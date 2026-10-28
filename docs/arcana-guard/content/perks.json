@@ -1,0 +1,1029 @@
+[
+  {
+    "id": "A1",
+    "name": "안개 걷기",
+    "family": "A",
+    "familyName": "속성 대비",
+    "rarity": "common",
+    "rarityName": "일반",
+    "icon": "🎯",
+    "short": "안개 피해 +15%",
+    "desc": "안개 조각에게 주는 피해가 15% 늘어요. 한 번 더 고르면 또 15% 늘어요.",
+    "stack": {
+      "max": 2,
+      "mode": "repeat"
+    },
+    "requires": [],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "dmgVsEnemy",
+        "enemies": [
+          "normal"
+        ],
+        "add": 0.15
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "dmgEq"
+    },
+    "eq": 5.5,
+    "me": {
+      "full": 6.4,
+      "std": 5.6,
+      "max": 6.3,
+      "formula": "ME = 15% × 안개 비중 0.368 × 1.16 = 6.4"
+    },
+    "weight": 1
+  },
+  {
+    "id": "A2",
+    "name": "느린 걸음",
+    "family": "A",
+    "familyName": "속성 대비",
+    "rarity": "common",
+    "rarityName": "일반",
+    "icon": "🎯",
+    "short": "속삭임 속도 -15%",
+    "desc": "속삭임의 걸음이 15% 느려져요. 컵 둔화와 겹쳐도 원래 속도의 45%보다 느려지지 않아요.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "stageHas",
+        "enemy": "fast"
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "enemySpeed",
+        "enemies": [
+          "fast"
+        ],
+        "mult": 0.85,
+        "floorBaseSpeed": 0.45
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "dmgEq"
+    },
+    "eq": 3.3,
+    "me": {
+      "full": 3.8,
+      "std": 3.3,
+      "max": 3.7,
+      "formula": "속도 ×0.85 → 사거리 체류 +17.6%, 하한 45%와 겹침으로 70%만 유효 = +12.3% × 속삭임 비중 0.265 × 1.16 = 3.8"
+    },
+    "weight": 1
+  },
+  {
+    "id": "A3",
+    "name": "갑옷 풀기",
+    "family": "A",
+    "familyName": "속성 대비",
+    "rarity": "common",
+    "rarityName": "일반",
+    "icon": "🎯",
+    "short": "침묵 방어 -3",
+    "desc": "침묵 덩어리의 방어를 3 깎고, 주는 피해도 10% 늘어요.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "stageHas",
+        "enemy": "tank"
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "armorShred",
+        "enemies": [
+          "tank"
+        ],
+        "value": 3
+      },
+      {
+        "op": "dmgVsEnemy",
+        "enemies": [
+          "tank"
+        ],
+        "add": 0.1
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "dmgEq"
+    },
+    "eq": 5.3,
+    "me": {
+      "full": 6.1,
+      "std": 5.3,
+      "max": 6,
+      "formula": "방어 -3 ≈ +13.8%(카드 피해 비중 가중) + 10% = 23.8% × 침묵 비중 0.221 × 1.16 = 6.1"
+    },
+    "weight": 1
+  },
+  {
+    "id": "A4",
+    "name": "큰 안개 사냥",
+    "family": "A",
+    "familyName": "속성 대비",
+    "rarity": "rare",
+    "rarityName": "희귀",
+    "icon": "🎯",
+    "short": "침묵·왕 피해 +20%",
+    "desc": "침묵 덩어리와 망각의 왕에게 주는 피해가 20% 늘어요.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "stageHas",
+        "enemy": "tank"
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "dmgVsEnemy",
+        "enemies": [
+          "tank",
+          "boss"
+        ],
+        "add": 0.2
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "dmgEq"
+    },
+    "eq": 7.4,
+    "me": {
+      "full": 8.5,
+      "std": 7.5,
+      "max": 8.4,
+      "formula": "20% × (0.221+0.147) × 1.16 = 8.5"
+    },
+    "weight": 1
+  },
+  {
+    "id": "A5",
+    "name": "왕관 겨누기",
+    "family": "A",
+    "familyName": "속성 대비",
+    "rarity": "rare",
+    "rarityName": "희귀",
+    "icon": "🎯",
+    "short": "왕 피해 +35%",
+    "desc": "망각의 왕에게 주는 피해가 35% 늘고, 왕이 탑에 닿아도 피해가 2 줄어요(5→3).",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "stageHas",
+        "enemy": "boss"
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "dmgVsEnemy",
+        "enemies": [
+          "boss"
+        ],
+        "add": 0.35
+      },
+      {
+        "op": "bossTowerDamage",
+        "delta": -2
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "dmgEq"
+    },
+    "eq": 5.1,
+    "me": {
+      "full": 6.9,
+      "std": 6,
+      "max": 6.7,
+      "formula": "35% × 0.147 × 1.16 = 6.0 + 보스 누수 보험 0.15 × 2HP × 3 = 0.9 → 6.9"
+    },
+    "weight": 1
+  },
+  {
+    "id": "A6",
+    "name": "새벽 빛줄기",
+    "family": "A",
+    "familyName": "속성 대비",
+    "rarity": "legendary",
+    "rarityName": "전설",
+    "icon": "🎯",
+    "short": "모든 피해 +10%",
+    "desc": "모든 안개에게 주는 피해가 10% 늘어요.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "cardKinds",
+        "kinds": [
+          "wand",
+          "cup",
+          "sword"
+        ],
+        "min": 2
+      }
+    ],
+    "minDraft": 2,
+    "effects": [
+      {
+        "op": "dmgAll",
+        "add": 0.1
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "dmgEq"
+    },
+    "eq": 10,
+    "me": {
+      "full": 11.6,
+      "std": 10.2,
+      "max": 11.4,
+      "formula": "10% × 1.16 = 11.6"
+    },
+    "weight": 1
+  },
+  {
+    "id": "B1",
+    "name": "한 방울 마나",
+    "family": "B",
+    "familyName": "처치 보상",
+    "rarity": "common",
+    "rarityName": "일반",
+    "icon": "🎁",
+    "short": "처치 15% 마나 +1",
+    "desc": "안개 조각·속삭임을 흩을 때 15% 확률로 마나 +1. 몰입 상태에서만, 판당 최대 +4.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "manaOnKill",
+        "enemies": [
+          "normal",
+          "fast"
+        ],
+        "chance": 0.15,
+        "amount": 1,
+        "gate": "flow",
+        "capRun": 4
+      }
+    ],
+    "gate": "flow",
+    "caps": {
+      "pool": "killMana"
+    },
+    "eq": null,
+    "me": {
+      "full": 4,
+      "std": 4,
+      "max": 4,
+      "formula": "min(4, 처치 71 × 0.15 × 몰입 0.85 × 남은 비율) = 4 (일찍 얻으면 상한에 닿음)"
+    },
+    "weight": 1
+  },
+  {
+    "id": "B2",
+    "name": "탑의 숨결",
+    "family": "B",
+    "familyName": "처치 보상",
+    "rarity": "common",
+    "rarityName": "일반",
+    "icon": "🎁",
+    "short": "정예 처치 탑 HP+1",
+    "desc": "침묵 덩어리나 망각의 왕을 흩으면 탑 HP +1. 판당 최대 +3.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "stageHas",
+        "enemy": "tank"
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "towerHealOnKill",
+        "enemies": [
+          "tank",
+          "boss"
+        ],
+        "amount": 1,
+        "capRun": 3
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "towerHeal"
+    },
+    "eq": null,
+    "me": {
+      "full": 5.4,
+      "std": 5.4,
+      "max": 3.6,
+      "formula": "min(3, 정예·왕 처치 8) × 실효 0.6(탑 HP가 깎여 있을 때만) × 3마나/HP = 5.4"
+    },
+    "weight": 1
+  },
+  {
+    "id": "B3",
+    "name": "콤보 방패",
+    "family": "B",
+    "familyName": "처치 보상",
+    "rarity": "common",
+    "rarityName": "일반",
+    "icon": "🎁",
+    "short": "콤보 보호 1회",
+    "desc": "누수 없이 웨이브를 막으면 방패가 충전돼요. 오답을 해도 콤보가 유지돼요(판당 최대 2번).",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "comboShield",
+        "chargeOn": "waveCleanClear",
+        "holdMax": 1,
+        "useCapRun": 2
+      }
+    ],
+    "gate": null,
+    "caps": {},
+    "eq": null,
+    "me": {
+      "full": 5,
+      "std": 5,
+      "max": 5,
+      "formula": "min(2, 콤보 3+ 오답 4 × 0.8) × 콤보 1회 가치 2.5 = 5.0"
+    },
+    "weight": 1
+  },
+  {
+    "id": "B4",
+    "name": "속삭임 수집",
+    "family": "B",
+    "familyName": "처치 보상",
+    "rarity": "rare",
+    "rarityName": "희귀",
+    "icon": "🎁",
+    "short": "3마리마다 마나+1",
+    "desc": "속삭임을 3마리 흩을 때마다 마나 +1. 몰입 상태에서만, 판당 최대 +6.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "card",
+        "card": "sword",
+        "min": 1
+      },
+      {
+        "type": "stageHas",
+        "enemy": "fast"
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "manaOnKill",
+        "enemies": [
+          "fast"
+        ],
+        "every": 3,
+        "amount": 1,
+        "gate": "flow",
+        "capRun": 6
+      }
+    ],
+    "gate": "flow",
+    "caps": {
+      "pool": "killMana"
+    },
+    "eq": null,
+    "me": {
+      "full": 6,
+      "std": 6,
+      "max": 6,
+      "formula": "min(6, 속삭임 36 ÷ 3 × 0.85) = 6"
+    },
+    "weight": 1
+  },
+  {
+    "id": "B5",
+    "name": "탑 복원",
+    "family": "B",
+    "familyName": "처치 보상",
+    "rarity": "rare",
+    "rarityName": "희귀",
+    "icon": "🎁",
+    "short": "정리 때 탑 HP+1",
+    "desc": "웨이브를 다 막으면 탑 HP +1(탑 HP 9 이하일 때). 판당 최대 +3.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "card",
+        "card": "pentacle",
+        "min": 1
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "towerHealOnWaveClear",
+        "amount": 1,
+        "whenTowerHpAtMost": 9,
+        "capRun": 3
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "towerHeal"
+    },
+    "eq": null,
+    "me": {
+      "full": 9,
+      "std": 7.2,
+      "max": 6,
+      "formula": "min(3, 남은 웨이브 5 × 실효 0.6) × 3마나/HP = 9 (이른 획득 기준)"
+    },
+    "weight": 1
+  },
+  {
+    "id": "B6",
+    "name": "빛의 샘",
+    "family": "B",
+    "familyName": "처치 보상",
+    "rarity": "legendary",
+    "rarityName": "전설",
+    "icon": "🎁",
+    "short": "5마리마다 마나+1",
+    "desc": "안개를 5마리 흩을 때마다 마나 +1. 몰입 상태에서만, 판당 최대 +10.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [],
+    "minDraft": 2,
+    "effects": [
+      {
+        "op": "manaOnKill",
+        "enemies": [
+          "normal",
+          "fast",
+          "tank",
+          "boss"
+        ],
+        "every": 5,
+        "amount": 1,
+        "gate": "flow",
+        "capRun": 10
+      }
+    ],
+    "gate": "flow",
+    "caps": {
+      "pool": "killMana"
+    },
+    "eq": null,
+    "me": {
+      "full": 10,
+      "std": 10,
+      "max": 10,
+      "formula": "min(10, 79 ÷ 5 × 0.85) = 10"
+    },
+    "weight": 1
+  },
+  {
+    "id": "C1",
+    "name": "이웃의 힘",
+    "family": "C",
+    "familyName": "주변 오라",
+    "rarity": "common",
+    "rarityName": "일반",
+    "icon": "🔗",
+    "short": "이웃 1장당 +3%",
+    "desc": "옆자리 카드 1장마다 공격력 +3%(최대 2장). 한 번 더 고르면 +6%씩.",
+    "stack": {
+      "max": 2,
+      "mode": "repeat"
+    },
+    "requires": [
+      {
+        "type": "cardCount",
+        "min": 2
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "auraAdjacentDmg",
+        "perNeighbor": 0.03,
+        "maxNeighbors": 2
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "dmgEq"
+    },
+    "eq": 4.8,
+    "me": {
+      "full": 5.6,
+      "std": 4.9,
+      "max": 5.5,
+      "formula": "평균 이웃 1.6장 × 3% = 4.8% × 1.16 = 5.6"
+    },
+    "weight": 1
+  },
+  {
+    "id": "C2",
+    "name": "같은 빛 공명",
+    "family": "C",
+    "familyName": "주변 오라",
+    "rarity": "common",
+    "rarityName": "일반",
+    "icon": "🔗",
+    "short": "같은 속성 쌍 +8%",
+    "desc": "같은 속성 카드가 2장 이상이면 그 카드들의 공격력이 8% 늘어요.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "sameAttr",
+        "min": 2
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "resonance",
+        "sameAttrMin": 2,
+        "dmgAdd": 0.08
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "dmgEq"
+    },
+    "eq": 5.6,
+    "me": {
+      "full": 6.5,
+      "std": 5.7,
+      "max": 6.4,
+      "formula": "표준 구성(완드 3·컵 2) 피해 비중 0.70 × 8% = 5.6% × 1.16 = 6.5"
+    },
+    "weight": 1
+  },
+  {
+    "id": "C3",
+    "name": "높은 곳의 눈",
+    "family": "C",
+    "familyName": "주변 오라",
+    "rarity": "common",
+    "rarityName": "일반",
+    "icon": "🔗",
+    "short": "고지 사거리 +5%p",
+    "desc": "중지대·고지대 슬롯 카드의 사거리가 5%p 늘어요. 지형 보너스와 합쳐 최대 +20%.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "slotElev",
+        "min": 1
+      },
+      {
+        "type": "stageElevKinds",
+        "min": 2
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "rangeAddByElev",
+        "elevMin": 1,
+        "add": 0.05,
+        "totalRangeCap": 1.2
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "rangeTotalMax": 1.2,
+      "pool": "dmgEq"
+    },
+    "eq": 3.8,
+    "me": {
+      "full": 4.4,
+      "std": 3.9,
+      "max": 4.3,
+      "formula": "체류 길이 L=2√(R²-1): 고지 5.39→5.66 (+5.8%p) × 슬롯 피해 비중 0.65 = 3.8% × 1.16 = 4.4"
+    },
+    "weight": 1
+  },
+  {
+    "id": "C4",
+    "name": "높낮이 어울림",
+    "family": "C",
+    "familyName": "주변 오라",
+    "rarity": "rare",
+    "rarityName": "희귀",
+    "icon": "🔗",
+    "short": "높낮이 공격 +8%",
+    "desc": "서로 다른 높이의 슬롯에 카드가 있으면 모든 카드의 공격력이 8% 늘어요.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "stageElevKinds",
+        "min": 2
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "elevMixBonus",
+        "kindsMin": 2,
+        "dmgAdd": 0.08
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "dmgEq"
+    },
+    "eq": 6.8,
+    "me": {
+      "full": 7.9,
+      "std": 6.9,
+      "max": 7.7,
+      "formula": "8% × 발동 확률 0.85 = 6.8% × 1.16 = 7.9"
+    },
+    "weight": 1
+  },
+  {
+    "id": "C5",
+    "name": "물결 오라",
+    "family": "C",
+    "familyName": "주변 오라",
+    "rarity": "rare",
+    "rarityName": "희귀",
+    "icon": "🔗",
+    "short": "컵 이웃 공속 +15%",
+    "desc": "컵 옆자리 카드의 공격 속도가 15% 늘어요.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "card",
+        "card": "cup",
+        "min": 1
+      },
+      {
+        "type": "cardCount",
+        "min": 2
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "auraAdjacentAtkSpeed",
+        "sourceCard": "cup",
+        "add": 0.15
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "dmgEq"
+    },
+    "eq": 6,
+    "me": {
+      "full": 7,
+      "std": 6.1,
+      "max": 6.8,
+      "formula": "컵 이웃 카드 피해 비중 0.40 × 15% = 6.0% × 1.16 = 7.0"
+    },
+    "weight": 1
+  },
+  {
+    "id": "C6",
+    "name": "탑지기 합창",
+    "family": "C",
+    "familyName": "주변 오라",
+    "rarity": "legendary",
+    "rarityName": "전설",
+    "icon": "🔗",
+    "short": "4속성 공격 +7%",
+    "desc": "네 속성 카드가 모두 있으면 모든 카드의 공격력 +7%, 사거리 +3%p.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "allAttrs",
+        "min": 4
+      }
+    ],
+    "minDraft": 2,
+    "effects": [
+      {
+        "op": "allAttrBonus",
+        "attrsMin": 4,
+        "dmgAdd": 0.07,
+        "rangeAdd": 0.03,
+        "totalRangeCap": 1.2
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "rangeTotalMax": 1.2,
+      "pool": "dmgEq"
+    },
+    "eq": 10.5,
+    "me": {
+      "full": 12.2,
+      "std": 10.7,
+      "max": 12,
+      "formula": "(7% + 사거리 +3%p ≈ 3.5%) = 10.5% × 1.16 = 12.2"
+    },
+    "weight": 1
+  },
+  {
+    "id": "D1",
+    "name": "반짝 마나",
+    "family": "D",
+    "familyName": "학습 연계",
+    "rarity": "common",
+    "rarityName": "일반",
+    "icon": "📖",
+    "short": "콤보2+ 마나 +1",
+    "desc": "콤보 2 이상일 때 정답마다 마나 +1. 판당 최대 +5(겹치면 +10).",
+    "stack": {
+      "max": 2,
+      "mode": "repeat"
+    },
+    "requires": [],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "manaOnCorrect",
+        "minCombo": 2,
+        "amount": 1,
+        "capRun": 5
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "learnMana"
+    },
+    "eq": null,
+    "me": {
+      "full": 5,
+      "std": 5,
+      "max": 5,
+      "formula": "min(5, 콤보2+ 정답 14 × 0.85) = 5"
+    },
+    "weight": 1
+  },
+  {
+    "id": "D2",
+    "name": "쉼표 한 번",
+    "family": "D",
+    "familyName": "학습 연계",
+    "rarity": "common",
+    "rarityName": "일반",
+    "icon": "📖",
+    "short": "오답 잠금 -1초",
+    "desc": "몰입 상태에서 연속 오답으로 늘어난 잠금이 1초 줄어요(기본 2초 아래로는 안 내려가요).",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "wrongLockReduce",
+        "seconds": 1,
+        "minLockSec": 2,
+        "gate": "flow"
+      }
+    ],
+    "gate": "flow",
+    "caps": {},
+    "eq": null,
+    "me": {
+      "full": 1.5,
+      "std": 1,
+      "max": 1.4,
+      "formula": "연속 오답 2회/판 × 1초 × 마나 속도 0.7/초 = 1.4 → 1.0~1.5"
+    },
+    "weight": 1
+  },
+  {
+    "id": "D3",
+    "name": "기억의 열쇠",
+    "family": "D",
+    "familyName": "학습 연계",
+    "rarity": "common",
+    "rarityName": "일반",
+    "icon": "📖",
+    "short": "복습 통과 마나+3",
+    "desc": "봉인 카드 복습 문제를 맞히면 마나 +3. 판당 최대 +6.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "dueSealed",
+        "min": 1
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "manaOnReviewPass",
+        "amount": 3,
+        "capRun": 6
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "learnMana"
+    },
+    "eq": null,
+    "me": {
+      "full": 6,
+      "std": 4.1,
+      "max": 6,
+      "formula": "min(6, 복습 통과 2(보통)~3(우수) × 3 × 남은 비율)"
+    },
+    "weight": 1
+  },
+  {
+    "id": "D4",
+    "name": "도전 보상",
+    "family": "D",
+    "familyName": "학습 연계",
+    "rarity": "rare",
+    "rarityName": "희귀",
+    "icon": "📖",
+    "short": "어려움 정답 +2",
+    "desc": "어려운 문제를 맞히면 마나가 2 더 들어와요. 몰입 상태에서만, 판당 최대 +8.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "packHasDifficulty",
+        "d": 3
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "manaOnCorrect",
+        "difficulty": 3,
+        "amount": 2,
+        "gate": "flow",
+        "capRun": 8
+      }
+    ],
+    "gate": "flow",
+    "caps": {
+      "pool": "learnMana"
+    },
+    "eq": null,
+    "me": {
+      "full": 8,
+      "std": 5.8,
+      "max": 8,
+      "formula": "min(8, 어려움 정답 5(보통)~12(우수) × 2 × 몰입 0.85~1.0 × 남은 비율) = 8"
+    },
+    "weight": 1
+  },
+  {
+    "id": "D5",
+    "name": "연승의 불꽃",
+    "family": "D",
+    "familyName": "학습 연계",
+    "rarity": "rare",
+    "rarityName": "희귀",
+    "icon": "📖",
+    "short": "콤보 달성 마나+1",
+    "desc": "콤보 3·5·8을 달성할 때마다 마나 +1. 판당 최대 +6.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "maxComboReached",
+        "min": 3
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "manaOnComboMilestone",
+        "combos": [
+          3,
+          5,
+          8
+        ],
+        "amount": 1,
+        "capRun": 6
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "learnMana"
+    },
+    "eq": null,
+    "me": {
+      "full": 5,
+      "std": 3.4,
+      "max": 6,
+      "formula": "min(6, 달성 횟수 5(보통)~11(우수) × 남은 비율)"
+    },
+    "weight": 1
+  },
+  {
+    "id": "D6",
+    "name": "깊은 몰입",
+    "family": "D",
+    "familyName": "학습 연계",
+    "rarity": "legendary",
+    "rarityName": "전설",
+    "icon": "📖",
+    "short": "몰입 정답 마나+1",
+    "desc": "몰입 상태에서 정답마다 마나 +1. 판당 최대 +10.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [],
+    "minDraft": 2,
+    "effects": [
+      {
+        "op": "manaOnCorrect",
+        "amount": 1,
+        "gate": "flow",
+        "capRun": 10
+      }
+    ],
+    "gate": "flow",
+    "caps": {
+      "pool": "learnMana"
+    },
+    "eq": null,
+    "me": {
+      "full": 10,
+      "std": 10,
+      "max": 10,
+      "formula": "min(10, 정답 21 × 0.85) = 10"
+    },
+    "weight": 1
+  }
+]
