@@ -1025,5 +1025,174 @@
       "formula": "min(10, 정답 21 × 0.85) = 10"
     },
     "weight": 1
+  },
+  {
+    "id": "E1",
+    "name": "빛줄기 강화",
+    "family": "E",
+    "familyName": "빛지기",
+    "rarity": "common",
+    "rarityName": "일반",
+    "icon": "✦",
+    "short": "빛지기 피해 +40%",
+    "desc": "빛지기의 기본 공격과 스킬 피해가 40% 늘어요.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "hasHero"
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "heroDmg",
+        "add": 0.4
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "heroEq"
+    },
+    "eq": null,
+    "me": {
+      "full": 2.1,
+      "std": 1.8,
+      "max": 2.1,
+      "formula": "(기본 0.59 + 스킬 0.31) DP × 40% = 0.36 DP ÷ 19.7 × 100 × 1.16 = 2.1"
+    },
+    "weight": 1
+  },
+  {
+    "id": "E2",
+    "name": "서두르는 빛",
+    "family": "E",
+    "familyName": "빛지기",
+    "rarity": "common",
+    "rarityName": "일반",
+    "icon": "✦",
+    "short": "스킬 쿨다운 -20%",
+    "desc": "빛지기 스킬의 재사용 대기가 20% 줄고, 구슬을 2개 더 모아 둘 수 있어요.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "hasHero"
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "heroSkillCooldown",
+        "mult": 0.8
+      },
+      {
+        "op": "orbCap",
+        "add": 2
+      }
+    ],
+    "gate": null,
+    "caps": {},
+    "eq": null,
+    "me": {
+      "full": 0.2,
+      "std": 0.2,
+      "max": 0.2,
+      "formula": "스킬 기여 1.83 × (쿨다운 병목 25% × 효과 25% + 구슬 만땅 낭비 회수 7%) = 0.24. 병목이 쿨다운이 아니라 구슬이라 의도적으로 약함"
+    },
+    "weight": 1
+  },
+  {
+    "id": "E3",
+    "name": "빛줄기 환급",
+    "family": "E",
+    "familyName": "빛지기",
+    "rarity": "rare",
+    "rarityName": "희귀",
+    "icon": "✦",
+    "short": "처치 시 마나 +1",
+    "desc": "빛지기가 길 위의 안개를 흩을 때마다 마나 +1. 몰입 상태에서만, 판당 최대 +4. 길 밖 안개는 세지 않아요.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "hasHero"
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "manaOnHeroKill",
+        "enemies": [
+          "normal",
+          "fast",
+          "tank"
+        ],
+        "excludeStray": true,
+        "chance": 1.0,
+        "amount": 1,
+        "gate": "flow",
+        "capRun": 4
+      }
+    ],
+    "gate": "flow",
+    "caps": {
+      "pool": "killMana"
+    },
+    "eq": null,
+    "me": {
+      "full": 4.0,
+      "std": 4.0,
+      "max": 4.0,
+      "formula": "min(4, 영웅 길 위 처치 6 × 몰입 0.85 × 남은 처치 0.785) = 4.0"
+    },
+    "weight": 1
+  },
+  {
+    "id": "E4",
+    "name": "등불의 보답",
+    "family": "E",
+    "familyName": "빛지기",
+    "rarity": "rare",
+    "rarityName": "희귀",
+    "icon": "✦",
+    "short": "스킬2마다 마나+2",
+    "desc": "환한 등불(스킬 2)을 쓸 때마다 마나 +2, 판당 최대 +6.",
+    "stack": {
+      "max": 1,
+      "mode": "none"
+    },
+    "requires": [
+      {
+        "type": "hasHero"
+      }
+    ],
+    "minDraft": 1,
+    "effects": [
+      {
+        "op": "manaOnHeroSkill",
+        "skill": 2,
+        "amount": 2,
+        "capRun": 6
+      }
+    ],
+    "gate": null,
+    "caps": {
+      "pool": "learnMana"
+    },
+    "eq": null,
+    "me": {
+      "full": 4.4,
+      "std": 3.0,
+      "max": 6.0,
+      "formula": "min(6, 스킬 2 시전 2.2회 × 2 × 남은 정답 기회 0.688) = 3.0"
+    },
+    "weight": 1
   }
 ]
