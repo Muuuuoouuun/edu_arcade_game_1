@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>아르카나 수비대 — 프로토타입</title>
+<title>아르카나 수비대 — 프로토타입 2차</title>
 <style>
 :root{
   --bg:#17143a; --panel:#221e4a; --panel2:#2d2860; --line:#3d3780; --ink:#f5f2ff; --mut:#aaa4d6;
@@ -43,12 +43,12 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 
 /* Stage */
 #stage{position:relative;flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;background:#120f2e}
-#map{display:block;touch-action:none}
+#map{display:block;touch-action:none;border-radius:6px}
 #banner{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);pointer-events:none;
   background:#000b;border:1px solid var(--gold);color:var(--gold);padding:6px 12px;border-radius:10px;font-weight:700;font-size:15px;
   opacity:0;transition:opacity .25s;white-space:nowrap;text-align:center}
 #banner.show{opacity:1}
-#popup{position:absolute;z-index:5;width:232px;background:#1b1842f2;border:1px solid var(--gold);border-radius:12px;padding:8px;box-shadow:0 8px 24px #000a}
+#popup{position:absolute;z-index:5;width:236px;background:#1b1842f2;border:1px solid var(--gold);border-radius:12px;padding:8px;box-shadow:0 8px 24px #000a}
 #popup[hidden]{display:none}
 .ptitle{font-weight:700;font-size:13px;margin-bottom:6px;display:flex;justify-content:space-between}
 .ptitle button{background:none;border:0;color:var(--mut);font-size:15px;padding:0 4px}
@@ -59,28 +59,38 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .pbtn:disabled{opacity:.4;cursor:not-allowed}
 .pinfo{font-size:12px;color:var(--mut);line-height:1.45;margin-bottom:6px}
 .pinfo b{color:var(--ink)}
+.pterr{font-size:11.5px;color:#ffe27a;margin:-2px 0 6px}
 .upbtn{width:100%;border:2px solid var(--gold);background:#4a3b0a;border-radius:9px;padding:7px;font-weight:700;font-size:14px}
 .upbtn:disabled{opacity:.4;cursor:not-allowed}
 
 /* Quiz */
-#quiz{flex:none;margin:6px 8px 0;background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:6px 8px 8px}
+#quiz{position:relative;flex:none;margin:6px 8px 0;background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:5px 8px 7px}
 #quiz.warn{animation:blink .5s steps(2) infinite}
 @keyframes blink{0%{border-color:var(--gold)}100%{border-color:var(--bad)}}
-.qhead{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);min-height:16px}
+.qhead{display:flex;justify-content:space-between;gap:6px;font-size:11.5px;color:var(--mut);min-height:16px;white-space:nowrap;overflow:hidden}
+#qFeedback{overflow:hidden;text-overflow:ellipsis}
 #qFeedback.good{color:var(--good)} #qFeedback.bad{color:var(--bad)} #qFeedback.skip{color:var(--gold)}
-#qText{font-size:22px;font-weight:700;text-align:center;margin:2px 0 4px;min-height:30px;word-break:keep-all}
-.idle{height:3px;background:#0005;border-radius:2px;overflow:hidden;margin-bottom:6px}
+#qText{font-size:22px;font-weight:700;text-align:center;margin:1px 0 3px;min-height:30px;word-break:keep-all;transition:filter .15s,opacity .15s}
+.idle{height:3px;background:#0005;border-radius:2px;overflow:hidden;margin-bottom:5px}
 .idle i{display:block;height:100%;width:0;background:var(--mut)}
 #quiz.warn .idle i{background:var(--bad)}
-#choices{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.ch{position:relative;min-height:44px;border:1px solid var(--line);background:var(--panel2);border-radius:10px;font-size:18px;font-weight:700;padding:4px 6px 4px 22px}
-.ch .k{position:absolute;left:6px;top:4px;font-size:10px;color:var(--mut);font-weight:400}
+#choices{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.ch{position:relative;min-height:46px;border:1px solid var(--line);background:var(--panel2);border-radius:10px;font-size:17px;font-weight:700;padding:10px 2px 4px;transition:filter .15s,opacity .15s;white-space:nowrap}
+.ch .k{position:absolute;left:5px;top:2px;font-size:10px;color:var(--mut);font-weight:400}
 .ch:active{transform:scale(.98)}
 .ch.correct{background:#145c43;border-color:var(--good)}
 .ch.correct::after{content:" ✓"}
 .ch.wrong{background:#6a1d2c;border-color:var(--bad)}
 .ch.wrong::after{content:" ✗"}
 #quiz.locked .ch{pointer-events:none}
+/* 오답 잠금: 카드가 흐려지고(정답 보기만 또렷하게) 남은 시간을 크게 표시 */
+#quiz.wlock{border-color:#6a5fb0}
+#quiz.wlock #qText{filter:blur(1.5px);opacity:.45}
+#quiz.wlock .ch:not(.correct){filter:blur(1.5px);opacity:.35}
+#quiz.wlock .ch.correct{opacity:.85}
+#lockBadge{position:absolute;right:8px;top:24px;z-index:2;background:#0d0b22e6;border:1px solid var(--bad);color:#ffd0d8;border-radius:9px;
+  padding:3px 9px;font-weight:800;font-size:15px;pointer-events:none;font-variant-numeric:tabular-nums}
+#lockBadge[hidden]{display:none}
 #quiz.idlemode{opacity:.55}
 
 /* Card bar */
@@ -98,13 +108,19 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 @keyframes pulse{50%{box-shadow:0 0 14px #ff4d8d}}
 
 /* Overlay */
-#overlay{position:absolute;inset:0;z-index:10;background:#0c0a1fe8;display:flex;align-items:center;justify-content:center;padding:14px}
+#overlay{position:absolute;inset:0;z-index:10;background:#0c0a1fe0;display:flex;align-items:center;justify-content:center;padding:12px}
 #overlay[hidden]{display:none}
-.panel{width:100%;max-height:100%;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
-.panel h1{margin:0 0 4px;font-size:24px;text-align:center}
-.panel h2{margin:12px 0 6px;font-size:14px;color:var(--mut)}
-.panel p{font-size:13px;line-height:1.55;margin:6px 0;color:#ddd8ff}
-.panel ul{margin:4px 0;padding-left:18px;font-size:12.5px;line-height:1.6;color:#ddd8ff}
+.panel{width:100%;max-height:100%;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px 14px}
+.panel h1{margin:0 0 2px;font-size:23px;text-align:center}
+.panel h2{margin:10px 0 4px;font-size:13.5px;color:var(--mut)}
+.panel p{font-size:13px;line-height:1.5;margin:4px 0;color:#ddd8ff}
+.panel ul{margin:3px 0;padding-left:18px;font-size:12.3px;line-height:1.55;color:#ddd8ff}
+.setup{display:grid;grid-template-columns:96px 1fr;gap:10px;margin-top:8px;align-items:start}
+#pv{width:96px;height:197px;border-radius:8px;border:1px solid var(--line);background:#000;display:block}
+.selcol{display:flex;flex-direction:column;gap:6px}
+.selcol label{display:flex;flex-direction:column;gap:2px;font-size:11.5px;color:var(--mut)}
+.selcol select{width:100%;min-height:34px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:3px 5px;font:inherit;font-size:13px}
+.mapinfo{font-size:11px;color:#ffe27a;line-height:1.45}
 .stars{text-align:center;font-size:40px;letter-spacing:6px;color:var(--gold);margin:4px 0}
 .stars .off{color:#4a4570}
 .crit{font-size:12.5px;line-height:1.7}
@@ -119,6 +135,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 #review{margin-top:8px}
 #review .rq{font-size:20px;font-weight:700;text-align:center;margin:6px 0}
 #review .rmsg{font-size:13px;text-align:center;min-height:18px;margin-top:6px}
+#review .ch{padding:4px 6px 4px 22px;font-size:18px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .stats{font-size:12.5px;color:#ddd8ff;line-height:1.6}
 </style>
@@ -145,6 +162,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
     <div id="qText"></div>
     <div class="idle"><i id="idleBar"></i></div>
     <div id="choices"></div>
+    <div id="lockBadge" hidden></div>
   </section>
 
   <nav id="cardbar"></nav>
@@ -155,64 +173,85 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 <script>
 'use strict';
 /* =====================================================================
- * BALANCE — 조정 가능한 모든 수치는 여기 한 곳에 모아 둔다.
- * (브리프 00_brief.md §4 고정 수치: 탑 HP 10, 정답 마나 3/4/5, 자동 회복 1/5초,
- *  소환 5, 강화 4/6/8, 웨이브 5, 콤보 3/5/8, 10초 방치 자동 교체)
+ * BALANCE v0.3 — 조정 가능한 모든 수치는 여기 한 곳에 모아 둔다.
+ * 브리프 00 §4 고정값(탑 HP 10, 정답 마나 3/4/5, 소환 5, 강화 4/6/8, 웨이브 5, 콤보 3/5/8, 10초 방치 교체)은 유지.
+ * 2차에서 바뀐 값은 주석에 "v0.3"으로 표시. 변경 이유는 README의 BALANCE 표 참고.
  * ===================================================================== */
 const BALANCE = {
+  version: 'v0.3',
   tower: { hp: 10, shieldCap: 5 },                 // 보호막 1 = 피해 1 흡수
   mana: {
     start: 5,                                       // 시작 마나(+ 해제 퀴즈 보너스)
     max: 99,
-    regenAmount: 1, regenEvery: 5,                  // 자동 회복 1마나 / 5초
+    regenAmount: 1, regenSec: 10,                   // v0.3: 자동 회복 1마나 / 10초 (1차 5초)
     byDifficulty: { 1: 3, 2: 4, 3: 5 },             // 정답 마나 (쉬움/보통/어려움)
   },
-  cost: { summon: 5, upgrade: [4, 6, 8] },          // upgrade[n-1] = Lv n → n+1 (프로토타입은 Lv3까지 → 4, 6 사용)
-  maxLevel: 3,
+  cost: { summon: 5, upgrade: [4, 6, 8] },          // upgrade[n-1] = Lv n → n+1
+  maxLevel: 4,                                      // v0.3: Lv4 추가 → 슬롯당 최대 5+4+6+8 = 23마나
   quiz: {
     idleWarnSec: 7,                                 // 7초부터 테두리 점멸
     idleSkipSec: 10,                                // 10초에 자동 교체("회피" 기록)
     correctDelay: 0.35,                             // 정답 후 다음 문제까지(초)
-    wrongLockSec: 2.0,                              // 오답 후 잠금(초) — 찍기 억제
+    wrongLockBase: 2.0,                             // v0.3: 오답 잠금 2초
+    wrongLockStep: 1.0,                             //       연속 오답마다 +1초
+    wrongLockMax: 5.0,                              //       최대 5초, 정답 시 리셋
+    readFloorSec: 0.8,                              // v0.3: 표시 후 0.8초 이내 제출 = 정답이어도 콤보 증가 없음(마나는 지급)
   },
   combo: {
     cycle: 8,                                       // 8콤보마다 보상 주기 반복(11/13/16…)
     discountAt: 3, discountAmount: 2,               // 콤보 3: 다음 소환 비용 -2
     buffAt: 5, buffMult: 1.3, buffSec: 10,          // 콤보 5: 전체 공격력 +30% 10초
-    ultAt: 8,                                       // 콤보 8: 궁극기 1회 사용권(누적 X)
+    ultAt: 8,                                       // 콤보 8: 궁극기 사용권 1개(최대 1개 보유, 콤보가 끊겨도 유지)
   },
   ult: { name: '세계(광역 폭발)', damage: 350 },     // 방어력 무시
-  waves: { count: 5, prepSec: 5, breakSec: 5, hpScalePerWave: 1.0 },   // 적 HP × (1 + 1.0×(웨이브-1)) → W5 = ×5
+  waves: { count: 5, prepSec: 5, breakSec: 5,
+           hpMult: [1, 1.6, 2.4, 3.4, 5.0] },       // v0.3: 웨이브별 적 HP 배율(1차: 1/2/3/4/5 선형)
+  stage: { hpMultByDiff: { 1: 0.85, 2: 1.0, 3: 1.2 } }, // 스테이지 난이도(시작 화면) → 적 HP. 밸런스 기준 = 난이도 2
+  terrain: {                                        // 08 문서 2절 규칙
+    rangeMult: [1.00, 1.08, 1.15],                  // 고도 0/1/2 슬롯 사거리
+    lowlandDiscount: 1, lowlandFloor: 4,            // 저지대 슬롯 소환 비용 -1 (하한 4)
+    comboFloor: 3,                                  // 콤보 3 할인과 겹칠 때 하한
+    uphill: 0.8, downhill: 1.1,                     // 오르막/내리막 구간 적 속도
+    minSpeedMult: 0.45,                             // 둔화·경사를 곱한 최종 속도 하한
+    normalizePathLen: true, refPathLen: 1290,       // 맵마다 길 길이가 달라도 평지 통과 시간은 같게(경사 효과는 유지)
+  },
   stars: { hpFor2: 6, accFor3: 0.8, comboFor3: 5 },  // ★1 클리어, ★2 탑 HP≥6, ★3 정답률≥80% & 최대 콤보≥5
   review: { bonusMana: 3 },                         // 해제 퀴즈 정답 시 다음 판 시작 마나
   cards: {
     wand:     { name:'완드',   el:'불',   icon:'🔥', key:'Q', color:'#ff7a45', shape:'tri',     role:'단일 고화력',
-                lv:[ {dmg:24, cd:1.1, range:88}, {dmg:40, cd:1.0, range:96}, {dmg:62, cd:0.9, range:104} ] },
+                lv:[ {dmg:24, cd:1.1, range:88}, {dmg:40, cd:1.0, range:96}, {dmg:62, cd:0.9, range:104},
+                     {dmg:80, cd:0.85, range:108, pierce:1, pierceMult:0.7} ] },          // Lv4: 관통 1
     cup:      { name:'컵',     el:'물',   icon:'💧', key:'W', color:'#4cc9f0', shape:'circle',  role:'둔화',
-                lv:[ {dmg:5, cd:0.9, range:82, slow:0.35, slowSec:1.6}, {dmg:8, cd:0.8, range:90, slow:0.45, slowSec:1.8}, {dmg:12, cd:0.7, range:98, slow:0.55, slowSec:2.0} ] },
-    sword:    { name:'소드',   el:'바람', icon:'🗡️', key:'E', color:'#8ee3a8', shape:'diamond', role:'연타·2체',
-                lv:[ {dmg:7, cd:0.40, range:78, targets:2}, {dmg:11, cd:0.35, range:84, targets:2}, {dmg:15, cd:0.30, range:90, targets:2} ] },
+                lv:[ {dmg:5, cd:0.9, range:82, slow:0.35, slowSec:1.6}, {dmg:8, cd:0.8, range:90, slow:0.45, slowSec:1.8}, {dmg:12, cd:0.7, range:98, slow:0.55, slowSec:2.0},
+                     {dmg:16, cd:0.65, range:102, slow:0.55, slowSec:2.2, slowAoE:46} ] },  // Lv4: 둔화 범위(반경 46)
+    sword:    { name:'소드',   el:'바람', icon:'🗡️', key:'E', color:'#8ee3a8', shape:'diamond', role:'연타·다수',
+                lv:[ {dmg:7, cd:0.40, range:78, targets:2}, {dmg:11, cd:0.35, range:84, targets:2}, {dmg:15, cd:0.30, range:90, targets:2},
+                     {dmg:18, cd:0.28, range:94, targets:3} ] },                            // Lv4: 3체 타격
     pentacle: { name:'펜타클', el:'땅',   icon:'🪨', key:'R', color:'#e9c46a', shape:'square',  role:'탑 보호막',
-                lv:[ {shieldEvery:12}, {shieldEvery:9}, {shieldEvery:6} ] },
+                lv:[ {shieldEvery:12}, {shieldEvery:9}, {shieldEvery:6},
+                     {shieldEvery:5, regenAfterHit:1.5} ] },                                 // Lv4: 피격 직후 1.5초 만에 보호막 재생
   },
-  enemies: {
-    normal: { name:'안개 조각',   hp:68,  speed:38, armor:0, dmg:1, r:9,  color:'#a3acd6', shape:'circle' },
-    fast:   { name:'속삭임',     hp:40,  speed:70, armor:0, dmg:1, r:7,  color:'#d3a8ff', shape:'tri' },
-    tank:   { name:'침묵 덩어리', hp:220, speed:24, armor:3, dmg:2, r:12, color:'#7d8597', shape:'square' },
-    boss:   { name:'망각의 왕',   hp:1800, speed:15, armor:5, dmg:5, r:20, color:'#7b3fb0', shape:'boss', slowResist:0.5 },
+  enemies: {                                        // v0.3: 기본 HP 약 ×1.9 (1차 68/40/220/1800) — 봇 시뮬로 맞춤
+    normal: { name:'안개 조각',   hp:130, speed:38, armor:0, dmg:1, r:10, color:'#dfe3ee', shape:'circle' },
+    fast:   { name:'속삭임',     hp:80,  speed:70, armor:0, dmg:1, r:8,  color:'#d3a8ff', shape:'tri' },
+    tank:   { name:'침묵 덩어리', hp:430, speed:24, armor:3, dmg:2, r:13, color:'#a9afbf', shape:'square' },
+    boss:   { name:'망각의 왕',   hp:3500, speed:15, armor:5, dmg:5, r:20, color:'#7b3fb0', shape:'boss', slowResist:0.5 },
   },
-  // 각 웨이브 = 그룹 배열(그룹은 순서대로 등장, gap = 개체 간격 초)
+  // 각 웨이브 = 그룹 배열. 그룹은 순서대로 등장(gap = 개체 간격 초). at 이 있는 그룹은 웨이브 시작 기준 그 시각부터 "동시에" 나온다.
+  // v0.3: 웨이브 1~2는 가볍게(문제 풀이 시작 구간), 3~5에 물량을 몰아 "풀이량 차이"가 웨이브 3~4에서 드러나게
   waveList: [
-    [ {type:'normal', n:8, gap:1.6} ],
-    [ {type:'normal', n:8, gap:1.3}, {type:'fast', n:5, gap:0.9} ],
-    [ {type:'normal', n:8, gap:1.1}, {type:'tank', n:3, gap:2.5}, {type:'fast', n:6, gap:0.8} ],
-    [ {type:'fast', n:8, gap:0.7}, {type:'tank', n:5, gap:2.0}, {type:'normal', n:10, gap:0.9} ],
-    [ {type:'normal', n:6, gap:1.0}, {type:'boss', n:1, gap:3.0}, {type:'tank', n:4, gap:2.0}, {type:'fast', n:6, gap:0.7} ],
+    [ {type:'normal', n:6, gap:1.8} ],
+    [ {type:'normal', n:6, gap:1.5}, {type:'fast', n:3, gap:1.1} ],
+    [ {type:'normal', n:12, gap:0.9}, {type:'tank', n:3, gap:2.5}, {type:'fast', n:6, gap:0.8} ],
+    [ {type:'fast', n:12, gap:0.6}, {type:'tank', n:4, gap:2.2}, {type:'normal', n:12, gap:0.8} ],
+    [ {type:'normal', n:6, gap:1.0}, {type:'boss', n:1, gap:3.0}, {type:'tank', n:3, gap:2.2}, {type:'fast', n:8, gap:0.7},
+      {type:'normal', n:10, gap:2.0, at:9} ],       // v0.3: 보스와 함께 걷는 호위(일반 적, 웨이브 시작 9초부터 동시 진행)
   ],
 };
 
 /* =====================================================================
  * 문제 팩 (수학 연산 30문항). c[0]이 정답, 표시할 때 섞는다. d = 난이도 1~3
+ * (2차: 시작 화면의 "과목"은 배경 소품만 바꾼다. 문항은 모든 과목에서 이 30문항)
  * ===================================================================== */
 const QUESTIONS = [
   {id:'m01', d:1, q:'7 + 8 = ?',          c:['15','14','16','13']},
@@ -247,31 +286,387 @@ const QUESTIONS = [
   {id:'m30', d:3, q:'2x + 3 = 11 일 때 x = ?', c:['4','7','5','8']},
 ];
 
-/* ===================== 맵 정의 (360×380 논리 좌표) ===================== */
-const W = 360, H = 380;
-const PATH = [[-20,48],[312,48],[312,142],[48,142],[48,236],[312,236],[312,330],[52,330]]; // S자 3굴곡
-const TOWER_POS = { x: 32, y: 330 };
-const SLOT_R = 19;
-const SLOTS = [[92,95],[180,95],[268,95],[110,189],[200,189],[290,189],[140,283],[240,283]].map(([x,y],i)=>({i,x,y}));
+/* =====================================================================
+ * 배경·지형 절차 생성 (bg_demo.html 의 맵 데이터·렌더 함수를 그대로 옮김, 08 문서와 같은 데이터)
+ * 외부 에셋 0. 스테이지 진입 시 오프스크린 캔버스에 1회 그려 캐시한다.
+ * ===================================================================== */
+const BG = (function(){
+/* ---- 아래는 bg_demo.html 의 상수·맵 데이터·팔레트·buildBG·buildFog 를 그대로 옮긴 것 ---- */
+const W=360,H=740,T=34,COLS=10,ROWS=18,OX=10,OY=100,L=4; // L = 고도 1단계당 들어올림(px)
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+
+/* ====================== 맵 데이터 (docs 08 문서와 동일) ====================== */
+const MAPS=[
+ {id:'R1',name:'은빛 씨앗 들판',wp:[[1,0],[1,3],[8,3],[8,8],[1,8],[1,13],[8,13],[8,17]],
+  slots:[[3,4],[6,4],[7,6],[5,7],[2,9],[5,9],[2,11],[4,12],[7,12],[7,15]],
+  elev:["0000000000","0000000000","0000111000","0001121100","0012221100","0011211100","0001110100","0000000000","0000000000","0000011000","0000111000","0001221000","0011211000","0001110000","0000000000","0000000000","0000000000","0000000000"]},
+ {id:'R2',name:'메아리 숲',wp:[[8,0],[8,2],[2,2],[2,7],[7,7],[7,12],[1,12],[1,17]],
+  slots:[[5,1],[4,3],[3,5],[6,6],[4,8],[6,10],[3,11],[5,13],[2,15]],
+  elev:["0000000000","0000011000","0000111000","0001221100","0001222100","0011122100","0011111100","0000110000","0001210000","0000110000","0000000000","0000000000","0000110000","0000121000","0000011000","0011000000","0000000000","0000000000"]},
+ {id:'R3',name:'안개 바다 항구',wp:[[5,0],[5,2],[1,2],[1,6],[8,6],[8,11],[3,11],[3,17]],
+  slots:[[3,3],[3,5],[6,5],[2,7],[5,7],[7,9],[5,12],[4,14],[2,15]],
+  elev:["2222222222","2222222222","2111222211","1112211111","1111111111","1000001111","0000000000","0000110000","0000000111","0000001211","0000001111","0000000000","0000011000","0000000000","0000100000","0000000000","0000000000","0000000000"]},
+ {id:'R4',name:'구름 계단 정상',wp:[[8,0],[8,3],[1,3],[1,8],[8,8],[8,13],[2,13],[2,17]],
+  slots:[[3,2],[6,2],[4,4],[5,7],[3,9],[6,9],[7,11],[5,12],[3,14]],
+  elev:["0000000000","0000000000","0000000000","0000000000","0001110000","1111111111","1111111111","1111111111","1111111111","1112111111","1111111111","1111122222","1112222222","2222222222","2222222222","2222222222","2222222222","2222222222"]}
+];
+function pathTiles(wp){const out=[];for(let i=0;i<wp.length-1;i++){const [x0,y0]=wp[i],[x1,y1]=wp[i+1];const dx=Math.sign(x1-x0),dy=Math.sign(y1-y0);let x=x0,y=y0;for(;;){const l=out[out.length-1];if(!l||l[0]!==x||l[1]!==y)out.push([x,y]);if(x===x1&&y===y1)break;x+=dx;y+=dy;}}return out;}
+MAPS.forEach(m=>{m.path=pathTiles(m.wp);m.E=(c,r)=>(c<0||c>=COLS||r<0||r>=ROWS)?null:+m.elev[r][c];
+  m.pk=new Map(m.path.map((t,i)=>[t[0]+','+t[1],i]));m.sk=new Set(m.slots.map(s=>s.join(',')));
+  let u=0,d=0;const slopes=[];for(let i=1;i<m.path.length;i++){const a=m.E(...m.path[i-1]),b=m.E(...m.path[i]);if(b>a){u++;slopes.push([m.path[i][0],m.path[i][1],1,m.path[i-1]]);}else if(b<a){d++;slopes.push([m.path[i][0],m.path[i][1],-1,m.path[i-1]]);}}
+  m.up=u;m.down=d;m.slopes=slopes;const N=m.path.length;m.tf=(N-u-d+u*1.25+d/1.1)/N;
+  m.ec=[0,0,0];m.slots.forEach(s=>m.ec[m.E(s[0],s[1])]++);});
+
+/* ====================== 유틸: 난수·노이즈·색 ====================== */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function hash2(x,y,s){let h=Math.imul(x|0,374761393)+Math.imul(y|0,668265263)+Math.imul(s|0,1013904223);h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296;}
+function vnoise(x,y,s){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi;const u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);const a=hash2(xi,yi,s),b=hash2(xi+1,yi,s),c=hash2(xi,yi+1,s),d=hash2(xi+1,yi+1,s);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v;}
+function hex(h){const n=parseInt(h.slice(1),16);return[(n>>16)&255,(n>>8)&255,n&255];}
+function css(c,a){const r=Math.round(clamp(c[0],0,255)),g=Math.round(clamp(c[1],0,255)),b=Math.round(clamp(c[2],0,255));return a===undefined?`rgb(${r},${g},${b})`:`rgba(${r},${g},${b},${a})`;}
+function mixc(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];}
+function rgb2hsl(c){const r=c[0]/255,g=c[1]/255,b=c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2;let h=0,s=0;if(mx!==mn){const d=mx-mn;s=l>0.5?d/(2-mx-mn):d/(mx+mn);if(mx===r)h=(g-b)/d+(g<b?6:0);else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h/=6;}return[h,s,l];}
+function hsl2rgb(h,s,l){if(s===0){const v=l*255;return[v,v,v];}const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;const f=t=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};return[f(h+1/3)*255,f(h)*255,f(h-1/3)*255];}
+function adjL(c,dl){const [h,s,l]=rgb2hsl(c);return hsl2rgb(h,s,clamp(l+dl,0,1));}
+function capSat(c,mx){const [h,s,l]=rgb2hsl(c);return s>mx?hsl2rgb(h,mx,l):c;}
+function relLum(c){const f=v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);};return 0.2126*f(c[0])+0.7152*f(c[1])+0.0722*f(c[2]);}
+function contrast(a,b){const x=relLum(a),y=relLum(b);return(Math.max(x,y)+0.05)/(Math.min(x,y)+0.05);}
+
+/* ====================== 팔레트 정의 ====================== */
+// 지역 (원경 고정 + 근경 지면 팔레트)
+const REG=[
+ {k:'R1',name:'1장 은빛 씨앗 들판',gA:'#8fc788',gB:'#a3d39b',path:'#54463a',cliff:'#7b6b4c',sky:null,fogMul:1.0,nightLift:0.00},
+ {k:'R2',name:'2장 메아리 숲',   gA:'#5f9c80',gB:'#6faa8c',path:'#4e4034',cliff:'#46503c',sky:['#3d6b5c',0.14],fogMul:1.0,nightLift:0.00},
+ {k:'R3',name:'3장 안개 바다 항구',gA:'#a3b6bd',gB:'#b4c5ca',path:'#444d5a',cliff:'#5c6670',sky:['#9fb3c0',0.24],fogMul:1.4,nightLift:0.00},
+ {k:'R4',name:'4장 구름 계단 정상',gA:'#dde3f1',gB:'#ecf0f9',path:'#40476a',cliff:'#aab4d0',sky:['#ffffff',0.10],fogMul:0.8,nightLift:0.14}
+];
+// 과목 (중경 소품 세트)
+const SUB=[
+ {k:'S1',name:'수학 · 기하 결정체',accent:'#7aa2e8',acc2:'#a58be0'},
+ {k:'S2',name:'영어 · 글자 깃발',  accent:'#e8a24a',acc2:'#e0786a'},
+ {k:'S3',name:'과학 · 실험 장치',  accent:'#58c2b0',acc2:'#e0b050'},
+ {k:'S4',name:'한국사 · 기와·성곽',accent:'#c8665a',acc2:'#4a7fb0'}
+];
+// 난이도 (시간대·안개·별)
+const DIF=[
+ {k:'D1',name:'난이도 1 · 이른 노을',sky:['#7db9ee','#bfe0f4','#ffe3b5','#ffc890'],stops:[0,0.45,0.8,1],tint:[255,226,170],amt:0.08,bright:1.00,fog:0.10,layers:1,stars:0,vig:0.00},
+ {k:'D2',name:'난이도 2 · 황혼',     sky:['#3c3f8f','#7a5aa6','#e08aa0','#ffad7e'],stops:[0,0.4,0.78,1],tint:[150,100,170],amt:0.20,bright:0.84,fog:0.22,layers:2,stars:26,vig:0.16},
+ {k:'D3',name:'난이도 3 · 밤',       sky:['#0b1230','#18285a','#2f4388','#5b73b4'],stops:[0,0.4,0.78,1],tint:[60,85,160],amt:0.34,bright:0.62,fog:0.36,layers:3,stars:72,vig:0.30}
+];
+const ENEMY_REF=[['안개 조각','#dfe3ee'],['침묵 덩어리','#a9afbf']];
+const MAX_SAT=0.48;     // 배경 채도 상한 (HSL)
+const GRID_FOG_CAP=0.09; // 길·슬롯 영역 위 안개 누적 알파 상한
+
+/* ====================== 그리기 도구 ====================== */
+function rr(g,x,y,w,h,r4){const [a,b,c,d]=r4;g.beginPath();g.moveTo(x+a,y);g.lineTo(x+w-b,y);if(b)g.arcTo(x+w,y,x+w,y+b,b);else g.lineTo(x+w,y);g.lineTo(x+w,y+h-c);if(c)g.arcTo(x+w,y+h,x+w-c,y+h,c);else g.lineTo(x+w,y+h);g.lineTo(x+d,y+h);if(d)g.arcTo(x,y+h,x,y+h-d,d);else g.lineTo(x,y+h);g.lineTo(x,y+a);if(a)g.arcTo(x,y,x+a,y,a);else g.lineTo(x,y);g.closePath();}
+function poly(g,pts,fill){g.beginPath();g.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)g.lineTo(pts[i][0],pts[i][1]);g.closePath();g.fillStyle=fill;g.fill();}
+function blob(g,x,y,r,col){g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fillStyle=col;g.fill();}
+function ell(g,x,y,rx,ry,rot,fill){g.beginPath();g.ellipse(x,y,rx,ry,rot||0,0,Math.PI*2);g.fillStyle=fill;g.fill();}
+
+/* ====================== 배경 빌더 ====================== */
+function buildBG(ri,si,di,dpr){
+  const R=REG[ri],S=SUB[si],D=DIF[di],M=MAPS[ri];
+  const cv=document.createElement('canvas');cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+  const g=cv.getContext('2d');g.scale(dpr,dpr);
+  const seed=hashStr(R.k+S.k);               // 형태(소품 위치·질감)는 지역+과목만으로 결정
+  const nightLift=R.nightLift*(di/2);
+  // 등급(grade): 난이도에 따른 틴트·밝기 + 채도 상한
+  const grade=c=>{let o=mixc(c,D.tint,D.amt);const b=D.bright+nightLift;o=[o[0]*b,o[1]*b,o[2]*b];return capSat(o,MAX_SAT);};
+  const G=h=>grade(typeof h==='string'?hex(h):h);
+  const skyC=h=>{let c=hex(h);if(R.sky)c=mixc(c,hex(R.sky[0]),R.sky[1]);return c;};
+  const horizon=skyC(D.sky[3]);
+  const fc=(h,haze)=>G(mixc(hex(h),horizon,haze));   // 원경: 대기 원근 후 등급
+
+  /* --- 1. 하늘 --- */
+  const sky=g.createLinearGradient(0,0,0,OY+6);
+  D.sky.forEach((c,i)=>sky.addColorStop(D.stops[i],css(skyC(c))));
+  g.fillStyle=sky;g.fillRect(0,0,W,OY+8);
+  // 별
+  if(D.stars){const sr=mulberry32(seed^0x51);for(let i=0;i<D.stars;i++){const x=sr()*W,y=sr()*(OY-24),a=0.35+sr()*0.55;blob(g,x,y,0.5+sr()*0.9,`rgba(255,250,225,${a*(y<OY*0.6?1:0.5)})`);}}
+  // 해/달
+  if(di===0){const gr=g.createRadialGradient(290,64,2,290,64,76);gr.addColorStop(0,'rgba(255,240,200,0.95)');gr.addColorStop(1,'rgba(255,220,160,0)');g.fillStyle=gr;g.fillRect(200,0,160,OY);blob(g,290,64,13,'#fff4d2');}
+  else if(di===1){const gr=g.createRadialGradient(72,OY-12,2,72,OY-12,96);gr.addColorStop(0,'rgba(255,190,140,0.85)');gr.addColorStop(1,'rgba(255,150,120,0)');g.fillStyle=gr;g.fillRect(0,0,200,OY+8);blob(g,72,OY-12,17,'#ffd9a0');}
+  else{const gr=g.createRadialGradient(288,32,2,288,32,50);gr.addColorStop(0,'rgba(235,240,255,0.55)');gr.addColorStop(1,'rgba(200,215,255,0)');g.fillStyle=gr;g.fillRect(220,0,140,90);blob(g,288,32,12,'#f2efdc');blob(g,284,29,2.6,'rgba(150,150,130,0.35)');blob(g,292,36,2,'rgba(150,150,130,0.3)');}
+
+  /* --- 2. 원경 (지역 고정) --- */
+  const ridge=(base,amp,f,ph,col,sd)=>{const fy=x=>base-amp*(0.55*Math.sin(x*f+ph)+0.3*Math.sin(x*f*2.3+ph*1.7)+0.25)-6*vnoise(x*0.04,sd,sd);g.beginPath();g.moveTo(0,OY+6);for(let x=0;x<=W;x+=4)g.lineTo(x,fy(x));g.lineTo(W,OY+6);g.closePath();g.fillStyle=col;g.fill();return fy;};
+  const fr=mulberry32(seed^0xA1);
+  if(ri===0){ // 들판: 둥근 언덕 + 새싹 나무 + 씨앗 빛
+    const hs=[[OY-30,16,0.018,0.5,'#a9d8ae',0.55],[OY-18,14,0.026,2.1,'#92cb9b',0.35],[OY-8,9,0.034,4.0,'#7fbc88',0.15]];
+    hs.forEach((h,i)=>{const fy=ridge(h[0],h[1],h[2],h[3],css(fc(h[4],h[5])),i+3);
+      if(i>0)for(let x=20+fr()*20;x<W-10;x+=34+fr()*20){const y=fy(x),s=9+i*4+fr()*4;g.strokeStyle=css(fc('#4f8f5c',0.2));g.lineWidth=1.4;g.beginPath();g.moveTo(x,y+2);g.lineTo(x,y-s);g.stroke();
+        ell(g,x-s*0.38,y-s,s*0.42,s*0.2,-0.6,css(fc('#6fb57c',0.15)));ell(g,x+s*0.38,y-s,s*0.42,s*0.2,0.6,css(fc('#82c88c',0.15)));}});
+    for(let i=0;i<16;i++){blob(g,fr()*W,20+fr()*(OY-50),0.8+fr()*1.1,`rgba(255,255,240,${0.35+fr()*0.4})`);}
+  }else if(ri===1){ // 숲: 겹겹 수관 + 빛줄기 + 메아리 고리
+    const ls=[[OY-22,30,'#6fae98',0.5,10],[OY-10,38,'#4f9179',0.3,13],[OY+2,46,'#3a7863',0.12,16]];
+    ls.forEach((l,i)=>{const col=css(fc(l[2],l[3]));g.fillStyle=col;for(let x=-6+fr()*6;x<W+10;x+=l[4]+fr()*4){const h=l[1]*(0.65+fr()*0.5),w=l[4]*0.95;
+      g.beginPath();g.moveTo(x-w,l[0]);g.lineTo(x,l[0]-h);g.lineTo(x+w,l[0]);g.closePath();g.fill();g.beginPath();g.moveTo(x-w*0.75,l[0]-h*0.45);g.lineTo(x,l[0]-h*1.12);g.lineTo(x+w*0.75,l[0]-h*0.45);g.closePath();g.fill();}
+      g.fillRect(0,l[0]-1,W,OY+8-l[0]);});
+    for(const sx of [70,190,300]){const gr=g.createLinearGradient(sx,0,sx+20,OY);gr.addColorStop(0,`rgba(255,255,230,${0.16-di*0.04})`);gr.addColorStop(1,'rgba(255,255,230,0)');g.fillStyle=gr;poly(g,[[sx-6,0],[sx+14,0],[sx+44,OY],[sx+4,OY]],gr);}
+    for(const [rx,ry] of [[92,52],[262,40]]){for(let k=1;k<=3;k++){g.beginPath();g.ellipse(rx,ry,k*7,k*3.4,0,0,Math.PI*2);g.strokeStyle=`rgba(205,255,238,${(0.5-k*0.12)*(0.6+di*0.3)})`;g.lineWidth=1;g.stroke();}}
+  }else if(ri===2){ // 항구: 수평선 바다 + 등대 + 항구 마을 + 돛배
+    const sea=g.createLinearGradient(0,56,0,OY+6);sea.addColorStop(0,css(fc('#9cc2d2',0.5)));sea.addColorStop(1,css(fc('#5f93ab',0.15)));g.fillStyle=sea;g.fillRect(0,56,W,OY-50);
+    g.strokeStyle=css(fc('#e6f2f6',0.3),0.45);g.lineWidth=1;for(let i=0;i<22;i++){const x=fr()*W,y=62+fr()*(OY-68);g.beginPath();g.moveTo(x,y);g.lineTo(x+8+fr()*10,y);g.stroke();}
+    for(const [sx,sy] of [[196,66],[238,61]]){poly(g,[[sx,sy],[sx,sy-14],[sx+8,sy]],css(fc('#f1ece0',0.35)));poly(g,[[sx-1,sy],[sx-1,sy-10],[sx-7,sy]],css(fc('#e2dccd',0.35)));g.fillStyle=css(fc('#4a4f5c',0.3));g.fillRect(sx-8,sy,18,2.4);}
+    // 마을
+    const hy=OY-2;for(let x=6,i=0;x<150;x+=14+fr()*8,i++){const w=11+fr()*6,h=10+fr()*10;g.fillStyle=css(fc('#6d7886',0.3));g.fillRect(x,hy-h,w,h);poly(g,[[x-1.5,hy-h],[x+w/2,hy-h-6-fr()*3],[x+w+1.5,hy-h]],css(fc('#4d5766',0.25)));
+      if(di>0){g.fillStyle=`rgba(255,214,130,${0.55+0.35*(di-1)})`;g.fillRect(x+2.5,hy-h+3,2.2,2.6);g.fillRect(x+w-5,hy-h+3,2.2,2.6);}}
+    // 등대
+    const lx=302,ly=OY+2;poly(g,[[lx-26,ly],[lx-14,ly-12],[lx+12,ly-14],[lx+28,ly]],css(fc('#4b5560',0.25)));
+    poly(g,[[lx-7,ly-12],[lx+7,ly-12],[lx+4,ly-52],[lx-4,ly-52]],css(fc('#e9e5dc',0.2)));
+    poly(g,[[lx-6,ly-26],[lx+6,ly-26],[lx+5,ly-34],[lx-5,ly-34]],css(fc('#c46a5c',0.2)));
+    g.fillStyle=css(fc('#3d4654',0.2));g.fillRect(lx-6,ly-58,12,6);poly(g,[[lx-7,ly-58],[lx,ly-66],[lx+7,ly-58]],css(fc('#3d4654',0.2)));
+    if(di>0){const bg=g.createLinearGradient(lx,ly-56,lx-150,ly-56);bg.addColorStop(0,`rgba(255,240,190,${0.2+0.2*(di-1)})`);bg.addColorStop(1,'rgba(255,240,190,0)');poly(g,[[lx,ly-56],[lx-170,ly-76],[lx-170,ly-38]],bg);blob(g,lx,ly-55,3.2,'rgba(255,245,200,0.95)');}
+    // 해무 띠
+    const mist=g.createLinearGradient(0,50,0,OY);mist.addColorStop(0,'rgba(235,242,246,0)');mist.addColorStop(1,`rgba(235,242,246,${0.22+di*0.08})`);g.fillStyle=mist;g.fillRect(0,50,W,OY-44);
+  }else{ // 정상: 구름 바다 + 떠 있는 계단 + 탑 첨탑 + 빛살
+    for(let i=0;i<9;i++){const a=-0.5+i*0.125;g.save();g.translate(250,-14);g.rotate(a);const gr=g.createLinearGradient(0,0,0,150);gr.addColorStop(0,`rgba(255,250,225,${0.22-di*0.05})`);gr.addColorStop(1,'rgba(255,250,225,0)');g.fillStyle=gr;g.fillRect(-6,0,12,150);g.restore();}
+    // 떠 있는 계단
+    for(let i=0;i<9;i++){const x=24+i*24,y=OY-34-i*8;g.fillStyle=css(fc('#f4f6ff',0.12));g.fillRect(x,y,38,5);g.fillStyle=css(fc('#9aa4c8',0.22));g.fillRect(x+2,y+5,34,3);}
+    // 첨탑
+    poly(g,[[238,36],[250,6],[262,36]],css(fc('#f0f2fb',0.15)));g.fillStyle=css(fc('#dfe3f2',0.15));g.fillRect(242,36,16,24);const gl=g.createRadialGradient(250,4,1,250,4,22);gl.addColorStop(0,'rgba(255,248,210,0.95)');gl.addColorStop(1,'rgba(255,248,210,0)');g.fillStyle=gl;g.fillRect(222,-20,56,48);
+    // 구름 바다
+    const cl=[[OY-28,0.35,'#f2f5ff',20],[OY-16,0.2,'#e6ebfa',24],[OY-4,0.08,'#dce2f4',28]];
+    cl.forEach((c,i)=>{const col=css(fc(c[2],c[1]));g.fillStyle=col;for(let x=-10+fr()*10;x<W+20;x+=c[3]*(0.8+fr()*0.4)){blob(g,x,c[0]+fr()*5,c[3]*(0.55+fr()*0.3),col);}g.fillRect(0,c[0]+4,W,OY+8-c[0]);});
+  }
+  // 지평선 안개
+  const hz=g.createLinearGradient(0,OY-30,0,OY+6);hz.addColorStop(0,css(horizon,0));hz.addColorStop(1,css(horizon,0.42));g.fillStyle=hz;g.fillRect(0,OY-30,W,36);
+
+  /* --- 3. 중경 소품 --- */
+  const acc=capSat(mixc(hex(S.accent),hex(R.gA),0.18),0.55),acc2=capSat(mixc(hex(S.acc2),hex(R.gA),0.18),0.55);
+  const P={a:G(acc),a2:G(acc2),aL:G(adjL(acc,0.18)),aD:G(adjL(acc,-0.18)),a2D:G(adjL(acc2,-0.16)),stone:G('#c9c4b4'),stoneD:G('#9c968a'),wood:G('#7a6248'),glass:G('#e6f4f8'),glow:di>0};
+  const prop=(kind,x,y,s,r)=>PROPS[si](g,x,y,s,r,P,di);
+  const mr=mulberry32(seed^0x77);
+  for(let x=22,i=0;x<W-14;x+=48+mr()*14,i++){prop(i,x,OY+3,21+mr()*8,mr);}
+
+  /* --- 4. 근경: 지면 --- */
+  const gBase=G(adjL(mixc(hex(R.gA),hex(R.gB),0.5),-0.03));
+  g.fillStyle=css(gBase);g.fillRect(0,OY-8,W,H-OY+8);
+  // 좌우 여백 장식
+  const mg=mulberry32(seed^0x33);
+  for(let y=OY+10;y<H-10;y+=22+mg()*10){for(const sx of [4,W-4]){
+    if(ri===0)blob(g,sx,y,5+mg()*2,css(G('#6fae78')));
+    else if(ri===1){blob(g,sx,y,5.5,css(G('#2f5a48')));blob(g,sx+(sx<W/2?2:-2),y-2,3,css(G('#4a8a70')));}
+    else if(ri===2){g.fillStyle=css(G('#3c4552'));g.fillRect(sx-2.5,y-5,5,9);blob(g,sx,y-5,3,css(G('#586272')));}
+    else blob(g,sx,y,6+mg()*2,css(G('#f7f9ff')));}}
+  const lg=g.createLinearGradient(0,0,OX,0);lg.addColorStop(0,'rgba(0,0,0,0.16)');lg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=lg;g.fillRect(0,OY-8,OX,H);
+  const rg=g.createLinearGradient(W,0,W-OX,0);rg.addColorStop(0,'rgba(0,0,0,0.16)');rg.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=rg;g.fillRect(W-OX,OY-8,OX,H);
+
+  /* --- 5. 타일 (행 순서 = 페인터 알고리즘) --- */
+  const E=M.E,isP=(c,r)=>M.pk.has(c+','+r),isS=(c,r)=>M.sk.has(c+','+r);
+  const pathCol=hex(R.path);
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const e=E(c,r),x=OX+c*T,y=OY+r*T-e*L,tr=mulberry32(Math.floor(hash2(c,r,seed)*4294967295));
+    const pth=isP(c,r),slot=isS(c,r);
+    let base=mixc(hex(R.gA),hex(R.gB),clamp(vnoise(c*0.5,r*0.5,seed)*1.3-0.1,0,1));
+    if((c+r)&1)base=adjL(base,-0.014);
+    base=adjL(base,0.04*e);
+    const eS=r===ROWS-1?0:E(c,r+1),eN=r>0?E(c,r-1):e,eW=c>0?E(c-1,r):e,eE=c<COLS-1?E(c+1,r):e;
+    // 남쪽 절벽면
+    const fh=(e-eS)*L;
+    if(fh>0){const fy=y+T;const fb=mixc(pth?pathCol:base,hex(R.cliff),0.55);const gr=g.createLinearGradient(0,fy,0,fy+fh);gr.addColorStop(0,css(G(adjL(fb,-0.10))));gr.addColorStop(1,css(G(adjL(fb,-0.24))));g.fillStyle=gr;g.fillRect(x,fy,T+0.5,fh+0.5);
+      g.strokeStyle='rgba(0,0,0,0.22)';g.lineWidth=1;for(let k=1;k<(e-eS);k++){g.beginPath();g.moveTo(x,fy+k*L);g.lineTo(x+T,fy+k*L);g.stroke();}
+      g.fillStyle='rgba(255,255,255,0.18)';g.fillRect(x,fy,T,1);}
+    // 윗면
+    g.fillStyle=css(G(base));g.fillRect(x,y,T+0.5,T+0.5);
+    const tg=g.createLinearGradient(0,y,0,y+T);tg.addColorStop(0,`rgba(255,255,255,${0.05+0.03*e})`);tg.addColorStop(1,'rgba(0,0,0,0.05)');g.fillStyle=tg;g.fillRect(x,y,T,T);
+    texGround(g,ri,x,y,tr,G);
+    // 길
+    if(pth){
+      const nN=!isP(c,r-1),nS=!isP(c,r+1),nW=!isP(c-1,r),nE=!isP(c+1,r),RAD=9;
+      const rad=[nN&&nW?RAD:0,nN&&nE?RAD:0,nS&&nE?RAD:0,nS&&nW?RAD:0];
+      g.save();rr(g,x,y,T,T,rad);g.clip();
+      g.fillStyle=css(G(adjL(pathCol,0.012*e+(vnoise(c*0.9,r*0.9,seed+7)-0.5)*0.03)));g.fillRect(x,y,T,T);
+      texPath(g,ri,x,y,tr,G,di);
+      const edge=(x0,y0,x1,y1,w)=>{const gr=g.createLinearGradient(x0,y0,x1,y1);gr.addColorStop(0,'rgba(0,0,0,0.38)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;return gr;};
+      if(nN){g.fillStyle=edge(0,y,0,y+6);g.fillRect(x,y,T,6);g.fillStyle='rgba(255,255,255,0.16)';g.fillRect(x,y+6,T,1);}
+      if(nS){g.fillStyle=edge(0,y+T,0,y+T-6);g.fillRect(x,y+T-6,T,6);}
+      if(nW){g.fillStyle=edge(x,0,x+6,0);g.fillRect(x,y,6,T);}
+      if(nE){g.fillStyle=edge(x+T,0,x+T-6,0);g.fillRect(x+T-6,y,6,T);}
+      g.restore();
+    }
+    // 측면 음영 + 립(등고 느낌)
+    const ao=(x0,y0,x1,y1,rx,ry,rw,rh)=>{const gr=g.createLinearGradient(x0,y0,x1,y1);gr.addColorStop(0,'rgba(10,10,30,0.24)');gr.addColorStop(1,'rgba(10,10,30,0)');g.fillStyle=gr;g.fillRect(rx,ry,rw,rh);};
+    if(eN>e)ao(0,y,0,y+7,x,y,T,7);
+    if(eW>e)ao(x,0,x+7,0,x,y,7,T);
+    if(eE>e)ao(x+T,0,x+T-7,0,x+T-7,y,7,T);
+    g.fillStyle='rgba(255,255,255,0.30)';
+    if(eN<e)g.fillRect(x,y,T,1.2);
+    if(eW<e)g.fillRect(x,y,1.2,T);
+    if(eE<e)g.fillRect(x+T-1.2,y,1.2,T);
+    // 등고선 (기본: 은은하게)
+    g.lineWidth=1;g.strokeStyle='rgba(255,255,255,0.30)';g.setLineDash([]);
+    const ins=3.2;
+    if(eN<e){g.beginPath();g.moveTo(x+ins,y+ins);g.lineTo(x+T-ins,y+ins);g.stroke();}
+    if(eW<e){g.beginPath();g.moveTo(x+ins,y+ins);g.lineTo(x+ins,y+T-ins);g.stroke();}
+    if(eE<e){g.beginPath();g.moveTo(x+T-ins,y+ins);g.lineTo(x+T-ins,y+T-ins);g.stroke();}
+    if(eS<e){g.beginPath();g.moveTo(x+ins,y+T-ins);g.lineTo(x+T-ins,y+T-ins);g.stroke();}
+    if(e===2){g.strokeStyle='rgba(255,255,255,0.14)';g.strokeRect(x+7.5,y+7.5,T-15,T-15);}
+    // 경사 계단선 (오르막/내리막 칸)
+    const sl=M.slopes.find(s=>s[0]===c&&s[1]===r);
+    if(sl){const pv=sl[3],dx=c-pv[0],dy=r-pv[1];g.save();g.lineWidth=1.2;for(let k=1;k<=3;k++){const t=k/4;g.beginPath();
+      if(dy!==0){const yy=y+T*t;g.moveTo(x+4,yy);g.lineTo(x+T-4,yy);}else{const xx=x+T*t;g.moveTo(xx,y+4);g.lineTo(xx,y+T-4);}
+      g.strokeStyle='rgba(0,0,0,0.30)';g.stroke();g.translate(0.8,0.8);g.strokeStyle=R.k==='R4'&&di===2?'rgba(255,245,200,0.7)':'rgba(255,255,255,0.22)';g.stroke();g.translate(-0.8,-0.8);}g.restore();}
+    // 슬롯
+    if(slot)drawSlot(g,x+T/2,y+T/2,e,di,G);
+    // 데코 소품 (길·슬롯과 맞닿지 않는 칸만, 밀도 0.5)
+    if(!pth&&!slot&&!isP(c+1,r)&&!isP(c-1,r)&&!isP(c,r+1)&&!isP(c,r-1)&&!isS(c+1,r)&&!isS(c-1,r)&&!isS(c,r+1)&&!isS(c,r-1)&&tr()<0.5){
+      prop(0,x+T/2+(tr()-0.5)*8,y+T-6,17+tr()*8,tr);}
+  }
+  // 바닥 마감
+  const bg=g.createLinearGradient(0,H-26,0,H);bg.addColorStop(0,'rgba(0,0,0,0)');bg.addColorStop(1,'rgba(0,0,0,0.22)');g.fillStyle=bg;g.fillRect(0,H-26,W,26);
+
+  /* --- 6. 시작 문(안개)·탑 --- */
+  const p0=M.path[0],pl=M.path[M.path.length-1];
+  { const x=OX+p0[0]*T+T/2,y=OY+p0[1]*T+T/2-M.E(...p0)*L;
+    for(let i=0;i<3;i++){const gr=g.createRadialGradient(x+(i-1)*5,y-3+i*2,1,x+(i-1)*5,y-3+i*2,17-i*2);gr.addColorStop(0,css(G('#e9e6f2'),0.7));gr.addColorStop(1,css(G('#cfcbe0'),0));g.fillStyle=gr;g.fillRect(x-22,y-22,44,44);}
+    g.strokeStyle=css(G('#8d88a8'),0.7);g.lineWidth=1.5;g.beginPath();g.arc(x,y,11,Math.PI*0.9,Math.PI*2.1);g.stroke(); }
+  { const x=OX+pl[0]*T+T/2,y=OY+pl[1]*T+T-6-M.E(...pl)*L;
+    ell(g,x,y+1,15,5,0,'rgba(0,0,0,0.25)');
+    g.fillStyle=css(G('#efe9fb'));g.fillRect(x-9,y-26,18,26);g.fillStyle=css(G('#cfc6e6'));g.fillRect(x+3,y-26,6,26);
+    g.fillStyle=css(G('#efe9fb'));for(let i=0;i<3;i++)g.fillRect(x-9+i*7,y-31,4.5,5);
+    g.fillStyle=css(G('#4f4a78'));g.beginPath();g.moveTo(x-4,y);g.lineTo(x-4,y-8);g.arc(x,y-8,4,Math.PI,0);g.lineTo(x+4,y);g.fill();
+    const gl=g.createRadialGradient(x,y-36,1,x,y-36,17);gl.addColorStop(0,'rgba(255,240,170,0.95)');gl.addColorStop(1,'rgba(255,230,140,0)');g.fillStyle=gl;g.fillRect(x-20,y-56,40,40);
+    blob(g,x,y-36,3.4,'#fff6c8'); }
+  // 비네트
+  if(D.vig){const vg=g.createRadialGradient(W/2,H*0.52,H*0.28,W/2,H*0.52,H*0.72);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,`rgba(5,8,30,${D.vig})`);g.fillStyle=vg;g.fillRect(0,0,W,H);}
+
+  // 통계(접근성 점검용)
+  const pathG=G(pathCol),groundG=G(mixc(hex(R.gA),hex(R.gB),0.5));
+  return {cv,stats:{pathLum:relLum(pathG),pathVsGround:contrast(pathG,groundG),enemyContrast:ENEMY_REF.map(e=>[e[0],contrast(pathG,hex(e[1]))]),pathRGB:pathG.map(Math.round),groundRGB:groundG.map(Math.round)},D,R,S};
+}
+
+/* --- 지면/길 질감 --- */
+function texGround(g,ri,x,y,tr,G){
+  if(ri===0){for(let i=0;i<3;i++){const px=x+3+tr()*(T-6),py=y+5+tr()*(T-8),l=3+tr()*3;g.strokeStyle=css(G(i%2?'#b6dfad':'#6fae78'),0.6);g.lineWidth=1;g.beginPath();g.moveTo(px,py);g.lineTo(px-1,py-l);g.moveTo(px+1.5,py);g.lineTo(px+2.5,py-l+1);g.stroke();}
+    if(tr()<0.16)blob(g,x+4+tr()*(T-8),y+4+tr()*(T-8),1.5,'rgba(245,240,255,0.85)');}
+  else if(ri===1){if(tr()<0.5)ell(g,x+4+tr()*(T-8),y+4+tr()*(T-8),3.2,1.5,tr()*3,css(G('#c9b27a'),0.5));if(tr()<0.4)blob(g,x+6+tr()*(T-12),y+6+tr()*(T-12),5,css(G('#3f7a62'),0.16));}
+  else if(ri===2){g.strokeStyle='rgba(30,40,50,0.13)';g.lineWidth=1;for(let k=1;k<4;k++){g.beginPath();g.moveTo(x,y+k*8.5);g.lineTo(x+T,y+k*8.5);g.stroke();}
+    g.fillStyle='rgba(30,40,50,0.22)';g.fillRect(x+2,y+2,1.2,1.2);g.fillRect(x+T-3.2,y+T-3.2,1.2,1.2);}
+  else{g.strokeStyle='rgba(255,255,255,0.45)';g.lineWidth=1;g.strokeRect(x+1.5,y+1.5,T-3,T-3);if(tr()<0.25){g.beginPath();g.arc(x+8+tr()*14,y+T-6,4,Math.PI,0);g.strokeStyle='rgba(255,255,255,0.7)';g.stroke();}}
+}
+function texPath(g,ri,x,y,tr,G,di){
+  if(ri===2){g.strokeStyle='rgba(255,255,255,0.14)';g.lineWidth=1;for(let i=1;i<3;i++){g.beginPath();g.moveTo(x+i*T/3,y);g.lineTo(x+i*T/3,y+T);g.moveTo(x,y+i*T/3);g.lineTo(x+T,y+i*T/3);g.stroke();}}
+  else if(ri===3){g.strokeStyle=di===2?'rgba(255,245,210,0.30)':'rgba(255,255,255,0.18)';g.lineWidth=1;g.beginPath();g.moveTo(x,y+T/2);g.lineTo(x+T,y+T/2);g.stroke();}
+  else{for(let i=0;i<5;i++)ell(g,x+3+tr()*(T-6),y+3+tr()*(T-6),1.2+tr()*1.4,0.9+tr()*0.8,tr()*3,'rgba(255,255,255,0.20)');}
+}
+/* --- 슬롯 판: 고도 문양(색에만 의존하지 않음) --- */
+function drawSlot(g,cx,cy,e,di,G){
+  ell(g,cx+1.5,cy+3,13,10,0,'rgba(0,0,0,0.28)');
+  if(di>0){const gl=g.createRadialGradient(cx,cy,6,cx,cy,24);gl.addColorStop(0,`rgba(255,236,170,${di===1?0.30:0.5})`);gl.addColorStop(1,'rgba(255,236,170,0)');g.fillStyle=gl;g.fillRect(cx-26,cy-26,52,52);}
+  blob(g,cx,cy,13.6,'rgba(30,34,66,0.9)');blob(g,cx,cy,12,'#fff7df');
+  blob(g,cx,cy,9.7,['#cde6f6','#f6efd8','#ffe19a'][e]);
+  g.strokeStyle='#2b2f58';g.lineWidth=1.8;g.lineCap='round';g.lineJoin='round';
+  if(e===0){g.beginPath();g.arc(cx,cy,3.2,0,Math.PI*2);g.stroke();}
+  else{const n=e;for(let i=0;i<n;i++){const yy=cy+(n===1?2:(i===0?3.6:-1.2));g.beginPath();g.moveTo(cx-4.2,yy);g.lineTo(cx,yy-4.2);g.lineTo(cx+4.2,yy);g.stroke();}}
+}
+
+/* ====================== 과목 소품 4종 ====================== */
+const PROPS=[
+ // S1 수학: 기하 결정체
+ function(g,x,y,s,r,P,di){const k=Math.floor(r()*4);ell(g,x,y,s*0.42,s*0.1,0,'rgba(0,0,0,0.18)');
+  if(k===0){const p=[[x-0.5*s,y-0.45*s],[x-0.25*s,y-0.9*s],[x+0.25*s,y-0.9*s],[x+0.5*s,y-0.45*s],[x,y]];poly(g,p,css(P.a));poly(g,[p[0],p[1],p[2],p[3]],css(P.aL));poly(g,[p[3],p[4],[x,y-0.45*s]],css(P.aD));poly(g,[p[0],p[4],[x,y-0.45*s]],css(P.a));}
+  else if(k===1){const w=s*0.5,h=s*0.28;poly(g,[[x,y-s*0.9],[x+w,y-s*0.9+h*0.6],[x,y-s*0.9+h*1.2],[x-w,y-s*0.9+h*0.6]],css(P.aL));poly(g,[[x-w,y-s*0.9+h*0.6],[x,y-s*0.9+h*1.2],[x,y-s*0.1],[x-w,y-s*0.4]],css(P.a));poly(g,[[x+w,y-s*0.9+h*0.6],[x,y-s*0.9+h*1.2],[x,y-s*0.1],[x+w,y-s*0.4]],css(P.aD));}
+  else if(k===2){poly(g,[[x-0.5*s,y],[x,y-s*0.95],[x+0.5*s,y]],css(P.a));poly(g,[[x,y-s*0.95],[x+0.5*s,y],[x+0.1*s,y]],css(P.aD));poly(g,[[x-0.5*s,y],[x,y-s*0.95],[x-0.08*s,y-0.2*s]],css(P.aL));}
+  else{const w=s*0.22;poly(g,[[x-w,y],[x-w,y-s*0.7],[x,y-s*1.0],[x+w,y-s*0.7],[x+w,y]],css(P.a2));poly(g,[[x,y-s*1.0],[x+w,y-s*0.7],[x+w,y],[x,y]],css(P.a2D));poly(g,[[x-w,y-s*0.7],[x,y-s*1.0],[x,y-s*0.75]],css(P.aL));}
+  if(P.glow)blob(g,x,y-s*0.5,s*0.1,'rgba(255,255,255,0.55)');},
+ // S2 영어: 글자 깃발
+ function(g,x,y,s,r,P,di){const L2='ABCDEGHKMNRSTW';const ch=L2[Math.floor(r()*L2.length)];const col=[P.a,P.a2,P.aL][Math.floor(r()*3)];
+  ell(g,x,y,s*0.28,s*0.07,0,'rgba(0,0,0,0.2)');g.strokeStyle=css(P.wood);g.lineWidth=1.6;g.beginPath();g.moveTo(x,y);g.lineTo(x,y-s*1.05);g.stroke();
+  const ty=y-s*1.05,w=s*0.8,h=s*0.52;poly(g,[[x,ty],[x+w,ty+h*0.08],[x+w*0.76,ty+h*0.5],[x+w,ty+h*0.92],[x,ty+h]],css(col));poly(g,[[x,ty+h*0.62],[x+w,ty+h*0.92],[x,ty+h]],'rgba(0,0,0,0.14)');
+  g.font='700 '+Math.max(8,Math.round(s*0.38))+'px "Noto Sans KR",sans-serif';g.textAlign='center';g.textBaseline='middle';g.lineWidth=1.8;g.strokeStyle='rgba(60,40,20,0.55)';g.strokeText(ch,x+w*0.4,ty+h*0.52);g.fillStyle='#fffaf0';g.fillText(ch,x+w*0.4,ty+h*0.52);},
+ // S3 과학: 실험 장치
+ function(g,x,y,s,r,P,di){const k=Math.floor(r()*4);ell(g,x,y,s*0.4,s*0.09,0,'rgba(0,0,0,0.2)');
+  if(k===0){poly(g,[[x-s*0.13,y-s],[x+s*0.13,y-s],[x+s*0.13,y-s*0.66],[x+s*0.42,y],[x-s*0.42,y],[x-s*0.13,y-s*0.66]],css(P.glass,0.6));poly(g,[[x-s*0.27,y-s*0.34],[x+s*0.27,y-s*0.34],[x+s*0.42,y],[x-s*0.42,y]],css(P.a));blob(g,x-s*0.08,y-s*0.18,s*0.06,'rgba(255,255,255,0.7)');blob(g,x+s*0.12,y-s*0.5,s*0.045,css(P.aL));}
+  else if(k===1){g.fillStyle=css(P.glass,0.6);g.fillRect(x-s*0.28,y-s*0.7,s*0.56,s*0.7);g.fillStyle=css(P.a);g.fillRect(x-s*0.28,y-s*0.38,s*0.56,s*0.38);g.strokeStyle='rgba(255,255,255,0.7)';g.lineWidth=1;g.strokeRect(x-s*0.28,y-s*0.7,s*0.56,s*0.7);blob(g,x,y-s*0.5,s*0.05,'rgba(255,255,255,0.8)');}
+  else if(k===2){const cy=y-s*0.55;g.strokeStyle=css(P.a2D);g.lineWidth=1.3;for(let i=0;i<3;i++){g.beginPath();g.ellipse(x,cy,s*0.42,s*0.15,i*Math.PI/3,0,Math.PI*2);g.stroke();}blob(g,x,cy,s*0.12,css(P.a));if(P.glow)blob(g,x,cy,s*0.2,'rgba(255,255,255,0.18)');}
+  else{g.fillStyle=css(P.wood);g.fillRect(x-s*0.4,y-s*0.2,s*0.8,s*0.2);for(let i=0;i<3;i++){const tx=x-s*0.26+i*s*0.26;g.fillStyle=css(P.glass,0.65);g.fillRect(tx-s*0.07,y-s*0.7,s*0.14,s*0.5);g.fillStyle=css(i===1?P.a2:P.a);g.fillRect(tx-s*0.07,y-s*0.45,s*0.14,s*0.25);}}},
+ // S4 한국사: 기와집·성곽·석등
+ function(g,x,y,s,r,P,di){const k=Math.floor(r()*3);ell(g,x,y,s*0.5,s*0.09,0,'rgba(0,0,0,0.2)');
+  if(k===0){g.fillStyle=css(P.stoneD);g.fillRect(x-s*0.5,y-s*0.1,s,s*0.1);g.fillStyle=css(P.a);g.fillRect(x-s*0.36,y-s*0.42,s*0.1,s*0.32);g.fillRect(x+s*0.26,y-s*0.42,s*0.1,s*0.32);g.fillStyle=css(P.stone);g.fillRect(x-s*0.26,y-s*0.42,s*0.52,s*0.32);
+    g.beginPath();g.moveTo(x-s*0.78,y-s*0.5);g.quadraticCurveTo(x-s*0.32,y-s*0.48,x-s*0.2,y-s*0.9);g.lineTo(x+s*0.2,y-s*0.9);g.quadraticCurveTo(x+s*0.32,y-s*0.48,x+s*0.78,y-s*0.5);g.quadraticCurveTo(x,y-s*0.36,x-s*0.78,y-s*0.5);g.closePath();g.fillStyle=css(P.a2D);g.fill();
+    g.strokeStyle='rgba(255,255,255,0.28)';g.lineWidth=1;g.beginPath();g.moveTo(x-s*0.2,y-s*0.9);g.lineTo(x+s*0.2,y-s*0.9);g.stroke();g.fillStyle=css(P.a);g.fillRect(x-s*0.5,y-s*0.46,s,s*0.04);}
+  else if(k===1){g.fillStyle=css(P.stone);g.fillRect(x-s*0.5,y-s*0.5,s,s*0.5);g.fillStyle=css(P.stoneD);for(let i=0;i<4;i++)g.fillRect(x-s*0.5+i*s*0.27,y-s*0.64,s*0.18,s*0.14);
+    g.strokeStyle='rgba(0,0,0,0.2)';g.lineWidth=1;g.beginPath();g.moveTo(x-s*0.5,y-s*0.25);g.lineTo(x+s*0.5,y-s*0.25);g.stroke();g.fillStyle=css(P.stoneD);g.beginPath();g.moveTo(x-s*0.12,y);g.lineTo(x-s*0.12,y-s*0.2);g.arc(x,y-s*0.2,s*0.12,Math.PI,0);g.lineTo(x+s*0.12,y);g.fill();}
+  else{g.fillStyle=css(P.stone);g.fillRect(x-s*0.2,y-s*0.1,s*0.4,s*0.1);g.fillRect(x-s*0.07,y-s*0.55,s*0.14,s*0.45);g.fillRect(x-s*0.2,y-s*0.78,s*0.4,s*0.23);
+    g.fillStyle=P.glow?'rgba(255,214,120,0.95)':css(P.stoneD);g.fillRect(x-s*0.1,y-s*0.72,s*0.2,s*0.12);poly(g,[[x-s*0.32,y-s*0.78],[x,y-s*1.0],[x+s*0.32,y-s*0.78]],css(P.a2D));}}
+];
+
+/* ====================== 안개 스프라이트(움직이는 레이어) ====================== */
+function buildFog(di,ri,dpr){
+  const D=DIF[di],R=REG[ri],PW=720,PH=260;const cv=document.createElement('canvas');cv.width=Math.round(PW*dpr);cv.height=Math.round(PH*dpr);const g=cv.getContext('2d');g.scale(dpr,dpr);
+  const fr=mulberry32(hashStr('fog'+R.k));
+  const col=mixc(hex(D.sky[3]),[240,244,250],0.55);
+  for(let i=0;i<22;i++){const x=fr()*PW,y=(i<17?18+fr()*(OY-8):OY+20+fr()*110),rx=36+fr()*52,ry=8+fr()*14;
+    for(const dx of [-PW,0,PW]){g.save();g.translate(x+dx,y);g.scale(1,ry/rx);const gr=g.createRadialGradient(0,0,0,0,0,rx);gr.addColorStop(0,css(col,0.85));gr.addColorStop(1,css(col,0));g.fillStyle=gr;g.beginPath();g.arc(0,0,rx,0,Math.PI*2);g.fill();g.restore();}}
+  const fogA=D.fog*R.fogMul,sum=D.layers===1?1:D.layers===2?1.8:2.5;
+  const m=Math.min(0.3,GRID_FOG_CAP/(fogA*sum));
+  g.globalCompositeOperation='destination-in';const mk=g.createLinearGradient(0,0,0,PH);mk.addColorStop(0,'rgba(0,0,0,1)');mk.addColorStop((OY-6)/PH,'rgba(0,0,0,1)');mk.addColorStop((OY+40)/PH,`rgba(0,0,0,${m})`);mk.addColorStop(1,`rgba(0,0,0,${m*0.5})`);g.fillStyle=mk;g.fillRect(0,0,PW,PH);
+  return {cv,fogA,layers:D.layers,gridAlpha:fogA*m*sum};
+}
+/* ---- bg_demo 코드 끝 ---- */
+
+/* 게임용 지형 오버레이(1회 캐시): 기본 = 경사 ▲▼ 표시만, 강화(T 키) = 고도 틴트 + 노란 등고선 + 칸 숫자(1·2만) + ▲▼ */
+function buildTerrainOverlay(M,dpr,strong){
+  const cv=document.createElement('canvas');cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);const g=cv.getContext('2d');g.scale(dpr,dpr);
+  const E=M.E;
+  if(strong){
+    g.font='700 10px sans-serif';g.textAlign='center';g.textBaseline='middle';
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const e=E(c,r),x=OX+c*T,y=OY+r*T-e*L;
+      if(e>0){g.fillStyle=e===1?'rgba(255,214,90,0.12)':'rgba(255,150,60,0.20)';g.fillRect(x,y,T,T);}
+      const eN=r>0?E(c,r-1):e,eW=c>0?E(c-1,r):e,eE=c<COLS-1?E(c+1,r):e,eS=r===ROWS-1?0:E(c,r+1);
+      const seg=(x0,y0,x1,y1)=>{g.beginPath();g.moveTo(x0,y0);g.lineTo(x1,y1);g.strokeStyle='rgba(20,16,0,0.75)';g.lineWidth=3.4;g.stroke();g.strokeStyle='#ffe27a';g.lineWidth=1.8;g.stroke();};
+      if(eN<e)seg(x,y,x+T,y);if(eW<e)seg(x,y,x,y+T);if(eE<e)seg(x+T,y,x+T,y+T);if(eS<e)seg(x,y+T,x+T,y+T);
+      if(e>0&&!M.sk.has(c+','+r)&&!M.pk.has(c+','+r)){g.lineWidth=2.4;g.strokeStyle='rgba(20,16,30,0.8)';g.strokeText(String(e),x+8,y+8);g.fillStyle='#fff';g.fillText(String(e),x+8,y+8);}
+    }
+  }
+  // 경사 화살표: ▲ 오르막(적 느려짐) / ▼ 내리막(빨라짐). 적이 지나가는 칸 가운데를 피해 칸 오른쪽 위에 둔다.
+  M.slopes.forEach(([c,r,dir])=>{const e=E(c,r),x=OX+c*T+T-8,y=OY+r*T+8-e*L,s=strong?6:5;
+    g.fillStyle=dir>0?'#ff8a5a':'#6ee0a0';g.strokeStyle='rgba(10,10,20,0.9)';g.lineWidth=2;g.beginPath();
+    if(dir>0){g.moveTo(x,y-s);g.lineTo(x+s,y+s*0.7);g.lineTo(x-s,y+s*0.7);}else{g.moveTo(x,y+s);g.lineTo(x+s,y-s*0.7);g.lineTo(x-s,y-s*0.7);}
+    g.closePath();g.stroke();g.fill();});
+  return cv;
+}
+return {W,H,T,COLS,ROWS,OX,OY,L,MAPS,REG,SUB,DIF,buildBG,buildFog,buildTerrainOverlay};
+})();
+
+/* ===================== 맵 (10×18 그리드 → 논리 좌표, bg와 같은 360×740 공간) ===================== */
+const TILE = BG.T;
+const VIEW_Y0 = BG.OY - 40;                                  // 위쪽 하늘은 40px 띠만 보여 준다(원경·과목 소품 스카이라인)
+const VW = BG.W, VH = BG.OY + BG.ROWS * TILE + 8 - VIEW_Y0;  // 360 × 660
+const SLOT_R = 15;
 const CARD_TYPES = ['wand','cup','sword','pentacle'];
 const KEY_TO_CARD = { KeyQ:'wand', KeyW:'cup', KeyE:'sword', KeyR:'pentacle' };
+const ELEV_NAME = ['저지대', '중지대', '고지대'], ELEV_GLYPH = ['○', '^', '^^'];
+let MAP = null, MAP_IDX = -1, SLOTS = [], PTS = [], SEG = [], PATH_LEN = 0, SPEED_NORM = 1, SLOT_PRIORITY = [], TOWER_POS = { x: 0, y: 0 };
 
-const SEG = []; let PATH_LEN = 0;
-for (let i = 0; i < PATH.length - 1; i++) {
-  const a = PATH[i], b = PATH[i+1], len = Math.hypot(b[0]-a[0], b[1]-a[1]);
-  SEG.push({ a, b, len, start: PATH_LEN }); PATH_LEN += len;
+function tileCenter(M, c, r) { const e = M.E(c, r); return { x: BG.OX + c*TILE + TILE/2, y: BG.OY + r*TILE + TILE/2 - e*BG.L, e }; }
+function loadMap(ri) {
+  const M = BG.MAPS[ri], TR = BALANCE.terrain; MAP = M; MAP_IDX = ri;
+  PTS = M.path.map(([c, r]) => Object.assign({ c, r }, tileCenter(M, c, r)));
+  SEG = []; PATH_LEN = 0;
+  for (let i = 0; i < PTS.length - 1; i++) {
+    const a = PTS[i], b = PTS[i+1], len = Math.hypot(b.x-a.x, b.y-a.y), slope = Math.sign(b.e - a.e);
+    SEG.push({ a, b, len, start: PATH_LEN, slope });     // slope: 이 구간(다음 칸으로 들어서는 이동)의 오르막 +1 / 내리막 -1
+    PATH_LEN += len;
+  }
+  SPEED_NORM = TR.normalizePathLen ? PATH_LEN / TR.refPathLen : 1;
+  SLOTS = M.slots.map(([c, r], i) => Object.assign({ i, c, r }, tileCenter(M, c, r)));
+  // 자동 배치 우선순위: (지형 보정 사거리 85) 안에 들어오는 길 길이가 긴 슬롯부터
+  for (const s of SLOTS) { const R = 85 * TR.rangeMult[s.e]; let cov = 0; for (let d = 0; d < PATH_LEN; d += 4) { const p = posAt(d); if (Math.hypot(p.x-s.x, p.y-s.y) <= R) cov += 4; } s.coverage = cov; }
+  SLOT_PRIORITY = SLOTS.slice().sort((a,b)=>b.coverage-a.coverage).map(s=>s.i);
+  const pl = M.path[M.path.length-1], tc = tileCenter(M, pl[0], pl[1]);
+  TOWER_POS = { x: tc.x, y: BG.OY + pl[1]*TILE + TILE - 6 - tc.e*BG.L - 14 };
 }
 function posAt(d) {
-  if (d <= 0) return { x: PATH[0][0], y: PATH[0][1] };
-  for (const s of SEG) if (d <= s.start + s.len) {
+  if (d <= 0) return { x: PTS[0].x, y: PTS[0].y, si: 0 };
+  for (let i = 0; i < SEG.length; i++) { const s = SEG[i]; if (d <= s.start + s.len) {
     const t = (d - s.start) / s.len;
-    return { x: s.a[0] + (s.b[0]-s.a[0]) * t, y: s.a[1] + (s.b[1]-s.a[1]) * t };
-  }
-  const l = PATH[PATH.length-1]; return { x: l[0], y: l[1] };
+    return { x: s.a.x + (s.b.x-s.a.x) * t, y: s.a.y + (s.b.y-s.a.y) * t, si: i };
+  } }
+  const l = PTS[PTS.length-1]; return { x: l.x, y: l.y, si: SEG.length - 1 };
 }
-// 자동 배치 우선순위: 사거리 85 안에 들어오는 경로 길이가 긴 슬롯부터
-for (const s of SLOTS) { let c = 0; for (let d = 0; d < PATH_LEN; d += 4) { const p = posAt(d); if (Math.hypot(p.x-s.x, p.y-s.y) <= 85) c += 4; } s.coverage = c; }
-const SLOT_PRIORITY = SLOTS.slice().sort((a,b)=>b.coverage-a.coverage).map(s=>s.i);
+function slopeMult(si) { const s = SEG[si]; if (!s) return 1; return s.slope > 0 ? BALANCE.terrain.uphill : s.slope < 0 ? BALANCE.terrain.downhill : 1; }
 
 /* ===================== 유틸 ===================== */
 const $ = id => document.getElementById(id);
@@ -284,19 +679,23 @@ function setHTML(el, v) { if (_txt.get(el) !== v) { _txt.set(el, v); el.innerHTM
 /* ===================== 상태 ===================== */
 const SEALED = new Map();   // 세션 동안 유지되는 봉인 목록: id → {item, wrongs, freed, newThisGame}
 let pendingBonus = 0;        // 해제 퀴즈로 얻은 다음 판 시작 마나
+const SET = { region: 0, subject: 0, diff: 2 };   // 시작 화면 선택(지역 0~3, 과목 0~3, 난이도 1~3)
+let terrainStrong = false;   // T 키: 지형 표시 강화
 let S = null;
 let nextEnemyId = 1;
 
 function newState(bonus) {
   return {
     phase: 'title', time: 0,
+    region: SET.region, subject: SET.subject, diff: SET.diff,
     hp: BALANCE.tower.hp, shield: 0,
     mana: BALANCE.mana.start + bonus, regenT: 0, startBonus: bonus,
     waveIdx: 0, phaseT: BALANCE.waves.prepSec, spawnQ: [], waveT: 0,
     enemies: [], towers: SLOTS.map(()=>null), fx: [],
     combo: 0, maxCombo: 0, discountReady: false, buffT: 0, ultReady: false,
-    stats: { answered:0, correct:0, wrong:0, skipped:0, summons:0, upgrades:0, leaked:0, killed:0, ults:0, manaFromQuiz:0, manaFromRegen:0 },
-    q: null, qT: 0, lockT: 0, deck: [], lastIdx: -1,
+    stats: { answered:0, correct:0, wrong:0, skipped:0, summons:0, upgrades:0, leaked:0, killed:0, ults:0, manaFromQuiz:0, manaFromRegen:0,
+             fastCorrect:0, lockSec:0, spent:0 },
+    q: null, qT: 0, lockT: 0, lockKind: '', wrongStreak: 0, deck: [], lastIdx: -1,
     selCard: null, popupSlot: -1, result: null, reviewDone: false,
   };
 }
@@ -304,35 +703,49 @@ function newState(bonus) {
 /* ===================== 웨이브/적 ===================== */
 function buildWave(idx) {
   const q = []; let t = 0;
-  for (const g of BALANCE.waveList[idx]) { for (let k = 0; k < g.n; k++) { q.push({ t, type: g.type }); t += g.gap; } t += 1.0; }
-  return q;
+  for (const g of BALANCE.waveList[idx]) {
+    const t0 = g.at !== undefined ? g.at : t;
+    for (let k = 0; k < g.n; k++) q.push({ t: t0 + k * g.gap, type: g.type });
+    if (g.at === undefined) t = t0 + g.n * g.gap + 1.0;
+  }
+  return q.sort((a, b) => a.t - b.t);
 }
 function startWave() {
   S.phase = 'wave'; S.waveT = 0; S.spawnQ = buildWave(S.waveIdx);
   banner(S.waveIdx === BALANCE.waves.count-1 ? `웨이브 ${S.waveIdx+1} — 망각의 왕 등장!` : `웨이브 ${S.waveIdx+1} 시작!`);
 }
+function enemyHp(type, waveIdx, diff) {
+  return Math.round(BALANCE.enemies[type].hp * BALANCE.waves.hpMult[waveIdx] * (BALANCE.stage.hpMultByDiff[diff] || 1));
+}
 function spawn(type) {
-  const b = BALANCE.enemies[type], hp = Math.round(b.hp * (1 + BALANCE.waves.hpScalePerWave * S.waveIdx));
-  S.enemies.push({ id: nextEnemyId++, type, hp, maxHp: hp, dist: 0, slowT: 0, slowAmt: 0, hitT: 0, x: PATH[0][0], y: PATH[0][1] });
+  const hp = enemyHp(type, S.waveIdx, S.diff);
+  S.enemies.push({ id: nextEnemyId++, type, hp, maxHp: hp, dist: 0, slowT: 0, slowAmt: 0, hitT: 0, x: PTS[0].x, y: PTS[0].y, si: 0 });
 }
 function damage(e, raw, ignoreArmor) {
+  if (e.dead) return;
   const armor = ignoreArmor ? 0 : (BALANCE.enemies[e.type].armor || 0);
   const d = Math.max(1, Math.round(raw - armor));
   e.hp -= d; e.hitT = 0.12;
-  if (e.hp <= 0 && !e.dead) {
+  if (e.hp <= 0) {
     e.dead = true; S.stats.killed++;
     S.fx.push({ k:'poof', x:e.x, y:e.y, r:BALANCE.enemies[e.type].r, t:0, life:0.45, color:BALANCE.enemies[e.type].color });
   }
+}
+function enemySpeed(e) {
+  const b = BALANCE.enemies[e.type];
+  let m = slopeMult(e.si);
+  if (e.slowT > 0) m *= 1 - e.slowAmt * (1 - (b.slowResist || 0));
+  return b.speed * SPEED_NORM * Math.max(m, BALANCE.terrain.minSpeedMult);
 }
 function updateEnemies(dt) {
   for (const e of S.enemies) {
     if (e.dead) continue;
     const b = BALANCE.enemies[e.type];
-    let sp = b.speed;
-    if (e.slowT > 0) { e.slowT -= dt; sp *= 1 - e.slowAmt * (1 - (b.slowResist || 0)); }
+    const sp = enemySpeed(e);
+    if (e.slowT > 0) e.slowT -= dt;
     if (e.hitT > 0) e.hitT -= dt;
     e.dist += sp * dt;
-    const p = posAt(e.dist); e.x = p.x; e.y = p.y;
+    const p = posAt(e.dist); e.x = p.x; e.y = p.y; e.si = p.si;
     if (e.dist >= PATH_LEN) { e.dead = true; e.leaked = true; towerHit(b.dmg); }
   }
   S.enemies = S.enemies.filter(e => !e.dead);
@@ -346,19 +759,29 @@ function towerHit(dmg) {
     S.fx.push({ k:'text', x:TOWER_POS.x+14, y:TOWER_POS.y-18, s:`-${dmg}`, color:'#ff5d73', t:0, life:0.9 });
     const box = $('hpBox'); box.classList.remove('hit'); void box.offsetWidth; box.classList.add('hit');
   }
+  // 펜타클 Lv4: 피격 직후 보호막 재생 가속
+  S.towers.forEach(t => { if (t && t.type === 'pentacle') { const L = towerStats(t); if (L.regenAfterHit) t.cd = Math.min(t.cd, L.regenAfterHit); } });
 }
 
 /* ===================== 수호자(타워) ===================== */
 function towerStats(t) { return BALANCE.cards[t.type].lv[t.lv-1]; }
-function summonCost() { return Math.max(0, BALANCE.cost.summon - (S.discountReady ? BALANCE.combo.discountAmount : 0)); }
+function rangeMultAt(slot) { return BALANCE.terrain.rangeMult[SLOTS[slot].e]; }
+function towerRange(slot) { const t = S.towers[slot]; return t && t.type !== 'pentacle' ? towerStats(t).range * rangeMultAt(slot) : 0; }
+function summonCost(slot) {
+  const B = BALANCE, TR = B.terrain;
+  let c = B.cost.summon;
+  if (slot !== undefined && slot !== null && slot >= 0 && SLOTS[slot].e === 0) c = Math.max(TR.lowlandFloor, c - TR.lowlandDiscount);
+  if (S.discountReady) c = Math.max(TR.comboFloor, c - B.combo.discountAmount);
+  return c;
+}
 function upgradeCost(t) { return t.lv >= BALANCE.maxLevel ? Infinity : BALANCE.cost.upgrade[t.lv-1]; }
 function canPlay() { return S && (S.phase === 'prep' || S.phase === 'wave'); }
 
 function summon(slot, type) {
   if (!canPlay() || S.towers[slot]) return false;
-  const cost = summonCost();
+  const cost = summonCost(slot);
   if (S.mana < cost) { flashFeedback(`마나 부족 (${cost} 필요)`, 'bad'); return false; }
-  S.mana -= cost; if (S.discountReady) S.discountReady = false;
+  S.mana -= cost; S.stats.spent += cost; if (S.discountReady) S.discountReady = false;
   const st = BALANCE.cards[type].lv[0];
   S.towers[slot] = { type, lv: 1, cd: type === 'pentacle' ? st.shieldEvery : 0, aim: 0 };
   S.stats.summons++;
@@ -371,7 +794,8 @@ function upgrade(slot) {
   const cost = upgradeCost(t);
   if (cost === Infinity) return false;
   if (S.mana < cost) { flashFeedback(`마나 부족 (${cost} 필요)`, 'bad'); return false; }
-  S.mana -= cost; t.lv++; S.stats.upgrades++;
+  S.mana -= cost; S.stats.spent += cost; t.lv++; S.stats.upgrades++;
+  if (t.type === 'pentacle') t.cd = Math.min(t.cd, towerStats(t).shieldEvery);
   const s = SLOTS[slot];
   S.fx.push({ k:'ring', x:s.x, y:s.y, r:SLOT_R+6, t:0, life:0.5, color:'#ffd166' });
   return true;
@@ -393,7 +817,8 @@ function updateTowers(dt) {
       return;
     }
     if (t.cd > 0) return;
-    const inRange = S.enemies.filter(e => !e.dead && Math.hypot(e.x-s.x, e.y-s.y) <= L.range).sort((a,b)=>b.dist-a.dist);
+    const R = L.range * rangeMultAt(i);
+    const inRange = S.enemies.filter(e => !e.dead && Math.hypot(e.x-s.x, e.y-s.y) <= R).sort((a,b)=>b.dist-a.dist);
     if (!inRange.length) return;
     t.cd = L.cd;
     const n = L.targets || 1, col = BALANCE.cards[t.type].color;
@@ -401,9 +826,22 @@ function updateTowers(dt) {
       const e = inRange[k];
       t.aim = Math.atan2(e.y-s.y, e.x-s.x);
       damage(e, L.dmg * mult);
-      if (L.slow) { e.slowAmt = e.slowT > 0 ? Math.max(e.slowAmt, L.slow) : L.slow; e.slowT = Math.max(e.slowT, L.slowSec); }
+      if (L.slow) {
+        const hit = L.slowAoE ? S.enemies.filter(o => !o.dead && Math.hypot(o.x-e.x, o.y-e.y) <= L.slowAoE) : [e];
+        for (const o of hit) {
+          if (o !== e) damage(o, L.dmg * mult);
+          o.slowAmt = o.slowT > 0 ? Math.max(o.slowAmt, L.slow) : L.slow; o.slowT = Math.max(o.slowT, L.slowSec);
+        }
+        if (L.slowAoE) S.fx.push({ k:'ring', x:e.x, y:e.y, r:L.slowAoE*0.6, t:0, life:0.3, color:col });
+      }
       S.fx.push({ k:'beam', x1:s.x, y1:s.y, x2:e.x, y2:e.y, color:col, t:0, life: t.type==='wand'?0.18:0.1, w: t.type==='wand'?4:2 });
-      if (t.type === 'wand') S.fx.push({ k:'ring', x:e.x, y:e.y, r:6, t:0, life:0.25, color:col });
+      if (t.type === 'wand') {
+        S.fx.push({ k:'ring', x:e.x, y:e.y, r:6, t:0, life:0.25, color:col });
+        if (L.pierce) {   // Lv4 관통: 사거리 안의 다음 적 1체에 피해 70%
+          const next = inRange.filter(o => o !== e && !o.dead).slice(0, L.pierce);
+          for (const o of next) { damage(o, L.dmg * mult * L.pierceMult); S.fx.push({ k:'beam', x1:e.x, y1:e.y, x2:o.x, y2:o.y, color:col, t:0, life:0.16, w:3 }); }
+        }
+      }
     }
   });
 }
@@ -411,7 +849,7 @@ function useUlt() {
   if (!canPlay() || !S.ultReady) return false;
   S.ultReady = false; S.stats.ults++;
   for (const e of S.enemies) damage(e, BALANCE.ult.damage, true);
-  S.fx.push({ k:'nova', x:W/2, y:H/2, t:0, life:0.7 });
+  S.fx.push({ k:'nova', x:VW/2, y:VIEW_Y0 + VH/2, t:0, life:0.7 });
   banner(`💥 메이저 아르카나 — ${BALANCE.ult.name}!`);
   return true;
 }
@@ -426,8 +864,12 @@ function nextQuestion() {
   const idx = S.deck.pop(); S.lastIdx = idx;
   const item = QUESTIONS[idx], order = shuffle([0,1,2,3]);
   S.q = { idx, item, opts: order.map(k => item.c[k]), correct: order.indexOf(0), picked: -1 };
-  S.qT = 0; S.lockT = 0;
+  S.qT = 0; S.lockT = 0; S.lockKind = '';
   renderQuestion();
+}
+function wrongLockSec(streak) {
+  const Q = BALANCE.quiz;
+  return Math.min(Q.wrongLockMax, Q.wrongLockBase + Q.wrongLockStep * (streak - 1));
 }
 function answer(i) {
   if (!canPlay() || !S.q || S.lockT > 0) return null;
@@ -436,18 +878,27 @@ function answer(i) {
   if (ok) {
     const gain = BALANCE.mana.byDifficulty[q.item.d];
     S.stats.correct++; addMana(gain, true);
-    S.combo++; S.maxCombo = Math.max(S.maxCombo, S.combo);
-    flashFeedback(`정답! +${gain} 마나`, 'good');
-    comboReward();
-    S.lockT = BALANCE.quiz.correctDelay;
+    S.wrongStreak = 0;
+    if (S.qT < BALANCE.quiz.readFloorSec) {          // 읽기 하한: 마나는 주되 콤보는 오르지 않음
+      S.stats.fastCorrect++;
+      flashFeedback(`정답 +${gain} · 너무 빨라 콤보 제외`, 'skip');
+    } else {
+      S.combo++; S.maxCombo = Math.max(S.maxCombo, S.combo);
+      flashFeedback(`정답! +${gain} 마나`, 'good');
+      comboReward();
+    }
+    S.lockT = BALANCE.quiz.correctDelay; S.lockKind = 'ok';
   } else {
     S.stats.wrong++;
-    if (S.combo >= 3) flashFeedback(`오답 — 콤보 ${S.combo} 끊김, 봉인 등록 🔒`, 'bad'); else flashFeedback('오답 — 봉인 카드에 등록 🔒', 'bad');
+    S.wrongStreak++;
+    const lock = wrongLockSec(S.wrongStreak);
+    const ans = q.opts[q.correct];
+    flashFeedback(S.combo >= 3 ? `오답 — 콤보 ${S.combo} 끊김 · 정답 ${ans} 🔒` : `오답 — 정답은 ${ans} · 봉인 등록 🔒`, 'bad', lock * 1000);
     S.combo = 0;
     const sealed = SEALED.get(q.item.id);
     if (sealed) { sealed.wrongs++; sealed.freed = false; sealed.newThisGame = true; }
     else SEALED.set(q.item.id, { item: q.item, wrongs: 1, freed: false, newThisGame: true });
-    S.lockT = BALANCE.quiz.wrongLockSec;
+    S.lockT = lock; S.lockKind = 'wrong'; S.stats.lockSec += lock;
   }
   renderQuestion();
   return ok;
@@ -473,6 +924,7 @@ function updateQuiz(dt) {
 function startGame() {
   const bonus = pendingBonus; pendingBonus = 0;
   for (const v of SEALED.values()) v.newThisGame = false;
+  if (MAP_IDX !== SET.region) loadMap(SET.region);
   S = newState(bonus);
   S.phase = 'prep'; S.phaseT = BALANCE.waves.prepSec;
   $('overlay').hidden = true; closePopup();
@@ -485,7 +937,7 @@ function update(dt) {
   if (!canPlay()) return;
   S.time += dt;
   S.regenT += dt;
-  while (S.regenT >= BALANCE.mana.regenEvery) { S.regenT -= BALANCE.mana.regenEvery; addMana(BALANCE.mana.regenAmount, false); }
+  while (S.regenT >= BALANCE.mana.regenSec) { S.regenT -= BALANCE.mana.regenSec; addMana(BALANCE.mana.regenAmount, false); }
   if (S.buffT > 0) S.buffT = Math.max(0, S.buffT - dt);
   updateQuiz(dt);
   if (S.phase === 'prep') {
@@ -500,7 +952,7 @@ function update(dt) {
   if (S.hp <= 0) { endGame(false); return; }
   if (S.phase === 'wave' && !S.spawnQ.length && !S.enemies.length) {
     if (S.waveIdx >= BALANCE.waves.count - 1) endGame(true);
-    else { S.waveIdx++; S.phase = 'prep'; S.phaseT = BALANCE.waves.breakSec; banner(`웨이브 ${S.waveIdx} 방어 성공! 5초 휴식`); }
+    else { S.waveIdx++; S.phase = 'prep'; S.phaseT = BALANCE.waves.breakSec; banner(`웨이브 ${S.waveIdx} 방어 성공! ${BALANCE.waves.breakSec}초 휴식`); }
   }
 }
 function updateFx(dt) { for (const f of S.fx) f.t += dt; S.fx = S.fx.filter(f => f.t < f.life); }
@@ -522,16 +974,31 @@ function endGame(win) {
 
 /* ===================== 렌더링: 캔버스 ===================== */
 const cv = $('map'), ctx = cv.getContext('2d');
-let VIEW = { scale: 1, dpr: 1 };
+let VIEW = { scale: 1, dpr: 1, k: 1 };
+const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+const BGC = { key: '', bg: null, fog: null, ovSoft: null, ovStrong: null, ms: 0, builds: 0 };
 function resize() {
   const st = $('stage'), aw = st.clientWidth, ah = st.clientHeight;
-  const scale = Math.max(0.3, Math.min(aw / W, ah / H));
+  const scale = Math.max(0.3, Math.min(aw / VW, ah / VH));
   const dpr = window.devicePixelRatio || 1;
-  cv.style.width = (W * scale) + 'px'; cv.style.height = (H * scale) + 'px';
-  cv.width = Math.round(W * scale * dpr); cv.height = Math.round(H * scale * dpr);
-  VIEW = { scale, dpr };
+  cv.style.width = (VW * scale) + 'px'; cv.style.height = (VH * scale) + 'px';
+  cv.width = Math.round(VW * scale * dpr); cv.height = Math.round(VH * scale * dpr);
+  VIEW = { scale, dpr, k: scale * dpr };
 }
-const DECOR = (() => { const a = []; let s = 7; const r = () => (s = (s * 9301 + 49297) % 233280) / 233280; for (let i = 0; i < 70; i++) a.push([r()*W, r()*H, 1 + r()*2]); return a; })();
+// 배경 캐시: (지역, 과목, 난이도, 해상도)가 바뀔 때만 오프스크린 캔버스에 다시 그린다.
+function ensureBG() {
+  const res = Math.min(2.5, Math.max(1, Math.round(VIEW.k * 4) / 4));
+  const key = `${SET.region}-${SET.subject}-${SET.diff}@${res}`;
+  if (BGC.key === key) return BGC;
+  const t0 = performance.now();
+  const ri = SET.region, si = SET.subject, di = SET.diff - 1;
+  BGC.bg = BG.buildBG(ri, si, di, res);
+  BGC.fog = BG.buildFog(di, ri, res);
+  BGC.ovSoft = BG.buildTerrainOverlay(BG.MAPS[ri], res, false);
+  BGC.ovStrong = BG.buildTerrainOverlay(BG.MAPS[ri], res, true);
+  BGC.key = key; BGC.ms = performance.now() - t0; BGC.builds++;
+  return BGC;
+}
 
 function shapePath(shape, x, y, r) {
   ctx.beginPath();
@@ -541,58 +1008,77 @@ function shapePath(shape, x, y, r) {
   else if (shape === 'square') { ctx.rect(x-r*0.82, y-r*0.82, r*1.64, r*1.64); }
   else if (shape === 'boss') { for (let k = 0; k < 8; k++) { const a = k * Math.PI/4, rr = k % 2 ? r*0.78 : r; ctx.lineTo(x + Math.cos(a)*rr, y + Math.sin(a)*rr); } ctx.closePath(); }
 }
+function pill(x, y, text, font, bg, fg) {
+  ctx.font = font; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(text).width + 8, h = 13;
+  ctx.fillStyle = bg; ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x - w/2, y - h/2, w, h, 5); else ctx.rect(x - w/2, y - h/2, w, h);
+  ctx.fill(); ctx.fillStyle = fg; ctx.fillText(text, x, y + 0.5);
+}
 function render() {
   if (!S) return;
-  const k = VIEW.scale * VIEW.dpr;
-  ctx.setTransform(k, 0, 0, k, 0, 0);
-  // 배경
-  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#1e3a3a'); g.addColorStop(1, '#173126');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = '#ffffff10'; for (const [x,y,r] of DECOR) { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); }
-  // 길
-  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  ctx.strokeStyle = '#0f1f1b'; ctx.lineWidth = 34; strokePath();
-  ctx.strokeStyle = '#4a4378'; ctx.lineWidth = 28; strokePath();
-  ctx.strokeStyle = '#6b62a855'; ctx.lineWidth = 2; ctx.setLineDash([6, 8]); strokePath(); ctx.setLineDash([]);
-  // 안개 입구
-  const tt = performance.now() / 1000;
-  for (let i = 0; i < 3; i++) { ctx.fillStyle = `rgba(200,190,255,${0.12 + 0.05*Math.sin(tt*2+i)})`; ctx.beginPath(); ctx.arc(4, 48, 18 + i*6, 0, 7); ctx.fill(); }
-  // 탑
+  const C = ensureBG();
+  const k = VIEW.k;
+  ctx.setTransform(k, 0, 0, k, 0, -VIEW_Y0 * k);       // 논리 좌표 = 배경(360×740) 좌표
+  // 1) 정적 배경(캐시)
+  ctx.drawImage(C.bg.cv, 0, 0, BG.W, BG.H);
+  // 2) 흐르는 안개(사전 렌더 스프라이트를 가로 이동)
+  const tt = performance.now() / 1000, sp = [5, -3, 8], yo = [0, 14, -10], al = [1, 0.8, 0.7];
+  for (let i = 0; i < C.fog.layers; i++) {
+    let off = reduceMotion ? i * 160 : i * 160 + tt * sp[i]; off = ((off % 720) + 720) % 720;
+    ctx.globalAlpha = C.fog.fogA * al[i];
+    ctx.drawImage(C.fog.cv, -off, yo[i], 720, 260); ctx.drawImage(C.fog.cv, 720 - off, yo[i], 720, 260);
+  }
+  ctx.globalAlpha = 1;
+  // 3) 지형 오버레이(캐시): 기본 ▲▼, 강화 = 등고선·숫자
+  ctx.drawImage(terrainStrong ? C.ovStrong : C.ovSoft, 0, 0, BG.W, BG.H);
+  // 지역 라벨
+  pill(VW/2, VIEW_Y0 + 10, `${BG.REG[S.region].name} · 난이도 ${S.diff}${terrainStrong ? ' · 지형 표시 강화(T)' : ''}`, 'bold 10px sans-serif', '#0d0b22b0', '#f5f2ff');
+  // 탑(보호막 링 + HP)
   drawTower();
-  // 사거리 표시
-  const showSlot = S.popupSlot >= 0 ? S.popupSlot : -1;
-  if (showSlot >= 0 && S.towers[showSlot] && S.towers[showSlot].type !== 'pentacle') {
-    const s = SLOTS[showSlot], L = towerStats(S.towers[showSlot]);
-    ctx.fillStyle = '#ffffff12'; ctx.strokeStyle = '#ffffff55'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(s.x, s.y, L.range, 0, 7); ctx.fill(); ctx.stroke();
+  // 사거리 표시(지형 보너스 반영)
+  const ps = S.popupSlot;
+  if (ps >= 0) {
+    const s = SLOTS[ps], t = S.towers[ps];
+    const R = t ? towerRange(ps) : BALANCE.cards.wand.lv[0].range * rangeMultAt(ps);
+    if (R > 0) {
+      ctx.fillStyle = '#ffffff14'; ctx.strokeStyle = s.e === 2 ? '#ffb070' : s.e === 1 ? '#ffe27a' : '#ffffffaa'; ctx.lineWidth = 1.5;
+      if (!t) ctx.setLineDash([5, 5]);
+      ctx.beginPath(); ctx.arc(s.x, s.y, R, 0, 7); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
+    }
   }
   // 슬롯
   SLOTS.forEach((s, i) => {
     const t = S.towers[i];
     if (!t) {
-      const hl = (S.selCard && canPlay()) || i === S.popupSlot;
-      ctx.setLineDash([4, 4]); ctx.lineWidth = hl ? 2.5 : 1.5;
-      ctx.strokeStyle = hl ? '#ffd166' : '#ffffff66'; ctx.fillStyle = '#00000033';
-      ctx.beginPath(); ctx.arc(s.x, s.y, SLOT_R, 0, 7); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
-      ctx.fillStyle = hl ? '#ffd166' : '#ffffff88'; ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('+', s.x, s.y + 1);
-      ctx.font = '9px sans-serif'; ctx.fillStyle = '#ffffff66'; ctx.fillText(String(i+1), s.x + SLOT_R - 2, s.y - SLOT_R + 3);
+      const hl = (S.selCard && canPlay()) || i === ps;
+      ctx.setLineDash([4, 4]); ctx.lineWidth = hl ? 2.5 : 1.3;
+      ctx.strokeStyle = hl ? '#ffd166' : '#ffffff99';
+      ctx.beginPath(); ctx.arc(s.x, s.y, SLOT_R + 1.5, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+      ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#0d0b22cc'; ctx.beginPath(); ctx.arc(s.x + 13, s.y - 13, 6, 0, 7); ctx.fill();
+      ctx.fillStyle = '#ffffffdd'; ctx.fillText(String(i+1), s.x + 13, s.y - 12.5);
+      // 고도 배지: 저지대 -1(소환 비용) / 중 R+8% / 고 R+15%(사거리)
+      const lab = s.e === 0 ? `-${BALANCE.terrain.lowlandDiscount}💎` : `R+${Math.round((BALANCE.terrain.rangeMult[s.e]-1)*100)}%`;
+      pill(s.x, s.y + 16, lab, 'bold 9.5px sans-serif', '#0f1228e6', s.e === 0 ? '#9fe0ff' : '#ffe27a');
     } else {
       const c = BALANCE.cards[t.type];
       ctx.fillStyle = '#0d0b1e'; ctx.beginPath(); ctx.arc(s.x, s.y, SLOT_R, 0, 7); ctx.fill();
       shapePath(c.shape, s.x, s.y, SLOT_R - 2); ctx.fillStyle = c.color + 'cc'; ctx.fill();
-      ctx.lineWidth = 2; ctx.strokeStyle = i === S.popupSlot ? '#fff' : '#0008'; ctx.stroke();
+      ctx.lineWidth = 2; ctx.strokeStyle = i === ps ? '#fff' : '#0008'; ctx.stroke();
       ctx.font = '15px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(c.icon, s.x, s.y + 1);
-      for (let l = 0; l < t.lv; l++) { ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(s.x - 7 + l*7, s.y + SLOT_R + 4, 2.6, 0, 7); ctx.fill(); }
-      if (canPlay() && upgradeCost(t) <= S.mana) { ctx.fillStyle = '#ffd166'; ctx.font = 'bold 10px sans-serif'; ctx.fillText('▲', s.x + SLOT_R - 2, s.y - SLOT_R + 2); }
+      for (let l = 0; l < t.lv; l++) { ctx.fillStyle = l === 3 ? '#ff9f6b' : '#ffd166'; ctx.strokeStyle = '#0009'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(s.x - 9 + l*6, s.y + SLOT_R + 3, 2.4, 0, 7); ctx.fill(); ctx.stroke(); }
+      if (s.e > 0) { ctx.font = 'bold 9px sans-serif'; ctx.fillStyle = '#0d0b22cc'; ctx.fillRect(s.x - SLOT_R - 3, s.y - SLOT_R - 2, s.e === 2 ? 14 : 9, 10); ctx.fillStyle = '#ffe27a'; ctx.fillText(ELEV_GLYPH[s.e], s.x - SLOT_R + (s.e === 2 ? 4 : 1.5), s.y - SLOT_R + 3.5); }
+      if (canPlay() && upgradeCost(t) <= S.mana) { ctx.fillStyle = '#ffd166'; ctx.font = 'bold 11px sans-serif'; ctx.fillText('▲', s.x + SLOT_R - 1, s.y - SLOT_R + 2); }
     }
   });
-  // 적
+  // 적 (A7: 흰 외곽선 + 아래 그림자, 난이도 틴트 비적용)
   for (const e of S.enemies) {
     const b = BALANCE.enemies[e.type];
+    ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.beginPath(); ctx.ellipse(e.x + 1, e.y + b.r * 0.85, b.r * 0.9, b.r * 0.35, 0, 0, 7); ctx.fill();
     shapePath(b.shape, e.x, e.y, b.r);
     ctx.fillStyle = e.hitT > 0 ? '#ffffff' : b.color; ctx.fill();
-    ctx.lineWidth = e.slowT > 0 ? 3 : 1.5; ctx.strokeStyle = e.slowT > 0 ? '#4cc9f0' : '#0009'; ctx.stroke();
+    ctx.lineWidth = e.slowT > 0 ? 3 : 1.5; ctx.strokeStyle = e.slowT > 0 ? '#4cc9f0' : '#ffffffd0'; ctx.stroke();
     if (e.type === 'boss') { ctx.font = '14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('👑', e.x, e.y - b.r - 10); }
     const w = b.r * 2 + 4, f = clamp(e.hp / e.maxHp, 0, 1);
     ctx.fillStyle = '#000a'; ctx.fillRect(e.x - w/2, e.y - b.r - 6, w, 3);
@@ -605,29 +1091,25 @@ function render() {
     if (f.k === 'beam') { ctx.strokeStyle = f.color; ctx.lineWidth = f.w; ctx.beginPath(); ctx.moveTo(f.x1, f.y1); ctx.lineTo(f.x2, f.y2); ctx.stroke(); }
     else if (f.k === 'ring') { ctx.strokeStyle = f.color; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(f.x, f.y, f.r + p*10, 0, 7); ctx.stroke(); }
     else if (f.k === 'poof') { ctx.fillStyle = f.color; for (let i = 0; i < 6; i++) { const ang = i * Math.PI/3; ctx.beginPath(); ctx.arc(f.x + Math.cos(ang)*p*f.r*2, f.y + Math.sin(ang)*p*f.r*2, f.r*0.35*(1-p)+1, 0, 7); ctx.fill(); } }
-    else if (f.k === 'nova') { ctx.fillStyle = '#ff4d8d55'; ctx.beginPath(); ctx.arc(f.x, f.y, p * 300, 0, 7); ctx.fill(); ctx.strokeStyle = '#ffb3cd'; ctx.lineWidth = 6*(1-p); ctx.stroke(); }
-    else if (f.k === 'text') { ctx.fillStyle = f.color; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(f.s, f.x, f.y - p*14); }
+    else if (f.k === 'nova') { ctx.fillStyle = '#ff4d8d55'; ctx.beginPath(); ctx.arc(f.x, f.y, p * 460, 0, 7); ctx.fill(); ctx.strokeStyle = '#ffb3cd'; ctx.lineWidth = 6*(1-p); ctx.stroke(); }
+    else if (f.k === 'text') { ctx.fillStyle = f.color; ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(f.s, f.x, f.y - p*14); }
     ctx.globalAlpha = 1;
   }
   // 버프 테두리
-  if (S.buffT > 0) { ctx.strokeStyle = '#9d4eddaa'; ctx.lineWidth = 4; ctx.strokeRect(2, 2, W-4, H-4); }
+  if (S.buffT > 0) { ctx.strokeStyle = '#9d4eddaa'; ctx.lineWidth = 5; ctx.strokeRect(2, VIEW_Y0 + 2, VW-4, VH-4); }
   // 휴식 카운트다운
   if (S.phase === 'prep') {
-    ctx.fillStyle = '#000a'; ctx.fillRect(W/2 - 110, H/2 - 30, 220, 56);
+    const cy = VIEW_Y0 + VH/2;
+    ctx.fillStyle = '#000b'; ctx.fillRect(VW/2 - 125, cy - 36, 250, 70);
     ctx.fillStyle = '#ffd166'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = 'bold 15px sans-serif'; ctx.fillText(`웨이브 ${S.waveIdx+1}/${BALANCE.waves.count} 시작까지`, W/2, H/2 - 12);
-    ctx.font = 'bold 22px sans-serif'; ctx.fillText(`${Math.ceil(Math.max(0, S.phaseT))}`, W/2, H/2 + 12);
+    ctx.font = 'bold 18px sans-serif'; ctx.fillText(`웨이브 ${S.waveIdx+1}/${BALANCE.waves.count} 시작까지`, VW/2, cy - 14);
+    ctx.font = 'bold 28px sans-serif'; ctx.fillText(`${Math.ceil(Math.max(0, S.phaseT))}`, VW/2, cy + 16);
   }
 }
-function strokePath() { ctx.beginPath(); ctx.moveTo(PATH[0][0], PATH[0][1]); for (let i = 1; i < PATH.length; i++) ctx.lineTo(PATH[i][0], PATH[i][1]); ctx.stroke(); }
 function drawTower() {
   const { x, y } = TOWER_POS;
-  if (S.shield > 0) { ctx.strokeStyle = '#e9c46a'; ctx.lineWidth = 2 + S.shield; ctx.globalAlpha = 0.6; ctx.beginPath(); ctx.arc(x, y - 4, 26, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
-  ctx.fillStyle = '#d9d2ff'; ctx.fillRect(x - 13, y - 18, 26, 30);
-  ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.moveTo(x - 16, y - 18); ctx.lineTo(x, y - 36); ctx.lineTo(x + 16, y - 18); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#3d3780'; ctx.fillRect(x - 4, y, 8, 12);
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#17143a'; ctx.fillText(`${S.hp}`, x, y - 8);
+  if (S.shield > 0) { ctx.strokeStyle = '#e9c46a'; ctx.lineWidth = 2 + S.shield; ctx.globalAlpha = 0.65; ctx.beginPath(); ctx.arc(x, y - 4, 24, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+  pill(x + 22, y - 18, `🏰${S.hp}`, 'bold 11px sans-serif', '#0d0b22d0', S.hp <= 3 ? '#ff8a9a' : '#ffffff');
 }
 
 /* ===================== 렌더링: DOM ===================== */
@@ -662,7 +1144,7 @@ function buildStaticUI() {
 function renderQuestion() {
   const q = S.q; if (!q) return;
   const dl = ['', '쉬움', '보통', '어려움'][q.item.d];
-  setText($('qDiff'), `${'★'.repeat(q.item.d)}${'☆'.repeat(3-q.item.d)} ${dl} · 정답 +${BALANCE.mana.byDifficulty[q.item.d]}💎`);
+  setText($('qDiff'), `${'★'.repeat(q.item.d)}${'☆'.repeat(3-q.item.d)} ${dl} · +${BALANCE.mana.byDifficulty[q.item.d]}💎`);
   setText($('qText'), q.item.q);
   [...$('choices').children].forEach((b, i) => {
     setText(b.querySelector('.v'), q.opts[i]);
@@ -670,16 +1152,22 @@ function renderQuestion() {
     b.classList.toggle('wrong', S.lockT > 0 && i === q.picked && i !== q.correct);
   });
   $('quiz').classList.toggle('locked', S.lockT > 0);
+  $('quiz').classList.toggle('wlock', S.lockT > 0 && S.lockKind === 'wrong');
 }
 let fbTimer = 0;
-function flashFeedback(msg, cls) {
+function flashFeedback(msg, cls, ms) {
   const el = $('qFeedback'); el.textContent = msg; el.className = cls; _txt.delete(el);
-  clearTimeout(fbTimer); fbTimer = setTimeout(() => { el.textContent = ''; }, 1800);
+  clearTimeout(fbTimer); fbTimer = setTimeout(() => { el.textContent = ''; }, Math.max(1800, ms || 0));
 }
 let bannerTimer = 0;
 function banner(msg) {
   const el = $('banner'); el.textContent = msg; el.classList.add('show');
   clearTimeout(bannerTimer); bannerTimer = setTimeout(() => el.classList.remove('show'), 1600);
+}
+function emptySlotCostRange() {
+  const cs = SLOTS.filter(s => !S.towers[s.i]).map(s => summonCost(s.i));
+  if (!cs.length) return null;
+  return [Math.min(...cs), Math.max(...cs)];
 }
 function syncHUD() {
   if (!S) return;
@@ -688,7 +1176,7 @@ function syncHUD() {
   $('hpBar').style.width = (S.hp / BALANCE.tower.hp * 100) + '%';
   $('hpBox').classList.toggle('low', S.hp <= 3);
   setText($('manaTxt'), S.mana);
-  $('manaBar').style.width = (S.regenT / BALANCE.mana.regenEvery * 100) + '%';
+  $('manaBar').style.width = (S.regenT / BALANCE.mana.regenSec * 100) + '%';
   setText($('waveTxt'), `${Math.min(S.waveIdx+1, BALANCE.waves.count)}/${BALANCE.waves.count}`);
   setText($('phaseTxt'), S.phase === 'prep' ? `휴식 ${Math.ceil(S.phaseT)}s` : S.phase === 'wave' ? `적 ${S.enemies.length + S.spawnQ.length}` : '');
   setText($('comboTxt'), S.combo);
@@ -697,20 +1185,25 @@ function syncHUD() {
   let bd = '';
   if (S.discountReady) bd += `<span class="badge disc">소환 -${BALANCE.combo.discountAmount}</span>`;
   if (S.buffT > 0) bd += `<span class="badge buff">⚔️+${Math.round((BALANCE.combo.buffMult-1)*100)}% ${Math.ceil(S.buffT)}s</span>`;
-  if (S.ultReady) bd += `<span class="badge ult">💥</span>`;
+  if (S.ultReady) bd += `<span class="badge ult">💥 1</span>`;
   setHTML($('badges'), bd);
   // 문제 방치
   const idleOn = canPlay() && S.lockT <= 0;
   $('idleBar').style.width = (idleOn ? clamp(S.qT / BALANCE.quiz.idleSkipSec, 0, 1) * 100 : 0) + '%';
   $('quiz').classList.toggle('warn', idleOn && S.qT >= BALANCE.quiz.idleWarnSec);
   $('quiz').classList.toggle('locked', S.lockT > 0);
+  const wl = S.lockT > 0 && S.lockKind === 'wrong';
+  $('quiz').classList.toggle('wlock', wl);
+  const lb = $('lockBadge'); lb.hidden = !wl;
+  if (wl) setText(lb, `🔒 ${Math.max(0, S.lockT).toFixed(1)}초`);
   if (S.lockT <= 0) [...$('choices').children].forEach(b => { b.classList.remove('correct', 'wrong'); });
-  // 카드 바
-  const cost = summonCost();
+  // 카드 바: 빈 슬롯 기준 소환 비용(저지대가 있으면 범위로)
+  const rg = emptySlotCostRange();
+  const costHtml = !rg ? '만석' : (S.discountReady ? `<s style="opacity:.6">${BALANCE.cost.summon}</s> ` : '') + (rg[0] === rg[1] ? `${rg[0]}💎` : `${rg[0]}~${rg[1]}💎`);
   [...$('cardbar').querySelectorAll('.card')].forEach(b => {
-    setHTML(b.querySelector('.cost'), S.discountReady ? `<s style="opacity:.6">${BALANCE.cost.summon}</s> ${cost}💎` : `${cost}💎`);
+    setHTML(b.querySelector('.cost'), costHtml);
     b.classList.toggle('sel', S.selCard === b.dataset.type);
-    b.classList.toggle('poor', S.mana < cost);
+    b.classList.toggle('poor', !rg || S.mana < rg[0]);
   });
   const u = $('ultBtn'); u.disabled = !(S.ultReady && canPlay()); u.classList.toggle('ready', S.ultReady && canPlay());
   if (S.popupSlot >= 0) refreshPopupState();
@@ -719,19 +1212,25 @@ function syncHUD() {
 /* ===================== 팝업 (슬롯 → 소환/강화) ===================== */
 function slotToStage(i) {
   const s = SLOTS[i], cr = cv.getBoundingClientRect(), sr = $('stage').getBoundingClientRect();
-  return { x: cr.left - sr.left + s.x * cr.width / W, y: cr.top - sr.top + s.y * cr.height / H, r: SLOT_R * cr.width / W };
+  return { x: cr.left - sr.left + s.x * cr.width / VW, y: cr.top - sr.top + (s.y - VIEW_Y0) * cr.height / VH, r: SLOT_R * cr.width / VW };
+}
+function terrainLine(i) {
+  const e = SLOTS[i].e, TR = BALANCE.terrain;
+  if (e === 0) return `${ELEV_GLYPH[0]} ${ELEV_NAME[0]} — 낮은 곳이라 싸요 (소환 -${TR.lowlandDiscount}💎)`;
+  return `${ELEV_GLYPH[e]} ${ELEV_NAME[e]} — 높은 곳이라 멀리 봐요 (사거리 +${Math.round((TR.rangeMult[e]-1)*100)}%)`;
 }
 function openPopup(i) {
   S.popupSlot = i;
   const pop = $('popup'), t = S.towers[i];
   if (!t) {
-    pop.innerHTML = `<div class="ptitle"><span>슬롯 ${i+1} · 소환</span><button data-x>✕</button></div><div class="pgrid">` +
+    pop.innerHTML = `<div class="ptitle"><span>슬롯 ${i+1} · 소환</span><button data-x>✕</button></div><div class="pterr">${terrainLine(i)}</div><div class="pgrid">` +
       CARD_TYPES.map(type => { const c = BALANCE.cards[type];
         return `<button class="pbtn" data-sum="${type}" style="--c:${c.color}"><span class="ic">${c.icon}</span><b>${c.name}</b> <span class="pc"></span><small>${c.key} · ${c.el} · ${c.role}</small></button>`; }).join('') + `</div>`;
   } else {
     const c = BALANCE.cards[t.type];
     pop.innerHTML = `<div class="ptitle"><span>${c.icon} ${c.name} Lv${t.lv}</span><button data-x>✕</button></div>
-      <div class="pinfo">${describe(t.type, t.lv)}${t.lv < BALANCE.maxLevel ? `<br>▶ Lv${t.lv+1}: ${describe(t.type, t.lv+1)}` : '<br>최대 레벨'}</div>
+      <div class="pterr">${terrainLine(i)}</div>
+      <div class="pinfo">${describe(t.type, t.lv, i)}${t.lv < BALANCE.maxLevel ? `<br>▶ Lv${t.lv+1}: ${describe(t.type, t.lv+1, i)}` : '<br>최대 레벨'}</div>
       <button class="upbtn" data-up>${t.lv < BALANCE.maxLevel ? `⬆ 강화 ${upgradeCost(t)}💎` : '최대 레벨'}</button>`;
   }
   pop.hidden = false;
@@ -741,19 +1240,22 @@ function openPopup(i) {
   pop.style.left = left + 'px'; pop.style.top = clamp(top, 4, st.clientHeight - ph - 4) + 'px';
   refreshPopupState();
 }
-function describe(type, lv) {
+function describe(type, lv, slot) {
   const L = BALANCE.cards[type].lv[lv-1];
-  if (type === 'pentacle') return `보호막 +1 / <b>${L.shieldEvery}초</b> (최대 ${BALANCE.tower.shieldCap})`;
-  let s = `피해 <b>${L.dmg}</b> · ${L.cd}초 · 사거리 ${L.range}`;
+  if (type === 'pentacle') return `보호막 +1 / <b>${L.shieldEvery}초</b> (최대 ${BALANCE.tower.shieldCap})` + (L.regenAfterHit ? ` · <b>피격 후 ${L.regenAfterHit}초 재생</b>` : '');
+  const m = slot !== undefined ? rangeMultAt(slot) : 1;
+  let s = `피해 <b>${L.dmg}</b> · ${L.cd}초 · 사거리 ${Math.round(L.range * m)}${m > 1 ? '↑' : ''}`;
   if (L.targets) s += ` · <b>${L.targets}체</b>`;
   if (L.slow) s += ` · 둔화 <b>${Math.round(L.slow*100)}%</b> ${L.slowSec}초`;
+  if (L.slowAoE) s += ` · <b>범위 둔화</b>`;
+  if (L.pierce) s += ` · <b>관통 ${L.pierce}</b>(${Math.round(L.pierceMult*100)}%)`;
   return s;
 }
 function refreshPopupState() {
   const pop = $('popup'); if (pop.hidden) return;
   const t = S.towers[S.popupSlot];
   if (!t) {
-    const cost = summonCost();
+    const cost = summonCost(S.popupSlot);
     pop.querySelectorAll('[data-sum]').forEach(b => { b.disabled = S.mana < cost || !canPlay(); setText(b.querySelector('.pc'), `${cost}💎`); });
   } else {
     const ub = pop.querySelector('[data-up]'); if (ub) ub.disabled = !canPlay() || S.mana < upgradeCost(t);
@@ -776,39 +1278,85 @@ function pickCard(type) {
   if (!canPlay()) return;
   if (S.popupSlot >= 0 && !S.towers[S.popupSlot]) { if (summon(S.popupSlot, type)) closePopup(); return; }
   if (S.selCard === type) {
-    const slot = SLOT_PRIORITY.find(i => !S.towers[i]);
-    if (slot === undefined) { flashFeedback('빈 슬롯이 없습니다', 'bad'); return; }
-    if (summon(slot, type)) { S.selCard = null; }
+    // 자동 배치: 우선순위가 높은 빈 슬롯 중 지금 마나로 소환 가능한 첫 슬롯
+    const empty = SLOT_PRIORITY.filter(i => !S.towers[i]);
+    if (!empty.length) { flashFeedback('빈 슬롯이 없습니다', 'bad'); return; }
+    const slot = empty.find(i => summonCost(i) <= S.mana);
+    if (summon(slot === undefined ? empty[0] : slot, type)) { S.selCard = null; }
     return;
   }
   S.selCard = type;
   flashFeedback(`${BALANCE.cards[type].icon} 선택 — 빈 슬롯 탭 / ${BALANCE.cards[type].key} 한 번 더 = 자동 배치`, 'skip');
 }
+function clientToLogical(cx, cy) {
+  const r = cv.getBoundingClientRect();
+  return { x: (cx - r.left) / r.width * VW, y: VIEW_Y0 + (cy - r.top) / r.height * VH };
+}
 cv.addEventListener('click', ev => {
   if (!canPlay()) return;
-  const r = cv.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * W, y = (ev.clientY - r.top) / r.height * H;
-  const hit = SLOTS.find(s => Math.hypot(s.x - x, s.y - y) <= SLOT_R + 6);
+  const p = clientToLogical(ev.clientX, ev.clientY);
+  let hit = null, best = TILE / 2 + 4;
+  for (const s of SLOTS) { const d = Math.hypot(s.x - p.x, s.y - p.y); if (d <= best) { best = d; hit = s; } }
   if (hit) onSlotTap(hit.i); else { closePopup(); S.selCard = null; }
 });
 
 /* ===================== 결과 / 타이틀 ===================== */
+function mapInfoText(ri) {
+  const M = BG.MAPS[ri];
+  return `슬롯 ${M.slots.length}개 (○저 ${M.ec[0]} · ^중 ${M.ec[1]} · ^^고 ${M.ec[2]}) · 길 ${M.path.length}칸 · ▲오르막 ${M.up} ▼내리막 ${M.down}`;
+}
+function drawPreview() {
+  const pv = $('pv'); if (!pv) return;
+  const C = ensureBG(), dpr = window.devicePixelRatio || 1;
+  pv.width = Math.round(96 * dpr); pv.height = Math.round(197 * dpr);
+  const g = pv.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0);
+  g.drawImage(C.bg.cv, 0, 0, pv.width, pv.height);
+  g.drawImage(C.ovSoft, 0, 0, pv.width, pv.height);
+}
 function renderTitle() {
-  const C = BALANCE.combo;
+  if (S && S.phase !== 'title') { S.phase = 'title'; closePopup(); }
+  const C = BALANCE.combo, Q = BALANCE.quiz, TR = BALANCE.terrain;
+  const opt = (arr, cur, fn) => arr.map((o, i) => `<option value="${i}" ${i === cur ? 'selected' : ''}>${fn(o, i)}</option>`).join('');
   $('overlay').innerHTML = `<div class="panel">
     <h1>🃏 아르카나 수비대</h1>
-    <p style="text-align:center">문제를 풀어 <b>마나</b>를 모으고, 아르카나 카드를 소환해<br>망각의 안개로부터 <b>지식의 탑</b>을 지키세요.</p>
-    <h2>카드 (소환 ${BALANCE.cost.summon}💎 · 강화 ${BALANCE.cost.upgrade.slice(0, BALANCE.maxLevel-1).join('/')}💎)</h2>
-    <ul>${CARD_TYPES.map(t => { const c = BALANCE.cards[t]; return `<li>${c.icon} <b>${c.name}</b>(${c.el}, ${c.key}) — ${c.role}</li>`; }).join('')}</ul>
-    <h2>콤보</h2>
-    <ul><li>${C.discountAt}콤보: 다음 소환 -${C.discountAmount}💎</li><li>${C.buffAt}콤보: 전체 공격력 +${Math.round((C.buffMult-1)*100)}% ${C.buffSec}초</li><li>${C.ultAt}콤보: 💥 궁극기(광역 폭발) 1회</li></ul>
-    <h2>조작</h2>
-    <ul><li>1~4: 답 선택 · Q/W/E/R: 카드 선택(한 번 더 누르면 자동 배치) · Space: 궁극기</li>
-    <li>빈 슬롯 탭 → 속성 선택 → 소환 · 소환된 슬롯 탭 → 강화</li>
-    <li>문제를 ${BALANCE.quiz.idleSkipSec}초 방치하면 자동 교체(회피 기록)</li></ul>
+    <p style="text-align:center">문제를 풀어 <b>마나</b>를 모으고, 아르카나 카드를 소환해 망각의 안개로부터 <b>지식의 탑</b>을 지키세요.</p>
+    <div class="setup">
+      <canvas id="pv" aria-label="배경 미리보기"></canvas>
+      <div class="selcol">
+        <label>지역 (맵·지형)<select id="selRegion">${opt(BG.REG, SET.region, o => o.name)}</select></label>
+        <label>과목 (배경 소품 · 문항은 수학 30문항)<select id="selSubject">${opt(BG.SUB, SET.subject, o => o.name)}</select></label>
+        <label>난이도 (하늘·안개 · 적 HP)<select id="selDiff">${opt(BG.DIF, SET.diff - 1, (o, i) => `${o.name} · ×${BALANCE.stage.hpMultByDiff[i+1]}`)}</select></label>
+        <div class="mapinfo" id="mapInfo">${mapInfoText(SET.region)}</div>
+      </div>
+    </div>
     ${pendingBonus ? `<p style="color:var(--good)">해제 퀴즈 보너스: 시작 마나 +${pendingBonus}</p>` : ''}
-    <button class="big" id="startBtn">시작하기 (Enter)</button></div>`;
+    <button class="big" id="startBtn">시작하기 (Enter)</button>
+    <h2>지형</h2>
+    <ul><li>슬롯 문양 <b>^^ 고지대</b> 사거리 +${Math.round((TR.rangeMult[2]-1)*100)}% · <b>^ 중지대</b> +${Math.round((TR.rangeMult[1]-1)*100)}% · <b>○ 저지대</b> 소환 -${TR.lowlandDiscount}💎 (배지 R = 사거리)</li>
+    <li>길의 <b style="color:#ff8a5a">▲오르막</b>에서 적 ×${TR.uphill}, <b style="color:#6ee0a0">▼내리막</b>에서 ×${TR.downhill} · <b>T</b>: 지형 표시 강화(등고선·고도 숫자)</li></ul>
+    <h2>카드 (소환 ${BALANCE.cost.summon}💎 · 강화 ${BALANCE.cost.upgrade.slice(0, BALANCE.maxLevel-1).join('/')}💎, 최대 Lv${BALANCE.maxLevel})</h2>
+    <ul>${CARD_TYPES.map(t => { const c = BALANCE.cards[t]; const sp = { wand:'관통', cup:'범위 둔화', sword:'3체 타격', pentacle:'보호막 빠른 재생' }[t];
+      return `<li>${c.icon} <b>${c.name}</b>(${c.el}, ${c.key}) — ${c.role} · Lv4 ${sp}</li>`; }).join('')}</ul>
+    <h2>문제 · 콤보</h2>
+    <ul><li>오답이면 문제 카드가 <b>${Q.wrongLockBase}초 잠김</b>(연속 오답마다 +${Q.wrongLockStep}초, 최대 ${Q.wrongLockMax}초). 마나 회복은 ${BALANCE.mana.regenSec}초에 1.</li>
+    <li>${Q.readFloorSec}초 안에 낸 답은 맞아도 콤보가 오르지 않아요 — 문제를 읽고 푸세요.</li>
+    <li>${C.discountAt}콤보: 다음 소환 -${C.discountAmount}💎 · ${C.buffAt}콤보: 공격력 +${Math.round((C.buffMult-1)*100)}% ${C.buffSec}초 · ${C.ultAt}콤보: 💥 궁극기 사용권(콤보가 끊겨도 유지, 최대 1)</li></ul>
+    <h2>조작</h2>
+    <ul><li>1~4: 답 · Q/W/E/R: 카드 선택(한 번 더 = 자동 배치) · Space: 궁극기 · Esc: 취소</li>
+    <li>빈 슬롯 탭 → 속성 선택 → 소환 · 소환된 슬롯 탭 → 강화</li>
+    <li>문제를 ${Q.idleSkipSec}초 방치하면 자동 교체(회피 기록)</li></ul>
+    </div>`;
   $('overlay').hidden = false;
+  const onSel = () => {
+    SET.region = +$('selRegion').value; SET.subject = +$('selSubject').value; SET.diff = +$('selDiff').value + 1;
+    if (MAP_IDX !== SET.region) loadMap(SET.region);
+    if (S && S.phase === 'title') { S = newState(0); S.phase = 'title'; }
+    setText($('mapInfo'), mapInfoText(SET.region));
+    drawPreview();
+  };
+  ['selRegion', 'selSubject', 'selDiff'].forEach(id => $(id).addEventListener('change', onSel));
   $('startBtn').addEventListener('click', startGame);
+  drawPreview();
 }
 function renderResult() {
   const R = S.result, st = S.stats;
@@ -816,6 +1364,7 @@ function renderResult() {
   const starHtml = [0,1,2].map(i => i < R.stars ? '★' : '<span class="off">★</span>').join('');
   $('overlay').innerHTML = `<div class="panel">
     <h1>${R.win ? '🏰 탑을 지켰다!' : '🌫️ 탑 함락…'}</h1>
+    <p style="text-align:center;margin:0;color:var(--mut);font-size:12px">${BG.REG[S.region].name} · ${BG.SUB[S.subject].name.split(' · ')[0]} · 난이도 ${S.diff}</p>
     <div class="stars">${starHtml}</div>
     <div class="crit">${R.crit.map(c => `<div class="${c.ok ? 'ok' : 'no'}">${c.ok ? '✔' : '✘'} ${c.label}</div>`).join('')}</div>
     <h2>기록</h2>
@@ -824,6 +1373,7 @@ function renderResult() {
       <div>정답 ${st.correct}/${st.answered} (회피 ${st.skipped})</div><div>정답률 ${Math.round(R.acc*100)}%</div>
       <div>최대 콤보 ${S.maxCombo}</div><div>궁극기 ${st.ults}회</div>
       <div>소환 ${st.summons} · 강화 ${st.upgrades}</div><div>마나 문제 ${st.manaFromQuiz} / 회복 ${st.manaFromRegen}</div>
+      <div>오답 잠금 ${Math.round(st.lockSec)}초</div><div>빠른 정답(콤보 제외) ${st.fastCorrect}</div>
     </div>
     <h2>🔒 봉인 카드 (${sealedList.filter(s => !s.freed).length})</h2>
     <div class="sealed" id="sealedList">${sealedList.length ? sealedList.map(s =>
@@ -831,9 +1381,11 @@ function renderResult() {
       : '<p>봉인된 카드가 없습니다. 완벽해요!</p>'}</div>
     <div id="review"></div>
     ${sealedList.some(s => !s.freed) && !S.reviewDone ? `<button class="sec" id="reviewBtn">🔓 해제 퀴즈 (1문제 · 정답 시 다음 판 +${BALANCE.review.bonusMana}💎)</button>` : ''}
-    <button class="big" id="retryBtn">다시하기 (Enter)</button></div>`;
+    <button class="big" id="retryBtn">다시하기 (Enter)</button>
+    <button class="sec" id="setupBtn">🗺️ 지역·과목·난이도 바꾸기</button></div>`;
   $('overlay').hidden = false;
   $('retryBtn').addEventListener('click', startGame);
+  $('setupBtn').addEventListener('click', renderTitle);
   const rb = $('reviewBtn');
   if (rb) rb.addEventListener('click', () => { const open = sealedList.filter(s => !s.freed); startReview(open[Math.floor(Math.random()*open.length)].item.id); });
   $('sealedList').addEventListener('click', ev => { const b = ev.target.closest('button[data-id]'); if (b && !b.disabled) startReview(b.dataset.id); });
@@ -866,7 +1418,7 @@ function reviewAnswer(i) {
 
 /* ===================== 입력 ===================== */
 document.addEventListener('keydown', ev => {
-  if (ev.code === 'Space') ev.preventDefault();
+  if (ev.code === 'Space' && !(ev.target && ev.target.tagName === 'SELECT')) ev.preventDefault();
   if (ev.repeat) return;
   const ov = !$('overlay').hidden;
   if (ov) {
@@ -878,6 +1430,7 @@ document.addEventListener('keydown', ev => {
   if (m) { answer(+m[2] - 1); return; }
   if (KEY_TO_CARD[ev.code]) { pickCard(KEY_TO_CARD[ev.code]); return; }
   if (ev.code === 'Space') { useUlt(); return; }
+  if (ev.code === 'KeyT') { terrainStrong = !terrainStrong; return; }
   if (ev.code === 'Escape') { closePopup(); if (S) S.selCard = null; }
 });
 document.addEventListener('keyup', ev => { if (ev.code === 'Space') ev.preventDefault(); });
@@ -892,6 +1445,7 @@ function frame(now) {
 }
 
 buildStaticUI();
+loadMap(SET.region);
 S = newState(0);
 resize();
 renderTitle();
@@ -899,12 +1453,17 @@ requestAnimationFrame(frame);
 
 /* 테스트/밸런싱용 디버그 훅 (게임 플레이에는 영향 없음) */
 window.__arcana = {
-  get state() { return S; }, BALANCE, QUESTIONS, SLOTS, PATH_LEN, SLOT_PRIORITY,
-  start: startGame, answer, summon, upgrade, useUlt,
+  get state() { return S; }, BALANCE, QUESTIONS, BG, SET,
+  get SLOTS() { return SLOTS; }, get PATH_LEN() { return PATH_LEN; }, get SLOT_PRIORITY() { return SLOT_PRIORITY; }, get SEG() { return SEG; },
+  get bgCache() { return { key: BGC.key, ms: BGC.ms, builds: BGC.builds }; },
+  get terrainStrong() { return terrainStrong; }, set terrainStrong(v) { terrainStrong = !!v; },
+  // opts: {region:0~3, subject:0~3, diff:1~3} — 생략하면 현재 선택 유지
+  start(opts) { if (opts) Object.assign(SET, opts); startGame(); },
+  answer, summon, upgrade, useUlt, summonCost, towerRange, enemySpeed, enemyHp, wrongLockSec, loadMap, renderTitle,
   answerCorrect() { return S.q ? answer(S.q.correct) : null; },
   answerWrong() { return S.q ? answer((S.q.correct + 1) % 4) : null; },
   step(sec, dt = 1/30, draw = true) { let n = Math.round(sec / dt); while (n-- > 0) update(dt); if (draw) { render(); syncHUD(); } },
-  slotClientPos(i) { const r = cv.getBoundingClientRect(), s = SLOTS[i]; return { x: r.left + s.x * r.width / W, y: r.top + s.y * r.height / H }; },
+  slotClientPos(i) { const r = cv.getBoundingClientRect(), s = SLOTS[i]; return { x: r.left + s.x * r.width / VW, y: r.top + (s.y - VIEW_Y0) * r.height / VH }; },
 };
 </script>
 </body>
