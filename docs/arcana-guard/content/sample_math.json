@@ -1,0 +1,31 @@
+{
+  "$schema": "./pack_schema.json",
+  "id": "math-ops-fractions",
+  "title": "수학: 연산과 분수",
+  "subject": "math",
+  "grade_band": "g5-6",
+  "version": "0.1.0",
+  "locale": "ko-KR",
+  "items": [
+    { "id": "m-001", "type": "mc", "prompt": "7 × 8 = ?", "choices": ["54", "56", "63", "64"], "answer": 1, "difficulty": 1, "tags": ["topic:multiplication", "skill:fluency"], "explanation": "7×8=56이며, 7×7=49에 7을 더해 확인할 수 있어요." },
+    { "id": "m-002", "type": "input", "input_kind": "number", "prompt": "126 + 49 = ?", "answer": ["175"], "difficulty": 1, "tags": ["topic:addition", "skill:fluency"], "explanation": "일의 자리 6+9=15로 올림하여 126+49=175예요." },
+    { "id": "m-003", "type": "tf", "prompt": "3/4은 1/2보다 크다.", "answer": true, "difficulty": 1, "tags": ["topic:fraction", "skill:compare"], "explanation": "1/2은 2/4와 같으므로 분자가 더 큰 3/4이 더 커요." },
+    { "id": "m-004", "type": "mc", "prompt": "1/4 + 2/4 = ?", "choices": ["3/8", "3/4", "2/8", "1/2"], "answer": 1, "difficulty": 1, "tags": ["topic:fraction", "skill:fluency", "misconception:add-denominators"], "explanation": "분모가 같은 분수의 덧셈은 분모는 그대로 두고 분자끼리만 더해 3/4이 돼요." },
+    { "id": "m-005", "type": "input", "input_kind": "number", "prompt": "144 ÷ 12 = ?", "answer": ["12"], "difficulty": 1, "tags": ["topic:division", "skill:fluency"], "explanation": "12×12=144이므로 144÷12=12예요." },
+    { "id": "m-006", "type": "tf", "prompt": "0.5와 1/2은 같은 수이다.", "answer": true, "difficulty": 1, "tags": ["topic:decimal", "topic:fraction", "skill:convert"], "explanation": "1/2은 5/10과 같고 5/10은 0.5이므로 두 수는 같아요." },
+    { "id": "m-007", "type": "mc", "prompt": "2/3 + 1/6 = ?", "choices": ["3/9", "5/6", "3/6", "1/2"], "answer": 1, "difficulty": 2, "tags": ["topic:fraction", "skill:common-denominator", "misconception:add-denominators"], "explanation": "2/3을 4/6으로 통분하면 4/6+1/6=5/6이에요." },
+    { "id": "m-008", "type": "input", "input_kind": "fraction", "prompt": "3/4 − 1/8 = ? (분수로 입력)", "answer": ["5/8"], "difficulty": 2, "tags": ["topic:fraction", "skill:common-denominator"], "explanation": "3/4을 6/8로 통분하면 6/8−1/8=5/8이에요." },
+    { "id": "m-009", "type": "mc", "prompt": "12 + 3 × 4 = ?", "choices": ["60", "24", "48", "15"], "answer": 1, "difficulty": 2, "tags": ["topic:order-of-operations", "misconception:left-to-right"], "explanation": "덧셈보다 곱셈을 먼저 계산하므로 12+(3×4)=12+12=24예요." },
+    { "id": "m-010", "type": "tf", "prompt": "2/5 × 5/2 = 1 이다.", "answer": true, "difficulty": 2, "tags": ["topic:fraction", "skill:reciprocal"], "explanation": "서로 역수인 두 수의 곱은 항상 1이므로 2/5×5/2=1이에요." },
+    { "id": "m-011", "type": "input", "input_kind": "number", "prompt": "348 ÷ 12 = ?", "answer": ["29"], "difficulty": 2, "tags": ["topic:division", "skill:fluency"], "explanation": "12×29=348이므로 348÷12=29예요." },
+    { "id": "m-012", "type": "mc", "prompt": "1.2 × 0.5 = ?", "choices": ["0.06", "0.6", "6", "0.62"], "answer": 1, "difficulty": 2, "tags": ["topic:decimal", "skill:estimate"], "explanation": "0.5는 절반이므로 1.2의 절반인 0.6이 돼요." },
+    { "id": "m-013", "type": "input", "input_kind": "fraction", "prompt": "3/5 ÷ 3 = ? (분수로 입력)", "answer": ["1/5"], "difficulty": 2, "tags": ["topic:fraction", "skill:division"], "explanation": "분수를 자연수로 나누면 분모에 그 수를 곱하므로 3/5÷3=3/15=1/5예요." },
+    { "id": "m-014", "type": "mc", "prompt": "분수 5/8을 소수로 나타내면?", "choices": ["0.58", "0.625", "0.85", "0.5"], "answer": 1, "difficulty": 2, "tags": ["topic:fraction", "topic:decimal", "skill:convert"], "explanation": "5÷8을 계산하면 0.625예요." },
+    { "id": "m-015", "type": "input", "input_kind": "number", "prompt": "(7 − 3) × 5 − 12 ÷ 4 = ?", "answer": ["17"], "difficulty": 3, "tags": ["topic:order-of-operations", "skill:reasoning", "skill:multi_step"], "explanation": "괄호 안을 먼저 하고 곱셈·나눗셈 뒤에 뺄셈을 하면 20−3=17이에요." },
+    { "id": "m-016", "type": "mc", "prompt": "2 1/2 − 1 3/4 = ?", "choices": ["1/4", "3/4", "1 1/4", "1 3/4"], "answer": 1, "difficulty": 3, "tags": ["topic:fraction", "skill:reasoning", "skill:multi_step"], "explanation": "2 1/2=10/4, 1 3/4=7/4이므로 10/4−7/4=3/4예요." },
+    { "id": "m-017", "type": "input", "input_kind": "fraction", "prompt": "3/4 ÷ 3/8 = ?", "answer": ["2", "2/1"], "difficulty": 3, "tags": ["topic:fraction", "skill:reciprocal", "skill:reasoning"], "explanation": "나누는 분수의 역수를 곱하면 3/4×8/3=2예요." },
+    { "id": "m-018", "type": "mc", "prompt": "피자 한 판의 2/3를 먹고, 남은 것의 1/2을 동생이 먹었어요. 동생이 먹은 양은 피자 한 판의 얼마일까요?", "choices": ["1/6", "1/3", "1/2", "2/9"], "answer": 0, "difficulty": 3, "tags": ["topic:fraction", "skill:word-problem", "skill:reasoning", "skill:multi_step"], "explanation": "먹고 남은 양은 1/3이고 그 절반은 1/3×1/2=1/6이에요." },
+    { "id": "m-019", "type": "tf", "prompt": "분모가 다른 두 분수를 더할 때는 분모끼리 더하면 된다.", "answer": false, "difficulty": 3, "tags": ["topic:fraction", "misconception:add-denominators"], "explanation": "분모가 다르면 먼저 통분한 뒤 분자끼리 더해야 해요." },
+    { "id": "m-020", "type": "input", "input_kind": "number", "prompt": "어떤 수에 3/5를 곱했더니 12가 되었어요. 어떤 수는 얼마일까요?", "answer": ["20"], "difficulty": 3, "tags": ["topic:fraction", "skill:word-problem", "skill:reasoning", "skill:multi_step"], "explanation": "어떤 수×3/5=12이므로 어떤 수는 12÷3/5=20이에요." }
+  ]
+}

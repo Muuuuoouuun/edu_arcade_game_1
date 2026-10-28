@@ -1,0 +1,21 @@
+{
+  "$schema": "./pack_schema.json",
+  "id": "science-core-concepts",
+  "title": "과학: 핵심 개념",
+  "subject": "science",
+  "grade_band": "g5-8",
+  "version": "0.1.0",
+  "locale": "ko-KR",
+  "items": [
+    { "id": "s-001", "type": "mc", "prompt": "물이 얼음이 되는 현상을 무엇이라고 할까요?", "choices": ["응고", "증발", "융해", "승화"], "answer": 0, "difficulty": 1, "tags": ["topic:state-change", "skill:term"], "explanation": "액체가 고체로 변하는 현상을 응고라고 해요." },
+    { "id": "s-002", "type": "tf", "prompt": "식물은 광합성으로 스스로 양분을 만든다.", "answer": true, "difficulty": 1, "tags": ["topic:plant", "skill:concept"], "explanation": "식물은 빛에너지를 이용한 광합성으로 양분을 만들어요." },
+    { "id": "s-003", "type": "mc", "prompt": "지구에서 낮과 밤이 생기는 까닭은?", "choices": ["지구의 자전", "지구의 공전", "달의 공전", "태양의 자전"], "answer": 0, "difficulty": 1, "tags": ["topic:earth-sun", "misconception:rotation-revolution"], "explanation": "지구가 하루에 한 바퀴씩 자전하므로 낮과 밤이 번갈아 생겨요." },
+    { "id": "s-004", "type": "mc", "prompt": "고체가 액체로 변하는 현상은?", "choices": ["융해", "응고", "기화", "액화"], "answer": 0, "difficulty": 2, "tags": ["topic:state-change", "skill:term"], "explanation": "고체가 열을 받아 액체로 변하는 현상을 융해라고 해요." },
+    { "id": "s-005", "type": "mc", "prompt": "다음 중 혼합물이 아닌 것은?", "choices": ["소금물", "공기", "순수한 물", "흙탕물"], "answer": 2, "difficulty": 2, "tags": ["topic:matter", "skill:classify"], "explanation": "순수한 물은 한 가지 물질로만 이루어져 있어 순물질이에요." },
+    { "id": "s-006", "type": "tf", "prompt": "계절이 생기는 가장 큰 까닭은 지구와 태양 사이의 거리가 달라지기 때문이다.", "answer": false, "difficulty": 2, "tags": ["topic:earth-sun", "misconception:season-distance"], "explanation": "계절은 지구 자전축이 기울어져 태양 빛을 받는 각도가 달라서 생겨요." },
+    { "id": "s-007", "type": "mc", "prompt": "다음 중 자석에 붙는 물체는?", "choices": ["철 못", "유리구슬", "플라스틱 자", "고무 지우개"], "answer": 0, "difficulty": 1, "tags": ["topic:magnet", "skill:classify"], "explanation": "철로 만든 물체는 자석에 붙어요." },
+    { "id": "s-008", "type": "mc", "prompt": "같은 속력으로 움직일 때 이동 거리를 2배로 하려면 시간은 어떻게 해야 할까요?", "choices": ["절반으로 줄인다", "2배로 늘린다", "그대로 둔다", "4배로 늘린다"], "answer": 1, "difficulty": 3, "tags": ["topic:motion", "skill:reasoning"], "explanation": "거리=속력×시간이므로 속력이 같으면 거리가 2배일 때 시간도 2배예요." },
+    { "id": "s-009", "type": "mc", "prompt": "식물 세포에는 있지만 동물 세포에는 없는 것은?", "choices": ["세포벽", "세포막", "핵", "미토콘드리아"], "answer": 0, "difficulty": 3, "tags": ["topic:cell", "skill:compare"], "explanation": "식물 세포는 세포막 바깥에 단단한 세포벽이 있어요." },
+    { "id": "s-010", "type": "input", "input_kind": "number", "prompt": "물 100g에 소금 25g을 녹인 소금물의 농도는 몇 %일까요? (숫자만 입력)", "answer": ["20"], "difficulty": 3, "tags": ["topic:solution", "skill:reasoning", "skill:multi_step"], "explanation": "소금물 125g 중 소금이 25g이므로 농도는 25÷125×100=20%예요." }
+  ]
+}
