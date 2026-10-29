@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3100 --strictPort",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node tools/build-prototypes.mjs",
+    "test:prototype": "node prototype/tests/sim_test.js",
     "preview": "vite preview --host 0.0.0.0 --port 3100 --strictPort",
     "test": "node --experimental-strip-types --test src/games/engine.test.ts src/games/quiz.test.ts src/games/race/engine.test.ts src/games/defense/engine.test.ts src/games/defense/campaign.test.ts src/games/defense/difficulty.test.ts src/lib/storage.test.ts src/games/defense/tactics.test.ts src/components/defenseInput.test.ts",
     "models:build": "blender -b --python tools/blender/build_towers.py",

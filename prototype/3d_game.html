@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>아르카나 수비대 — 3D 4차</title>
+<title>아르카나 수비대 — 3D 수학 실험실</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%23221e4a'/%3E%3Cpath d='M24 7 41 39H7Z' fill='%23ffd166'/%3E%3C/svg%3E">
 <style>
 :root{--bg:#17143a;--panel:#221e4a;--panel2:#2d2860;--line:#3d3780;--ink:#f5f2ff;--mut:#aaa4d6;--gold:#ffd166;--good:#38d996;--bad:#ff5d73;--info:#7cc7ff}
 *{box-sizing:border-box}
@@ -13,6 +14,13 @@ body{display:flex;justify-content:center;align-items:flex-start;overflow:hidden}
 #app{position:relative;width:100%;max-width:360px;height:100vh;max-height:740px;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 @media (min-width:420px){#app{border-radius:14px;box-shadow:0 0 0 1px #2f2a66,0 20px 60px #0008}}
 button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.run-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;font-size:12px;color:var(--mut)}
+.run-nav a,.run-nav button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:5px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--ink);font:inherit;text-decoration:none}
+.run-nav button:disabled{opacity:.45;cursor:default}
+a.sec{text-align:center;color:var(--ink);text-decoration:none}
+#pauseLayer{position:absolute;inset:0;z-index:20;background:#0c0a1fe8;display:flex;align-items:center;justify-content:center;padding:18px}
+#pauseLayer h2{color:var(--ink);font-size:23px;text-align:center;margin:0 0 10px}
+button:focus-visible,a:focus-visible,select:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 #hud{padding:6px 8px 4px;background:var(--panel);border-bottom:1px solid var(--line);flex:none;z-index:2}
 .hrow{display:flex;gap:6px;align-items:center}
 .stat{flex:1;min-width:0;background:var(--panel2);border-radius:8px;padding:3px 6px;font-size:13px;line-height:1.25;white-space:nowrap}
@@ -115,6 +123,8 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 body{align-items:stretch}
 #app{max-width:none;max-height:none;height:100vh;display:grid;grid-template-columns:1fr 400px;grid-template-rows:auto 1fr;border-radius:0}
 #hud{grid-column:1/3}#stage{grid-column:1;grid-row:2}
+#hud{display:grid;grid-template-columns:300px minmax(0,1fr);column-gap:16px;align-items:center}
+#hud>.run-nav{grid-row:1/4;margin-bottom:0}#hud>.hrow{grid-column:2}
 #side{grid-column:2;grid-row:2;justify-content:center;border-left:1px solid var(--line)}
 #choices{grid-template-columns:1fr 1fr}.ch{min-height:64px;font-size:20px}
 }
@@ -123,6 +133,7 @@ body{align-items:stretch}
 <body>
 <div id="app">
   <header id="hud">
+    <nav class="run-nav" aria-label="실험실 메뉴"><a href="../index.html" data-hub>← 허브</a><span>3D 실험실 · 수학</span><button id="pauseBtn" disabled>일시정지</button></nav>
     <div class="hrow">
       <div class="stat" id="hpBox" title="탑 HP">🏰 <b id="hpTxt">10</b><small id="hpMax">/10</small> <span id="shieldTxt"></span><div class="bar"><i id="hpBar"></i></div></div>
       <div class="stat" title="마나 (아래 막대 = 자동 회복까지)">💎 <b id="manaTxt">0</b><small>마나</small><div class="bar"><i id="manaBar"></i></div></div>
@@ -152,6 +163,9 @@ body{align-items:stretch}
     <nav id="cardbar"></nav>
   </div>
   <div id="overlay"></div>
+  <div id="pauseLayer" hidden role="dialog" aria-modal="true" aria-labelledby="pauseTitle" aria-describedby="pauseText">
+    <div class="panel"><h2 id="pauseTitle">잠시 쉬어가요</h2><p id="pauseText"></p><button class="big" id="resumeBtn">이어하기</button><button class="sec" id="leaveBtn" hidden>허브로 돌아가기</button><a class="sec" href="../index.html" data-hub id="pauseHub">허브로 돌아가기</a></div>
+  </div>
 </div>
 <script src="vendor/three.min.js"></script>
 <script src="core/sim.js"></script>
@@ -666,17 +680,49 @@ const R = (()=>{
 /* ===== DOM UI(2D 3차와 같은 HUD·문제 카드·카드 바·팝업·드래프트·결과) ===== */
 const SET = { region: 0, subject: 0, diff: 2, theme: 'light' }, session = SIM.createSession();
 let run = null, snap = null, selCard = null, popupSlot = -1;
+let userPaused = false, pauseFocus = null;
+const HUB_URL = new URL('../index.html', location.href).href;
+function pauseUser(reason = 'manual') {
+ if (reason !== 'exit' && (!run || !run.canPlay() || !$('overlay').hidden)) return;
+ if (!userPaused) pauseFocus = document.activeElement;
+ userPaused = true; closePopup(); selCard = null; R.hold(false);
+ const exiting = reason === 'exit';
+ $('pauseTitle').textContent = exiting ? '허브로 돌아갈까요?' : '잠시 쉬어가요';
+ $('pauseText').textContent = exiting ? '이 실험작의 진행과 복습 보너스는 저장되지 않아요. 허브로 돌아가면 이번 플레이가 끝나요.' : reason === 'system' ? '화면을 벗어나 게임을 멈췄어요. 준비되면 이어하기를 눌러 주세요.' : '적과 문제의 시간이 멈췄어요. 준비되면 이어서 플레이하세요.';
+ $('resumeBtn').textContent = exiting ? '계속 보기' : '이어하기';
+ $('leaveBtn').hidden = !exiting; $('pauseHub').hidden = exiting;
+ ['hud', 'stage', 'side', 'overlay'].forEach(id=>$(id).inert = true);
+ $('pauseLayer').hidden = false; $('resumeBtn').focus();
+}
+function resumeUser() {
+ if (document.hidden) return;
+ userPaused = false; last = performance.now();
+ $('pauseLayer').hidden = true;
+ ['hud', 'stage', 'side', 'overlay'].forEach(id=>$(id).inert = false);
+ if (pauseFocus && pauseFocus.isConnected && !pauseFocus.closest('[hidden]')) pauseFocus.focus();
+ else $('pauseBtn').focus();
+}
+function requestHub() {
+ if (!run && !session.sealed.size && !session.pendingBonus) location.assign(HUB_URL);
+ else pauseUser('exit');
+}
+$('pauseBtn').onclick = ()=>pauseUser();
+$('resumeBtn').onclick = resumeUser;
+$('leaveBtn').onclick = ()=>location.assign(HUB_URL);
+document.addEventListener('click', ev=>{ if (ev.target.closest('a[data-hub]')) { ev.preventDefault(); requestHub(); } });
+addEventListener('blur', ()=>{ if (!userPaused) pauseUser('system'); });
+document.addEventListener('visibilitychange', ()=>{ if (document.hidden && !userPaused) pauseUser('system'); });
 const EL_NAME = ['저지대', '중지대', '고지대'], EL_GLYPH = ['○', '^', '^^'], RG = { common: '●', rare: '◆', legendary: '★' }, Q = BAL.quiz, CB = BAL.combo, TR = BAL.terrain;
 const _t = new Map(), setText = (el, v)=>{ v = String(v); if (_t.get(el) !== v) { _t.set(el, v); el.textContent = v; } }, setHTML = (el, v)=>{ if (_t.get(el) !== v) { _t.set(el, v); el.innerHTML = v; } };
-const S = ()=>run && run.state, canPlay = ()=>!!run && run.canPlay();
+const S = ()=>run && run.state, canPlay = ()=>!userPaused && !!run && run.canPlay();
 function buildStaticUI() {
  for (let i = 1; i <= CB.cycle; i++) { const sp = document.createElement('span'); if ([CB.discountAt, CB.buffAt, CB.ultAt].includes(i)) { sp.className = 'mark'; sp.dataset.m = i; } $('pips').appendChild(sp); }
  for (let i = 0; i < 4; i++) { const b = document.createElement('button'); b.className = 'ch'; b.innerHTML = `<span class="k">${i + 1}</span><span class="v"></span>`; b.onclick = ()=>{ answer(i); b.blur(); }; $('choices').appendChild(b); }
  for (const type of CT) { const c = BAL.cards[type], b = document.createElement('button'); b.className = 'card'; b.dataset.type = type; b.style.setProperty('--c', VIS.card[type][0]);
   b.title = `${c.name}(${c.el}) — ${c.role}`; b.innerHTML = `<span class="k">${c.key}</span><span class="ic">${c.glyph}</span>${c.name}<br><span class="cost2">5💎</span>`; b.onclick = ()=>{ pickCard(type); b.blur(); }; $('cardbar').appendChild(b); }
- const u = document.createElement('button'); u.id = 'ultBtn'; u.disabled = true; u.innerHTML = '<span class="ic">💥</span>궁극기<br><small>Space</small>'; u.onclick = ()=>{ run && run.useUlt(); u.blur(); }; $('cardbar').appendChild(u);
+ const u = document.createElement('button'); u.id = 'ultBtn'; u.disabled = true; u.innerHTML = '<span class="ic">💥</span>궁극기<br><small>Space</small>'; u.onclick = ()=>{ canPlay() && run.useUlt(); u.blur(); }; $('cardbar').appendChild(u);
 }
-function answer(i) { if (!run) return; const r = run.answer(i); if (r !== null) renderQuestion(); return r; }
+function answer(i) { if (!canPlay()) return; const r = run.answer(i); if (r !== null) renderQuestion(); return r; }
 function renderQuestion() {
  const s = S(), q = s && s.q; if (!q) return;
  setText($('qDiff'), `${'★'.repeat(q.item.d)}${'☆'.repeat(3 - q.item.d)} ${['', '쉬움', '보통', '어려움'][q.item.d]} · +${BAL.mana.byDifficulty[q.item.d]}💎`);
@@ -687,6 +733,7 @@ let fbT = 0, bnT = 0;
 function flash(msg, cls, ms) { const el = $('qFeedback'); el.textContent = msg; el.className = cls; _t.delete(el); clearTimeout(fbT); fbT = setTimeout(()=>{ el.textContent = ''; }, max(1800, ms || 0)); }
 function banner(msg) { const el = $('banner'); el.textContent = msg; el.classList.add('show'); clearTimeout(bnT); bnT = setTimeout(()=>el.classList.remove('show'),1600); }
 function syncHUD() {
+ $('pauseBtn').disabled = !run || !run.canPlay() || !$('overlay').hidden;
  const s = S(); if (!s || !snap) return;
  setText($('hpTxt'), s.hp); setText($('hpMax'), `/${BAL.tower.hp}`); setText($('shieldTxt'), s.shield ? `🛡️${s.shield}` : '');
  $('hpBar').style.width = s.hp / BAL.tower.hp * 100 + '%'; $('hpBox').classList.toggle('low', s.hp <= 3);
@@ -738,7 +785,7 @@ function refreshPopup() {
  else { const ub = pop.querySelector('[data-up]'); if (ub) ub.disabled = !canPlay() || S().mana < run.upgradeCost(popupSlot); }
 }
 function closePopup() { popupSlot = -1; $('popup').hidden = true; }
-$('popup').addEventListener('click', ev=>{ const b = ev.target.closest('button'); if (!b) return;
+$('popup').addEventListener('click', ev=>{ const b = ev.target.closest('button'); if (!b || !canPlay()) return;
  if (b.hasAttribute('data-x')) return closePopup();
  if (b.dataset.sum) { if (run.summon(popupSlot, b.dataset.sum)) closePopup(); return; }
  if (b.hasAttribute('data-up')) { const i = popupSlot; if (run.upgrade(i)) openPopup(i); } });
@@ -764,7 +811,7 @@ function renderDraft() {
  box.innerHTML = d.cards.map((p, i)=>`<button class="pcard r-${p.rarity}" data-k="${i}" title="${p.desc}"><span class="pr">${RG[p.rarity]}${p.rarityName} ${p.icon}</span><span class="pk">${i + 1}</span><b>${p.name}</b><small>${p.short}</small>${i === 0 ? '<i class="pdef">기본</i>' : ''}</button>`).join('');
  setText($('qDiff'), '특성을 골라요 · 1·2·3 또는 탭');
 }
-$('draft').addEventListener('click', ev=>{ const b = ev.target.closest('[data-k]'); if (b) { run.pickPerk(+b.dataset.k); b.blur(); } });
+$('draft').addEventListener('click', ev=>{ const b = ev.target.closest('[data-k]'); if (b && canPlay()) { run.pickPerk(+b.dataset.k); b.blur(); } });
 const opt = (arr, cur, fn)=>arr.map((o, i)=>`<option value="${i}" ${i === cur ? 'selected' : ''}>${fn(o, i)}</option>`).join('');
 const mapInfo = ri=>{ const m = SIM.MAPS[ri]; return `슬롯 ${m.slots.length}개 (○저 ${m.ec[0]} · ^중 ${m.ec[1]} · ^^고 ${m.ec[2]}) · 길 ${m.path.length}칸 · ▲오르막 ${m.up} ▼내리막 ${m.down}`; };
 function renderTitle() {
@@ -772,21 +819,24 @@ function renderTitle() {
  ov.innerHTML = `<div class="panel"><h1>🃏 아르카나 수비대 3D</h1>
   <p style="text-align:center">문제를 풀어 <b>마나</b>를 모으고, 받침대에 아르카나 카드를 소환해 <b>지식의 탑</b>을 지키세요.</p>
   <div class="selcol"><label>지역 (맵·지형)<select id="selRegion">${opt(SIM.MAPS, SET.region, o=>o.name)}</select></label>
-  <label>과목 (소품 · 문항은 수학 30)<select id="selSubject">${opt(SIM.SUBJECTS, SET.subject, o=>o)}</select></label>
+  <label>과목 · 현재 수학 30문항<select id="selSubject">${SIM.SUBJECTS.map((o, i)=>`<option value="${i}" ${i === 0 ? 'selected' : 'disabled'}>${i === 0 ? '수학 · 플레이 가능' : o + ' · 준비 중'}</option>`).join('')}</select></label>
   <label>난이도 (조명 · 적 HP)<select id="selDiff">${opt(SIM.DIFFS, SET.diff - 1, (o, i)=>`${o} · ×${BAL.stage.hpMultByDiff[i + 1]}`)}</select></label>
   <label>테마<select id="selTheme">${opt(['라이트', '다크'], SET.theme === 'dark' ? 1 : 0, o=>o)}</select></label></div>
   <div class="mapinfo" id="mapInfo">${mapInfo(SET.region)}</div>
   ${session.pendingBonus ? `<p style="color:var(--good)">해제 퀴즈 보너스: 시작 마나 +${session.pendingBonus}</p>` : ''}
   <button class="big" id="startBtn">시작하기 (Enter)</button>
+  <a class="sec" href="../index.html" data-hub>← 게임 허브로 돌아가기</a>
   <ul><li>받침대 탭 → 속성 → 소환, 소환된 받침대 탭 → 강화 · ^^ 고지대 사거리 +${round((TR.rangeMult[2] - 1) * 100)}% · ○ 저지대 -${TR.lowlandDiscount}💎</li>
   <li>1~4 답 · Q/W/E/R 카드 · Space 궁극기 · 맵 길게 누르기 = 전체 보기 · 오답 잠금 ${Q.wrongLockBase}~${Q.wrongLockMax}초</li></ul></div>`;
  ov.hidden = false;
- const onSel = ()=>{ SET.region = +$('selRegion').value; SET.subject = +$('selSubject').value; SET.diff = +$('selDiff').value + 1; SET.theme = $('selTheme').value === '1' ? 'dark' : 'light';
+ const onSel = ()=>{ SET.region = +$('selRegion').value; SET.subject = 0; SET.diff = +$('selDiff').value + 1; SET.theme = $('selTheme').value === '1' ? 'dark' : 'light';
   setText($('mapInfo'), mapInfo(SET.region)); R.setMap(SET.region, SET.subject, SET.diff, SET.theme); };
  ['selRegion', 'selSubject', 'selDiff', 'selTheme'].forEach(id=>$(id).addEventListener('change', onSel));
  $('startBtn').onclick = startGame; R.setMap(SET.region, SET.subject, SET.diff, SET.theme);
 }
 function startGame(seed) {
+ if (userPaused) return;
+ SET.subject = 0; last = performance.now();
  R.setMap(SET.region, SET.subject, SET.diff, SET.theme);
  run = SIM.createRun({ region: SET.region, subject: SET.subject, diff: SET.diff, session, seed: typeof seed === 'number' ? seed : (Date.now() ^ (Math.random() * 1e9)) >>> 0 });
  $('overlay').hidden = true; closePopup(); selCard = null; renderDraft(); renderQuestion();
@@ -804,7 +854,7 @@ function renderResult() {
    return `<div class="r-${p.rarity}">${j + 1}. <span class="rb">${RG[p.rarity]}${p.rarityName}</span> ${p.icon} <b>${p.name}</b> — ${p.short}${k.auto ? ' <small style="color:var(--mut)">(자동)</small>' : ''}</div>`; }).join('') : '<p>고른 특성이 없어요.</p>'}${st.manaFromPerk ? `<div style="color:var(--mut)">특성 마나 +${st.manaFromPerk}</div>` : ''}</div>` : ''}
   <h2>🔒 봉인 카드 (${sealed.filter(x=>!x.freed).length})</h2><div class="sealed" id="sealedList">${sealed.length ? sealed.map(x=>`<button data-id="${x.item.id}" class="${x.freed ? 'freed' : ''} ${x.newThisGame && !x.freed ? 'new' : ''}" ${x.freed || s.reviewDone ? 'disabled' : ''}>🔒 ${x.item.q} <small style="color:var(--mut)">· 오답 ${x.wrongs}회</small></button>`).join('') : '<p>봉인된 카드가 없습니다. 완벽해요!</p>'}</div>
   <div id="review"></div>${sealed.some(x=>!x.freed) && !s.reviewDone ? `<button class="sec" id="reviewBtn">🔓 해제 퀴즈 (1문제 · 정답 시 다음 판 +${BAL.review.bonusMana}💎)</button>` : ''}
-  <button class="big" id="retryBtn">다시하기 (Enter)</button><button class="sec" id="setupBtn">🗺️ 지역·과목·난이도 바꾸기</button></div>`;
+  <button class="big" id="retryBtn">다시하기 (Enter)</button><button class="sec" id="setupBtn">🗺️ 지역·난이도 바꾸기</button><a class="sec" href="../index.html" data-hub>← 게임 허브로 돌아가기</a></div>`;
  ov.hidden = false; $('retryBtn').onclick = startGame; $('setupBtn').onclick = renderTitle;
  const rb = $('reviewBtn'); if (rb) rb.onclick = ()=>startReview();
  $('sealedList').addEventListener('click', ev=>{ const b = ev.target.closest('button[data-id]'); if (b && !b.disabled) startReview(b.dataset.id); });
@@ -822,8 +872,15 @@ function reviewAnswer(i) {
 }
 const KEY = { KeyQ: 'wand', KeyW: 'cup', KeyE: 'sword', KeyR: 'pentacle' };
 document.addEventListener('keydown', ev=>{
+ if (userPaused) {
+  if (ev.code === 'Tab') { const buttons = [...$('pauseLayer').querySelectorAll('button:not([hidden]),a:not([hidden])')], first = buttons[0], last = buttons[buttons.length - 1];
+   if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+   else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); } }
+  return;
+ }
  if (ev.code === 'Space' && !(ev.target && ev.target.tagName === 'SELECT')) ev.preventDefault();
  if (ev.repeat) return;
+ if (ev.code === 'KeyP' && canPlay() && $('overlay').hidden) { ev.preventDefault(); pauseUser(); return; }
  const num = /^(Digit|Numpad)([1-4])$/.exec(ev.code);
  if (!$('overlay').hidden) { const s = S(); if (s && s.review && !s.review.answered && num) return reviewAnswer(+num[2] - 1); if (ev.code === 'Enter' || ev.code === 'NumpadEnter') { ev.preventDefault(); startGame(); } return; }
  if (S() && S().draft) { if (num && +num[2] <= BAL.perk.draft.choices) run.pickPerk(+num[2] - 1); return; }
@@ -833,7 +890,7 @@ document.addEventListener('keydown', ev=>{
  if (ev.code === 'Escape') { closePopup(); selCard = null; }
 });
 { const cv = $('gl'); let lp = 0, held = false, down = null;
- cv.addEventListener('pointerdown', ev=>{ down = [ev.clientX, ev.clientY]; held = false; clearTimeout(lp); lp = setTimeout(()=>{ held = true; R.hold(true); }, VIS.longPress); });
+ cv.addEventListener('pointerdown', ev=>{ if (userPaused) return; down = [ev.clientX, ev.clientY]; held = false; clearTimeout(lp); lp = setTimeout(()=>{ if (!userPaused) { held = true; R.hold(true); } }, VIS.longPress); });
  const up = ev=>{ clearTimeout(lp); if (held) { R.hold(false); held = false; down = null; return; }
   if (down && ev.type === 'pointerup' && hypot(ev.clientX - down[0], ev.clientY - down[1]) < 12 && canPlay()) { const i = R.pickSlot(ev.clientX, ev.clientY); if (i >= 0) onSlotTap(i); else { closePopup(); selCard = null; } } down = null; };
  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', up); }
@@ -857,11 +914,11 @@ function uiState() {
 }
 function frame(now) {
  const dt = min(0.25, max(0, (now - last) / 1000)); last = now;
- if (run && !paused) run.step(dt);
+ if (run && !paused && !userPaused) run.step(dt);
  snap = run ? run.snapshot() : null;
  if (snap) handle(snap.events);
  syncHUD();
- const inf = R.draw(snap, run ? run.alpha : 0, dt, uiState());
+ const inf = R.draw(snap, run ? run.alpha : 0, userPaused ? 0 : dt, uiState());
  fpsN++; if (now - fpsT >= 500) { if (fpsN > 3) fps = fpsN * 1000 / (now - fpsT); fpsN = 0; fpsT = now;   // 긴 정지 구간(캡처 등)은 건너뜀
   const pf = $('perf'); pf.textContent = `${fps.toFixed(0)}fps DC ${inf.calls} △${(inf.tris / 1000).toFixed(1)}k ${inf.mode} 칸${inf.tilePx}`; pf.classList.toggle('over', inf.calls > 60 || inf.tris > 40000); }
  requestAnimationFrame(frame);

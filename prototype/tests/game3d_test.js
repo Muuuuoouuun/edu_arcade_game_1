@@ -4,8 +4,11 @@
 //  세로·가로 스크린샷(prototype/3d_game_portrait.png, 3d_game_landscape.png)과 드래프트(3d_game_draft.png), 드로우콜·삼각형·FPS 기록.
 // 게임 진행은 페이지 안 봇이 sim 틱을 직접 돌리고(실시간 대기 없음) 몇 틱마다 렌더한다. FPS 는 실제 RAF 루프로 3초 잰다.
 const { chromium } = require('playwright');
-const path = require('path');
+const path = require('path'), fs = require('fs'), os = require('os');
 const PROTO = path.resolve(__dirname, '..');
+const PAGE_URL = new URL('3d_game.html', process.env.BASE_URL || 'file://' + PROTO + '/').href;
+const OUT_DIR = process.env.OUT_DIR || path.join(os.tmpdir(), 'arcana-3d-test');
+fs.mkdirSync(OUT_DIR, { recursive: true });
 const ALLOWED = ['3d_game.html', 'core/sim.js', 'vendor/three.min.js'].map(f => path.join(PROTO, f));
 const R = []; const check = (name, pass, detail) => { R.push({ name, pass: !!pass, detail }); console.log(pass ? '✓' : '✗', name, JSON.stringify(detail || {})); };
 
@@ -39,22 +42,31 @@ async function open(browser, vp, dpr) {
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
   page.on('request', r => { const u = r.url();
     if (u.startsWith('file://')) { const p = decodeURIComponent(u.slice(7)); files.add(path.relative(PROTO, p)); if (!ALLOWED.includes(p)) external.push(u); }
+    else if (/^https?:/.test(u) && new URL(u).origin === new URL(PAGE_URL).origin) files.add(new URL(u).pathname);
     else if (!u.startsWith('data:') && !u.startsWith('blob:')) external.push(u); });
-  await page.goto('file://' + path.join(PROTO, '3d_game.html'));
+  await page.goto(PAGE_URL);
   await page.waitForFunction(() => window.__game3d && document.getElementById('startBtn'), null, { timeout: 15000 });
   await page.waitForTimeout(400);
   return { page, errors, external, files, infos };
 }
 const ev = (page, fn, arg) => page.evaluate(fn, arg);
 const fpsOver = async (page, ms) => { await page.waitForTimeout(500); const f0 = await ev(page, () => __game3d.fps); await page.waitForTimeout(ms); return ev(page, () => __game3d.fps); };
+const focusPage = async page => {
+  await page.bringToFront();
+  if (await page.locator('#pauseLayer').isVisible()) await page.click('#resumeBtn');
+};
 
 (async () => {
-  const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  const executablePath = process.env.CHROMIUM_PATH || (fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined);
+  const browser = await chromium.launch({ executablePath, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const perf = [];
   // ================= 세로 360×740 =================
   const P = await open(browser, { width: 360, height: 740 }, 2), page = P.page;
   const title = await ev(page, () => ({ sels: ['selRegion', 'selSubject', 'selDiff', 'selTheme'].map(id => document.getElementById(id).options.length), three: THREE.REVISION, sim: typeof ArcanaSim.createRun }));
   check('title_selects', title.sels.join() === '4,4,3,2' && title.three === '169' && title.sim === 'function', title);
+  const mathOnly = await ev(page, () => [...document.getElementById('selSubject').options].map(o => ({ value: o.value, disabled: o.disabled, text: o.textContent })));
+  check('math_only_available', mathOnly.filter(o => !o.disabled).length === 1 && mathOnly[0].value === '0' && mathOnly.slice(1).every(o => o.text.includes('준비 중')), mathOnly);
+  check('page_identity', (await page.title()).includes('3D 수학 실험실') && await page.locator('#startBtn').isVisible() && await page.locator('#overlay a[data-hub]').isVisible());
   await page.selectOption('#selRegion', '0'); await page.selectOption('#selSubject', '0'); await page.selectOption('#selDiff', '0');
   await page.click('#startBtn'); await page.waitForTimeout(300);
   await ev(page, () => { __game3d.paused = true; });
@@ -112,7 +124,7 @@ const fpsOver = async (page, ms) => { await page.waitForTimeout(500); const f0 =
   await ev(page, () => { __game3d.paused = true; });
   let b1 = await ev(page, BOT, { sec: 400, stop: 'draft' });
   await page.waitForTimeout(1000);
-  await page.screenshot({ path: path.join(PROTO, '3d_game_draft.png') });
+  await page.screenshot({ path: path.join(OUT_DIR, '3d_game_draft.png') });
   const d0 = await ev(page, () => ({ cards: document.querySelectorAll('#draft .pcard').length, choicesHidden: getComputedStyle(document.getElementById('choices')).display === 'none', ts: __game3d.run.state.timeScale }));
   await ev(page, () => { const r = __game3d.run; for (let k = 0; k < 3; k++) r.step(0.1); });
   await page.keyboard.press('Digit2'); await page.waitForTimeout(100);
@@ -124,7 +136,7 @@ const fpsOver = async (page, ms) => { await page.waitForTimeout(500); const f0 =
   await ev(page, () => { __game3d.paused = false; }); const fpsP = await fpsOver(page, 3000); await ev(page, () => { __game3d.paused = true; });
   await ev(page, () => __game3d.pump(true)); await page.waitForTimeout(1200);
   const infP = await ev(page, () => __game3d.info());
-  await page.screenshot({ path: path.join(PROTO, '3d_game_portrait.png') });
+  await page.screenshot({ path: path.join(OUT_DIR, '3d_game_portrait.png') });
   perf.push({ view: 'portrait 360×740 DPR2', region: 1, fps: +fpsP.toFixed(1), calls: infP.calls, tris: infP.tris, enemies: await ev(page, () => __game3d.snap.enemies.n), tilePx: infP.tilePx, mode: infP.mode });
   check('wave_progress', b2.wave >= 3 && b2.waves.length >= 3, b2);
   check('budget_portrait', infP.calls <= 60 && infP.tris <= 40000, { calls: infP.calls, tris: infP.tris });
@@ -159,7 +171,7 @@ const fpsOver = async (page, ms) => { await page.waitForTimeout(500); const f0 =
   await lp.mouse.click(lr.cx, lr.cy); await lp.waitForTimeout(150);
   const lpop = await ev(lp, () => !document.getElementById('popup').hidden && document.querySelector('#popup .ptitle span').textContent);
   await lp.keyboard.press('Escape');
-  await lp.screenshot({ path: path.join(PROTO, '3d_game_landscape.png') });
+  await lp.screenshot({ path: path.join(OUT_DIR, '3d_game_landscape.png') });
   perf.push({ view: 'landscape 1280×720 DPR1', region: 2, fps: +fpsL.toFixed(1), calls: infL.calls, tris: infL.tris, enemies: await ev(lp, () => __game3d.snap.enemies.n), tilePx: infL.tilePx, mode: infL.mode });
   check('landscape', infL.mode === 'H45' && infL.yaw === 45 && bl.wave >= 3 && typeof lpop === 'string' && lpop.startsWith(`슬롯 ${ls + 1}`), { mode: infL.mode, yaw: infL.yaw, wave: bl.wave, popup: lpop });
   check('budget_landscape', infL.calls <= 60 && infL.tris <= 40000, { calls: infL.calls, tris: infL.tris });
@@ -167,16 +179,17 @@ const fpsOver = async (page, ms) => { await page.waitForTimeout(500); const f0 =
 
   // 13 §9-1 체크리스트 수치(지역 4개 × 세로 V-Follow / 가로 H45): 슬롯 간 화면 거리 ≥ 48px, 적 지름 ≥ 20px, 단차 앞면 ≥ 6px, 가림 슬롯(Lv4 기준)
   const met = [];
-  for (const [pg, view] of [[page, '세로 V-Follow'], [lp, '가로 H45']]) for (let ri = 0; ri < 4; ri++) {
+  for (const [pg, view] of [[page, '세로 V-Follow'], [lp, '가로 H45']]) { await focusPage(pg); for (let ri = 0; ri < 4; ri++) {
     const m = await ev(pg, ri => { __game3d.R.setMap(ri, 0, 2, 'light'); return __game3d.R.info; }, ri);
     met.push({ view, region: ri + 1, tilePx: m.tilePx, slotMinPx: m.slotMinPx, enemyPx: m.enemyPx, cliffFacePx: m.cliffFacePx, occluding: m.occluding.join(' ') || '-', lowProps: m.lowProps });
-  }
+  } }
   check('checklist_enemy_cliff', met.every(m => m.enemyPx >= 20 && m.cliffFacePx >= 6), { min: Math.min(...met.map(m => m.enemyPx)), cliff: Math.min(...met.map(m => m.cliffFacePx)) });
   const narrow = met.filter(m => m.slotMinPx < 48);   // 알려진 한계(README): 고도차가 세로 압축을 더 줄이는 슬롯 쌍
   console.log(narrow.length ? `⚠ 슬롯 간격 < 48px: ${narrow.map(m => `${m.view} ${m.region}장 ${m.slotMinPx}px`).join(', ')}` : '슬롯 간격 전부 ≥ 48px');
 
   // 13 §9-7: 실제 WebGL 픽셀로 길 상대휘도 ≤ 0.10, 적 ↔ 길 대비 ≥ 3:1 (난이도 3 × 테마 2, 지역 1·4)
   const lum = [];
+  await focusPage(page);
   for (const ri of [0, 3]) for (const di of [1, 2, 3]) for (const theme of ['light', 'dark']) {
     lum.push(await ev(page, ({ ri, di, theme }) => {
       const G = __game3d, R = G.R, gl = R.renderer.getContext(), dpr = R.renderer.getPixelRatio(), H = gl.drawingBufferHeight;
@@ -202,8 +215,60 @@ const fpsOver = async (page, ms) => { await page.waitForTimeout(500); const f0 =
   const rp = await ev(page, () => !document.getElementById('popup').hidden && document.querySelector('#popup .ptitle span').textContent);
   check('resize_pick', typeof rp === 'string' && rp.startsWith(`슬롯 ${rs + 1}`), { slot: rs, popup: rp });
 
+  // User pause is separate from the legacy debug clock switch. Exercise real UI,
+  // then deterministic lifecycle events; no combat state is changed by these checks.
+  await page.keyboard.press('Escape');
+  await ev(page, () => { __game3d.paused = false; });
+  await page.clock.install();
+  await page.clock.runFor(500);
+  await page.click('#pauseBtn');
+  const pausedState = await ev(page, () => JSON.stringify(__game3d.run.state));
+  await page.keyboard.press('Digit1'); await page.keyboard.press('KeyQ');
+  // A real Space on the focused resume button intentionally activates it; send
+  // the game shortcut directly to check its guard without clicking that button.
+  await ev(page, () => document.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', bubbles: true })));
+  await page.clock.runFor(2000);
+  check('manual_pause_freezes_state_and_input', await ev(page, () => JSON.stringify(__game3d.run.state)) === pausedState && await page.locator('#pauseLayer').isVisible());
+  await page.screenshot({ path: path.join(OUT_DIR, '3d_game_paused.png') });
+  const beforeResume = await ev(page, () => __game3d.run.state.time);
+  await page.click('#resumeBtn'); await page.clock.runFor(50);
+  const afterResume = await ev(page, () => __game3d.run.state.time);
+  await page.clock.runFor(250);
+  check('resume_without_catchup', !(await page.locator('#pauseLayer').isVisible()) && afterResume - beforeResume <= 0.10001 && await ev(page, t => __game3d.run.state.time > t, afterResume), { beforeResume, afterResume });
+
+  await ev(page, () => window.dispatchEvent(new Event('blur')));
+  const blurState = await ev(page, () => JSON.stringify(__game3d.run.state));
+  await page.clock.runFor(3000);
+  await ev(page, () => window.dispatchEvent(new Event('focus')));
+  await page.clock.runFor(200);
+  check('blur_requires_deliberate_resume', await page.locator('#pauseLayer').isVisible() && await ev(page, () => JSON.stringify(__game3d.run.state)) === blurState);
+  await page.click('#resumeBtn'); await page.clock.runFor(200);
+  await ev(page, () => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); document.dispatchEvent(new Event('visibilitychange')); });
+  const hiddenState = await ev(page, () => JSON.stringify(__game3d.run.state));
+  await ev(page, () => document.getElementById('resumeBtn').click());
+  await page.clock.runFor(3000);
+  const stillPausedHidden = await page.locator('#pauseLayer').isVisible();
+  await ev(page, () => { delete document.hidden; document.dispatchEvent(new Event('visibilitychange')); });
+  await page.clock.runFor(200);
+  check('visibility_latch_blocks_hidden_resume', stillPausedHidden && await page.locator('#pauseLayer').isVisible() && await ev(page, () => JSON.stringify(__game3d.run.state)) === hiddenState);
+  await page.click('#resumeBtn'); await page.clock.runFor(200);
+
+  await page.click('#hud a[data-hub]');
+  const exitState = await ev(page, () => JSON.stringify(__game3d.run.state));
+  await page.clock.runFor(1000);
+  check('hub_return_confirmation_pauses', await page.locator('#leaveBtn').isVisible() && (await page.textContent('#pauseText')).includes('저장되지') && await ev(page, () => JSON.stringify(__game3d.run.state)) === exitState);
+  await page.click('#resumeBtn'); await page.clock.runFor(200);
+  check('cancel_hub_return_keeps_run', page.url().endsWith('/3d_game.html') && !(await page.locator('#pauseLayer').isVisible()));
+
   check('console_errors_0', P.errors.length === 0 && L.errors.length === 0, { errors: [...P.errors, ...L.errors].slice(0, 5) });
   check('external_requests_0', P.external.length === 0 && L.external.length === 0, { files: [...P.files], external: [...P.external, ...L.external] });
+
+  // Verify the deliberate exit destination after runtime-health assertions; the
+  // source hub is served by Vite rather than file:// in normal use.
+  await page.click('#hud a[data-hub]');
+  const destination = new URL('../index.html', page.url()).href;
+  await Promise.all([page.waitForURL(destination), page.click('#leaveBtn')]);
+  check('hub_return_destination', page.url() === destination);
 
   console.log('\n| 화면 | 지역 | 카메라 | 적 | 드로우콜 | 삼각형 | 칸(px) | FPS(SwiftShader) |');
   console.log('|---|---|---|---|---|---|---|---|');

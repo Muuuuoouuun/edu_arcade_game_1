@@ -33,18 +33,7 @@ export function makeQuestion(game: 'math' | 'word', seed: number, index: number)
   }
   // Reuse the mobile app's deterministic domain engine: one source for all ten levels.
   const level = Math.min(10, Math.floor(index / 6) + 1);
-  let [problem] = generateSessionProblems(seed + index * 101, level, 1);
-  // The source engine truncates level-9 division, even when it has a remainder.
-  // Practice questions must have mathematically exact integer answers.
-  if (level === 9) {
-    const terms = problem.prompt.match(/^\((\d+) × (\d+)\) ÷ (\d+)$/);
-    if (terms) {
-      const a = Number(terms[1]), divisor = Number(terms[3]);
-      let b = Number(terms[2]);
-      while ((a * b) % divisor !== 0) b++;
-      problem = { ...problem, prompt: `(${a} × ${b}) ÷ ${divisor}`, answer: (a * b) / divisor };
-    }
-  }
+  const [problem] = generateSessionProblems(seed + index * 101, level, 1);
   const choices = new Set<number>([problem.answer]);
   const radius = Math.max(3, Math.min(12, Math.abs(problem.answer) / 4));
   while (choices.size < 4) {

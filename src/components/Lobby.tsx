@@ -3,6 +3,7 @@ import { GAME_INFO } from '../games/engine';
 import type { GameId } from '../games/engine';
 import { Art } from './Art';
 import { Icon } from './Icon';
+import './prototype-entry.css';
 
 export function Lobby({ best, onPlay }: { best: number; onPlay: (id: GameId) => void }) {
   const [category, setCategory] = useState('전체');
@@ -33,6 +34,16 @@ export function Lobby({ best, onPlay }: { best: number; onPlay: (id: GameId) => 
         </button>;
       })}</div>
     </section>
+    {(category === '전체' || category === '디펜스') && <section className="prototype-entry" aria-labelledby="prototype-title">
+      <div className="prototype-entry-copy">
+        <span className="prototype-badge">새로운 플레이 · 프로토타입</span>
+        <h2 id="prototype-title">3D 카드 수비대</h2>
+        <p>정답으로 마나를 모으고, 네 가지 카드로 다섯 웨이브를 버텨요.</p>
+        <small>수학 퀴즈 모드 · 한 판씩 플레이 · 캠페인 진행도와 별도</small>
+        <a href="prototype/3d_game.html" className="prototype-play"><Icon name="play" size={22}/>3D 수비 시작</a>
+      </div>
+      <Art kind="defense"/>
+    </section>}
     <footer className="footer"><strong>공부 말고, 일단 플레이.</strong><span><Icon name="keyboard" size={24}/>키보드와 터치 모두 OK</span></footer>
   </main>;
 }
