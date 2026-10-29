@@ -3,6 +3,8 @@ import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getPaths, getSlots } from '../games/defense/data';
 import { actionSpriteAsset, monsterSpriteAsset, spriteAsset, towerSpriteAsset } from '../games/defense/art';
 import type { SpriteAsset, ActionPose } from '../games/defense/art';
+import type { DefenseThemeId } from '../games/defense/themes';
+import { DefenseThemeScenery } from './DefenseThemeScenery';
 import { towerRange, positionOnPath } from '../games/defense/engine';
 import type { CombatAttack, DefenseState, Effect, Element, Enemy, HeroId, Point, Tower } from '../games/defense/types';
 import { AttackTrails, DashTrail, DefenseFxDefs, EffectLayer, FX_COLORS, ProjectileLayer } from './DefenseEffects';
@@ -147,7 +149,7 @@ const Terrain=memo(function Terrain({stageId}:{stageId:number}){
  </g>;
 });
 
-export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSelect,onMove,aimingDash=false,onSelectCandidates,onCancelAim}:{state:DefenseState;selectedSlot:number|null;onSelect:(id:number)=>void;onMove:(p:Point)=>void;aimingDash?:boolean;onSelectCandidates?:(ids:number[])=>void;onCancelAim?:()=>void}){
+export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSelect,onMove,aimingDash=false,onSelectCandidates,onCancelAim,themeId='verdant'}:{state:DefenseState;selectedSlot:number|null;onSelect:(id:number)=>void;onMove:(p:Point)=>void;aimingDash?:boolean;onSelectCandidates?:(ids:number[])=>void;onCancelAim?:()=>void;themeId?:DefenseThemeId}){
  const stage=getStage(s.stage),snow=getRegion(s.stage)==='snow',slots=getSlots(s.stage),availableSlots=slots.filter(slot=>slot.unlock<=s.stage);
  const reduced=useReducedMotion();
  const mapRef=useRef<SVGSVGElement>(null),boardRef=useRef<HTMLDivElement>(null),tapRef=useRef(new BoardTapTracker());
@@ -225,11 +227,11 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
  if(s.pet)units.push({id:'pet',y:s.pet.position.y,render:<Actor actor="wolf" position={s.pet.position} facing={s.pet.facing} moving={distance(s.pet.position,s.pet.target)>2} attack={s.attacks.find(a=>a.source==='pet')} time={s.time} reduced={reduced}/>});
  units.push({id:'hero',y:s.heroPosition.y,render:<Actor actor={s.hero} position={s.heroPosition} facing={s.heroFacing} moving={Math.hypot(s.heroVelocity.x,s.heroVelocity.y)>5||distance(s.heroPosition,s.heroTarget)>2} velocity={s.heroVelocity} dashTime={s.dashTime} attack={s.attacks.find(a=>a.source==='hero')} time={s.time} reduced={reduced} promoted={Boolean(s.promotion)} skill={s.effects.filter(e=>e.kind==='skill').at(-1)} leader/>});
  const weatherTime=reduced?0:s.time;
- return <div ref={boardRef} onPointerDownCapture={pointerDown} onPointerMoveCapture={pointerMove} onPointerUpCapture={pointerUp} onPointerCancelCapture={()=>cancelInput(true)} onLostPointerCapture={event=>{if(tapRef.current.has(event.pointerId))cancelInput(true);}} onClickCapture={preventPointerClick} className={`def-board ${snow?'def-snow':''} ${stage.climate==='rain'?'def-rain':''} ${stage.climate==='blizzard'?'def-blizzard':''} ${s.paused?'def-paused':''} ${reduced?'def-reduced-motion':''} ${s.freeze>0?'def-frozen':''}`} data-testid="defense-board" data-enemies={s.enemies.length} data-game-time={s.time.toFixed(3)}>
+ return <div ref={boardRef} onPointerDownCapture={pointerDown} onPointerMoveCapture={pointerMove} onPointerUpCapture={pointerUp} onPointerCancelCapture={()=>cancelInput(true)} onLostPointerCapture={event=>{if(tapRef.current.has(event.pointerId))cancelInput(true);}} onClickCapture={preventPointerClick} className={`def-board ${snow?'def-snow':''} ${stage.climate==='rain'?'def-rain':''} ${stage.climate==='blizzard'?'def-blizzard':''} ${s.paused?'def-paused':''} ${reduced?'def-reduced-motion':''} ${s.freeze>0?'def-frozen':''}`} data-testid="defense-board" data-theme={themeId} data-enemies={s.enemies.length} data-game-time={s.time.toFixed(3)}>
   <svg ref={mapRef} className="def-map" viewBox="0 0 900 600" tabIndex={0} aria-label={`${snow?'서리산맥':'청록의 숲'} 전장. 땅을 누르면 영웅이 이동합니다. 전장에 초점을 두고 방향키로도 이동할 수 있어요. 건설 지점을 선택해 타워를 세우세요.`} onKeyDown={moveWithKeys}>
    <Terrain stageId={s.stage}/><DefenseFxDefs/>
    {slot&&slot.unlock<=s.stage?<circle cx={slot.x} cy={slot.y} r={selectedTower?towerRange(selectedTower,s.stage):145} fill="#e6f5b91a" stroke="#f5e7a5" strokeWidth="2" strokeDasharray="7 6" pointerEvents="none"/>:null}
-   <Sprite index={snow?21:7} x={850} y={318} size={125}/>{stage.expanded?<g opacity={s.outpostHp<=0?.4:1}><Sprite index={snow?21:7} x={852} y={131} size={111}/></g>:null}
+   <DefenseThemeScenery themeId={themeId} snow={snow} expanded={stage.expanded} outpostFallen={s.outpostHp<=0}/>
    <EffectLayer effects={activeEffects} reduced={reduced} layer="ground"/>
    <DashTrail effect={dashEffect} position={s.heroPosition} remaining={s.dashTime} reduced={reduced}/>
    {!dashEffect&&distance(s.heroPosition,s.heroTarget)>5?<g className="def-move-destination" pointerEvents="none"><path d={`M${s.heroPosition.x} ${s.heroPosition.y}L${s.heroTarget.x} ${s.heroTarget.y}`} stroke="#e2f4bb" strokeDasharray="4 8" strokeWidth="1.5" opacity=".4"/><ellipse cx={s.heroTarget.x} cy={s.heroTarget.y} rx="16" ry="7" fill="none" stroke="#f1ffba" strokeWidth="2"/><path d={`M${s.heroTarget.x-6} ${s.heroTarget.y}h12M${s.heroTarget.x} ${s.heroTarget.y-4}v8`} stroke="#f1ffba" strokeWidth="1.4"/></g>:null}

@@ -18,7 +18,7 @@ export function getRegion(stage:number):'forest'|'snow' { return getStage(stage)
 export function stageLabel(stage:number):string { return getStage(stage).label; }
 
 export const HEROES: Record<HeroId,{name:string;role:string;description:string;skill:string;sprite:number;color:string}> = {
-  mage:{name:'이안',role:'인간 · 마법사',description:'불꽃 탄환으로 나무와 얼음 적을 녹여요.',skill:'유성 낙하',sprite:0,color:'#e4813f'},
+  mage:{name:'이안',role:'인간 · 마법사',description:'나무를 태우고 얼음 갑옷을 녹이는 불꽃 공격.',skill:'유성 낙하',sprite:0,color:'#e4813f'},
   elf:{name:'리엘',role:'엘프 · 명사수',description:'가장 긴 사거리로 빠른 적을 추격해요.',skill:'별빛 화살비',sprite:1,color:'#73aa65'},
   dwarf:{name:'브론',role:'드워프 · 공병',description:'망치의 충격으로 돌과 얼음 갑옷을 부숴요.',skill:'대지 강타',sprite:2,color:'#c89b52'},
   tao:{name:'청운',role:'동방 · 도사',description:'번개 부적으로 금속과 젖은 적을 연결해요.',skill:'뇌운 결계',sprite:3,color:'#69afb8'},

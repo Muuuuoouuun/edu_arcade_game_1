@@ -3,6 +3,7 @@ import { getWavePlan } from '../games/defense/difficulty';
 import { ENEMIES, getStage } from '../games/defense/data';
 import type { DefenseState, Difficulty, EnemyKind } from '../games/defense/types';
 import { DefenseSprite } from './DefenseBoard';
+import { DefenseFieldGuide } from './DefenseFieldGuide';
 
 /** Only integer combat milestones update the scout panel, never animation frames. */
 export const DefenseForecast = memo(function DefenseForecast({ stage, wave, phase, difficulty, spawned, alive, expanded = false }: {
@@ -30,6 +31,7 @@ export const DefenseForecast = memo(function DefenseForecast({ stage, wave, phas
         <DefenseSprite index={ENEMIES[kind].sprite}/><span><strong>{ENEMIES[kind].name} <b>×{count}</b></strong><small>{ENEMIES[kind].elementHint}</small></span>
       </div>)}</div>
       <p>{getStage(stage).expanded ? '두 갈래 진입로 · 영웅과 용병으로 빈 길목을 보완하세요.' : '건설 지점 선택 → 타워 건설 · 빈 땅을 누르면 영웅 이동'}</p>
+      <DefenseFieldGuide stage={stage} wave={next} difficulty={difficulty}/>
     </div>
   </details>;
 });
