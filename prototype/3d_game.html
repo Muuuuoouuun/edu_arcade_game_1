@@ -55,6 +55,9 @@ button:focus-visible,a:focus-visible,select:focus-visible{outline:3px solid var(
 #prep{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#000b;color:var(--gold);border-radius:10px;padding:6px 18px;text-align:center;font-weight:700;pointer-events:none;white-space:nowrap}
 #prep b{display:block;font-size:28px}
 #popup{position:absolute;z-index:5;width:236px;background:#1b1842f2;border:1px solid var(--gold);border-radius:12px;padding:8px;box-shadow:0 8px 24px #000a}
+#popup .slot-choices{display:grid;gap:6px}
+#popup .slot-choice{min-height:48px;text-align:left;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--ink)}
+#popup .slot-choice small{display:block;color:var(--mut);font-size:11px}
 #popup[hidden],#prep[hidden],[hidden]{display:none!important}
 .ptitle{font-weight:700;font-size:13px;margin-bottom:6px;display:flex;justify-content:space-between}
 .ptitle button{background:none;border:0;color:var(--mut);font-size:15px;padding:0 4px}
@@ -577,11 +580,13 @@ const R = (()=>{
  }
  function slotRect(i) { const s = map.slots[i], rc = canvas.getBoundingClientRect(), p = scr(s.x, s.top + 0.3, s.z), q = scr(s.x + VIS.ped.r0, s.top, s.z), o = scr(s.x, s.top, s.z);
   return { x: p[0], y: p[1], cx: rc.left + p[0], cy: rc.top + p[1], r: max(22, hypot(q[0]-o[0], q[1]-o[1])*1.4) }; }
- function pickSlot(clientX, clientY) {
+ function pickSlots(clientX, clientY) {
   const t = pickTile(clientX, clientY), byTile = t ? map.slots.findIndex(s=>s.c === t.c && s.r === t.r) : -1;
-  const rc = canvas.getBoundingClientRect(); let best = -1, bd = max(26,0.8*info.tilePx);
-  map.slots.forEach((s, i)=>{ const r = slotRect(i), d = hypot(r.cx - clientX, r.cy - clientY); if (d < bd) { bd = d; best = i; } });
-  return best >= 0 ? best : byTile;
+  const radius = max(26,0.8*info.tilePx);
+  const hits = map.slots.map((s, i)=>{ const r = slotRect(i); return { i, x:r.cx, y:r.cy, d:hypot(r.cx-clientX,r.cy-clientY) }; })
+   .filter(hit=>hit.d < radius).sort((a,b)=>a.d-b.d);
+  if (hits.length || byTile < 0) return hits;
+  const r = slotRect(byTile); return [{ i:byTile, x:r.cx, y:r.cy, d:0 }];
  }
  /* 이벤트 → 연출(시뮬로 돌아가는 경로 없음) */
  const ghosts = [], lastPos = new Map(), hitAt = new Map(), lastSpark = new Float32Array(10).fill(-9), WHITE = col('#fff');
@@ -711,12 +716,12 @@ const R = (()=>{
  }
  const place = (el, p)=>{ el.style.transform = `translate(${p[0].toFixed(1)}px,${p[1].toFixed(1)}px) translate(-50%,-100%)`; };
  function floatText(s, color) { const el = document.createElement('div'), p = scr(map.top.x + 0.3, map.top.y + 0.4, map.top.z); el.className = 'ft'; el.textContent = s; el.style.color = color; el.style.left = p[0] + 'px'; el.style.top = p[1] + 'px'; el.style.transform = 'translate(-50%,0)'; $('labels').appendChild(el); setTimeout(()=>el.remove(),900); }
- return { setMap, resize, draw, event, pickTile, slotRect, pickSlot, floatText, get info() { return info; }, renderer, overview() { cur.overview = !cur.overview; }, hold(v) { cur.hold = v; }, proj: scr, lastPos };
+ return { setMap, resize, draw, event, pickTile, slotRect, pickSlots, floatText, get info() { return info; }, renderer, overview() { cur.overview = !cur.overview; }, hold(v) { cur.hold = v; }, proj: scr, lastPos };
 })();
 $('viewBtn').onclick = ()=>R.overview();
 /* ===== DOM UI(2D 3차와 같은 HUD·문제 카드·카드 바·팝업·드래프트·결과) ===== */
 const SET = { region: 0, subject: 0, diff: 2, theme: 'light' }, session = SIM.createSession();
-let run = null, snap = null, selCard = null, popupSlot = -1;
+let run = null, snap = null, selCard = null, popupSlot = -1, slotChoiceOpen = false, ignorePopupClick = false;
 let userPaused = false, pauseFocus = null;
 const HUB_URL = new URL('../index.html', location.href).href;
 function pauseUser(reason = 'manual') {
@@ -807,7 +812,7 @@ function describe(type, lv, slot) {
  return `피해 <b>${L.dmg}</b> · ${L.cd}초 · 사거리 ${(L.range * m).toFixed(1)}칸${m > 1 ? '↑' : ''}` + (L.targets ? ` · <b>${L.targets}체</b>` : '') + (L.slow ? ` · 둔화 <b>${round(L.slow * 100)}%</b> ${L.slowSec}초` : '') + (L.slowAoE ? ' · <b>범위 둔화</b>' : '') + (L.pierce ? ` · <b>관통 ${L.pierce}</b>(${round(L.pierceMult * 100)}%)` : '');
 }
 function openPopup(i) {
- popupSlot = i; const pop = $('popup'), t = S().towers[i];
+ slotChoiceOpen = false; ignorePopupClick = false; popupSlot = i; const pop = $('popup'), t = S().towers[i];
  if (!t) pop.innerHTML = `<div class="ptitle"><span>슬롯 ${i + 1} · 소환</span><button data-x>✕</button></div><div class="pterr">${terrainLine(i)}</div><div class="pgrid">` +
   CT.map(type=>{ const c = BAL.cards[type]; return `<button class="pbtn" data-sum="${type}" style="--c:${VIS.card[type][0]}"><span class="ic">${c.glyph}</span><b>${GUARDIANS[type]}</b> <span class="pc"></span><small>${c.key} · ${c.el} · ${c.role}</small></button>`; }).join('') + '</div>';
  else { const c = BAL.cards[t.type]; pop.innerHTML = `<div class="ptitle"><span>${c.glyph} ${GUARDIANS[t.type]} Lv${t.lv}</span><button data-x>✕</button></div><div class="pterr">${terrainLine(i)}</div>
@@ -823,9 +828,21 @@ function refreshPopup() {
  if (!t) { const cost = run.summonCost(popupSlot); pop.querySelectorAll('[data-sum]').forEach(b=>{ b.disabled = S().mana < cost || !canPlay(); setText(b.querySelector('.pc'), `${cost}💎`); }); }
  else { const ub = pop.querySelector('[data-up]'); if (ub) ub.disabled = !canPlay() || S().mana < run.upgradeCost(popupSlot); }
 }
-function closePopup() { popupSlot = -1; $('popup').hidden = true; }
-$('popup').addEventListener('click', ev=>{ const b = ev.target.closest('button'); if (!b || !canPlay()) return;
+function closePopup() { popupSlot = -1; slotChoiceOpen = false; ignorePopupClick = false; $('popup').hidden = true; }
+// Overlapping touch targets must not silently choose a neighbouring slot.
+function openSlotChoices(hits, clientX, clientY) {
+ popupSlot = -1; slotChoiceOpen = true; ignorePopupClick = true; const pop = $('popup'), st = $('stage'), rc = st.getBoundingClientRect();
+ const direction = h=>{ const dx=h.x-clientX, dy=h.y-clientY; return abs(dx)>abs(dy) ? (dx<0?'왼쪽':'오른쪽') : (dy<0?'위쪽':'아래쪽'); };
+ pop.innerHTML = `<div class="ptitle"><span>어느 받침대인가요?</span><button data-x aria-label="받침대 선택 닫기">✕</button></div><div class="slot-choices">` +
+  hits.map(h=>`<button class="slot-choice" data-slot-choice="${h.i}"><b>${direction(h)} · 슬롯 ${h.i+1}</b><small>${terrainLine(h.i)}</small></button>`).join('') + '</div>';
+ pop.hidden = false;
+ pop.style.left = clamp(clientX-rc.left-pop.offsetWidth/2,4,st.clientWidth-pop.offsetWidth-4)+'px';
+ pop.style.top = clamp(clientY-rc.top-pop.offsetHeight/2,4,st.clientHeight-pop.offsetHeight-4)+'px';
+}
+$('popup').addEventListener('pointerdown', ()=>{ ignorePopupClick = false; });
+$('popup').addEventListener('click', ev=>{ if (ignorePopupClick && ev.detail > 0) { ignorePopupClick = false; return; } const b = ev.target.closest('button'); if (!b || !canPlay()) return;
  if (b.hasAttribute('data-x')) return closePopup();
+ if (b.hasAttribute('data-slot-choice')) { const i=Number(b.dataset.slotChoice); closePopup(); return onSlotTap(i); }
  if (b.dataset.sum) { if (run.summon(popupSlot, b.dataset.sum)) closePopup(); return; }
  if (b.hasAttribute('data-up')) { const i = popupSlot; if (run.upgrade(i)) openPopup(i); } });
 function onSlotTap(i) {
@@ -933,17 +950,17 @@ document.addEventListener('keydown', ev=>{
 { const cv = $('gl'); let lp = 0, held = false, down = null;
  cv.addEventListener('pointerdown', ev=>{ if (userPaused) return; down = [ev.clientX, ev.clientY]; held = false; clearTimeout(lp); lp = setTimeout(()=>{ if (!userPaused) { held = true; R.hold(true); } }, VIS.longPress); });
  const up = ev=>{ clearTimeout(lp); if (held) { R.hold(false); held = false; down = null; return; }
-  if (down && ev.type === 'pointerup' && hypot(ev.clientX - down[0], ev.clientY - down[1]) < 12 && canPlay()) { const i = R.pickSlot(ev.clientX, ev.clientY); if (i >= 0) onSlotTap(i); else { closePopup(); selCard = null; } } down = null; };
+  if (down && ev.type === 'pointerup' && hypot(ev.clientX - down[0], ev.clientY - down[1]) < 12 && canPlay()) { const hits = R.pickSlots(ev.clientX, ev.clientY); if (hits.length > 1) openSlotChoices(hits,ev.clientX,ev.clientY); else if (hits.length) onSlotTap(hits[0].i); else { closePopup(); selCard = null; } } down = null; };
  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', up); }
 // Draft cards and larger text can resize the battlefield without resizing the window.
-new ResizeObserver(()=>{ R.resize(); if (popupSlot >= 0) openPopup(popupSlot); }).observe($('stage'));
-addEventListener('resize', ()=>{ R.resize(); if (popupSlot >= 0) openPopup(popupSlot); });
+new ResizeObserver(()=>{ R.resize(); if (slotChoiceOpen) closePopup(); else if (popupSlot >= 0) openPopup(popupSlot); }).observe($('stage'));
+addEventListener('resize', ()=>{ R.resize(); if (slotChoiceOpen) closePopup(); else if (popupSlot >= 0) openPopup(popupSlot); });
 /* 루프: 실제 시간 → sim.step(10틱/초) → snapshot → 이벤트 → HUD·렌더 */
 let last = performance.now(), paused = false, fpsN = 0, fpsT = last, fps = 0;
 function handle(ev) {
  for (const e of ev) {
   if (e.k === 'banner') banner(e.msg); else if (e.k === 'feedback') flash(e.msg, e.cls, e.ms); else if (e.k === 'question' || e.k === 'answer') renderQuestion();
-  else if (e.k === 'draft') renderDraft(); else if (e.k === 'text') { R.floatText(e.s, e.color); if (e.hit) { const b = $('hpBox'); b.classList.remove('hit'); void b.offsetWidth; b.classList.add('hit'); } }
+  else if (e.k === 'draft') { if (slotChoiceOpen) closePopup(); renderDraft(); } else if (e.k === 'text') { R.floatText(e.s, e.color); if (e.hit) { const b = $('hpBox'); b.classList.remove('hit'); void b.offsetWidth; b.classList.add('hit'); } }
   else if (e.k === 'end') { closePopup(); renderDraft(); renderResult(); }
   R.event(e);
  }

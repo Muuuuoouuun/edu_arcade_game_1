@@ -50,6 +50,13 @@ async function open(browser, vp, dpr) {
   return { page, errors, external, files, infos };
 }
 const ev = (page, fn, arg) => page.evaluate(fn, arg);
+// Software WebGL can be slow under shared CPU load. Keep capture failures fatal,
+// but allow longer than Playwright's 30s default and report actual capture time.
+const capture = async (page, filename) => {
+  const start = Date.now();
+  await page.screenshot({ path: path.join(OUT_DIR, filename), timeout: 90000 });
+  console.log(`[screenshot] ${filename}: ${Date.now() - start}ms`);
+};
 const fpsOver = async (page, ms) => { await page.waitForTimeout(500); const f0 = await ev(page, () => __game3d.fps); await page.waitForTimeout(ms); return ev(page, () => __game3d.fps); };
 const focusPage = async page => {
   await page.bringToFront();
@@ -124,7 +131,7 @@ const focusPage = async page => {
   await ev(page, () => { __game3d.paused = true; });
   let b1 = await ev(page, BOT, { sec: 400, stop: 'draft' });
   await page.waitForTimeout(1000);
-  await page.screenshot({ path: path.join(OUT_DIR, '3d_game_draft.png') });
+  await capture(page, '3d_game_draft.png');
   const d0 = await ev(page, () => ({ cards: document.querySelectorAll('#draft .pcard').length, choicesHidden: getComputedStyle(document.getElementById('choices')).display === 'none', ts: __game3d.run.state.timeScale }));
   check('draft_canvas_follows_layout', await ev(page, () => Math.abs(document.getElementById('gl').clientHeight - document.getElementById('stage').clientHeight) <= 1));
   await ev(page, () => { const r = __game3d.run; for (let k = 0; k < 3; k++) r.step(0.1); });
@@ -137,7 +144,7 @@ const focusPage = async page => {
   await ev(page, () => { __game3d.paused = false; }); const fpsP = await fpsOver(page, 3000); await ev(page, () => { __game3d.paused = true; });
   await ev(page, () => __game3d.pump(true)); await page.waitForTimeout(1200);
   const infP = await ev(page, () => __game3d.info());
-  await page.screenshot({ path: path.join(OUT_DIR, '3d_game_portrait.png') });
+  await capture(page, '3d_game_portrait.png');
   perf.push({ view: 'portrait 360×740 DPR2', region: 1, fps: +fpsP.toFixed(1), calls: infP.calls, tris: infP.tris, enemies: await ev(page, () => __game3d.snap.enemies.n), tilePx: infP.tilePx, mode: infP.mode });
   check('wave_progress', b2.wave >= 3 && b2.waves.length >= 3, b2);
   check('budget_portrait', infP.calls <= 60 && infP.tris <= 40000, { calls: infP.calls, tris: infP.tris });
@@ -172,7 +179,7 @@ const focusPage = async page => {
   await lp.mouse.click(lr.cx, lr.cy); await lp.waitForTimeout(150);
   const lpop = await ev(lp, () => !document.getElementById('popup').hidden && document.querySelector('#popup .ptitle span').textContent);
   await lp.keyboard.press('Escape');
-  await lp.screenshot({ path: path.join(OUT_DIR, '3d_game_landscape.png') });
+  await capture(lp, '3d_game_landscape.png');
   perf.push({ view: 'landscape 1280×720 DPR1', region: 2, fps: +fpsL.toFixed(1), calls: infL.calls, tris: infL.tris, enemies: await ev(lp, () => __game3d.snap.enemies.n), tilePx: infL.tilePx, mode: infL.mode });
   check('landscape', infL.mode === 'H45' && infL.yaw === 45 && bl.wave >= 3 && typeof lpop === 'string' && lpop.startsWith(`슬롯 ${ls + 1}`), { mode: infL.mode, yaw: infL.yaw, wave: bl.wave, popup: lpop });
   check('budget_landscape', infL.calls <= 60 && infL.tris <= 40000, { calls: infL.calls, tris: infL.tris });
@@ -230,9 +237,12 @@ const focusPage = async page => {
   // then deterministic lifecycle events; no combat state is changed by these checks.
   await page.keyboard.press('Escape');
   await ev(page, () => { __game3d.paused = false; });
+  await page.click('#pauseBtn');
+  // Capture before installing the virtual clock: screenshot preparation can need
+  // animation frames that are not advanced while runFor is idle.
+  await capture(page, '3d_game_paused.png');
   await page.clock.install();
   await page.clock.runFor(500);
-  await page.click('#pauseBtn');
   const pausedState = await ev(page, () => JSON.stringify(__game3d.run.state));
   await page.keyboard.press('Digit1'); await page.keyboard.press('KeyQ');
   // A real Space on the focused resume button intentionally activates it; send
@@ -240,7 +250,6 @@ const focusPage = async page => {
   await ev(page, () => document.dispatchEvent(new KeyboardEvent('keydown', { code: 'Space', bubbles: true })));
   await page.clock.runFor(2000);
   check('manual_pause_freezes_state_and_input', await ev(page, () => JSON.stringify(__game3d.run.state)) === pausedState && await page.locator('#pauseLayer').isVisible());
-  await page.screenshot({ path: path.join(OUT_DIR, '3d_game_paused.png') });
   const beforeResume = await ev(page, () => __game3d.run.state.time);
   await page.click('#resumeBtn'); await page.clock.runFor(50);
   const afterResume = await ev(page, () => __game3d.run.state.time);

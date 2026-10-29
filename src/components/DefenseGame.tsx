@@ -11,6 +11,7 @@ import { Icon } from './Icon';
 import { createDefense, actDefense, stepDefense, questSatisfied as isQuestSatisfied, allowedBranches, upgradeCost } from '../games/defense/engine';
 import { STAGES, HEROES, TOWERS, BRANCHES, ENEMIES, getStage, getSlots, stageLabel, getRegion, STAGE_COUNT } from '../games/defense/data';
 import { readCampaign, writeCampaign, stageUnlocked, completeRun, acknowledgeVisitor, trainCampaign, selectHero, selectDifficulty, trainingCost } from '../games/defense/campaign';
+import { shouldPublishDefenseFrame } from './defenseFrame';
 import { DIFFICULTIES } from '../games/defense/difficulty';
 import type { Campaign, DefenseAction, DefenseState, HeroId, TowerKind } from '../games/defense/types';
 import type { RoundRecord } from '../lib/storage';
@@ -167,7 +168,7 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
           if (next.phase === 'promotion' || (!finishing && (next.phase === 'won' || next.phase === 'lost'))) { accumulated = 0; break; }
         }
         combatFeedback(before, next); stateRef.current = next;
-        if (next !== lastPublishedState && (now - lastPublish >= 32 || before.phase !== next.phase)) {
+        if (shouldPublishDefenseFrame(before, next, lastPublishedState, now - lastPublish)) {
           lastPublish = now; lastPublishedState = next; setState(next);
         }
       } else accumulated = 0;
