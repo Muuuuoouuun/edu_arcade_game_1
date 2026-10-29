@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>아르카나 수비대 — 3D 수학 실험실</title>
+<title>아르카나 3D 수학 실험실</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%23221e4a'/%3E%3Cpath d='M24 7 41 39H7Z' fill='%23ffd166'/%3E%3C/svg%3E">
 <style>
 :root{--bg:#17143a;--panel:#221e4a;--panel2:#2d2860;--line:#3d3780;--ink:#f5f2ff;--mut:#aaa4d6;--gold:#ffd166;--good:#38d996;--bad:#ff5d73;--info:#7cc7ff}
@@ -134,7 +134,7 @@ body{align-items:stretch}
 <body>
 <div id="app">
   <header id="hud">
-    <nav class="run-nav" aria-label="실험실 메뉴"><a href="../index.html" data-hub>← 허브</a><span>아르카나 수비대</span><button id="pauseBtn" disabled>일시정지</button></nav>
+    <nav class="run-nav" aria-label="실험실 메뉴"><a href="../index.html" data-hub>← 허브</a><span>3D 수학 실험실</span><button id="pauseBtn" disabled>일시정지</button></nav>
     <div class="hrow">
       <div class="stat" data-stat="hp" id="hpBox" title="탑 HP">🏰 <b id="hpTxt">10</b><small id="hpMax">/10</small> <span id="shieldTxt"></span><div class="bar"><i id="hpBar"></i></div></div>
       <div class="stat" data-stat="mana" title="마나 (아래 막대 = 자동 회복까지)">💎 <b id="manaTxt">0</b><small>마나</small><div class="bar"><i id="manaBar"></i></div></div>
@@ -855,7 +855,7 @@ const opt = (arr, cur, fn)=>arr.map((o, i)=>`<option value="${i}" ${i === cur ? 
 const mapInfo = ri=>{ const m = SIM.MAPS[ri]; return `슬롯 ${m.slots.length}개 (○저 ${m.ec[0]} · ^중 ${m.ec[1]} · ^^고 ${m.ec[2]}) · 길 ${m.path.length}칸 · ▲오르막 ${m.up} ▼내리막 ${m.down}`; };
 function renderTitle() {
  const ov = $('overlay'); ov.className = 'title'; closePopup();
- ov.innerHTML = `<div class="panel"><h1>아르카나 수비대</h1>
+ ov.innerHTML = `<div class="panel"><h1>아르카나 3D 수학 실험실</h1>
   <p style="text-align:center">문제를 풀어 <b>마나</b>를 모으고, 받침대에 아르카나 카드를 소환해 <b>지식의 탑</b>을 지키세요.</p>
   <div class="selcol"><label>지역 (맵·지형)<select id="selRegion">${opt(SIM.MAPS, SET.region, o=>o.name)}</select></label>
   <label>과목 · 현재 수학 30문항<select id="selSubject">${SIM.SUBJECTS.map((o, i)=>`<option value="${i}" ${i === 0 ? 'selected' : 'disabled'}>${i === 0 ? '수학 · 플레이 가능' : o + ' · 준비 중'}</option>`).join('')}</select></label>
