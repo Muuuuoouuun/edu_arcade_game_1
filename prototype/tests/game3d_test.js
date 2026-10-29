@@ -9,7 +9,7 @@ const PROTO = path.resolve(__dirname, '..');
 const PAGE_URL = new URL('3d_game.html', process.env.BASE_URL || 'file://' + PROTO + '/').href;
 const OUT_DIR = process.env.OUT_DIR || path.join(os.tmpdir(), 'arcana-3d-test');
 fs.mkdirSync(OUT_DIR, { recursive: true });
-const ALLOWED = ['3d_game.html', 'core/sim.js', 'vendor/three.min.js'].map(f => path.join(PROTO, f));
+const ALLOWED = ['3d_game.html', 'core/sim.js', 'vendor/three.min.js', 'graphics/models.js', 'graphics/ui.css'].map(f => path.join(PROTO, f));
 const R = []; const check = (name, pass, detail) => { R.push({ name, pass: !!pass, detail }); console.log(pass ? '✓' : '✗', name, JSON.stringify(detail || {})); };
 
 // 페이지 안 봇(2D bal_sim 과 같은 소비 규칙, 마나가 모자라면 사지 않음). sec 동안 0.1초 틱, every 틱마다 렌더
@@ -114,7 +114,7 @@ const focusPage = async page => {
 
   // 길게 누르기 = V-Fit(전체 보기), 떼면 V-Follow
   const box = await page.locator('#gl').boundingBox();
-  await page.mouse.move(box.x + 30, box.y + 30); await page.mouse.down(); await page.waitForTimeout(900);
+  await page.mouse.move(box.x + box.width - 20, box.y + box.height - 20); await page.mouse.down(); await page.waitForTimeout(900);
   const held = await ev(page, () => __game3d.info());
   await page.mouse.up(); await page.waitForTimeout(900);
   const rel = await ev(page, () => __game3d.info());
@@ -126,6 +126,7 @@ const focusPage = async page => {
   await page.waitForTimeout(1000);
   await page.screenshot({ path: path.join(OUT_DIR, '3d_game_draft.png') });
   const d0 = await ev(page, () => ({ cards: document.querySelectorAll('#draft .pcard').length, choicesHidden: getComputedStyle(document.getElementById('choices')).display === 'none', ts: __game3d.run.state.timeScale }));
+  check('draft_canvas_follows_layout', await ev(page, () => Math.abs(document.getElementById('gl').clientHeight - document.getElementById('stage').clientHeight) <= 1));
   await ev(page, () => { const r = __game3d.run; for (let k = 0; k < 3; k++) r.step(0.1); });
   await page.keyboard.press('Digit2'); await page.waitForTimeout(100);
   const d1 = await ev(page, () => { const s = __game3d.run.state; return { picks: s.picks.map(p => ({ id: p.id, auto: p.auto })), draft: !!s.draft, offered: s.picks.length ? s.picks[0].offered : [] }; });
@@ -214,6 +215,16 @@ const focusPage = async page => {
   await page.mouse.click(rr.cx, rr.cy); await page.waitForTimeout(150);
   const rp = await ev(page, () => !document.getElementById('popup').hidden && document.querySelector('#popup .ptitle span').textContent);
   check('resize_pick', typeof rp === 'string' && rp.startsWith(`슬롯 ${rs + 1}`), { slot: rs, popup: rp });
+
+  // A short landscape screen uses a close follow camera, with a deliberate overview.
+  await page.setViewportSize({ width: 844, height: 390 }); await page.waitForTimeout(600);
+  const closeView = await ev(page, () => __game3d.info());
+  await page.click('#viewBtn'); await page.waitForTimeout(600);
+  const overview = await ev(page, () => __game3d.info());
+  check('compact_camera_overview', closeView.mode === 'H-Follow' && closeView.tilePx >= 35 && overview.mode === 'H-Fit' && overview.tilePx < closeView.tilePx && await page.getAttribute('#viewBtn','aria-pressed') === 'true', { closeView:closeView.tilePx, overview:overview.tilePx });
+  await page.locator('#viewBtn').focus(); await page.keyboard.press('Space'); await page.waitForTimeout(600);
+  check('compact_camera_keyboard_restore', (await ev(page, () => __game3d.info())).mode === 'H-Follow' && await page.getAttribute('#viewBtn','aria-pressed') === 'false');
+  await page.setViewportSize({ width: 390, height: 680 }); await page.waitForTimeout(400);
 
   // User pause is separate from the legacy debug clock switch. Exercise real UI,
   // then deterministic lifecycle events; no combat state is changed by these checks.

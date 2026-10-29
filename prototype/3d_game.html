@@ -129,15 +129,16 @@ body{align-items:stretch}
 #choices{grid-template-columns:1fr 1fr}.ch{min-height:64px;font-size:20px}
 }
 </style>
+<link rel="stylesheet" href="graphics/ui.css">
 </head>
 <body>
 <div id="app">
   <header id="hud">
-    <nav class="run-nav" aria-label="실험실 메뉴"><a href="../index.html" data-hub>← 허브</a><span>3D 실험실 · 수학</span><button id="pauseBtn" disabled>일시정지</button></nav>
+    <nav class="run-nav" aria-label="실험실 메뉴"><a href="../index.html" data-hub>← 허브</a><span>아르카나 수비대</span><button id="pauseBtn" disabled>일시정지</button></nav>
     <div class="hrow">
-      <div class="stat" id="hpBox" title="탑 HP">🏰 <b id="hpTxt">10</b><small id="hpMax">/10</small> <span id="shieldTxt"></span><div class="bar"><i id="hpBar"></i></div></div>
-      <div class="stat" title="마나 (아래 막대 = 자동 회복까지)">💎 <b id="manaTxt">0</b><small>마나</small><div class="bar"><i id="manaBar"></i></div></div>
-      <div class="stat" title="웨이브">🌫️ <b id="waveTxt">1/5</b><small id="phaseTxt"></small></div>
+      <div class="stat" data-stat="hp" id="hpBox" title="탑 HP">🏰 <b id="hpTxt">10</b><small id="hpMax">/10</small> <span id="shieldTxt"></span><div class="bar"><i id="hpBar"></i></div></div>
+      <div class="stat" data-stat="mana" title="마나 (아래 막대 = 자동 회복까지)">💎 <b id="manaTxt">0</b><small>마나</small><div class="bar"><i id="manaBar"></i></div></div>
+      <div class="stat" data-stat="wave" title="웨이브">🌫️ <b id="waveTxt">1/5</b><small id="phaseTxt"></small></div>
     </div>
     <div class="hrow combo">콤보 <b id="comboTxt">0</b><div id="pips"></div><div id="badges"></div></div>
     <div class="hrow lvrow" id="lvRow"><b id="lvTxt">Lv1</b><div class="bar"><i id="xpBar"></i></div><span id="xpTxt">XP 0/15</span><div id="perkIcons"></div></div>
@@ -145,6 +146,7 @@ body{align-items:stretch}
   <div id="stage">
     <canvas id="gl" aria-label="게임 맵(3D)"></canvas>
     <div id="labels"></div>
+    <button id="viewBtn" type="button" aria-pressed="false">전체 보기</button>
     <div id="flash"></div>
     <div id="prep" hidden></div>
     <div id="perf"></div>
@@ -169,6 +171,7 @@ body{align-items:stretch}
 </div>
 <script src="vendor/three.min.js"></script>
 <script src="core/sim.js"></script>
+<script src="graphics/models.js"></script>
 <script>
 'use strict';
 /* 4차 3D 게임 = 시뮬 코어(core/sim.js, 로직·수치 전부) + 렌더 어댑터 R(Three.js, snapshot 읽기 전용) + DOM UI.
@@ -184,21 +187,23 @@ const VIS = {
  card: { wand: ['#E0A030', '#F2C14E'], cup: ['#2F7DB8', '#7CC0EC'], sword: ['#F4EAD5', '#1B2A41'], pentacle: ['#6A593A', '#C9B68E'] },
  // 13 §1.2 팔레트 슬롯(M1 지면 M2 절벽 M3 길 M4 물 M5 받침대 top 윗판 M6 잎 M7 줄기)
  reg: [
-  { M1: '#6FC662', M2: '#A08C6C', M3: '#54463A', M4: '#7DB7D9', M5: '#7E848F', top: '#F4EAD5', M6: '#4FA85A', M7: '#8A6A44' },
-  { M1: '#4D9979', M2: '#6F7566', M3: '#4E4034', M4: '#5FA3B5', M5: '#C3CAC4', top: '#F4EAD5', M6: '#2F7A5C', M7: '#6F5238' },
+  { M1: '#72B894', M2: '#6D8290', M3: '#54463A', M4: '#7DB7D9', M5: '#7E848F', top: '#F4EAD5', M6: '#319477', M7: '#7E6452' },
+  { M1: '#408D80', M2: '#607A83', M3: '#4E4034', M4: '#5FA3B5', M5: '#C3CAC4', top: '#F4EAD5', M6: '#2F7A5C', M7: '#6F5238' },
   { M1: '#9AB2BC', M2: '#7C8A94', M3: '#444D5A', M4: '#6E93AB', M5: '#737C88', top: '#F4EAD5', M6: '#5F9A86', M7: '#7A6A5A' },
   { M1: '#DDE3F1', M2: '#B4BCD4', M3: '#40476A', M4: '#F4F7FC', M5: '#7F869A', top: '#4A5675', M6: '#A9C7E6', M7: '#B8A58A' }],
  subj: ['#7AA2E8', '#E8A24A', '#58C2B0', '#C8665A'],
  // 13 §4.3 난이도 → 조명
  light: [
   { key: '#FFE9C2', el: 55, k: 1.0, sky: '#CFE6FF', gnd: '#9DB58C', h: 0.70, top: '#7DB9EE', hor: '#FFC890', haze: 0.10, expo: 1.00 },
-  { key: '#FF9A5C', el: 35, k: 0.85, sky: '#6F6BB5', gnd: '#4A4668', h: 0.55, top: '#3C3F8F', hor: '#FFAD7E', haze: 0.22, expo: 0.84 },
-  { key: '#9FB4FF', el: 55, k: 0.55, sky: '#2B3B77', gnd: '#1B2240', h: 0.50, top: '#0B1230', hor: '#5B73B4', haze: 0.36, expo: 0.62 }],
+  { key: '#FFE4BC', el: 42, k: 0.85, sky: '#BCDDF0', gnd: '#667E83', h: 0.62, top: '#183F59', hor: '#9CBEBA', haze: 0.18, expo: 0.90 },
+  { key: '#BED9FF', el: 55, k: 0.55, sky: '#668BB2', gnd: '#2F445A', h: 0.55, top: '#101F36', hor: '#557C92', haze: 0.28, expo: 0.72 }],
  particles: 60, trees: 22, props: 3,
 };
 const $ = id=>document.getElementById(id);
 const clamp = (v, a, b)=>max(a, min(b, v));
 const V3 = THREE.Vector3, rad = d=>d * PI / 180, col = h=>new THREE.Color(h), mixC = (a, b, t)=>col(a).lerp(col(b), t);
+const DEBUG_VIEW = new URLSearchParams(location.search).has('debug');
+$('perf').hidden = !DEBUG_VIEW;
 const RM = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 const hashI = (a, b, s)=>{ let h = Math.imul(a + 1,374761393) ^ Math.imul(b + 7,668265263) ^ Math.imul(s + 3,2246822519); h = Math.imul(h ^ (h >>> 13),1274126177); return ((h ^ (h >>> 16)) >>> 0)/4294967296; };
 const LDIR = new V3(-0.45,0.8,0.4).normalize();
@@ -242,7 +247,7 @@ const R = (()=>{
  const matFlat = new THREE.MeshBasicMaterial({ vertexColors: true });   // 조명 무관: 적·받침대·수호자
  const matFx = o=>new THREE.MeshBasicMaterial(Object.assign({ transparent: true, depthWrite: false, fog: false }, o));
  const ST = VIS.step, cx = c=>c - 5, cz = r=>r - 9;
- const cur = { ri: -1, si: 0, di: 1, theme: 'light', yaw: 0, land: false, W: 360, H: 400, k: 8, z: 0, fitK: 8, followK: 8, hold: false, tilePx: 34, fitPx: 30 };
+ const cur = { ri: -1, si: 0, di: 1, theme: 'light', yaw: 0, land: false, W: 360, H: 400, k: 8, z: 0, fitK: 8, followK: 8, hold: false, overview: false, compact: false, tilePx: 34, fitPx: 30 };
  let M = null, map = null, terrain = null, props = null, peds = null, path = null;
  /* 지형 1메시: 윗면 e·0.5, 길 -0.08, 경사 = 중심-중심 선형, 높이차 > 0.02 변에 벽. 칸 9점: 0 NW 1 N 2 NE 3 E 4 SE 5 S 6 SW 7 W 8 중심 */
  const P9 = [[0,0], [0.5,0], [1,0], [1,0.5], [1,1], [0.5,1], [0,1], [0,0.5], [0.5,0.5]];
@@ -289,6 +294,16 @@ const R = (()=>{
     }
    }
   }
+  // Small inset paving stones: one batched mesh, no extra materials or draw calls.
+  m.path.forEach(([c, r], i)=>{
+   const h = H[r][c][8] + 0.012;
+   if (m.path.some(([pc, pr])=>abs(pc-c)+abs(pr-r) === 1 && +m.elev[pr][pc] !== +m.elev[r][c])) return;
+   for (let k = 0; k < 3; k++) {
+    const x = cx(c) + 0.18 + k * 0.25, z = cz(r) + 0.25 + hashI(c,k,ri)*0.45;
+    const sc = pathC.clone().multiplyScalar(1.08 + hashI(r,k,ri)*0.18);
+    B.quad([x,h,z], [x-0.02,h,z+0.14], [x+0.18,h,z+0.18], [x+0.2,h,z+0.01], sc, sc);
+   }
+  });
   const dark = pathC.clone().multiplyScalar(0.55);
   for (let i = 1; i < m.path.length; i++) {
    const [c0, r0] = m.path[i - 1], [c1, r1] = m.path[i], e0 = +m.elev[r0][c0], e1 = +m.elev[r1][c1];
@@ -300,7 +315,7 @@ const R = (()=>{
     B.quad([x - px, y, z - pz], [x - px, y, z + pz], [x + px, y, z + pz], [x + px, y, z - pz], dark, dark);
    }
   }
-  const fc = col(C.M1 && (ri >= 2 ? C.M4 : C.M1)).multiplyScalar(ri >= 2 ? 1 : 0.82), y = -0.05, o = 6;
+  const fc = col(ri === 3 ? '#718FA6' : '#426E7B'), y = -VIS.skirt - 0.12, o = 10;
   B.quad([-5-o, y,-9-o], [-5-o, y,9+o], [-5, y,9+o], [-5, y,-9-o], fc, fc); B.quad([5, y,-9-o], [5, y,9+o], [5+o, y,9+o], [5+o, y,-9-o], fc, fc);
   B.quad([-5, y,-9-o], [-5, y,-9], [5, y,-9], [5, y,-9-o], fc, fc); B.quad([-5, y,9], [-5, y,9+o], [5, y,9+o], [5, y,9], fc, fc);
   return { geo: B.build(), H };
@@ -310,10 +325,21 @@ const R = (()=>{
   const rnd = SIM.mulberry32(500+ri * 31+si), B = new Batch(rnd), X = c=>cx(c)+0.5, Z = r=>cz(r)+0.5, base = (c, r)=>+m.elev[r][c] * ST;
   const blob = (x, y, z, r)=>B.add(new THREE.CircleGeometry(r,8).rotateX(-PI / 2), M4(x, y + 0.012, z), col(C.M1).multiplyScalar(0.62), null,0);
   const [ec, er] = m.path[m.path.length - 1], hy = H[er][ec][8], hx = X(ec), hz = Z(er), gold = col(VIS.gold);
-  B.add(new THREE.BoxGeometry(0.72,0.5,0.62), M4(hx, hy + 0.25, hz), col(VIS.parch), col(VIS.parch));
-  B.add(new THREE.ConeGeometry(0.58,0.42,4), M4(hx, hy + 0.71, hz,1, PI / 4), col('#2F7DB8'), col('#2F7DB8'));
-  B.add(new THREE.CylinderGeometry(0.15,0.17,0.95,6), M4(hx + 0.27, hy + 0.47, hz - 0.22), col(VIS.parch), col(VIS.parch));
-  B.add(new THREE.ConeGeometry(0.22,0.34,6), M4(hx + 0.27, hy + 1.11, hz - 0.22), gold, gold);
+  const stone = col('#DCE5DD'), shade = col('#8AA7AD'), roof = col('#286586'), ink = col('#183C51');
+  B.add(new THREE.CylinderGeometry(0.55,0.65,0.15,8), M4(hx,hy+0.07,hz), shade, stone);
+  B.add(new THREE.BoxGeometry(0.76,0.54,0.62), M4(hx,hy+0.4,hz), stone,stone);
+  B.add(new THREE.ConeGeometry(0.61,0.38,4), M4(hx,hy+0.86,hz,1,PI/4),roof,roof);
+  B.add(new THREE.BoxGeometry(0.23,0.32,0.03), M4(hx,hy+0.29,hz+0.325),ink,ink);
+  B.add(new THREE.BoxGeometry(0.13,0.21,0.035), M4(hx,hy+0.27,hz+0.345),gold,gold);
+  for (const dx of [-0.37,0.37]) for (const dz of [-0.27,0.27]) {
+   B.add(new THREE.CylinderGeometry(0.14,0.18,0.71,6),M4(hx+dx,hy+0.48,hz+dz),stone,stone);
+   B.add(new THREE.CylinderGeometry(0.18,0.16,0.09,6),M4(hx+dx,hy+0.84,hz+dz),shade,stone);
+   B.add(new THREE.ConeGeometry(0.22,0.32,6),M4(hx+dx,hy+1.04,hz+dz),roof,roof);
+   B.add(new THREE.OctahedronGeometry(0.045,0),M4(hx+dx,hy+1.24,hz+dz),gold,gold);
+   B.add(new THREE.BoxGeometry(0.045,0.15,0.025),M4(hx+dx,hy+0.57,hz+dz+0.15),ink,ink);
+  }
+  B.add(new THREE.CylinderGeometry(0.015,0.015,0.28,4),M4(hx,hy+1.17,hz),gold,gold);
+  B.add(new THREE.BoxGeometry(0.18,0.12,0.012),M4(hx+0.085,hy+1.23,hz),col('#58C3B5'),col('#58C3B5'));
   // 길·슬롯과 맞닿지 않는 칸만. 길·슬롯의 화면 아래쪽 2칸 안이면 높이 ≤ 0.7(13 §3.4)
   const busy = (c, r)=>m.pk.has(c + ',' + r) || m.sk.has(c + ',' + r);
   const near = (c, r)=>[[0,0], [1,0], [-1,0], [0,1], [0,-1]].some(([a, b])=>busy(c + a, r + b));
@@ -339,6 +365,17 @@ const R = (()=>{
    B.add(new THREE.CylinderGeometry(0.06,0.08,0.26,5), M4(x, y + 0.13*s, z, s, ry), col(C.M7), col(C.M7));
    B.add(new THREE.ConeGeometry(0.32,0.6,7), M4(x, y + 0.56*s, z, s, ry), lc, lc,0.12);
    if (two) B.add(new THREE.ConeGeometry(0.23,0.45,7), M4(x, y + 0.86*s, z, s, ry + 0.4), lc.clone().multiplyScalar(1.1), lc,0.12);
+   // Broad foliage clusters break up the repeated cone silhouette.
+   if (!two && lim > 0.7) {
+    B.add(new THREE.IcosahedronGeometry(0.22,0),M4(x+0.13*s,y+0.60*s,z,s,ry,0.8*s),lc.clone().multiplyScalar(1.16),lc);
+   }
+   const pebble = col(C.M2).lerp(col(C.top),0.25);
+   B.add(new THREE.DodecahedronGeometry(0.12,0),M4(x-0.26,y+0.06,z+0.16,1,ry,0.55),pebble,pebble);
+   for (let k=0;k<3;k++) B.add(new THREE.ConeGeometry(0.035,0.14,3),M4(x+0.26+k*0.045,y+0.07,z-0.12),lc.clone().multiplyScalar(1.3),lc);
+   if (nt % 4 === 0 && ri < 2) {
+    B.add(new THREE.CylinderGeometry(0.025,0.03,0.10,4),M4(x-0.2,y+0.05,z-0.2),stone,stone);
+    B.add(new THREE.ConeGeometry(0.09,0.06,6),M4(x-0.2,y+0.12,z-0.2),col('#EBBA85'),col('#EBBA85'));
+   }
    nt++;
   }
   return { geo: B.build(), house: new V3(hx, hy, hz), top: new V3(hx, hy + 1.3, hz), lowProps: low };
@@ -357,35 +394,8 @@ const R = (()=>{
   });
   return { geo: B.build(), slots };
  }
- /* 적 4종(조명 무관, 반달 눈, 아래 안개 보라 35%) */
- function enemyGeo(t) {
-  const c = col(VIS.enemy.color[t]), ink = col(VIS.ink), fog = col(VIS.enemy.fog), B = new Batch(SIM.mulberry32(t + 3));
-  const o = top=>({ bake: true, grad: [fog,0.35,0, top] }), Ic = r=>new THREE.IcosahedronGeometry(r,1);
-  let ey, ez, ex;
-  if (t === 0) { B.add(Ic(0.24), M4(0,0.26,0), c, c,0.04, o(0.5)).add(Ic(0.16), M4(-0.19,0.18,0.02), c, c,0.04, o(0.5)).add(Ic(0.16), M4(0.19,0.18,0.02), c, c,0.04, o(0.5)); ey = 0.3; ez = 0.22; ex = 0.08; }
-  else if (t === 1) { B.add(new THREE.ConeGeometry(0.28,0.55,8), M4(0,0.29,0), c, c,0.04, o(0.55)); [-0.09,0.09].forEach(x=>B.add(new THREE.BoxGeometry(0.025,0.1,0.32), M4(x,0.12,-0.3), c, c,0, o(0.3))); ey = 0.24; ez = 0.17; ex = 0.07; }
-  else if (t === 2) { B.add(new THREE.CylinderGeometry(0.36,0.42,0.44,8), M4(0,0.24,0,1, PI / 8), c, c,0.04, o(0.5)).add(new THREE.CylinderGeometry(0.28,0.36,0.08,8), M4(0,0.5,0,1, PI / 8), c, c,0.04, o(0.5)); ey = 0.3; ez = 0.39; ex = 0.11; }
-  else { B.add(Ic(0.86), M4(0,0.9,0), c, c,0.04, o(1.6)); const cr = col('#6E5C9E'); for (let k = 0; k < 5; k++) { const a = k / 5 * PI * 2; B.add(new THREE.ConeGeometry(0.09,0.32,5), M4(sin(a)*0.36,1.78, cos(a)*0.36), cr, cr,0, { bake: true }); } ey = 1.02; ez = 0.8; ex = 0.24; }
-  for (const sx of [-1,1]) {
-   if (t === 2) B.add(new THREE.BoxGeometry(0.1,0.02,0.02), M4(sx * ex, ey, ez), ink, ink,0);
-   else B.add(new THREE.CircleGeometry(t === 3 ? 0.1 : 0.05,6,0, PI), M4(sx * ex, ey, ez + 0.01), ink, ink,0);
-  }
-  return B.build();
- }
- /* 수호자: 꼭대기 ▲●◆⬟, Lv 높이 0.6~1.0·반지름 0.28~0.39, Lv2 띠(Lv3 공전·Lv4 헤일로는 인스턴스) */
- const towerGeoCache = {};
- function towerGeo(type, lv) {
-  const key = type + lv; if (towerGeoCache[key]) return towerGeoCache[key];
-  const h = VIS.tower.h[lv - 1], r = VIS.tower.r[lv - 1], [c1, c2] = VIS.card[type].map(col), B = new Batch(SIM.mulberry32(lv)), o = { bake: true };
-  const bodyC = type === 'sword' ? col(VIS.ink) : c1.clone().multiplyScalar(0.62), bh = h * 0.42, gh = h - bh;
-  B.add(new THREE.CylinderGeometry(r * 0.55, r * 0.7, bh,8), M4(0, bh / 2,0), bodyC, bodyC,0, o);
-  if (type === 'wand') B.add(new THREE.ConeGeometry(r, gh,6), M4(0, bh + gh / 2,0), c1, c2,0, o);
-  else if (type === 'cup') B.add(new THREE.IcosahedronGeometry(r,1), M4(0, bh + gh / 2,0,1,0, gh / (2*r)), c1, c2,0, o);
-  else if (type === 'sword') B.add(new THREE.OctahedronGeometry(r,0), M4(0, bh + gh / 2,0,0.9,0, gh / (2*r)), c1, c1,0, o);
-  else { B.add(new THREE.CylinderGeometry(r, r, gh * 0.8,5), M4(0, bh + gh * 0.4,0), c1, c2,0, o); B.add(new THREE.CylinderGeometry(r * 0.7, r, gh * 0.2,5), M4(0, bh + gh * 0.9,0), c2, c2,0, o); }
-  if (lv >= 2) B.add(new THREE.TorusGeometry(r * 0.66,0.03,4,12).rotateX(PI / 2), M4(0, bh * 0.85,0), col(VIS.gold), col(VIS.gold),0, o);
-  return (towerGeoCache[key] = B.build());
- }
+ // Cached, batched character meshes share the original simulation coordinates.
+ const { enemyGeo, towerGeo } = ArcanaModels.create({ THREE, Batch, M4, col, VIS });
  const inst = (geo, mat, n)=>{ const m = new THREE.InstancedMesh(geo, mat, n); m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); m.frustumCulled = false; m.count = 0; m.setColorAt(0, col('#fff')); scene.add(m); return m; };
  const enemyMesh = ET.map((_, t)=>inst(enemyGeo(t), matFlat, VIS.enemy.cap[t]+4));
  const footGeo = (()=>{ const g1 = new THREE.CircleGeometry(0.5,14).rotateX(-PI / 2).toNonIndexed(), g2 = flatRing(0.5,0.6,16).toNonIndexed();
@@ -397,6 +407,8 @@ const R = (()=>{
  const gems = inst(new THREE.OctahedronGeometry(0.045,0), new THREE.MeshBasicMaterial(),40);
  const halo = inst(new THREE.TorusGeometry(0.3,0.022,4,20), new THREE.MeshBasicMaterial({ color: VIS.glow }),10);
  const orbit = inst(new THREE.OctahedronGeometry(0.06,0), new THREE.MeshBasicMaterial(),30);
+ const hitRings = inst(flatRing(0.82,1,20), matFx({ opacity: 0.65, blending: THREE.AdditiveBlending }),24);
+ const impacts = [];
  const aura = inst(flatRing(0.4,0.46,24), matFx({ color: VIS.glow, opacity: 0.8 }),10);
  const slotRing = inst((()=>{ const B = new Batch(); for (let k = 0; k < 8; k++) B.add(flatRing(0.28,0.34,3, k * PI / 4, PI / 8), null, col('#fff'), null,0); return B.build(); })(), new THREE.MeshBasicMaterial({ vertexColors: true }),10);
  const towerMesh = [], towerMat = [];
@@ -466,7 +478,7 @@ const R = (()=>{
  }
  function setMap(ri, si, di, theme) {
   if (ri !== cur.ri || si !== cur.si) {
-   cur.ri = ri; cur.si = si; M = SIM.MAPS[ri]; const C = VIS.reg[ri];
+   cur.ri = ri; cur.si = si; cur.overview = false; cur.z = 0; M = SIM.MAPS[ri]; const C = VIS.reg[ri];
    [terrain, props, peds].forEach(o=>{ if (o) { scene.remove(o); o.geometry.dispose(); } });
    const tb = buildTerrain(M, ri, C), pb = buildProps(M, ri, si, C, tb.H), sb = buildPedestals(M, C);
    terrain = new THREE.Mesh(tb.geo, matLit); props = new THREE.Mesh(pb.geo, matLit); peds = new THREE.Mesh(sb.geo, matFlat);
@@ -474,11 +486,11 @@ const R = (()=>{
    map = { H: tb.H, slots: sb.slots, house: pb.house, top: pb.top, lowProps: pb.lowProps, maxH: max(...M.elev.join('').split('').map(Number)) * ST };
    path = buildPath(M, tb.H);
    pillar.position.set(path.start.x, path.start.y + 0.8, path.start.z); beam.position.set(map.top.x, map.top.y + 0.2, map.top.z);
-   towerMesh.forEach(t=>scene.remove(t)); towerMesh.length = towerMat.length = 0;
-   map.slots.forEach(s=>{ const mat = new THREE.MeshBasicMaterial({ vertexColors: true, alphaHash: true }), t = new THREE.Mesh(towerGeo('wand',1), mat); t.visible = false; t.position.set(s.x, s.top, s.z); scene.add(t); towerMesh.push(t); towerMat.push(mat); s.kind = -1; s.lv = 0; s.pop = 0; });
+   towerMesh.forEach(t=>{ scene.remove(t); t.material.dispose(); }); towerMesh.length = towerMat.length = 0;
+   map.slots.forEach(s=>{ const mat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true }), t = new THREE.Mesh(towerGeo('wand',1), mat); t.visible = false; t.position.set(s.x, s.top, s.z); scene.add(t); towerMesh.push(t); towerMat.push(mat); s.kind = -1; s.lv = 0; s.pop = 0; });
    $('labels').innerHTML = map.slots.map(()=>'<div class="lab cost"></div>').join('') + '<div class="lab tlab" id="tlab"></div>';
    labels = [...$('labels').children];
-   ghosts.length = 0; lastPos.clear(); hitAt.clear(); pS.life.fill(0);
+   ghosts.length = 0; impacts.length = 0; lastPos.clear(); hitAt.clear(); pS.life.fill(0);
    occl = null; resize();
   }
   cur.di = di - 1; cur.theme = theme || cur.theme; setLight();
@@ -517,11 +529,13 @@ const R = (()=>{
   cur.W = W; cur.H = H; renderer.setSize(W, H, false); canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
   pMat.uniforms.uS.value = renderer.getPixelRatio();
   cur.land = matchMedia('(orientation:landscape) and (min-width:700px)').matches;
-  cur.yaw = VIS.yaw[cur.land ? 'landscape' : 'portrait']; setLight();
+  cur.compact = cur.land && H < 420;
+  cur.yaw = cur.compact ? 0 : VIS.yaw[cur.land ? 'landscape' : 'portrait'];
+  $('viewBtn').hidden = cur.land && !cur.compact; setLight();
   cur.fitK = fitK();
-  const tile = min(VIS.followTile, (W - 2 * VIS.margin)/10.4);
+  const tile = min(cur.compact ? 40 : VIS.followTile, (W - 2 * VIS.margin)/10.4);
   cur.followK = min(cur.fitK, H / (2*tile));
-  cur.k = cur.land ? cur.fitK : cur.followK; applyCam(cur.k, cur.z = 0);
+  cur.k = (cur.land && !cur.compact) || cur.overview ? cur.fitK : cur.followK; applyCam(cur.k, cur.z);
   occl = null; placeGems(); metrics();
  }
  function tilePx(k) { applyCam(k,0); const a = scr(0, ST,0), b = scr(1, ST,0); return hypot(b[0]-a[0], b[1]-a[1]); }
@@ -532,7 +546,7 @@ const R = (()=>{
   for (let i = 0; i < ss.length; i++) for (let j = i + 1; j < ss.length; j++) dmin = min(dmin, hypot(ss[i][0]-ss[j][0], ss[i][1]-ss[j][1]));
   const a = scr(0,0,0), b = scr(0, ST,0), face = abs(b[1]-a[1]);
   occludeList();
-  info = { mode: cur.land ? 'H45' : (cur.k < cur.fitK - 1e-6 ? 'V-Follow' : 'V-Fit'), yaw: cur.yaw, tilePx: +T.toFixed(1), fitTilePx: +tilePx(cur.fitK).toFixed(1), slotMinPx: +dmin.toFixed(1),
+  info = { mode: cur.land && !cur.compact ? 'H45' : ((cur.compact ? 'H-' : 'V-') + (cur.k < cur.fitK - 1e-6 ? 'Follow' : 'Fit')), yaw: cur.yaw, tilePx: +T.toFixed(1), fitTilePx: +tilePx(cur.fitK).toFixed(1), slotMinPx: +dmin.toFixed(1),
    enemyPx: +(VIS.enemy.size[0] * T).toFixed(1), cliffFacePx: +face.toFixed(1), occluding: occl.map(o=>`(${o.c},${o.r})`), lowProps: map.lowProps };
   applyCam(cur.k, cur.z);
   console.info('[3d] 체크리스트', JSON.stringify(info));
@@ -570,7 +584,7 @@ const R = (()=>{
   return best >= 0 ? best : byTile;
  }
  /* 이벤트 → 연출(시뮬로 돌아가는 경로 없음) */
- const ghosts = [], lastPos = new Map(), hitAt = new Map(), lastSpark = new Float32Array(10), WHITE = col('#fff');
+ const ghosts = [], lastPos = new Map(), hitAt = new Map(), lastSpark = new Float32Array(10).fill(-9), WHITE = col('#fff');
  let labels = [], fxT = { beam: 0, ult: 0, flash: -9, buff: 0 }, now = 0;
  const towerTop = i=>{ const s = map.slots[i]; return [s.x, s.top + VIS.tower.h[max(0, s.lv - 1)]*0.85, s.z]; };
  const posOf = (id, s)=>lastPos.get(id) || (()=>{ const p = along(s || 0,0); return [p.x, p.y + 0.3, p.z]; })();
@@ -580,7 +594,8 @@ const R = (()=>{
    case 'beam': {   // 같은 수호자 80ms 병합
     if (now - lastSpark[e.slot] < 0.08) break; lastSpark[e.slot] = now;
     const [x, y, z] = towerTop(e.slot), to = posOf(e.id, e.s), tc = WHITE.clone().lerp(col(VIS.card[e.card][0]),0.2), T = 0.18;
-    for (let k = 0; k < 4; k++) emit(x, y, z, (to[0]-x) / T + (k - 1.5)*0.3, (to[1]-y) / T, (to[2]-z) / T, T,5, tc,0);
+    for (let k = 0; k < 5; k++) emit(x, y, z, (to[0]-x) / T + (k - 2)*0.18, (to[1]-y) / T, (to[2]-z) / T, T, k === 2 ? 7 : 4, tc,0);
+    if (!RM && impacts.length < 24) impacts.push({ x:to[0], y:to[1]-0.18, z:to[2], life:0.3, size:0.24, color:VIS.card[e.card][1] });
     break; }
    case 'aoe': { const p = posOf(-1, e.s); for (let k = 0; k < 6; k++) { const a = k / 6*6.283; emit(p[0], p[1], p[2], cos(a)*e.r * 3,0.2, sin(a)*e.r * 3,0.3,5, col(VIS.card.cup[1]),0); } break; }
    case 'kill': { const p = posOf(e.id, e.s), t = ET.indexOf(e.type), n = [6,6,14,40][t], life = [0.5,0.5,0.7,1.5][t];
@@ -600,6 +615,17 @@ const R = (()=>{
  const put = (m, i, x, y, z, ry = 0, s = 1, rx = 0, rz = 0)=>{ D.position.set(x, y, z); D.rotation.set(rx, ry, rz); D.scale.setScalar(s); D.updateMatrix(); m.setMatrixAt(i, D.matrix); };
  function draw(snap, alpha, dt, ui) {
   now += dt; updateParticles(dt);
+  let hitCount = 0;
+  for (let i = impacts.length - 1; i >= 0; i--) {
+   const hit = impacts[i]; hit.life -= dt;
+   if (hit.life <= 0) { impacts.splice(i,1); continue; }
+   const f = hit.life / 0.3;
+   put(hitRings,hitCount,hit.x,hit.y,hit.z,0,hit.size*(2-f));
+   hitRings.setColorAt(hitCount++,C1.set(hit.color).multiplyScalar(f));
+  }
+  hitRings.count = hitCount; hitRings.instanceMatrix.needsUpdate = true;
+  if (hitCount) hitRings.instanceColor.needsUpdate = true;
+  const ambientTime = RM ? 0 : now;
   const E = snap ? snap.enemies : { n: 0 }, yawR = rad(cur.yaw), cnt = [0,0,0,0];
   let nf = 0, nb = 0, lead = -1, leadZ = 0;
   const barAdd = (x, y, z, w, f, fill)=>{
@@ -612,7 +638,8 @@ const R = (()=>{
    const t = E.type[i], id = E.id[i], s = E.ps[i]+(E.s[i] - E.ps[i])*alpha, lane = (hashI(id,3,1)-0.5)*2 * VIS.enemy.lane;
    const p = along(s, lane), bob = RM ? 0 : abs(sin(now * 7+id)) * VIS.enemy.bob, j = cnt[t]++;
    if (j >= VIS.enemy.cap[t]) continue;
-   put(enemyMesh[t], j, p.x, p.y + bob, p.z, yawR);
+   const sway = RM ? 0 : sin(now * (t === 1 ? 13 : t === 2 ? 5 : 8) + id) * (t === 1 ? 0.10 : 0.035);
+   put(enemyMesh[t], j, p.x, p.y + bob, p.z, yawR + sway, 1, 0, sway * 0.5);
    const fl = E.flags[i]; if (fl & 2) hitAt.set(id, now);
    enemyMesh[t].setColorAt(j, (fl & 2) ? C1.setRGB(1.35,1.35,1.35) : (fl & 1) ? C1.setRGB(0.78,0.92,1.25) : C1.setRGB(1,1,1));
    const sz = VIS.enemy.size[t]; put(foot, nf++, p.x, p.y + 0.01, p.z,0, sz * 0.62);
@@ -636,34 +663,43 @@ const R = (()=>{
    const kind = Tw ? Tw.type[i] : -1, lv = Tw ? Tw.lv[i] : 0, tm = towerMesh[i];
    if (kind !== s.kind || lv !== s.lv) { s.kind = kind; s.lv = lv; if (kind >= 0) tm.geometry = towerGeo(CT[kind], lv); }
    tm.visible = kind >= 0; s.pop = max(0, s.pop - dt);
-   const pop = s.pop > 0 ? 1+0.15*sin(s.pop / 0.25 * PI) : 1; tm.scale.setScalar(pop); tm.rotation.y = yawR;
-   towerMat[i].opacity = fade.has(i) ? 0.55 : 1;
+   const pop = s.pop > 0 ? 1+0.15*sin(s.pop / 0.25 * PI) : 1; const recoil = RM ? 0 : max(0,1-(now-lastSpark[i])/0.22);
+   tm.scale.set(pop*(1+recoil*0.04),pop*(1-recoil*0.08),pop);
+   tm.rotation.set(0,yawR+recoil*0.2, -recoil*0.07);
+   tm.position.y = s.top + (RM ? 0 : sin(now*2+i)*0.012);
+   towerMat[i].opacity = fade.has(i) ? 0.30 : 1;
+   towerMat[i].depthWrite = !fade.has(i);
    for (let k = 0; k < 4; k++) gems.setColorAt(i * 4+k, C1.set(k < lv ? (k === 3 ? VIS.gold : VIS.glow) : VIS.ink));
-   if (kind < 0) { put(slotRing, nr, s.x, s.top + 0.006, s.z, now * 0.3);
+   if (kind < 0) { put(slotRing, nr, s.x, s.top + 0.006, s.z, ambientTime * 0.3);
     slotRing.setColorAt(nr++, C1.set(ui.hl === i || ui.hlAll ? VIS.glow : '#ffffff')); return; }
    const h = VIS.tower.h[lv - 1];
-   if (lv >= 3) for (let k = 0; k < 2; k++) { const a = now * 1.6+k * PI + i; put(orbit, no, s.x + cos(a)*0.36, s.top + h * 0.6, s.z + sin(a)*0.36, a); orbit.setColorAt(no++, C1.set(VIS.card[CT[kind]][1])); }
-   if (lv >= 4) { put(halo, nh++, s.x, s.top + h - 0.06, s.z,0,1, PI / 2, now * 0.8); }
-   if (snap && snap.buffT > 0) { put(aura, na++, s.x, s.top + 0.02, s.z,0,1+0.05*sin(now * 5)); }
+   if (lv >= 3) for (let k = 0; k < 2; k++) { const a = ambientTime * 1.6+k * PI + i; put(orbit, no, s.x + cos(a)*0.36, s.top + h * 0.6, s.z + sin(a)*0.36, a); orbit.setColorAt(no++, C1.set(VIS.card[CT[kind]][1])); }
+   if (lv >= 4) { put(halo, nh++, s.x, s.top + h - 0.06, s.z,0,1, PI / 2, ambientTime * 0.8); }
+   if (snap && snap.buffT > 0) { put(aura, na++, s.x, s.top + 0.02, s.z,0,1+0.05*sin(ambientTime * 5)); }
   });
   gems.instanceColor.needsUpdate = true;
   [[orbit, no], [halo, nh], [aura, na], [slotRing, nr]].forEach(([m, n])=>{ m.count = n; m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; });
-  const sh = snap ? snap.shield : 0; for (let k = 0; k < sh; k++) { const a = now * 1.2+k / sh * 6.283; put(shieldGem, k, map.top.x + cos(a)*0.55, map.top.y - 0.4, map.top.z + sin(a)*0.55, a); }
+  const sh = snap ? snap.shield : 0; for (let k = 0; k < sh; k++) { const a = ambientTime * 1.2+k / sh * 6.283; put(shieldGem, k, map.top.x + cos(a)*0.55, map.top.y - 0.4, map.top.z + sin(a)*0.55, a); }
   shieldGem.count = sh; shieldGem.instanceMatrix.needsUpdate = true;
   fxT.beam = max(0, fxT.beam - dt); beam.material.opacity = 0.45*fxT.beam / 0.6; beam.visible = fxT.beam > 0;
   pillar.rotation.y += RM ? 0 : dt * 0.6;
-  for (let k = 0; k < 6; k++) { const f = RM ? k / 6 : (now * 0.3+k / 6) % 1, a = now * 1.2+k * 1.05; put(puffs, k, pillar.position.x + cos(a)*0.32, pillar.position.y - 0.7+f * 1.5, pillar.position.z + sin(a)*0.32,0,0.24*(1-f * 0.6)); }
+  for (let k = 0; k < 6; k++) { const f = RM ? k / 6 : (now * 0.3+k / 6) % 1, a = ambientTime * 1.2+k * 1.05; put(puffs, k, pillar.position.x + cos(a)*0.32, pillar.position.y - 0.7+f * 1.5, pillar.position.z + sin(a)*0.32,0,0.24*(1-f * 0.6)); }
   puffs.count = 6; puffs.instanceMatrix.needsUpdate = true;
   fxT.ult = max(0, fxT.ult - dt); ultRing.visible = fxT.ult > 0; ultRing.position.set(0, ST + 0.3,0); ultRing.scale.setScalar(1+(1-fxT.ult / 1.2)*11); ultRing.material.opacity = fxT.ult / 1.2;
   const rs = ui.range; rangeSolid.visible = rangeDash.visible = rangeDisc.visible = false;
   if (rs && rs.r > 0) { const s = map.slots[rs.slot], m = rs.dashed ? rangeDash : rangeSolid; m.visible = rangeDisc.visible = true;
    [m, rangeDisc].forEach(o=>{ o.position.set(s.x, s.ground + 0.04, s.z); o.scale.setScalar(rs.r); }); m.material.color.set(s.e ? VIS.glow : '#fff'); }
-  if (!cur.land) {
-   const fit = cur.hold || cur.followK >= cur.fitK - 1e-6, kT = fit ? cur.fitK : cur.followK;
+  if (!cur.land || cur.compact) {
+   const fit = cur.hold || cur.overview || cur.followK >= cur.fitK - 1e-6, kT = fit ? cur.fitK : cur.followK;
    const half = kT / sin(rad(VIS.pitch)), lo = -9+half - 0.8, hi = 9-half + 0.6;
-   const zT = fit || lo > hi ? 0 : clamp(lead >= 0 ? leadZ : path.start.z, lo, hi), f = min(1, dt * (cur.hold ? 8 : 4));
+   const zT = fit || lo > hi ? 0 : clamp(lead >= 0 ? leadZ : path.start.z, lo, hi), f = RM ? 1 : min(1, dt * (cur.hold ? 8 : 4));
    cur.k += (kT - cur.k)*f; cur.z += (zT - cur.z)*f; applyCam(cur.k, cur.z);
-   info.mode = fit ? 'V-Fit' : 'V-Follow'; info.camZ = +cur.z.toFixed(2);
+   const ax = scr(0,ST,cur.z), bx = scr(1,ST,cur.z);
+   info.tilePx = +hypot(bx[0]-ax[0],bx[1]-ax[1]).toFixed(1);
+   info.enemyPx = +(VIS.enemy.size[0]*info.tilePx).toFixed(1);
+   info.mode = (cur.compact ? 'H-' : 'V-') + (fit ? 'Fit' : 'Follow');
+   $('viewBtn').textContent = cur.overview ? '전투 따라가기' : '전체 보기';
+   $('viewBtn').setAttribute('aria-pressed', String(cur.overview)); info.camZ = +cur.z.toFixed(2);
   }
   map.slots.forEach((s, i)=>{ const el = labels[i], c = ui.costs ? ui.costs[i] : null; el.hidden = !c;
    if (c) { place(el, scr(s.x, s.top + 0.5, s.z)); if (el._t !== c.t) { el._t = c.t; el.textContent = c.t; } el.className = 'lab cost' + (c.ok ? '' : ' poor')+(ui.hl === i ? ' hl' : ''); } });
@@ -675,8 +711,9 @@ const R = (()=>{
  }
  const place = (el, p)=>{ el.style.transform = `translate(${p[0].toFixed(1)}px,${p[1].toFixed(1)}px) translate(-50%,-100%)`; };
  function floatText(s, color) { const el = document.createElement('div'), p = scr(map.top.x + 0.3, map.top.y + 0.4, map.top.z); el.className = 'ft'; el.textContent = s; el.style.color = color; el.style.left = p[0] + 'px'; el.style.top = p[1] + 'px'; el.style.transform = 'translate(-50%,0)'; $('labels').appendChild(el); setTimeout(()=>el.remove(),900); }
- return { setMap, resize, draw, event, pickTile, slotRect, pickSlot, floatText, get info() { return info; }, renderer, hold(v) { cur.hold = v; }, proj: scr, lastPos };
+ return { setMap, resize, draw, event, pickTile, slotRect, pickSlot, floatText, get info() { return info; }, renderer, overview() { cur.overview = !cur.overview; }, hold(v) { cur.hold = v; }, proj: scr, lastPos };
 })();
+$('viewBtn').onclick = ()=>R.overview();
 /* ===== DOM UI(2D 3차와 같은 HUD·문제 카드·카드 바·팝업·드래프트·결과) ===== */
 const SET = { region: 0, subject: 0, diff: 2, theme: 'light' }, session = SIM.createSession();
 let run = null, snap = null, selCard = null, popupSlot = -1;
@@ -712,6 +749,7 @@ $('leaveBtn').onclick = ()=>location.assign(HUB_URL);
 document.addEventListener('click', ev=>{ if (ev.target.closest('a[data-hub]')) { ev.preventDefault(); requestHub(); } });
 addEventListener('blur', ()=>{ if (!userPaused) pauseUser('system'); });
 document.addEventListener('visibilitychange', ()=>{ if (document.hidden && !userPaused) pauseUser('system'); });
+const GUARDIANS = { wand: '마법사', cup: '물의 사제', sword: '왕국 기사', pentacle: '숲 수호자' };
 const EL_NAME = ['저지대', '중지대', '고지대'], EL_GLYPH = ['○', '^', '^^'], RG = { common: '●', rare: '◆', legendary: '★' }, Q = BAL.quiz, CB = BAL.combo, TR = BAL.terrain;
 const _t = new Map(), setText = (el, v)=>{ v = String(v); if (_t.get(el) !== v) { _t.set(el, v); el.textContent = v; } }, setHTML = (el, v)=>{ if (_t.get(el) !== v) { _t.set(el, v); el.innerHTML = v; } };
 const S = ()=>run && run.state, canPlay = ()=>!userPaused && !!run && run.canPlay();
@@ -719,7 +757,7 @@ function buildStaticUI() {
  for (let i = 1; i <= CB.cycle; i++) { const sp = document.createElement('span'); if ([CB.discountAt, CB.buffAt, CB.ultAt].includes(i)) { sp.className = 'mark'; sp.dataset.m = i; } $('pips').appendChild(sp); }
  for (let i = 0; i < 4; i++) { const b = document.createElement('button'); b.className = 'ch'; b.innerHTML = `<span class="k">${i + 1}</span><span class="v"></span>`; b.onclick = ()=>{ answer(i); b.blur(); }; $('choices').appendChild(b); }
  for (const type of CT) { const c = BAL.cards[type], b = document.createElement('button'); b.className = 'card'; b.dataset.type = type; b.style.setProperty('--c', VIS.card[type][0]);
-  b.title = `${c.name}(${c.el}) — ${c.role}`; b.innerHTML = `<span class="k">${c.key}</span><span class="ic">${c.glyph}</span>${c.name}<br><span class="cost2">5💎</span>`; b.onclick = ()=>{ pickCard(type); b.blur(); }; $('cardbar').appendChild(b); }
+  b.title = `${GUARDIANS[type]}(${c.el}) — ${c.role}`; b.innerHTML = `<span class="k">${c.key}</span><span class="ic">${c.glyph}</span>${GUARDIANS[type]}<br><span class="cost2">5💎</span>`; b.onclick = ()=>{ pickCard(type); b.blur(); }; $('cardbar').appendChild(b); }
  const u = document.createElement('button'); u.id = 'ultBtn'; u.disabled = true; u.innerHTML = '<span class="ic">💥</span>궁극기<br><small>Space</small>'; u.onclick = ()=>{ canPlay() && run.useUlt(); u.blur(); }; $('cardbar').appendChild(u);
 }
 function answer(i) { if (!canPlay()) return; const r = run.answer(i); if (r !== null) renderQuestion(); return r; }
@@ -734,6 +772,7 @@ function flash(msg, cls, ms) { const el = $('qFeedback'); el.textContent = msg; 
 function banner(msg) { const el = $('banner'); el.textContent = msg; el.classList.add('show'); clearTimeout(bnT); bnT = setTimeout(()=>el.classList.remove('show'),1600); }
 function syncHUD() {
  $('pauseBtn').disabled = !run || !run.canPlay() || !$('overlay').hidden;
+ $('viewBtn').hidden = !run || !$('overlay').hidden || R.info.mode === 'H45';
  const s = S(); if (!s || !snap) return;
  setText($('hpTxt'), s.hp); setText($('hpMax'), `/${BAL.tower.hp}`); setText($('shieldTxt'), s.shield ? `🛡️${s.shield}` : '');
  $('hpBar').style.width = s.hp / BAL.tower.hp * 100 + '%'; $('hpBox').classList.toggle('low', s.hp <= 3);
@@ -770,8 +809,8 @@ function describe(type, lv, slot) {
 function openPopup(i) {
  popupSlot = i; const pop = $('popup'), t = S().towers[i];
  if (!t) pop.innerHTML = `<div class="ptitle"><span>슬롯 ${i + 1} · 소환</span><button data-x>✕</button></div><div class="pterr">${terrainLine(i)}</div><div class="pgrid">` +
-  CT.map(type=>{ const c = BAL.cards[type]; return `<button class="pbtn" data-sum="${type}" style="--c:${VIS.card[type][0]}"><span class="ic">${c.glyph}</span><b>${c.name}</b> <span class="pc"></span><small>${c.key} · ${c.el} · ${c.role}</small></button>`; }).join('') + '</div>';
- else { const c = BAL.cards[t.type]; pop.innerHTML = `<div class="ptitle"><span>${c.glyph} ${c.name} Lv${t.lv}</span><button data-x>✕</button></div><div class="pterr">${terrainLine(i)}</div>
+  CT.map(type=>{ const c = BAL.cards[type]; return `<button class="pbtn" data-sum="${type}" style="--c:${VIS.card[type][0]}"><span class="ic">${c.glyph}</span><b>${GUARDIANS[type]}</b> <span class="pc"></span><small>${c.key} · ${c.el} · ${c.role}</small></button>`; }).join('') + '</div>';
+ else { const c = BAL.cards[t.type]; pop.innerHTML = `<div class="ptitle"><span>${c.glyph} ${GUARDIANS[t.type]} Lv${t.lv}</span><button data-x>✕</button></div><div class="pterr">${terrainLine(i)}</div>
   <div class="pinfo">${describe(t.type, t.lv, i)}${t.lv < BAL.maxLevel ? `<br>▶ Lv${t.lv + 1}: ${describe(t.type, t.lv + 1, i)}` : '<br>최대 레벨'}</div><button class="upbtn" data-up>${t.lv < BAL.maxLevel ? `⬆ 강화 ${run.upgradeCost(i)}💎` : '최대 레벨'}</button>`; }
  pop.hidden = false;
  const r = R.slotRect(i), st = $('stage'), pw = pop.offsetWidth, ph = pop.offsetHeight;
@@ -816,7 +855,7 @@ const opt = (arr, cur, fn)=>arr.map((o, i)=>`<option value="${i}" ${i === cur ? 
 const mapInfo = ri=>{ const m = SIM.MAPS[ri]; return `슬롯 ${m.slots.length}개 (○저 ${m.ec[0]} · ^중 ${m.ec[1]} · ^^고 ${m.ec[2]}) · 길 ${m.path.length}칸 · ▲오르막 ${m.up} ▼내리막 ${m.down}`; };
 function renderTitle() {
  const ov = $('overlay'); ov.className = 'title'; closePopup();
- ov.innerHTML = `<div class="panel"><h1>🃏 아르카나 수비대 3D</h1>
+ ov.innerHTML = `<div class="panel"><h1>아르카나 수비대</h1>
   <p style="text-align:center">문제를 풀어 <b>마나</b>를 모으고, 받침대에 아르카나 카드를 소환해 <b>지식의 탑</b>을 지키세요.</p>
   <div class="selcol"><label>지역 (맵·지형)<select id="selRegion">${opt(SIM.MAPS, SET.region, o=>o.name)}</select></label>
   <label>과목 · 현재 수학 30문항<select id="selSubject">${SIM.SUBJECTS.map((o, i)=>`<option value="${i}" ${i === 0 ? 'selected' : 'disabled'}>${i === 0 ? '수학 · 플레이 가능' : o + ' · 준비 중'}</option>`).join('')}</select></label>
@@ -878,7 +917,9 @@ document.addEventListener('keydown', ev=>{
    else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); } }
   return;
  }
- if (ev.code === 'Space' && !(ev.target && ev.target.tagName === 'SELECT')) ev.preventDefault();
+ // Let focused controls keep their native Enter/Space behavior.
+ if (ev.target instanceof Element && ev.target.closest('button,a,select,input') && ['Space','Enter','NumpadEnter'].includes(ev.code)) return;
+ if (ev.code === 'Space') ev.preventDefault();
  if (ev.repeat) return;
  if (ev.code === 'KeyP' && canPlay() && $('overlay').hidden) { ev.preventDefault(); pauseUser(); return; }
  const num = /^(Digit|Numpad)([1-4])$/.exec(ev.code);
@@ -894,6 +935,8 @@ document.addEventListener('keydown', ev=>{
  const up = ev=>{ clearTimeout(lp); if (held) { R.hold(false); held = false; down = null; return; }
   if (down && ev.type === 'pointerup' && hypot(ev.clientX - down[0], ev.clientY - down[1]) < 12 && canPlay()) { const i = R.pickSlot(ev.clientX, ev.clientY); if (i >= 0) onSlotTap(i); else { closePopup(); selCard = null; } } down = null; };
  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', up); }
+// Draft cards and larger text can resize the battlefield without resizing the window.
+new ResizeObserver(()=>{ R.resize(); if (popupSlot >= 0) openPopup(popupSlot); }).observe($('stage'));
 addEventListener('resize', ()=>{ R.resize(); if (popupSlot >= 0) openPopup(popupSlot); });
 /* 루프: 실제 시간 → sim.step(10틱/초) → snapshot → 이벤트 → HUD·렌더 */
 let last = performance.now(), paused = false, fpsN = 0, fpsT = last, fps = 0;
