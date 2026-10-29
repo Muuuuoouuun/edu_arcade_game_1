@@ -24,18 +24,23 @@
 | 12 | [3D 기술 계획](12_3d_tech_plan.md) | 엔진 비교, 렌더 어댑터 구조, 로드·런타임 예산, 품질 사다리, 마일스톤 5단계 | Three.js, 초기 로드 2.0MB, 2D 폴백 유지 |
 | 13 | [3D 아트 디렉션](13_3d_art_direction.md) | 카메라 프리셋, 절벽 단차, 48조합 에셋표, 수호자·적 외형, 이펙트 상한, 플레이스홀더 체크리스트 | 직교 피치 55°, 세로는 추적 카메라, 에셋 약 115개 |
 | 14 | [스테이지 모드](14_stage_modes.md) | 수비/영웅/RTS 규칙 차이, 24스테이지 배정, 튜토리얼 흐름, 영웅 전용 특성 | 수비 13/영웅 5/RTS 6, 수비 모드는 영웅 없음 |
+| 15 | [영웅 모드 시뮬 규격](15_hero_mode_sim_spec.md) | 상태 머신 5단계, 틱 순서, BALANCE.hero 키, API·snapshot, 봇 시나리오 H1~H10 | 5차 구현 입력 문서 |
 
 ## 데이터와 스크립트
 - `content/pack_schema.json` — 콘텐츠 팩 JSON Schema(draft-07). 샘플 팩: 수학 20, 영어 20, 과학 10, 한국사 10 문항.
-- `content/perks.json` — 특성 24종.
+- `content/perks.json` — 특성 28종(A~D 24종 + 영웅 전용 E 4종).
+- `content/stages.json` / `stage_schema.json` — 24스테이지 정의(모드·맵·도전 단계·웨이브·튜토리얼)와 스키마.
 - `sim/` — 01 역산용 파이썬 시뮬레이터(`coord2.py`가 확정값 재현).
 
 ## 프로토타입 (`/prototype`)
-- `index.html` — 단일 파일, 외부 의존성 0. 더블클릭으로 플레이. 1차(핵심 루프) → 2차(지형·배경·밸런스 v0.3) → 3차(특성 드래프트).
+- `index.html` — 2D 단일 파일, 외부 의존성 0. 1차(핵심 루프) → 2차(지형·배경·밸런스 v0.3) → 3차(특성 드래프트). **4차부터 동결(로직 기준값 보존용).**
+- `core/sim.js` — 렌더·DOM 의존 0의 타일 단위 시뮬 코어(4차). 브라우저·Node 공용. 2D 3차와 같은 시드에서 결과 일치 검증됨.
+- `3d_game.html` — 4차 3D 게임(수비 모드 전체 로직, Three.js 렌더 어댑터, 세로 추적 카메라·가로 45°).
 - `bg_demo.html` — 2D 배경·지형 뷰어(48조합).
 - `3d_spike.html` — Three.js 렌더 스파이크(지형 단차, 적 떼 인스턴싱, 세로/가로·직교/원근 토글, 성능 HUD). `vendor/three.min.js` 동봉(MIT). 측정값은 README의 "3D 스파이크" 절.
-- `tests/proto_test.js` — Playwright 기능 검증(27항목). `tests/bal_sim.js` — 봇 밸런싱 시뮬(4조건). `tests/bg_test.js` — 배경 대비 검증. `tests/spike_test.js` — 3D 스파이크 성능 측정.
-- 실행: `node prototype/tests/proto_test.js` (Playwright + Chromium 필요).
+- `tests/proto_test.js` — 2D Playwright 기능 검증(27항목). `tests/bal_sim.js` — 2D 봇 밸런싱 시뮬(4조건). `tests/bg_test.js` — 배경 대비 검증. `tests/spike_test.js` — 3D 스파이크 성능 측정.
+- `tests/sim_test.js` — 시뮬 코어 단위·봇·2D 일치 검증(63항목, 약 9초, 렌더 불필요). `tests/game3d_test.js` — 3D 게임 Playwright 한 판 자동 진행(21항목). `tests/sim_ref_2d.json` — 2D 기준값.
+- 실행: `node prototype/tests/sim_test.js`(렌더 없음, 빠름), `node prototype/tests/game3d_test.js`·`proto_test.js`(Playwright + Chromium 필요).
 
 ## 적용 범위
 사용자 지시(2026-10-28): 구현은 최소한으로, 기획·로직 확정이 우선. 프로토타입은 게임성 검증용이며 제품 코드가 아니다. 렌더링은 3D(로우폴리 아이소메트릭)로 확정, 로직 이식은 D11·D13 결정 후. RTS 모드는 설계 확정 후 별도 차수.
