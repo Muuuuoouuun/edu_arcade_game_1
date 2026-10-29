@@ -70,6 +70,10 @@ npm run preview
 
 `src/games/defense`의 전투 엔진·캠페인 저장·데이터와 `DefenseGame`/`DefenseBoard` 전투 화면, `DefenseEffects` 효과, `DefenseCamp` 거점 화면이 분리되어 있습니다. 아트는 `public/defense`의 로컬 생성 이미지이며, 이동 경로·건설 지점·체력·공격 궤적은 실제 판정과 일치하는 SVG/HTML로 표시합니다. 모션은 스프라이트 포즈와 변환을 조합하며, 물리는 투사체와 경로 위의 이동·넉백을 대상으로 합니다. 별도 대화의 작업 범위와 붙여 넣을 요청문은 [작업 분담 문서](docs/arcana-workstreams.md)에 있습니다.
 
+## 세계관·캐릭터 확장 기획
+
+설정·스토리 채팅에서 정리한 [세계관·성장·아트 기획](docs/arcana-world-planning/README.md)과 [시안 갤러리 33장](docs/arcana-world-planning/concept-gallery.md)을 보존했습니다. 동양 지역, 짐승·수인·도깨비·서양 판타지, 영웅 스킬·포탑·마을·성 테마를 다루며 사용자 결정과 미확정 제안을 구분합니다. 이미지는 `art-source/defense/concepts/2026-10-29/`의 원본 콘셉트이며 현재 게임의 구현·밸런스 확정이나 배포 에셋 연결을 의미하지 않습니다.
+
 ## 모델 제작 도구
 
 Blender 4.3.2와 FFmpeg를 확인했고, 모델 작업실용 Three.js 0.186.1을 추가했습니다. [모델 제작 안내](docs/arcana-asset-pipeline.md)에 원본 수정·내보내기·실행 방법을 정리했습니다.
