@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { DIFFICULTIES, DIFFICULTY_ORDER, getDifficulty, getWavePlan } from './difficulty.ts';
-import type { EnemyKind } from './types.ts';
+import type { DefenseAction, EnemyKind } from './types.ts';
+import { actDefense, createDefense, stepDefense } from './engine.ts';
 
 test('standard forecasts preserve the original eight-stage wave counts and encounter order', () => {
   const counts = [[10,12,14,16], [12,14,16,18], [14,16,18,20], [16,18,20,23],
@@ -23,7 +24,7 @@ test('standard forecasts preserve the original eight-stage wave counts and encou
 test('veteran inserts fast packs without dropping normal encounters or moving the final boss', () => {
   for (let stage = 1; stage <= 8; stage++) for (let wave = 1; wave <= 4; wave++) {
     const standard = getWavePlan(stage, wave), veteran = getWavePlan(stage, wave, 'veteran');
-    assert.equal(veteran.length - standard.length, [2,3,3,4][wave - 1]);
+    assert.equal(veteran.length - standard.length, [2,3,3,4][wave - 1] + (stage === 4 && wave <= 2 ? 2 : 0));
     let next = 0;
     for (const kind of veteran) if (kind === standard[next]) next++;
     assert.equal(next, standard.length, 'the original encounters remain in order');
@@ -56,4 +57,35 @@ test('forecasts are deterministic, mutation-safe and reject invalid stage/wave i
   for (const valid of DIFFICULTY_ORDER) assert.equal(getDifficulty(valid), valid);
   for (const stage of [0, -1, 9, 1.5, NaN, Infinity]) assert.deepEqual(getWavePlan(stage, 1), []);
   for (const wave of [0, -1, 5, 1.5, NaN, Infinity]) assert.deepEqual(getWavePlan(1, wave), []);
+});
+
+// Targeted regression for a reproducible replay (the barbarian unlocks after 2-1).
+// Uses only normal actions: no injected state, damage, coins or accelerated time.
+test('forest veteran finale asks the idle barbarian to build, while a basic defense can win', () => {
+  const play = (build: boolean) => {
+    let state = createDefense(4, 'barbarian', 1, 'veteran');
+    const route: DefenseAction[] = build ? [
+      {type:'build',slot:2,kind:'magic'}, {type:'build',slot:3,kind:'cannon'},
+      {type:'upgrade',slot:2,branch:'fire'}, {type:'build',slot:0,kind:'crossbow'},
+      {type:'upgrade',slot:3,branch:'crush'},
+    ] : [];
+    let next = 0;
+    for (let tick = 0; tick < 36000; tick++) {
+      if (next < route.length) {
+        const result = actDefense(state, route[next]);
+        if (result.coins < state.coins) { state = result; next++; }
+      }
+      if (state.phase === 'prep' || state.phase === 'intermission') state = actDefense(state, {type:'start-wave'});
+      if (state.phase === 'promotion') state = actDefense(state, {type:'promote',choice:'power'});
+      if (state.phase === 'won' || state.phase === 'lost') return state;
+      state = stepDefense(state, 1 / 60);
+    }
+    throw new Error('battle did not finish');
+  };
+  const idle = play(false), basic = play(true);
+  assert.equal(idle.phase, 'lost');
+  assert.equal(idle.towers.length, 0);
+  assert.equal(basic.phase, 'won');
+  assert.equal(basic.towers.length, 3);
+  assert(basic.hp > 0 && basic.outpostHp > 0);
 });

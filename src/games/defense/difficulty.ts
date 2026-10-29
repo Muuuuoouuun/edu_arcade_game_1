@@ -48,8 +48,11 @@ export function getWavePlan(stage: number, wave: number, difficulty: Difficulty 
   const count = (data.region === 'snow' ? 12 : 8) + wave * 2 + (data.order - 1) * 2 + (boss ? 1 : 0);
   const plan: EnemyKind[] = Array.from({ length: count - (boss ? 1 : 0) }, (_, index) => pool[(index + wave - 1) % pool.length]);
   if (getDifficulty(difficulty) === 'veteran') {
-    const extras = [2, 3, 3, 4][wave - 1], originalCount = plan.length;
-    // Add fast flankers between regular packs, leaving the boss as the final arrival.
+    const extras = [2, 3, 3, 4][wave - 1] + (stage === 4 && wave <= 2 ? 2 : 0), originalCount = plan.length;
+    // The forest finale gets two extra flankers in each of the first two veteran waves: in a replay,
+    // the high-area barbarian could hold the main road without towers while the
+    // optional outpost absorbed the other lane. Keep its boss last. The shared
+    // plan also keeps the pre-battle forecast identical to actual spawns.
     for (let i = extras - 1; i >= 0; i--) {
       const extra: EnemyKind = i % 3 === 2 && stage > 1 ? 'insulator' : data.region === 'snow' ? 'frostwolf' : 'sprout';
       plan.splice(Math.floor((i + 1) * originalCount / (extras + 1)), 0, extra);

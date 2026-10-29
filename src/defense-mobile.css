@@ -138,7 +138,10 @@ body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-in
  .battle-hud .battle-pause{width:44px;min-width:44px;min-height:44px}
  .battle-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(48px,auto) minmax(48px,auto);gap:8px;padding:4px 8px}
  .battle-map-column{grid-column:1;grid-row:1}
- .battle-map-space{align-items:flex-start}
+ /* The 3:2 board is width-limited on tall phones. Center it in the available
+    space so the unused height is shared above and below the battlefield,
+    keeping the map closer to the controls without cropping its play area. */
+ .battle-map-space{align-items:center}
  .battle-map-size .def-board{border-radius:5px}
  .battle-map-size .def-build-pad>span{font-size:20px}
  .battle-map-size .def-build-pad:not(.occupied){isolation:isolate;background:transparent;border:0;box-shadow:none}
