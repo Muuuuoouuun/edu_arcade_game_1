@@ -68,7 +68,7 @@ function hit(s:DefenseState,e:Enemy,amount:number,element:Element,from:Point,for
     e.knockVelocity=Math.min(180,force/enemyMass(e.kind));
     e.knockCooldown=1;
   }
-  effect(s,from,e,element,`${multiplier>1?'약점! ':''}${Math.round(amount*multiplier)}`,'impact',{force,targetId:e.id});
+  effect(s,from,e,element,`${multiplier>1?'약점! ':multiplier<1?'내성 ':''}${Math.round(amount*multiplier)}`,'impact',{force,targetId:e.id});
 }
 function reap(s:DefenseState) {
   const dead=s.enemies.filter(e=>e.hp<=0);
