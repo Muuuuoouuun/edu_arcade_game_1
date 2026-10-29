@@ -1,0 +1,45 @@
+{
+  "blender": "4.3.2",
+  "source": "art-source/defense/towers.blend",
+  "coordinate_system": "Authoring Z-up; GLB exported with Y-up; local origin at ground center.",
+  "models": [
+    {
+      "id": "fire-tower",
+      "glb": "/defense/models/fire-tower.glb",
+      "sprite": "/defense/models/fire-tower.png",
+      "bytes": 755932,
+      "mesh_objects": 80,
+      "vertices_before_modifiers": 2534,
+      "editable_nodes": [
+        "fire-tower",
+        "fire-core"
+      ]
+    },
+    {
+      "id": "piercing-ballista",
+      "glb": "/defense/models/piercing-ballista.glb",
+      "sprite": "/defense/models/piercing-ballista.png",
+      "bytes": 1129584,
+      "mesh_objects": 141,
+      "vertices_before_modifiers": 6319,
+      "editable_nodes": [
+        "piercing-ballista",
+        "turret",
+        "bolt"
+      ]
+    },
+    {
+      "id": "water-cannon",
+      "glb": "/defense/models/water-cannon.glb",
+      "sprite": "/defense/models/water-cannon.png",
+      "bytes": 1138284,
+      "mesh_objects": 149,
+      "vertices_before_modifiers": 9582,
+      "editable_nodes": [
+        "water-cannon",
+        "turret",
+        "barrel"
+      ]
+    }
+  ]
+}

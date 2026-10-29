@@ -1,0 +1,188 @@
+/* Existing forest/parchment art, with a viewport-sized combat surface. */
+body:has(.battle-page){overflow:hidden;background:#102c25}
+.app-shell:has(.battle-page)>.header{display:none}
+.app-shell:has(.battle-page)>.skip-link{top:0;transform:translateY(-110%)}
+.app-shell:has(.battle-page)>.skip-link:focus{top:8px;transform:none}
+.battle-page{--pine:#173e32;--paper:#f8eed6;--brass:#c6a15d;position:fixed;inset:0;z-index:20;height:100dvh;width:100%;display:grid;grid-template-rows:auto minmax(0,1fr);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);background:#102c25;color:#fff5d9;font-family:Pretendard,sans-serif;overflow:hidden}
+.battle-page button,.defense-tactical button{font-family:Jua,Pretendard,sans-serif;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.battle-font-probe{position:absolute;width:1rem;height:1rem;visibility:hidden;pointer-events:none}
+.battle-page button:focus-visible,.defense-tactical button:focus-visible{outline:3px solid #fff3b1;outline-offset:2px}
+.battle-page button:disabled{opacity:.48;cursor:default}
+.battle-hud{display:flex;align-items:stretch;gap:8px;min-height:48px;padding:4px 8px;background:#173e32;border-bottom:1px solid #8c8758;z-index:2}
+.battle-hud>span,.battle-hud>button{display:flex;align-items:center;justify-content:center;gap:6px;padding:3px 12px;border:1px solid #809574;border-radius:7px;background:#113329;min-width:0;font-family:Jua,sans-serif;color:#fff5df;font-size:1rem;font-weight:400}
+.battle-hud>span{flex:1}
+.battle-hud b{font-size:1.2rem;font-weight:400;font-variant-numeric:tabular-nums}
+.battle-hud small{font-size:.75rem;white-space:nowrap}
+.battle-hud svg{width:21px;height:21px;flex-shrink:0}
+.battle-hud .battle-pause{min-width:48px;min-height:44px;padding:0}
+.battle-hud .battle-stage{min-width:48px}
+.battle-health.danger{border:2px solid #efb26a;background:#5d342b}
+.battle-health.danger::before{content:'!';font-weight:700;color:#ffcf7c}
+.battle-body{min-height:0;display:grid;grid-template-columns:112px minmax(0,1fr) 112px;gap:8px;padding:8px}
+.battle-utilities{grid-column:1;grid-row:1;display:flex;flex-direction:column;justify-content:center;gap:8px;min-height:0}
+.battle-utilities button{min-height:48px;flex-shrink:0;border:1px solid #bd9e64;border-radius:9px;background:var(--paper);color:#193f33;font-size:1rem;display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:inset 0 0 0 2px #fff8e5}
+.battle-utilities .battle-party{background:#214c3c;color:#fff0cf;box-shadow:none}
+.battle-party .def-sprite{width:42px;height:45px;flex-shrink:0}
+.battle-utilities .battle-speed{background:#173e32;color:#fff5df;box-shadow:none}
+.battle-utilities .battle-start{background:#f4cc6c;color:#44331e;box-shadow:inset 0 0 0 2px #ffeab2}
+.battle-map-column{grid-column:2;grid-row:1;min-height:0;min-width:0;display:flex;flex-direction:column;position:relative}
+.battle-map-space{min-height:0;min-width:0;flex:1;display:flex;justify-content:center;align-items:center}
+.battle-map-size{flex-shrink:0;max-width:100%;aspect-ratio:3/2}
+.battle-map-size .def-board{border:0;border-radius:7px;box-shadow:0 0 0 1px #59704c;aspect-ratio:3/2;overflow:hidden}
+.battle-map-size .def-map{display:block;width:100%;height:100%;aspect-ratio:3/2}
+.battle-map-size .def-build-pad,.battle-map-size .def-build-pad.occupied{width:48px;height:48px;min-width:48px;min-height:48px;transform:translate(-50%,-50%)}
+.battle-map-size .def-build-pad:not(:disabled):active{transform:translate(-50%,-50%) scale(.94)}
+.battle-map-size .def-build-pad>small{font-size:10px}
+.battle-map-size .def-build-pad:disabled{opacity:1;cursor:default}
+.battle-map-size .def-build-pad:disabled:not(.occupied){background:#f3e3b0;color:#38523b}
+.battle-map-size .def-build-pad.occupied{border-color:transparent;background:transparent;box-shadow:none}
+.battle-map-size .def-build-pad.occupied.selected{border:2px solid #ffe298;box-shadow:0 0 0 3px #a77b284d}
+.battle-input-note{display:none;pointer-events:none;font-size:.75rem;text-align:center;line-height:1.5}
+.battle-aiming .battle-input-note{display:block;position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:max-content;max-width:95%;padding:5px 12px;border-radius:5px;background:#173e32ef;color:#ffdf8a}
+.battle-aiming .battle-map-size{outline:2px solid #f6d581;outline-offset:3px;border-radius:7px}
+.battle-commands{grid-column:3;grid-row:1;display:flex;flex-direction:column;justify-content:flex-end;gap:16px;padding-bottom:8px}
+.battle-commands button{min-height:72px;border:1px solid #c6a15d;border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:1.1rem;line-height:1.15;box-shadow:inset 0 0 0 2px #ffffff20}
+.battle-commands small{display:block;font-family:Pretendard,sans-serif;font-size:.65rem;margin-top:4px;line-height:1.3}
+.battle-commands .battle-skill{order:2;background:#f5cd70;color:#49331b;min-height:92px;box-shadow:inset 0 0 0 2px #ffe8ac,0 3px 0 #825c25}
+.battle-commands .battle-dash{order:1;background:#214b3b;color:#fff4d4}
+.battle-commands .battle-dash.selected{background:#fff0b5;color:#153b2e;border:2px solid #ffcf54}
+.battle-portrait-summary{display:none}
+.battle-save-warning{position:absolute;bottom:0;max-width:100%;padding:5px 10px;color:#ffdda6;background:#4a3128;font-size:.7rem;pointer-events:none}
+.dialog-backdrop:has(.defense-tactical){background:#082c2638;backdrop-filter:none;align-items:center;justify-content:flex-end;padding:calc(env(safe-area-inset-top) + 58px) calc(env(safe-area-inset-right) + 8px) calc(env(safe-area-inset-bottom) + 8px) calc(env(safe-area-inset-left) + 8px)}
+.dialog-backdrop:has(.defense-tactical.tactical-left){justify-content:flex-start}
+.defense-tactical{--paper:#f8eed6;background:var(--paper);border:2px solid #c6a15d;border-radius:14px;width:min(300px,48vw);height:100%;max-height:100%;padding:0;display:flex;flex-direction:column;overflow:hidden;color:#183d31;box-shadow:0 12px 40px #031e2577;text-align:left;font-family:Pretendard,sans-serif}
+.tactical-heading{display:flex;align-items:center;gap:6px;padding:8px 8px 8px 12px;border-bottom:1px solid #d3bd8f;flex-shrink:0;min-width:0}
+.tactical-heading>div{min-width:0;flex:1}
+.defense-tactical .tactical-heading h2{font-family:Jua,sans-serif;font-size:1.1rem;line-height:1.25;margin:0}
+.tactical-heading p{font-size:.68rem;line-height:1.55;margin:3px 0 0;color:#697351}
+.tactical-heading p span{white-space:nowrap;color:#805c23}
+.tactical-heading p svg{width:14px;height:14px;vertical-align:middle}
+.tactical-heading>button{width:48px;height:48px;flex-shrink:0;background:#e9dfc4;border:1px solid #c8b788;border-radius:8px;display:grid;place-items:center;color:#234a38}
+.tactical-content{min-height:0;overflow:auto;overscroll-behavior:contain;padding:12px;scrollbar-width:thin}
+.tactical-towers,.tactical-upgrades{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tactical-towers>button,.tactical-upgrades>button{display:flex;flex-direction:column;align-items:center;min-width:0;min-height:120px;padding:6px 3px;border:1px solid #c8af7d;border-radius:8px;background:#fff8e9;color:#254333;line-height:1.3}
+.tactical-towers .def-sprite{width:64px;height:58px;max-width:100%}
+.tactical-towers strong,.tactical-upgrades strong{font-size:.92rem;font-weight:400}
+.tactical-towers span{font-family:Pretendard,sans-serif;font-size:.6rem;color:#69715a;margin:3px 0 7px}
+.tactical-towers b,.tactical-upgrades b{font-size:.85rem;color:#95601f;font-weight:400;margin-top:auto}
+.tactical-content button:disabled{background:#e6e0ce;color:#6b705f;border-color:#bcb49d;cursor:default}
+.tactical-content button:disabled b{color:#805a34}
+.tactical-content button:disabled .def-sprite{opacity:.6}
+.tactical-upgrades{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tactical-upgrades .def-sprite{width:76px;height:76px;max-width:100%}
+.tactical-upgrades span{font-family:Pretendard,sans-serif;font-size:.72rem;color:#687258;margin:6px 0 9px;line-height:1.5}
+.tactical-upgrades>button{padding:8px}
+.tactical-sell{margin-top:14px;background:none;border:0;text-decoration:underline;text-underline-offset:4px;font-size:.8rem;min-height:48px;color:#766140;padding:8px}
+.tactical-sell-confirm{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;border-top:1px solid #cbb68e;padding-top:12px;font-size:.85rem}
+.tactical-sell-confirm>span{width:100%;line-height:1.5}
+.tactical-sell-confirm button,.tactical-menu button{min-height:48px;padding:8px 12px;background:#214a38;color:#fff4d7;border:1px solid #a68d5b;border-radius:7px;font-size:1rem}
+.tactical-sell-confirm button:last-child{background:#ede3c9;color:#30503e}
+.tactical-candidates,.tactical-recruits{display:flex;flex-direction:column;gap:8px}
+.tactical-candidates button{min-height:56px;padding:10px 12px;text-align:left;background:#fff8e9;border:1px solid #c8af7d;border-radius:8px;color:#254333}
+.tactical-candidates strong{display:block;font-size:1rem;font-weight:400}
+.tactical-candidates span{display:block;font-family:Pretendard,sans-serif;font-size:.72rem;margin-top:4px}
+.tactical-recruits button{display:flex;align-items:center;gap:8px;min-height:64px;padding:6px 8px;background:#fff8e9;color:#284b37;border:1px solid #c8af7d;border-radius:8px;text-align:left}
+.tactical-recruits .def-sprite{width:48px;height:48px;flex-shrink:0}
+.tactical-recruits strong{font-size:1.05rem;font-weight:400}
+.tactical-recruits small{display:block;font-family:Pretendard,sans-serif;font-size:.68rem;color:#6b735b;line-height:1.4}
+.tactical-recruits b{margin-left:auto;font-size:.85rem;white-space:nowrap;color:#8b632b;font-weight:400}
+.tactical-hired{text-align:center;font-size:.9rem}
+.tactical-hired .def-sprite{display:block;width:90px;height:95px;margin:auto}
+.tactical-hired p{margin-top:8px}
+.tactical-hero{display:flex;align-items:center;gap:8px}
+.tactical-hero .def-sprite{width:76px;height:86px;flex-shrink:0}
+.tactical-hero h3{font-family:Jua,sans-serif;font-size:1.4rem;font-weight:400}
+.tactical-hero p,.tactical-party>p{font-size:.8rem;margin:6px 0;line-height:1.6}
+.tactical-hero small,.tactical-quest small{font-size:.7rem;color:#6b735b;line-height:1.5}
+.tactical-menu{display:flex;gap:8px;margin:12px 0}
+.tactical-menu button{flex:1}
+.tactical-quest{border-top:1px solid #cab78c;padding-top:12px;font-size:.8rem;line-height:1.6}
+.tactical-help{color:#6b735b}
+.tactical-maxed{grid-column:1/-1;display:flex;align-items:center;gap:8px;min-height:70px;font-family:Jua,sans-serif}
+.defense-tactical .defense-forecast{border:0;padding:0;background:none;box-shadow:none}
+.defense-tactical .defense-forecast>summary{min-height:48px;flex-wrap:wrap;gap:8px;padding:4px 0}
+.defense-tactical .defense-scout-content{position:static;border:0;box-shadow:none;padding:8px 0;background:none;max-height:none}
+.defense-tactical .defense-scout-enemies{display:flex;flex-direction:column;gap:8px}
+.defense-tactical .defense-scout-enemies>div{min-height:58px}
+.defense-tactical .defense-scout-enemies small{font-size:.75rem;line-height:1.5}
+.defense-tactical .defense-scout-content>p{font-size:.75rem;line-height:1.5}
+.defense-return{z-index:1}
+body:has(.battle-page) .dialog-backdrop:not(:has(.defense-tactical)){background:#062b245e;backdrop-filter:blur(3px)}
+body:has(.battle-page) .defense-dialog button{min-height:48px}
+body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px)}
+@media(orientation:landscape) and (max-height:360px),(orientation:landscape) and (max-width:700px){
+ .battle-body{grid-template-columns:64px minmax(0,1fr) 64px;padding:4px 8px}
+ .battle-recruit,.battle-scout,.battle-party .def-sprite{display:none!important}
+ .battle-commands{gap:8px;padding-bottom:0;justify-content:center}
+ .battle-commands button{min-height:56px;padding:6px 2px;font-size:.9rem;gap:3px}
+ .battle-commands .battle-skill{min-height:64px}
+ .battle-commands small{display:none}
+ .battle-hud{gap:4px;padding:2px 8px;min-height:44px}
+ .battle-hud>span{padding-inline:5px}
+ .battle-hud .battle-stage{display:none}
+ .battle-hud b{font-size:1.05rem}
+ .battle-hud .battle-pause{min-height:44px}
+ .defense-tactical .tactical-heading h2{font-size:1rem}
+ .dialog-backdrop:has(.defense-tactical){padding-top:52px}
+ body:has(.battle-page) .defense-dialog{padding:16px 22px;gap:8px}
+ body:has(.battle-page) .defense-dialog h2{font-size:1.6rem}
+}
+@media(orientation:portrait){
+ .battle-hud{gap:4px;padding:2px 8px;min-height:48px;flex-wrap:wrap}
+ .battle-hud .battle-stage{display:none}
+ .battle-hud>span{gap:3px;padding:3px 5px;min-width:max-content;flex:1 1 auto}
+ .battle-hud b{font-size:1rem}
+ .battle-hud small{font-size:.65rem}
+ .battle-hud svg{width:16px;height:16px}
+ .battle-hud .battle-wave small{display:none}
+ .battle-hud .battle-pause{width:44px;min-width:44px;min-height:44px}
+ .battle-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(48px,auto) minmax(48px,auto);gap:8px;padding:4px 8px}
+ .battle-map-column{grid-column:1;grid-row:1}
+ .battle-map-space{align-items:flex-start}
+ .battle-map-size .def-board{border-radius:5px}
+ .battle-map-size .def-build-pad>span{font-size:20px}
+ .battle-map-size .def-build-pad:not(.occupied){isolation:isolate;background:transparent;border:0;box-shadow:none}
+ .battle-map-size .def-build-pad:not(.occupied)::before{content:'';position:absolute;inset:6px;border:1px solid #d3bf82;border-radius:50%;background:#f3e3b0;box-shadow:0 2px 1px #213a3a40;z-index:-1}
+ .battle-map-size .def-build-pad:not(.occupied)>span{font-size:18px;line-height:18px}
+ .battle-map-size .def-build-pad:not(.occupied)>small{font-size:9px;line-height:10px}
+ .battle-utilities{grid-column:1;grid-row:2;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+ .battle-utilities .battle-party{display:none}
+ .battle-utilities button{font-size:.9rem;padding:5px 3px;min-width:0;border-radius:7px}
+ .battle-utilities .battle-start{gap:2px}
+ .battle-utilities .battle-start svg{width:15px}
+ .battle-commands{grid-column:1;grid-row:3;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:0}
+ .battle-commands button,.battle-commands .battle-skill{min-height:48px;flex-direction:row;padding:5px 8px;font-size:1rem;border-radius:8px;gap:8px;box-shadow:inset 0 0 0 2px #ffffff20}
+ .battle-commands .battle-skill{order:1}
+ .battle-commands .battle-dash{order:2}
+ .battle-commands small{font-size:.6rem;margin-top:3px}
+ .battle-commands>button>svg{width:23px;height:23px;flex-shrink:0}
+ .battle-input-note,.battle-aiming .battle-input-note{display:block;position:static;transform:none;width:auto;max-width:none;min-height:30px;flex-shrink:0;padding:5px 4px;margin-top:4px;background:none}
+ .battle-portrait-summary{display:flex;align-items:center;gap:10px;min-height:76px;padding:8px 6px;text-align:left;background:none;border:0;color:#f9efd8;flex-shrink:0}
+ .battle-portrait-summary>.def-sprite{width:57px;height:62px;flex-shrink:0}
+ .battle-portrait-summary>span{flex:1;min-width:0}
+ .battle-portrait-summary strong{display:flex;align-items:center;gap:8px;font-family:Jua,sans-serif;font-size:1.15rem;font-weight:400;border-bottom:1px solid #65795a;padding-bottom:5px;margin-bottom:5px}
+ .battle-portrait-summary strong small{margin-left:auto}
+ .battle-portrait-summary>span>span{display:block;font-family:Jua,sans-serif;font-size:.95rem;margin-bottom:3px}
+ .battle-portrait-summary small{font-family:Pretendard,sans-serif;font-size:.65rem;color:#c1ceb4;line-height:1.5}
+ .battle-portrait-summary>svg:last-child{transform:rotate(180deg)}
+ .dialog-backdrop:has(.defense-tactical){align-items:flex-end;justify-content:stretch;padding:0}
+ .defense-tactical{width:100%;height:auto;max-height:min(50dvh,280px);border-radius:16px 16px 0 0;border-bottom:0;padding-bottom:env(safe-area-inset-bottom)}
+ .tactical-heading{padding:6px 8px 6px 12px}
+ .tactical-content{padding:10px 12px}
+ .tactical-towers .def-sprite{height:52px;width:62px}
+ .tactical-towers>button{min-height:115px}
+ .tactical-upgrades .def-sprite{height:56px;width:60px}
+ .battle-save-warning{position:static;flex-shrink:0}
+}
+@media(orientation:portrait) and (max-height:620px){
+ .battle-portrait-summary{min-height:58px;padding:4px}
+ .battle-portrait-summary>.def-sprite{height:48px;width:44px}
+ .battle-portrait-summary strong{font-size:1rem;padding-bottom:3px;margin-bottom:3px}
+ .battle-portrait-summary>span>span{font-size:.8rem}
+ .battle-portrait-summary>span>small{display:none}
+}
+@media(orientation:portrait) and (max-width:360px){.battle-hud .battle-health svg{display:none}.battle-hud small{font-size:.7rem}}
+.battle-large-text .battle-portrait-summary,.battle-large-text .battle-input-note,.battle-large-text .battle-commands small,.battle-large-text .battle-commands>button>svg,.battle-large-text .battle-start svg{display:none}
+.battle-large-text .battle-utilities button,.battle-large-text .battle-commands button{white-space:nowrap}
+@media(orientation:landscape){.battle-large-text .battle-body{grid-template-columns:104px minmax(0,1fr) 104px}.battle-large-text .battle-utilities button{font-size:.9rem}.battle-large-text .battle-party .def-sprite{display:none}.battle-large-text .battle-commands button{font-size:.9rem}}
+@media(prefers-reduced-motion:reduce){.battle-page *,.defense-tactical *{scroll-behavior:auto!important}}
