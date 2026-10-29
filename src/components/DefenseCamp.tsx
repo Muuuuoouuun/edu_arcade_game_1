@@ -1,12 +1,17 @@
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import { DefenseSprite } from './DefenseBoard';
+import { DefenseFieldGuide } from './DefenseFieldGuide';
 import { Icon } from './Icon';
 import { campaignFacilities, campaignRequest, stageUnlocked, trainingCost } from '../games/defense/campaign';
 import { getStage, HEROES, STAGES } from '../games/defense/data';
 import { DIFFICULTIES, DIFFICULTY_ORDER, getDifficulty } from '../games/defense/difficulty';
 import type { Campaign, Difficulty, HeroId } from '../games/defense/types';
+import { DEFENSE_THEMES, THEME_ORDER, themeUnlocked } from '../games/defense/themes';
+import type { DefenseThemeId } from '../games/defense/themes';
 import '../camp.css';
 import '../defense-difficulty.css';
+import '../defense-themes.css';
 
 type Props = {
   campaign: Campaign;
@@ -16,21 +21,21 @@ type Props = {
   onTrain: () => void;
   onExit: () => void;
   storageFailed: boolean;
+  themeId: DefenseThemeId;
+  onSelectTheme: (theme: DefenseThemeId) => void;
+  themeStorageFailed: boolean;
 };
 type FacilityId = ReturnType<typeof campaignFacilities>[number]['id'];
-const positions: Record<FacilityId, {left:string;top:string}> = {
-  lodge:{left:'46%',top:'43%'}, ranger:{left:'18%',top:'32%'},
-  forge:{left:'78%',top:'60%'}, shrine:{left:'79%',top:'26%'}, beast:{left:'23%',top:'77%'},
-};
 const regionNames = {forest:'청록의 숲',snow:'서리산맥'};
 const regionArt = {forest:'/defense/forest.png',snow:'/defense/snow.png'};
 const regionSummary = {forest:'숲길과 물길을 따라, 이웃 마을을 지켜요.',snow:'빙판을 달리는 적들과 서리군주가 기다려요.'};
 
-export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDifficulty,onTrain,onExit,storageFailed}:Props) {
+export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDifficulty,onTrain,onExit,storageFailed,themeId,onSelectTheme,themeStorageFailed}:Props) {
   const request = campaignRequest(campaign);
   const [selectedStage,setSelectedStage] = useState(request?.stage ?? 8);
   const [selectedFacility,setSelectedFacility] = useState<FacilityId|null>(null);
   const stage = getStage(selectedStage);
+  const theme = DEFENSE_THEMES[themeId];
   const facilities = campaignFacilities(campaign).filter(f=>f.unlocked);
   const focusedFacility = facilities.find(f=>f.id===selectedFacility);
   const completed = campaign.cleared.includes(selectedStage);
@@ -49,7 +54,7 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
   };
   const letterTitle = allDone ? '두 지역에 평화가 찾아왔어요' : completed ? '다시 찾아가는 마을' : stage.region==='snow' ? '설산에서 온 구조 요청' : campaign.cleared.length ? '새로운 구조 요청' : '우리 마을을 지켜 주세요';
   const letterBody = allDone ? '함께 모인 수비대로 다른 조합을 시험해 보세요. 아직 놓친 추가 퀘스트에도 다시 도전할 수 있어요.' : completed ? `${stage.name}의 길목을 다시 지켜 주세요. 새로운 영웅과 타워 조합을 시험할 수 있어요.` : stage.story;
-  return <main className="camp-page" id="main">
+  return <main className="camp-page camp-themed" id="main" data-theme={themeId} style={{'--theme-accent':theme.accent,'--theme-ink':theme.ink} as CSSProperties}>
     <div className="camp-heading">
       <button className="camp-back" onClick={onExit}><Icon name="back" size={18}/><span>게임으로</span></button>
       <h1>아르카나 수비대</h1>
@@ -58,16 +63,35 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
     {storageFailed ? <p className="camp-save-warning" role="status">진행을 저장할 수 없어요. 현재 원정은 계속할 수 있지만, 창을 닫으면 기록이 사라질 수 있어요.</p> : null}
     <div className="camp-layout">
       <section className="camp-village" aria-labelledby="camp-title">
-        <div className="camp-intro"><h2 id="camp-title">우리의 작은 거점</h2><p>{campaign.cleared.length ? '구해 낸 사람들이 모여, 다음 모험을 준비합니다.' : '작은 마을에서 시작하는, 우리 수비대의 첫 모험.'}</p></div>
-        <div className="camp-scene" aria-label={`정착한 시설 ${facilities.length}곳과 동료 ${campaign.visitors.length}명`}>
-          <img className="camp-landscape" src="/defense/camp.png" alt="숲과 작은 개울에 둘러싸인 수비대의 정착지" draggable={false}/>
-          {facilities.map(f=><button key={f.id} className={`camp-facility camp-facility-${f.id} ${selectedFacility===f.id?'selected':''}`} style={positions[f.id]} onClick={()=>setSelectedFacility(current=>current===f.id?null:f.id)} aria-label={`${f.name} 살펴보기`} aria-pressed={selectedFacility===f.id}>
-            <DefenseSprite index={f.sprite ?? 7}/><span>{f.id==='ranger'?'정찰 초소':f.name}<Icon name="back" size={13}/></span>
-          </button>)}
-          <div className="camp-residents" aria-hidden="true">{campaign.visitors.map((hero,i)=><DefenseSprite key={hero} index={HEROES[hero].sprite} style={{transform:`translateY(${i%2?8:0}px)`}}/>)}</div>
-          {campaign.cleared.length===0?<div className="camp-first-sign"><strong>이안과 함께 시작해요</strong><span>첫 방어를 마치면 새로운 동료가 찾아옵니다.</span></div>:null}
-          {focusedFacility?<div className="camp-facility-detail" role="status"><div><strong>{focusedFacility.name}</strong><p>{focusedFacility.description}</p></div><button onClick={()=>setSelectedFacility(null)} aria-label="시설 안내 닫기"><Icon name="close" size={17}/></button></div>:null}
-          <div className="camp-settled"><span>{facilities.length}곳의 불빛</span><span>{campaign.cleared.length}개의 방어 성공</span></div>
+        <div className="camp-intro"><h2 id="camp-title">수비대의 거점</h2><p>{campaign.cleared.length ? '구해 낸 사람들이 모여, 다음 모험을 준비합니다.' : '이안과 함께 시작하는, 우리 수비대의 첫 모험.'}</p></div>
+        <div className="camp-home">
+          <div className="camp-scene camp-theme-scene">
+            <picture className="camp-landscape" key={themeId}>
+              <source media="(max-width: 600px)" srcSet={theme.thumbnail}/>
+              <img src={theme.image} width="1200" height="800" alt={`${theme.name} 외형의 수비대 거점`} draggable={false} fetchPriority="high" decoding="async"/>
+            </picture>
+          </div>
+          <div className="camp-theme-caption" aria-live="polite"><div><h3>{theme.name}</h3><p>{theme.description}</p></div><span>{campaign.cleared.length}개 원정 완료</span></div>
+          <section className="camp-theme-picker" aria-labelledby="camp-theme-title">
+            <div className="camp-theme-heading"><h3 id="camp-theme-title">거점 테마</h3><p>거점과 성문의 외형이 바뀌어요. 전투 능력은 같아요.</p></div>
+            <div className="camp-theme-options">{THEME_ORDER.map(id=>{
+              const option=DEFENSE_THEMES[id],unlocked=themeUnlocked(id,campaign.cleared),selected=themeId===id;
+              const unlockLabel=option.unlockStage ? `${getStage(option.unlockStage).label} 방어 후` : '처음부터 사용';
+              return <button key={id} type="button" className={`camp-theme-option ${selected?'selected':''}`} data-theme-id={id} disabled={!unlocked} aria-pressed={selected} aria-label={`${option.name} 테마${unlocked?' 선택':` · ${unlockLabel} 해금`}`} onClick={()=>onSelectTheme(id)}>
+                <img src={option.thumbnail} width="600" height="400" alt="" loading="lazy" decoding="async"/>
+                <span><strong>{option.name}</strong><small>{selected?'✓ 적용 중':unlocked?'선택하기':unlockLabel}</small></span>
+              </button>;
+            })}</div>
+            {themeStorageFailed?<p className="camp-theme-save-warning" role="status">선택한 테마를 저장하지 못했어요. 지금 원정에는 적용돼요.</p>:null}
+          </section>
+          <section className="camp-services" aria-labelledby="camp-services-title">
+            <div className="camp-services-heading"><h3 id="camp-services-title">문을 연 시설</h3><span>동료 {campaign.visitors.length}명 · 시설 {facilities.length}곳</span></div>
+            <div className="camp-service-list">{facilities.map(f=><button key={f.id} className={`camp-service ${selectedFacility===f.id?'selected':''}`} onClick={()=>setSelectedFacility(current=>current===f.id?null:f.id)} aria-label={`${f.name} 살펴보기`} aria-expanded={selectedFacility===f.id} aria-controls="camp-service-detail">
+              <DefenseSprite index={f.sprite ?? 7}/><span>{f.id==='ranger'?'정찰 초소':f.name}</span><Icon name="back" size={14}/>
+            </button>)}</div>
+            <div id="camp-service-detail">{focusedFacility?<div className="camp-service-detail" role="status"><div><strong>{focusedFacility.name}</strong><p>{focusedFacility.description}</p></div><button onClick={()=>setSelectedFacility(null)} aria-label="시설 안내 닫기"><Icon name="close" size={17}/></button></div>:null}</div>
+            {!campaign.cleared.length?<p className="camp-service-next">첫 방어를 마치면 새로운 동료와 시설이 찾아옵니다.</p>:null}
+          </section>
         </div>
         <section className="camp-roster" aria-label="출전 영웅 선택">
           <div className="camp-roster-heading"><h2>함께하는 동료</h2><span>영웅을 고르고 원정을 떠나요</span></div>
@@ -102,6 +126,7 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
           <p>{stage.region==='forest'&&!snowOpen?'숲의 마지막 마을을 지키면, 설산에서 소식이 옵니다.':regionSummary[stage.region]}</p>
           <nav className="camp-stages" aria-label={`${regionNames[stage.region]} 스테이지`}>{chapterStages.map(s=><button key={s.id} className={`${s.id===selectedStage?'selected':''} ${campaign.cleared.includes(s.id)?'complete':''}`} disabled={!stageUnlocked(campaign,s.id)} onClick={()=>setSelectedStage(s.id)} aria-label={`${s.label} ${s.name}${campaign.cleared.includes(s.id)?' 완료':''}`} aria-current={s.id===selectedStage?'step':undefined}><span>{campaign.cleared.includes(s.id)?'✓':s.order}</span><strong>{s.label}</strong></button>)}</nav>
         </section>
+        {stageUnlocked(campaign,stage.id)?<DefenseFieldGuide stage={stage.id} difficulty={difficulty}/>:null}
         {forgeOpen?<section className="camp-forge"><DefenseSprite index={22}/><div><h2>공용 장비 Lv.{campaign.training}</h2><p>모든 영웅·타워 공격력 <strong>+{campaign.training*8}%</strong></p><button onClick={onTrain} disabled={campaign.training>=5||campaign.gold<trainingCost(campaign)}>{campaign.training>=5?'최종 강화 완료':<><Gold/>강화 {trainingCost(campaign)} G</>}</button></div></section>:<section className="camp-coming"><DefenseSprite index={2}/><div><h2>길이 안전해지면</h2><p>대장장이를 구하고, 거점에 대장간을 열어요.</p><span>1-2 방어 후 찾아옵니다</span></div></section>}
       </aside>
     </div>

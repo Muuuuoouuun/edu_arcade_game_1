@@ -9,12 +9,14 @@ import { allowedBranches, upgradeCost } from '../games/defense/engine';
 import type { TacticalAction } from '../games/defense/engine';
 import { towerSpriteAsset } from '../games/defense/art';
 import type { Campaign, DefenseState, Point, TowerKind } from '../games/defense/types';
+import type { DefenseThemeId } from '../games/defense/themes';
 import '../defense-mobile.css';
 
 export type BattlePanel = { kind: 'build'; slot: number } | { kind: 'candidates'; slots: number[] } | { kind: 'recruit' | 'scout' | 'party' };
 const terrainNames = { high: '고지대 · 사거리 증가', water: '물가 · 전기 연계', ice: '빙판 · 빠른 적 주의', plain: '평지' };
 
-export function DefenseBattle({ state, campaign, aimingDash, selectedSlot, onPanel, onCandidates, onMove, onCancelAim, onDash, onSkill, onStart, onSpeed, onPause, storageFailed }: {
+export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSlot, onPanel, onCandidates, onMove, onCancelAim, onDash, onSkill, onStart, onSpeed, onPause, storageFailed }: {
+  themeId: DefenseThemeId;
   state: DefenseState; campaign: Campaign; aimingDash: boolean; selectedSlot: number | null; storageFailed: boolean;
   onPanel: (panel: BattlePanel) => void; onCandidates: (ids: number[]) => void; onMove: (point: Point) => void;
   onCancelAim: () => void; onDash: () => void; onSkill: () => void; onStart: () => void; onSpeed: () => void; onPause: () => void;
@@ -62,7 +64,7 @@ export function DefenseBattle({ state, campaign, aimingDash, selectedSlot, onPan
       <section className="battle-map-column" aria-label="방어 전장">
         <div className="battle-map-space" ref={mapSpace}>
           <div className="battle-map-size" style={{ width: mapWidth || '100%' }}>
-            <DefenseBoard state={state} selectedSlot={selectedSlot} aimingDash={aimingDash} onSelect={slot => onPanel({ kind: 'build', slot })} onSelectCandidates={onCandidates} onCancelAim={onCancelAim} onMove={onMove}/>
+            <DefenseBoard state={state} themeId={themeId} selectedSlot={selectedSlot} aimingDash={aimingDash} onSelect={slot => onPanel({ kind: 'build', slot })} onSelectCandidates={onCandidates} onCancelAim={onCancelAim} onMove={onMove}/>
           </div>
         </div>
         <div className={`battle-input-note ${aimingDash ? 'aiming' : ''}`} role="status">{aimingDash ? '전장을 탭하면 돌진 · 전투는 계속돼요' : state.paused ? '전술 선택 중 · 전투가 멈췄어요' : state.phase === 'prep' ? '건설 지점에 타워를 세우고 시작하세요' : '땅을 탭해 영웅 이동'}</div>

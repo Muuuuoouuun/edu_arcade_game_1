@@ -16,6 +16,8 @@ import type { Campaign, DefenseAction, DefenseState, HeroId, TowerKind } from '.
 import type { RoundRecord } from '../lib/storage';
 import { playSound, playCombatSound, unlockAudio } from '../lib/sound';
 import { preloadDefenseMotion, towerSpriteAsset } from '../games/defense/art';
+import { availableTheme, readDefenseTheme, themeUnlocked, writeDefenseTheme } from '../games/defense/themes';
+import type { DefenseThemeId } from '../games/defense/themes';
 import '../defense.css';
 import '../defense-combat.css';
 
@@ -56,6 +58,9 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
   const modeRef = useRef<'camp' | 'battle'>('camp');
   const [campaign, setCampaign] = useState(readCampaign);
   const campaignRef = useRef(campaign);
+  const [themePreference, setThemePreference] = useState(readDefenseTheme);
+  const [themeStorageFailed, setThemeStorageFailed] = useState(false);
+  const themeId = availableTheme(themePreference, campaign.cleared);
   const [state, setState] = useState(() => createDefense(latestStage(campaign), campaign.selectedHero, campaign.training, campaign.difficulty));
   const stateRef = useRef(state);
   const runId = useRef('');
@@ -74,6 +79,11 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
   const tacticalRef = useRef<OpenPanel | null>(null);
   const blockedRef = useRef(blocked);
   blockedRef.current = blocked;
+  const chooseTheme = (id: DefenseThemeId) => {
+    if (blockedRef.current || modeRef.current !== 'camp' || !themeUnlocked(id, campaignRef.current.cleared)) return;
+    setThemePreference(id);
+    setThemeStorageFailed(!writeDefenseTheme(id));
+  };
   const publish = useCallback((next: DefenseState) => { stateRef.current = next; setState(next); }, []);
   const persist = useCallback((next: Campaign) => {
     campaignRef.current = next; setCampaign(next); setStorageFailed(!writeCampaign(next));
@@ -262,9 +272,9 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
     : state.hero === 'tao'
       ? '영웅 기본 공격 사거리 +65 · 필살기의 기존 둔화 4초 유지'
       : '영웅 기본 공격 사거리 +65 · 필살기에 4초 둔화 추가';
-  return <div className="defense-root">{mode === 'camp' ? <DefenseCamp campaign={campaign} onDepart={begin} onChooseHero={chooseHero} onSelectDifficulty={difficulty => { if (!blockedRef.current) persist(selectDifficulty(campaignRef.current, difficulty)); }} onTrain={train} onExit={() => { if (!blockedRef.current) onExit(); }} storageFailed={storageFailed}/> : <>
+  return <div className="defense-root" data-theme={themeId}>{mode === 'camp' ? <DefenseCamp themeId={themeId} onSelectTheme={chooseTheme} themeStorageFailed={themeStorageFailed} campaign={campaign} onDepart={begin} onChooseHero={chooseHero} onSelectDifficulty={difficulty => { if (!blockedRef.current) persist(selectDifficulty(campaignRef.current, difficulty)); }} onTrain={train} onExit={() => { if (!blockedRef.current) onExit(); }} storageFailed={storageFailed}/> : <>
     <div inert={state.paused || blocked || !!arriving || terminal || state.phase === 'promotion' || undefined}>
-      <DefenseBattle state={state} campaign={campaign} aimingDash={aimingDash} selectedSlot={tactical?.view.kind === 'build' ? tactical.view.slot : null} onPanel={openPanel} onCandidates={slots => openPanel({ kind: 'candidates', slots })} onMove={moveHero} onCancelAim={cancelAim} onDash={toggleDash} onSkill={() => { cancelAim(); dispatch({ type: 'skill' }); }} onStart={() => dispatch({ type: 'start-wave' })} onSpeed={() => dispatch({ type: 'speed' })} onPause={() => pause('manual')} storageFailed={storageFailed}/>
+      <DefenseBattle themeId={themeId} state={state} campaign={campaign} aimingDash={aimingDash} selectedSlot={tactical?.view.kind === 'build' ? tactical.view.slot : null} onPanel={openPanel} onCandidates={slots => openPanel({ kind: 'candidates', slots })} onMove={moveHero} onCancelAim={cancelAim} onDash={toggleDash} onSkill={() => { cancelAim(); dispatch({ type: 'skill' }); }} onStart={() => dispatch({ type: 'start-wave' })} onSpeed={() => dispatch({ type: 'speed' })} onPause={() => pause('manual')} storageFailed={storageFailed}/>
     </div>
     {tactical && !terminal ? <DefenseTacticalPanel key={tactical.session.id} panel={tactical.view} state={state} campaign={campaign} active={!blocked && !systemPaused} onClose={closePanel} onPanel={openPanel} onBuy={(action, confirmSell) => purchase(tactical.session, action, confirmSell)}/> : null}
     {!blocked && systemPaused && !terminal && !arriving ? <Dialog title="전장으로 돌아오기" className="defense-dialog defense-return" onClose={() => resume('system')}><h2>준비되면 다시 시작해요</h2><p>화면이 바뀌어 전투를 멈췄어요.<br/>{tactical ? '선택하던 전술은 그대로 남아 있어요.' : '마을과 수비대가 기다리고 있어요.'}</p><button className="defense-primary" onClick={() => resume('system')}>{tactical ? '전술 선택으로 돌아오기' : reasons.includes('manual') ? '일시정지로 돌아오기' : '계속 방어하기'}</button></Dialog> : null}

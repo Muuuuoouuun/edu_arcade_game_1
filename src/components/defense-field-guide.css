@@ -1,0 +1,35 @@
+.defense-field-guide{min-width:0;margin:16px 0 0;border:1px solid #b3ab8f;border-radius:10px;background:#f4eedc;color:#243f38;box-shadow:0 3px 10px #14372d08;font-family:Pretendard,sans-serif;text-align:left}
+.defense-field-guide>summary{display:flex;align-items:center;gap:10px;min-height:64px;padding:10px 12px;cursor:pointer;list-style:none}
+.defense-field-guide summary::-webkit-details-marker{display:none}
+.defense-field-guide summary:focus-visible{outline:3px solid #1b6e66;outline-offset:3px;border-radius:6px}
+.defense-field-guide>summary>svg{width:26px;height:26px;flex:0 0 26px;color:#456756}
+.defense-field-guide>summary>span:nth-child(2){min-width:0;flex:1}
+.defense-field-guide>summary strong{display:block;font-size:.98rem;line-height:1.5}
+.defense-field-guide>summary small{display:block;color:#526357;font-size:.75rem;line-height:1.5;margin-top:2px}
+.defense-field-guide .field-guide-count{font-size:.72rem;color:#536255;white-space:nowrap}
+.defense-field-guide .field-guide-chevron{display:block;flex:0 0 14px;font-size:1.2rem;line-height:1;text-align:center;transform-origin:center}
+.defense-field-guide[open]>summary>.field-guide-chevron,.field-guide-note[open]>summary>.field-guide-chevron{transform:rotate(180deg)}
+.defense-field-guide .field-guide-pages{border-top:1px solid #c8c0a7;padding:10px}
+.defense-field-guide .field-guide-intro{margin:0 2px 10px;color:#526357;font-size:.78rem;line-height:1.6}
+.defense-field-guide .field-guide-note{margin:7px 0;background:#fffaf0;border:1px solid #d7cfb8;border-radius:7px;overflow:visible}
+.defense-field-guide .field-guide-note>summary{display:flex;align-items:center;gap:8px;min-height:48px;padding:9px;list-style:none;cursor:pointer}
+.defense-field-guide .field-guide-note>summary>strong{flex:1;min-width:0;font-size:.82rem;line-height:1.5;font-weight:650;overflow-wrap:anywhere}
+.defense-field-guide .field-guide-material{flex:0 0 auto;min-width:32px;padding:3px 6px;background:#e0e9db;border:1px solid #bdcbb1;border-radius:4px;font-size:.7rem;line-height:1.5;font-weight:650;color:#345444;text-align:center}
+.defense-field-guide .field-guide-ice .field-guide-material{background:#deedf0;border-color:#afcad2;color:#275367}
+.defense-field-guide .field-guide-stone .field-guide-material{background:#e8e3da;border-color:#c6bfb1;color:#5f5142}
+.defense-field-guide .field-guide-metal .field-guide-material{background:#ede6ca;border-color:#cfc08d;color:#665329}
+.defense-field-guide .field-guide-insulator .field-guide-material{background:#e9e2ef;border-color:#c9b8d5;color:#654677}
+.defense-field-guide .field-guide-entry{padding:0 11px 12px}
+.defense-field-guide .field-guide-enemies{margin:0 0 10px;color:#57675b;font-size:.72rem;line-height:1.6}
+.defense-field-guide .field-guide-entry dl{display:grid;gap:10px;margin:0}
+.defense-field-guide .field-guide-entry dl>div{border-left:2px solid #bda771;padding-left:9px}
+.defense-field-guide .field-guide-entry dl>div+div{border-left-color:#789c91}
+.defense-field-guide .field-guide-entry dt{font-size:.7rem;line-height:1.5;font-weight:750;color:#416456;margin:0 0 3px}
+.defense-field-guide .field-guide-entry dd{margin:0;font-size:.8rem;line-height:1.7;color:#344d42;overflow-wrap:anywhere}
+.defense-field-guide .field-guide-footnote{margin:11px 2px 2px;color:#5c6555;font-size:.7rem;line-height:1.6}
+@media(max-width:380px){.defense-field-guide>summary{gap:8px;padding:10px}.defense-field-guide>summary>svg{width:22px;height:22px;flex-basis:22px}.defense-field-guide .field-guide-count{display:none}}
+/* Reading is voluntary: only an expanded notebook needs a taller portrait sheet. */
+@media(max-width:600px) and (orientation:portrait){
+ .defense-tactical.panel-scout:has(.defense-field-guide[open]){max-height:min(78dvh,640px)}
+ .defense-tactical.panel-scout .field-guide-note>summary{scroll-margin-top:80px}
+}

@@ -1,0 +1,62 @@
+{
+  "purpose": "Cosmetic campaign settlement illustrations; original concepts are preserved.",
+  "encoding": "WebP, aspect-preserving resize only; no crop or retouch.",
+  "files": [
+    {
+      "file": "verdant.webp",
+      "source": "art-source/defense/concepts/2026-10-29/castles/verdant-citadel.png",
+      "width": 1200,
+      "bytes": 390482,
+      "sha256": "136ffc118d9e1e4fe1ea4079fb3d86eea0c54a2fbf912107b524dac2ca639a5b"
+    },
+    {
+      "file": "verdant-small.webp",
+      "source": "art-source/defense/concepts/2026-10-29/castles/verdant-citadel.png",
+      "width": 600,
+      "bytes": 96484,
+      "sha256": "a34d3cd9f0ac018765a5730d4331d5ee936973d3af96340dd64bc1d47849786d"
+    },
+    {
+      "file": "steel.webp",
+      "source": "art-source/defense/concepts/2026-10-29/castles/blue-steel-bastion.png",
+      "width": 1200,
+      "bytes": 360240,
+      "sha256": "c46809dded3520ce1017d60dc8c7edf31efbd173b9fb73178418f879ada9d3cf"
+    },
+    {
+      "file": "steel-small.webp",
+      "source": "art-source/defense/concepts/2026-10-29/castles/blue-steel-bastion.png",
+      "width": 600,
+      "bytes": 92776,
+      "sha256": "39311997124668f0609e9869ca54ebdcd31069d5f8a6a27957a7b9385ce20b96"
+    },
+    {
+      "file": "unryeong.webp",
+      "source": "art-source/defense/concepts/2026-10-29/castles/unryeong-castle.png",
+      "width": 1200,
+      "bytes": 370896,
+      "sha256": "7f1d22b251e78a406bcd40a8062d84e83874f569c9af610d3d7b3e8f1542b75b"
+    },
+    {
+      "file": "unryeong-small.webp",
+      "source": "art-source/defense/concepts/2026-10-29/castles/unryeong-castle.png",
+      "width": 600,
+      "bytes": 95890,
+      "sha256": "48af44accca9981e4eaccf37897bd7569d7a9659a4ed675ffe026d96404a420d"
+    },
+    {
+      "file": "twilight.webp",
+      "source": "art-source/defense/concepts/2026-10-29/castles/twilight-castle.png",
+      "width": 1200,
+      "bytes": 288920,
+      "sha256": "392ff763e9869d75d44dc9f5911e12f1168d89498e590cbe9a5764f0e966fd6b"
+    },
+    {
+      "file": "twilight-small.webp",
+      "source": "art-source/defense/concepts/2026-10-29/castles/twilight-castle.png",
+      "width": 600,
+      "bytes": 74226,
+      "sha256": "ee312d3faab515816a729bce36840346923943dbaa24cd88c66cd8a164dd5662"
+    }
+  ]
+}
