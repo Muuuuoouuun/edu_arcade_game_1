@@ -117,3 +117,7 @@ Blender 4.3.2와 FFmpeg를 확인했고, 모델 작업실용 Three.js 0.186.1을
 돌진 조준 중에는 건설 지점을 눌러도 해당 위치로 돌진합니다. 같은 버튼·Escape·pointercancel·드래그·화면 변화로 조준을 취소하며, 취소에는 재사용 시간을 쓰지 않습니다. 작은 화면에서 겹친 건설 지점은 후보를 먼저 고릅니다. 화면을 확대해 글자를 크게 쓰면 보조 설명을 접어 전장과 주요 조작을 유지합니다.
 
 구매와 정지 사유는 `src/games/defense/tactics.ts`, 전투 화면·전술 패널은 `DefenseBattle`, 포인터 판정은 `defenseInput`에 분리했습니다. [모바일 기획·구현 현황](docs/arcana-mobile-layout-plan.md)에 실제 구현과 남은 확대 카메라·실기기 검증 범위를 구분했습니다. Claude 검토용 키는 웹 앱에서 사용하지 않습니다.
+
+### 카드 수비·3D 프로토타입
+
+별도 브랜치에서 만든 카드 수비 모드의 기획과 2D/3D 프로토타입을 함께 보존했습니다. 이 모드는 문제 정답으로 마나를 얻어 카드를 소환하는 5웨이브 실험작이며, 기존 영웅·용병 중심 4웨이브 캠페인과 규칙·진행도를 공유하지 않습니다. [기획 문서](docs/arcana-guard/README.md), [3D 수비 모드](prototype/3d_game.html), [2D 기준판](prototype/index.html), [실행·검증 안내](prototype/README.md)를 참고하세요.

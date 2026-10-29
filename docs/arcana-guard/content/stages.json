@@ -1,0 +1,2444 @@
+{
+  "$schema": "./stage_schema.json",
+  "version": "0.1.0",
+  "description": "아르카나 수비대 24스테이지 정의(5차). 챕터 1 = 03 §1.3 표 그대로, 2~4장 = 03 §1.2 배수, 모드 배정 = 14 §2.2, RTS 목표 = 14 §2.4, 별 = 03 §3.1 + 14 §1.1 + 10 §3. 적 HP는 런타임에 BALANCE.enemies × rules.waveHpMult × rules.challengeTierHpMult로 계산한다.",
+  "rules": {
+    "waveHpMult": [1, 1.6, 2.4, 3.4, 5.0],
+    "challengeTierHpMult": {"1": 0.85, "2": 1.0, "3": 1.2},
+    "fm": {"normal": 1.0, "fast": 0.7, "tank": 3.0, "stray": 0.5},
+    "bossHp": {
+      "balanceKey": "enemies.boss.hp",
+      "fmRef": 16,
+      "note": "왕 HP = BALANCE.enemies.boss.hp × (bossSpawn.fm ÷ fmRef) × waveHpMult[4] × challengeTierHpMult. fmRef 16 = 1-6의 왕 FM (잠정, 15 변경 제안 참조)"
+    },
+    "chapters": [
+      {
+        "chapter": 1,
+        "countMult": 1.0,
+        "kingFmMult": 1.0,
+        "intervalMult": 1.0,
+        "enemySpeedMult": 1.0,
+        "slots": 6,
+        "sigma": 1.0
+      },
+      {
+        "chapter": 2,
+        "countMult": 1.25,
+        "kingFmMult": 1.25,
+        "intervalMult": 0.95,
+        "enemySpeedMult": 1.05,
+        "slots": 6,
+        "sigma": 1.1
+      },
+      {
+        "chapter": 3,
+        "countMult": 1.55,
+        "kingFmMult": 1.6,
+        "intervalMult": 0.9,
+        "enemySpeedMult": 1.1,
+        "slots": 7,
+        "sigma": 1.2
+      },
+      {
+        "chapter": 4,
+        "countMult": 1.9,
+        "kingFmMult": 2.0,
+        "intervalMult": 0.88,
+        "enemySpeedMult": 1.15,
+        "slots": 8,
+        "sigma": 1.3
+      }
+    ],
+    "generation": "챕터 2~4 = ceil(챕터 1 수 × countMult), 간격 = 챕터 1 간격 × intervalMult(0.1초 단위 반올림, 간격 0인 단발 그룹이 2마리 이상이 되면 6.0초를 기준으로), 시작 오프셋 유지, 왕 FM = 챕터 1 × kingFmMult. RTS 스테이지는 위 결과의 길 위 FM(왕 포함)을 ×0.9로 맞추고(속삭임·안개 조각 수로 조정, 침묵 덩어리 수 유지) 이탈 안개(stray)를 별도 추가.",
+    "rtsRoadFmMult": 0.9,
+    "slotIndexConvention": "slotsEnabled의 숫자 = 08 §3 각 장의 '슬롯:' 목록 순서(0부터). 예) 1장 0=(3,4)고 … 9=(7,15)저",
+    "modes": {
+      "defense": {
+        "label": "수비",
+        "hero": "none",
+        "orbs": false,
+        "restSec": 5,
+        "strayEnemies": false,
+        "veil": false,
+        "mapTiles": ["S", "T", "=", "o", "."],
+        "heroStarRule": null,
+        "perkPool": "base24",
+        "swarmVisual": [3, 4]
+      },
+      "hero": {
+        "label": "영웅",
+        "hero": "semi",
+        "orbs": true,
+        "restSec": 8,
+        "strayEnemies": false,
+        "veil": false,
+        "mapTiles": ["S", "T", "=", "o", ".", "x", "P"],
+        "heroStarRule": "star3_fallsMax2",
+        "perkPool": "base24+E4",
+        "swarmVisual": [2, 2]
+      },
+      "rts": {
+        "label": "작전",
+        "hero": "semi",
+        "orbs": true,
+        "restSec": 8,
+        "strayEnemies": true,
+        "veil": "per-stage",
+        "mapTiles": ["S", "T", "=", "o", ".", "x", "P", "X", "G", "R", "C", "B"],
+        "heroStarRule": "star3_fallsMax2",
+        "perkPool": "base24+E4",
+        "swarmVisual": [1, 1]
+      }
+    }
+  },
+  "stages": [
+    {
+      "id": "1-1",
+      "chapter": 1,
+      "index": 1,
+      "mode": "defense",
+      "mapId": 1,
+      "challengeTier": 2,
+      "restSec": 5,
+      "enemySpeedMult": 1.0,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 4, "intervalSec": 4.0, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 4.0
+        },
+        {
+          "wave": 2,
+          "enemies": [{"type": "normal", "count": 6, "intervalSec": 3.5, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 6.0
+        },
+        {
+          "wave": 3,
+          "enemies": [{"type": "normal", "count": 8, "intervalSec": 3.0, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 8.0
+        },
+        {
+          "wave": 4,
+          "enemies": [{"type": "normal", "count": 11, "intervalSec": 2.5, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 11.0
+        },
+        {
+          "wave": 5,
+          "enemies": [{"type": "normal", "count": 10, "intervalSec": 2.2, "startSec": 0}],
+          "boss": true,
+          "bossSpawn": {"startSec": 8, "fm": 10.0},
+          "fm": 20.0
+        }
+      ],
+      "slotsEnabled": [0, 4, 5, 7, 8, 9],
+      "heroEnabled": false,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": null,
+      "tutorialProtection": null,
+      "tutorialScript": [
+        {
+          "step": 1,
+          "countsAsStep": true,
+          "trigger": {"kind": "firstWrong", "value": null},
+          "highlight": "sealCardIcon",
+          "text": "틀린 건 봉인돼요",
+          "pass": {"kind": "dismiss", "value": null},
+          "stuckHelp": null
+        }
+      ],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 8},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": null,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 49.0,
+        "fmStray": 0.0,
+        "fm03": 49,
+        "r70": 0.35,
+        "questions03": 23,
+        "guaranteedAnswers": 23,
+        "densityTarget": 7.5,
+        "densityFloor": null
+      }
+    },
+    {
+      "id": "1-2",
+      "chapter": 1,
+      "index": 2,
+      "mode": "defense",
+      "mapId": 1,
+      "challengeTier": 2,
+      "restSec": 5,
+      "enemySpeedMult": 1.0,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 5, "intervalSec": 3.5, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 5.0
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 6, "intervalSec": 3.0, "startSec": 0},
+            {"type": "normal", "count": 5, "intervalSec": 3.5, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 9.2
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 8, "intervalSec": 2.6, "startSec": 0},
+            {"type": "normal", "count": 7, "intervalSec": 3.0, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 12.6
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 10, "intervalSec": 2.3, "startSec": 0},
+            {"type": "normal", "count": 9, "intervalSec": 2.8, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 16.0
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 8, "intervalSec": 2.1, "startSec": 0},
+            {"type": "normal", "count": 8, "intervalSec": 2.6, "startSec": 0}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 8, "fm": 11.0},
+          "fm": 24.6
+        }
+      ],
+      "slotsEnabled": [0, 4, 5, 7, 8, 9],
+      "heroEnabled": false,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": null,
+      "tutorialProtection": null,
+      "tutorialScript": [
+        {
+          "step": 1,
+          "countsAsStep": true,
+          "trigger": {"kind": "stageStart", "value": null},
+          "highlight": "cardCup",
+          "text": "컵은 안개를 늦춰요",
+          "pass": {"kind": "dismiss", "value": null},
+          "stuckHelp": null
+        },
+        {
+          "step": 2,
+          "countsAsStep": true,
+          "trigger": {"kind": "waveStart", "value": 2},
+          "highlight": "enemyFast",
+          "text": "빠른 속삭임이 와요",
+          "pass": {"kind": "observe", "value": 3},
+          "stuckHelp": null
+        }
+      ],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 8},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": null,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 67.4,
+        "fmStray": 0.0,
+        "fm03": 67,
+        "r70": 0.49,
+        "questions03": 23,
+        "guaranteedAnswers": 23,
+        "densityTarget": 7.5,
+        "densityFloor": null
+      }
+    },
+    {
+      "id": "1-3",
+      "chapter": 1,
+      "index": 3,
+      "mode": "hero",
+      "mapId": 1,
+      "challengeTier": 2,
+      "restSec": 8,
+      "enemySpeedMult": 1.0,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 5, "intervalSec": 3.4, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 5.0
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 7, "intervalSec": 2.8, "startSec": 0},
+            {"type": "normal", "count": 6, "intervalSec": 3.0, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 10.9
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 10, "intervalSec": 2.3, "startSec": 0},
+            {"type": "normal", "count": 10, "intervalSec": 2.8, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 17.0
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 12, "intervalSec": 2.0, "startSec": 0},
+            {"type": "normal", "count": 12, "intervalSec": 2.5, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 20.4
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 9, "intervalSec": 1.9, "startSec": 0},
+            {"type": "normal", "count": 10, "intervalSec": 2.2, "startSec": 0}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 8, "fm": 12.0},
+          "fm": 28.3
+        }
+      ],
+      "slotsEnabled": [0, 4, 5, 7, 8, 9],
+      "heroEnabled": true,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": "hero-zone:r1",
+      "tutorialProtection": {"firstFallFree": true, "orbBoost": 2, "straySpeedMultW2": null},
+      "tutorialScript": [
+        {
+          "step": 0,
+          "countsAsStep": false,
+          "trigger": {"kind": "waveStart", "value": 1},
+          "highlight": "heroStart",
+          "text": "빛지기가 왔어요",
+          "pass": {"kind": "auto", "value": 2},
+          "stuckHelp": null
+        },
+        {
+          "step": 1,
+          "countsAsStep": true,
+          "trigger": {"kind": "afterStep", "value": 0},
+          "highlight": "tile:5,10",
+          "text": "땅을 눌러 이동",
+          "pass": {"kind": "reachTile", "value": "5,10"},
+          "stuckHelp": {"afterSec": 10, "action": "handIcon", "value": null}
+        },
+        {
+          "step": 2,
+          "countsAsStep": true,
+          "trigger": {"kind": "firstCorrect", "value": null},
+          "highlight": "orbSlot1",
+          "text": "정답은 빛 구슬!",
+          "pass": {"kind": "answerCorrect", "value": null},
+          "stuckHelp": {"afterSec": 0, "action": "retry", "value": null}
+        },
+        {
+          "step": 3,
+          "countsAsStep": true,
+          "trigger": {"kind": "orbsAtLeast", "value": 2},
+          "highlight": "skillButton1",
+          "text": "꾹 눌러 스킬!",
+          "pass": {"kind": "skillCast", "value": 1},
+          "stuckHelp": {"afterSec": 15, "action": "autoCast", "value": 1}
+        }
+      ],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 9},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": 2,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 81.6,
+        "fmStray": 0.0,
+        "fm03": 82,
+        "r70": 0.57,
+        "questions03": 24,
+        "guaranteedAnswers": 21,
+        "densityTarget": 6.4,
+        "densityFloor": 5.5
+      }
+    },
+    {
+      "id": "1-4",
+      "chapter": 1,
+      "index": 4,
+      "mode": "defense",
+      "mapId": 1,
+      "challengeTier": 2,
+      "restSec": 5,
+      "enemySpeedMult": 1.0,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 5, "intervalSec": 3.4, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 5.0
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "normal", "count": 6, "intervalSec": 3.0, "startSec": 0},
+            {"type": "tank", "count": 1, "intervalSec": 0, "startSec": 8}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 9.0
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 7, "intervalSec": 2.5, "startSec": 0},
+            {"type": "normal", "count": 7, "intervalSec": 3.0, "startSec": 0},
+            {"type": "tank", "count": 2, "intervalSec": 7.0, "startSec": 10}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 17.9
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "normal", "count": 10, "intervalSec": 2.5, "startSec": 0},
+            {"type": "tank", "count": 3, "intervalSec": 5.5, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 19.0
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "normal", "count": 9, "intervalSec": 2.3, "startSec": 0},
+            {"type": "tank", "count": 2, "intervalSec": 7.0, "startSec": 4}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 10, "fm": 13.0},
+          "fm": 28.0
+        }
+      ],
+      "slotsEnabled": [0, 4, 5, 7, 8, 9],
+      "heroEnabled": false,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": null,
+      "tutorialProtection": null,
+      "tutorialScript": [
+        {
+          "step": 0,
+          "countsAsStep": false,
+          "trigger": {"kind": "stageStart", "value": null},
+          "highlight": "modeBanner",
+          "text": "이번엔 카드만!",
+          "pass": {"kind": "auto", "value": 2},
+          "stuckHelp": null
+        },
+        {
+          "step": 1,
+          "countsAsStep": true,
+          "trigger": {"kind": "waveStart", "value": 2},
+          "highlight": "enemyTank",
+          "text": "단단한 덩어리 조심",
+          "pass": {"kind": "observe", "value": 3},
+          "stuckHelp": null
+        }
+      ],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 8},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": null,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 78.9,
+        "fmStray": 0.0,
+        "fm03": 79,
+        "r70": 0.54,
+        "questions03": 25,
+        "guaranteedAnswers": 25,
+        "densityTarget": 7.5,
+        "densityFloor": null
+      }
+    },
+    {
+      "id": "1-5",
+      "chapter": 1,
+      "index": 5,
+      "mode": "hero",
+      "mapId": 1,
+      "challengeTier": 2,
+      "restSec": 8,
+      "enemySpeedMult": 1.0,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [
+            {"type": "fast", "count": 5, "intervalSec": 2.6, "startSec": 0},
+            {"type": "normal", "count": 4, "intervalSec": 3.4, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 7.5
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 6, "intervalSec": 2.4, "startSec": 0},
+            {"type": "normal", "count": 6, "intervalSec": 3.0, "startSec": 0},
+            {"type": "tank", "count": 1, "intervalSec": 0, "startSec": 8}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 13.2
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 8, "intervalSec": 2.1, "startSec": 0},
+            {"type": "normal", "count": 8, "intervalSec": 2.7, "startSec": 0},
+            {"type": "tank", "count": 2, "intervalSec": 6.0, "startSec": 8}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 19.6
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 9, "intervalSec": 1.9, "startSec": 0},
+            {"type": "normal", "count": 9, "intervalSec": 2.4, "startSec": 0},
+            {"type": "tank", "count": 2, "intervalSec": 6.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 21.3
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 8, "intervalSec": 1.9, "startSec": 0},
+            {"type": "normal", "count": 8, "intervalSec": 2.3, "startSec": 0},
+            {"type": "tank", "count": 2, "intervalSec": 6.0, "startSec": 4}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 10, "fm": 14.0},
+          "fm": 33.6
+        }
+      ],
+      "slotsEnabled": [0, 4, 5, 7, 8, 9],
+      "heroEnabled": true,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": "hero-zone:r1",
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 9},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": 2,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 95.2,
+        "fmStray": 0.0,
+        "fm03": 95,
+        "r70": 0.7,
+        "questions03": 24,
+        "guaranteedAnswers": 21,
+        "densityTarget": 6.4,
+        "densityFloor": 5.5
+      }
+    },
+    {
+      "id": "1-6",
+      "chapter": 1,
+      "index": 6,
+      "mode": "defense",
+      "mapId": 1,
+      "challengeTier": 2,
+      "restSec": 5,
+      "enemySpeedMult": 1.0,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [
+            {"type": "fast", "count": 5, "intervalSec": 2.6, "startSec": 0},
+            {"type": "normal", "count": 4, "intervalSec": 3.2, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 7.5
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 6, "intervalSec": 2.3, "startSec": 0},
+            {"type": "normal", "count": 6, "intervalSec": 2.9, "startSec": 0},
+            {"type": "tank", "count": 2, "intervalSec": 6.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 16.2
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 8, "intervalSec": 2.0, "startSec": 0},
+            {"type": "normal", "count": 8, "intervalSec": 2.5, "startSec": 0},
+            {"type": "tank", "count": 3, "intervalSec": 5.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 22.6
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 10, "intervalSec": 1.8, "startSec": 0},
+            {"type": "normal", "count": 10, "intervalSec": 2.3, "startSec": 0},
+            {"type": "tank", "count": 3, "intervalSec": 5.0, "startSec": 5}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 26.0
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 8, "intervalSec": 1.8, "startSec": 0},
+            {"type": "normal", "count": 8, "intervalSec": 2.2, "startSec": 0},
+            {"type": "tank", "count": 3, "intervalSec": 5.0, "startSec": 4}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 10, "fm": 16.0},
+          "fm": 38.6
+        }
+      ],
+      "slotsEnabled": [0, 4, 5, 7, 8, 9],
+      "heroEnabled": false,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": null,
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 8},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": null,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 110.9,
+        "fmStray": 0.0,
+        "fm03": 111,
+        "r70": 0.79,
+        "questions03": 25,
+        "guaranteedAnswers": 25,
+        "densityTarget": 7.5,
+        "densityFloor": null
+      }
+    },
+    {
+      "id": "2-1",
+      "chapter": 2,
+      "index": 1,
+      "mode": "defense",
+      "mapId": 2,
+      "challengeTier": 2,
+      "restSec": 5,
+      "enemySpeedMult": 1.05,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 5, "intervalSec": 3.8, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 5.0
+        },
+        {
+          "wave": 2,
+          "enemies": [{"type": "normal", "count": 8, "intervalSec": 3.3, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 8.0
+        },
+        {
+          "wave": 3,
+          "enemies": [{"type": "normal", "count": 10, "intervalSec": 2.9, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 10.0
+        },
+        {
+          "wave": 4,
+          "enemies": [{"type": "normal", "count": 14, "intervalSec": 2.4, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 14.0
+        },
+        {
+          "wave": 5,
+          "enemies": [{"type": "normal", "count": 13, "intervalSec": 2.1, "startSec": 0}],
+          "boss": true,
+          "bossSpawn": {"startSec": 8, "fm": 12.5},
+          "fm": 25.5
+        }
+      ],
+      "slotsEnabled": [1, 3, 4, 5, 6, 8],
+      "heroEnabled": false,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": null,
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 8},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": null,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 62.5,
+        "fmStray": 0.0,
+        "fm03": 61,
+        "r70": 0.38,
+        "questions03": 25,
+        "guaranteedAnswers": 25,
+        "densityTarget": 7.5,
+        "densityFloor": null
+      }
+    },
+    {
+      "id": "2-2",
+      "chapter": 2,
+      "index": 2,
+      "mode": "rts",
+      "mapId": 2,
+      "challengeTier": 2,
+      "restSec": 8,
+      "enemySpeedMult": 1.05,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 6, "intervalSec": 3.3, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 6.0
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 8, "intervalSec": 2.9, "startSec": 0},
+            {"type": "normal", "count": 6, "intervalSec": 3.3, "startSec": 0},
+            {"type": "stray", "count": 2, "intervalSec": 9.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 12.6
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 9, "intervalSec": 2.5, "startSec": 0},
+            {"type": "normal", "count": 8, "intervalSec": 2.9, "startSec": 0},
+            {"type": "stray", "count": 3, "intervalSec": 6.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 15.8
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 11, "intervalSec": 2.2, "startSec": 0},
+            {"type": "normal", "count": 11, "intervalSec": 2.7, "startSec": 0},
+            {"type": "stray", "count": 3, "intervalSec": 6.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 20.2
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 9, "intervalSec": 2.0, "startSec": 0},
+            {"type": "normal", "count": 9, "intervalSec": 2.5, "startSec": 0},
+            {"type": "stray", "count": 4, "intervalSec": 4.5, "startSec": 6}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 8, "fm": 12.375},
+          "fm": 29.675
+        }
+      ],
+      "slotsEnabled": [1, 3, 4, 5, 6, 8],
+      "heroEnabled": true,
+      "rtsObjective": "block",
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": "rts:2-2",
+      "tutorialProtection": {"firstFallFree": true, "orbBoost": 0, "straySpeedMultW2": 0.7},
+      "tutorialScript": [
+        {
+          "step": 0,
+          "countsAsStep": false,
+          "trigger": {"kind": "waveStart", "value": 1},
+          "highlight": "goalChip",
+          "text": "작전을 시작해요",
+          "pass": {"kind": "auto", "value": 2},
+          "stuckHelp": null
+        },
+        {
+          "step": 1,
+          "countsAsStep": true,
+          "trigger": {"kind": "strayWaveStart", "value": 2},
+          "highlight": "strayOutline",
+          "text": "길 밖 안개예요",
+          "pass": {"kind": "observe", "value": 3},
+          "stuckHelp": null
+        },
+        {
+          "step": 2,
+          "countsAsStep": true,
+          "trigger": {"kind": "afterStep", "value": 1},
+          "highlight": "strayInTowerRange",
+          "text": "카드는 못 막아요",
+          "pass": {"kind": "observe", "value": 3},
+          "stuckHelp": null
+        },
+        {
+          "step": 3,
+          "countsAsStep": true,
+          "trigger": {"kind": "afterStep", "value": 2},
+          "highlight": "gateG",
+          "text": "탑 옆문을 지켜요",
+          "pass": {"kind": "strayKilled", "value": 1},
+          "stuckHelp": {"afterSec": 15, "action": "autoPatrol", "value": null}
+        }
+      ],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 10},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": 4, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": 2,
+          "maxLeaks": 1,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 78.28,
+        "fmStray": 6.0,
+        "fm03": 84,
+        "r70": 0.54,
+        "questions03": 24,
+        "guaranteedAnswers": 20,
+        "densityTarget": 6.0,
+        "densityFloor": 5.0
+      }
+    },
+    {
+      "id": "2-3",
+      "chapter": 2,
+      "index": 3,
+      "mode": "defense",
+      "mapId": 2,
+      "challengeTier": 2,
+      "restSec": 5,
+      "enemySpeedMult": 1.05,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 7, "intervalSec": 3.2, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 7.0
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 9, "intervalSec": 2.7, "startSec": 0},
+            {"type": "normal", "count": 8, "intervalSec": 2.9, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 14.3
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 13, "intervalSec": 2.2, "startSec": 0},
+            {"type": "normal", "count": 13, "intervalSec": 2.7, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 22.1
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 15, "intervalSec": 1.9, "startSec": 0},
+            {"type": "normal", "count": 15, "intervalSec": 2.4, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 25.5
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 12, "intervalSec": 1.8, "startSec": 0},
+            {"type": "normal", "count": 13, "intervalSec": 2.1, "startSec": 0}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 8, "fm": 15.0},
+          "fm": 36.4
+        }
+      ],
+      "slotsEnabled": [1, 3, 4, 5, 6, 8],
+      "heroEnabled": false,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": null,
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 8},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": null,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 105.3,
+        "fmStray": 0.0,
+        "fm03": 102,
+        "r70": 0.61,
+        "questions03": 26,
+        "guaranteedAnswers": 26,
+        "densityTarget": 7.5,
+        "densityFloor": null
+      }
+    },
+    {
+      "id": "2-4",
+      "chapter": 2,
+      "index": 4,
+      "mode": "rts",
+      "mapId": 2,
+      "challengeTier": 2,
+      "restSec": 8,
+      "enemySpeedMult": 1.05,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 6, "intervalSec": 3.2, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 6.0
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "normal", "count": 7, "intervalSec": 2.9, "startSec": 0},
+            {"type": "tank", "count": 2, "intervalSec": 5.7, "startSec": 8},
+            {"type": "stray", "count": 2, "intervalSec": 9.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 14.0
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 7, "intervalSec": 2.4, "startSec": 0},
+            {"type": "normal", "count": 8, "intervalSec": 2.9, "startSec": 0},
+            {"type": "tank", "count": 3, "intervalSec": 6.7, "startSec": 10},
+            {"type": "stray", "count": 3, "intervalSec": 6.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 23.4
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "normal", "count": 10, "intervalSec": 2.4, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 5.2, "startSec": 6},
+            {"type": "stray", "count": 3, "intervalSec": 6.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 23.5
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "normal", "count": 10, "intervalSec": 2.2, "startSec": 0},
+            {"type": "tank", "count": 3, "intervalSec": 6.7, "startSec": 4},
+            {"type": "stray", "count": 4, "intervalSec": 4.5, "startSec": 6}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 10, "fm": 14.625},
+          "fm": 35.625
+        }
+      ],
+      "slotsEnabled": [1, 3, 4, 5, 6, 8],
+      "heroEnabled": true,
+      "rtsObjective": "escort",
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": "rts:2-4",
+      "tutorialProtection": null,
+      "tutorialScript": [
+        {
+          "step": 0,
+          "countsAsStep": false,
+          "trigger": {"kind": "stageStart", "value": null},
+          "highlight": "cartChip",
+          "text": "수레와 함께 가요",
+          "pass": {"kind": "dismiss", "value": null},
+          "stuckHelp": null
+        }
+      ],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 10},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": 3, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": 2,
+          "maxLeaks": null,
+          "minCartLight": 5,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 96.53,
+        "fmStray": 6.0,
+        "fm03": 99,
+        "r70": 0.6,
+        "questions03": 26,
+        "guaranteedAnswers": 21,
+        "densityTarget": 6.0,
+        "densityFloor": 5.0
+      }
+    },
+    {
+      "id": "2-5",
+      "chapter": 2,
+      "index": 5,
+      "mode": "hero",
+      "mapId": 2,
+      "challengeTier": 2,
+      "restSec": 8,
+      "enemySpeedMult": 1.05,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [
+            {"type": "fast", "count": 7, "intervalSec": 2.5, "startSec": 0},
+            {"type": "normal", "count": 5, "intervalSec": 3.2, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 9.9
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 8, "intervalSec": 2.3, "startSec": 0},
+            {"type": "normal", "count": 8, "intervalSec": 2.9, "startSec": 0},
+            {"type": "tank", "count": 2, "intervalSec": 5.7, "startSec": 8}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 19.6
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 10, "intervalSec": 2.0, "startSec": 0},
+            {"type": "normal", "count": 10, "intervalSec": 2.6, "startSec": 0},
+            {"type": "tank", "count": 3, "intervalSec": 5.7, "startSec": 8}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 26.0
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 12, "intervalSec": 1.8, "startSec": 0},
+            {"type": "normal", "count": 12, "intervalSec": 2.3, "startSec": 0},
+            {"type": "tank", "count": 3, "intervalSec": 5.7, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 29.4
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 10, "intervalSec": 1.8, "startSec": 0},
+            {"type": "normal", "count": 10, "intervalSec": 2.2, "startSec": 0},
+            {"type": "tank", "count": 3, "intervalSec": 5.7, "startSec": 4}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 10, "fm": 17.5},
+          "fm": 43.5
+        }
+      ],
+      "slotsEnabled": [1, 3, 4, 5, 6, 8],
+      "heroEnabled": true,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": "hero-zone:r2",
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 9},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": 2,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 128.4,
+        "fmStray": 0.0,
+        "fm03": 119,
+        "r70": 0.8,
+        "questions03": 24,
+        "guaranteedAnswers": 21,
+        "densityTarget": 6.4,
+        "densityFloor": 5.5
+      }
+    },
+    {
+      "id": "2-6",
+      "chapter": 2,
+      "index": 6,
+      "mode": "defense",
+      "mapId": 2,
+      "challengeTier": 2,
+      "restSec": 5,
+      "enemySpeedMult": 1.05,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [
+            {"type": "fast", "count": 7, "intervalSec": 2.5, "startSec": 0},
+            {"type": "normal", "count": 5, "intervalSec": 3.0, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 9.9
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 8, "intervalSec": 2.2, "startSec": 0},
+            {"type": "normal", "count": 8, "intervalSec": 2.8, "startSec": 0},
+            {"type": "tank", "count": 3, "intervalSec": 5.7, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 22.6
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 10, "intervalSec": 1.9, "startSec": 0},
+            {"type": "normal", "count": 10, "intervalSec": 2.4, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 4.8, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 29.0
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 13, "intervalSec": 1.7, "startSec": 0},
+            {"type": "normal", "count": 13, "intervalSec": 2.2, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 4.8, "startSec": 5}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 34.1
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 10, "intervalSec": 1.7, "startSec": 0},
+            {"type": "normal", "count": 10, "intervalSec": 2.1, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 4.8, "startSec": 4}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 10, "fm": 20.0},
+          "fm": 49.0
+        }
+      ],
+      "slotsEnabled": [1, 3, 4, 5, 6, 8],
+      "heroEnabled": false,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": null,
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 8},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": null,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 144.6,
+        "fmStray": 0.0,
+        "fm03": 139,
+        "r70": 0.88,
+        "questions03": 26,
+        "guaranteedAnswers": 26,
+        "densityTarget": 7.5,
+        "densityFloor": null
+      }
+    },
+    {
+      "id": "3-1",
+      "chapter": 3,
+      "index": 1,
+      "mode": "defense",
+      "mapId": 3,
+      "challengeTier": 2,
+      "restSec": 5,
+      "enemySpeedMult": 1.1,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 7, "intervalSec": 3.6, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 7.0
+        },
+        {
+          "wave": 2,
+          "enemies": [{"type": "normal", "count": 10, "intervalSec": 3.2, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 10.0
+        },
+        {
+          "wave": 3,
+          "enemies": [{"type": "normal", "count": 13, "intervalSec": 2.7, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 13.0
+        },
+        {
+          "wave": 4,
+          "enemies": [{"type": "normal", "count": 18, "intervalSec": 2.3, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 18.0
+        },
+        {
+          "wave": 5,
+          "enemies": [{"type": "normal", "count": 16, "intervalSec": 2.0, "startSec": 0}],
+          "boss": true,
+          "bossSpawn": {"startSec": 8, "fm": 16.0},
+          "fm": 32.0
+        }
+      ],
+      "slotsEnabled": [0, 1, 4, 5, 6, 7, 8],
+      "heroEnabled": false,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": null,
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 8},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": null,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 80.0,
+        "fmStray": 0.0,
+        "fm03": 76,
+        "r70": 0.41,
+        "questions03": 28,
+        "guaranteedAnswers": 28,
+        "densityTarget": 7.5,
+        "densityFloor": null
+      }
+    },
+    {
+      "id": "3-2",
+      "chapter": 3,
+      "index": 2,
+      "mode": "rts",
+      "mapId": 3,
+      "challengeTier": 2,
+      "restSec": 8,
+      "enemySpeedMult": 1.1,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 7, "intervalSec": 3.2, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 7.0
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 9, "intervalSec": 2.7, "startSec": 0},
+            {"type": "normal", "count": 7, "intervalSec": 3.2, "startSec": 0},
+            {"type": "stray", "count": 2, "intervalSec": 9.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 14.3
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 12, "intervalSec": 2.3, "startSec": 0},
+            {"type": "normal", "count": 10, "intervalSec": 2.7, "startSec": 0},
+            {"type": "stray", "count": 4, "intervalSec": 4.5, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 20.4
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 14, "intervalSec": 2.1, "startSec": 0},
+            {"type": "normal", "count": 13, "intervalSec": 2.5, "startSec": 0},
+            {"type": "stray", "count": 3, "intervalSec": 6.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 24.3
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 11, "intervalSec": 1.9, "startSec": 0},
+            {"type": "normal", "count": 12, "intervalSec": 2.3, "startSec": 0},
+            {"type": "stray", "count": 5, "intervalSec": 3.6, "startSec": 6}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 8, "fm": 15.84},
+          "fm": 38.04
+        }
+      ],
+      "slotsEnabled": [0, 1, 4, 5, 6, 7, 8],
+      "heroEnabled": true,
+      "rtsObjective": "capture",
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": "rts:3-2",
+      "tutorialProtection": null,
+      "tutorialScript": [
+        {
+          "step": 0,
+          "countsAsStep": false,
+          "trigger": {"kind": "stageStart", "value": null},
+          "highlight": "beaconChip",
+          "text": "봉화에 서 있어요",
+          "pass": {"kind": "dismiss", "value": null},
+          "stuckHelp": null
+        }
+      ],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 12},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": 3},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": 2,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": 3
+        }
+      },
+      "design": {
+        "fmRoad": 97.04,
+        "fmStray": 7.0,
+        "fm03": 105,
+        "r70": 0.55,
+        "questions03": 27,
+        "guaranteedAnswers": 22,
+        "densityTarget": 6.0,
+        "densityFloor": 5.0
+      }
+    },
+    {
+      "id": "3-3",
+      "chapter": 3,
+      "index": 3,
+      "mode": "defense",
+      "mapId": 3,
+      "challengeTier": 2,
+      "restSec": 5,
+      "enemySpeedMult": 1.1,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 8, "intervalSec": 3.1, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 8.0
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 11, "intervalSec": 2.5, "startSec": 0},
+            {"type": "normal", "count": 10, "intervalSec": 2.7, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 17.7
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 16, "intervalSec": 2.1, "startSec": 0},
+            {"type": "normal", "count": 16, "intervalSec": 2.5, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 27.2
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 19, "intervalSec": 1.8, "startSec": 0},
+            {"type": "normal", "count": 19, "intervalSec": 2.3, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 32.3
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 14, "intervalSec": 1.7, "startSec": 0},
+            {"type": "normal", "count": 16, "intervalSec": 2.0, "startSec": 0}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 8, "fm": 19.2},
+          "fm": 45.0
+        }
+      ],
+      "slotsEnabled": [0, 1, 4, 5, 6, 7, 8],
+      "heroEnabled": false,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": null,
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 8},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": null,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 130.2,
+        "fmStray": 0.0,
+        "fm03": 127,
+        "r70": 0.63,
+        "questions03": 29,
+        "guaranteedAnswers": 29,
+        "densityTarget": 7.5,
+        "densityFloor": null
+      }
+    },
+    {
+      "id": "3-4",
+      "chapter": 3,
+      "index": 4,
+      "mode": "hero",
+      "mapId": 3,
+      "challengeTier": 2,
+      "restSec": 8,
+      "enemySpeedMult": 1.1,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 8, "intervalSec": 3.1, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 8.0
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "normal", "count": 10, "intervalSec": 2.7, "startSec": 0},
+            {"type": "tank", "count": 2, "intervalSec": 5.4, "startSec": 8}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 16.0
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 11, "intervalSec": 2.3, "startSec": 0},
+            {"type": "normal", "count": 11, "intervalSec": 2.7, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 6.3, "startSec": 10}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 30.7
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "normal", "count": 16, "intervalSec": 2.3, "startSec": 0},
+            {"type": "tank", "count": 5, "intervalSec": 5.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 31.0
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "normal", "count": 14, "intervalSec": 2.1, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 6.3, "startSec": 4}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 10, "fm": 20.8},
+          "fm": 46.8
+        }
+      ],
+      "slotsEnabled": [0, 1, 4, 5, 6, 7, 8],
+      "heroEnabled": true,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": "hero-zone:r3",
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 10},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": 2,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 132.5,
+        "fmStray": 0.0,
+        "fm03": 123,
+        "r70": 0.61,
+        "questions03": 27,
+        "guaranteedAnswers": 23,
+        "densityTarget": 6.4,
+        "densityFloor": 5.5
+      }
+    },
+    {
+      "id": "3-5",
+      "chapter": 3,
+      "index": 5,
+      "mode": "rts",
+      "mapId": 3,
+      "challengeTier": 2,
+      "restSec": 8,
+      "enemySpeedMult": 1.1,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [
+            {"type": "fast", "count": 8, "intervalSec": 2.3, "startSec": 0},
+            {"type": "normal", "count": 6, "intervalSec": 3.1, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 11.6
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 8, "intervalSec": 2.2, "startSec": 0},
+            {"type": "normal", "count": 9, "intervalSec": 2.7, "startSec": 0},
+            {"type": "tank", "count": 2, "intervalSec": 5.4, "startSec": 8},
+            {"type": "stray", "count": 3, "intervalSec": 6.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 22.1
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 11, "intervalSec": 1.9, "startSec": 0},
+            {"type": "normal", "count": 11, "intervalSec": 2.4, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 5.4, "startSec": 8},
+            {"type": "stray", "count": 5, "intervalSec": 3.6, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 33.2
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 12, "intervalSec": 1.7, "startSec": 0},
+            {"type": "normal", "count": 12, "intervalSec": 2.2, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 5.4, "startSec": 6},
+            {"type": "stray", "count": 4, "intervalSec": 4.5, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 34.4
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 11, "intervalSec": 1.7, "startSec": 0},
+            {"type": "normal", "count": 11, "intervalSec": 2.1, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 5.4, "startSec": 4},
+            {"type": "stray", "count": 6, "intervalSec": 3.0, "startSec": 6}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 10, "fm": 20.16},
+          "fm": 53.86
+        }
+      ],
+      "slotsEnabled": [0, 1, 4, 5, 6, 7, 8],
+      "heroEnabled": true,
+      "rtsObjective": "escort",
+      "rtsSecondary": [],
+      "veil": true,
+      "mapOverlay": "rts:3-5",
+      "tutorialProtection": null,
+      "tutorialScript": [
+        {
+          "step": 0,
+          "countsAsStep": false,
+          "trigger": {"kind": "stageStart", "value": null},
+          "highlight": "veilChip",
+          "text": "왕의 장막을 깨요",
+          "pass": {"kind": "dismiss", "value": null},
+          "stuckHelp": null
+        }
+      ],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 12},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": 3, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": 2,
+          "maxLeaks": null,
+          "minCartLight": 5,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 146.16,
+        "fmStray": 9.0,
+        "fm03": 148,
+        "r70": 0.85,
+        "questions03": 25,
+        "guaranteedAnswers": 20,
+        "densityTarget": 6.0,
+        "densityFloor": 5.0
+      }
+    },
+    {
+      "id": "3-6",
+      "chapter": 3,
+      "index": 6,
+      "mode": "defense",
+      "mapId": 3,
+      "challengeTier": 2,
+      "restSec": 5,
+      "enemySpeedMult": 1.1,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [
+            {"type": "fast", "count": 8, "intervalSec": 2.3, "startSec": 0},
+            {"type": "normal", "count": 7, "intervalSec": 2.9, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 12.6
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 10, "intervalSec": 2.1, "startSec": 0},
+            {"type": "normal", "count": 10, "intervalSec": 2.6, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 5.4, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 29.0
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 13, "intervalSec": 1.8, "startSec": 0},
+            {"type": "normal", "count": 13, "intervalSec": 2.3, "startSec": 0},
+            {"type": "tank", "count": 5, "intervalSec": 4.5, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 37.1
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 16, "intervalSec": 1.6, "startSec": 0},
+            {"type": "normal", "count": 16, "intervalSec": 2.1, "startSec": 0},
+            {"type": "tank", "count": 5, "intervalSec": 4.5, "startSec": 5}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 42.2
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 13, "intervalSec": 1.6, "startSec": 0},
+            {"type": "normal", "count": 13, "intervalSec": 2.0, "startSec": 0},
+            {"type": "tank", "count": 5, "intervalSec": 4.5, "startSec": 4}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 10, "fm": 25.6},
+          "fm": 62.7
+        }
+      ],
+      "slotsEnabled": [0, 1, 4, 5, 6, 7, 8],
+      "heroEnabled": false,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": null,
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 8},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": null,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 183.6,
+        "fmStray": 0.0,
+        "fm03": 173,
+        "r70": 0.95,
+        "questions03": 27,
+        "guaranteedAnswers": 27,
+        "densityTarget": 7.5,
+        "densityFloor": null
+      }
+    },
+    {
+      "id": "4-1",
+      "chapter": 4,
+      "index": 1,
+      "mode": "defense",
+      "mapId": 4,
+      "challengeTier": 2,
+      "restSec": 5,
+      "enemySpeedMult": 1.15,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 8, "intervalSec": 3.5, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 8.0
+        },
+        {
+          "wave": 2,
+          "enemies": [{"type": "normal", "count": 12, "intervalSec": 3.1, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 12.0
+        },
+        {
+          "wave": 3,
+          "enemies": [{"type": "normal", "count": 16, "intervalSec": 2.6, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 16.0
+        },
+        {
+          "wave": 4,
+          "enemies": [{"type": "normal", "count": 21, "intervalSec": 2.2, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 21.0
+        },
+        {
+          "wave": 5,
+          "enemies": [{"type": "normal", "count": 19, "intervalSec": 1.9, "startSec": 0}],
+          "boss": true,
+          "bossSpawn": {"startSec": 8, "fm": 20.0},
+          "fm": 39.0
+        }
+      ],
+      "slotsEnabled": [0, 1, 2, 3, 4, 5, 6, 8],
+      "heroEnabled": false,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": null,
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 8},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": null,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 96.0,
+        "fmStray": 0.0,
+        "fm03": 94,
+        "r70": 0.41,
+        "questions03": 32,
+        "guaranteedAnswers": 32,
+        "densityTarget": 7.5,
+        "densityFloor": null
+      }
+    },
+    {
+      "id": "4-2",
+      "chapter": 4,
+      "index": 2,
+      "mode": "hero",
+      "mapId": 4,
+      "challengeTier": 2,
+      "restSec": 8,
+      "enemySpeedMult": 1.15,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 10, "intervalSec": 3.1, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 10.0
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 12, "intervalSec": 2.6, "startSec": 0},
+            {"type": "normal", "count": 10, "intervalSec": 3.1, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 18.4
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 16, "intervalSec": 2.3, "startSec": 0},
+            {"type": "normal", "count": 14, "intervalSec": 2.6, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 25.2
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 19, "intervalSec": 2.0, "startSec": 0},
+            {"type": "normal", "count": 18, "intervalSec": 2.5, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 31.3
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 16, "intervalSec": 1.8, "startSec": 0},
+            {"type": "normal", "count": 16, "intervalSec": 2.3, "startSec": 0}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 8, "fm": 22.0},
+          "fm": 49.2
+        }
+      ],
+      "slotsEnabled": [0, 1, 2, 3, 4, 5, 6, 8],
+      "heroEnabled": true,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": "hero-zone:r4",
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 10},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": 2,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 134.1,
+        "fmStray": 0.0,
+        "fm03": 129,
+        "r70": 0.55,
+        "questions03": 30,
+        "guaranteedAnswers": 26,
+        "densityTarget": 6.4,
+        "densityFloor": 5.5
+      }
+    },
+    {
+      "id": "4-3",
+      "chapter": 4,
+      "index": 3,
+      "mode": "rts",
+      "mapId": 4,
+      "challengeTier": 2,
+      "restSec": 8,
+      "enemySpeedMult": 1.15,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 9, "intervalSec": 3.0, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 9.0
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 12, "intervalSec": 2.5, "startSec": 0},
+            {"type": "normal", "count": 11, "intervalSec": 2.6, "startSec": 0},
+            {"type": "stray", "count": 3, "intervalSec": 6.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 20.9
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 17, "intervalSec": 2.0, "startSec": 0},
+            {"type": "normal", "count": 17, "intervalSec": 2.5, "startSec": 0},
+            {"type": "stray", "count": 5, "intervalSec": 3.6, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 31.4
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 20, "intervalSec": 1.8, "startSec": 0},
+            {"type": "normal", "count": 21, "intervalSec": 2.2, "startSec": 0},
+            {"type": "stray", "count": 5, "intervalSec": 3.6, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 37.5
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 16, "intervalSec": 1.7, "startSec": 0},
+            {"type": "normal", "count": 17, "intervalSec": 1.9, "startSec": 0},
+            {"type": "stray", "count": 7, "intervalSec": 2.6, "startSec": 6}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 8, "fm": 21.6},
+          "fm": 53.3
+        }
+      ],
+      "slotsEnabled": [0, 1, 2, 3, 4, 5, 6, 8],
+      "heroEnabled": true,
+      "rtsObjective": "capture",
+      "rtsSecondary": ["block"],
+      "veil": true,
+      "mapOverlay": "rts:4-3",
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 12},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": 4, "minCartLight": null, "minBeaconsLit": 3},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": 2,
+          "maxLeaks": 1,
+          "minCartLight": null,
+          "minBeaconsLit": 3
+        }
+      },
+      "design": {
+        "fmRoad": 142.1,
+        "fmStray": 10.0,
+        "fm03": 156,
+        "r70": 0.63,
+        "questions03": 33,
+        "guaranteedAnswers": 27,
+        "densityTarget": 6.0,
+        "densityFloor": 5.0
+      }
+    },
+    {
+      "id": "4-4",
+      "chapter": 4,
+      "index": 4,
+      "mode": "defense",
+      "mapId": 4,
+      "challengeTier": 2,
+      "restSec": 5,
+      "enemySpeedMult": 1.15,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [{"type": "normal", "count": 10, "intervalSec": 3.0, "startSec": 0}],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 10.0
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "normal", "count": 12, "intervalSec": 2.6, "startSec": 0},
+            {"type": "tank", "count": 2, "intervalSec": 5.3, "startSec": 8}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 18.0
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 14, "intervalSec": 2.2, "startSec": 0},
+            {"type": "normal", "count": 14, "intervalSec": 2.6, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 6.2, "startSec": 10}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 35.8
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "normal", "count": 19, "intervalSec": 2.2, "startSec": 0},
+            {"type": "tank", "count": 6, "intervalSec": 4.8, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 37.0
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "normal", "count": 18, "intervalSec": 2.0, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 6.2, "startSec": 4}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 10, "fm": 26.0},
+          "fm": 56.0
+        }
+      ],
+      "slotsEnabled": [0, 1, 2, 3, 4, 5, 6, 8],
+      "heroEnabled": false,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": null,
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 8},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": null,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 156.8,
+        "fmStray": 0.0,
+        "fm03": 151,
+        "r70": 0.63,
+        "questions03": 30,
+        "guaranteedAnswers": 30,
+        "densityTarget": 7.5,
+        "densityFloor": null
+      }
+    },
+    {
+      "id": "4-5",
+      "chapter": 4,
+      "index": 5,
+      "mode": "rts",
+      "mapId": 4,
+      "challengeTier": 2,
+      "restSec": 8,
+      "enemySpeedMult": 1.15,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [
+            {"type": "fast", "count": 9, "intervalSec": 2.3, "startSec": 0},
+            {"type": "normal", "count": 7, "intervalSec": 3.0, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 13.3
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 11, "intervalSec": 2.1, "startSec": 0},
+            {"type": "normal", "count": 10, "intervalSec": 2.6, "startSec": 0},
+            {"type": "tank", "count": 2, "intervalSec": 5.3, "startSec": 8},
+            {"type": "stray", "count": 4, "intervalSec": 4.5, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 25.7
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 13, "intervalSec": 1.8, "startSec": 0},
+            {"type": "normal", "count": 14, "intervalSec": 2.4, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 5.3, "startSec": 8},
+            {"type": "stray", "count": 6, "intervalSec": 3.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 38.1
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 16, "intervalSec": 1.7, "startSec": 0},
+            {"type": "normal", "count": 15, "intervalSec": 2.1, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 5.3, "startSec": 6},
+            {"type": "stray", "count": 6, "intervalSec": 3.0, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 41.2
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 13, "intervalSec": 1.7, "startSec": 0},
+            {"type": "normal", "count": 14, "intervalSec": 2.0, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 5.3, "startSec": 4},
+            {"type": "stray", "count": 8, "intervalSec": 2.3, "startSec": 6}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 10, "fm": 25.2},
+          "fm": 64.3
+        }
+      ],
+      "slotsEnabled": [0, 1, 2, 3, 4, 5, 6, 8],
+      "heroEnabled": true,
+      "rtsObjective": "escort",
+      "rtsSecondary": ["capture"],
+      "veil": false,
+      "mapOverlay": "rts:4-5",
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 12},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": 3, "minBeaconsLit": 3},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": 2,
+          "maxLeaks": null,
+          "minCartLight": 5,
+          "minBeaconsLit": 3
+        }
+      },
+      "design": {
+        "fmRoad": 170.6,
+        "fmStray": 12.0,
+        "fm03": 182,
+        "r70": 0.89,
+        "questions03": 28,
+        "guaranteedAnswers": 23,
+        "densityTarget": 6.0,
+        "densityFloor": 5.0
+      }
+    },
+    {
+      "id": "4-6",
+      "chapter": 4,
+      "index": 6,
+      "mode": "defense",
+      "mapId": 4,
+      "challengeTier": 2,
+      "restSec": 5,
+      "enemySpeedMult": 1.15,
+      "waves": [
+        {
+          "wave": 1,
+          "enemies": [
+            {"type": "fast", "count": 10, "intervalSec": 2.3, "startSec": 0},
+            {"type": "normal", "count": 8, "intervalSec": 2.8, "startSec": 0}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 15.0
+        },
+        {
+          "wave": 2,
+          "enemies": [
+            {"type": "fast", "count": 12, "intervalSec": 2.0, "startSec": 0},
+            {"type": "normal", "count": 12, "intervalSec": 2.6, "startSec": 0},
+            {"type": "tank", "count": 4, "intervalSec": 5.3, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 32.4
+        },
+        {
+          "wave": 3,
+          "enemies": [
+            {"type": "fast", "count": 16, "intervalSec": 1.8, "startSec": 0},
+            {"type": "normal", "count": 16, "intervalSec": 2.2, "startSec": 0},
+            {"type": "tank", "count": 6, "intervalSec": 4.4, "startSec": 6}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 45.2
+        },
+        {
+          "wave": 4,
+          "enemies": [
+            {"type": "fast", "count": 19, "intervalSec": 1.6, "startSec": 0},
+            {"type": "normal", "count": 19, "intervalSec": 2.0, "startSec": 0},
+            {"type": "tank", "count": 6, "intervalSec": 4.4, "startSec": 5}
+          ],
+          "boss": false,
+          "bossSpawn": null,
+          "fm": 50.3
+        },
+        {
+          "wave": 5,
+          "enemies": [
+            {"type": "fast", "count": 16, "intervalSec": 1.6, "startSec": 0},
+            {"type": "normal", "count": 16, "intervalSec": 1.9, "startSec": 0},
+            {"type": "tank", "count": 6, "intervalSec": 4.4, "startSec": 4}
+          ],
+          "boss": true,
+          "bossSpawn": {"startSec": 10, "fm": 32.0},
+          "fm": 77.2
+        }
+      ],
+      "slotsEnabled": [0, 1, 2, 3, 4, 5, 6, 8],
+      "heroEnabled": false,
+      "rtsObjective": null,
+      "rtsSecondary": [],
+      "veil": false,
+      "mapOverlay": null,
+      "tutorialProtection": null,
+      "tutorialScript": [],
+      "starThresholds": {
+        "star1": {"towerSurvives": true, "minCorrect": 8},
+        "star2": {"minTowerHp": 6, "minAccuracy": 0.6, "maxLeaks": null, "minCartLight": null, "minBeaconsLit": null},
+        "star3": {
+          "minTowerHp": 9,
+          "minAccuracy": 0.8,
+          "minMaxCombo": 5,
+          "maxFalls": null,
+          "maxLeaks": null,
+          "minCartLight": null,
+          "minBeaconsLit": null
+        }
+      },
+      "design": {
+        "fmRoad": 220.1,
+        "fmStray": 0.0,
+        "fm03": 212,
+        "r70": 0.99,
+        "questions03": 29,
+        "guaranteedAnswers": 29,
+        "densityTarget": 7.5,
+        "densityFloor": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "./pack_schema.json",
+  "id": "history-kr-timeline",
+  "title": "한국사: 연표",
+  "subject": "history",
+  "grade_band": "g5-8",
+  "version": "0.1.0",
+  "locale": "ko-KR",
+  "items": [
+    { "id": "h-001", "type": "mc", "prompt": "훈민정음을 만든 왕은?", "choices": ["세종대왕", "태종", "정조", "광개토대왕"], "answer": 0, "difficulty": 1, "tags": ["era:joseon", "topic:culture"], "explanation": "조선의 4대 왕 세종대왕이 집현전 학자들과 훈민정음을 만들었어요." },
+    { "id": "h-002", "type": "tf", "prompt": "임진왜란은 1592년에 일어났다.", "answer": true, "difficulty": 1, "tags": ["era:joseon", "topic:war", "skill:date"], "explanation": "임진왜란은 1592년에 일본이 조선을 침입하며 시작되었어요." },
+    { "id": "h-003", "type": "mc", "prompt": "삼국을 통일한 나라는?", "choices": ["신라", "고구려", "백제", "고려"], "answer": 0, "difficulty": 1, "tags": ["era:three-kingdoms", "topic:politics"], "explanation": "신라가 나당 연합으로 백제와 고구려를 무너뜨리고 삼국을 통일했어요." },
+    { "id": "h-004", "type": "mc", "prompt": "고려를 세운 인물은?", "choices": ["왕건", "이성계", "견훤", "궁예"], "answer": 0, "difficulty": 2, "tags": ["era:goryeo", "topic:politics", "misconception:founder-mixup"], "explanation": "왕건이 918년에 고려를 세우고 후삼국을 통일했어요." },
+    { "id": "h-005", "type": "mc", "prompt": "조선이 건국된 해는?", "choices": ["1392년", "918년", "1270년", "1592년"], "answer": 0, "difficulty": 2, "tags": ["era:joseon", "skill:date"], "explanation": "이성계가 1392년에 조선을 세웠어요." },
+    { "id": "h-006", "type": "input", "input_kind": "number", "prompt": "훈민정음이 반포된 해는 몇 년일까요? (숫자만 입력)", "answer": ["1446"], "difficulty": 2, "tags": ["era:joseon", "topic:culture", "skill:date"], "explanation": "세종대왕은 1446년에 훈민정음을 백성에게 널리 알렸어요." },
+    { "id": "h-007", "type": "order", "prompt": "먼저 일어난 일부터 순서대로 배열하세요.", "choices": ["조선 건국", "신라의 삼국 통일", "고려 건국"], "answer": [1, 2, 0], "difficulty": 2, "tags": ["topic:chronology", "skill:sequence"], "explanation": "신라의 삼국 통일(676), 고려 건국(918), 조선 건국(1392) 순이에요." },
+    { "id": "h-008", "type": "order", "prompt": "먼저 일어난 일부터 순서대로 배열하세요.", "choices": ["병자호란", "조선 건국", "임진왜란", "훈민정음 반포"], "answer": [1, 3, 2, 0], "difficulty": 3, "tags": ["era:joseon", "topic:chronology", "skill:sequence"], "explanation": "조선 건국(1392), 훈민정음 반포(1446), 임진왜란(1592), 병자호란(1636) 순이에요." },
+    { "id": "h-009", "type": "order", "prompt": "먼저 일어난 일부터 순서대로 배열하세요.", "choices": ["6·25 전쟁", "3·1 운동", "4·19 혁명", "광복", "대한민국 정부 수립"], "answer": [1, 3, 4, 0, 2], "difficulty": 3, "tags": ["era:modern", "topic:chronology", "skill:sequence"], "explanation": "3·1 운동(1919), 광복(1945), 정부 수립(1948), 6·25 전쟁(1950), 4·19 혁명(1960) 순이에요." },
+    { "id": "h-010", "type": "tf", "prompt": "병자호란은 임진왜란보다 먼저 일어났다.", "answer": false, "difficulty": 3, "tags": ["era:joseon", "topic:war", "skill:sequence", "misconception:war-order"], "explanation": "임진왜란은 1592년, 병자호란은 1636년이므로 임진왜란이 먼저예요." }
+  ]
+}

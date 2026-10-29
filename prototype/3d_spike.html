@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>아르카나 수비대 — 3D 렌더 스파이크</title>
+<style>
+:root{--bg:#17143a;--panel:#221e4a;--panel2:#2d2860;--line:#3d3780;--ink:#f5f2ff;--mut:#aaa4d6;--gold:#ffd166}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#0c0a1f;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif}
+body{display:flex;flex-direction:column;align-items:center;overflow:hidden}
+#ctrl{flex:none;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:center;padding:6px 10px;font-size:12.5px;color:var(--mut)}
+#ctrl label{display:flex;gap:4px;align-items:center}
+#ctrl select{font:inherit;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:2px 4px}
+#wrap{flex:1 1 auto;min-height:0;width:100%;display:flex;justify-content:center;align-items:flex-start}
+#app{position:relative;flex:none;overflow:hidden;background:#000;border-radius:14px;box-shadow:0 0 0 1px #2f2a66,0 20px 60px #0008;transform-origin:top center}
+#gl{position:absolute;left:0;top:0;display:block}
+#labels{position:absolute;inset:0;pointer-events:none}
+.cost{position:absolute;transform:translate(-50%,-100%);background:#1b2a41e6;color:#f2c14e;border:1px solid #f2c14e;border-radius:9px;
+  padding:0 5px;font-size:11px;font-weight:700;line-height:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cost.lo{color:#9fe3b8;border-color:#9fe3b8}
+/* 상단 HUD 자리 (2D 의 #hud 와 같은 위치) — 측정값 오버레이 */
+#hud{position:absolute;left:0;right:0;top:0;display:flex;gap:4px;padding:6px 8px 4px;background:#221e4acc;border-bottom:1px solid var(--line)}
+.stat{flex:1;min-width:0;background:var(--panel2);border-radius:8px;padding:3px 5px;font-size:11px;line-height:1.25;white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums}
+.stat b{font-size:13px}
+/* 하단: 2D 와 같은 자리의 더미 문제 카드 + 카드 바 (기능 없음) */
+#bottom{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(#17143a00,#17143acc 18%)}
+#app.land #bottom{left:50%;right:auto;width:560px;transform:translateX(-50%);background:none}
+#quiz{margin:6px 8px 0;background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:5px 8px 7px}
+.qhead{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);min-height:16px}
+#qText{font-size:22px;font-weight:700;text-align:center;margin:1px 0 3px;min-height:30px}
+.idle{height:3px;background:#0005;border-radius:2px;overflow:hidden;margin-bottom:5px}.idle i{display:block;height:100%;width:40%;background:var(--mut)}
+#choices{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.ch{position:relative;min-height:46px;border:1px solid var(--line);background:var(--panel2);border-radius:10px;font:inherit;font-size:17px;font-weight:700;color:var(--ink);padding:10px 2px 4px}
+.ch .k{position:absolute;left:5px;top:2px;font-size:10px;color:var(--mut);font-weight:400}
+#cardbar{display:grid;grid-template-columns:repeat(4,1fr) 1.15fr;gap:5px;padding:6px 8px 8px}
+.card{border:2px solid var(--c);background:#0006;border-radius:10px;padding:3px 2px 4px;text-align:center;font-size:11px;line-height:1.3}
+.card b{display:block;font-size:16px}
+</style>
+</head>
+<body>
+<div id="ctrl">
+  <label>적 <select id="selN"><option>5</option><option selected>50</option><option>200</option></select></label>
+  <label>지역 <select id="selR"><option value="0">1 들판</option><option value="1">2 숲</option><option value="2">3 항구</option><option value="3">4 정상</option></select></label>
+  <label>난이도 <select id="selD"><option value="0">1 낮</option><option value="1">2 황혼</option><option value="2">3 밤</option></select></label>
+  <label>카메라 <select id="selCam"><option value="o">직교</option><option value="p">원근</option></select></label>
+  <label>요 <select id="selYaw"><option value="45">45°</option><option value="0">0°</option></select></label>
+  <label>화면 <select id="selView"><option value="portrait">세로 360×740</option><option value="landscape">가로 1280×720</option></select></label>
+  <label><input type="checkbox" id="chkSh" checked> 그림자</label>
+</div>
+<div id="wrap"><div id="app">
+  <canvas id="gl"></canvas>
+  <div id="labels"></div>
+  <header id="hud">
+    <div class="stat">FPS <b id="sFps">-</b></div>
+    <div class="stat" title="드로우콜(그림자 패스 포함)">DC <b id="sDc">-</b></div>
+    <div class="stat" title="삼각형 수(그림자 패스 포함)">△ <b id="sTri">-</b></div>
+    <div class="stat">적 <b id="sEn">-</b></div>
+    <div class="stat" title="화면에서 타일 한 칸의 가로·세로 변 길이">칸 <b id="sTile">-</b></div>
+  </header>
+  <div id="bottom">
+    <section id="quiz">
+      <div class="qhead"><span>수학 · 난이도 1</span><span>더미 카드 (기능 없음)</span></div>
+      <div id="qText">7 × 8 = ?</div>
+      <div class="idle"><i></i></div>
+      <div id="choices"><button class="ch"><span class="k">1</span>54</button><button class="ch"><span class="k">2</span>56</button><button class="ch"><span class="k">3</span>48</button><button class="ch"><span class="k">4</span>64</button></div>
+    </section>
+    <nav id="cardbar">
+      <div class="card" style="--c:#E0A030"><b>▲</b>완드</div><div class="card" style="--c:#2F7DB8"><b>●</b>컵</div>
+      <div class="card" style="--c:#c9ccd6"><b>◆</b>소드</div><div class="card" style="--c:#C9B68E"><b>⬟</b>펜타클</div>
+      <div class="card" style="--c:#6E5C9E"><b>★</b>궁극기</div>
+    </nav>
+  </div>
+</div></div>
+
+<script src="vendor/three.min.js"></script>
+<script>
+'use strict';
+/* =====================================================================
+ * SPIKE — 렌더 조정값을 모두 여기 모은다. (게임 로직 수치 아님: 마나·문제·콤보·특성은 이식하지 않음)
+ * 단위: 1 = 타일 한 칸. 고도 1단 = step(타일 폭의 0.5배).
+ * ===================================================================== */
+const SPIKE = {
+  grid: { cols: 10, rows: 18, step: 0.5, sink: 0.06, skirt: 0.9, lip: 0.07, jitter: 0.035 },
+  cam: { pitch: 55, yaw: 45, fov: 32, orthoDist: 40, margin: 8 },
+  view: { portrait: [360, 740], landscape: [1280, 720], dprMax: 2 },
+  shadow: { size: 1024, bias: -0.0006, normalBias: 0.02 },
+  enemy: { max: 200, r: [0.2, 0.15], speed: [[0.9, 1.15], [1.2, 1.5]], hp: [3, 2], colors: ['#e5484d', '#f7c948'],
+           yellowShare: 0.4, lane: 0.22, bob: 0.05, die: 0.35, respawn: 0.5, detail: 1 },
+  tower: { slots: [0, 3, 5, 8], range: 2.6, cd: 0.45, sparks: 7, sparkT: 0.22, impact: 3, debris: 7,
+           roof: ['#E0A030', '#2F7DB8', '#c9ccd6', '#6A593A'], body: '#efe6d0', crystal: '#f4f8ff' },
+  pedestal: { r: 0.34, h: 0.2, seg: 8, side: '#8f969f', top: '#c2c7ce' },
+  house: { wall: '#f1e6cf', roof: '#2F7DB8', turret: '#e9dcc0', turretRoof: '#E0A030' },
+  pillar: { color: '#A99BD8', opacity: 0.3, puffs: 6 },
+  trees: { n: 26, seed: 7 },
+  particles: 1600,
+  regions: [
+    { name: '1장 은빛 씨앗 들판', gA: '#74c450', gB: '#8fd462', cliff: '#9c7a52', cliffD: '#5a4330', path: '#ecd9a6', bg: '#a6dcf4',
+      tree: ['#3c9b45', '#55b54f', '#2f8748'], trunk: '#7a5236' },
+    { name: '2장 메아리 숲', gA: '#47a45e', gB: '#5ab56c', cliff: '#6d6248', cliffD: '#3b352a', path: '#dcc58e', bg: '#8ccfbf',
+      tree: ['#24704a', '#2f8556', '#3f9a5c'], trunk: '#5d4029' },
+    { name: '3장 안개 바다 항구', gA: '#93c79a', gB: '#a6d3a8', cliff: '#7f8b96', cliffD: '#4a535e', path: '#e2d6b6', bg: '#86bede',
+      tree: ['#4f9a78', '#62ad85', '#3e8a6c'], trunk: '#6b5440' },
+    { name: '4장 구름 계단 정상', gA: '#e3eaf6', gB: '#f1f4fb', cliff: '#a8b3d0', cliffD: '#6f7aa0', path: '#eadcc0', bg: '#c9d8f2',
+      tree: ['#8db6cc', '#a6c9db', '#7aa6c0'], trunk: '#6d6a80' }
+  ],
+  // 난이도 = 조명 색온도 + 안개 밀도 (08 문서: 이른 노을 / 황혼 / 밤)
+  diffs: [
+    { name: '낮', sun: '#fff2d8', sunI: 2.6, sky: '#e2f1ff', ground: '#6f8f4f', hemiI: 1.25, fogNear: 6, fogFar: 70, tint: '#ffffff', tintAmt: 0 },
+    { name: '황혼', sun: '#ffb27a', sunI: 2.0, sky: '#bca8e2', ground: '#5d4a6a', hemiI: 1.0, fogNear: -3, fogFar: 34, tint: '#6a4f92', tintAmt: 0.45 },
+    { name: '밤', sun: '#8fb0ff', sunI: 1.3, sky: '#5a6aa8', ground: '#1a2238', hemiI: 0.95, fogNear: -4, fogFar: 32, tint: '#0e1530', tintAmt: 0.75 }
+  ]
+};
+
+/* 맵 4개 — prototype/bg_demo.html(= docs 08 문서 3절)의 데이터를 그대로 복사 */
+const MAPS = [
+ {id:'R1',wp:[[1,0],[1,3],[8,3],[8,8],[1,8],[1,13],[8,13],[8,17]],
+  slots:[[3,4],[6,4],[7,6],[5,7],[2,9],[5,9],[2,11],[4,12],[7,12],[7,15]],
+  elev:["0000000000","0000000000","0000111000","0001121100","0012221100","0011211100","0001110100","0000000000","0000000000","0000011000","0000111000","0001221000","0011211000","0001110000","0000000000","0000000000","0000000000","0000000000"]},
+ {id:'R2',wp:[[8,0],[8,2],[2,2],[2,7],[7,7],[7,12],[1,12],[1,17]],
+  slots:[[5,1],[4,3],[3,5],[6,6],[4,8],[6,10],[3,11],[5,13],[2,15]],
+  elev:["0000000000","0000011000","0000111000","0001221100","0001222100","0011122100","0011111100","0000110000","0001210000","0000110000","0000000000","0000000000","0000110000","0000121000","0000011000","0011000000","0000000000","0000000000"]},
+ {id:'R3',wp:[[5,0],[5,2],[1,2],[1,6],[8,6],[8,11],[3,11],[3,17]],
+  slots:[[3,3],[3,5],[6,5],[2,7],[5,7],[7,9],[5,12],[4,14],[2,15]],
+  elev:["2222222222","2222222222","2111222211","1112211111","1111111111","1000001111","0000000000","0000110000","0000000111","0000001211","0000001111","0000000000","0000011000","0000000000","0000100000","0000000000","0000000000","0000000000"]},
+ {id:'R4',wp:[[8,0],[8,3],[1,3],[1,8],[8,8],[8,13],[2,13],[2,17]],
+  slots:[[3,2],[6,2],[4,4],[5,7],[3,9],[6,9],[7,11],[5,12],[3,14]],
+  elev:["0000000000","0000000000","0000000000","0000000000","0001110000","1111111111","1111111111","1111111111","1111111111","1112111111","1111111111","1111122222","1112222222","2222222222","2222222222","2222222222","2222222222","2222222222"]}
+];
+function pathTiles(wp){const out=[];for(let i=0;i<wp.length-1;i++){const [x0,y0]=wp[i],[x1,y1]=wp[i+1];const dx=Math.sign(x1-x0),dy=Math.sign(y1-y0);let x=x0,y=y0;for(;;){const l=out[out.length-1];if(!l||l[0]!==x||l[1]!==y)out.push([x,y]);if(x===x1&&y===y1)break;x+=dx;y+=dy;}}return out;}
+
+/* ====================== 공용 ====================== */
+const $ = id => document.getElementById(id);
+const V3 = THREE.Vector3, rad = d => d * Math.PI / 180;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function hash2(a, b, s){let h=Math.imul(a+1,374761393)^Math.imul(b+7,668265263)^Math.imul(s+3,2246822519);h=Math.imul(h^(h>>>13),1274126177);h^=h>>>16;return (h>>>0)/4294967296;}
+const col = h => new THREE.Color(h);
+const mixC = (a, b, t) => col(a).lerp(col(b), t);
+
+/* 정적 메시 묶음: 프리미티브를 버텍스 컬러로 칠해 한 BufferGeometry 로 합친다 (드로우콜 1) */
+class Batch {
+  constructor(rnd){ this.p = []; this.c = []; this.rnd = rnd; }
+  vtx(v, c){ this.p.push(v[0], v[1], v[2]); this.c.push(c.r, c.g, c.b); }
+  tri(a, b, c, ca, cb = ca, cc = ca){ this.vtx(a, ca); this.vtx(b, cb); this.vtx(c, cc); }
+  quad(tl, bl, br, tr, ct, cbm){ this.tri(tl, bl, br, ct, cbm, cbm); this.tri(tl, br, tr, ct, cbm, ct); }
+  add(geo, m, side, top, jit = 0.08){
+    const g = geo.index ? geo.toNonIndexed() : geo.clone(); g.applyMatrix4(m);
+    const a = g.attributes.position.array, A = new V3(), B = new V3(), C = new V3(), n = new V3();
+    for (let i = 0; i < a.length; i += 9){
+      A.fromArray(a, i); B.fromArray(a, i + 3); C.fromArray(a, i + 6);
+      n.subVectors(B, A).cross(C.clone().sub(A)).normalize();
+      const k = (top && n.y > 0.7 ? top : side).clone().multiplyScalar(1 + (this.rnd() - 0.5) * jit);
+      this.tri([A.x, A.y, A.z], [B.x, B.y, B.z], [C.x, C.y, C.z], k);
+    }
+    g.dispose(); geo.dispose();
+  }
+  build(){
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(this.p, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(this.c, 3));
+    g.computeVertexNormals(); return g;
+  }
+}
+const M4 = (x, y, z, s = 1, ry = 0, sy = s) => new THREE.Matrix4().compose(new V3(x, y, z), new THREE.Quaternion().setFromAxisAngle(new V3(0, 1, 0), ry), new V3(s, sy, s));
+
+/* ====================== 렌더러·씬 ====================== */
+const app = $('app'), canvas = $('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, SPIKE.view.dprMax));
+renderer.shadowMap.enabled = true; renderer.info.autoReset = false; // 그림자 패스까지 세려고 매 프레임 직접 reset renderer.shadowMap.type = THREE.PCFShadowMap;
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xffffff, 40, 100);
+const ortho = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
+const persp = new THREE.PerspectiveCamera(SPIKE.cam.fov, 1, 0.5, 1000);
+const hemi = new THREE.HemisphereLight(0xffffff, 0x445533, 1.2); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 2.5);
+sun.position.set(-7, 14, 6); sun.target.position.set(0, 0, 0); scene.add(sun, sun.target);
+Object.assign(sun.shadow.camera, { left: -11, right: 11, top: 11, bottom: -11, near: 1, far: 50 });
+sun.shadow.mapSize.set(SPIKE.shadow.size, SPIKE.shadow.size); sun.shadow.bias = SPIKE.shadow.bias; sun.shadow.normalBias = SPIKE.shadow.normalBias;
+sun.castShadow = true;
+const matStatic = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true });
+
+const cur = { region: 0, diff: 0, ortho: true, yaw: SPIKE.cam.yaw, view: 'portrait', n: 50, camDist: 40, tile: [0, 0] };
+let terrainMesh = null, propsMesh = null, mapInfo = null;
+
+/* ====================== 지형 ====================== */
+// 코너 순서: 0 NW, 1 NE, 2 SE, 3 SW. 변: [dc,dr, 내 코너a1,a2, 이웃 코너b1,b2] — a1→a2 는 바깥에서 볼 때 왼→오
+const EDGES = [[0, 1, 3, 2, 0, 1], [0, -1, 1, 0, 2, 3], [1, 0, 2, 1, 3, 0], [-1, 0, 0, 3, 1, 2]];
+const side = (dc, dr) => dc === 1 ? [1, 2] : dc === -1 ? [0, 3] : dr === 1 ? [3, 2] : [0, 1];
+
+function buildMap(ri){
+  const M = MAPS[ri], RG = SPIKE.regions[ri], G = SPIKE.grid, rnd = mulberry32(1000 + ri * 77);
+  const { cols, rows, step, sink, skirt, lip, jitter } = G;
+  const E = (c, r) => +M.elev[r][c];
+  const path = pathTiles(M.wp), pk = new Map(path.map((t, i) => [t[0] + ',' + t[1], i]));
+  const sk = new Set(M.slots.map(s => s.join(',')));
+  const cx = c => c - cols / 2, cz = r => r - rows / 2;
+  const CP = (c, r, k) => [(k === 1 || k === 2) ? cx(c + 1) : cx(c), k >= 2 ? cz(r + 1) : cz(r)];
+  // 1) 타일 코너 높이 (길 = 살짝 낮게, 고도가 바뀌는 길 칸 = 이전 칸 쪽 변을 이전 높이로 → 경사)
+  const H = [], topCol = [];
+  for (let r = 0; r < rows; r++){ H.push([]); topCol.push([]);
+    for (let c = 0; c < cols; c++){
+      const e = E(c, r), i = pk.get(c + ',' + r);
+      let h;
+      if (i !== undefined){
+        const y = e * step - sink; h = [y, y, y, y];
+        if (i > 0){ const [pc, pr] = path[i - 1], ep = E(pc, pr);
+          if (ep !== e) side(pc - c, pr - r).forEach(k => h[k] = ep * step - sink); }
+        topCol[r][c] = col(RG.path);
+      } else {
+        h = [0, 1, 2, 3].map(k => { const ix = (k === 1 || k === 2) ? c + 1 : c, iz = k >= 2 ? r + 1 : r;
+          return e * step + (hash2(ix, iz, ri) - 0.5) * 2 * jitter; });
+        topCol[r][c] = mixC(RG.gA, RG.gB, rnd()).multiplyScalar(1 + 0.05 * e);
+      }
+      H[r].push(h);
+    }
+  }
+  const at = (c, r) => (c < 0 || r < 0 || c >= cols || r >= rows) ? null : H[r][c];
+  const B = new Batch(rnd);
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++){
+    const h = H[r][c], tc = topCol[r][c], P = k => { const [x, z] = CP(c, r, k); return [x, h[k], z]; };
+    const j1 = tc.clone().multiplyScalar(1 + (rnd() - 0.5) * 0.06), j2 = tc.clone().multiplyScalar(1 + (rnd() - 0.5) * 0.06);
+    if ((c + r) & 1){ B.tri(P(0), P(3), P(2), j1); B.tri(P(0), P(2), P(1), j2); }
+    else { B.tri(P(0), P(3), P(1), j1); B.tri(P(3), P(2), P(1), j2); }
+    // 2) 옆면: 내 변이 이웃 변보다 높은 만큼만 벽을 세운다 (절벽·길 턱·맵 가장자리 치마)
+    for (const [dc, dr, a1, a2, b1, b2] of EDGES){
+      const n = at(c + dc, r + dr), ha1 = h[a1], ha2 = h[a2];
+      const hb1 = n ? n[b1] : -skirt, hb2 = n ? n[b2] : -skirt;
+      if (ha1 <= hb1 + 1e-4 && ha2 <= hb2 + 1e-4) continue;
+      const lo1 = Math.min(ha1, hb1), lo2 = Math.min(ha2, hb2);
+      const [x1, z1] = CP(c, r, a1), [x2, z2] = CP(c, r, a2);
+      const lipC = tc.clone().multiplyScalar(0.78), cl = col(RG.cliff).multiplyScalar(1 + (rnd() - 0.5) * 0.12);
+      const clB = n ? mixC(RG.cliff, RG.cliffD, 0.45) : col(RG.cliffD);
+      if (Math.max(ha1 - lo1, ha2 - lo2) > lip * 1.6){
+        const m1 = ha1 - lip, m2 = ha2 - lip;
+        B.quad([x1, ha1, z1], [x1, m1, z1], [x2, m2, z2], [x2, ha2, z2], lipC, lipC);
+        B.quad([x1, m1, z1], [x1, lo1, z1], [x2, lo2, z2], [x2, m2, z2], cl, clB);
+      } else B.quad([x1, ha1, z1], [x1, lo1, z1], [x2, lo2, z2], [x2, ha2, z2], lipC, lipC);
+    }
+  }
+  const terrain = B.build();
+
+  // 3) 소품: 받침대·타워·탑(집)·나무 → 한 메시
+  const P = new Batch(rnd), X = c => cx(c) + 0.5, Z = r => cz(r) + 0.5, base = (c, r) => E(c, r) * step;
+  const pd = SPIKE.pedestal, tw = SPIKE.tower, labels = [], towers = [];
+  M.slots.forEach(([c, r], si) => {
+    const y = base(c, r), ti = tw.slots.indexOf(si);
+    P.add(new THREE.CylinderGeometry(pd.r, pd.r * 1.1, pd.h + 0.05, pd.seg), M4(X(c), y + pd.h / 2 - 0.05, Z(r)), col(pd.side), col(pd.top), 0.1);
+    const top = y + pd.h;
+    if (ti < 0){ labels.push({ x: X(c), y: top + 0.08, z: Z(r), cost: E(c, r) === 0 ? 4 : 5 }); return; }
+    const rc = col(tw.roof[ti % tw.roof.length]), bd = col(tw.body);
+    P.add(new THREE.CylinderGeometry(0.19, 0.24, 0.55, 6), M4(X(c), top + 0.275, Z(r)), bd, bd);
+    P.add(new THREE.CylinderGeometry(0.25, 0.25, 0.08, 6), M4(X(c), top + 0.5, Z(r)), rc.clone().multiplyScalar(0.8), rc);
+    P.add(new THREE.ConeGeometry(0.29, 0.36, 6), M4(X(c), top + 0.72, Z(r)), rc, rc);
+    P.add(new THREE.OctahedronGeometry(0.1, 0), M4(X(c), top + 1.0, Z(r), 1, 0, 1.4), col(tw.crystal), col(tw.crystal), 0.2);
+    towers.push({ x: X(c), y: top + 1.0, z: Z(r), cd: rnd() * tw.cd });
+  });
+  // 탑(지식의 탑) = 길 끝의 작은 집 + 망루
+  const [ec, er] = path[path.length - 1], hy = base(ec, er), hs = SPIKE.house, hx = X(ec), hz = Z(er);
+  P.add(new THREE.BoxGeometry(0.72, 0.48, 0.62), M4(hx, hy + 0.24, hz), col(hs.wall), col(hs.wall));
+  P.add(new THREE.ConeGeometry(0.58, 0.42, 4), M4(hx, hy + 0.69, hz, 1, Math.PI / 4, 1), col(hs.roof), col(hs.roof));
+  P.add(new THREE.CylinderGeometry(0.15, 0.17, 0.95, 6), M4(hx + 0.27, hy + 0.47, hz - 0.22), col(hs.turret), col(hs.turret));
+  P.add(new THREE.ConeGeometry(0.22, 0.34, 6), M4(hx + 0.27, hy + 1.11, hz - 0.22), col(hs.turretRoof), col(hs.turretRoof));
+  // 나무: 길·슬롯·길에 맞닿은 칸 제외(깨끗한 차선), 시드 고정 무작위
+  const near = (c, r) => [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => pk.has((c + a) + ',' + (r + b)));
+  const cand = [];
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (!sk.has(c + ',' + r) && !near(c, r)) cand.push([c, r]);
+  const tr = mulberry32(SPIKE.trees.seed * 31 + ri);
+  for (let i = cand.length - 1; i > 0; i--){ const j = Math.floor(tr() * (i + 1)); [cand[i], cand[j]] = [cand[j], cand[i]]; }
+  let nt = 0;
+  for (let i = 0; nt < SPIKE.trees.n && i < cand.length * 2; i++){
+    const [c, r] = cand[i % cand.length], s = 0.75 + tr() * 0.45, x = X(c) + (tr() - 0.5) * 0.5, z = Z(r) + (tr() - 0.5) * 0.5, y = base(c, r), ry = tr() * 6;
+    const lc = col(RG.tree[Math.floor(tr() * RG.tree.length)]);
+    P.add(new THREE.CylinderGeometry(0.06, 0.08, 0.26, 5), M4(x, y + 0.13 * s, z, s, ry), col(RG.trunk), col(RG.trunk));
+    P.add(new THREE.ConeGeometry(0.32, 0.6, 7), M4(x, y + (0.26 + 0.3) * s, z, s, ry), lc, lc, 0.14);
+    if (tr() < 0.55) P.add(new THREE.ConeGeometry(0.23, 0.45, 7), M4(x, y + 0.86 * s, z, s, ry + 0.4), lc.clone().multiplyScalar(1.12), lc, 0.14);
+    nt++;
+  }
+  // 4) 적 이동 폴리라인: 칸 중심·변 중점, 꺾이는 칸은 2차 베지어로 둥글게
+  const hc = (c, r) => { const h = H[r][c]; return (h[0] + h[1] + h[2] + h[3]) / 4; };
+  const edgeMid = (i) => { const [c, r] = path[i], [c2, r2] = path[i + 1], s2 = side(c2 - c, r2 - r), h = H[r][c];
+    return [(X(c) + X(c2)) / 2, (h[s2[0]] + h[s2[1]]) / 2, (Z(r) + Z(r2)) / 2]; };
+  const pts = [[X(path[0][0]), hc(...path[0]), Z(path[0][1])]];
+  for (let i = 0; i < path.length - 1; i++){
+    const a = edgeMid(i); pts.push(a);
+    const k = i + 1, [c, r] = path[k];
+    if (k === path.length - 1){ pts.push([X(c), hc(c, r), Z(r)]); break; }
+    const [pc, pr] = path[k - 1], [nc, nr] = path[k + 1];
+    if (c - pc !== nc - c || r - pr !== nr - r){
+      const b = edgeMid(k), m = [X(c), hc(c, r), Z(r)];
+      for (const t of [0.25, 0.5, 0.75]) pts.push([0, 1, 2].map(d => (1 - t) * (1 - t) * a[d] + 2 * t * (1 - t) * m[d] + t * t * b[d]));
+    } else pts.push([X(c), hc(c, r), Z(r)]);
+  }
+  const cum = [0];
+  for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1], pts[i][2] - pts[i - 1][2]));
+  const maxH = Math.max(...M.elev.join('').split('').map(Number)) * step;
+  return { terrain, props: P.build(), labels, towers, pts, cum, L: cum[cum.length - 1], maxH,
+    start: [X(path[0][0]), base(...path[0]), Z(path[0][1])], end: [hx, hy, hz] };
+}
+
+/* ====================== 적 (InstancedMesh 1개) ====================== */
+const EN = SPIKE.enemy, NMAX = EN.max;
+const enemyMesh = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, EN.detail), new THREE.MeshLambertMaterial({ flatShading: true }), NMAX);
+enemyMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); enemyMesh.castShadow = true; enemyMesh.frustumCulled = false;
+enemyMesh.setColorAt(0, col('#fff'));
+scene.add(enemyMesh);
+const ES = { s: new Float32Array(NMAX), sp: new Float32Array(NMAX), hp: new Int8Array(NMAX), type: new Uint8Array(NMAX), st: new Uint8Array(NMAX),
+  t: new Float32Array(NMAX), lane: new Float32Array(NMAX), seg: new Int32Array(NMAX), flash: new Float32Array(NMAX), gen: new Uint32Array(NMAX),
+  x: new Float32Array(NMAX), y: new Float32Array(NMAX), z: new Float32Array(NMAX), ph: new Float32Array(NMAX) };
+const ECOL = EN.colors.map(col), WHITE = col('#ffffff');
+const erng = mulberry32(99);
+function resetEnemy(i, s){
+  const ty = erng() < EN.yellowShare ? 1 : 0, [a, b] = EN.speed[ty];
+  ES.type[i] = ty; ES.s[i] = s; ES.sp[i] = a + erng() * (b - a); ES.hp[i] = EN.hp[ty]; ES.st[i] = 0; ES.t[i] = 0;
+  ES.lane[i] = (erng() * 2 - 1) * EN.lane; ES.seg[i] = 0; ES.flash[i] = 0; ES.gen[i]++; ES.ph[i] = erng() * 6.28;
+  enemyMesh.setColorAt(i, ECOL[ty]);
+}
+function setEnemyCount(n){
+  cur.n = n; hits.length = 0;
+  for (let i = 0; i < n; i++) resetEnemy(i, (i + erng() * 0.8) / n * mapInfo.L * 0.92);
+  enemyMesh.count = n; enemyMesh.instanceColor.needsUpdate = true;
+}
+const tmp = [0, 0, 0];
+function posAt(i, s){
+  const { pts, cum } = mapInfo; let k = ES.seg[i];
+  if (s < cum[k]) k = 0;
+  while (k < pts.length - 2 && cum[k + 1] <= s) k++;
+  ES.seg[i] = k;
+  const a = pts[k], b = pts[k + 1], len = cum[k + 1] - cum[k] || 1, t = Math.min(1, (s - cum[k]) / len);
+  const dx = b[0] - a[0], dz = b[2] - a[2], hl = Math.hypot(dx, dz) || 1;
+  tmp[0] = a[0] + dx * t - dz / hl * ES.lane[i]; tmp[1] = a[1] + (b[1] - a[1]) * t; tmp[2] = a[2] + dz * t + dx / hl * ES.lane[i];
+  return tmp;
+}
+
+/* ====================== 파티클 (스파크·흩어짐, InstancedMesh 1개) ====================== */
+const PN = SPIKE.particles;
+const partMesh = new THREE.InstancedMesh(new THREE.OctahedronGeometry(1, 0), new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false }), PN);
+partMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); partMesh.frustumCulled = false; partMesh.count = 0;
+partMesh.setColorAt(0, WHITE); scene.add(partMesh);
+const PS = { n: 0, d: new Float32Array(PN * 12) }; // x y z vx vy vz life max size grav r g|b packed below
+const PC = new Float32Array(PN * 3);
+function spawnP(x, y, z, vx, vy, vz, life, size, grav, c){
+  if (PS.n >= PN) return; const o = PS.n * 12, q = PS.n * 3, d = PS.d;
+  d[o] = x; d[o + 1] = y; d[o + 2] = z; d[o + 3] = vx; d[o + 4] = vy; d[o + 5] = vz; d[o + 6] = life; d[o + 7] = life; d[o + 8] = size; d[o + 9] = grav;
+  PC[q] = c.r; PC[q + 1] = c.g; PC[q + 2] = c.b; PS.n++;
+}
+function updateParticles(dt){
+  const d = PS.d, m = partMesh.instanceMatrix.array, ca = partMesh.instanceColor.array;
+  for (let i = 0; i < PS.n; i++){
+    let o = i * 12;
+    d[o + 6] -= dt;
+    if (d[o + 6] <= 0){ // 마지막 것과 바꿔 빈칸 없이 유지
+      const l = --PS.n; if (i !== l){ d.copyWithin(o, l * 12, l * 12 + 12); PC.copyWithin(i * 3, l * 3, l * 3 + 3); } i--; continue;
+    }
+    d[o + 4] -= d[o + 9] * dt; d[o] += d[o + 3] * dt; d[o + 1] += d[o + 4] * dt; d[o + 2] += d[o + 5] * dt;
+    const s = d[o + 8] * Math.sqrt(d[o + 6] / d[o + 7]), mo = i * 16;
+    m[mo] = s; m[mo + 1] = 0; m[mo + 2] = 0; m[mo + 3] = 0; m[mo + 4] = 0; m[mo + 5] = s; m[mo + 6] = 0; m[mo + 7] = 0;
+    m[mo + 8] = 0; m[mo + 9] = 0; m[mo + 10] = s; m[mo + 11] = 0; m[mo + 12] = d[o]; m[mo + 13] = d[o + 1]; m[mo + 14] = d[o + 2]; m[mo + 15] = 1;
+    ca[i * 3] = PC[i * 3]; ca[i * 3 + 1] = PC[i * 3 + 1]; ca[i * 3 + 2] = PC[i * 3 + 2];
+  }
+  partMesh.count = PS.n; partMesh.instanceMatrix.needsUpdate = true; partMesh.instanceColor.needsUpdate = true;
+}
+
+/* ====================== 시작점 안개 기둥 ====================== */
+const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 1.6, 10, 1, true),
+  new THREE.MeshLambertMaterial({ color: SPIKE.pillar.color, transparent: true, opacity: SPIKE.pillar.opacity, depthWrite: false, side: THREE.DoubleSide, flatShading: true }));
+const puffs = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 0),
+  new THREE.MeshLambertMaterial({ color: '#c6bcea', transparent: true, opacity: 0.6, flatShading: true }), SPIKE.pillar.puffs);
+puffs.frustumCulled = false; scene.add(pillar, puffs);
+const dummy = new THREE.Object3D();
+
+/* ====================== 타워 공격 ====================== */
+const hits = [];
+function updateTowers(dt){
+  const T = SPIKE.tower, R2 = T.range * T.range;
+  for (const tw of mapInfo.towers){
+    tw.cd -= dt; if (tw.cd > 0) continue;
+    let best = -1, bs = -1;
+    for (let i = 0; i < cur.n; i++){ if (ES.st[i]) continue; const dx = ES.x[i] - tw.x, dz = ES.z[i] - tw.z;
+      if (dx * dx + dz * dz <= R2 && ES.s[i] > bs){ bs = ES.s[i]; best = i; } }
+    if (best < 0){ tw.cd = 0.1; continue; }
+    tw.cd = T.cd;
+    const lead = ES.sp[best] * T.sparkT, p = posAt(best, Math.min(ES.s[best] + lead, mapInfo.L)), ty = p[1] + EN.r[ES.type[best]];
+    const tx = p[0], tz = p[2];
+    for (let k = 0; k < T.sparks; k++){ const f = 1 / (T.sparkT * (0.85 + Math.random() * 0.3)), j = () => (Math.random() - 0.5) * 0.25;
+      spawnP(tw.x, tw.y, tw.z, (tx + j() - tw.x) * f, (ty + j() - tw.y) * f, (tz + j() - tw.z) * f, 1 / f, 0.035 + Math.random() * 0.03, 0, WHITE); }
+    hits.push({ i: best, t: T.sparkT, gen: ES.gen[best] });
+  }
+  for (let h = hits.length - 1; h >= 0; h--){
+    const H = hits[h]; H.t -= dt; if (H.t > 0) continue; hits.splice(h, 1);
+    const i = H.i; if (ES.st[i] || ES.gen[i] !== H.gen || i >= cur.n) continue;
+    ES.flash[i] = 0.12;
+    for (let k = 0; k < T.impact; k++) spawnP(ES.x[i], ES.y[i], ES.z[i], (Math.random() - 0.5) * 2, Math.random() * 1.5, (Math.random() - 0.5) * 2, 0.2, 0.04, 4, WHITE);
+    if (--ES.hp[i] <= 0){ ES.st[i] = 1; ES.t[i] = 0; const c = ECOL[ES.type[i]];
+      for (let k = 0; k < T.debris; k++){ const a = k / T.debris * 6.283 + Math.random() * 0.5, v = 0.8 + Math.random() * 0.8;
+        spawnP(ES.x[i], ES.y[i], ES.z[i], Math.cos(a) * v, 1 + Math.random() * 1.2, Math.sin(a) * v, 0.55 + Math.random() * 0.25, 0.05 + Math.random() * 0.03, 5, c); } }
+  }
+}
+function updateEnemies(dt, now){
+  const m = enemyMesh.instanceMatrix.array, ca = enemyMesh.instanceColor.array, L = mapInfo.L;
+  let colDirty = false;
+  for (let i = 0; i < cur.n; i++){
+    let sc = EN.r[ES.type[i]];
+    if (ES.st[i] === 0){ ES.s[i] += ES.sp[i] * dt; if (ES.s[i] >= L - 0.35){ resetEnemy(i, 0); colDirty = true; } }
+    else if (ES.st[i] === 1){ ES.t[i] += dt; sc *= Math.max(0, 1 - ES.t[i] / EN.die); if (ES.t[i] >= EN.die){ ES.st[i] = 2; ES.t[i] = 0; } }
+    else { sc = 0; ES.t[i] += dt; if (ES.t[i] >= EN.respawn){ resetEnemy(i, 0); colDirty = true; } }
+    const p = posAt(i, ES.s[i]), r0 = EN.r[ES.type[i]];
+    ES.x[i] = p[0]; ES.z[i] = p[2]; ES.y[i] = p[1] + r0 + Math.abs(Math.sin(now * 0.009 * ES.sp[i] + ES.ph[i])) * EN.bob;
+    const o = i * 16, sy = sc * (ES.st[i] ? 1 : 0.92);
+    m[o] = sc; m[o + 1] = 0; m[o + 2] = 0; m[o + 3] = 0; m[o + 4] = 0; m[o + 5] = sy; m[o + 6] = 0; m[o + 7] = 0;
+    m[o + 8] = 0; m[o + 9] = 0; m[o + 10] = sc; m[o + 11] = 0; m[o + 12] = p[0]; m[o + 13] = ES.y[i] - (r0 - sy); m[o + 14] = p[2]; m[o + 15] = 1;
+    if (ES.flash[i] > 0){ ES.flash[i] -= dt; const c = ES.flash[i] > 0 ? WHITE : ECOL[ES.type[i]]; ca[i * 3] = c.r; ca[i * 3 + 1] = c.g; ca[i * 3 + 2] = c.b; colDirty = true; }
+  }
+  enemyMesh.instanceMatrix.needsUpdate = true; if (colDirty) enemyMesh.instanceColor.needsUpdate = true;
+}
+
+/* ====================== 지역·난이도·카메라·화면 ====================== */
+function setRegion(ri){
+  cur.region = ri;
+  if (terrainMesh){ scene.remove(terrainMesh, propsMesh); terrainMesh.geometry.dispose(); propsMesh.geometry.dispose(); }
+  mapInfo = buildMap(ri);
+  terrainMesh = new THREE.Mesh(mapInfo.terrain, matStatic); terrainMesh.receiveShadow = terrainMesh.castShadow = true;
+  propsMesh = new THREE.Mesh(mapInfo.props, matStatic); propsMesh.receiveShadow = propsMesh.castShadow = true;
+  scene.add(terrainMesh, propsMesh);
+  const [sx, sy, sz] = mapInfo.start; pillar.position.set(sx, sy + 0.8, sz);
+  $('labels').innerHTML = mapInfo.labels.map(l => `<div class="cost${l.cost < 5 ? ' lo' : ''}">◆${l.cost}</div>`).join('');
+  PS.n = 0; setEnemyCount(cur.n); setDiff(cur.diff); fit();
+}
+function setDiff(di){
+  cur.diff = di; const D = SPIKE.diffs[di], RG = SPIKE.regions[cur.region];
+  sun.color.set(D.sun); sun.intensity = D.sunI; hemi.color.set(D.sky); hemi.groundColor.set(D.ground); hemi.intensity = D.hemiI;
+  const bg = mixC(RG.bg, D.tint, D.tintAmt); scene.background = bg; scene.fog.color.copy(bg);
+  scene.fog.near = cur.camDist + D.fogNear; scene.fog.far = cur.camDist + D.fogFar;
+}
+const camera = () => cur.ortho ? ortho : persp;
+const pv = new V3();
+function fit(){
+  const W = app.clientWidth, H = app.clientHeight, m = SPIKE.cam.margin, hud = $('hud'), bot = $('bottom');
+  const top = hud.offsetTop + hud.offsetHeight + m, bottom = bot.offsetTop - m, left = m, right = W - m;
+  const ccx = (left + right) / 2, ccy = (top + bottom) / 2, fw = 2 * Math.max(ccx, W - ccx), fh = 2 * Math.max(ccy, H - ccy);
+  const pitch = rad(SPIKE.cam.pitch), yaw = rad(cur.yaw), G = SPIKE.grid;
+  const dir = new V3(Math.cos(pitch) * Math.sin(yaw), Math.sin(pitch), Math.cos(pitch) * Math.cos(yaw));
+  const tgt = new V3(0, G.step, 0), cam = camera(), hx = G.cols / 2, hz = G.rows / 2, yt = mapInfo.maxH + 0.35;
+  const pts = [];
+  for (const x of [-hx, hx]) for (const z of [-hz, hz]) for (const y of [-G.skirt, yt]) pts.push(new V3(x, y, z));
+  pts.push(new V3(mapInfo.start[0], mapInfo.start[1] + 1.7, mapInfo.start[2]), new V3(mapInfo.end[0], mapInfo.end[1] + 1.3, mapInfo.end[2]));
+  const apply = k => {
+    let d = SPIKE.cam.orthoDist;
+    if (cur.ortho){ cam.top = k; cam.bottom = -k; cam.right = k * fw / fh; cam.left = -cam.right; } else { cam.aspect = fw / fh; d = k; }
+    cam.position.copy(tgt).addScaledVector(dir, d); cam.lookAt(tgt);
+    cam.setViewOffset(fw, fh, fw / 2 - ccx, fh / 2 - ccy, W, H); cam.updateProjectionMatrix(); cam.updateMatrixWorld(); return d;
+  };
+  const ok = () => pts.every(p => { pv.copy(p).project(cam); const x = (pv.x + 1) / 2 * W, y = (1 - pv.y) / 2 * H;
+    return pv.z > -1 && pv.z < 1 && x >= left && x <= right && y >= top && y <= bottom; });
+  let lo = cur.ortho ? 0.5 : 8, hi = cur.ortho ? 60 : 400;
+  for (let i = 0; i < 40; i++){ const mid = (lo + hi) / 2; apply(mid); if (ok()) hi = mid; else lo = mid; }
+  cur.camDist = apply(hi);
+  const scr = v => { pv.copy(v).project(cam); return [(pv.x + 1) / 2 * W, (1 - pv.y) / 2 * H]; };
+  const o = scr(new V3(0, G.step, 0)), a = scr(new V3(1, G.step, 0)), b = scr(new V3(0, G.step, 1));
+  cur.tile = [Math.hypot(a[0] - o[0], a[1] - o[1]), Math.hypot(b[0] - o[0], b[1] - o[1])];
+  $('sTile').textContent = cur.tile.map(v => v.toFixed(0)).join('·');
+  [...$('labels').children].forEach((el, i) => { const l = mapInfo.labels[i], s = scr(new V3(l.x, l.y, l.z));
+    el.style.left = s[0].toFixed(1) + 'px'; el.style.top = s[1].toFixed(1) + 'px'; });
+  setDiff(cur.diff);
+}
+function setView(v){
+  cur.view = v; const [w, h] = SPIKE.view[v];
+  app.style.width = w + 'px'; app.style.height = h + 'px'; app.classList.toggle('land', v === 'landscape');
+  renderer.setSize(w, h);
+  const s = Math.min(1, (innerWidth - 8) / w, (innerHeight - $('ctrl').offsetHeight - 8) / h);
+  app.style.transform = s < 1 ? `scale(${s})` : '';
+  if (mapInfo) fit();
+}
+
+/* ====================== 루프·측정 ====================== */
+let last = performance.now(), fpsN = 0, fpsT = last, meas = null;
+function frame(now){
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  updateEnemies(dt, now); updateTowers(dt); updateParticles(dt);
+  pillar.rotation.y += dt * 0.6;
+  for (let k = 0; k < SPIKE.pillar.puffs; k++){ const f = (now * 0.0003 + k / SPIKE.pillar.puffs) % 1, a = now * 0.0012 + k * 1.05;
+    dummy.position.set(pillar.position.x + Math.cos(a) * 0.32, pillar.position.y - 0.7 + f * 1.5, pillar.position.z + Math.sin(a) * 0.32);
+    dummy.scale.setScalar(0.24 * (1 - f * 0.6)); dummy.updateMatrix(); puffs.setMatrixAt(k, dummy.matrix); }
+  puffs.instanceMatrix.needsUpdate = true;
+  renderer.info.reset(); renderer.render(scene, camera());
+  const inf = renderer.info.render;
+  fpsN++;
+  if (now - fpsT >= 500){ $('sFps').textContent = (fpsN * 1000 / (now - fpsT)).toFixed(0); fpsN = 0; fpsT = now;
+    $('sDc').textContent = inf.calls; $('sTri').textContent = (inf.triangles / 1000).toFixed(1) + 'k'; $('sEn').textContent = cur.n; }
+  if (meas){ meas.f++; meas.calls += inf.calls; meas.tris += inf.triangles; meas.maxMs = Math.max(meas.maxMs, now - meas.prev); meas.prev = now;
+    if (now - meas.t0 >= meas.dur){ const r = meas; meas = null;
+      r.res({ fps: r.f * 1000 / (now - r.t0), calls: r.calls / r.f, tris: r.tris / r.f, maxFrameMs: r.maxMs, frames: r.f, enemies: cur.n }); } }
+  requestAnimationFrame(frame);
+}
+
+/* ====================== UI ====================== */
+const on = (id, f) => $(id).addEventListener('change', e => f(e.target));
+on('selN', t => setEnemyCount(+t.value));
+on('selR', t => setRegion(+t.value));
+on('selD', t => setDiff(+t.value));
+on('selCam', t => { cur.ortho = t.value === 'o'; fit(); });
+on('selYaw', t => { cur.yaw = +t.value; fit(); });
+on('selView', t => setView(t.value));
+on('chkSh', t => { sun.castShadow = t.checked; });
+addEventListener('resize', () => setView(cur.view));
+
+setView('portrait'); setRegion(0); requestAnimationFrame(frame);
+
+// 테스트용 훅 (tests/spike_test.js)
+window.SPIKE_API = {
+  measure: sec => new Promise(res => { const t = performance.now(); meas = { dur: sec * 1000, t0: t, prev: t, f: 0, calls: 0, tris: 0, maxMs: 0, res }; }),
+  info: () => { const gl = renderer.getContext(); return { three: THREE.REVISION, webgl2: renderer.capabilities.isWebGL2 !== false,
+    gl: gl.getParameter(gl.RENDERER), view: cur.view, tile: cur.tile, dpr: renderer.getPixelRatio(), particles: PS.n }; }
+};
+</script>
+</body>
+</html>

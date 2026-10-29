@@ -1,0 +1,305 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Arcana Guard Stages",
+  "description": "아르카나 수비대 24스테이지 정의(stages.json)의 JSON Schema. 모든 객체는 additionalProperties:false. id 유일성, 모드 분포(13/5/6), 03 FM 표와의 일치 같은 교차 검증은 스키마로 표현할 수 없어 검증 스크립트가 맡는다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "description", "rules", "stages"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$" },
+    "description": { "type": "string", "minLength": 1, "maxLength": 600 },
+    "rules": { "$ref": "#/definitions/rules" },
+    "stages": {
+      "type": "array",
+      "minItems": 24,
+      "maxItems": 24,
+      "items": { "$ref": "#/definitions/stage" }
+    }
+  },
+  "definitions": {
+    "enemyType": { "type": "string", "enum": ["normal", "fast", "tank", "stray"], "description": "normal=안개 조각, fast=속삭임, tank=침묵 덩어리(정예), stray=이탈 안개(RTS 전용). 왕은 waves[].bossSpawn" },
+    "mode": { "type": "string", "enum": ["defense", "hero", "rts"] },
+    "objective": { "type": "string", "enum": ["block", "escort", "capture"], "description": "block=차단, escort=수레 호위, capture=거점 점령" },
+    "nonNegNumber": { "type": "number", "minimum": 0 },
+
+    "rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["waveHpMult", "challengeTierHpMult", "fm", "bossHp", "chapters", "generation", "rtsRoadFmMult", "slotIndexConvention", "modes"],
+      "properties": {
+        "waveHpMult": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "type": "number", "exclusiveMinimum": 0 }, "description": "BALANCE.waves.hpMult 사본(웨이브 1~5)" },
+        "challengeTierHpMult": {
+          "type": "object", "additionalProperties": false, "required": ["1", "2", "3"],
+          "properties": { "1": { "type": "number" }, "2": { "type": "number" }, "3": { "type": "number" } },
+          "description": "D6 도전 단계 → 적 HP 배율(BALANCE.stage.hpMultByDiff 사본)"
+        },
+        "fm": {
+          "type": "object", "additionalProperties": false, "required": ["normal", "fast", "tank", "stray"],
+          "properties": { "normal": { "type": "number" }, "fast": { "type": "number" }, "tank": { "type": "number" }, "stray": { "type": "number" } },
+          "description": "03 §0.2 FM(안개량) 환산. 검증용이며 전투 HP는 BALANCE.enemies가 원본(D5)"
+        },
+        "bossHp": {
+          "type": "object", "additionalProperties": false, "required": ["balanceKey", "fmRef", "note"],
+          "properties": {
+            "balanceKey": { "type": "string" },
+            "fmRef": { "type": "number", "exclusiveMinimum": 0 },
+            "note": { "type": "string" }
+          }
+        },
+        "chapters": {
+          "type": "array", "minItems": 4, "maxItems": 4,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["chapter", "countMult", "kingFmMult", "intervalMult", "enemySpeedMult", "slots", "sigma"],
+            "properties": {
+              "chapter": { "type": "integer", "minimum": 1, "maximum": 4 },
+              "countMult": { "type": "number" }, "kingFmMult": { "type": "number" }, "intervalMult": { "type": "number" },
+              "enemySpeedMult": { "type": "number" }, "slots": { "type": "integer", "minimum": 1, "maximum": 10 }, "sigma": { "type": "number" }
+            }
+          }
+        },
+        "generation": { "type": "string" },
+        "rtsRoadFmMult": { "type": "number" },
+        "slotIndexConvention": { "type": "string" },
+        "modes": {
+          "type": "object", "additionalProperties": false, "required": ["defense", "hero", "rts"],
+          "properties": {
+            "defense": { "$ref": "#/definitions/modeRule" },
+            "hero": { "$ref": "#/definitions/modeRule" },
+            "rts": { "$ref": "#/definitions/modeRule" }
+          }
+        }
+      }
+    },
+
+    "modeRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "hero", "orbs", "restSec", "strayEnemies", "veil", "mapTiles", "heroStarRule", "perkPool", "swarmVisual"],
+      "properties": {
+        "label": { "type": "string", "maxLength": 4 },
+        "hero": { "type": "string", "enum": ["none", "semi"] },
+        "orbs": { "type": "boolean" },
+        "restSec": { "type": "integer", "minimum": 0, "maximum": 30 },
+        "strayEnemies": { "type": "boolean" },
+        "veil": { "oneOf": [{ "type": "boolean" }, { "type": "string", "const": "per-stage" }] },
+        "mapTiles": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[A-Za-z=.]$" } },
+        "heroStarRule": { "type": ["string", "null"], "enum": ["star3_fallsMax2", null] },
+        "perkPool": { "type": "string", "enum": ["base24", "base24+E4"] },
+        "swarmVisual": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 1, "maximum": 8 }, "description": "논리 1마리당 군집 연출 개체 수 [최소, 최대] (14 §6.3, 판정 무관)" }
+      }
+    },
+
+    "enemyGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "count", "intervalSec", "startSec"],
+      "properties": {
+        "type": { "$ref": "#/definitions/enemyType" },
+        "count": { "type": "integer", "minimum": 1, "maximum": 80 },
+        "intervalSec": { "type": "number", "minimum": 0, "maximum": 20, "description": "개체 간 스폰 간격(초). 0.1초(1틱)의 배수. count 1이면 0" },
+        "startSec": { "type": "number", "minimum": 0, "maximum": 60, "description": "웨이브 시작 기준 첫 개체 등장 시각(03의 '+Ns 시작'). 0.1초의 배수" }
+      }
+    },
+
+    "wave": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["wave", "enemies", "boss", "bossSpawn", "fm"],
+      "properties": {
+        "wave": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "enemies": { "type": "array", "minItems": 1, "maxItems": 6, "items": { "$ref": "#/definitions/enemyGroup" } },
+        "boss": { "type": "boolean", "description": "망각의 왕 등장 여부(웨이브 5만 true)" },
+        "bossSpawn": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object", "additionalProperties": false, "required": ["startSec", "fm"],
+              "properties": {
+                "startSec": { "type": "number", "minimum": 0, "maximum": 60 },
+                "fm": { "type": "number", "exclusiveMinimum": 0, "description": "왕 FM (rules.bossHp 변환 규칙으로 HP가 됨)" }
+              }
+            }
+          ]
+        },
+        "fm": { "type": "number", "minimum": 0, "description": "웨이브 총 FM(왕·이탈 안개 포함, 검증용 파생값)" }
+      },
+      "allOf": [
+        { "if": { "properties": { "boss": { "const": true } }, "required": ["boss"] }, "then": { "properties": { "bossSpawn": { "type": "object" } } }, "else": { "properties": { "bossSpawn": { "type": "null" } } } }
+      ]
+    },
+
+    "tutorialStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["step", "countsAsStep", "trigger", "highlight", "text", "pass", "stuckHelp"],
+      "properties": {
+        "step": { "type": "integer", "minimum": 0, "maximum": 9, "description": "0 = 배너·새 카드(3단계에 포함하지 않음)" },
+        "countsAsStep": { "type": "boolean" },
+        "trigger": {
+          "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+          "properties": {
+            "kind": { "type": "string", "enum": ["stageStart", "waveStart", "afterStep", "firstCorrect", "firstWrong", "orbsAtLeast", "strayWaveStart"] },
+            "value": { "type": ["integer", "null"] }
+          }
+        },
+        "highlight": { "type": "string", "minLength": 1, "maxLength": 40, "description": "렌더·DOM이 해석하는 하이라이트 키. 'tile:c,r'은 맵 칸" },
+        "text": { "type": "string", "minLength": 1, "maxLength": 12, "description": "도토 안내 한 줄, 공백·부호 포함 12자 이내(03 §2.1)" },
+        "pass": {
+          "type": "object", "additionalProperties": false, "required": ["kind", "value"],
+          "properties": {
+            "kind": { "type": "string", "enum": ["auto", "dismiss", "observe", "reachTile", "answerCorrect", "skillCast", "strayKilled"] },
+            "value": { "type": ["integer", "string", "null"] }
+          }
+        },
+        "stuckHelp": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object", "additionalProperties": false, "required": ["afterSec", "action", "value"],
+              "properties": {
+                "afterSec": { "type": "number", "minimum": 0, "maximum": 60 },
+                "action": { "type": "string", "enum": ["handIcon", "retry", "autoCast", "autoPatrol", "orbBoost"] },
+                "value": { "type": ["integer", "null"] }
+              }
+            }
+          ]
+        }
+      }
+    },
+
+    "tutorialProtection": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object", "additionalProperties": false, "required": ["firstFallFree", "orbBoost", "straySpeedMultW2"],
+          "properties": {
+            "firstFallFree": { "type": "boolean", "description": "첫 쓰러짐: 벌칙·구슬 손실·쓰러짐 횟수 없이 즉시 부활" },
+            "orbBoost": { "type": "integer", "minimum": 0, "maximum": 6, "description": "스킬 1 안내 단계에서 구슬 부족 시 보정 지급 수" },
+            "straySpeedMultW2": { "type": ["number", "null"], "description": "RTS 도입 스테이지의 웨이브 2 이탈 안개 속도 배율" }
+          }
+        }
+      ]
+    },
+
+    "starThresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["star1", "star2", "star3"],
+      "properties": {
+        "star1": {
+          "type": "object", "additionalProperties": false, "required": ["towerSurvives", "minCorrect"],
+          "properties": { "towerSurvives": { "type": "boolean", "const": true }, "minCorrect": { "type": "integer", "minimum": 1, "maximum": 30 } }
+        },
+        "star2": {
+          "type": "object", "additionalProperties": false,
+          "required": ["minTowerHp", "minAccuracy", "maxLeaks", "minCartLight", "minBeaconsLit"],
+          "properties": {
+            "minTowerHp": { "type": "integer", "minimum": 1, "maximum": 10 },
+            "minAccuracy": { "type": "number", "minimum": 0, "maximum": 1 },
+            "maxLeaks": { "type": ["integer", "null"], "minimum": 0 },
+            "minCartLight": { "type": ["integer", "null"], "minimum": 1, "maximum": 6 },
+            "minBeaconsLit": { "type": ["integer", "null"], "minimum": 1, "maximum": 3 }
+          }
+        },
+        "star3": {
+          "type": "object", "additionalProperties": false,
+          "required": ["minTowerHp", "minAccuracy", "minMaxCombo", "maxFalls", "maxLeaks", "minCartLight", "minBeaconsLit"],
+          "properties": {
+            "minTowerHp": { "type": "integer", "minimum": 1, "maximum": 10 },
+            "minAccuracy": { "type": "number", "minimum": 0, "maximum": 1 },
+            "minMaxCombo": { "type": "integer", "minimum": 0 },
+            "maxFalls": { "type": ["integer", "null"], "minimum": 0, "description": "영웅이 있는 모드만(수비 null)" },
+            "maxLeaks": { "type": ["integer", "null"], "minimum": 0 },
+            "minCartLight": { "type": ["integer", "null"], "minimum": 1, "maximum": 6 },
+            "minBeaconsLit": { "type": ["integer", "null"], "minimum": 1, "maximum": 3 }
+          }
+        }
+      }
+    },
+
+    "design": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fmRoad", "fmStray", "fm03", "r70", "questions03", "guaranteedAnswers", "densityTarget", "densityFloor"],
+      "description": "밸런스 검증 기준값(런타임에 쓰지 않음). 봇 시뮬·CI가 읽는다.",
+      "properties": {
+        "fmRoad": { "type": "number", "minimum": 0, "description": "이 파일 웨이브의 길 위 FM 합(왕 포함)" },
+        "fmStray": { "type": "number", "minimum": 0 },
+        "fm03": { "type": "integer", "description": "03 §1.4 요약표의 총 FM(원본)" },
+        "r70": { "type": "number", "minimum": 0, "maximum": 2, "description": "03 §1.4 r(70%) σ 보정 후" },
+        "questions03": { "type": "integer", "minimum": 1 },
+        "guaranteedAnswers": { "type": "integer", "minimum": 1, "description": "판당 보장 응답 = 03 문항 × (수비 1.0 / 영웅 0.85 / RTS 0.8, 올림, RTS 최소 20)" },
+        "densityTarget": { "type": "number", "exclusiveMinimum": 0 },
+        "densityFloor": { "type": ["number", "null"] }
+      }
+    },
+
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "chapter", "index", "mode", "mapId", "challengeTier", "restSec", "enemySpeedMult", "waves", "slotsEnabled",
+        "heroEnabled", "rtsObjective", "rtsSecondary", "veil", "mapOverlay", "tutorialProtection", "tutorialScript",
+        "starThresholds", "design"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[1-4]-[1-6]$" },
+        "chapter": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "index": { "type": "integer", "minimum": 1, "maximum": 6 },
+        "mode": { "$ref": "#/definitions/mode" },
+        "mapId": { "type": "integer", "minimum": 1, "maximum": 4, "description": "08 §3 맵(= 챕터 = 지역)" },
+        "challengeTier": { "type": "integer", "minimum": 1, "maximum": 3, "description": "D6 기본 도전 단계(적 HP ×0.85/×1/×1.2). 플레이어가 시작 화면에서 바꿀 수 있다" },
+        "restSec": { "type": "integer", "enum": [5, 8], "description": "첫 웨이브 전과 웨이브 사이 휴식" },
+        "enemySpeedMult": { "type": "number", "exclusiveMinimum": 0, "description": "03 §1.2 챕터 적 속도 배수" },
+        "waves": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "$ref": "#/definitions/wave" } },
+        "slotsEnabled": {
+          "oneOf": [
+            { "type": "string", "const": "all" },
+            { "type": "array", "minItems": 1, "maxItems": 10, "uniqueItems": true, "items": { "type": "integer", "minimum": 0, "maximum": 9 } }
+          ],
+          "description": "사용 슬롯 인덱스(08 §3 '슬롯:' 목록 순서, 0부터) 또는 'all'"
+        },
+        "heroEnabled": { "type": "boolean" },
+        "rtsObjective": { "oneOf": [{ "type": "null" }, { "$ref": "#/definitions/objective" }], "description": "RTS 주 목표. 복합 목표의 나머지는 rtsSecondary" },
+        "rtsSecondary": { "type": "array", "maxItems": 2, "uniqueItems": true, "items": { "$ref": "#/definitions/objective" } },
+        "veil": { "type": "boolean", "description": "보스 장막(10 §3.5)" },
+        "mapOverlay": { "type": ["string", "null"], "pattern": "^(hero-zone:r[1-4]|rts:[1-4]-[1-6])$", "description": "영웅 구역·RTS 타일 오버레이 키(08 맵 위 레이어). 수비 null" },
+        "tutorialProtection": { "$ref": "#/definitions/tutorialProtection" },
+        "tutorialScript": { "type": "array", "maxItems": 6, "items": { "$ref": "#/definitions/tutorialStep" }, "description": "해당 없으면 빈 배열" },
+        "starThresholds": { "$ref": "#/definitions/starThresholds" },
+        "design": { "$ref": "#/definitions/design" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "mode": { "const": "defense" } }, "required": ["mode"] },
+          "then": {
+            "properties": {
+              "heroEnabled": { "const": false }, "rtsObjective": { "type": "null" }, "rtsSecondary": { "maxItems": 0 },
+              "veil": { "const": false }, "mapOverlay": { "type": "null" }, "restSec": { "const": 5 }, "tutorialProtection": { "type": "null" }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "mode": { "const": "hero" } }, "required": ["mode"] },
+          "then": {
+            "properties": {
+              "heroEnabled": { "const": true }, "rtsObjective": { "type": "null" }, "rtsSecondary": { "maxItems": 0 },
+              "veil": { "const": false }, "mapOverlay": { "type": "string" }, "restSec": { "const": 8 }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "mode": { "const": "rts" } }, "required": ["mode"] },
+          "then": {
+            "properties": {
+              "heroEnabled": { "const": true }, "rtsObjective": { "$ref": "#/definitions/objective" },
+              "mapOverlay": { "type": "string" }, "restSec": { "const": 8 }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
