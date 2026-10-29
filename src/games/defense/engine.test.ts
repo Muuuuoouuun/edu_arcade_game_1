@@ -109,6 +109,19 @@ test('lightning arcs through metal and wet bodies, while insulation blocks the c
   assert.equal(targetInsulated.enemies[1].hp,ENEMIES.insulator.hp);
 });
 
+test('hit numbers label weak, resisted and neutral matchups without changing damage',()=>{
+  const labels=(kind:EnemyKind,branch:'water'|'fire')=>{
+    const s=battlefield();s.towers=[{slot:2,kind:'cannon',branch,level:2,cooldown:0}];
+    const e=enemy(kind,1);e.progress=410;e.speed=0;Object.assign(e,positionOnPath(0,e.progress));s.enemies=[e];
+    const next=advance(s,1);
+    return {texts:next.effects.filter(f=>f.targetId===1&&f.text).map(f=>f.text as string),hp:next.enemies[0]?.hp??0};
+  };
+  const resisted=labels('wood','water'),weak=labels('wood','fire');
+  assert.ok(resisted.texts.length>0&&resisted.texts.every(t=>t.startsWith('내성 ')),'water vs wood is labelled as resisted');
+  assert.ok(weak.texts.length>0&&weak.texts.every(t=>t.startsWith('약점! ')),'fire vs wood is labelled as weak');
+  assert.ok(resisted.hp<ENEMIES.wood.hp,'resisted hits still deal damage');
+});
+
 test('water attacks slow and wet a group and rain supplies a natural conductive state',()=>{
   const s=battlefield();s.towers=[{slot:2,kind:'cannon',branch:'water',level:2,cooldown:0}];
   const a=enemy('stone',1),b=enemy('wood',2);a.progress=410;b.progress=370;a.speed=0;b.speed=0;

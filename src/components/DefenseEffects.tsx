@@ -164,7 +164,7 @@ export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];re
    <circle r={reduced?8:9+p*(kind==='shockwave'?38:21)} fill={`url(#${e.element==='fire'?'def-fire-core':e.element==='water'||e.element==='lightning'?'def-blue-core':'def-impact-core'})`} opacity={kind==='shockwave'?.8:.65}/>
    {detail&&e.element==='physical'?<path d="m-12-12 24 24m0-24-24 24" stroke="#fff8df" strokeWidth="2" strokeLinecap="round" opacity={Math.max(0,1-p*2)}/>:null}
    <Sparks effect={{...e,age,maxLife:life}} reduced={reduced} count={sparks}/>
-   {e.text?<text x={Math.max(44,Math.min(856,e.to.x))-e.to.x} y={-29-(reduced?0:p*27)} textAnchor="middle" className={`def-float-number ${e.text.includes('약점')?'def-float-weak':''}`}>{e.text}</text>:null}
+   {e.text?<text x={Math.max(44,Math.min(856,e.to.x))-e.to.x} y={-29-(reduced?0:p*27)} textAnchor="middle" className={`def-float-number ${e.text.includes('약점')?'def-float-weak':e.text.startsWith('내성')?'def-float-resist':''}`}>{e.text}</text>:null}
   </g>;
  })}</g>;
 }
