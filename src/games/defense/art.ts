@@ -37,7 +37,7 @@ const TOWER_MODELS:MotionFrame[] = [
 // Its projected ground center is (320, 488.65): this crop/scale aligns it within
 // half a world pixel of the build point at Lv.2, including TowerUnit's +12 offset.
 const BAKED_TOWERS:Record<TowerKind,{branch:Branch;asset:SpriteAsset;mastered?:SpriteAsset}> = {
- crossbow:{branch:'pierce',asset:{src:'/defense/models/piercing-ballista-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
+ crossbow:{branch:'pierce',asset:{src:'/defense/models/piercing-ballista-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/piercing-ballista-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
  // Lv.3 has its own render with the same camera/crop, so the ground anchor is shared with Lv.2.
  magic:{branch:'fire',asset:{src:'/defense/models/fire-tower-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16},mastered:{src:'/defense/models/fire-tower-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16}},
  cannon:{branch:'water',asset:{src:'/defense/models/water-cannon-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
