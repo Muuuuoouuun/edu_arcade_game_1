@@ -112,9 +112,22 @@ function CastGlyph({attack:a,reduced}:{attack:CombatAttack;reduced:boolean}) {
  </g>;
 }
 
+/** Elf bow draw: a pulled bowstring with a nocked light arrow along the aim line that snaps and streaks on release. */
+function ElfDraw({attack:a,reduced}:{attack:CombatAttack;reduced:boolean}) {
+ const charge=clamp(a.elapsed/a.hitAt),release=clamp((a.elapsed-a.hitAt)/.18),fade=a.elapsed<a.hitAt?.95:(1-release)*.9;
+ const facing=a.to.x<a.from.x?-1:1,angle=Math.atan2(a.to.y-(a.from.y-40),a.to.x-a.from.x)*180/Math.PI;
+ const pull=a.elapsed<a.hitAt?charge*11:(reduced?0:-(1-release)*4*Math.sin(release*18));
+ return <g data-elf-draw={a.actor} opacity={fade} transform={`translate(${a.from.x+facing*20},${a.from.y-40}) rotate(${angle})`}>
+  <path d={`M10-17Q22 0 10 17M10-17L${10-pull} 0L10 17`} fill="none" stroke="#e9ffc4" strokeWidth="2.6" strokeLinejoin="round" strokeLinecap="round"/>
+  <path d={`M${10-pull} 0H${34-pull}`} stroke="#d6ffa0" strokeWidth="3.2" strokeLinecap="round" opacity={.55+.4*charge}/>
+  <circle cx={34-pull} cy="0" r={reduced?8:5+charge*7} fill="url(#def-green-core)"/>
+  {!reduced&&a.elapsed>=a.hitAt?<path d={`M34 0H${34+70*release}`} stroke="url(#def-magic-tail)" strokeWidth={5*(1-release)+1} strokeLinecap="round"/>:null}
+ </g>;
+}
+
 /** A short readable motion arc follows a real attack's contact interval. */
 export function AttackTrails({attacks,reduced}:{attacks:CombatAttack[];reduced:boolean}) {
- return <g className="def-attack-trails" aria-hidden="true" pointerEvents="none">{attacks.filter(a=>a.kind==='spell'&&a.source!=='tower'&&a.elapsed<=a.hitAt+.18).map(a=><CastGlyph key={`cast-${a.id}`} attack={a} reduced={reduced}/>)}{attacks.filter(a=>a.kind==='melee'||a.kind==='slam').map(a=>{
+ return <g className="def-attack-trails" aria-hidden="true" pointerEvents="none">{attacks.filter(a=>a.kind==='spell'&&a.source!=='tower'&&a.elapsed<=a.hitAt+.18).map(a=><CastGlyph key={`cast-${a.id}`} attack={a} reduced={reduced}/>)}{attacks.filter(a=>a.kind==='shot'&&a.actor==='elf'&&a.elapsed<=a.hitAt+.18).map(a=><ElfDraw key={`draw-${a.id}`} attack={a} reduced={reduced}/>)}{attacks.filter(a=>a.kind==='melee'||a.kind==='slam').map(a=>{
   const contact=a.elapsed-a.hitAt;if(contact<-.08||contact>.22)return null;
   const direction=Math.atan2(a.to.y-a.from.y,a.to.x-a.from.x)*180/Math.PI;
   const progress=clamp((contact+.08)/.3),opacity=(1-progress)*.85;
