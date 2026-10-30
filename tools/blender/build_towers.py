@@ -336,7 +336,7 @@ def fire_tower(ascended=False):
         cube('Keep / basalt arch pilaster',(side*.42,-.99,.88),(.14,.17,.83),'stone_dark2',.025)
         crystal('Keep / gold arch pinnacle',side*.42,-.99,1.29,.20,.10,'gold')
     if ascended:
-        # Lv.3 additions stay inside the Lv.2 silhouette height so the shared battle crop is unchanged.
+        # Lv.3 is taller than Lv.2 but must fit the shared battle crop (checked by build-tower-sprites.mjs).
         torus('Ascended / gold foundation ring',(0,0,.43),1.14,.045,'gold')
         for i,angle in enumerate([math.pi/4,3*math.pi/4,5*math.pi/4,7*math.pi/4]):
             x,y=1.04*math.cos(angle),1.04*math.sin(angle)
@@ -613,9 +613,7 @@ for index,(name,build) in enumerate(zip(NAMES,(fire_tower,piercing_ballista,wate
     MODEL_ROOT.location=((index-1)*7.0,0,0)
     models.append((name,CURRENT,MODEL_ROOT))
 
-# Render-only Lv.3 variant: built after the exported models, with the same seed the
-# fire tower used, so the shared masonry is identical and only additions differ.
-random.seed(37)
+# Render-only Lv.3 variant, built after the exported models so they are unaffected.
 CURRENT=new_collection(VARIANT)
 MODEL_ROOT=None
 MODEL_ROOT=group(VARIANT)
