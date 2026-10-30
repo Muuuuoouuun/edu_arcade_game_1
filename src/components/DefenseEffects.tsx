@@ -100,15 +100,14 @@ function DwarfThud({attack:a,direction,progress,contact,reduced}:{attack:CombatA
  </g>;
 }
 
-/** Hero spellcasting wind-up: a rune ring at the caster's feet and a charging orb at the hand that flares on release. */
+/** Hero spellcasting wind-up: a rune ring at the caster's feet and motes drawn into the wind-up orb (the orb itself is drawn by the actor). */
 function CastGlyph({attack:a,reduced}:{attack:CombatAttack;reduced:boolean}) {
  const charge=clamp(a.elapsed/a.hitAt),release=clamp((a.elapsed-a.hitAt)/.18),fade=a.elapsed<a.hitAt?.95:(1-release)*.9;
  const green=a.actor==='druid',lightning=a.actor==='tao';
- const core=green?'def-green-core':lightning?'def-blue-core':'def-fire-core',rune=green?'#c9f59a':lightning?'#bff3ff':'#ffd27a';
- const facing=a.to.x<a.from.x?-1:1,hand={x:a.from.x+facing*16,y:a.from.y-34};
+ const rune=green?'#c9f59a':lightning?'#bff3ff':'#ffd27a';
+ const facing=a.to.x<a.from.x?-1:1,hand={x:a.from.x+facing*24,y:a.from.y-48};
  return <g data-cast-glyph={a.actor} opacity={fade}>
   <ellipse cx={a.from.x} cy={a.from.y+3} rx={14+charge*12} ry={5+charge*4} fill="none" stroke={rune} strokeWidth="2.5" strokeDasharray={reduced?undefined:'5 4'} transform={reduced?undefined:`rotate(${charge*50} ${a.from.x} ${a.from.y+3})`}/>
-  <circle cx={hand.x} cy={hand.y} r={(reduced?8:5)+(reduced?0:charge*8)+release*6} fill={`url(#${core})`}/>
   {!reduced?[0,1,2].map(i=>{const ang=i*2.1+charge*4,r=(1-charge)*20+4;return <circle key={i} cx={hand.x+Math.cos(ang)*r} cy={hand.y+Math.sin(ang)*r*.7} r="1.8" fill={rune} opacity={.4+.5*charge}/>;}):null}
  </g>;
 }
