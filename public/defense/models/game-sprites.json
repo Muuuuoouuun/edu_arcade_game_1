@@ -75,6 +75,30 @@
       "sha256": "98920098afd4d944e56fc8dd5e1a3d7fad3ea5e0a5f6c043f9e467449e798637"
     },
     {
+      "id": "piercing-ballista-lv3",
+      "source": "piercing-ballista-lv3.png",
+      "file": "piercing-ballista-lv3-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        111,
+        72,
+        529,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 489851,
+      "bytes": 42436,
+      "source_sha256": "176aca2a3428e812cadcb2709e8a207a8d959fa7e9cb864fe80ba94e88cdf1d8",
+      "sha256": "4cf6121f33e0c5e989835ba3571e10ee4eb95f6d7f6f42f1cbbb6268ec3a2f06"
+    },
+    {
       "id": "water-cannon",
       "source": "water-cannon.png",
       "file": "water-cannon-game.webp",

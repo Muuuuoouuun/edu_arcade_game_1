@@ -60,6 +60,14 @@
       "render_only": true,
       "mesh_objects": 97,
       "vertices_before_modifiers": 4046
+    },
+    {
+      "id": "piercing-ballista-lv3",
+      "base": "piercing-ballista",
+      "sprite": "/defense/models/piercing-ballista-lv3.png",
+      "render_only": true,
+      "mesh_objects": 166,
+      "vertices_before_modifiers": 7085
     }
   ]
 }
