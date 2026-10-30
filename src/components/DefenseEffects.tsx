@@ -85,6 +85,21 @@ function HammerSlam({attack:a,direction,progress,contact,reduced}:{attack:Combat
  </g>;
 }
 
+/** The dwarf's compact stone hammer: a short steel-blue chop, then a flat double shock ring and dust where it lands. */
+function DwarfThud({attack:a,direction,progress,contact,reduced}:{attack:CombatAttack;direction:number;progress:number;contact:number;reduced:boolean}) {
+ const swing=clamp((contact+.08)/.08),impact=clamp(contact/.2),fade=(1-progress)*.9;
+ return <g data-attack-trail={a.actor} opacity={fade}>
+  <g transform={`translate(${a.from.x},${a.from.y-20}) rotate(${direction})`}>
+   <path d={reduced?'M20-30Q58-28 70 18':'M16-36Q66-36 76 20Q58-4 38-10Q26-16 16-36Z'} fill={reduced?'none':'#bfe0f099'} stroke="#e4f4fb" strokeWidth={reduced?4:3} strokeLinecap="round" strokeLinejoin="round" opacity={reduced?1:.45+.55*swing}/>
+  </g>
+  {contact>=0?<g transform={`translate(${a.to.x},${a.to.y+4})`}>
+   <ellipse rx={8+impact*(reduced?20:28)} ry={3+impact*(reduced?6:9)} fill="none" stroke="#e4f4fb" strokeWidth={3.5-impact*2.2}/>
+   {!reduced?<><ellipse rx={4+impact*16} ry={2+impact*5} fill="none" stroke="#9fb6c2" strokeWidth={2.5-impact*1.6}/>
+    {[-1,1].map(i=><circle key={i} cx={i*(8+impact*18)} cy={-impact*4} r={3+impact*4} fill="#cdbf9f" opacity={.5*(1-impact)}/>)}</>:null}
+  </g>:null}
+ </g>;
+}
+
 /** A short readable motion arc follows a real attack's contact interval. */
 export function AttackTrails({attacks,reduced}:{attacks:CombatAttack[];reduced:boolean}) {
  return <g className="def-attack-trails" aria-hidden="true" pointerEvents="none">{attacks.filter(a=>a.kind==='melee'||a.kind==='slam').map(a=>{
@@ -92,6 +107,7 @@ export function AttackTrails({attacks,reduced}:{attacks:CombatAttack[];reduced:b
   const direction=Math.atan2(a.to.y-a.from.y,a.to.x-a.from.x)*180/Math.PI;
   const progress=clamp((contact+.08)/.3),opacity=(1-progress)*.85;
   if(a.actor==='barbarian')return <HammerSlam key={a.id} attack={a} direction={direction} progress={progress} contact={contact} reduced={reduced}/>;
+  if(a.actor==='dwarf')return <DwarfThud key={a.id} attack={a} direction={direction} progress={progress} contact={contact} reduced={reduced}/>;
   return <g key={a.id} transform={`translate(${a.from.x},${a.from.y-22}) rotate(${direction})`} opacity={opacity} data-attack-trail={a.actor}>
     {a.actor==='wolf'?<><path d="M26-22Q55-10 69 8M31-28Q62-14 75 4M36-33Q66-20 80-1" stroke="#eafee0" strokeWidth="3" fill="none" strokeLinecap="round"/></>:<>
       <path d={reduced?'M24-28Q60-8 72 22':'M16-43Q72-45 85 18Q62-12 16-43Z'} fill={reduced?'none':'#ffefb266'} stroke="#fff5d6" strokeWidth="3" strokeLinecap="round"/>
