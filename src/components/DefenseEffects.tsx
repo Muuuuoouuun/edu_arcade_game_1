@@ -100,9 +100,21 @@ function DwarfThud({attack:a,direction,progress,contact,reduced}:{attack:CombatA
  </g>;
 }
 
+/** Hero spellcasting wind-up: a rune ring at the caster's feet and motes drawn into the wind-up orb (the orb itself is drawn by the actor). */
+function CastGlyph({attack:a,reduced}:{attack:CombatAttack;reduced:boolean}) {
+ const charge=clamp(a.elapsed/a.hitAt),release=clamp((a.elapsed-a.hitAt)/.18),fade=a.elapsed<a.hitAt?.95:(1-release)*.9;
+ const green=a.actor==='druid',lightning=a.actor==='tao';
+ const rune=green?'#c9f59a':lightning?'#bff3ff':'#ffd27a';
+ const facing=a.to.x<a.from.x?-1:1,hand={x:a.from.x+facing*24,y:a.from.y-48};
+ return <g data-cast-glyph={a.actor} opacity={fade}>
+  <ellipse cx={a.from.x} cy={a.from.y+3} rx={14+charge*12} ry={5+charge*4} fill="none" stroke={rune} strokeWidth="2.5" strokeDasharray={reduced?undefined:'5 4'} transform={reduced?undefined:`rotate(${charge*50} ${a.from.x} ${a.from.y+3})`}/>
+  {!reduced?[0,1,2].map(i=>{const ang=i*2.1+charge*4,r=(1-charge)*20+4;return <circle key={i} cx={hand.x+Math.cos(ang)*r} cy={hand.y+Math.sin(ang)*r*.7} r="1.8" fill={rune} opacity={.4+.5*charge}/>;}):null}
+ </g>;
+}
+
 /** A short readable motion arc follows a real attack's contact interval. */
 export function AttackTrails({attacks,reduced}:{attacks:CombatAttack[];reduced:boolean}) {
- return <g className="def-attack-trails" aria-hidden="true" pointerEvents="none">{attacks.filter(a=>a.kind==='melee'||a.kind==='slam').map(a=>{
+ return <g className="def-attack-trails" aria-hidden="true" pointerEvents="none">{attacks.filter(a=>a.kind==='spell'&&a.source!=='tower'&&a.elapsed<=a.hitAt+.18).map(a=><CastGlyph key={`cast-${a.id}`} attack={a} reduced={reduced}/>)}{attacks.filter(a=>a.kind==='melee'||a.kind==='slam').map(a=>{
   const contact=a.elapsed-a.hitAt;if(contact<-.08||contact>.22)return null;
   const direction=Math.atan2(a.to.y-a.from.y,a.to.x-a.from.x)*180/Math.PI;
   const progress=clamp((contact+.08)/.3),opacity=(1-progress)*.85;
