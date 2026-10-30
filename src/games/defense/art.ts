@@ -1,5 +1,5 @@
 import type { Branch, EnemyKind, HeroId, TowerKind } from './types';
-export type SpriteAsset = {src:string;viewBox:string;width:number;height:number;displayScale?:number};
+export type SpriteAsset = {src:string;viewBox:string;width:number;height:number;displayScale?:number;nativeFacing?:-1|1};
 export type ActionPose = 'windup'|'strike'|'recover';
 // Source frames are shared by tactical units, portraits and the growing village.
 const ORIGINAL = [[38,65,275,250],[350,65,265,255],[675,65,225,255],[950,65,280,260],[40,380,260,260],[355,360,240,280],[650,385,260,260],[965,355,270,290],[40,690,245,210],[330,650,280,270],[660,665,250,245],[965,675,270,240],[20,940,280,250],[335,950,270,250],[635,915,300,285],[960,950,270,250]];
@@ -32,8 +32,19 @@ const TOWER_MODELS:MotionFrame[] = [
  [43,434,337,398,1],[446,412,365,422,1],[885,420,342,413,1],
  [33,874,360,340,1],[425,834,406,390,1.05],[858,840,396,378,1.05],
 ];
-/** Nine modeled silhouettes: three foundations and the six specialization branches. */
+// The editable GLBs are baked once for battle; no WebGL scene is created per unit.
+// A shared, centered camera frame keeps the foundation on the same ground anchor.
+// Its projected ground center is (320, 488.65): this crop/scale aligns it within
+// half a world pixel of the build point at Lv.2, including TowerUnit's +12 offset.
+const BAKED_TOWERS:Record<TowerKind,{branch:Branch;asset:SpriteAsset}> = {
+ crossbow:{branch:'pierce',asset:{src:'/defense/models/piercing-ballista-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
+ magic:{branch:'fire',asset:{src:'/defense/models/fire-tower-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16}},
+ cannon:{branch:'water',asset:{src:'/defense/models/water-cannon-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
+};
+/** Available model renders take precedence; each failed render keeps its atlas fallback. */
 export function towerSpriteAsset(kind:TowerKind,branch:Branch|null=null,level=1):SpriteAsset|null {
+ const baked=BAKED_TOWERS[kind];
+ if(level>=2&&branch===baked.branch&&motionLoaded.has(baked.asset.src))return {...baked.asset,displayScale:(baked.asset.displayScale??1)*(level===3?1.025:1)};
  const src='/defense/tower-models.png';if(!motionLoaded.has(src))return null;
  const row=kind==='crossbow'?0:kind==='magic'?1:2;
  const column=branch==='pierce'||branch==='fire'||branch==='crush'?1:branch?2:0;
@@ -72,7 +83,7 @@ export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAss
 /** Load while preparing in camp; slow or failed requests keep the existing idle art. */
 export function preloadDefenseMotion():Promise<void> {
  if(typeof Image==='undefined')return Promise.resolve();
- return motionPreload ??= Promise.all(['/defense/melee-motion.png','/defense/ranged-motion.png','/defense/tower-models.png','/defense/monster-models.png','/defense/boss-models.png'].map(src=>new Promise<void>(resolve=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.png','/defense/ranged-motion.png','/defense/tower-models.png','/defense/monster-models.png','/defense/boss-models.png',...Object.values(BAKED_TOWERS).map(model=>model.asset.src)].map(src=>new Promise<void>(resolve=>{
   const asset=new Image();
   asset.onload=()=>{motionLoaded.add(src);asset.onload=null;asset.onerror=null;resolve();};
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};

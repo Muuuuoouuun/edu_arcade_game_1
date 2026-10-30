@@ -1,0 +1,78 @@
+{
+  "purpose": "Battlefield delivery copies; the editable Blender source and full PNG/GLB assets are preserved.",
+  "encoding": "WebP quality 88; original transparent canvas, no resize or crop.",
+  "files": [
+    {
+      "id": "fire-tower",
+      "source": "fire-tower.png",
+      "file": "fire-tower-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        149,
+        60,
+        491,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 457223,
+      "bytes": 29302,
+      "source_sha256": "28e74db471da94a29e57f97faf5a7db4038243190a0fd879328f9bc4e51dff05",
+      "sha256": "109f558a4451289fe135b6c2512222fe337f315ba61362d662ed4391bda800c4"
+    },
+    {
+      "id": "piercing-ballista",
+      "source": "piercing-ballista.png",
+      "file": "piercing-ballista-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        115,
+        119,
+        505,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 452402,
+      "bytes": 34172,
+      "source_sha256": "68f7d3190e213179bacbf81d56c8b171442846ff193f321a7d698acb5bfedc19",
+      "sha256": "98920098afd4d944e56fc8dd5e1a3d7fad3ea5e0a5f6c043f9e467449e798637"
+    },
+    {
+      "id": "water-cannon",
+      "source": "water-cannon.png",
+      "file": "water-cannon-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        132,
+        89,
+        491,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 462543,
+      "bytes": 32530,
+      "source_sha256": "ebf928491a3324cf48d20b0ac491b2c6174f59c007e845112a4e43bb3506fa55",
+      "sha256": "88b55791fda90f7c9ce07e9a84daf87084d9238d8723827f66ab33c5cdbda02a"
+    }
+  ]
+}
