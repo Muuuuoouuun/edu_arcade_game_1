@@ -2,44 +2,54 @@
   "blender": "4.3.2",
   "source": "art-source/defense/towers.blend",
   "coordinate_system": "Authoring Z-up; GLB exported with Y-up; local origin at ground center.",
+  "export_batching": "Static meshes merged by animation parent and material set. Editable Blender objects remain separate.",
   "models": [
     {
       "id": "fire-tower",
       "glb": "/defense/models/fire-tower.glb",
       "sprite": "/defense/models/fire-tower.png",
-      "bytes": 755932,
-      "mesh_objects": 80,
-      "vertices_before_modifiers": 2534,
+      "bytes": 889184,
+      "mesh_objects": 84,
+      "vertices_before_modifiers": 2538,
       "editable_nodes": [
         "fire-tower",
         "fire-core"
-      ]
+      ],
+      "runtime_mesh_objects": 11,
+      "runtime_triangles": 15872,
+      "runtime_materials": 12
     },
     {
       "id": "piercing-ballista",
       "glb": "/defense/models/piercing-ballista.glb",
       "sprite": "/defense/models/piercing-ballista.png",
-      "bytes": 1129584,
-      "mesh_objects": 141,
-      "vertices_before_modifiers": 6319,
+      "bytes": 1148960,
+      "mesh_objects": 145,
+      "vertices_before_modifiers": 6303,
       "editable_nodes": [
         "piercing-ballista",
         "turret",
         "bolt"
-      ]
+      ],
+      "runtime_mesh_objects": 21,
+      "runtime_triangles": 24246,
+      "runtime_materials": 13
     },
     {
       "id": "water-cannon",
       "glb": "/defense/models/water-cannon.glb",
       "sprite": "/defense/models/water-cannon.png",
-      "bytes": 1138284,
-      "mesh_objects": 149,
-      "vertices_before_modifiers": 9582,
+      "bytes": 1234700,
+      "mesh_objects": 160,
+      "vertices_before_modifiers": 9904,
       "editable_nodes": [
         "water-cannon",
         "turret",
         "barrel"
-      ]
+      ],
+      "runtime_mesh_objects": 22,
+      "runtime_triangles": 29946,
+      "runtime_materials": 17
     }
   ]
 }
