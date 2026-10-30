@@ -40,7 +40,7 @@ const BAKED_TOWERS:Record<TowerKind,{branch:Branch;asset:SpriteAsset;mastered?:S
  crossbow:{branch:'pierce',asset:{src:'/defense/models/piercing-ballista-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/piercing-ballista-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
  // Lv.3 has its own render with the same camera/crop, so the ground anchor is shared with Lv.2.
  magic:{branch:'fire',asset:{src:'/defense/models/fire-tower-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16},mastered:{src:'/defense/models/fire-tower-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16}},
- cannon:{branch:'water',asset:{src:'/defense/models/water-cannon-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
+ cannon:{branch:'water',asset:{src:'/defense/models/water-cannon-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/water-cannon-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
 };
 /** Available model renders take precedence; each failed render keeps its atlas fallback. */
 export function towerSpriteAsset(kind:TowerKind,branch:Branch|null=null,level=1):SpriteAsset|null {

@@ -121,6 +121,30 @@
       "bytes": 32530,
       "source_sha256": "ebf928491a3324cf48d20b0ac491b2c6174f59c007e845112a4e43bb3506fa55",
       "sha256": "88b55791fda90f7c9ce07e9a84daf87084d9238d8723827f66ab33c5cdbda02a"
+    },
+    {
+      "id": "water-cannon-lv3",
+      "source": "water-cannon-lv3.png",
+      "file": "water-cannon-lv3-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        132,
+        49,
+        529,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 505880,
+      "bytes": 42160,
+      "source_sha256": "21f84916b2151ae1d1714313579f09a130c0ecb233a1029c1be203fd659ff046",
+      "sha256": "5c5738bbb78d207475379576084e13900ca32f640c0f7974dcea14fd11d90b92"
     }
   ]
 }
