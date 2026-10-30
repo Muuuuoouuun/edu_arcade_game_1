@@ -28,7 +28,7 @@ test('only matching upgraded branches use the loaded battle renders; base art an
  ] as const){
   const specialized=art.towerSpriteAsset(kind,branch,2),mastered=art.towerSpriteAsset(kind,branch,3);
   assert.equal(specialized?.src,`/defense/models/${id}-game.webp`);
-  assert.equal(mastered?.src,kind==='cannon'?specialized?.src:`/defense/models/${id}-lv3-game.webp`,'the fire tower and ballista have dedicated Lv.3 renders; the water cannon does not yet');
+  assert.equal(mastered?.src,`/defense/models/${id}-lv3-game.webp`,'every baked tower has a dedicated Lv.3 render');
   assert.equal(mastered?.nativeFacing??1,facing,'Lv.3 keeps the facing of its base render');
   assert.equal(mastered?.viewBox,specialized?.viewBox,'Lv.3 shares the Lv.2 crop so the ground anchor is unchanged');
   assert.equal(specialized?.nativeFacing??1,facing);
@@ -56,6 +56,13 @@ test('a failed Lv.3 render keeps the Lv.2 render instead of the atlas',async()=>
  const {art}=await loadWithImageResults(src=>src.endsWith('/fire-tower-lv3-game.webp'),'lv3-failure');
  assert.equal(art.towerSpriteAsset('magic','fire',3)?.src,'/defense/models/fire-tower-game.webp');
  assert.equal(art.towerSpriteAsset('magic','fire',2)?.src,'/defense/models/fire-tower-game.webp');
+});
+
+test('a failed water cannon Lv.3 render keeps the Lv.2 render and its facing',async()=>{
+ const {art}=await loadWithImageResults(src=>src.endsWith('/water-cannon-lv3-game.webp'),'cannon-lv3-failure');
+ const lv3=art.towerSpriteAsset('cannon','water',3);
+ assert.equal(lv3?.src,'/defense/models/water-cannon-game.webp');
+ assert.equal(lv3?.nativeFacing,-1);
 });
 
 test('a failed ballista Lv.3 render keeps the Lv.2 render and its facing',async()=>{

@@ -68,6 +68,14 @@
       "render_only": true,
       "mesh_objects": 166,
       "vertices_before_modifiers": 7085
+    },
+    {
+      "id": "water-cannon-lv3",
+      "base": "water-cannon",
+      "sprite": "/defense/models/water-cannon-lv3.png",
+      "render_only": true,
+      "mesh_objects": 177,
+      "vertices_before_modifiers": 11172
     }
   ]
 }

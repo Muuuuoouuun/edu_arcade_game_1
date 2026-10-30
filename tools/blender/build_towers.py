@@ -2,7 +2,7 @@
 
 Run from the repository root:
     blender -b --python tools/blender/build_towers.py
-Optional arguments after --: --size 640 --samples 128 --only fire-tower|fire-tower-lv3|piercing-ballista-lv3 --skip-render
+Optional arguments after --: --size 640 --samples 128 --only fire-tower|fire-tower-lv3|piercing-ballista-lv3|water-cannon-lv3 --skip-render
 *-lv3 ids are render-only Lv.3 sprite variants (baked 2.5D, no GLB).
 No image inputs are altered. All geometry/materials are authored here in Blender.
 """
@@ -23,7 +23,7 @@ NAMES = ('fire-tower', 'piercing-ballista', 'water-cannon')
 args = argparse.ArgumentParser()
 args.add_argument('--size', type=int, default=640)
 args.add_argument('--samples', type=int, default=128)
-VARIANTS_IDS = ('fire-tower-lv3', 'piercing-ballista-lv3')
+VARIANTS_IDS = ('fire-tower-lv3', 'piercing-ballista-lv3', 'water-cannon-lv3')
 args.add_argument('--only', choices=NAMES + VARIANTS_IDS)
 args.add_argument('--skip-render', action='store_true')
 opts = args.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
@@ -455,7 +455,7 @@ def hollow_barrel(name, start, end, outer, inner, material, parent):
     return mesh(name,verts,faces,material,parent,.018)
 
 
-def water_cannon():
+def water_cannon(ascended=False):
     oak_keep()
     banner('blue','water')
     # A pressurized reservoir is fixed to the carriage behind the rotating barrel.
@@ -512,6 +512,25 @@ def water_cannon():
     plug=cyl('Barrel / water chamber deep inside',b-direction*.30,.195,.04,'water',24,barrel,.0)
     plug.rotation_euler=direction.to_track_quat('Z','Y').to_euler()
     rod('Sight / brass front pin',tuple(b+Vector((0,.05,.30))),tuple(b+Vector((0,.05,.45))),.035,'gold',barrel)
+    if ascended:
+        # Lv.3: gold foundation, tidal crown over the tank, orbiting water ring, river pennants and a gilded muzzle flare.
+        torus('Ascended / gold foundation ring',(0,0,.43),1.14,.045,'gold')
+        crystal('Ascended / tidal crown spire',0,.37,3.18,.46,.18,'water')
+        for k,x in enumerate([-.30,.30]):
+            crystal(f'Ascended / crown side spire {k}',x,.37,3.14,.30,.11,'bubble')
+        orbit=(math.radians(68),0,math.radians(18)); center=Vector((0,.37,2.30))
+        torus('Ascended / orbiting water ring',tuple(center),.98,.05,'gold',rotation=orbit)
+        spin=Euler(orbit).to_matrix()
+        for i,ang in enumerate([0.4,2.3,4.2]):
+            p=center+spin@Vector((.98*math.cos(ang),.98*math.sin(ang),0))
+            sphere(f'Ascended / orbiting water pearl {i}',tuple(p),(.12,.12,.12),'bubble')
+        for x in [-.72,.72]:
+            rod(f'Ascended / pennant pole {x:+.2f}',(x,.72,1.86),(x,.72,2.78),.03,'brass')
+            crystal(f'Ascended / pennant pole finial {x:+.2f}',x,.72,2.76,.22,.08,'gold')
+            panel(f'Ascended / river pennant {x:+.2f}',[(x,2.68),(x+math.copysign(.62,x),2.50),(x,2.30)],.72,.03,'blue',bevel=.006)
+            panel(f'Ascended / pennant gold edge {x:+.2f}',[(x,2.70),(x+math.copysign(.66,x),2.50),(x,2.66)],.70,.02,'gold',bevel=.005)
+        flare=torus('Ascended / gilded muzzle flare',tuple(b+direction*.06),.40,.07,'gold',barrel)
+        flare.rotation_euler=direction.to_track_quat('Z','Y').to_euler()
 
 
 def configure_scene():
@@ -632,7 +651,7 @@ for index,(name,build) in enumerate(zip(NAMES,(fire_tower,piercing_ballista,wate
     models.append((name,CURRENT,MODEL_ROOT))
 
 # Render-only Lv.3 variants, built after the exported models so they are unaffected.
-VARIANTS=(('fire-tower-lv3','fire-tower',fire_tower,(-7.0,10.0,0)),('piercing-ballista-lv3','piercing-ballista',piercing_ballista,(0.0,10.0,0)))
+VARIANTS=(('fire-tower-lv3','fire-tower',fire_tower,(-7.0,10.0,0)),('piercing-ballista-lv3','piercing-ballista',piercing_ballista,(0.0,10.0,0)),('water-cannon-lv3','water-cannon',water_cannon,(7.0,10.0,0)))
 variants=[]
 for vname,base_name,build,home in VARIANTS:
     CURRENT=new_collection(vname)
