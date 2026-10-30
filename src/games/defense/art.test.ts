@@ -28,7 +28,8 @@ test('only matching upgraded branches use the loaded battle renders; base art an
  ] as const){
   const specialized=art.towerSpriteAsset(kind,branch,2),mastered=art.towerSpriteAsset(kind,branch,3);
   assert.equal(specialized?.src,`/defense/models/${id}-game.webp`);
-  assert.equal(mastered?.src,specialized?.src);
+  assert.equal(mastered?.src,kind==='magic'?'/defense/models/fire-tower-lv3-game.webp':specialized?.src,'only the fire tower has a dedicated Lv.3 render');
+  assert.equal(mastered?.viewBox,specialized?.viewBox,'Lv.3 shares the Lv.2 crop so the ground anchor is unchanged');
   assert.equal(specialized?.nativeFacing??1,facing);
   assert.equal(art.towerSpriteAsset(kind)?.src,'/defense/tower-models.png');
   assert.equal(art.towerSpriteAsset(kind,branch,1)?.src,'/defense/tower-models.png');
@@ -48,6 +49,12 @@ test('a failed model image falls back to the same specialization without suppres
  assert.notEqual(water?.viewBox,base?.viewBox,'the water specialization keeps its own atlas frame');
  assert.equal(art.towerSpriteAsset('magic','fire',2)?.src,'/defense/models/fire-tower-game.webp');
  assert.equal(art.towerSpriteAsset('crossbow','pierce',2)?.src,'/defense/models/piercing-ballista-game.webp');
+});
+
+test('a failed Lv.3 render keeps the Lv.2 render instead of the atlas',async()=>{
+ const {art}=await loadWithImageResults(src=>src.endsWith('/fire-tower-lv3-game.webp'),'lv3-failure');
+ assert.equal(art.towerSpriteAsset('magic','fire',3)?.src,'/defense/models/fire-tower-game.webp');
+ assert.equal(art.towerSpriteAsset('magic','fire',2)?.src,'/defense/models/fire-tower-game.webp');
 });
 
 test('failed optional art leaves the original tower sprites usable',async()=>{

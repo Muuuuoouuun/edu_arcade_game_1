@@ -51,5 +51,15 @@
       "runtime_triangles": 29946,
       "runtime_materials": 17
     }
+  ],
+  "sprite_variants": [
+    {
+      "id": "fire-tower-lv3",
+      "base": "fire-tower",
+      "sprite": "/defense/models/fire-tower-lv3.png",
+      "render_only": true,
+      "mesh_objects": 97,
+      "vertices_before_modifiers": 4046
+    }
   ]
 }

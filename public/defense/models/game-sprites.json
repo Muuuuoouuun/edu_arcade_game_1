@@ -27,6 +27,30 @@
       "sha256": "109f558a4451289fe135b6c2512222fe337f315ba61362d662ed4391bda800c4"
     },
     {
+      "id": "fire-tower-lv3",
+      "source": "fire-tower-lv3.png",
+      "file": "fire-tower-lv3-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        149,
+        38,
+        491,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 503242,
+      "bytes": 39942,
+      "source_sha256": "8606a7071c5125a4783efbf1833c563df3a77144fde99cf8e496027cdadc1eb1",
+      "sha256": "2ae409992bb0857f61a0757b636a95a6aa7858f412dad3fa95bbd1b8ccc146c7"
+    },
+    {
       "id": "piercing-ballista",
       "source": "piercing-ballista.png",
       "file": "piercing-ballista-game.webp",
