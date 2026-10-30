@@ -70,12 +70,28 @@ export function ProjectileLayer({projectiles,reduced}:{projectiles:Projectile[];
   })}</g>;
 }
 
+/** The barbarian's heavy hammer: a thick overhead crescent, then a ground burst where it lands. */
+function HammerSlam({attack:a,direction,progress,contact,reduced}:{attack:CombatAttack;direction:number;progress:number;contact:number;reduced:boolean}) {
+ const swing=clamp((contact+.08)/.08),impact=clamp(contact/.2),fade=(1-progress)*.9;
+ return <g data-attack-trail={a.actor} opacity={fade}>
+  <g transform={`translate(${a.from.x},${a.from.y-26}) rotate(${direction})`}>
+   <path d={reduced?'M20-40Q78-36 92 22':'M14-52Q86-52 100 26Q80-8 52-16Q30-24 14-52Z'} fill={reduced?'none':'#ffd98a99'} stroke="#fff1c4" strokeWidth={reduced?4:3} strokeLinecap="round" strokeLinejoin="round" opacity={reduced?1:.45+.55*swing}/>
+   {!reduced?<path d="M10-60Q94-56 108 28" fill="none" stroke="#f0a43d" strokeWidth="4" strokeLinecap="round" opacity=".75"/>:null}
+  </g>
+  {contact>=0?<g transform={`translate(${a.to.x},${a.to.y+4})`}>
+   <ellipse rx={10+impact*(reduced?24:34)} ry={4+impact*(reduced?9:13)} fill="none" stroke="#fff1c4" strokeWidth={4-impact*2.5}/>
+   {!reduced?[0,1,2,3].map(i=>{const dir=(i-1.5)*.7+direction*Math.PI/180*.3,reach=14+i%2*8;return <path key={i} d="M-3-2 3-3 4 2-2 4Z" transform={`translate(${Math.sin(dir)*reach*impact*2},${-Math.sin(impact*Math.PI)*(12+i*3)}) rotate(${impact*(i%2?200:-160)})`} fill={i%2?'#e7d0a1':'#8e7d70'} stroke="#5d4e41" strokeWidth=".7"/>;}):null}
+  </g>:null}
+ </g>;
+}
+
 /** A short readable motion arc follows a real attack's contact interval. */
 export function AttackTrails({attacks,reduced}:{attacks:CombatAttack[];reduced:boolean}) {
  return <g className="def-attack-trails" aria-hidden="true" pointerEvents="none">{attacks.filter(a=>a.kind==='melee'||a.kind==='slam').map(a=>{
   const contact=a.elapsed-a.hitAt;if(contact<-.08||contact>.22)return null;
   const direction=Math.atan2(a.to.y-a.from.y,a.to.x-a.from.x)*180/Math.PI;
   const progress=clamp((contact+.08)/.3),opacity=(1-progress)*.85;
+  if(a.actor==='barbarian')return <HammerSlam key={a.id} attack={a} direction={direction} progress={progress} contact={contact} reduced={reduced}/>;
   return <g key={a.id} transform={`translate(${a.from.x},${a.from.y-22}) rotate(${direction})`} opacity={opacity} data-attack-trail={a.actor}>
     {a.actor==='wolf'?<><path d="M26-22Q55-10 69 8M31-28Q62-14 75 4M36-33Q66-20 80-1" stroke="#eafee0" strokeWidth="3" fill="none" strokeLinecap="round"/></>:<>
       <path d={reduced?'M24-28Q60-8 72 22':'M16-43Q72-45 85 18Q62-12 16-43Z'} fill={reduced?'none':'#ffefb266'} stroke="#fff5d6" strokeWidth="3" strokeLinecap="round"/>
