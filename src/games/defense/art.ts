@@ -59,7 +59,7 @@ const BAKED_TOWERS:Record<TowerKind,BakedTower> = {
 const BAKED_BRANCHES:BakedTower[] = [
  {branch:'lightning',asset:{src:'/defense/models/lightning-tower-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16},mastered:{src:'/defense/models/lightning-tower-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16}},
 ];
-const bakedFor=(kind:TowerKind,branch:Branch|null)=>[BAKED_TOWERS[kind],...(kind==='magic'?BAKED_BRANCHES:[])].find(model=>model.branch===branch)??BAKED_TOWERS[kind];
+const bakedFor=(kind:TowerKind,branch:Branch|null)=>(kind==='magic'?BAKED_BRANCHES.find(model=>model.branch===branch):undefined)??BAKED_TOWERS[kind];
 /** Available model renders take precedence; each failed render keeps its atlas fallback. */
 export function towerSpriteAsset(kind:TowerKind,branch:Branch|null=null,level=1):SpriteAsset|null {
  const baked=bakedFor(kind,branch);
