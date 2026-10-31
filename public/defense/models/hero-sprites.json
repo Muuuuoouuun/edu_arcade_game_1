@@ -1,0 +1,112 @@
+{
+  "purpose": "Four baked poses of the editable dwarf model; activate as one complete set in battle.",
+  "encoding": "WebP quality 88; shared transparent 640px camera, no resize or individual pose cropping.",
+  "model_metadata_sha256": "3a8ff1581e0eecdbaf64669e7d330950dffd678fdb5e4460206a3e7f93ca3d99",
+  "ground": [
+    320.0002,
+    550
+  ],
+  "nativeFacing": 1,
+  "files": [
+    {
+      "id": "dwarf-idle",
+      "pose": "idle",
+      "source": "dwarf-idle.png",
+      "file": "dwarf-idle-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        197,
+        188,
+        556,
+        585
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        0,
+        0,
+        640,
+        640
+      ],
+      "source_bytes": 367660,
+      "bytes": 25760,
+      "source_sha256": "ae1fc343ed92f20f47daec44a3aabb0f6fe70a6c4ebb3becaca81ad59be3b188",
+      "sha256": "8b354e22ec30b843937070227bd95ff7ce3be7775b29ac8b14f55d0c3b5cd07d"
+    },
+    {
+      "id": "dwarf-windup",
+      "pose": "windup",
+      "source": "dwarf-windup.png",
+      "file": "dwarf-windup-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        200,
+        124,
+        499,
+        585
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        0,
+        0,
+        640,
+        640
+      ],
+      "source_bytes": 371474,
+      "bytes": 25374,
+      "source_sha256": "97b85061d6aab3136e7288dbe0eab73b84148c5ba943f854e0e5b2ad68b0eaf7",
+      "sha256": "7dd1aeb7154a867d8a924f27538d9178cedf673cb2190a6ba8201d7d7392a6ad"
+    },
+    {
+      "id": "dwarf-strike",
+      "pose": "strike",
+      "source": "dwarf-strike.png",
+      "file": "dwarf-strike-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        193,
+        214,
+        563,
+        585
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        0,
+        0,
+        640,
+        640
+      ],
+      "source_bytes": 358448,
+      "bytes": 25316,
+      "source_sha256": "a2d161dabc2e5dec56890c7e1538e8b4341e239ce315f34c53c71608b2d517a5",
+      "sha256": "07381213fd8b2b58110b9905bb03bf4a5beae0199b049aa723b3f574179eddf9"
+    },
+    {
+      "id": "dwarf-recover",
+      "pose": "recover",
+      "source": "dwarf-recover.png",
+      "file": "dwarf-recover-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        195,
+        217,
+        608,
+        585
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        0,
+        0,
+        640,
+        640
+      ],
+      "source_bytes": 354517,
+      "bytes": 24280,
+      "source_sha256": "4889b727a546b50b058af04e94ded672e5453bd6eba2b0b01283bde18fa932ae",
+      "sha256": "72c4665ad433565952db344abb0f862d7d2bab48256ce179aba9ece6068a482d"
+    }
+  ]
+}

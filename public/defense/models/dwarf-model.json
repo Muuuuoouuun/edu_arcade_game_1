@@ -1,0 +1,132 @@
+{
+  "id": "dwarf-guardian",
+  "source": "art-source/defense/dwarf.blend",
+  "generator": "tools/blender/build_dwarf.py",
+  "blender": "4.3.2",
+  "authoring": "Actual editable geometry and articulated object joints; no image inputs.",
+  "nativeFacing": 1,
+  "forward": "Blender +Y; GLB -Z (right handed Y-up conversion)",
+  "frame": {
+    "width": 640,
+    "height": 640,
+    "ground": [
+      320.0002,
+      550.0
+    ],
+    "viewBox": [
+      0,
+      0,
+      640,
+      640
+    ],
+    "orthographic_scale": 5.800000190734863
+  },
+  "animation": {
+    "clip": "dwarf-hammer-attack",
+    "fps": 30,
+    "first_frame": 1,
+    "last_frame": 25,
+    "duration_seconds": 0.8,
+    "poses": {
+      "idle": {
+        "frame": 1,
+        "arm": 0.0,
+        "wrist": 0.0,
+        "body": 0.0,
+        "head": 0.0,
+        "guard": 0.0
+      },
+      "windup": {
+        "frame": 7,
+        "arm": 1.24,
+        "wrist": 0.18,
+        "body": -0.06,
+        "head": 0.04,
+        "guard": 0.18
+      },
+      "strike": {
+        "frame": 11,
+        "arm": -0.98,
+        "wrist": -1.72,
+        "body": 0.08,
+        "head": -0.04,
+        "guard": -0.17
+      },
+      "recover": {
+        "frame": 17,
+        "arm": -0.2,
+        "wrist": -0.8,
+        "body": 0.035,
+        "head": -0.015,
+        "guard": -0.08
+      }
+    },
+    "pivot_rotation_axis": "Blender X becomes GLB X; values in radians; rotation values include parent hierarchy"
+  },
+  "runtime": {
+    "mesh_objects": 48,
+    "triangles": 23190,
+    "materials": 18
+  },
+  "bytes": 1326260,
+  "editable_mesh_objects": 157,
+  "pivot_names": [
+    "body",
+    "head",
+    "hammer-arm",
+    "hammer-forearm",
+    "hammer",
+    "guard-arm"
+  ],
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 128,
+    "transparent": true
+  },
+  "poses": [
+    {
+      "name": "idle",
+      "file": "dwarf-idle.png",
+      "frame": 1,
+      "projected_mesh_bbox": [
+        190.088,
+        184.741,
+        555.984,
+        588.737
+      ]
+    },
+    {
+      "name": "windup",
+      "file": "dwarf-windup.png",
+      "frame": 7,
+      "projected_mesh_bbox": [
+        192.241,
+        120.044,
+        505.583,
+        588.737
+      ]
+    },
+    {
+      "name": "strike",
+      "file": "dwarf-strike.png",
+      "frame": 11,
+      "projected_mesh_bbox": [
+        186.599,
+        201.161,
+        564.755,
+        588.737
+      ]
+    },
+    {
+      "name": "recover",
+      "file": "dwarf-recover.png",
+      "frame": 17,
+      "projected_mesh_bbox": [
+        188.619,
+        202.799,
+        610.884,
+        588.737
+      ]
+    }
+  ]
+}

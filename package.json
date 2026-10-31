@@ -12,7 +12,9 @@
     "art:themes": "node tools/build-defense-themes.mjs",
     "models:build": "blender -b --python tools/blender/build_towers.py && npm run models:sprites",
     "balance:defense": "node --experimental-strip-types tools/balance-defense.ts",
-    "models:sprites": "node tools/build-tower-sprites.mjs"
+    "models:sprites": "node tools/build-tower-sprites.mjs",
+    "models:dwarf": "blender -b --python tools/blender/build_dwarf.py && npm run models:hero-sprites",
+    "models:hero-sprites": "node tools/build-hero-sprites.mjs"
   },
   "dependencies": {
     "react": "19.2.0",

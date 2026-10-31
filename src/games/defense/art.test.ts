@@ -79,3 +79,67 @@ test('failed optional art leaves the original tower sprites usable',async()=>{
  assert.equal(art.towerSpriteAsset('cannon','water',2),null);
  for(const index of [4,5,6])assert.equal(art.spriteAsset(index).src,'/defense/atlas.png');
 });
+
+test('a complete dwarf render set shares its body scale and ground anchor across idle, attacks and portraits',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'dwarf-complete');
+ const idle=art.idleSpriteAsset('dwarf');
+ assert.equal(idle?.src,'/defense/models/dwarf-idle-game.webp');
+ assert.equal(art.spriteAsset(2).src,idle?.src,'camp portrait and battle use the same model');
+ assert.notEqual(art.spriteAsset(2).viewBox,idle?.viewBox,'portraits remove the empty action margin without cropping battle poses');
+ for(const pose of ['windup','strike','recover'] as const){
+  const frame=art.actionSpriteAsset('dwarf',pose);
+  assert.equal(frame?.src,`/defense/models/dwarf-${pose}-game.webp`);
+  for(const key of ['viewBox','width','height','displayScale','nativeFacing','groundY'] as const)
+   assert.equal(frame?.[key],idle?.[key],`${pose} must keep the same ${key}`);
+ }
+ assert.equal(art.idleSpriteAsset('mage'),null);
+ assert.equal(art.idleSpriteAsset('wolf'),null);
+ assert.equal(art.actionSpriteAsset('barbarian','strike')?.src,'/defense/melee-motion.png');
+ assert.equal(art.actionSpriteAsset('mage','strike')?.src,'/defense/ranged-motion.png');
+ assert.equal(art.spriteAsset(0).src,'/defense/atlas.png');
+ assert.equal(requests.filter(src=>/\/dwarf-.*-game\.webp$/.test(src)).length,4);
+ assert.equal(requests.some(src=>src.endsWith('.glb')),false,'battle must not request articulated realtime models');
+});
+
+test('any missing dwarf pose keeps the whole actor on its existing atlas',async()=>{
+ for(const missing of ['idle','windup','strike','recover']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(`/dwarf-${missing}-game.webp`),`dwarf-missing-${missing}`);
+  assert.equal(art.idleSpriteAsset('dwarf'),null);
+  assert.equal(art.spriteAsset(2).src,'/defense/atlas.png');
+  for(const pose of ['windup','strike','recover'] as const)
+   assert.equal(art.actionSpriteAsset('dwarf',pose)?.src,'/defense/melee-motion.png',`${missing} failure keeps ${pose} in the same art style`);
+  assert.equal(art.towerSpriteAsset('magic','fire',2)?.src,'/defense/models/fire-tower-game.webp');
+ }
+});
+
+test('dwarf idle art remains usable when every optional image fails',async()=>{
+ const {art}=await loadWithImageResults(()=>true,'dwarf-all-failed');
+ assert.equal(art.idleSpriteAsset('dwarf'),null);
+ assert.equal(art.spriteAsset(2).src,'/defense/atlas.png');
+ assert.equal(art.actionSpriteAsset('dwarf','strike'),null);
+});
+
+test('a delayed final dwarf frame does not switch the actor prematurely or duplicate preload requests',async()=>{
+ const previous=Object.getOwnPropertyDescriptor(globalThis,'Image'),pending=new Map<string,()=>void>();
+ class DeferredImage {
+  onload:(()=>void)|null=null;
+  onerror:(()=>void)|null=null;
+  set src(value:string){assert.equal(pending.has(value),false);pending.set(value,()=>this.onload?.());}
+ }
+ Object.defineProperty(globalThis,'Image',{value:DeferredImage,configurable:true});
+ try{
+  const art=await import(new URL('./art.ts?scenario=dwarf-pending',import.meta.url).href) as Art;
+  const preload=art.preloadDefenseMotion();
+  assert.equal(art.preloadDefenseMotion(),preload);
+  const last='/defense/models/dwarf-recover-game.webp';
+  for(const [src,resolve] of pending)if(src!==last)resolve();
+  assert.equal(art.idleSpriteAsset('dwarf'),null);
+  assert.equal(art.spriteAsset(2).src,'/defense/atlas.png');
+  assert.equal(art.actionSpriteAsset('dwarf','strike')?.src,'/defense/melee-motion.png');
+  assert.ok(pending.has(last));pending.get(last)!();await preload;
+  assert.equal(art.idleSpriteAsset('dwarf')?.src,'/defense/models/dwarf-idle-game.webp');
+  assert.equal(art.actionSpriteAsset('dwarf','strike')?.src,'/defense/models/dwarf-strike-game.webp');
+ }finally{
+  if(previous)Object.defineProperty(globalThis,'Image',previous);else Reflect.deleteProperty(globalThis,'Image');
+ }
+});
