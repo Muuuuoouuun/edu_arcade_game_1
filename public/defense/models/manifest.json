@@ -92,6 +92,22 @@
       "render_only": true,
       "mesh_objects": 100,
       "vertices_before_modifiers": 4446
+    },
+    {
+      "id": "rapid-crossbow",
+      "base": "piercing-ballista",
+      "sprite": "/defense/models/rapid-crossbow.png",
+      "render_only": true,
+      "mesh_objects": 161,
+      "vertices_before_modifiers": 6861
+    },
+    {
+      "id": "rapid-crossbow-lv3",
+      "base": "piercing-ballista",
+      "sprite": "/defense/models/rapid-crossbow-lv3.png",
+      "render_only": true,
+      "mesh_objects": 182,
+      "vertices_before_modifiers": 7643
     }
   ]
 }

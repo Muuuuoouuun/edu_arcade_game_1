@@ -48,7 +48,7 @@ const TOWER_MODELS:MotionFrame[] = [
 // A shared, centered camera frame keeps the foundation on the same ground anchor.
 // Its projected ground center is (320, 488.65): this crop/scale aligns it within
 // half a world pixel of the build point at Lv.2, including TowerUnit's +12 offset.
-type BakedTower={branch:Branch;asset:SpriteAsset;mastered?:SpriteAsset};
+type BakedTower={kind?:TowerKind;branch:Branch;asset:SpriteAsset;mastered?:SpriteAsset};
 const BAKED_TOWERS:Record<TowerKind,BakedTower> = {
  crossbow:{branch:'pierce',asset:{src:'/defense/models/piercing-ballista-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/piercing-ballista-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
  // Lv.3 has its own render with the same camera/crop, so the ground anchor is shared with Lv.2.
@@ -57,9 +57,10 @@ const BAKED_TOWERS:Record<TowerKind,BakedTower> = {
 };
 // Render-only branch variants (baked 2.5D, no GLB), same camera and crop as the Fire tower.
 const BAKED_BRANCHES:BakedTower[] = [
- {branch:'lightning',asset:{src:'/defense/models/lightning-tower-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16},mastered:{src:'/defense/models/lightning-tower-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16}},
+ {kind:'magic',branch:'lightning',asset:{src:'/defense/models/lightning-tower-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16},mastered:{src:'/defense/models/lightning-tower-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16}},
+ {kind:'crossbow',branch:'rapid',asset:{src:'/defense/models/rapid-crossbow-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/rapid-crossbow-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
 ];
-const bakedFor=(kind:TowerKind,branch:Branch|null)=>(kind==='magic'?BAKED_BRANCHES.find(model=>model.branch===branch):undefined)??BAKED_TOWERS[kind];
+const bakedFor=(kind:TowerKind,branch:Branch|null)=>BAKED_BRANCHES.find(model=>model.kind===kind&&model.branch===branch)??BAKED_TOWERS[kind];
 /** Available model renders take precedence; each failed render keeps its atlas fallback. */
 export function towerSpriteAsset(kind:TowerKind,branch:Branch|null=null,level=1):SpriteAsset|null {
  const baked=bakedFor(kind,branch);
