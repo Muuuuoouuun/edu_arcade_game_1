@@ -147,6 +147,54 @@
       "sha256": "4cf6121f33e0c5e989835ba3571e10ee4eb95f6d7f6f42f1cbbb6268ec3a2f06"
     },
     {
+      "id": "rapid-crossbow",
+      "source": "rapid-crossbow.png",
+      "file": "rapid-crossbow-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        115,
+        64,
+        505,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 470307,
+      "bytes": 34850,
+      "source_sha256": "9767adf2b3cb1af56d6053c534807e025f9d6df011f8817d886c528725cd58ea",
+      "sha256": "17b452b586d568ca4d0fce0781bd07d3171560cb563acdd679d17a373acd120a"
+    },
+    {
+      "id": "rapid-crossbow-lv3",
+      "source": "rapid-crossbow-lv3.png",
+      "file": "rapid-crossbow-lv3-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        111,
+        64,
+        529,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 500090,
+      "bytes": 42542,
+      "source_sha256": "d4665ba4be8827ccfb67021ebe67335ea5860f1c920fd312ff4469b5951bfaf4",
+      "sha256": "9a95f0771814249d8f376de21a29f9429b90564d6c84a38f11f89d14d0239bf5"
+    },
+    {
       "id": "water-cannon",
       "source": "water-cannon.png",
       "file": "water-cannon-game.webp",

@@ -2,7 +2,7 @@
 
 Run from the repository root:
     blender -b --python tools/blender/build_towers.py
-Optional arguments after --: --size 640 --samples 128 --only fire-tower|fire-tower-lv3|lightning-tower|lightning-tower-lv3|piercing-ballista-lv3|water-cannon-lv3 --skip-render
+Optional arguments after --: --size 640 --samples 128 --only fire-tower|fire-tower-lv3|lightning-tower|lightning-tower-lv3|rapid-crossbow|rapid-crossbow-lv3|piercing-ballista-lv3|water-cannon-lv3 --skip-render
 *-lv3 ids are render-only Lv.3 sprite variants (baked 2.5D, no GLB).
 No image inputs are altered. All geometry/materials are authored here in Blender.
 """
@@ -23,7 +23,7 @@ NAMES = ('fire-tower', 'piercing-ballista', 'water-cannon')
 args = argparse.ArgumentParser()
 args.add_argument('--size', type=int, default=640)
 args.add_argument('--samples', type=int, default=128)
-VARIANTS_IDS = ('fire-tower-lv3', 'piercing-ballista-lv3', 'water-cannon-lv3', 'lightning-tower', 'lightning-tower-lv3')
+VARIANTS_IDS = ('fire-tower-lv3', 'piercing-ballista-lv3', 'water-cannon-lv3', 'lightning-tower', 'lightning-tower-lv3', 'rapid-crossbow', 'rapid-crossbow-lv3')
 args.add_argument('--only', choices=NAMES + VARIANTS_IDS)
 args.add_argument('--skip-render', action='store_true')
 opts = args.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
@@ -395,9 +395,9 @@ def oak_keep():
     torus('Deck / turntable rim',(0,0,1.73),.98,.06,'gold')
 
 
-def piercing_ballista(ascended=False):
+def piercing_ballista(ascended=False, rapid=False):
     oak_keep()
-    banner('teal','arrow')
+    banner('red' if rapid else 'teal','arrow')
     turret=group('turret',(0,0,1.82))
     turret['animation_hint']='Rotate local Z to aim; bolt translates along negative local Y.'
     cyl('Turret / brass bearing',(0,0,1.85),.50,.27,'brass',24,turret)
@@ -428,6 +428,18 @@ def piercing_ballista(ascended=False):
     mesh('Bolt / broad forged spearhead',verts,[(0,1,2),(0,2,3),(0,3,4),(0,4,1),(1,4,3,2)],'steel',bolt,.01)
     for side in [-1,1]:
         panel('Bolt / feather fletching',[(side*.02,2.52),(side*.21,2.68),(side*.18,2.50)],.78,.22,'teal',bolt,.005)
+    if rapid:
+        # Repeating-crossbow read: a brass-banded box magazine on the rail holding a visible stack of short bolts.
+        cube('Magazine / oak hopper body',(0,.50,2.80),(.50,.92,.34),'wood',.04,turret)
+        cube('Magazine / dark bolt well',(0,.50,2.99),(.36,.78,.06),'wood_dark',.01,turret)
+        for y in (.18,.82):
+            cube('Magazine / brass band',(0,y,2.82),(.56,.12,.40),'brass',.025,turret)
+            rivet((.29,y-.07,2.97),'gold',.05,turret)
+        for x in (-.21,-.07,.07,.21):
+            rod('Magazine / queued bolt shaft',(x,.14,3.04),(x,.90,3.04),.04,'wood_dark',turret)
+            panel('Magazine / queued bolt fletching',[(x-.01,3.04),(x+.02,3.19),(x+.12,3.04)],.74,.20,'red',turret,.004)
+        rod('Magazine / lever arm',(.0,.96,2.80),(.0,1.20,2.52),.045,'iron',turret)
+        sphere('Magazine / lever brass grip',(.0,1.20,2.52),(.10,.10,.10),'gold',turret)
     rod('Winch / transverse axle',(-.56,.72,2.12),(.56,.72,2.12),.095,'iron',turret)
     for side in [-1,1]:
         torus('Winch / hand wheel',(side*.60,.72,2.12),.23,.045,'brass',turret,rotation=(0,math.pi/2,0))
@@ -441,7 +453,7 @@ def piercing_ballista(ascended=False):
             crystal(f'Ascended / front post gold finial {x:+.2f}',x,-.72,1.86,.46,.15,'gold')
             rod(f'Ascended / pennant pole {x:+.2f}',(x,.72,1.86),(x,.72,2.78),.03,'brass')
             crystal(f'Ascended / pennant pole finial {x:+.2f}',x,.72,2.76,.22,.08,'gold')
-            panel(f'Ascended / teal pennant {x:+.2f}',[(x,2.68),(x+math.copysign(.62,x),2.50),(x,2.30)],.72,.03,'teal',bevel=.006)
+            panel(f'Ascended / teal pennant {x:+.2f}',[(x,2.68),(x+math.copysign(.62,x),2.50),(x,2.30)],.72,.03,'red' if rapid else 'teal',bevel=.006)
             panel(f'Ascended / pennant gold edge {x:+.2f}',[(x,2.70),(x+math.copysign(.66,x),2.50),(x,2.66)],.70,.02,'gold',bevel=.005)
         for side in [-1,1]:
             tip=(side*1.58,-.12,2.46)
@@ -666,7 +678,7 @@ for index,(name,build) in enumerate(zip(NAMES,(fire_tower,piercing_ballista,wate
     models.append((name,CURRENT,MODEL_ROOT))
 
 # Render-only Lv.3 variants, built after the exported models so they are unaffected.
-VARIANTS=(('lightning-tower','fire-tower',lambda ascended=False:fire_tower(ascended,True),(-14.0,10.0,0)),('lightning-tower-lv3','fire-tower',lambda ascended=True:fire_tower(ascended,True),(-14.0,20.0,0)),('fire-tower-lv3','fire-tower',fire_tower,(-7.0,10.0,0)),('piercing-ballista-lv3','piercing-ballista',piercing_ballista,(0.0,10.0,0)),('water-cannon-lv3','water-cannon',water_cannon,(7.0,10.0,0)))
+VARIANTS=(('lightning-tower','fire-tower',lambda ascended=False:fire_tower(ascended,True),(-14.0,10.0,0)),('lightning-tower-lv3','fire-tower',lambda ascended=True:fire_tower(ascended,True),(-14.0,20.0,0)),('rapid-crossbow','piercing-ballista',lambda ascended=False:piercing_ballista(ascended,True),(14.0,10.0,0)),('rapid-crossbow-lv3','piercing-ballista',lambda ascended=True:piercing_ballista(ascended,True),(14.0,20.0,0)),('fire-tower-lv3','fire-tower',fire_tower,(-7.0,10.0,0)),('piercing-ballista-lv3','piercing-ballista',piercing_ballista,(0.0,10.0,0)),('water-cannon-lv3','water-cannon',water_cannon,(7.0,10.0,0)))
 variants=[]
 for vname,base_name,build,home in VARIANTS:
     CURRENT=new_collection(vname)
@@ -674,7 +686,7 @@ for vname,base_name,build,home in VARIANTS:
     MODEL_ROOT=group(vname)
     MODEL_ROOT['asset']='Arcana Defense branch/upgrade render variant (sprite only, no GLB)'
     ascended = vname.endswith('-lv3')
-    builder_name = 'fire_tower(storm=True)' if vname.startswith('lightning-') else build.__name__
+    builder_name = 'fire_tower(storm=True)' if vname.startswith('lightning-') else 'piercing_ballista(rapid=True)' if vname.startswith('rapid-') else build.__name__
     MODEL_ROOT['authoring']=f'Generated by tools/blender/build_towers.py; {builder_name}, ascended={ascended}.'
     build(vname.endswith('-lv3'))
     MODEL_ROOT.scale=(1.6,1.6,1.6)
