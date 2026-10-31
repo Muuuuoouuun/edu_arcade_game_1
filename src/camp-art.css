@@ -1,0 +1,37 @@
+/* Preparation is an illustrated destination; these styles never target battle. */
+.camp-art .camp-panorama{position:relative;isolation:isolate;min-height:480px;height:min(62vw,590px);border-radius:22px;overflow:hidden;background:#183e35;color:#fff5de;box-shadow:0 18px 45px #173d3220}
+.camp-panorama>picture,.camp-panorama>picture>img,.camp-panorama-shade{position:absolute;inset:0;width:100%;height:100%}
+.camp-panorama>picture>img{object-fit:cover;object-position:center 48%}
+.camp-panorama-shade{background:linear-gradient(90deg,#102e2bd9 0%,#102e2b38 48%,transparent 70%),linear-gradient(0deg,#0d2428cf,transparent 65%)}
+.camp-panorama-copy{position:relative;padding:55px 46px;max-width:580px}
+.camp-art-kicker{font-size:11px;letter-spacing:2px;color:#ffe2a1;margin-bottom:20px}
+.camp-panorama-copy h2{font-size:clamp(32px,3.8vw,54px);line-height:1.2;letter-spacing:-1px;color:#fff8e6;text-shadow:0 3px 20px #102e2b80}
+.camp-panorama-copy>p:not(.camp-art-kicker){margin-top:18px;line-height:1.8;font-size:15px;color:#f1eedc}
+.camp-panorama-party{display:flex;align-items:center;gap:12px;margin-top:30px}
+.camp-panorama-party>.def-sprite{width:70px;height:80px;filter:drop-shadow(0 5px 8px #0005)}
+.camp-panorama-party small,.camp-panorama-party strong{display:block}.camp-panorama-party small{font-size:10px;color:#d7dfc7}.camp-panorama-party strong{font-size:22px;margin-top:5px}
+.camp-panorama-party button{margin-left:12px;color:#fff1ce;border-bottom:1px solid #d3c596;padding:10px 0;background:transparent;font-size:12px}
+.camp-expedition-card{position:absolute;bottom:42px;right:38px;width:310px;padding:24px;background:#102e2bea;border:1px solid #f1d89c70;border-radius:14px;box-shadow:0 12px 30px #0003}
+.camp-expedition-card>span{color:#e3c68d;font-size:11px;letter-spacing:1px}.camp-expedition-card h3{font-size:25px;margin:12px 0 8px;color:#fff7df}.camp-expedition-card p{color:#c9d8c8;font-size:12px}.camp-expedition-card>small{display:block;text-align:center;color:#c9d8c8;margin-top:12px;font-size:10px}
+.camp-enter-stage{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:22px;background:#f0cf83;color:#243b32;border:1px solid #ffe7ad;border-radius:7px;min-height:49px;font-size:16px;font-weight:800}.camp-enter-stage>span{margin-left:auto}.camp-enter-stage:disabled{opacity:.5}
+.camp-panorama-caption{position:absolute;left:46px;bottom:26px;color:#d9e4cc;font-size:11px}
+.camp-art-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin:20px auto 22px;background:#bac4ad;border:1px solid #bac4ad;border-radius:12px;overflow:hidden}
+.camp-art-nav button{display:flex;align-items:center;justify-content:center;gap:14px;background:#f8f5e9;color:#506257;padding:18px 12px;min-height:64px}.camp-art-nav strong{font-size:19px}.camp-art-nav span{font-size:11px}.camp-art-nav [aria-pressed=true]{background:#244b40;color:#fff1cd;box-shadow:inset 0 -3px #e7c574}
+.camp-art .camp-layout{display:block}.camp-art .camp-intro{display:none}.camp-art .camp-village{display:block}
+.camp-art[data-section=expedition] .camp-village,.camp-art:not([data-section=home]) .camp-home,.camp-art:not([data-section=companions]) .camp-roster{display:none}
+.camp-art[data-section=home] .camp-command{display:none}
+.camp-art[data-section=expedition] .camp-command{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:start;gap:20px}
+.camp-art[data-section=expedition] .camp-letter{grid-column:1;grid-row:1 / span 3}.camp-art[data-section=expedition] .camp-command>.camp-forge,.camp-art[data-section=expedition] .camp-command>.camp-coming{display:none}
+.camp-art[data-section=companions] .camp-command>section:not(.camp-forge):not(.camp-coming){display:none}.camp-art[data-section=companions] .camp-command{display:block;margin-top:18px}
+.camp-art .camp-home{border-radius:14px}.camp-art .camp-theme-option img{height:150px;object-fit:cover}.camp-art .camp-roster{border:1px solid #c4ad82;border-radius:14px;margin:0}.camp-art .camp-region-art{height:220px}.camp-art .camp-letter h2{text-align:left}.camp-art .camp-regions{min-width:0}.camp-art .camp-theme-heading{margin-bottom:20px}
+@media(max-width:700px){
+ .camp-art .camp-panorama{min-height:590px;height:auto;border-radius:14px}.camp-panorama>picture>img{object-position:60% center}.camp-panorama-shade{background:linear-gradient(0deg,#102e2bf2,transparent 65%),linear-gradient(90deg,#102e2b85,transparent)}
+ .camp-panorama-copy{padding:27px 22px}.camp-art-kicker{font-size:9px;margin-bottom:12px}.camp-panorama-copy h2{font-size:33px}.camp-panorama-copy>p:not(.camp-art-kicker){font-size:12px;margin-top:12px}.camp-panorama-party{margin-top:17px}.camp-panorama-party>.def-sprite{width:52px;height:64px}.camp-panorama-party strong{font-size:19px}.camp-panorama-party button{font-size:11px}
+ .camp-expedition-card{bottom:38px;left:18px;right:18px;width:auto;padding:19px}.camp-expedition-card h3{font-size:23px}.camp-enter-stage{margin-top:16px}.camp-panorama-caption{left:22px;bottom:15px;font-size:9px}
+ .camp-art-nav{margin:13px 0 18px}.camp-art-nav button{flex-direction:column;gap:5px;padding:14px 6px;min-height:68px}.camp-art-nav strong{font-size:17px}.camp-art-nav span{font-size:9px}
+ .camp-art[data-section=expedition] .camp-command{display:flex;flex-direction:column;gap:14px}.camp-art .camp-command>section{width:100%}.camp-art .camp-regions{order:-1}.camp-art .camp-region-art{height:160px}.camp-art .camp-theme-options{grid-template-columns:repeat(2,minmax(0,1fr))}.camp-art .camp-theme-option img{height:125px}
+}
+.camp-art[data-section=companions] .camp-command>.defense-field-guide{display:none}
+.camp-art{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
+.camp-art-nav{scroll-margin-top:16px;scroll-margin-bottom:112px}
+.camp-art button,.camp-art summary{scroll-margin-bottom:112px}

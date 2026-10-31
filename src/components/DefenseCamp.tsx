@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { DefenseSprite } from './DefenseBoard';
 import { DefenseFieldGuide } from './DefenseFieldGuide';
@@ -12,6 +12,7 @@ import type { DefenseThemeId } from '../games/defense/themes';
 import '../camp.css';
 import '../defense-difficulty.css';
 import '../defense-themes.css';
+import '../camp-art.css';
 
 type Props = {
   campaign: Campaign;
@@ -31,6 +32,8 @@ const regionArt = {forest:'/defense/forest.png',snow:'/defense/snow.png'};
 const regionSummary = {forest:'숲길과 물길을 따라, 이웃 마을을 지켜요.',snow:'빙판을 달리는 적들과 서리군주가 기다려요.'};
 
 export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDifficulty,onTrain,onExit,storageFailed,themeId,onSelectTheme,themeStorageFailed}:Props) {
+  const menuRef = useRef<HTMLElement>(null);
+  const [section,setSection] = useState<'expedition'|'companions'|'home'>('expedition');
   const request = campaignRequest(campaign);
   const [selectedStage,setSelectedStage] = useState(request?.stage ?? 8);
   const [selectedFacility,setSelectedFacility] = useState<FacilityId|null>(null);
@@ -54,24 +57,40 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
   };
   const letterTitle = allDone ? '두 지역에 평화가 찾아왔어요' : completed ? '다시 찾아가는 마을' : stage.region==='snow' ? '설산에서 온 구조 요청' : campaign.cleared.length ? '새로운 구조 요청' : '우리 마을을 지켜 주세요';
   const letterBody = allDone ? '함께 모인 수비대로 다른 조합을 시험해 보세요. 아직 놓친 추가 퀘스트에도 다시 도전할 수 있어요.' : completed ? `${stage.name}의 길목을 다시 지켜 주세요. 새로운 영웅과 타워 조합을 시험할 수 있어요.` : stage.story;
-  return <main className="camp-page camp-themed" id="main" data-theme={themeId} style={{'--theme-accent':theme.accent,'--theme-ink':theme.ink} as CSSProperties}>
+  return <main className="camp-page camp-themed camp-art" id="main" data-screen="preparation" data-section={section} data-theme={themeId} style={{'--theme-accent':theme.accent,'--theme-ink':theme.ink} as CSSProperties}>
     <div className="camp-heading">
       <button className="camp-back" onClick={onExit}><Icon name="back" size={18}/><span>게임으로</span></button>
       <h1>아르카나 수비대</h1>
       <span className="camp-gold" aria-label={`성장 골드 ${campaign.gold}`}><Gold/>{campaign.gold.toLocaleString()}<small>G</small></span>
     </div>
     {storageFailed ? <p className="camp-save-warning" role="status">진행을 저장할 수 없어요. 현재 원정은 계속할 수 있지만, 창을 닫으면 기록이 사라질 수 있어요.</p> : null}
-    <div className="camp-layout">
+    <section className="camp-panorama" aria-labelledby="camp-panorama-title">
+      <picture key={themeId}>
+        <img src={theme.image} width="1200" height="800" alt={`${theme.name}, 원정을 준비하는 수비대의 거점`} fetchPriority="high" decoding="async"/>
+      </picture>
+      <div className="camp-panorama-shade"/>
+      <div className="camp-panorama-copy">
+        <p className="camp-art-kicker">ARCANA · 수비대의 거점</p>
+        <h2 id="camp-panorama-title">모험이 시작되는 곳</h2>
+        <p>{theme.name}에서 동료를 모으고,<br/>다음 마을로 떠날 준비를 해요.</p>
+        <div className="camp-panorama-party"><DefenseSprite index={HEROES[campaign.selectedHero].sprite}/><span><small>이번 원정의 영웅</small><strong>{HEROES[campaign.selectedHero].name}</strong></span><button onClick={()=>{setSection('companions');menuRef.current?.scrollIntoView({block:'start',behavior:'instant'});menuRef.current?.querySelector<HTMLButtonElement>('[data-camp-menu=companions]')?.focus({preventScroll:true});}}>동료 선택 ↗</button></div>
+      </div>
+      <div className="camp-expedition-card">
+        <span>다음 목적지 · {difficultyInfo.name}</span>
+        <h3>{stage.label} {stage.name}</h3>
+        <p>{stage.weather} · {completed?'다시 지키는 마을':'새로운 구조 요청'}</p>
+        <button className="camp-enter-stage" onClick={()=>onDepart(stage.id)} disabled={!stageUnlocked(campaign,stage.id)}><Icon name="play" size={20}/>스테이지 입장<span aria-hidden="true">↗</span></button>
+        <small>입장 후 전장에서 타워를 배치해요</small>
+      </div>
+      <span className="camp-panorama-caption">{theme.name} · {campaign.cleared.length}개 원정 완료</span>
+    </section>
+    <nav ref={menuRef} className="camp-art-nav" aria-label="원정 준비 메뉴">
+      {([{id:'expedition',name:'원정 선택',detail:'지역과 난이도'},{id:'companions',name:'동료',detail:'출전 영웅과 장비'},{id:'home',name:'나의 거점',detail:'테마와 시설'}] as const).map(item=><button key={item.id} data-camp-menu={item.id} aria-controls="camp-preparation-panel" aria-pressed={section===item.id} onClick={()=>setSection(item.id)}><strong>{item.name}</strong><span>{item.detail}</span></button>)}
+    </nav>
+    <div className="camp-layout" id="camp-preparation-panel" role="region" aria-label={section==='expedition'?'원정 선택':section==='companions'?'동료와 장비':'거점 테마와 시설'}>
       <section className="camp-village" aria-labelledby="camp-title">
         <div className="camp-intro"><h2 id="camp-title">수비대의 거점</h2><p>{campaign.cleared.length ? '구해 낸 사람들이 모여, 다음 모험을 준비합니다.' : '이안과 함께 시작하는, 우리 수비대의 첫 모험.'}</p></div>
         <div className="camp-home">
-          <div className="camp-scene camp-theme-scene">
-            <picture className="camp-landscape" key={themeId}>
-              <source media="(max-width: 600px)" srcSet={theme.thumbnail}/>
-              <img src={theme.image} width="1200" height="800" alt={`${theme.name} 외형의 수비대 거점`} draggable={false} fetchPriority="high" decoding="async"/>
-            </picture>
-          </div>
-          <div className="camp-theme-caption" aria-live="polite"><div><h3>{theme.name}</h3><p>{theme.description}</p></div><span>{campaign.cleared.length}개 원정 완료</span></div>
           <section className="camp-theme-picker" aria-labelledby="camp-theme-title">
             <div className="camp-theme-heading"><h3 id="camp-theme-title">거점 테마</h3><p>거점과 성문의 외형이 바뀌어요. 전투 능력은 같아요.</p></div>
             <div className="camp-theme-options">{THEME_ORDER.map(id=>{
@@ -118,7 +137,7 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
           </div>
           <div className="camp-request-reward"><span>{completed?'재도전 보상':'첫 방어 보상'}{difficultyInfo.rewardMultiplier>1?<small className="camp-difficulty-reward">정예 +40% 반영</small>:null}</span><strong><Gold/>{departureReward} G</strong></div>
           <p className="camp-quest-preview">{campaign.questClaimed.includes(stage.id)?'추가 퀘스트 보상 수령 완료':`추가 퀘스트 +${stage.questReward} G · ${stage.quest}`}</p>
-          <button className="camp-depart" onClick={()=>onDepart(stage.id)} disabled={!stageUnlocked(campaign,stage.id)}><Icon name="play" size={25}/>{completed?'다시 원정 준비':'원정 준비'}<Icon name="back" size={19}/></button>
+          <button className="camp-depart" onClick={()=>onDepart(stage.id)} disabled={!stageUnlocked(campaign,stage.id)}><Icon name="play" size={25}/>{completed?'다시 스테이지 입장':'스테이지 입장'}<Icon name="back" size={19}/></button>
           {snowOpen && !campaign.cleared.includes(5) && stage.region==='snow'?<p className="camp-new-request" role="status">숲 너머에서도 수비대를 기다리고 있어요.</p>:null}
         </section>
         <section className="camp-regions" aria-label="지역과 스테이지 선택"><h2>지역 선택</h2>
@@ -133,7 +152,7 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
     <p className="camp-save-note">완료한 원정과 성장은 이 브라우저에 저장돼요. 전투 중 배치는 다음 원정에서 새로 준비해요.</p>
     <div className="camp-departure-dock" aria-label="선택한 원정으로 출발">
       <div><strong>{HEROES[campaign.selectedHero].name} · {stage.label}</strong><span>{stage.name} · {difficultyInfo.name}</span></div>
-      <button onClick={()=>onDepart(stage.id)} disabled={!stageUnlocked(campaign,stage.id)}><Icon name="play" size={22}/>원정 준비</button>
+      <button onClick={()=>onDepart(stage.id)} disabled={!stageUnlocked(campaign,stage.id)}><Icon name="play" size={22}/>스테이지 입장</button>
     </div>
   </main>;
 }
