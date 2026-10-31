@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getPaths, getSlots } from '../games/defense/data';
-import { actionSpriteAsset, monsterSpriteAsset, spriteAsset, towerSpriteAsset } from '../games/defense/art';
+import { actionSpriteAsset, idleSpriteAsset, monsterSpriteAsset, spriteAsset, towerSpriteAsset } from '../games/defense/art';
 import type { SpriteAsset, ActionPose } from '../games/defense/art';
 import type { DefenseThemeId } from '../games/defense/themes';
 import { DefenseThemeScenery } from './DefenseThemeScenery';
@@ -31,12 +31,14 @@ const SpriteFrame=memo(function SpriteFrame({src,viewBox,sourceWidth,sourceHeigh
 const Sprite=memo(function Sprite({index,x=0,y=0,size=70,flip=false,art:override,pose='',shadow=true,shadowScale=1}:{index:number;x?:number;y?:number;size?:number;flip?:boolean;art?:SpriteAsset|null;pose?:string;shadow?:boolean;shadowScale?:number}){
  const art=override??spriteAsset(index);
  const artSize=size*(art.displayScale??1);
- const [,,frameWidth,frameHeight]=art.viewBox.split(' ').map(Number);
+ const [,frameY,frameWidth,frameHeight]=art.viewBox.split(' ').map(Number);
  // Crop the frame itself: a square viewport leaves atlas rows visible in letterbox space.
  const width=artSize*Math.min(1,frameWidth/frameHeight),height=artSize*Math.min(1,frameHeight/frameWidth);
+ // Baked action frames share a projected ground point, including overhead poses.
+ const bottom=art.groundY===undefined?size*.1:height*(1-(art.groundY-frameY)/frameHeight);
  return <g transform={`translate(${x},${y})`}>
   {shadow?<g className="def-contact-shadow"><ellipse cx={-size*.07} cy={size*.025} rx={size*.38*shadowScale} ry={size*.12*shadowScale} fill="url(#def-ground-shadow)"/><ellipse cy="0" rx={size*.2*shadowScale} ry={size*.045*shadowScale} fill="#142b28" opacity=".23"/></g>:null}
-  <g transform={`${pose} scale(${flip?-1:1},1)`} className="def-sprite-body"><SpriteFrame src={art.src} sourceWidth={art.width} sourceHeight={art.height} viewBox={art.viewBox} width={width} height={height} bottom={size*.1}/></g>
+  <g transform={`${pose} scale(${flip?-1:1},1)`} className="def-sprite-body"><SpriteFrame src={art.src} sourceWidth={art.width} sourceHeight={art.height} viewBox={art.viewBox} width={width} height={height} bottom={bottom}/></g>
  </g>;
 });
 function attackPhase(a:CombatAttack):ActionPose {return a.elapsed<a.hitAt?'windup':a.elapsed<a.hitAt+.12?'strike':'recover';}
@@ -45,7 +47,7 @@ function Actor({actor,position,facing,moving,velocity,dashTime=0,attack,skill,ti
  const dashing=dashTime>0,speed=velocity?Math.hypot(velocity.x,velocity.y):moving?180:0,pace=clamp(speed/230);
  const skillAge=skill?.age??Infinity,casting=skillAge<.5;
  const phase=casting?(skillAge<.18?'strike':'recover'):dashing?null:attack?attackPhase(attack):null;
- const art=phase?actionSpriteAsset(actor,phase):null;
+ const art=phase?actionSpriteAsset(actor,phase):idleSpriteAsset(actor);
  const aim=!dashing&&attack&&Math.abs(attack.to.x-attack.from.x)>.5?(attack.to.x>attack.from.x?1:-1):facing;
  let bob=0,lean=0,offset=0,sx=1,sy=1;
  if(!reduced){
@@ -64,7 +66,7 @@ function Actor({actor,position,facing,moving,velocity,dashTime=0,attack,skill,ti
   {leader?<ellipse cy="1" rx="30" ry="12" fill="#d3f8a129" stroke="#e3f6a5" strokeWidth="1.8" opacity=".85"/>:wolf?<ellipse cy="1" rx="23" ry="8" fill="#c9f3ff25" stroke="#cfeddd" strokeWidth="1"/>:null}
   {moving&&!dashing&&!reduced?<g opacity={.2*pace}><ellipse cx={-facing*17} cy="3" rx="10" ry="3" fill="#f2dec4"/><ellipse cx={-facing*28} cy="5" rx="5" ry="2" fill="#f2dec4"/></g>:null}
   {casting?<ellipse cy="-4" rx={32+(reduced?0:skillAge*26)} ry="12" fill="none" stroke={actor==='druid'?'#c4ef96':actor==='mage'?'#ffc585':'#d5f5ff'} strokeWidth="2" opacity={1-skillAge*1.7}/>:null}
-  <Sprite index={index} size={size} flip={aim<0} art={art} pose={`translate(${offset},${bob}) rotate(${lean}) scale(${sx},${sy})`} shadowScale={1+bob*.02}/>
+  <Sprite index={index} size={size} flip={(aim<0)!==(art?.nativeFacing===-1)} art={art} pose={`translate(${offset},${bob}) rotate(${lean}) scale(${sx},${sy})`} shadowScale={1+bob*.02}/>
   {attack&&phase==='windup'&&attack.kind==='spell'?<g transform="translate(0,-43)" opacity={.35+.35*clamp(attack.elapsed/Math.max(.05,attack.hitAt))}><circle cx={aim*24} cy="-5" r={7+clamp(attack.elapsed/Math.max(.05,attack.hitAt))*9} fill={`url(#${attack.element==='fire'?'def-fire-core':attack.actor==='druid'?'def-green-core':'def-blue-core'})`}/></g>:null}
   {promoted?<text y={-size*.92} fill="#ffe3a2" fontSize="18" textAnchor="middle" className="def-world-label">✦</text>:null}
   {wolf?<text y="20" textAnchor="middle" className="def-pet-label">달빛 늑대</text>:null}

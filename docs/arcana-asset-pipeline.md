@@ -1,6 +1,6 @@
 # 아르카나 모델 제작 과정
 
-현재 웹 게임은 React 19 + Vite 7 기반이다. Blender 4.3.2에서 편집 가능한 모형을 제작하고, Three.js 0.186.1 작업실에서 구조·재질·발사 동작을 검토할 수 있다. 게임 전투는 기존 2.5D 방식으로 실행된다.
+현재 웹 게임은 React 19 + Vite 7 기반이다. Blender 4.3.2에서 편집 가능한 모형을 제작하고, Three.js 0.186.1 작업실에서 구조·재질·발사 및 캐릭터 공격 동작을 검토할 수 있다. 게임 전투는 기존 2.5D 방식으로 실행된다.
 
 ## 준비된 도구
 
@@ -9,7 +9,7 @@
 | Node.js 22.23.4, npm | 게임·작업실 실행, 빌드, 테스트 |
 | Blender 4.3.2 | 메시·재질 편집, CPU 렌더, GLB 내보내기 |
 | Three.js 0.186.1 | 브라우저 모델 검토, 회전·확대·메시·발사 미리보기 |
-| FFmpeg | 시연 녹화 편집·검증 |
+| FFmpeg / libwebp | 투명 렌더의 경량 게임 이미지 생성, 시연 녹화 검증 |
 | Chromium + Playwright | 실제 게임과 작업실 조작 검증 |
 
 Blender·FFmpeg·Chromium은 이 환경에 제공된 설치를 검증해 사용했다. Three.js와 타입 선언은 프로젝트에 정확한 버전으로 추가했다. `npm ci`로 웹 의존성을 재설치할 수 있다. 계정·API 키가 필요하지 않다.
@@ -47,13 +47,31 @@ blender -b --python tools/blender/build_towers.py -- --skip-render
 
 기본 렌더는 CPU Cycles, 640×640, 128 samples, 투명 배경이다. 이 Blender 빌드에는 OpenImageDenoise가 없어 노이즈 제거 옵션을 끄고 샘플 수를 높였다. 원본의 모델·조명·정사영 카메라로 새 이미지를 생성한다. 재생성 후 원본 `.blend`는 세 모형이 나란히 보이는 구도로 저장된다.
 
-`public/defense/models/`에 `fire-tower`, `piercing-ballista`, `water-cannon`의 GLB·PNG와 `manifest.json`이 생성된다. GLB는 메시·재질을 포함하며 외부 텍스처 요청이 없다. 각 파일은 약 0.76~1.14MB다. Blender 원본은 Z-up, GLB는 Y-up이며 바닥 중심이 원점이다.
+`public/defense/models/`에 `fire-tower`, `piercing-ballista`, `water-cannon`의 GLB·PNG와 `manifest.json`이 생성된다. GLB는 메시·재질을 포함하며 외부 텍스처 요청이 없다. 정확한 크기와 메시 수는 생성된 메타데이터 및 작업실에서 확인한다. Blender 원본은 Z-up, GLB는 Y-up이며 바닥 중심이 원점이다.
 
-작업실은 `fire-core`, `turret`, `bolt`, `barrel` 피벗을 사용한다. 발사 미리보기는 이 부품을 움직이며 게임 엔진의 피해 계산과는 별개다. 원본 GLB에는 애니메이션 클립을 포함하지 않는다.
+작업실은 `fire-core`, `turret`, `bolt`, `barrel` 피벗을 사용한다. 발사 미리보기는 이 부품을 움직이며 게임 엔진의 피해 계산과는 별개다. 타워 GLB에는 애니메이션 클립을 포함하지 않는다.
+
+## 드워프 공병 브론
+
+`art-source/defense/dwarf.blend`와 `tools/blender/build_dwarf.py`가 별도 캐릭터 원본이다. 구리빛 수염, 강철·청동 판금, 가죽 장갑과 부츠, 망토·방패·대형 망치를 실제 메시로 만들었다. `body`, `head`, `hammer-arm`, `hammer-forearm`, `hammer`, `guard-arm` 관절 아래에 부품을 나누며, 내보낼 때만 같은 관절·재질의 표면을 합친다. 스키닝된 인체 리그가 아닌 관절별 강체 애니메이션이다.
+
+```bash
+# 원본, GLB, 네 포즈 PNG 및 전장 WebP를 모두 생성
+npm run models:dwarf
+
+# PNG가 이미 갱신됐다면 전장 이미지와 해시 메타데이터만 다시 생성
+npm run models:hero-sprites
+```
+
+`dwarf-guardian.glb`에는 `dwarf-hammer-attack` 공격 클립이 있다. 작업실의 **망치 강타**를 누를 때 한 번 재생하고 대기 자세로 돌아온다. 움직임 줄이기를 켜면 공격 미리보기·자동 회전을 멈추며, 수동 회전과 메시 검토는 사용할 수 있다. 3D 로딩 실패 시 선택한 모델의 PNG가 표시된다.
+
+전장의 `dwarf-{idle,windup,strike,recover}-game.webp`는 같은 카메라·조명·배율에서 구운 네 자세다. 전체 640×640 프레임과 바닥 기준 `(320,550)`을 공유하며 개별 자세를 잘라 확대하지 않는다. 렌더·관절·메시 정보는 `dwarf-model.json`, 전장 이미지의 용량·해시·알파 경계는 `hero-sprites.json`에 기록한다. 변환 스크립트는 카메라 기준, 오른쪽 방향, RGBA 크기와 가장자리 여백을 검사한다.
+
+네 이미지가 모두 로드된 경우에만 영웅·용병·캠프의 브론을 함께 전환한다. 하나라도 실패하거나 아직 도착하지 않으면 기존 아틀라스를 사용한다. 기존 공격 준비·명중·회복 시점과 이동·강타 효과에 연결하며 피해·속도·성장 수치는 바꾸지 않는다. 재생성은 원본과 결과를 덮어쓰므로 수동 편집 파일은 별도로 보관한다.
 
 ## 게임 아트와 연결
 
-현재 전장에서는 `tower-models.png`, `monster-models.png`, `boss-models.png`와 영웅 모션 아틀라스를 사용한다. 새 모델링 원본 3종은 다음 아트 제작에 재사용할 수 있는 편집 자산과 정사영 출력이다. 모델을 전투 아트로 채택할 때는 기존 그림체·광원·바닥 기준·실루엣 크기를 비교한 뒤 `src/games/defense/art.ts`의 매핑에 연결한다.
+전장에서는 타워·몬스터·영웅 아틀라스와 Blender에서 구운 투명 WebP를 함께 사용한다. 화염·관통·물 분기의 2단계와 3단계 타워는 각 단계의 모델 렌더를 사용한다. `npm run models:sprites`는 원본 640px 캔버스를 보존하며 타워 WebP와 `game-sprites.json`을 생성한다. 모델을 전투 아트로 채택할 때는 기존 그림체·광원·바닥 기준·실루엣 크기를 비교한 뒤 `src/games/defense/art.ts`의 매핑에 연결한다. 전장에서는 GLB를 다운로드하거나 유닛별 WebGL 렌더러를 만들지 않는다.
 
 아틀라스 프레임은 여백을 포함하되 이웃 그림이 비치지 않아야 한다. 포즈가 바뀔 때 몸 크기가 변하지 않도록 같은 몬스터는 공통 픽셀/월드 배율을 사용한다. 새로운 시전 포즈는 HP 바·상태 효과와 겹치지 않는지 확인한다.
 
