@@ -2,7 +2,7 @@
 
 Run from the repository root:
     blender -b --python tools/blender/build_towers.py
-Optional arguments after --: --size 640 --samples 128 --only fire-tower|fire-tower-lv3|lightning-tower|lightning-tower-lv3|rapid-crossbow|rapid-crossbow-lv3|piercing-ballista-lv3|water-cannon-lv3 --skip-render
+Optional arguments after --: --size 640 --samples 128 --only fire-tower|fire-tower-lv3|lightning-tower|lightning-tower-lv3|rapid-crossbow|rapid-crossbow-lv3|crush-cannon|crush-cannon-lv3|piercing-ballista-lv3|water-cannon-lv3 --skip-render
 *-lv3 ids are render-only Lv.3 sprite variants (baked 2.5D, no GLB).
 No image inputs are altered. All geometry/materials are authored here in Blender.
 """
@@ -23,7 +23,7 @@ NAMES = ('fire-tower', 'piercing-ballista', 'water-cannon')
 args = argparse.ArgumentParser()
 args.add_argument('--size', type=int, default=640)
 args.add_argument('--samples', type=int, default=128)
-VARIANTS_IDS = ('fire-tower-lv3', 'piercing-ballista-lv3', 'water-cannon-lv3', 'lightning-tower', 'lightning-tower-lv3', 'rapid-crossbow', 'rapid-crossbow-lv3')
+VARIANTS_IDS = ('fire-tower-lv3', 'piercing-ballista-lv3', 'water-cannon-lv3', 'lightning-tower', 'lightning-tower-lv3', 'rapid-crossbow', 'rapid-crossbow-lv3', 'crush-cannon', 'crush-cannon-lv3')
 args.add_argument('--only', choices=NAMES + VARIANTS_IDS)
 args.add_argument('--skip-render', action='store_true')
 opts = args.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
@@ -271,6 +271,9 @@ def banner(material, emblem, y=-1.06, top=1.4, bottom=.47, width=.55):
         panel('Heraldry / arrow sigil', [(-.035,.66),(.035,.66),(.035,1.04),(.13,.95),(0,1.22),(-.13,.95),(-.035,1.04)],y-.08,.02,'gold')
         for side in [-1,1]:
             panel('Heraldry / wing', [(side*.06,.86),(side*.23,1.02),(side*.19,.81),(side*.06,.75)],y-.08,.02,'gold')
+    elif emblem == 'rock':
+        panel('Heraldry / boulder sigil', [(-.20,.68),(.20,.68),(.26,.88),(.12,1.12),(-.10,1.14),(-.26,.90)], y-.08,.02,'gold')
+        panel('Heraldry / boulder crack', [(-.02,.74),(.04,.74),(.07,.98),(.01,1.08),(-.05,.98)], y-.095,.01,'iron')
     else:
         for z in [.75,.94,1.13]:
             tube('Heraldry / wave embroidery',[(-.18,y-.08,z),(-.09,y-.08,z+.055),(0,y-.08,z),(.09,y-.08,z+.055),(.18,y-.08,z)],.019,'bubble')
@@ -482,41 +485,58 @@ def hollow_barrel(name, start, end, outer, inner, material, parent):
     return mesh(name,verts,faces,material,parent,.018)
 
 
-def water_cannon(ascended=False):
-    oak_keep()
-    banner('blue','water')
-    # A pressurized reservoir is fixed to the carriage behind the rotating barrel.
-    cyl('Reservoir / bronze tank plinth',(0,.37,1.86),.63,.24,'brass',24)
-    sphere('Reservoir / glass pressure tank',(0,.37,2.29),(.65,.65,.77),'glass')
-    sphere('Reservoir / visible blue water',(0,.37,2.23),(.56,.56,.59),'water')
-    for z,r in [(1.88,.50),(2.80,.43)]:
-        torus('Reservoir / reinforcing hoop',(0,.37,z),r,.065,'gold')
+def crush_shot_rack():
+    # Crush branch: a stacked pile of quarried stone shot in an iron-banded cradle replaces the pressure tank.
+    cyl('Shot rack / iron plinth',(0,.37,1.86),.66,.24,'iron',24)
+    for x,y,z,r in [(-.30,.37,2.18,.30),(.30,.37,2.18,.30),(0,.37,2.62,.32),(0,.04,2.16,.27),(0,.70,2.16,.27)]:
+        sphere('Shot rack / quarried stone shot',(x,y,z),(r,r,r),'stone_light' if (x+y)>.5 else 'stone')
+    for z,r in [(1.98,.62),(2.40,.50)]:
+        torus('Shot rack / iron band',(0,.37,z),r,.07,'iron')
     for side in [-1,1]:
-        tube('Reservoir / curved bronze strap',[(side*.40,.37,1.88),(side*.62,.37,2.16),(side*.62,.37,2.48),(side*.35,.37,2.85)],.055,'brass')
-    cyl('Reservoir / pressure cap',(0,.37,3.04),.24,.15,'brass',24)
-    sphere('Reservoir / cap crown',(0,.37,3.14),(.18,.18,.09),'gold')
-    for x,y,z in [(-.21,-.12,2.3),(.25,-.09,2.42),(.04,-.19,2.15),(-.08,-.14,2.58)]:
-        sphere('Reservoir / floating air bubble',(x,y,z),(.045,.045,.045),'bubble')
-    tube('Plumbing / main supply elbow',[(.48,.38,2.0),(.83,.38,2.0),(.92,.15,1.96),(.92,-.48,1.96),(.49,-.65,2.10)],.095,'brass')
-    tube('Plumbing / return loop',[(-.48,.39,2.04),(-.87,.39,1.96),(-.88,-.46,1.84),(-.56,-.61,1.84)],.065,'brass')
-    # Forward-facing valve wheel and bolts distinguish the pump from an ordinary cannon.
-    rod('Valve / spindle',(-.79,-.48,1.97),(-.79,-.72,1.97),.065,'iron')
-    torus('Valve / operating wheel',(-.79,-.76,1.97),.24,.042,'gold',rotation=(math.pi/2,0,0))
-    for a in [0,math.pi/3,math.pi*2/3]:
-        rod('Valve / wheel spoke',(-.79-.21*math.cos(a),-.76,1.97-.21*math.sin(a)),(-.79+.21*math.cos(a),-.76,1.97+.21*math.sin(a)),.025,'brass')
-    # Front-right pressure gauge and water sight tube make the hydraulic mechanism legible.
-    rod('Gauge / bronze stem',(.76,-.12,2.08),(.88,-.30,2.43),.06,'brass')
-    gauge=cyl('Gauge / bronze housing',(.91,-.40,2.49),.27,.12,'brass',24)
-    gauge.rotation_euler.x=math.pi/2
-    dial=cyl('Gauge / ivory pressure face',(.91,-.473,2.49),.225,.025,'ivory',24,bevel=.005)
-    dial.rotation_euler.x=math.pi/2
-    for a in [-math.pi*.15,math.pi*.20,math.pi*.55,math.pi*.90,math.pi*1.15]:
-        beam('Gauge / bold dial mark',(.91+.16*math.cos(a),-.492,2.49+.16*math.sin(a)),(.91+.20*math.cos(a),-.492,2.49+.20*math.sin(a)),.027,.018,'iron',bevel=.003)
-    beam('Gauge / red needle',(.86,-.513,2.45),(1.04,-.513,2.62),.032,.022,'red',bevel=.004)
-    sphere('Gauge / needle hub',(.91,-.523,2.49),(.047,.025,.047),'gold')
-    cyl('Plumbing / side water sight tube',(.83,.16,1.44),.105,.54,'water',16)
-    for z in [1.15,1.73]:
-        cyl('Plumbing / sight tube collar',(.83,.16,z),.145,.10,'brass',16)
+        beam('Shot rack / basalt cheek wall',(side*.70,.37,1.98),(side*.52,.37,2.78),.16,.62,'stone_dark',bevel=.04)
+    sphere('Shot rack / glowing molten shot',(0,.37,3.06),(.20,.20,.20),'crystal_light')
+    for x,y,z in [(.55,-.15,2.10),(-.55,-.18,2.05),(.32,-.42,1.98)]:
+        sphere('Shot rack / loose stone shot',(x,y,z),(.17,.17,.17),'stone_light')
+
+
+def water_cannon(ascended=False,crush=False):
+    oak_keep()
+    banner('red' if crush else 'blue','rock' if crush else 'water')
+    if crush:
+        crush_shot_rack()
+    else:
+        # A pressurized reservoir is fixed to the carriage behind the rotating barrel.
+        cyl('Reservoir / bronze tank plinth',(0,.37,1.86),.63,.24,'brass',24)
+        sphere('Reservoir / glass pressure tank',(0,.37,2.29),(.65,.65,.77),'glass')
+        sphere('Reservoir / visible blue water',(0,.37,2.23),(.56,.56,.59),'water')
+        for z,r in [(1.88,.50),(2.80,.43)]:
+            torus('Reservoir / reinforcing hoop',(0,.37,z),r,.065,'gold')
+        for side in [-1,1]:
+            tube('Reservoir / curved bronze strap',[(side*.40,.37,1.88),(side*.62,.37,2.16),(side*.62,.37,2.48),(side*.35,.37,2.85)],.055,'brass')
+        cyl('Reservoir / pressure cap',(0,.37,3.04),.24,.15,'brass',24)
+        sphere('Reservoir / cap crown',(0,.37,3.14),(.18,.18,.09),'gold')
+        for x,y,z in [(-.21,-.12,2.3),(.25,-.09,2.42),(.04,-.19,2.15),(-.08,-.14,2.58)]:
+            sphere('Reservoir / floating air bubble',(x,y,z),(.045,.045,.045),'bubble')
+        tube('Plumbing / main supply elbow',[(.48,.38,2.0),(.83,.38,2.0),(.92,.15,1.96),(.92,-.48,1.96),(.49,-.65,2.10)],.095,'brass')
+        tube('Plumbing / return loop',[(-.48,.39,2.04),(-.87,.39,1.96),(-.88,-.46,1.84),(-.56,-.61,1.84)],.065,'brass')
+        # Forward-facing valve wheel and bolts distinguish the pump from an ordinary cannon.
+        rod('Valve / spindle',(-.79,-.48,1.97),(-.79,-.72,1.97),.065,'iron')
+        torus('Valve / operating wheel',(-.79,-.76,1.97),.24,.042,'gold',rotation=(math.pi/2,0,0))
+        for a in [0,math.pi/3,math.pi*2/3]:
+            rod('Valve / wheel spoke',(-.79-.21*math.cos(a),-.76,1.97-.21*math.sin(a)),(-.79+.21*math.cos(a),-.76,1.97+.21*math.sin(a)),.025,'brass')
+        # Front-right pressure gauge and water sight tube make the hydraulic mechanism legible.
+        rod('Gauge / bronze stem',(.76,-.12,2.08),(.88,-.30,2.43),.06,'brass')
+        gauge=cyl('Gauge / bronze housing',(.91,-.40,2.49),.27,.12,'brass',24)
+        gauge.rotation_euler.x=math.pi/2
+        dial=cyl('Gauge / ivory pressure face',(.91,-.473,2.49),.225,.025,'ivory',24,bevel=.005)
+        dial.rotation_euler.x=math.pi/2
+        for a in [-math.pi*.15,math.pi*.20,math.pi*.55,math.pi*.90,math.pi*1.15]:
+            beam('Gauge / bold dial mark',(.91+.16*math.cos(a),-.492,2.49+.16*math.sin(a)),(.91+.20*math.cos(a),-.492,2.49+.20*math.sin(a)),.027,.018,'iron',bevel=.003)
+        beam('Gauge / red needle',(.86,-.513,2.45),(1.04,-.513,2.62),.032,.022,'red',bevel=.004)
+        sphere('Gauge / needle hub',(.91,-.523,2.49),(.047,.025,.047),'gold')
+        cyl('Plumbing / side water sight tube',(.83,.16,1.44),.105,.54,'water',16)
+        for z in [1.15,1.73]:
+            cyl('Plumbing / sight tube collar',(.83,.16,z),.145,.10,'brass',16)
     turret=group('turret',(0,-.38,1.93))
     turret['animation_hint']='Rotate local Z slightly to aim; barrel moves along its local forward axis for recoil.'
     for x in [-.46,.46]:
@@ -524,37 +544,37 @@ def water_cannon(ascended=False):
         rod('Carriage / steel pivot',(x-.09,-.45,2.06),(x+.09,-.45,2.06),.16,'iron',turret)
     barrel=group('barrel',(0,-.43,2.08),turret)
     a=Vector((0,-.22,2.02)); b=Vector((0,-1.48,2.42)); direction=(b-a).normalized()
-    hollow_barrel('Barrel / turquoise enamel cannon',a,b,.31,.205,'enamel',barrel)
+    hollow_barrel('Barrel / basalt crusher cannon' if crush else 'Barrel / turquoise enamel cannon',a,b,.36 if crush else .31,.23 if crush else .205,'stone_dark' if crush else 'enamel',barrel)
     for t in [0.12,.54,1.0]:
         center=a+(b-a)*t
-        ring=torus('Barrel / broad bronze collar',center,.31 if t<1 else .33,.065,'brass',barrel)
+        ring=torus('Barrel / broad iron collar' if crush else 'Barrel / broad bronze collar',center,(.36 if crush else .31) if t<1 else (.39 if crush else .33),.07 if crush else .065,'iron' if crush else 'brass',barrel)
         ring.rotation_euler=direction.to_track_quat('Z','Y').to_euler()
         for i in range(6):
             # Rivets sit on the collars' upper and side arcs.
             angle=math.tau*i/6
             right=Vector((1,0,0)); up=direction.cross(right)
-            point=center+(right*math.cos(angle)+up*math.sin(angle))*.34
+            point=center+(right*math.cos(angle)+up*math.sin(angle))*(.39 if crush else .34)
             rivet(point,'gold',.037,barrel)
     # A recessed blue plug gives the hollow muzzle depth without a black painted disk.
-    plug=cyl('Barrel / water chamber deep inside',b-direction*.30,.195,.04,'water',24,barrel,.0)
+    plug=cyl('Barrel / water chamber deep inside',b-direction*.30,.22 if crush else .195,.04,'iron' if crush else 'water',24,barrel,.0)
     plug.rotation_euler=direction.to_track_quat('Z','Y').to_euler()
     rod('Sight / brass front pin',tuple(b+Vector((0,.05,.30))),tuple(b+Vector((0,.05,.45))),.035,'gold',barrel)
     if ascended:
         # Lv.3: gold foundation, tidal crown over the tank, orbiting water ring, river pennants and a gilded muzzle flare.
         torus('Ascended / gold foundation ring',(0,0,.43),1.14,.045,'gold')
-        crystal('Ascended / tidal crown spire',0,.37,3.18,.46,.18,'water')
+        crystal('Ascended / tidal crown spire',0,.37,3.18,.46,.18,'crystal' if crush else 'water')
         for k,x in enumerate([-.30,.30]):
-            crystal(f'Ascended / crown side spire {k}',x,.37,3.14,.30,.11,'bubble')
+            crystal(f'Ascended / crown side spire {k}',x,.37,3.14,.30,.11,'crystal_dark' if crush else 'bubble')
         orbit=(math.radians(68),0,math.radians(18)); center=Vector((0,.37,2.30))
         torus('Ascended / orbiting water ring',tuple(center),.98,.05,'gold',rotation=orbit)
         spin=Euler(orbit).to_matrix()
         for i,ang in enumerate([0.4,2.3,4.2]):
             p=center+spin@Vector((.98*math.cos(ang),.98*math.sin(ang),0))
-            sphere(f'Ascended / orbiting water pearl {i}',tuple(p),(.12,.12,.12),'bubble')
+            sphere(f'Ascended / orbiting water pearl {i}',tuple(p),(.12,.12,.12),'stone_light' if crush else 'bubble')
         for x in [-.72,.72]:
             rod(f'Ascended / pennant pole {x:+.2f}',(x,.72,1.86),(x,.72,2.78),.03,'brass')
             crystal(f'Ascended / pennant pole finial {x:+.2f}',x,.72,2.76,.22,.08,'gold')
-            panel(f'Ascended / river pennant {x:+.2f}',[(x,2.68),(x+math.copysign(.62,x),2.50),(x,2.30)],.72,.03,'blue',bevel=.006)
+            panel(f'Ascended / river pennant {x:+.2f}',[(x,2.68),(x+math.copysign(.62,x),2.50),(x,2.30)],.72,.03,'red' if crush else 'blue',bevel=.006)
             panel(f'Ascended / pennant gold edge {x:+.2f}',[(x,2.70),(x+math.copysign(.66,x),2.50),(x,2.66)],.70,.02,'gold',bevel=.005)
         flare=torus('Ascended / gilded muzzle flare',tuple(b+direction*.06),.40,.07,'gold',barrel)
         flare.rotation_euler=direction.to_track_quat('Z','Y').to_euler()
@@ -678,7 +698,7 @@ for index,(name,build) in enumerate(zip(NAMES,(fire_tower,piercing_ballista,wate
     models.append((name,CURRENT,MODEL_ROOT))
 
 # Render-only Lv.3 variants, built after the exported models so they are unaffected.
-VARIANTS=(('lightning-tower','fire-tower',lambda ascended=False:fire_tower(ascended,True),(-14.0,10.0,0)),('lightning-tower-lv3','fire-tower',lambda ascended=True:fire_tower(ascended,True),(-14.0,20.0,0)),('rapid-crossbow','piercing-ballista',lambda ascended=False:piercing_ballista(ascended,True),(14.0,10.0,0)),('rapid-crossbow-lv3','piercing-ballista',lambda ascended=True:piercing_ballista(ascended,True),(14.0,20.0,0)),('fire-tower-lv3','fire-tower',fire_tower,(-7.0,10.0,0)),('piercing-ballista-lv3','piercing-ballista',piercing_ballista,(0.0,10.0,0)),('water-cannon-lv3','water-cannon',water_cannon,(7.0,10.0,0)))
+VARIANTS=(('lightning-tower','fire-tower',lambda ascended=False:fire_tower(ascended,True),(-14.0,10.0,0)),('lightning-tower-lv3','fire-tower',lambda ascended=True:fire_tower(ascended,True),(-14.0,20.0,0)),('rapid-crossbow','piercing-ballista',lambda ascended=False:piercing_ballista(ascended,True),(14.0,10.0,0)),('rapid-crossbow-lv3','piercing-ballista',lambda ascended=True:piercing_ballista(ascended,True),(14.0,20.0,0)),('crush-cannon','water-cannon',lambda ascended=False:water_cannon(ascended,True),(21.0,10.0,0)),('crush-cannon-lv3','water-cannon',lambda ascended=True:water_cannon(ascended,True),(21.0,20.0,0)),('fire-tower-lv3','fire-tower',fire_tower,(-7.0,10.0,0)),('piercing-ballista-lv3','piercing-ballista',piercing_ballista,(0.0,10.0,0)),('water-cannon-lv3','water-cannon',water_cannon,(7.0,10.0,0)))
 variants=[]
 for vname,base_name,build,home in VARIANTS:
     CURRENT=new_collection(vname)
@@ -686,7 +706,7 @@ for vname,base_name,build,home in VARIANTS:
     MODEL_ROOT=group(vname)
     MODEL_ROOT['asset']='Arcana Defense branch/upgrade render variant (sprite only, no GLB)'
     ascended = vname.endswith('-lv3')
-    builder_name = 'fire_tower(storm=True)' if vname.startswith('lightning-') else 'piercing_ballista(rapid=True)' if vname.startswith('rapid-') else build.__name__
+    builder_name = 'fire_tower(storm=True)' if vname.startswith('lightning-') else 'piercing_ballista(rapid=True)' if vname.startswith('rapid-') else 'water_cannon(crush=True)' if vname.startswith('crush-') else build.__name__
     MODEL_ROOT['authoring']=f'Generated by tools/blender/build_towers.py; {builder_name}, ascended={ascended}.'
     build(vname.endswith('-lv3'))
     MODEL_ROOT.scale=(1.6,1.6,1.6)

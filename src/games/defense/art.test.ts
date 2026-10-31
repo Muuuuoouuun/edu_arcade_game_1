@@ -24,7 +24,7 @@ async function loadWithImageResults(failed:(src:string)=>boolean, scenario:strin
 test('only matching upgraded branches use the loaded battle renders; base art and other specializations remain available',async()=>{
  const {art,requests}=await loadWithImageResults(()=>false,'available');
  for(const [kind,branch,id,facing] of [
-  ['magic','fire','fire-tower',1],['magic','lightning','lightning-tower',1],['crossbow','pierce','piercing-ballista',-1],['crossbow','rapid','rapid-crossbow',-1],['cannon','water','water-cannon',-1],
+  ['magic','fire','fire-tower',1],['magic','lightning','lightning-tower',1],['crossbow','pierce','piercing-ballista',-1],['crossbow','rapid','rapid-crossbow',-1],['cannon','water','water-cannon',-1],['cannon','crush','crush-cannon',-1],
  ] as const){
   const specialized=art.towerSpriteAsset(kind,branch,2),mastered=art.towerSpriteAsset(kind,branch,3);
   assert.equal(specialized?.src,`/defense/models/${id}-game.webp`);
@@ -35,7 +35,7 @@ test('only matching upgraded branches use the loaded battle renders; base art an
   assert.equal(art.towerSpriteAsset(kind)?.src,'/defense/tower-models.png');
   assert.equal(art.towerSpriteAsset(kind,branch,1)?.src,'/defense/tower-models.png');
  }
- assert.equal(art.towerSpriteAsset('cannon','crush',2)?.src,'/defense/tower-models.png');
+ assert.equal(art.towerSpriteAsset('cannon',null,2)?.src,'/defense/tower-models.png','an unspecialized cannon keeps the atlas');
  assert.equal(art.spriteAsset(4).src,'/defense/tower-models.png');
  assert.equal(art.spriteAsset(5).src,'/defense/tower-models.png');
  assert.equal(art.spriteAsset(6).src,'/defense/tower-models.png');
