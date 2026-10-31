@@ -10,7 +10,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const directory = path.join(root, 'public/defense/models');
 const digest = file => createHash('sha256').update(readFileSync(file)).digest('hex');
 const files = [];
-for (const id of ['fire-tower', 'fire-tower-lv3', 'lightning-tower', 'lightning-tower-lv3', 'piercing-ballista', 'piercing-ballista-lv3', 'rapid-crossbow', 'rapid-crossbow-lv3', 'water-cannon', 'water-cannon-lv3']) {
+for (const id of ['fire-tower', 'fire-tower-lv3', 'lightning-tower', 'lightning-tower-lv3', 'piercing-ballista', 'piercing-ballista-lv3', 'rapid-crossbow', 'rapid-crossbow-lv3', 'crush-cannon', 'crush-cannon-lv3', 'water-cannon', 'water-cannon-lv3']) {
   const source = path.join(directory, `${id}.png`);
   const header = readFileSync(source).subarray(0, 26);
   if (!header.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])) ||

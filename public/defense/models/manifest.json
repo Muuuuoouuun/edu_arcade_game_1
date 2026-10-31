@@ -108,6 +108,22 @@
       "render_only": true,
       "mesh_objects": 182,
       "vertices_before_modifiers": 7643
+    },
+    {
+      "id": "crush-cannon",
+      "base": "water-cannon",
+      "sprite": "/defense/models/crush-cannon.png",
+      "render_only": true,
+      "mesh_objects": 140,
+      "vertices_before_modifiers": 9096
+    },
+    {
+      "id": "crush-cannon-lv3",
+      "base": "water-cannon",
+      "sprite": "/defense/models/crush-cannon-lv3.png",
+      "render_only": true,
+      "mesh_objects": 157,
+      "vertices_before_modifiers": 10364
     }
   ]
 }

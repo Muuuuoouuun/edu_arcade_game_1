@@ -195,6 +195,54 @@
       "sha256": "9a95f0771814249d8f376de21a29f9429b90564d6c84a38f11f89d14d0239bf5"
     },
     {
+      "id": "crush-cannon",
+      "source": "crush-cannon.png",
+      "file": "crush-cannon-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        145,
+        88,
+        491,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 432706,
+      "bytes": 25350,
+      "source_sha256": "462cd414f2357e1716c349025e8d467b5d3e86550cd775dd50e4d40156517134",
+      "sha256": "add2ab6f7d58aad3ec3aa10f59a74b36e8add0d050c65422ed5ba22d2b76d3a7"
+    },
+    {
+      "id": "crush-cannon-lv3",
+      "source": "crush-cannon-lv3.png",
+      "file": "crush-cannon-lv3-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        139,
+        49,
+        529,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 480910,
+      "bytes": 36300,
+      "source_sha256": "3c2637a59371b64f143741aa69d838e8170a09b2e68bd994caa1809069c9a7bd",
+      "sha256": "3d436cc1e2d90c27951fd1eef626e7b985b7397077f59119fb4cf4e07a6b6d7e"
+    },
+    {
       "id": "water-cannon",
       "source": "water-cannon.png",
       "file": "water-cannon-game.webp",

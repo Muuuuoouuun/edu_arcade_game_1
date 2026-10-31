@@ -59,6 +59,7 @@ const BAKED_TOWERS:Record<TowerKind,BakedTower> = {
 const BAKED_BRANCHES:BakedTower[] = [
  {kind:'magic',branch:'lightning',asset:{src:'/defense/models/lightning-tower-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16},mastered:{src:'/defense/models/lightning-tower-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16}},
  {kind:'crossbow',branch:'rapid',asset:{src:'/defense/models/rapid-crossbow-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/rapid-crossbow-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
+ {kind:'cannon',branch:'crush',asset:{src:'/defense/models/crush-cannon-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/crush-cannon-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
 ];
 const bakedFor=(kind:TowerKind,branch:Branch|null)=>BAKED_BRANCHES.find(model=>model.kind===kind&&model.branch===branch)??BAKED_TOWERS[kind];
 /** Available model renders take precedence; each failed render keeps its atlas fallback. */
