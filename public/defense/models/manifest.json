@@ -76,6 +76,22 @@
       "render_only": true,
       "mesh_objects": 177,
       "vertices_before_modifiers": 11172
+    },
+    {
+      "id": "lightning-tower",
+      "base": "fire-tower",
+      "sprite": "/defense/models/lightning-tower.png",
+      "render_only": true,
+      "mesh_objects": 87,
+      "vertices_before_modifiers": 2938
+    },
+    {
+      "id": "lightning-tower-lv3",
+      "base": "fire-tower",
+      "sprite": "/defense/models/lightning-tower-lv3.png",
+      "render_only": true,
+      "mesh_objects": 100,
+      "vertices_before_modifiers": 4446
     }
   ]
 }

@@ -2,7 +2,7 @@
 
 Run from the repository root:
     blender -b --python tools/blender/build_towers.py
-Optional arguments after --: --size 640 --samples 128 --only fire-tower|fire-tower-lv3|piercing-ballista-lv3|water-cannon-lv3 --skip-render
+Optional arguments after --: --size 640 --samples 128 --only fire-tower|fire-tower-lv3|lightning-tower|lightning-tower-lv3|piercing-ballista-lv3|water-cannon-lv3 --skip-render
 *-lv3 ids are render-only Lv.3 sprite variants (baked 2.5D, no GLB).
 No image inputs are altered. All geometry/materials are authored here in Blender.
 """
@@ -23,7 +23,7 @@ NAMES = ('fire-tower', 'piercing-ballista', 'water-cannon')
 args = argparse.ArgumentParser()
 args.add_argument('--size', type=int, default=640)
 args.add_argument('--samples', type=int, default=128)
-VARIANTS_IDS = ('fire-tower-lv3', 'piercing-ballista-lv3', 'water-cannon-lv3')
+VARIANTS_IDS = ('fire-tower-lv3', 'piercing-ballista-lv3', 'water-cannon-lv3', 'lightning-tower', 'lightning-tower-lv3')
 args.add_argument('--only', choices=NAMES + VARIANTS_IDS)
 args.add_argument('--skip-render', action='store_true')
 opts = args.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
@@ -81,6 +81,10 @@ M = {
     'glass': mat('Glass / turquoise pressure vessel', (0.035, 0.62, 0.69), roughness=0.17, transmission=0.32),
     'water': mat('Water / luminous azure reservoir', (0.012, 0.36, 0.54), roughness=0.21, emission=0.16),
     'enamel': mat('Enamel / turquoise cannon shell', (0.018, 0.34, 0.38), 0.4, 0.25),
+    'volt': mat('Crystal / storm outer facets', (0.10, 0.28, 0.85), roughness=0.2, emission=0.15, transmission=0.10),
+    'volt_light': mat('Crystal / illuminated cyan facets', (0.25, 0.82, 1.0), roughness=0.16, emission=0.55),
+    'volt_dark': mat('Crystal / deep indigo facets', (0.05, 0.05, 0.38), roughness=0.3, emission=0.06),
+    'arc': mat('Crystal / white-violet arc heart', (0.78, 0.86, 1.0), roughness=0.14, emission=1.8),
     'bubble': mat('Water / bright air bubbles', (0.24, 0.88, 0.94), roughness=0.12, emission=0.25),
 }
 CURRENT = None
@@ -283,16 +287,18 @@ def crystal(name, x, y, bottom, height, radius, material, parent=None):
         j = (i+1)%n
         faces += [(0,1+j,1+i),(1+i,1+j,1+n+j,1+n+i),(1+n+i,1+n+j,len(verts)-1)]
     obj=mesh(name,verts,faces,material,parent,.008)
-    if material=='crystal':
-        obj.data.materials.append(M['crystal_light'])
-        obj.data.materials.append(M['crystal_dark'])
+    if material in ('crystal','volt'):
+        obj.data.materials.append(M['crystal_light' if material=='crystal' else 'volt_light'])
+        obj.data.materials.append(M['crystal_dark' if material=='crystal' else 'volt_dark'])
         # Real facet materials keep the shard readable without a texture or bloom.
         for face in obj.data.polygons:
             face.material_index=(1 if face.index%9 in (1,2,5) else 2 if face.index%9 in (6,7) else 0)
     return obj
 
 
-def fire_tower(ascended=False):
+def fire_tower(ascended=False, storm=False):
+    # storm=True is the Lightning branch: same keep, blue-white arc crystal, rod and bolt window.
+    CRY,HEART=('volt','arc') if storm else ('crystal','core')
     base()
     cyl('Keep / basalt core',(0,0,1.02),.95,1.42,'mortar',32)
     for row in range(3):
@@ -307,14 +313,14 @@ def fire_tower(ascended=False):
     cyl('Crown / lower brass girdle',(0,0,1.67),1.05,.13,'brass',32)
     torus('Crown / polished rim',(0,0,1.75),.78,.07,'gold')
     cyl('Crown / fiery brazier',(0,0,1.75),.72,.15,'iron',24)
-    cyl('Crown / ember pool',(0,0,1.84),.64,.035,'core',32)
+    cyl('Crown / ember pool',(0,0,1.84),.64,.035,HEART,32)
     core=group('fire-core',(0,0,2.45))
     core['animation_hint']='Pulse scale 0.98–1.04 or bob along local Z.'
-    crystal('Crystal / main amber shard',0,0,1.82,1.92,.55,'crystal',core)
+    crystal('Crystal / main amber shard',0,0,1.82,1.92,.55,CRY,core)
     for side in [-1,1]:
-        crystal('Crystal / orbiting ember shard',side*.69,.18,1.95,1.08,.23,'crystal',core)
+        crystal('Crystal / orbiting ember shard',side*.69,.18,1.95,1.08,.23,CRY,core)
         crystal('Crystal / shard foot',side*.69,.18,1.91,.27,.27,'brass')
-    crystal('Crystal / incandescent center',0,-.025,1.94,1.39,.28,'core',core)
+    crystal('Crystal / incandescent center',0,-.025,1.94,1.39,.28,HEART,core)
     for i,angle in enumerate([math.pi/4,3*math.pi/4,5*math.pi/4,7*math.pi/4]):
         points=[(.72,1.65),(.99,1.75),(.99,1.98),(.79,2.34),(.59,2.58),(.62,2.20),(.72,1.97)]
         tangent=Vector((-math.sin(angle),math.cos(angle),0))
@@ -331,27 +337,36 @@ def fire_tower(ascended=False):
     arch=[(-.37,.47),(.37,.47),(.37,1.12),(.27,1.38),(0,1.59),(-.27,1.38),(-.37,1.12)]
     panel('Keep / bronze arch surround',arch,-1.02,.10,'brass',bevel=.028)
     panel('Keep / deep arched recess',[(x*.77,.56+(z-.47)*.81) for x,z in arch],-1.09,.025,'mortar',bevel=.012)
-    panel('Keep / glowing flame window',[(0,.65),(-.16,.84),(-.12,1.07),(-.035,1.0),(0,1.31),(.17,1.02),(.13,.80)],-1.113,.016,'core',bevel=.008)
+    if storm:
+        panel('Keep / glowing lightning window',[(.10,.64),(-.13,.93),(-.01,.93),(-.12,1.28),(.17,.88),(.04,.88)],-1.113,.016,HEART,bevel=.008)
+    else:
+      panel('Keep / glowing flame window',[(0,.65),(-.16,.84),(-.12,1.07),(-.035,1.0),(0,1.31),(.17,1.02),(.13,.80)],-1.113,.016,HEART,bevel=.008)
     for side in [-1,1]:
         cube('Keep / basalt arch pilaster',(side*.42,-.99,.88),(.14,.17,.83),'stone_dark2',.025)
         crystal('Keep / gold arch pinnacle',side*.42,-.99,1.29,.20,.10,'gold')
+    if storm:
+        # Steel lightning rod over the shard and a tilted arc ring: reads as electric, not flame, at small size.
+        rod('Storm / lightning rod',(0,0,3.5),(0,0,3.8),.05,'steel')
+        sphere('Storm / rod tip',(0,0,3.82),(.08,.08,.08),HEART)
+        ring=torus('Storm / arc ring',(0,0,2.45),.86,.025,HEART)
+        ring.rotation_euler=(math.radians(68),0,math.radians(20))
     if ascended:
         # Lv.3 is taller than Lv.2 but must fit the shared battle crop (checked by build-tower-sprites.mjs).
         torus('Ascended / gold foundation ring',(0,0,.43),1.14,.045,'gold')
         for i,angle in enumerate([math.pi/4,3*math.pi/4,5*math.pi/4,7*math.pi/4]):
             x,y=1.04*math.cos(angle),1.04*math.sin(angle)
-            crystal(f'Ascended / buttress flame spire {i+1}',x,y,1.88,.78,.14,'crystal')
+            crystal(f'Ascended / buttress flame spire {i+1}',x,y,1.88,.78,.14,CRY)
         halo_tilt=(math.radians(42),0,math.radians(-28))
         halo_z=2.68
         # Tilt after parenting: torus() would parent from a stale, unrotated matrix_world.
-        for name,thickness,material in (('gold',.05,'gold'),('ember',.02,'core')):
+        for name,thickness,material in (('gold',.05,'gold'),('ember',.02,HEART)):
             ring=torus(f'Ascended / {name} halo',(0,0,halo_z),1.12,thickness,material)
             ring.rotation_euler=halo_tilt
         rot=Euler(halo_tilt).to_matrix()
         for i in range(6):
             a=math.tau*i/6+.3
             p=rot@Vector((1.12*math.cos(a),1.12*math.sin(a),0))
-            sphere(f'Ascended / halo ember bead {i+1}',(p.x,p.y,halo_z+p.z),(.085,.085,.085),'core')
+            sphere(f'Ascended / halo ember bead {i+1}',(p.x,p.y,halo_z+p.z),(.085,.085,.085),HEART)
 
 
 def oak_keep():
@@ -651,15 +666,17 @@ for index,(name,build) in enumerate(zip(NAMES,(fire_tower,piercing_ballista,wate
     models.append((name,CURRENT,MODEL_ROOT))
 
 # Render-only Lv.3 variants, built after the exported models so they are unaffected.
-VARIANTS=(('fire-tower-lv3','fire-tower',fire_tower,(-7.0,10.0,0)),('piercing-ballista-lv3','piercing-ballista',piercing_ballista,(0.0,10.0,0)),('water-cannon-lv3','water-cannon',water_cannon,(7.0,10.0,0)))
+VARIANTS=(('lightning-tower','fire-tower',lambda ascended=False:fire_tower(ascended,True),(-14.0,10.0,0)),('lightning-tower-lv3','fire-tower',lambda ascended=True:fire_tower(ascended,True),(-14.0,20.0,0)),('fire-tower-lv3','fire-tower',fire_tower,(-7.0,10.0,0)),('piercing-ballista-lv3','piercing-ballista',piercing_ballista,(0.0,10.0,0)),('water-cannon-lv3','water-cannon',water_cannon,(7.0,10.0,0)))
 variants=[]
 for vname,base_name,build,home in VARIANTS:
     CURRENT=new_collection(vname)
     MODEL_ROOT=None
     MODEL_ROOT=group(vname)
-    MODEL_ROOT['asset']='Arcana Defense Lv.3 render variant (sprite only, no GLB)'
-    MODEL_ROOT['authoring']=f'Generated by tools/blender/build_towers.py; {build.__name__}(ascended=True).'
-    build(True)
+    MODEL_ROOT['asset']='Arcana Defense branch/upgrade render variant (sprite only, no GLB)'
+    ascended = vname.endswith('-lv3')
+    builder_name = 'fire_tower(storm=True)' if vname.startswith('lightning-') else build.__name__
+    MODEL_ROOT['authoring']=f'Generated by tools/blender/build_towers.py; {builder_name}, ascended={ascended}.'
+    build(vname.endswith('-lv3'))
     MODEL_ROOT.scale=(1.6,1.6,1.6)
     MODEL_ROOT.location=home
     CURRENT.hide_render=True

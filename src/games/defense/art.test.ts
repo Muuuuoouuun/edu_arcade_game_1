@@ -24,7 +24,7 @@ async function loadWithImageResults(failed:(src:string)=>boolean, scenario:strin
 test('only matching upgraded branches use the loaded battle renders; base art and other specializations remain available',async()=>{
  const {art,requests}=await loadWithImageResults(()=>false,'available');
  for(const [kind,branch,id,facing] of [
-  ['magic','fire','fire-tower',1],['crossbow','pierce','piercing-ballista',-1],['cannon','water','water-cannon',-1],
+  ['magic','fire','fire-tower',1],['magic','lightning','lightning-tower',1],['crossbow','pierce','piercing-ballista',-1],['cannon','water','water-cannon',-1],
  ] as const){
   const specialized=art.towerSpriteAsset(kind,branch,2),mastered=art.towerSpriteAsset(kind,branch,3);
   assert.equal(specialized?.src,`/defense/models/${id}-game.webp`);
@@ -35,7 +35,7 @@ test('only matching upgraded branches use the loaded battle renders; base art an
   assert.equal(art.towerSpriteAsset(kind)?.src,'/defense/tower-models.png');
   assert.equal(art.towerSpriteAsset(kind,branch,1)?.src,'/defense/tower-models.png');
  }
- for(const [kind,branch] of [['magic','lightning'],['crossbow','rapid'],['cannon','crush']] as const)
+ for(const [kind,branch] of [['crossbow','rapid'],['cannon','crush']] as const)
   assert.equal(art.towerSpriteAsset(kind,branch,2)?.src,'/defense/tower-models.png');
  assert.equal(art.spriteAsset(4).src,'/defense/tower-models.png');
  assert.equal(art.spriteAsset(5).src,'/defense/tower-models.png');
@@ -50,6 +50,12 @@ test('a failed model image falls back to the same specialization without suppres
  assert.notEqual(water?.viewBox,base?.viewBox,'the water specialization keeps its own atlas frame');
  assert.equal(art.towerSpriteAsset('magic','fire',2)?.src,'/defense/models/fire-tower-game.webp');
  assert.equal(art.towerSpriteAsset('crossbow','pierce',2)?.src,'/defense/models/piercing-ballista-game.webp');
+});
+
+test('a failed Lightning render falls back to the atlas without touching the Fire tower',async()=>{
+ const {art}=await loadWithImageResults(src=>src.endsWith('/lightning-tower-game.webp'),'lightning-failure');
+ assert.equal(art.towerSpriteAsset('magic','lightning',2)?.src,'/defense/tower-models.png');
+ assert.equal(art.towerSpriteAsset('magic','fire',2)?.src,'/defense/models/fire-tower-game.webp');
 });
 
 test('a failed Lv.3 render keeps the Lv.2 render instead of the atlas',async()=>{
