@@ -51,6 +51,54 @@
       "sha256": "2ae409992bb0857f61a0757b636a95a6aa7858f412dad3fa95bbd1b8ccc146c7"
     },
     {
+      "id": "lightning-tower",
+      "source": "lightning-tower.png",
+      "file": "lightning-tower-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        149,
+        39,
+        491,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 459802,
+      "bytes": 30530,
+      "source_sha256": "090edcf7aee4af7362e1e653fe28431c9ebe928502b7b5e0e23a08785c08a18b",
+      "sha256": "c85e85247428250ab02e5d64aed0322a4cf468bdd29ecfc47398eb17574f4649"
+    },
+    {
+      "id": "lightning-tower-lv3",
+      "source": "lightning-tower-lv3.png",
+      "file": "lightning-tower-lv3-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        149,
+        38,
+        491,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 499632,
+      "bytes": 40344,
+      "source_sha256": "f001430a93fc52923847bd70fe71506a2bffd6eb10be732ee6fd1fdc74046994",
+      "sha256": "2381f47541212e4d2ffa3ed04c2ac01fbf2f03dbce732b223031fc6d20670753"
+    },
+    {
       "id": "piercing-ballista",
       "source": "piercing-ballista.png",
       "file": "piercing-ballista-game.webp",

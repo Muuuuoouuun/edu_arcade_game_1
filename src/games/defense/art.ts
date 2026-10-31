@@ -48,15 +48,21 @@ const TOWER_MODELS:MotionFrame[] = [
 // A shared, centered camera frame keeps the foundation on the same ground anchor.
 // Its projected ground center is (320, 488.65): this crop/scale aligns it within
 // half a world pixel of the build point at Lv.2, including TowerUnit's +12 offset.
-const BAKED_TOWERS:Record<TowerKind,{branch:Branch;asset:SpriteAsset;mastered?:SpriteAsset}> = {
+type BakedTower={branch:Branch;asset:SpriteAsset;mastered?:SpriteAsset};
+const BAKED_TOWERS:Record<TowerKind,BakedTower> = {
  crossbow:{branch:'pierce',asset:{src:'/defense/models/piercing-ballista-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/piercing-ballista-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
  // Lv.3 has its own render with the same camera/crop, so the ground anchor is shared with Lv.2.
  magic:{branch:'fire',asset:{src:'/defense/models/fire-tower-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16},mastered:{src:'/defense/models/fire-tower-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16}},
  cannon:{branch:'water',asset:{src:'/defense/models/water-cannon-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/water-cannon-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
 };
+// Render-only branch variants (baked 2.5D, no GLB), same camera and crop as the Fire tower.
+const BAKED_BRANCHES:BakedTower[] = [
+ {branch:'lightning',asset:{src:'/defense/models/lightning-tower-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16},mastered:{src:'/defense/models/lightning-tower-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16}},
+];
+const bakedFor=(kind:TowerKind,branch:Branch|null)=>[BAKED_TOWERS[kind],...(kind==='magic'?BAKED_BRANCHES:[])].find(model=>model.branch===branch)??BAKED_TOWERS[kind];
 /** Available model renders take precedence; each failed render keeps its atlas fallback. */
 export function towerSpriteAsset(kind:TowerKind,branch:Branch|null=null,level=1):SpriteAsset|null {
- const baked=BAKED_TOWERS[kind];
+ const baked=bakedFor(kind,branch);
  if(level===3&&branch===baked.branch&&baked.mastered&&motionLoaded.has(baked.mastered.src))return {...baked.mastered,displayScale:(baked.mastered.displayScale??1)*1.025};
  if(level>=2&&branch===baked.branch&&motionLoaded.has(baked.asset.src))return {...baked.asset,displayScale:(baked.asset.displayScale??1)*(level===3?1.025:1)};
  const src='/defense/tower-models.png';if(!motionLoaded.has(src))return null;
@@ -98,7 +104,7 @@ export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAss
 /** Load while preparing in camp; slow or failed requests keep the existing idle art. */
 export function preloadDefenseMotion():Promise<void> {
  if(typeof Image==='undefined')return Promise.resolve();
- return motionPreload ??= Promise.all(['/defense/melee-motion.png','/defense/ranged-motion.png','/defense/tower-models.png','/defense/monster-models.png','/defense/boss-models.png',...Object.values(BAKED_TOWERS).flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...Object.values(DWARF_RENDERS).map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.png','/defense/ranged-motion.png','/defense/tower-models.png','/defense/monster-models.png','/defense/boss-models.png',...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...Object.values(DWARF_RENDERS).map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
   const asset=new Image();
   asset.onload=()=>{motionLoaded.add(src);asset.onload=null;asset.onerror=null;resolve();};
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
