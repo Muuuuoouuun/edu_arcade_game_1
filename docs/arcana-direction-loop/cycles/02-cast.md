@@ -31,11 +31,11 @@
 | 카르 (바바리안) | 2-1 후 | 충격 | 140 | 66 / 1.3 | 범위 75, 넉백 190 | **붉은 머리와 수염, 톱니 장식 망치, 황동 장식**, 흰 털 망토 |
 | 루나 (드루이드) | 2-3 후 | 물리 | 195 | 16 / 0.95 | 늑대 영물, 둔화 | 동물 귀, 덩굴 지팡이. 늑대는 흰 털에 녹색 보석 목걸이 |
 
-출처: `src/games/defense/data.ts` `HEROES`, `engine.ts` `heroStats`, `public/defense/snow-atlas.png`, `melee-motion.png`, `ranged-motion.png`.
+출처: `src/games/defense/data.ts` `HEROES`, `engine.ts` `heroStats`, `public/defense/snow-atlas.png`, `melee-motion.webp`, `ranged-motion.webp`.
 
 ### 2-2. 발견
 
-1. **카르 ≈ 브론 (가장 심각).** `melee-motion.png` 위 두 줄을 나란히 보면 둘 다 붉은 머리, 붉은 수염, 땅딸막한 드워프 비율, 톱니 장식 망치, 황동 갑옷이다. 속성(충격), 근접 거리(140/155), 넉백까지 겹친다. 카르를 용병으로 쓰고 브론을 영웅으로 쓰면 64px 전장에서 둘을 구분하기 어렵다. 카르의 필살기 이름 ‘산맥 가르기’는 베는 무기를 말하는데 그림은 망치다.
+1. **카르 ≈ 브론 (가장 심각).** `melee-motion.webp` 위 두 줄을 나란히 보면 둘 다 붉은 머리, 붉은 수염, 땅딸막한 드워프 비율, 톱니 장식 망치, 황동 갑옷이다. 속성(충격), 근접 거리(140/155), 넉백까지 겹친다. 카르를 용병으로 쓰고 브론을 영웅으로 쓰면 64px 전장에서 둘을 구분하기 어렵다. 카르의 필살기 이름 ‘산맥 가르기’는 베는 무기를 말하는데 그림은 망치다.
 2. **이안의 색이 속성을 거스른다.** 이안은 불 속성(대표색 주황 `#e4813f`)인데 그림은 파란 수정과 파란 로브다. 이 게임에서 파랑은 얼음·물이다(빙결 기사·서리늑대·서리군주·물폭탄포). 정체성 기준 1(재료와 속성을 보고 읽는다)과 충돌한다. 같은 불 속성인 Blender 화염탑은 주황 수정을 쓴다.
 3. **루나는 기획의 ‘수인’ 정의와 다르다.** 기획은 수인을 “동물 얼굴·털·발·꼬리를 유지한 두 발 캐릭터”로 정의했다(`cast-and-items.md`). 실제 루나는 사람 얼굴에 동물 귀만 있다. 콘셉트의 은서리 늑대 수인(`variants/silverfrost-wolf-variants.png` 오른쪽)과도 다르다.
 4. **청운과 기획의 부적술사가 겹친다.** 둘 다 부적을 쓰는 동방 술사다. 그대로 두면 새 동료를 만들 때 역할이 중복된다.
@@ -124,14 +124,14 @@
 | 항목 | 내용 |
 | --- | --- |
 | 대상·목적 | 카르를 브론과 다른 사람으로 보이게 한다. 2-3의 사연(구조대 생존자)과 2-4의 역할(전선 돌파·부채꼴)을 형태와 동작에 담는다. |
-| 참고 이미지 | `public/defense/snow-atlas.png` 첫 칸(현행 카르) — 가져올 것: 흰 털 망토, 넓은 어깨. 버릴 것: 붉은 머리·수염, 톱니 망치, 드워프 비율.<br>`public/defense/melee-motion.png` 위 두 줄 — 공격 3단계의 시간 배분. 브론과 **닮지 않아야 할** 기준으로도 쓴다.<br>`public/defense/models/dwarf-*-game.webp` — 같은 Blender 장난감 렌더의 카메라·조명·윤곽 기준.<br>`art-source/defense/concepts/2026-10-29/heroes/spear-guardian.png` — 가져올 것: 키 큰 비율, 먹청 누비옷, 주홍 허리띠와 매듭. 버릴 것: 창.<br>`art-source/defense/concepts/2026-10-29/variants/silverfrost-wolf-variants.png` 오른쪽 — 설산 정찰 복장의 가죽 끈, 주홍 매듭 장식. |
+| 참고 이미지 | `public/defense/snow-atlas.png` 첫 칸(현행 카르) — 가져올 것: 흰 털 망토, 넓은 어깨. 버릴 것: 붉은 머리·수염, 톱니 망치, 드워프 비율.<br>`art-source/defense/atlases/melee-motion.png` 위 두 줄 — 공격 3단계의 시간 배분. 브론과 **닮지 않아야 할** 기준으로도 쓴다.<br>`public/defense/models/dwarf-*-game.webp` — 같은 Blender 장난감 렌더의 카메라·조명·윤곽 기준.<br>`art-source/defense/concepts/2026-10-29/heroes/spear-guardian.png` — 가져올 것: 키 큰 비율, 먹청 누비옷, 주홍 허리띠와 매듭. 버릴 것: 창.<br>`art-source/defense/concepts/2026-10-29/variants/silverfrost-wolf-variants.png` 오른쪽 — 설산 정찰 복장의 가죽 끈, 주홍 매듭 장식. |
 | 실루엣 (64px) | ① 브론보다 1.25배 큰 키, 머리:몸 = 1:3 ② 어깨 위로 솟은 양날 도끼 머리. 초승달 두 개가 브론의 사각 망치와 반대 모양이다. ③ 왼팔의 주홍 구조대 완장 한 점. 수비대 문장이 정해지면 그 문장으로 바꾼다. |
 | 부위·노드 | 드워프 피벗 이름 규칙을 따른다. `barbarian`(원점) › `body` › `head`, `axe-arm` › `axe-forearm` › `axe`, `guard-arm`, `cape`(부가 흔들림). |
 | 재질·팔레트 | 털 망토 상아 #e8e4da, 누비옷 먹청 #2c3a4a, 허리띠·완장 주홍 #d2502f, 도끼날 강철 #b9c3c9(날 끝 서리 하이라이트), 자루 물푸레 #8a6a45, 머리 먹청 #1f2730.<br>**붉은 머리와 황동 장식은 쓰지 않는다**(브론 전용). |
 | 포즈 | 히어로 포즈 계약 idle·windup·strike·recover를 유지한다(`art.ts` `DWARF_POSES`, `ActionPose`).<br>idle: 도끼를 어깨에 걸침.<br>windup: 몸을 비틀며 도끼를 반대쪽 어깨 뒤로.<br>strike: **수평 휩쓸기**. 도끼날이 몸 앞 부채꼴을 지나간다.<br>recover: 도끼를 끌며 자세를 되찾는다.<br>브론의 strike는 수직 내려찍기이므로 동작 자체가 역할(한 점 / 부채꼴)을 보여 준다. |
 | 게임 크기 가독성 | 브론이 영웅이고 카르가 용병인 경우(동시 배치 가능)를 기준 장면으로 삼는다. 390px 세로 전장 확대 카메라와 전체 보기 모두에서 둘을 키·무기·머리색으로 구분한다. 도끼가 위쪽 체력바를 가리지 않도록 idle에서 도끼 머리를 어깨 높이로 둔다. |
 | 예산 | 런타임 삼각형 ≤ 24k(드워프 23,190), 재질 ≤ 18, 640×640 프레임, 접지점 (320,550), 포즈당 게임 WebP ≤ 28 KB(드워프 24~26 KB). |
-| 제작 경로 | `tools/blender/build_barbarian.py`(신규, `build_dwarf.py`의 공용 함수 재사용) → `art-source/defense/barbarian.blend` → `public/defense/models/barbarian-{idle,windup,strike,recover}.png`, `*-game.webp`, `barbarian-model.json`, `hero-sprites.json` 항목. `art.ts`의 `DWARF_RENDERS`·`dwarfModelReady`를 영웅별 모델 묶음으로 일반화하고, 네 포즈가 모두 로드됐을 때만 전환한다. 대체 표시는 `melee-motion.png`로 남긴다. |
+| 제작 경로 | `tools/blender/build_barbarian.py`(신규, `build_dwarf.py`의 공용 함수 재사용) → `art-source/defense/barbarian.blend` → `public/defense/models/barbarian-{idle,windup,strike,recover}.png`, `*-game.webp`, `barbarian-model.json`, `hero-sprites.json` 항목. `art.ts`의 `DWARF_RENDERS`·`dwarfModelReady`를 영웅별 모델 묶음으로 일반화하고, 네 포즈가 모두 로드됐을 때만 전환한다. 대체 표시는 `melee-motion.webp`로 남긴다. |
 | 완료 판단 | 브론(영웅)+카르(용병) 같은 장면 스크린샷에서 64px 크기로 구분된다. strike 렌더가 실제 공격 판정 시점(`hitAt`)에 표시된다. 붉은 머리가 없다. 네 포즈의 접지 y가 550±2px다. 브론 모델의 기존 렌더와 수치가 바뀌지 않는다. |
 
 ### 3-2. 새싹 도적 — 그루터기 새싹
@@ -139,7 +139,7 @@
 | 항목 | 내용 |
 | --- | --- |
 | 대상·목적 | 이름·약점·사정(01회차: 베어 간 연장을 되찾는 새싹 무리)이 그림으로 읽히게 한다. |
-| 참고 이미지 | `public/defense/atlas.png` 9번째 칸(현행 고블린) — 가져올 것: 작은 키, 앞으로 숙인 달리기 자세, 손에 든 물건. 버릴 것: 고블린 얼굴·귀, 방패, 단검.<br>`public/defense/monster-models.png` 첫 줄(나무 병사) — 같은 나무 재질 가족. 크기와 형태로 구분한다.<br>`public/defense/boss-models.png` 윗줄(고목왕) — 이끼 색을 공유해 같은 숲 출신임을 보여 준다. |
+| 참고 이미지 | `public/defense/atlas.png` 9번째 칸(현행 고블린) — 가져올 것: 작은 키, 앞으로 숙인 달리기 자세, 손에 든 물건. 버릴 것: 고블린 얼굴·귀, 방패, 단검.<br>`art-source/defense/atlases/monster-models.png` 첫 줄(나무 병사) — 같은 나무 재질 가족. 크기와 형태로 구분한다.<br>`art-source/defense/atlases/boss-models.png` 윗줄(고목왕) — 이끼 색을 공유해 같은 숲 출신임을 보여 준다. |
 | 실루엣 (64px) | ① 작은 그루터기 몸통. 윗면의 **나이테 단면**이 ‘잘린 나무’라는 핵심 단서다. ② 머리 위로 솟은 새싹 두 잎(V자). ③ 등에 진 작은 톱 한 자루. 마을 연장을 되찾아 가는 중이다. |
 | 크기 | 나무 병사 키의 약 0.55배. 속도 48(나무 병사 28)에 맞춰 잰걸음으로 앞으로 기운 자세. |
 | 부위·노드 | `sprout-thief`(원점) › `stump`, `leaf-L`, `leaf-R`, `saw`, `leg-L`, `leg-R`. |
@@ -156,7 +156,7 @@
 | --- | --- | --- |
 | 1 | 카르 Blender 모델 4포즈 + 영웅별 모델 묶음 일반화 | 3-1 완료 판단 |
 | 2 | 새싹 도적 Blender 모델 3포즈 (송진 슬라임과 같은 생성기) | 3-2 완료 판단 |
-| 3 | 이안의 수정·로브 장식 색을 파랑에서 주황으로 (`ranged-motion.png` 첫 줄, `atlas.png` 첫 칸) | 원본 보존, 같은 크기와 위치. 390px에서 불 속성이 색으로 읽힘 |
+| 3 | 이안의 수정·로브 장식 색을 파랑에서 주황으로 (원본 `art-source/defense/atlases/ranged-motion.png` 첫 줄을 고친 뒤 `tools/build-motion-atlases.mjs`로 WebP 재생성, `atlas.png` 첫 칸) | 원본 보존, 같은 크기와 위치. 390px에서 불 속성이 색으로 읽힘 |
 | 4 | 합류 한 줄 대사 6개를 결과 화면 ‘다음 방문자’ 안내에 표시 | 사용자 확인 후. 저장·보상 불변, 360px에서 한 줄 |
 
 01회차 후보(송진 슬라임, 금줄 고목왕)는 그대로 유효하다. 같은 생성기를 쓰므로 송진 슬라임과 새싹 도적은 한 작업으로 묶을 수 있다.

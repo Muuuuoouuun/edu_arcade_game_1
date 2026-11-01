@@ -12,7 +12,7 @@
 | 분야 | 현재 상태 | 발견 |
 | --- | --- | --- |
 | 세계관 | 8스테이지 모두 한 줄 구조 요청이다(`src/games/defense/data.ts` `STAGES[].story`). 기획의 지역 5요소 중 “감춰진 사정”과 “해결 이후 변화”가 게임에 없다. | ① 적이 **왜 그 재료로 되어 있는지** 설명이 없다. 숲에 금속 병사와 절연 슬라임이 나오는 이유, 1-3 숲에 빙결 기사가 나오는 이유가 비어 있다(`difficulty.ts` `ENEMY_POOLS`). ② 2-4 보상인 황혼성(달빛 첨탑·수정)이 설산 이야기와 연결되지 않는다(`themes.ts`). |
-| 캐릭터 | 6영웅의 역할·스킬·대표색은 있으나 성격·목표는 사용자 결정 대기다. | ① **새싹 도적** 스프라이트는 방패와 단검을 든 초록 고블린이다. 이름과 약점(불 약점·물 내성)이 말하는 식물 재료가 보이지 않는다(`public/defense/atlas.png` 9번째 칸). ② **절연 슬라임**의 보라색이 고목왕 균열의 보라색과 같아, 두 적에게 하나의 공통 흑막이 있는 것처럼 보인다(`atlas.png` 14번째 칸, `boss-models.png` 윗줄). 사용자 결정 “단일 공통 배후로 묶지 않는다”와 충돌한다. |
+| 캐릭터 | 6영웅의 역할·스킬·대표색은 있으나 성격·목표는 사용자 결정 대기다. | ① **새싹 도적** 스프라이트는 방패와 단검을 든 초록 고블린이다. 이름과 약점(불 약점·물 내성)이 말하는 식물 재료가 보이지 않는다(`public/defense/atlas.png` 9번째 칸). ② **절연 슬라임**의 보라색이 고목왕 균열의 보라색과 같아, 두 적에게 하나의 공통 흑막이 있는 것처럼 보인다(`atlas.png` 14번째 칸, `boss-models.webp` 윗줄). 사용자 결정 “단일 공통 배후로 묶지 않는다”와 충돌한다. |
 | 운영 | 첫 클리어 100+40×스테이지, 반복 30+10×스테이지, 실패 최대 40 G, 퀘스트는 모든 스테이지 80 G(`campaign.ts` `completeRun`). 골드를 쓰는 곳은 공용 장비 5단계뿐이다. | 공용 장비가 5단계에 도달하면 골드를 쓸 곳이 없다. 사용자가 결정한 랭킹 모드는 아직 없다. → 03회차에 다룬다. |
 | 아이템·특성 | 장비가 없다. 성장은 공용 장비(단계당 +8%)와 2웨이브 뒤 전직(공격/제어) 두 가지다(`engine.ts`). | 전직 두 갈래가 6영웅 모두 같아서 영웅마다의 특성이 없다. 기획의 장비 14종(`cast-and-items.md`)은 연결되지 않았다. → 04회차에 다룬다. |
 
@@ -20,7 +20,7 @@
 
 | 계열 | 위치 | 톤 |
 | --- | --- | --- |
-| 전투 아틀라스 | `public/defense/atlas.png`, `monster-models.png`, `boss-models.png` | 귀여운 2등신 회화. 타워 깃발은 파랑 바탕 백합 문장(서양 왕실풍) |
+| 전투 아틀라스 | `public/defense/atlas.png`, `monster-models.webp`, `boss-models.webp` | 귀여운 2등신 회화. 타워 깃발은 파랑 바탕 백합 문장(서양 왕실풍) |
 | Blender 렌더 | `public/defense/models/*-game.webp` | 깔끔한 장난감 질감, 청록 금속과 황동, 속성 아이콘 명판(불꽃·번개·물) |
 | 콘셉트 원화 | `art-source/defense/concepts/2026-10-29/` | 반실사, 한국 산촌·기와, 청록·먹청·상아·주홍 |
 
@@ -129,14 +129,14 @@ Blender 계열이 앞으로의 제작 경로다(개발 루프 규약). 따라서
 | 항목 | 내용 |
 | --- | --- |
 | 대상·목적 | 3-2의 “약속의 고목, 진정시키는 보스”를 화면에 보여 준다. 공통 흑막을 암시하는 보라색을 없앤다. |
-| 참고 이미지 | `public/defense/boss-models.png` 윗줄 4포즈 — 가져올 것: 넓은 수관과 뿌리 다리, 긴 팔의 비율. 버릴 것: 몸의 보라색 균열빛.<br>`public/defense/atlas.png` 15번째 칸(거목형 보스) — 가져올 것: 땅에 박힌 뿌리 기단.<br>`art-source/defense/concepts/2026-10-29/encounters/path-folding-guardian.png` — 가져올 것: 꼬인 밧줄, 붉은 매듭과 술, 나무판. 버릴 것: 사람 얼굴 장승의 비율.<br>`art-source/defense/concepts/2026-10-29/terrain/rescue-camp-village.png` — 주홍·청록 팔레트. |
+| 참고 이미지 | `art-source/defense/atlases/boss-models.png` 윗줄 4포즈 — 가져올 것: 넓은 수관과 뿌리 다리, 긴 팔의 비율. 버릴 것: 몸의 보라색 균열빛.<br>`public/defense/atlas.png` 15번째 칸(거목형 보스) — 가져올 것: 땅에 박힌 뿌리 기단.<br>`art-source/defense/concepts/2026-10-29/encounters/path-folding-guardian.png` — 가져올 것: 꼬인 밧줄, 붉은 매듭과 술, 나무판. 버릴 것: 사람 얼굴 장승의 비율.<br>`art-source/defense/concepts/2026-10-29/terrain/rescue-camp-village.png` — 주홍·청록 팔레트. |
 | 실루엣 (64px) | ① 몸통 폭의 1.6배 이상인 넓은 수관 ② 네 갈래 뿌리 다리 ③ 가슴에 감긴 금줄과 **주홍 매듭 한 점**. 작은 화면에서는 이 점 하나가 보스를 구분한다. |
 | 부위·노드 | `treeking`(원점, 지면 중앙) › `trunk` › `crown`, `arm-L`, `arm-R`, `rope-knot`. `roots`는 돌진 예고 때 모아지는 별도 노드다. 정적 메시는 노드별 재질 묶음으로 병합한다(타워 `export_batching`과 같은 규칙). |
 | 재질·팔레트 | 껍질: 갈색 #6b4a2f + 이끼 #6f8f3c, 거친 범프.<br>불 약점 표시: 껍질 균열 사이로 마른 속이 상아색 #e9dcc0으로 드러난다(“불이 잘 붙는 마른 속”).<br>금줄: 짚 상아 #d8c79a, 숯 검정 #2a2a2a, 고추 주홍 #d2502f.<br>생명광: 보라 대신 청록 #5fc6b8. 격노(체력 절반)에는 균열이 주황 #f08a3c로 바뀌어 돌진을 예고한다. |
 | 포즈 | 엔진 `BOSS_MODELS`의 네 프레임 계약(idle·charge·hit·death)을 유지한다(`src/games/defense/art.ts`).<br>idle: 수관을 펴고 팔을 늘어뜨린다.<br>charge: 몸을 앞으로 기울이고 뿌리를 모은다. 균열이 주황.<br>hit: 상체를 뒤로 젖히고 잎이 흩어진다.<br>death 칸 → **calm**: 무릎을 꿇고 수관을 낮춘다. 금줄이 청록으로 빛난다. |
 | 게임 크기 가독성 | 기존 표시 폭 `span:345`과 bbox 가로세로비(1.0~1.3)를 유지한다. 수관이 위쪽 건설 지점(숲 `SLOTS` id 6 (540,130), id 7 (750,165))을 덮지 않도록 프레임 위 여백을 기존 boss 프레임 이상으로 둔다. 체력바 자리를 비워 둔다. |
 | 예산 | 런타임 삼각형 ≤ 25k(드워프 23,190, 발리스타 24,246 기준), 재질 ≤ 14, 640×640 프레임, 접지점 (320,550), 포즈당 게임 WebP ≤ 45 KB(Lv.3 타워 40~42 KB 기준). |
-| 제작 경로 | `tools/blender/build_treeking.py`(신규) → `art-source/defense/treeking.blend` → `public/defense/models/treeking-{idle,charge,hit,calm}.png`, `*-game.webp`, `treeking-model.json`. `art.ts`의 boss 분기에서 모델 렌더를 우선하고 `boss-models.png`는 로드 실패 시 대체로 남긴다(드워프와 같은 방식). |
+| 제작 경로 | `tools/blender/build_treeking.py`(신규) → `art-source/defense/treeking.blend` → `public/defense/models/treeking-{idle,charge,hit,calm}.png`, `*-game.webp`, `treeking-model.json`. `art.ts`의 boss 분기에서 모델 렌더를 우선하고 `boss-models.webp`는 로드 실패 시 대체로 남긴다(드워프와 같은 방식). |
 | 완료 판단 | 390px 세로 전장에서 주홍 매듭과 수관 실루엣이 구분된다. 네 포즈의 접지 y가 550±2px다. charge 렌더가 실제 체력 절반 돌진 시점에 표시된다. 보라색이 남지 않는다. 결과 문구가 calm 포즈와 모순되지 않는다(문구 조정은 별도 작업). |
 
 ### 4-2. 송진 슬라임 (절연 슬라임 재설계)
@@ -144,7 +144,7 @@ Blender 계열이 앞으로의 제작 경로다(개발 루프 규약). 따라서
 | 항목 | 내용 |
 | --- | --- |
 | 대상·목적 | 절연을 외형으로 읽게 한다(기준 1). 3-2·3-3의 송진 기원을 보여 준다. 고목왕과의 공통 보라색을 없앤다. |
-| 참고 이미지 | `public/defense/atlas.png` 14번째 칸(보라 슬라임) — 가져올 것: 낮고 넓은 방울 실루엣, 두 눈. 버릴 것: 보라색, 촉수.<br>`public/defense/monster-models.png` — 일반 몬스터의 2보행+피격 3열 배치와 크기감.<br>`public/defense/models/fire-tower-lv3-game.webp` — Blender 장난감 렌더의 광택과 윤곽 굵기 기준. |
+| 참고 이미지 | `public/defense/atlas.png` 14번째 칸(보라 슬라임) — 가져올 것: 낮고 넓은 방울 실루엣, 두 눈. 버릴 것: 보라색, 촉수.<br>`art-source/defense/atlases/monster-models.png` — 일반 몬스터의 2보행+피격 3열 배치와 크기감.<br>`public/defense/models/fire-tower-lv3-game.webp` — Blender 장난감 렌더의 광택과 윤곽 굵기 기준. |
 | 실루엣 (64px) | ① 낮은 물방울(높이 ≈ 폭의 0.7) ② 위쪽에 박힌 잎 또는 나뭇조각 하나. 호박 속 내포물처럼 보여 “나무에서 나온 송진”임을 알린다. ③ 바닥에 늘어진 끈적한 자국. |
 | 부위·노드 | `resin-slime`(원점) › `body`(셰이프 키: squash/stretch), `inclusion`, `eyes`. |
 | 재질·팔레트 | 반투명 호박색 #d9922e 표면, 짙은 속 #7a3f12, 강한 하이라이트. 내포된 잎은 녹색 #4f7a32 실루엣.<br>나무 병사와의 구분: 나무는 무광에 거칠고, 송진은 광택에 매끈하고 반투명하다. 색상환에서만 구분하지 않고 **광택과 투명도**로 구분한다. |
