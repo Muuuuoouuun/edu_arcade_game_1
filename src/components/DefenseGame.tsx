@@ -17,6 +17,7 @@ import { DIFFICULTIES } from '../games/defense/difficulty';
 import type { Campaign, DefenseAction, DefenseState, HeroId, TowerKind } from '../games/defense/types';
 import type { RoundRecord } from '../lib/storage';
 import { playSound, playCombatSound, unlockAudio } from '../lib/sound';
+import { playHaptic } from '../lib/haptic';
 import { preloadDefenseMotion, towerSpriteAsset } from '../games/defense/art';
 import { availableTheme, readDefenseTheme, themeUnlocked, writeDefenseTheme } from '../games/defense/themes';
 import type { DefenseThemeId } from '../games/defense/themes';
@@ -36,14 +37,16 @@ const greeting: Record<HeroId, string> = {
 function freshRunId() { return crypto.randomUUID(); }
 function latestStage(c: Campaign) { return Math.min(STAGE_COUNT, c.cleared.length + 1); }
 function completedWaves(s: DefenseState) { return s.phase === 'won' ? 4 : ['intermission', 'promotion'].includes(s.phase) ? s.wave : Math.max(0, s.wave - 1); }
-function combatFeedback(before: DefenseState, next: DefenseState) {
+function combatFeedback(before: DefenseState, next: DefenseState, haptics: boolean) {
   const cue = combatCueFor(before, next);
-  if (cue) playCombatSound(cue.kind, cue.pan);
+  if (cue) { playCombatSound(cue.kind, cue.pan); playHaptic(cue.kind, haptics); }
 }
 
 export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggleSound }: { blocked: boolean; onExit: () => void; onFinish: (record: RoundRecord) => void; sound: boolean; onToggleSound: () => void }) {
   const [mode, setMode] = useState<'camp' | 'battle'>('camp');
   const modeRef = useRef<'camp' | 'battle'>('camp');
+  const hapticsRef = useRef(sound);
+  hapticsRef.current = sound;
   const [campaign, setCampaign] = useState(readCampaign);
   const campaignRef = useRef(campaign);
   const [themePreference, setThemePreference] = useState(readDefenseTheme);
@@ -96,7 +99,7 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
     if (action.type === 'hire' && !campaignRef.current.visitors.includes(action.hero)) return;
     const next = actDefense(before, action);
     if (next === before) return;
-    combatFeedback(before, next); publish(next);
+    combatFeedback(before, next, hapticsRef.current); publish(next);
     if (['build', 'upgrade', 'hire', 'promote'].includes(action.type)) playSound('flip');
     if (action.type === 'start-wave') { unlockAudio(); playSound('start'); }
   }, [pause, resume, publish]);
@@ -154,7 +157,7 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
           next = stepDefense(next, fixedStep); accumulated -= fixedStep;
           if (next.phase === 'promotion' || (!finishing && (next.phase === 'won' || next.phase === 'lost'))) { accumulated = 0; break; }
         }
-        combatFeedback(before, next); stateRef.current = next;
+        combatFeedback(before, next, hapticsRef.current); stateRef.current = next;
         if (shouldPublishDefenseFrame(before, next, lastPublishedState, now - lastPublish)) {
           lastPublish = now; lastPublishedState = next; setState(next);
         }
