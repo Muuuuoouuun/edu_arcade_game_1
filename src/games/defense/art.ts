@@ -67,7 +67,7 @@ export function towerSpriteAsset(kind:TowerKind,branch:Branch|null=null,level=1)
  const baked=bakedFor(kind,branch);
  if(level===3&&branch===baked.branch&&baked.mastered&&motionLoaded.has(baked.mastered.src))return {...baked.mastered,displayScale:(baked.mastered.displayScale??1)*1.025};
  if(level>=2&&branch===baked.branch&&motionLoaded.has(baked.asset.src))return {...baked.asset,displayScale:(baked.asset.displayScale??1)*(level===3?1.025:1)};
- const src='/defense/tower-models.png';if(!motionLoaded.has(src))return null;
+ const src='/defense/tower-models.webp';if(!motionLoaded.has(src))return null;
  const row=kind==='crossbow'?0:kind==='magic'?1:2;
  const column=branch==='pierce'||branch==='fire'||branch==='crush'?1:branch?2:0;
  const [x,y,w,h,scale]=TOWER_MODELS[row*3+column];
@@ -88,7 +88,7 @@ const BOSS_MODELS:Partial<Record<EnemyKind,{span:number;frames:ModelFrame[]}>>={
 /** A common pixels-to-world scale per creature prevents pose changes resizing the body. */
 export function monsterSpriteAsset(kind:EnemyKind,pose:MonsterPose):SpriteAsset|null {
  const boss=kind==='boss'||kind==='frostboss',model=(boss?BOSS_MODELS:MONSTER_MODELS)[kind];if(!model)return null;
- const src=boss?'/defense/boss-models.png':'/defense/monster-models.png';if(!motionLoaded.has(src))return null;
+ const src=boss?'/defense/boss-models.webp':'/defense/monster-models.webp';if(!motionLoaded.has(src))return null;
  const frame=boss?(pose==='charge'?1:pose==='hit'?2:pose==='death'?3:0):(pose==='hit'||pose==='death'?2:pose==='walk-b'?1:0);
  const [x,y,w,h]=model.frames[frame];
  return {src,viewBox:`${x} ${y} ${w} ${h}`,width:boss?1774:1086,height:boss?887:1448,displayScale:Math.max(w,h)/model.span};
@@ -97,7 +97,7 @@ export function monsterSpriteAsset(kind:EnemyKind,pose:MonsterPose):SpriteAsset|
 export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAsset|null {
  if(actor==='dwarf'&&dwarfModelReady())return DWARF_RENDERS[pose];
  const melee = actor==='barbarian'||actor==='dwarf'||actor==='wolf';
- const src = melee?'/defense/melee-motion.png':'/defense/ranged-motion.png';
+ const src = melee?'/defense/melee-motion.webp':'/defense/ranged-motion.webp';
  if(!motionLoaded.has(src))return null;
  const frames = melee?MELEE[actor as keyof typeof MELEE]:RANGED[actor as keyof typeof RANGED];
  const [x,y,w,h,displayScale]=frames[pose==='windup'?0:pose==='strike'?1:2];
@@ -106,7 +106,7 @@ export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAss
 /** Load while preparing in camp; slow or failed requests keep the existing idle art. */
 export function preloadDefenseMotion():Promise<void> {
  if(typeof Image==='undefined')return Promise.resolve();
- return motionPreload ??= Promise.all(['/defense/melee-motion.png','/defense/ranged-motion.png','/defense/tower-models.png','/defense/monster-models.png','/defense/boss-models.png',...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...Object.values(DWARF_RENDERS).map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/monster-models.webp','/defense/boss-models.webp',...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...Object.values(DWARF_RENDERS).map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
   const asset=new Image();
   asset.onload=()=>{motionLoaded.add(src);asset.onload=null;asset.onerror=null;resolve();};
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};

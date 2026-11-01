@@ -13,6 +13,7 @@
     "models:build": "blender -b --python tools/blender/build_towers.py && npm run models:sprites",
     "balance:defense": "node --experimental-strip-types tools/balance-defense.ts",
     "models:sprites": "node tools/build-tower-sprites.mjs",
+    "art:atlases": "node tools/build-motion-atlases.mjs",
     "models:dwarf": "blender -b --python tools/blender/build_dwarf.py && npm run models:hero-sprites",
     "models:hero-sprites": "node tools/build-hero-sprites.mjs"
   },
