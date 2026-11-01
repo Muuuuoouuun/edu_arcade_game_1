@@ -12,6 +12,7 @@ import { createDefense, actDefense, stepDefense, questSatisfied as isQuestSatisf
 import { STAGES, HEROES, TOWERS, BRANCHES, ENEMIES, getStage, getSlots, stageLabel, getRegion, STAGE_COUNT } from '../games/defense/data';
 import { readCampaign, writeCampaign, stageUnlocked, completeRun, acknowledgeVisitor, trainCampaign, selectHero, selectDifficulty, trainingCost, resultFollowUp } from '../games/defense/campaign';
 import { shouldPublishDefenseFrame } from './defenseFrame';
+import { combatCueFor } from './defenseSound';
 import { DIFFICULTIES } from '../games/defense/difficulty';
 import type { Campaign, DefenseAction, DefenseState, HeroId, TowerKind } from '../games/defense/types';
 import type { RoundRecord } from '../lib/storage';
@@ -36,24 +37,8 @@ function freshRunId() { return crypto.randomUUID(); }
 function latestStage(c: Campaign) { return Math.min(STAGE_COUNT, c.cleared.length + 1); }
 function completedWaves(s: DefenseState) { return s.phase === 'won' ? 4 : ['intermission', 'promotion'].includes(s.phase) ? s.wave : Math.max(0, s.wave - 1); }
 function combatFeedback(before: DefenseState, next: DefenseState) {
-  if (before === next || next.paused) return;
-  const fresh = next.effects.filter(effect => effect.id >= before.nextId);
-  if (fresh.some(effect => effect.kind === 'dash')) { playCombatSound('slash', (next.heroPosition.x - 450) / 450); return; }
-  const breach = fresh.find(effect => effect.kind === 'breach');
-  if (breach) { playCombatSound('breach', (breach.to.x - 450) / 450); return; }
-  const heavy = fresh.find(effect => effect.kind === 'skill' || effect.kind === 'interrupt' || effect.kind === 'freeze' || effect.kind === 'shockwave');
-  if (heavy) {
-    playCombatSound(heavy.kind === 'freeze' ? 'freeze' : heavy.kind === 'shockwave' ? 'impact' : 'skill', (heavy.to.x - 450) / 450);
-    return;
-  }
-  const shell = next.projectiles.find(projectile => projectile.id >= before.nextId && projectile.kind === 'shell');
-  if (shell) { playCombatSound('cannon', (shell.from.x - 450) / 450); return; }
-  const strike = next.attacks.find(attack => attack.fired && (attack.kind === 'melee' || attack.kind === 'slam') && !before.attacks.find(old => old.id === attack.id)?.fired);
-  if (strike) { playCombatSound(strike.element === 'impact' ? 'impact' : 'slash', (strike.to.x - 450) / 450); return; }
-  const hit = fresh.find(effect => effect.kind === 'impact' || effect.kind === 'chain');
-  if (hit) { playCombatSound(hit.element === 'impact' || hit.element === 'physical' ? 'impact' : 'cast', (hit.to.x - 450) / 450); return; }
-  const shot = next.projectiles.find(projectile => projectile.id >= before.nextId);
-  if (shot) playCombatSound(shot.kind === 'arrow' ? 'arrow' : 'cast', (shot.from.x - 450) / 450);
+  const cue = combatCueFor(before, next);
+  if (cue) playCombatSound(cue.kind, cue.pan);
 }
 
 export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggleSound }: { blocked: boolean; onExit: () => void; onFinish: (record: RoundRecord) => void; sound: boolean; onToggleSound: () => void }) {
