@@ -200,3 +200,4 @@ body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-in
 .battle-large-text .battle-utilities button,.battle-large-text .battle-commands button{white-space:nowrap}
 @media(orientation:landscape){.battle-large-text .battle-body{grid-template-columns:104px minmax(0,1fr) 104px}.battle-large-text .battle-utilities button{font-size:.9rem}.battle-large-text .battle-party .def-sprite{display:none}.battle-large-text .battle-commands button{font-size:.9rem}}
 @media(prefers-reduced-motion:reduce){.battle-page *,.defense-tactical *{scroll-behavior:auto!important}}
+.defense-follow-up{border:1px dashed #c9b684;border-radius:8px;background:#fff8e9;padding:8px 10px;margin:2px 0}.defense-dialog .defense-follow-up p{font-size:13px;line-height:1.5;color:#5a6a4a;margin:0}.defense-dialog .defense-follow-up p+p{margin-top:4px;color:#8a6a2a}
