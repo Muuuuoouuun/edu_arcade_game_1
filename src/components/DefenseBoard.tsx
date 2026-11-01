@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getPaths, getSlots } from '../games/defense/data';
-import { actionSpriteAsset, monsterSpriteAsset, spriteAsset, towerSpriteAsset } from '../games/defense/art';
+import { actionSpriteAsset, idleSpriteAsset, monsterSpriteAsset, spriteAsset, towerSpriteAsset } from '../games/defense/art';
 import type { SpriteAsset, ActionPose } from '../games/defense/art';
 import type { DefenseThemeId } from '../games/defense/themes';
 import { DefenseThemeScenery } from './DefenseThemeScenery';
@@ -31,12 +31,14 @@ const SpriteFrame=memo(function SpriteFrame({src,viewBox,sourceWidth,sourceHeigh
 const Sprite=memo(function Sprite({index,x=0,y=0,size=70,flip=false,art:override,pose='',shadow=true,shadowScale=1}:{index:number;x?:number;y?:number;size?:number;flip?:boolean;art?:SpriteAsset|null;pose?:string;shadow?:boolean;shadowScale?:number}){
  const art=override??spriteAsset(index);
  const artSize=size*(art.displayScale??1);
- const [,,frameWidth,frameHeight]=art.viewBox.split(' ').map(Number);
+ const [,frameY,frameWidth,frameHeight]=art.viewBox.split(' ').map(Number);
  // Crop the frame itself: a square viewport leaves atlas rows visible in letterbox space.
  const width=artSize*Math.min(1,frameWidth/frameHeight),height=artSize*Math.min(1,frameHeight/frameWidth);
+ // Baked action frames share a projected ground point, including overhead poses.
+ const bottom=art.groundY===undefined?size*.1:height*(1-(art.groundY-frameY)/frameHeight);
  return <g transform={`translate(${x},${y})`}>
   {shadow?<g className="def-contact-shadow"><ellipse cx={-size*.07} cy={size*.025} rx={size*.38*shadowScale} ry={size*.12*shadowScale} fill="url(#def-ground-shadow)"/><ellipse cy="0" rx={size*.2*shadowScale} ry={size*.045*shadowScale} fill="#142b28" opacity=".23"/></g>:null}
-  <g transform={`${pose} scale(${flip?-1:1},1)`} className="def-sprite-body"><SpriteFrame src={art.src} sourceWidth={art.width} sourceHeight={art.height} viewBox={art.viewBox} width={width} height={height} bottom={size*.1}/></g>
+  <g transform={`${pose} scale(${flip?-1:1},1)`} className="def-sprite-body"><SpriteFrame src={art.src} sourceWidth={art.width} sourceHeight={art.height} viewBox={art.viewBox} width={width} height={height} bottom={bottom}/></g>
  </g>;
 });
 function attackPhase(a:CombatAttack):ActionPose {return a.elapsed<a.hitAt?'windup':a.elapsed<a.hitAt+.12?'strike':'recover';}
@@ -45,7 +47,7 @@ function Actor({actor,position,facing,moving,velocity,dashTime=0,attack,skill,ti
  const dashing=dashTime>0,speed=velocity?Math.hypot(velocity.x,velocity.y):moving?180:0,pace=clamp(speed/230);
  const skillAge=skill?.age??Infinity,casting=skillAge<.5;
  const phase=casting?(skillAge<.18?'strike':'recover'):dashing?null:attack?attackPhase(attack):null;
- const art=phase?actionSpriteAsset(actor,phase):null;
+ const art=phase?actionSpriteAsset(actor,phase):idleSpriteAsset(actor);
  const aim=!dashing&&attack&&Math.abs(attack.to.x-attack.from.x)>.5?(attack.to.x>attack.from.x?1:-1):facing;
  let bob=0,lean=0,offset=0,sx=1,sy=1;
  if(!reduced){
@@ -64,7 +66,7 @@ function Actor({actor,position,facing,moving,velocity,dashTime=0,attack,skill,ti
   {leader?<ellipse cy="1" rx="30" ry="12" fill="#d3f8a129" stroke="#e3f6a5" strokeWidth="1.8" opacity=".85"/>:wolf?<ellipse cy="1" rx="23" ry="8" fill="#c9f3ff25" stroke="#cfeddd" strokeWidth="1"/>:null}
   {moving&&!dashing&&!reduced?<g opacity={.2*pace}><ellipse cx={-facing*17} cy="3" rx="10" ry="3" fill="#f2dec4"/><ellipse cx={-facing*28} cy="5" rx="5" ry="2" fill="#f2dec4"/></g>:null}
   {casting?<ellipse cy="-4" rx={32+(reduced?0:skillAge*26)} ry="12" fill="none" stroke={actor==='druid'?'#c4ef96':actor==='mage'?'#ffc585':'#d5f5ff'} strokeWidth="2" opacity={1-skillAge*1.7}/>:null}
-  <Sprite index={index} size={size} flip={aim<0} art={art} pose={`translate(${offset},${bob}) rotate(${lean}) scale(${sx},${sy})`} shadowScale={1+bob*.02}/>
+  <Sprite index={index} size={size} flip={(aim<0)!==(art?.nativeFacing===-1)} art={art} pose={`translate(${offset},${bob}) rotate(${lean}) scale(${sx},${sy})`} shadowScale={1+bob*.02}/>
   {attack&&phase==='windup'&&attack.kind==='spell'?<g transform="translate(0,-43)" opacity={.35+.35*clamp(attack.elapsed/Math.max(.05,attack.hitAt))}><circle cx={aim*24} cy="-5" r={7+clamp(attack.elapsed/Math.max(.05,attack.hitAt))*9} fill={`url(#${attack.element==='fire'?'def-fire-core':attack.actor==='druid'?'def-green-core':'def-blue-core'})`}/></g>:null}
   {promoted?<text y={-size*.92} fill="#ffe3a2" fontSize="18" textAnchor="middle" className="def-world-label">✦</text>:null}
   {wolf?<text y="20" textAnchor="middle" className="def-pet-label">달빛 늑대</text>:null}
@@ -116,7 +118,7 @@ function TowerUnit({tower:t,position:p,state:s,reduced}:{tower:Tower;position:Po
   <path d="M-30 1Q0-13 30 1V6Q0 19-30 6Z" fill="#42584c" stroke="#253d36" strokeWidth="1" opacity=".9"/><ellipse cy="1" rx="30" ry="9" fill="#7b8c70" stroke="#bac6a1" strokeWidth="1"/>
   {t.level===3?<g className="def-tower-mastery"><ellipse cy="3" rx="33" ry="11" fill="none" stroke="#e5cc86" strokeWidth="1.6"/>{[-1,0,1].map(i=><path key={i} d="m0-3 3 3-3 3-3-3Z" transform={`translate(${i*19},${10-Math.abs(i)*2})`} fill={color} stroke="#765b36" strokeWidth=".7"/>)}</g>:null}
   {t.kind==='magic'?<ellipse cy="-1" rx="28" ry="10" fill={t.branch==='fire'?'#f5ac4720':'#7fcfea20'} stroke={color} strokeOpacity=".25" strokeWidth="1"/>:null}
-  <Sprite index={TOWERS[t.kind].sprite} size={92+t.level*4} art={art} flip={dx<0} pose={`translate(${reduced?0:-dx*recoil*(t.kind==='cannon'?6:3)},${-lift+(reduced?0:recoil*1.8)}) rotate(${rock}) scale(${scale},${scale*(reduced?1:1-recoil*.025)})`} shadow={false}/>
+  <Sprite index={TOWERS[t.kind].sprite} size={92+t.level*4} art={art} flip={(dx<0)!==(art?.nativeFacing===-1)} pose={`translate(${reduced?0:-dx*recoil*(t.kind==='cannon'?6:3)},${-lift+(reduced?0:recoil*1.8)}) rotate(${rock}) scale(${scale},${scale*(reduced?1:1-recoil*.025)})`} shadow={false}/>
   {t.kind==='magic'?<g className="def-magic-core" transform={`translate(0,${-67-lift})`}>
    <circle r={12+windup*12} fill={`url(#${core})`} opacity={.18+windup*.48+(flash?.3:0)}/>
    <g transform={`scale(1,.45) rotate(${reduced?0:s.time*(t.branch==='lightning'?42:23)+t.slot*31})`} opacity={.38+windup*.35}><path d="M-16 0A16 16 0 0 1 9-13M16 0A16 16 0 0 1-9 13" fill="none" stroke={t.branch==='fire'?'#ffcf88':'#b8efff'} strokeWidth="2"/><circle cx="16" r="2.2" fill={color}/><circle cx="-16" r="2.2" fill={color}/></g>
@@ -219,6 +221,7 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
  };
  const handleEnemyKey=(event:KeyboardEvent<SVGGElement>,enemy:Enemy)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();activateEnemy(enemy);}};
  const activeEffects=s.effects;
+ const breach=activeEffects.filter(e=>e.kind==='breach').at(-1);
  const dashEffect=activeEffects.filter(e=>e.kind==='dash').at(-1);
  const units:{id:string;y:number;render:ReactNode}[]=[];
  for(const t of s.towers){const p=slots.find(slot=>slot.id===t.slot);if(p)units.push({id:`tower-${t.slot}`,y:p.y,render:<TowerUnit tower={t} position={p} state={s} reduced={reduced}/>});}
@@ -238,7 +241,8 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
    {units.sort((a,b)=>a.y-b.y).map(unit=><g key={unit.id}>{unit.render}</g>)}
    <AttackTrails attacks={s.attacks} reduced={reduced}/><ProjectileLayer projectiles={s.projectiles} reduced={reduced}/><EffectLayer effects={activeEffects} reduced={reduced}/>
   </svg>
-  <div className="def-town-label" style={{left:'93%',top:'54%'}}>마을 <b>{s.hp}</b></div>{stage.expanded?<div className={`def-town-label ${s.outpostHp<=0?'fallen':''}`} style={{left:'92%',top:'23%'}}>구조 <b>{s.outpostHp}</b></div>:null}
+  {breach&&!reduced?<div className="def-breach-flash" style={{opacity:Math.max(0,1-(breach.age??0)/(breach.maxLife??.6))*Math.min(1,.45+(breach.force??1)*.12)}} aria-hidden="true"/>:null}
+  <div className="def-town-label" style={{right:'1.5%',top:'var(--town-label-top,74%)'}}>마을 <b>{s.hp}</b></div>{stage.expanded?<div className={`def-town-label ${s.outpostHp<=0?'fallen':''}`} style={{right:'1.5%',top:'11%'}}>구조 <b>{s.outpostHp}</b></div>:null}
   {availableSlots.map(p=>{const tower=s.towers.find(t=>t.slot===p.id);return <button key={p.id} className={`def-build-pad ${tower?'occupied':''} ${selectedSlot===p.id?'selected':''}`} style={{left:`${p.x/9}%`,top:`${p.y/6}%`}} onClick={event=>{event.stopPropagation();activateSlot(p.id);}} aria-label={`${p.id+1}번 건설 지점 · ${terrainLabel[p.terrain]}${tower?` · ${TOWERS[tower.kind].name} 레벨 ${tower.level}`:''}`} aria-pressed={selectedSlot===p.id} disabled={!movingAllowed}>{tower?<span className="def-pad-selected">{selectedSlot===p.id?'선택':''}</span>:<><span aria-hidden="true">+</span><small>{p.terrain==='high'?'고지':p.terrain==='water'?'물가':p.terrain==='ice'?'빙판':p.id+1}</small></>}</button>})}
   {stage.climate==='rain'?<div className="def-weather-rain" style={{backgroundPosition:`${-weatherTime*50}px ${weatherTime*185}px`}} aria-hidden="true"/>:null}
   {snow?<div className="def-weather-snow" style={{backgroundPosition:`${-weatherTime*10}px ${weatherTime*28}px,${-weatherTime*7}px ${42+weatherTime*19}px`}} aria-hidden="true"/>:null}

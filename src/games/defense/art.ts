@@ -1,11 +1,13 @@
 import type { Branch, EnemyKind, HeroId, TowerKind } from './types';
-export type SpriteAsset = {src:string;viewBox:string;width:number;height:number;displayScale?:number};
+export type SpriteAsset = {src:string;viewBox:string;width:number;height:number;displayScale?:number;nativeFacing?:-1|1;groundY?:number};
 export type ActionPose = 'windup'|'strike'|'recover';
 // Source frames are shared by tactical units, portraits and the growing village.
 const ORIGINAL = [[38,65,275,250],[350,65,265,255],[675,65,225,255],[950,65,280,260],[40,380,260,260],[355,360,240,280],[650,385,260,260],[965,355,270,290],[40,690,245,210],[330,650,280,270],[660,665,250,245],[965,675,270,240],[20,940,280,250],[335,950,270,250],[635,915,300,285],[960,950,270,250]];
 const SNOW = [[46,20,446,485],[548,30,442,479],[94,568,336,370],[543,533,448,425],[22,952,516,562],[545,962,459,528]];
 const CAMP = [[18,16,694,672],[735,110,699,579],[1471,30,685,652]];
 export function spriteAsset(index:number):SpriteAsset {
+ // Portraits crop out the shared action-frame margin; battle keeps the full frame.
+ if(index===2){const model=idleSpriteAsset('dwarf');if(model)return {...model,viewBox:'180 172 392 430'};}
  if(index>=4&&index<=6){const model=towerSpriteAsset((['crossbow','magic','cannon'] as const)[index-4]);if(model)return model;}
  const kind=({9:'wood',10:'ice',11:'stone',14:'boss',19:'frostwolf',20:'frostboss'} as Record<number,EnemyKind>)[index];
  if(kind){const model=monsterSpriteAsset(kind,'idle');if(model)return model;}
@@ -27,14 +29,45 @@ const RANGED:Record<'mage'|'elf'|'tao'|'druid',MotionFrame[]> = {
 };
 const motionLoaded = new Set<string>();
 let motionPreload:Promise<void>|null = null;
+const DWARF_POSES = ['idle','windup','strike','recover'] as const;
+const DWARF_RENDERS = Object.fromEntries(DWARF_POSES.map(pose=>[pose,{
+ src:`/defense/models/dwarf-${pose}-game.webp`,viewBox:'0 0 640 640',width:640,height:640,displayScale:1.2,nativeFacing:1,groundY:550,
+}])) as Record<typeof DWARF_POSES[number],SpriteAsset>;
+// Switch the whole actor together: a missing action frame must never alternate
+// a modeled body with the old illustrated body during an attack.
+function dwarfModelReady(){return DWARF_POSES.every(pose=>motionLoaded.has(DWARF_RENDERS[pose].src));}
+export function idleSpriteAsset(actor:HeroId|'wolf'):SpriteAsset|null {
+ return actor==='dwarf'&&dwarfModelReady()?DWARF_RENDERS.idle:null;
+}
 const TOWER_MODELS:MotionFrame[] = [
  [40,35,337,380,1],[432,24,460,391,1.15],[889,48,333,370,1],
  [43,434,337,398,1],[446,412,365,422,1],[885,420,342,413,1],
  [33,874,360,340,1],[425,834,406,390,1.05],[858,840,396,378,1.05],
 ];
-/** Nine modeled silhouettes: three foundations and the six specialization branches. */
+// The editable GLBs are baked once for battle; no WebGL scene is created per unit.
+// A shared, centered camera frame keeps the foundation on the same ground anchor.
+// Its projected ground center is (320, 488.65): this crop/scale aligns it within
+// half a world pixel of the build point at Lv.2, including TowerUnit's +12 offset.
+type BakedTower={kind?:TowerKind;branch:Branch;asset:SpriteAsset;mastered?:SpriteAsset};
+const BAKED_TOWERS:Record<TowerKind,BakedTower> = {
+ crossbow:{branch:'pierce',asset:{src:'/defense/models/piercing-ballista-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/piercing-ballista-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
+ // Lv.3 has its own render with the same camera/crop, so the ground anchor is shared with Lv.2.
+ magic:{branch:'fire',asset:{src:'/defense/models/fire-tower-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16},mastered:{src:'/defense/models/fire-tower-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16}},
+ cannon:{branch:'water',asset:{src:'/defense/models/water-cannon-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/water-cannon-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
+};
+// Render-only branch variants (baked 2.5D, no GLB), same camera and crop as the Fire tower.
+const BAKED_BRANCHES:BakedTower[] = [
+ {kind:'magic',branch:'lightning',asset:{src:'/defense/models/lightning-tower-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16},mastered:{src:'/defense/models/lightning-tower-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16}},
+ {kind:'crossbow',branch:'rapid',asset:{src:'/defense/models/rapid-crossbow-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/rapid-crossbow-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
+ {kind:'cannon',branch:'crush',asset:{src:'/defense/models/crush-cannon-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/crush-cannon-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
+];
+const bakedFor=(kind:TowerKind,branch:Branch|null)=>BAKED_BRANCHES.find(model=>model.kind===kind&&model.branch===branch)??BAKED_TOWERS[kind];
+/** Available model renders take precedence; each failed render keeps its atlas fallback. */
 export function towerSpriteAsset(kind:TowerKind,branch:Branch|null=null,level=1):SpriteAsset|null {
- const src='/defense/tower-models.png';if(!motionLoaded.has(src))return null;
+ const baked=bakedFor(kind,branch);
+ if(level===3&&branch===baked.branch&&baked.mastered&&motionLoaded.has(baked.mastered.src))return {...baked.mastered,displayScale:(baked.mastered.displayScale??1)*1.025};
+ if(level>=2&&branch===baked.branch&&motionLoaded.has(baked.asset.src))return {...baked.asset,displayScale:(baked.asset.displayScale??1)*(level===3?1.025:1)};
+ const src='/defense/tower-models.webp';if(!motionLoaded.has(src))return null;
  const row=kind==='crossbow'?0:kind==='magic'?1:2;
  const column=branch==='pierce'||branch==='fire'||branch==='crush'?1:branch?2:0;
  const [x,y,w,h,scale]=TOWER_MODELS[row*3+column];
@@ -55,15 +88,16 @@ const BOSS_MODELS:Partial<Record<EnemyKind,{span:number;frames:ModelFrame[]}>>={
 /** A common pixels-to-world scale per creature prevents pose changes resizing the body. */
 export function monsterSpriteAsset(kind:EnemyKind,pose:MonsterPose):SpriteAsset|null {
  const boss=kind==='boss'||kind==='frostboss',model=(boss?BOSS_MODELS:MONSTER_MODELS)[kind];if(!model)return null;
- const src=boss?'/defense/boss-models.png':'/defense/monster-models.png';if(!motionLoaded.has(src))return null;
+ const src=boss?'/defense/boss-models.webp':'/defense/monster-models.webp';if(!motionLoaded.has(src))return null;
  const frame=boss?(pose==='charge'?1:pose==='hit'?2:pose==='death'?3:0):(pose==='hit'||pose==='death'?2:pose==='walk-b'?1:0);
  const [x,y,w,h]=model.frames[frame];
  return {src,viewBox:`${x} ${y} ${w} ${h}`,width:boss?1774:1086,height:boss?887:1448,displayScale:Math.max(w,h)/model.span};
 }
 /** Long weapons need a larger viewport to keep the actor's body size consistent. */
 export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAsset|null {
+ if(actor==='dwarf'&&dwarfModelReady())return DWARF_RENDERS[pose];
  const melee = actor==='barbarian'||actor==='dwarf'||actor==='wolf';
- const src = melee?'/defense/melee-motion.png':'/defense/ranged-motion.png';
+ const src = melee?'/defense/melee-motion.webp':'/defense/ranged-motion.webp';
  if(!motionLoaded.has(src))return null;
  const frames = melee?MELEE[actor as keyof typeof MELEE]:RANGED[actor as keyof typeof RANGED];
  const [x,y,w,h,displayScale]=frames[pose==='windup'?0:pose==='strike'?1:2];
@@ -72,7 +106,7 @@ export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAss
 /** Load while preparing in camp; slow or failed requests keep the existing idle art. */
 export function preloadDefenseMotion():Promise<void> {
  if(typeof Image==='undefined')return Promise.resolve();
- return motionPreload ??= Promise.all(['/defense/melee-motion.png','/defense/ranged-motion.png','/defense/tower-models.png','/defense/monster-models.png','/defense/boss-models.png'].map(src=>new Promise<void>(resolve=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/monster-models.webp','/defense/boss-models.webp',...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...Object.values(DWARF_RENDERS).map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
   const asset=new Image();
   asset.onload=()=>{motionLoaded.add(src);asset.onload=null;asset.onerror=null;resolve();};
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};

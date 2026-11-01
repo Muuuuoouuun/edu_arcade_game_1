@@ -3,10 +3,10 @@
   "prompt_path": "/workspace/.cloud-setup/arcana-loop/runtime/arcana_loop_prompt.md",
   "claude_bin": "/workspace/.cloud-setup/tools/claude-code/node_modules/.bin/claude",
   "agents_file": "/workspace/.cloud-setup/arcana-loop/runtime/arcana_loop_agents.json",
-  "interval_seconds": 7200,
-  "timeout_seconds": 5400,
+  "interval_seconds": 3600,
+  "timeout_seconds": 3000,
   "model": "claude-sonnet-5-5",
   "effort": "medium",
-  "max_turns": 36,
+  "max_turns": 64,
   "max_budget_usd": 8
 }

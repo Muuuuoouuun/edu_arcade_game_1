@@ -187,3 +187,35 @@ export function campaignRequest(campaign: Campaign): CampaignRequest | null {
     region: stage.region,
   } : null;
 }
+
+export type TerritoryProgress = { rescued: number; total: number; questsLeft: number };
+
+/** Derived camp hook: villages rescued so far and optional quests still open on cleared stages. Reads state only. */
+export function territoryProgress(campaign: Campaign): TerritoryProgress {
+  return {
+    rescued: campaign.cleared.length,
+    total: STAGES.length,
+    questsLeft: campaign.cleared.filter(id => !campaign.questClaimed.includes(id)).length,
+  };
+}
+
+export type ResultFollowUp = {
+  /** The stage after the one just played; null after the final stage. */
+  next: { id: number; label: string; name: string } | null;
+  /** Visitor who arrives on clearing the next stage, if still not recruited. */
+  upcomingVisitor: HeroId | null;
+  /** Optional side quest of the stage just played that is still unclaimed. */
+  pendingQuest: { text: string; reward: number } | null;
+};
+
+/** Derived result-screen hook: what to do next. Reads state only; never gates rewards. */
+export function resultFollowUp(campaign: Campaign, playedStage: number): ResultFollowUp {
+  const played = getStage(playedStage);
+  // Same target as the result dialog's "next expedition" button, even when replaying an older stage.
+  const nextStage = playedStage < STAGE_COUNT ? getStage(playedStage + 1) : null;
+  return {
+    next: nextStage ? { id: nextStage.id, label: nextStage.label, name: nextStage.name } : null,
+    upcomingVisitor: nextStage?.visitor && !campaign.visitors.includes(nextStage.visitor) ? nextStage.visitor : null,
+    pendingQuest: campaign.questClaimed.includes(played.id) ? null : { text: played.quest, reward: played.questReward },
+  };
+}

@@ -4,8 +4,8 @@ import type { Campaign, DefenseState } from './types.ts';
 import { getStage, STAGE_COUNT, STAGES } from './data.ts';
 import { createDefense } from './engine.ts';
 import {
-  acknowledgeVisitor, campaignFacilities, campaignRequest, completeRun, createCampaign, readCampaign, selectDifficulty, selectHero,
-  stageUnlocked, trainCampaign, trainingCost, writeCampaign,
+  acknowledgeVisitor, campaignFacilities, campaignRequest, completeRun, createCampaign, resultFollowUp, readCampaign, selectDifficulty, selectHero,
+  stageUnlocked, territoryProgress, trainCampaign, trainingCost, writeCampaign,
 } from './campaign.ts';
 
 function result(stage = 1, overrides: Partial<DefenseState> = {}): DefenseState {
@@ -355,4 +355,30 @@ test('veteran multiplies only clear rewards using the completed run difficulty',
   assert.equal(loss.goldEarned, 40);
   assert.equal(loss.difficultyBonus, 0);
   assert.equal(loss.questReward, 0);
+});
+
+test('result follow-up points to the next request and the unclaimed optional quest', () => {
+  const start = createCampaign();
+  const fail = completeRun(start, 'fu-1', result(1, { phase: 'won', stage: 1, hp: 3, questProgress: 0 }));
+  const f1 = resultFollowUp(fail.campaign, 1);
+  assert.equal(f1.next?.id, 2);
+  assert.equal(f1.upcomingVisitor, 'dwarf');
+  assert.equal(f1.pendingQuest?.reward, getStage(1).questReward);
+  const good = completeRun(start, 'fu-2', result(1, { phase: 'won', stage: 1, hp: 20 }));
+  assert.equal(resultFollowUp(good.campaign, 1).pendingQuest, null);
+  const done = { ...good.campaign, visitors: ['mage', 'elf', 'dwarf', 'tao', 'barbarian', 'druid'] as Campaign['visitors'], cleared: STAGES.map(s => s.id), questClaimed: STAGES.map(s => s.id) };
+  assert.equal(resultFollowUp(done, 1).next?.id, 2);
+  assert.equal(resultFollowUp(done, 1).upcomingVisitor, null);
+  const end = resultFollowUp(done, STAGE_COUNT);
+  assert.equal(end.next, null);
+  assert.equal(end.upcomingVisitor, null);
+});
+
+test('territory progress counts rescued villages and open optional quests on cleared stages only', () => {
+  const fresh = createCampaign();
+  assert.deepEqual(territoryProgress(fresh), { rescued: 0, total: STAGE_COUNT, questsLeft: 0 });
+  const cleared = completeRun(fresh, 'territory-1', result(1, { hp: 12 })).campaign;
+  assert.deepEqual(territoryProgress(cleared), { rescued: 1, total: STAGE_COUNT, questsLeft: 1 });
+  const claimed = completeRun(cleared, 'territory-2', result(1)).campaign;
+  assert.equal(territoryProgress(claimed).questsLeft, 0);
 });

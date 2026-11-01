@@ -70,12 +70,69 @@ export function ProjectileLayer({projectiles,reduced}:{projectiles:Projectile[];
   })}</g>;
 }
 
+/** The barbarian's heavy hammer: a thick overhead crescent, then a ground burst where it lands. */
+function HammerSlam({attack:a,direction,progress,contact,reduced}:{attack:CombatAttack;direction:number;progress:number;contact:number;reduced:boolean}) {
+ const swing=clamp((contact+.08)/.08),impact=clamp(contact/.2),fade=(1-progress)*.9;
+ return <g data-attack-trail={a.actor} opacity={fade}>
+  <g transform={`translate(${a.from.x},${a.from.y-26}) rotate(${direction})`}>
+   <path d={reduced?'M20-40Q78-36 92 22':'M14-52Q86-52 100 26Q80-8 52-16Q30-24 14-52Z'} fill={reduced?'none':'#ffd98a99'} stroke="#fff1c4" strokeWidth={reduced?4:3} strokeLinecap="round" strokeLinejoin="round" opacity={reduced?1:.45+.55*swing}/>
+   {!reduced?<path d="M10-60Q94-56 108 28" fill="none" stroke="#f0a43d" strokeWidth="4" strokeLinecap="round" opacity=".75"/>:null}
+  </g>
+  {contact>=0?<g transform={`translate(${a.to.x},${a.to.y+4})`}>
+   <ellipse rx={10+impact*(reduced?24:34)} ry={4+impact*(reduced?9:13)} fill="none" stroke="#fff1c4" strokeWidth={4-impact*2.5}/>
+   {!reduced?[0,1,2,3].map(i=>{const dir=(i-1.5)*.7+direction*Math.PI/180*.3,reach=14+i%2*8;return <path key={i} d="M-3-2 3-3 4 2-2 4Z" transform={`translate(${Math.sin(dir)*reach*impact*2},${-Math.sin(impact*Math.PI)*(12+i*3)}) rotate(${impact*(i%2?200:-160)})`} fill={i%2?'#e7d0a1':'#8e7d70'} stroke="#5d4e41" strokeWidth=".7"/>;}):null}
+  </g>:null}
+ </g>;
+}
+
+/** The dwarf's compact stone hammer: a short steel-blue chop, then a flat double shock ring and dust where it lands. */
+function DwarfThud({attack:a,direction,progress,contact,reduced}:{attack:CombatAttack;direction:number;progress:number;contact:number;reduced:boolean}) {
+ const swing=clamp((contact+.08)/.08),impact=clamp(contact/.2),fade=(1-progress)*.9;
+ return <g data-attack-trail={a.actor} opacity={fade}>
+  <g transform={`translate(${a.from.x},${a.from.y-20}) rotate(${direction})`}>
+   <path d={reduced?'M20-30Q58-28 70 18':'M16-36Q66-36 76 20Q58-4 38-10Q26-16 16-36Z'} fill={reduced?'none':'#bfe0f099'} stroke="#e4f4fb" strokeWidth={reduced?4:3} strokeLinecap="round" strokeLinejoin="round" opacity={reduced?1:.45+.55*swing}/>
+  </g>
+  {contact>=0?<g transform={`translate(${a.to.x},${a.to.y+4})`}>
+   <ellipse rx={8+impact*(reduced?20:28)} ry={3+impact*(reduced?6:9)} fill="none" stroke="#e4f4fb" strokeWidth={3.5-impact*2.2}/>
+   {!reduced?<><ellipse rx={4+impact*16} ry={2+impact*5} fill="none" stroke="#9fb6c2" strokeWidth={2.5-impact*1.6}/>
+    {[-1,1].map(i=><circle key={i} cx={i*(8+impact*18)} cy={-impact*4} r={3+impact*4} fill="#cdbf9f" opacity={.5*(1-impact)}/>)}</>:null}
+  </g>:null}
+ </g>;
+}
+
+/** Hero spellcasting wind-up: a rune ring at the caster's feet and motes drawn into the wind-up orb (the orb itself is drawn by the actor). */
+function CastGlyph({attack:a,reduced}:{attack:CombatAttack;reduced:boolean}) {
+ const charge=clamp(a.elapsed/a.hitAt),release=clamp((a.elapsed-a.hitAt)/.18),fade=a.elapsed<a.hitAt?.95:(1-release)*.9;
+ const green=a.actor==='druid',lightning=a.actor==='tao';
+ const rune=green?'#c9f59a':lightning?'#bff3ff':'#ffd27a';
+ const facing=a.to.x<a.from.x?-1:1,hand={x:a.from.x+facing*24,y:a.from.y-48};
+ return <g data-cast-glyph={a.actor} opacity={fade}>
+  <ellipse cx={a.from.x} cy={a.from.y+3} rx={14+charge*12} ry={5+charge*4} fill="none" stroke={rune} strokeWidth="2.5" strokeDasharray={reduced?undefined:'5 4'} transform={reduced?undefined:`rotate(${charge*50} ${a.from.x} ${a.from.y+3})`}/>
+  {!reduced?[0,1,2].map(i=>{const ang=i*2.1+charge*4,r=(1-charge)*20+4;return <circle key={i} cx={hand.x+Math.cos(ang)*r} cy={hand.y+Math.sin(ang)*r*.7} r="1.8" fill={rune} opacity={.4+.5*charge}/>;}):null}
+ </g>;
+}
+
+/** Elf bow draw: a pulled bowstring with a nocked light arrow along the aim line that snaps and streaks on release. */
+function ElfDraw({attack:a,reduced}:{attack:CombatAttack;reduced:boolean}) {
+ const charge=clamp(a.elapsed/a.hitAt),release=clamp((a.elapsed-a.hitAt)/.18),fade=a.elapsed<a.hitAt?.95:(1-release)*.9;
+ const facing=a.to.x<a.from.x?-1:1,angle=Math.atan2(a.to.y-(a.from.y-40),a.to.x-a.from.x)*180/Math.PI;
+ const pull=a.elapsed<a.hitAt?charge*11:(reduced?0:-(1-release)*4*Math.sin(release*18));
+ return <g data-elf-draw={a.actor} opacity={fade} transform={`translate(${a.from.x+facing*20},${a.from.y-40}) rotate(${angle})`}>
+  <path d={`M10-17Q22 0 10 17M10-17L${10-pull} 0L10 17`} fill="none" stroke="#e9ffc4" strokeWidth="2.6" strokeLinejoin="round" strokeLinecap="round"/>
+  <path d={`M${10-pull} 0H${34-pull}`} stroke="#d6ffa0" strokeWidth="3.2" strokeLinecap="round" opacity={.55+.4*charge}/>
+  <circle cx={34-pull} cy="0" r={reduced?8:5+charge*7} fill="url(#def-green-core)"/>
+  {!reduced&&a.elapsed>=a.hitAt?<path d={`M34 0H${34+70*release}`} stroke="url(#def-magic-tail)" strokeWidth={5*(1-release)+1} strokeLinecap="round"/>:null}
+ </g>;
+}
+
 /** A short readable motion arc follows a real attack's contact interval. */
 export function AttackTrails({attacks,reduced}:{attacks:CombatAttack[];reduced:boolean}) {
- return <g className="def-attack-trails" aria-hidden="true" pointerEvents="none">{attacks.filter(a=>a.kind==='melee'||a.kind==='slam').map(a=>{
+ return <g className="def-attack-trails" aria-hidden="true" pointerEvents="none">{attacks.filter(a=>a.kind==='spell'&&a.source!=='tower'&&a.elapsed<=a.hitAt+.18).map(a=><CastGlyph key={`cast-${a.id}`} attack={a} reduced={reduced}/>)}{attacks.filter(a=>a.kind==='shot'&&a.actor==='elf'&&a.elapsed<=a.hitAt+.18).map(a=><ElfDraw key={`draw-${a.id}`} attack={a} reduced={reduced}/>)}{attacks.filter(a=>a.kind==='melee'||a.kind==='slam').map(a=>{
   const contact=a.elapsed-a.hitAt;if(contact<-.08||contact>.22)return null;
   const direction=Math.atan2(a.to.y-a.from.y,a.to.x-a.from.x)*180/Math.PI;
   const progress=clamp((contact+.08)/.3),opacity=(1-progress)*.85;
+  if(a.actor==='barbarian')return <HammerSlam key={a.id} attack={a} direction={direction} progress={progress} contact={contact} reduced={reduced}/>;
+  if(a.actor==='dwarf')return <DwarfThud key={a.id} attack={a} direction={direction} progress={progress} contact={contact} reduced={reduced}/>;
   return <g key={a.id} transform={`translate(${a.from.x},${a.from.y-22}) rotate(${direction})`} opacity={opacity} data-attack-trail={a.actor}>
     {a.actor==='wolf'?<><path d="M26-22Q55-10 69 8M31-28Q62-14 75 4M36-33Q66-20 80-1" stroke="#eafee0" strokeWidth="3" fill="none" strokeLinecap="round"/></>:<>
       <path d={reduced?'M24-28Q60-8 72 22':'M16-43Q72-45 85 18Q62-12 16-43Z'} fill={reduced?'none':'#ffefb266'} stroke="#fff5d6" strokeWidth="3" strokeLinecap="round"/>
@@ -121,6 +178,7 @@ export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];re
     <ellipse rx={30+(reduced?0:p*24)} ry={11+(reduced?0:p*9)} fill="none" stroke={kind==='build'?'#e8d9af':color} strokeWidth={kind==='build'?2:2.5}/>
     {!reduced&&kind==='build'?[-1,1].map(side=><path key={side} d="M-8 0Q0-5 8 0" transform={`translate(${side*(23+p*18)},${p*6})`} fill="none" stroke="#e1d4b6" strokeWidth={3*(1-p)} opacity=".5"/>):null}
    </g>;
+   if(kind==='breach'){const r=30+(reduced?30:p*(46+(e.force??1)*9));return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} opacity={fade*.9} data-effect-ground="breach"><ellipse rx={r} ry={r*.38} fill="#d9433a24" stroke="#ff7b6b" strokeWidth={Math.min(6,2+(e.force??1)*.5)}/></g>;}
    if(!['shockwave','skill','impact','freeze','interrupt'].includes(kind)||(kind==='impact'&&!detail))return null;
    const wide=kind==='skill'||kind==='shockwave'||kind==='interrupt';
    const radius=wide?35+p*(e.force?Math.min(145,e.force):100):12+p*30;
@@ -134,6 +192,10 @@ export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];re
     <g transform={`translate(0,${-67-(reduced?0:p*24)})`} stroke={color} strokeWidth="2.3" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="m-8 0 8-7 8 7M-8-7l8-7 8 7"/></g>
     {!reduced?[-1,1].map(side=><g key={side} opacity={(1-p)*.7}><path d={`M${side*28} ${-15-p*30}v-15`} stroke={color} strokeWidth="1.8"/><path d={`M${side*36} ${-5-p*45}v-7`} stroke={color} strokeWidth="1.3"/></g>):null}
    </>:!reduced?<g opacity={(1-p)*.4}>{[-1,1].map(side=><ellipse key={side} cx={side*(24+p*22)} cy={5-p*4} rx={5+p*7} ry={3+p*3} fill="#dfd4b7"/>)}</g>:null}
+  </g>;
+  if(kind==='breach')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y-27})`} opacity={fade} data-effect="breach">
+   <circle r={reduced?18:12+p*(28+Math.min(8,e.force??1)*4)} fill="#ff5f4e55"/>
+   {e.text?<text x={Math.max(44,Math.min(856,e.to.x))-e.to.x} y={-34-(reduced?0:p*20)} textAnchor="middle" className="def-float-number def-float-breach">{e.text}</text>:null}
   </g>;
   if(kind==='chain')return <g key={e.id} opacity={fade} data-effect="chain"><Lightning effect={e}/><circle cx={e.to.x} cy={e.to.y-25} r={12+p*12} fill="url(#def-blue-core)"/></g>;
   if(kind==='death'){
@@ -164,7 +226,7 @@ export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];re
    <circle r={reduced?8:9+p*(kind==='shockwave'?38:21)} fill={`url(#${e.element==='fire'?'def-fire-core':e.element==='water'||e.element==='lightning'?'def-blue-core':'def-impact-core'})`} opacity={kind==='shockwave'?.8:.65}/>
    {detail&&e.element==='physical'?<path d="m-12-12 24 24m0-24-24 24" stroke="#fff8df" strokeWidth="2" strokeLinecap="round" opacity={Math.max(0,1-p*2)}/>:null}
    <Sparks effect={{...e,age,maxLife:life}} reduced={reduced} count={sparks}/>
-   {e.text?<text x={Math.max(44,Math.min(856,e.to.x))-e.to.x} y={-29-(reduced?0:p*27)} textAnchor="middle" className={`def-float-number ${e.text.includes('약점')?'def-float-weak':''}`}>{e.text}</text>:null}
+   {e.text?<text x={Math.max(44,Math.min(856,e.to.x))-e.to.x} y={-29-(reduced?0:p*27)} textAnchor="middle" className={`def-float-number ${e.text.includes('약점')?'def-float-weak':e.text.startsWith('내성')?'def-float-resist':''}`}>{e.text}</text>:null}
   </g>;
  })}</g>;
 }

@@ -26,8 +26,8 @@ import uuid
 
 DEFAULT_STATE = Path('/workspace/.cloud-setup/arcana-loop')
 RUNTIME_NOTE = 'Runs only while this cloud environment is running; it cannot restart a stopped environment.'
-DEFAULTS = dict(interval_seconds=7200, timeout_seconds=5400, model='claude-sonnet-5-5',
-                effort='medium', max_turns=36, max_budget_usd=8)
+DEFAULTS = dict(interval_seconds=3600, timeout_seconds=3000, model='claude-sonnet-5-5',
+                effort='medium', max_turns=64, max_budget_usd=8)
 CONFIG_KEYS = {*DEFAULTS, 'workspace', 'prompt_path', 'claude_bin', 'agents_file'}
 SECRET_NAMES = ['ANTHROPIC_API_KEY', 'ANTHROPIC_API_KEY_KR1', 'ANTHROPIC_API_KEY_KR2',
                 'ANTHROPIC_API_KEY_KRVIDEO', 'ANTHROPIC_API_KEY_JUNGSANGHWA',
@@ -402,7 +402,11 @@ def daemon(directory: Path, config_path: Path, immediate=False) -> int:
         config = load_config(config_path)
         interval = config['interval_seconds']
         now = time.time()
-        previous = read_state(directory).get('next_due')
+        saved = read_state(directory)
+        previous = saved.get('next_due')
+        # A cadence change starts a new interval instead of retaining an old two-hour deadline.
+        if saved.get('interval_seconds', interval) != interval:
+            previous = None
         due = now if immediate else (previous if isinstance(previous, (int, float)) and math.isfinite(previous) else now + interval)
         if not immediate and due <= now:
             due = next_future_due(due, now, interval)

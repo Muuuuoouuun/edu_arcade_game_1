@@ -1,0 +1,294 @@
+{
+  "purpose": "Battlefield delivery copies; the editable Blender source and full PNG/GLB assets are preserved.",
+  "encoding": "WebP quality 88; original transparent canvas, no resize or crop.",
+  "files": [
+    {
+      "id": "fire-tower",
+      "source": "fire-tower.png",
+      "file": "fire-tower-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        149,
+        60,
+        491,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 457223,
+      "bytes": 29302,
+      "source_sha256": "28e74db471da94a29e57f97faf5a7db4038243190a0fd879328f9bc4e51dff05",
+      "sha256": "109f558a4451289fe135b6c2512222fe337f315ba61362d662ed4391bda800c4"
+    },
+    {
+      "id": "fire-tower-lv3",
+      "source": "fire-tower-lv3.png",
+      "file": "fire-tower-lv3-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        149,
+        38,
+        491,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 503242,
+      "bytes": 39942,
+      "source_sha256": "8606a7071c5125a4783efbf1833c563df3a77144fde99cf8e496027cdadc1eb1",
+      "sha256": "2ae409992bb0857f61a0757b636a95a6aa7858f412dad3fa95bbd1b8ccc146c7"
+    },
+    {
+      "id": "lightning-tower",
+      "source": "lightning-tower.png",
+      "file": "lightning-tower-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        149,
+        39,
+        491,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 459802,
+      "bytes": 30530,
+      "source_sha256": "bff0640d73828d70553e5db52abd59f4de191ae55e688b0e10c908913f7700ba",
+      "sha256": "c85e85247428250ab02e5d64aed0322a4cf468bdd29ecfc47398eb17574f4649"
+    },
+    {
+      "id": "lightning-tower-lv3",
+      "source": "lightning-tower-lv3.png",
+      "file": "lightning-tower-lv3-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        149,
+        38,
+        491,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 499530,
+      "bytes": 40468,
+      "source_sha256": "d1b34f80d4d38268f78e499c79e3bbbf1f593a6eca097fb6049533b0af81d110",
+      "sha256": "9772b9873f5acdcccf38719ec9b2ad2f3a137c14ea3e6efa1ddf056640fcbad9"
+    },
+    {
+      "id": "piercing-ballista",
+      "source": "piercing-ballista.png",
+      "file": "piercing-ballista-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        115,
+        119,
+        505,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 452402,
+      "bytes": 34172,
+      "source_sha256": "68f7d3190e213179bacbf81d56c8b171442846ff193f321a7d698acb5bfedc19",
+      "sha256": "98920098afd4d944e56fc8dd5e1a3d7fad3ea5e0a5f6c043f9e467449e798637"
+    },
+    {
+      "id": "piercing-ballista-lv3",
+      "source": "piercing-ballista-lv3.png",
+      "file": "piercing-ballista-lv3-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        111,
+        72,
+        529,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 489851,
+      "bytes": 42436,
+      "source_sha256": "176aca2a3428e812cadcb2709e8a207a8d959fa7e9cb864fe80ba94e88cdf1d8",
+      "sha256": "4cf6121f33e0c5e989835ba3571e10ee4eb95f6d7f6f42f1cbbb6268ec3a2f06"
+    },
+    {
+      "id": "rapid-crossbow",
+      "source": "rapid-crossbow.png",
+      "file": "rapid-crossbow-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        115,
+        64,
+        505,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 470307,
+      "bytes": 34850,
+      "source_sha256": "9767adf2b3cb1af56d6053c534807e025f9d6df011f8817d886c528725cd58ea",
+      "sha256": "17b452b586d568ca4d0fce0781bd07d3171560cb563acdd679d17a373acd120a"
+    },
+    {
+      "id": "rapid-crossbow-lv3",
+      "source": "rapid-crossbow-lv3.png",
+      "file": "rapid-crossbow-lv3-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        111,
+        64,
+        529,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 500090,
+      "bytes": 42542,
+      "source_sha256": "d4665ba4be8827ccfb67021ebe67335ea5860f1c920fd312ff4469b5951bfaf4",
+      "sha256": "9a95f0771814249d8f376de21a29f9429b90564d6c84a38f11f89d14d0239bf5"
+    },
+    {
+      "id": "crush-cannon",
+      "source": "crush-cannon.png",
+      "file": "crush-cannon-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        145,
+        88,
+        491,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 432706,
+      "bytes": 25350,
+      "source_sha256": "462cd414f2357e1716c349025e8d467b5d3e86550cd775dd50e4d40156517134",
+      "sha256": "add2ab6f7d58aad3ec3aa10f59a74b36e8add0d050c65422ed5ba22d2b76d3a7"
+    },
+    {
+      "id": "crush-cannon-lv3",
+      "source": "crush-cannon-lv3.png",
+      "file": "crush-cannon-lv3-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        139,
+        49,
+        529,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 480910,
+      "bytes": 36300,
+      "source_sha256": "3c2637a59371b64f143741aa69d838e8170a09b2e68bd994caa1809069c9a7bd",
+      "sha256": "3d436cc1e2d90c27951fd1eef626e7b985b7397077f59119fb4cf4e07a6b6d7e"
+    },
+    {
+      "id": "water-cannon",
+      "source": "water-cannon.png",
+      "file": "water-cannon-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        132,
+        89,
+        491,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 462543,
+      "bytes": 32530,
+      "source_sha256": "ebf928491a3324cf48d20b0ac491b2c6174f59c007e845112a4e43bb3506fa55",
+      "sha256": "88b55791fda90f7c9ce07e9a84daf87084d9238d8723827f66ab33c5cdbda02a"
+    },
+    {
+      "id": "water-cannon-lv3",
+      "source": "water-cannon-lv3.png",
+      "file": "water-cannon-lv3-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        132,
+        49,
+        529,
+        578
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        32,
+        24,
+        576,
+        576
+      ],
+      "source_bytes": 505880,
+      "bytes": 42160,
+      "source_sha256": "21f84916b2151ae1d1714313579f09a130c0ecb233a1029c1be203fd659ff046",
+      "sha256": "5c5738bbb78d207475379576084e13900ca32f640c0f7974dcea14fd11d90b92"
+    }
+  ]
+}

@@ -187,6 +187,18 @@ class LoopTests(unittest.TestCase):
         self.assertGreater(restarted['next_due'], time.time())
         self.assertIsNone(restarted.get('last_run'))
 
+    def test_changing_to_hourly_reanchors_old_due_and_keeps_it_on_restart(self):
+        loop.update_state(self.state, interval_seconds=7200, next_due=time.time() + 6500)
+        self.write_config(interval_seconds=3600, timeout_seconds=3000, max_turns=64)
+        began = time.time()
+        first = loop.start(self.state, self.config)
+        self.assertEqual(first['interval_seconds'], 3600)
+        self.assertGreaterEqual(first['next_due'], began + 3600)
+        self.assertLess(first['next_due'], began + 3603)
+        loop.stop(self.state)
+        restarted = loop.start(self.state, self.config)
+        self.assertEqual(restarted['next_due'], first['next_due'])
+
     def test_orphan_worker_blocks_start_and_run_once_without_locks(self):
         worker = subprocess.Popen([os.sys.executable, '-c', 'import time;time.sleep(20)'], start_new_session=True)
         try:
