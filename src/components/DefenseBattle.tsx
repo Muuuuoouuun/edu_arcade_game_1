@@ -12,6 +12,10 @@ import type { Campaign, DefenseState, Point, TowerKind } from '../games/defense/
 import type { DefenseThemeId } from '../games/defense/themes';
 import '../defense-mobile.css';
 
+const ZOOM_KEY = 'arcana.battle-zoom';
+const readZoomPreference = () => { try { return localStorage.getItem(ZOOM_KEY) === '1'; } catch { return false; } };
+const writeZoomPreference = (on: boolean) => { try { localStorage.setItem(ZOOM_KEY, on ? '1' : '0'); } catch { /* preference only */ } };
+
 export type BattlePanel = { kind: 'build'; slot: number } | { kind: 'candidates'; slots: number[] } | { kind: 'recruit' | 'scout' | 'party' };
 const terrainNames = { high: '고지대 · 사거리 증가', water: '물가 · 전기 연계', ice: '빙판 · 빠른 적 주의', plain: '평지' };
 
@@ -31,7 +35,7 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
   const lastMapScroll = useRef(-Infinity);
   const fontProbe = useRef<HTMLSpanElement>(null);
   const [mapWidth, setMapWidth] = useState(0);
-  const [zoomed, setZoomed] = useState(false);
+  const [zoomed, setZoomed] = useState(readZoomPreference);
   const [canZoom, setCanZoom] = useState(false);
   const [largeText, setLargeText] = useState(false);
   const heroX = useRef(state.heroPosition.x);
@@ -87,7 +91,7 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
         <div className="battle-camera" role="group" aria-label="전장 시야">
           <span>{zoomed && canZoom ? '확대 · 좌우로 밀어 보기' : '전체 전장'}</span>
           {zoomed && canZoom ? <button onClick={focusHero} aria-label="영웅 위치 보기">영웅 위치</button> : null}
-          <button onClick={() => { onCancelAim(); setZoomed(value => !value); }} disabled={!canZoom} aria-pressed={zoomed && canZoom} aria-label="전장 확대">{zoomed && canZoom ? '전체 보기' : '확대 보기'}</button>
+          <button onClick={() => { onCancelAim(); const next = !(zoomed && canZoom); writeZoomPreference(next); setZoomed(next); }} disabled={!canZoom} aria-pressed={zoomed && canZoom} aria-label="전장 확대">{zoomed && canZoom ? '전체 보기' : '확대 보기'}</button>
         </div>
         <div className="battle-map-space" ref={mapSpace}>
           <div className={`battle-map-viewport ${zoomed && canZoom ? 'is-zoomed' : ''}`} ref={mapViewport} tabIndex={zoomed && canZoom ? 0 : undefined} role="region" aria-label="전장 지도. 확대 시 좌우로 스크롤할 수 있어요"
