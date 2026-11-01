@@ -27,7 +27,11 @@ body:has(.battle-page){overflow:hidden;background:#102c25}
 .battle-utilities .battle-start{background:#f4cc6c;color:#44331e;box-shadow:inset 0 0 0 2px #ffeab2}
 .battle-map-column{grid-column:2;grid-row:1;min-height:0;min-width:0;display:flex;flex-direction:column;position:relative}
 .battle-map-space{min-height:0;min-width:0;flex:1;display:flex;justify-content:center;align-items:center}
-.battle-map-size{flex-shrink:0;max-width:100%;aspect-ratio:3/2}
+.battle-map-viewport{width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:#c6a15d #102c25;border-radius:7px}
+.battle-map-viewport:focus-visible{outline:2px solid #ffdf8a;outline-offset:2px}
+.battle-map-viewport.is-zoomed{touch-action:pan-x pinch-zoom}
+.battle-map-size{flex-shrink:0;margin-inline:auto;aspect-ratio:3/2}
+.battle-camera,.battle-camera-edges{display:none}
 .battle-map-size .def-board{border:0;border-radius:7px;box-shadow:0 0 0 1px #59704c;aspect-ratio:3/2;overflow:hidden}
 .battle-map-size .def-map{display:block;width:100%;height:100%;aspect-ratio:3/2}
 .battle-map-size .def-build-pad,.battle-map-size .def-build-pad.occupied{width:48px;height:48px;min-width:48px;min-height:48px;transform:translate(-50%,-50%)}
@@ -138,6 +142,12 @@ body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-in
  .battle-hud .battle-pause{width:44px;min-width:44px;min-height:44px}
  .battle-body{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(48px,auto) minmax(48px,auto);gap:8px;padding:4px 8px}
  .battle-map-column{grid-column:1;grid-row:1}
+ .battle-camera{display:flex;align-items:center;gap:6px;flex-shrink:0;min-height:48px;padding-bottom:4px}
+ .battle-camera>span{flex:1;font-size:.7rem;color:#c1ceb4}
+ .battle-camera button{min-height:44px;padding:6px 12px;border:1px solid #809574;border-radius:7px;background:#214b3b;color:#fff4d4;font-size:.85rem}
+ .battle-camera button[aria-pressed=true]{border-color:#f4cc6c;background:#f4cc6c;color:#44331e}
+ .battle-camera-edges{display:flex;justify-content:space-between;gap:8px;flex-shrink:0;height:48px}
+ .battle-camera-edges button{min-height:44px;padding:6px 12px;border:1px solid #809574;border-radius:7px;background:#173e32;color:#fff4d4;font-size:.85rem}
  /* The 3:2 board is width-limited on tall phones. Center it in the available
     space so the unused height is shared above and below the battlefield,
     keeping the map closer to the controls without cropping its play area. */
@@ -186,6 +196,7 @@ body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-in
 }
 @media(orientation:portrait) and (max-width:360px){.battle-hud .battle-health svg{display:none}.battle-hud small{font-size:.7rem}}
 .battle-large-text .battle-portrait-summary,.battle-large-text .battle-input-note,.battle-large-text .battle-commands small,.battle-large-text .battle-commands>button>svg,.battle-large-text .battle-start svg{display:none}
+.battle-large-text .battle-camera>span{display:none}
 .battle-large-text .battle-utilities button,.battle-large-text .battle-commands button{white-space:nowrap}
 @media(orientation:landscape){.battle-large-text .battle-body{grid-template-columns:104px minmax(0,1fr) 104px}.battle-large-text .battle-utilities button{font-size:.9rem}.battle-large-text .battle-party .def-sprite{display:none}.battle-large-text .battle-commands button{font-size:.9rem}}
 @media(prefers-reduced-motion:reduce){.battle-page *,.defense-tactical *{scroll-behavior:auto!important}}
