@@ -35,3 +35,5 @@
 .camp-art{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
 .camp-art-nav{scroll-margin-top:16px;scroll-margin-bottom:112px}
 .camp-art button,.camp-art summary{scroll-margin-bottom:112px}
+
+.camp-expedition-card .camp-territory{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:10px;color:#fff1c8;font-size:12px}.camp-territory-pips{display:inline-flex;gap:3px}.camp-territory-pips i{width:12px;height:12px;border-radius:50%;border:1px solid #f1d89c99;background:#0000}.camp-territory-pips i.on{background:#f6cb68;border-color:#f6cb68}.camp-territory-pips i.now{border-color:#fff;box-shadow:0 0 0 1px #fff6}.camp-territory b{font-weight:700}.camp-territory em{font-style:normal;color:#ffd98a;font-size:11px}

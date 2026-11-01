@@ -5,7 +5,7 @@ import { getStage, STAGE_COUNT, STAGES } from './data.ts';
 import { createDefense } from './engine.ts';
 import {
   acknowledgeVisitor, campaignFacilities, campaignRequest, completeRun, createCampaign, resultFollowUp, readCampaign, selectDifficulty, selectHero,
-  stageUnlocked, trainCampaign, trainingCost, writeCampaign,
+  stageUnlocked, territoryProgress, trainCampaign, trainingCost, writeCampaign,
 } from './campaign.ts';
 
 function result(stage = 1, overrides: Partial<DefenseState> = {}): DefenseState {
@@ -372,4 +372,13 @@ test('result follow-up points to the next request and the unclaimed optional que
   const end = resultFollowUp(done, STAGE_COUNT);
   assert.equal(end.next, null);
   assert.equal(end.upcomingVisitor, null);
+});
+
+test('territory progress counts rescued villages and open optional quests on cleared stages only', () => {
+  const fresh = createCampaign();
+  assert.deepEqual(territoryProgress(fresh), { rescued: 0, total: STAGE_COUNT, questsLeft: 0 });
+  const cleared = completeRun(fresh, 'territory-1', result(1, { hp: 12 })).campaign;
+  assert.deepEqual(territoryProgress(cleared), { rescued: 1, total: STAGE_COUNT, questsLeft: 1 });
+  const claimed = completeRun(cleared, 'territory-2', result(1)).campaign;
+  assert.equal(territoryProgress(claimed).questsLeft, 0);
 });
