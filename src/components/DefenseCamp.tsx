@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import { DefenseSprite } from './DefenseBoard';
 import { DefenseFieldGuide } from './DefenseFieldGuide';
 import { Icon } from './Icon';
-import { campaignFacilities, campaignRequest, stageUnlocked, trainingCost } from '../games/defense/campaign';
+import { campaignFacilities, campaignRequest, stageUnlocked, territoryProgress, trainingCost } from '../games/defense/campaign';
 import { getStage, HEROES, STAGES } from '../games/defense/data';
 import { DIFFICULTIES, DIFFICULTY_ORDER, getDifficulty } from '../games/defense/difficulty';
 import type { Campaign, Difficulty, HeroId } from '../games/defense/types';
@@ -48,6 +48,7 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
   const nextVisitorStage = STAGES.find(s=>s.visitor && !campaign.visitors.includes(s.visitor));
   const forgeOpen = campaign.visitors.includes('dwarf');
   const snowOpen = stageUnlocked(campaign,5);
+  const territory = territoryProgress(campaign);
   const allDone = campaign.cleared.length === STAGES.length;
   const chapterStages = STAGES.filter(s=>s.region===stage.region);
   const selectRegion = (region:'forest'|'snow') => {
@@ -79,6 +80,7 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
         <span>다음 목적지 · {difficultyInfo.name}</span>
         <h3>{stage.label} {stage.name}</h3>
         <p>{stage.weather} · {completed?'다시 지키는 마을':'새로운 구조 요청'}</p>
+        <p className="camp-territory" aria-label={`구한 마을 ${territory.rescued}곳, 전체 ${territory.total}곳${territory.questsLeft?`, 남은 추가 퀘스트 ${territory.questsLeft}개`:''}`}><span className="camp-territory-pips" aria-hidden="true">{STAGES.map(s=><i key={s.id} className={campaign.cleared.includes(s.id)?'on':s.id===stage.id?'now':''}/>)}</span><b>구한 마을 {territory.rescued}/{territory.total}</b>{territory.questsLeft?<em>추가 퀘스트 {territory.questsLeft}개 남음</em>:null}</p>
         <button className="camp-enter-stage" onClick={()=>onDepart(stage.id)} disabled={!stageUnlocked(campaign,stage.id)}><Icon name="play" size={20}/>스테이지 입장<span aria-hidden="true">↗</span></button>
         <small>입장 후 전장에서 타워를 배치해요</small>
       </div>
