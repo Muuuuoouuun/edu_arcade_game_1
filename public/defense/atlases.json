@@ -1,0 +1,71 @@
+{
+  "purpose": "Battlefield delivery copies of painted pose atlases; originals are preserved in art-source.",
+  "encoding": "WebP quality 92 via libwebp; same dimensions, lossless alpha, no crop or resize.",
+  "files": [
+    {
+      "id": "monster-models",
+      "file": "monster-models.webp",
+      "source": "art-source/defense/atlases/monster-models.png",
+      "width": 1086,
+      "height": 1448,
+      "source_bytes": 2127101,
+      "bytes": 594058,
+      "mean_abs_color_error_opaque": 4.886,
+      "alpha_max_diff": 0,
+      "source_sha256": "0a34c9d70f13924e5d13f899459802ef226ecd7569c164ad7f8e52d0fb2a00da",
+      "sha256": "edef6f3e79f54a2d99e5ed40e1d66178cd830d03e469ee2a1e62c29cef140062"
+    },
+    {
+      "id": "boss-models",
+      "file": "boss-models.webp",
+      "source": "art-source/defense/atlases/boss-models.png",
+      "width": 1774,
+      "height": 887,
+      "source_bytes": 1969984,
+      "bytes": 531906,
+      "mean_abs_color_error_opaque": 6.26,
+      "alpha_max_diff": 0,
+      "source_sha256": "03477db648112979ec5193e0f04c5a50a4a2f8ccffacf6d1859fa46650310221",
+      "sha256": "5c240a24af49ab2f65715865aa86bd86ea8ee3d51a28c214d10f7d9863ce98c8"
+    },
+    {
+      "id": "tower-models",
+      "file": "tower-models.webp",
+      "source": "art-source/defense/atlases/tower-models.png",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 2167418,
+      "bytes": 571594,
+      "mean_abs_color_error_opaque": 4.282,
+      "alpha_max_diff": 0,
+      "source_sha256": "72f50387cbffe2db0c05d51aafddea9b7d8dad63451dfb07fe8d7e1707b1b87e",
+      "sha256": "0045ad709c6e9b0fd9835c53243cb38355cbb7a74d85a5f6effd7b301374d343"
+    },
+    {
+      "id": "melee-motion",
+      "file": "melee-motion.webp",
+      "source": "art-source/defense/atlases/melee-motion.png",
+      "width": 1254,
+      "height": 1254,
+      "source_bytes": 1937473,
+      "bytes": 539174,
+      "mean_abs_color_error_opaque": 4.436,
+      "alpha_max_diff": 0,
+      "source_sha256": "9e264fcf20942375e1017348f0f555f9e44e89f6fbf097ddd2dd3789a44c5222",
+      "sha256": "93d50c57c1416a38aaf5633af227e3bac3ee3a08f9049304e966a40630c00cf5"
+    },
+    {
+      "id": "ranged-motion",
+      "file": "ranged-motion.webp",
+      "source": "art-source/defense/atlases/ranged-motion.png",
+      "width": 1086,
+      "height": 1448,
+      "source_bytes": 2345045,
+      "bytes": 707842,
+      "mean_abs_color_error_opaque": 5.991,
+      "alpha_max_diff": 0,
+      "source_sha256": "444644e358d8312d72c9192237dbe1e662338e5f287138e54639d02eb283f28c",
+      "sha256": "3e4482f074ce012a2b7ce6086561d5a6cc43237f7bc844b021a0129fe91b0f4a"
+    }
+  ]
+}
