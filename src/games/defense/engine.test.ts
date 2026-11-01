@@ -132,6 +132,13 @@ test('water attacks slow and wet a group and rain supplies a natural conductive 
   assert.ok(stepDefense(rain,.1).enemies[0].wet>0);
 });
 
+test('a leak raises one breach effect sized to the lost HP without changing the damage',()=>{
+  const small=battlefield();const wood=enemy('wood',1);wood.progress=10000;small.enemies=[wood];
+  const hit=stepDefense(small,.1);const breach=hit.effects.filter(e=>e.kind==='breach');
+  assert.equal(hit.hp,19);assert.equal(hit.leaks,1);assert.equal(breach.length,1);assert.equal(breach[0].force,1);
+  const big=battlefield();const boss=enemy('boss',1);boss.progress=10000;big.enemies=[boss];
+  const crash=stepDefense(big,.1);assert.equal(crash.hp,12);assert.equal(crash.effects.find(e=>e.kind==='breach')?.force,8);
+});
 test('kills pay once, main leaks cause loss, and losing the expanded village only fails its quest',()=>{
   const kill=battlefield();const dead=enemy('sprout',1);dead.hp=0;kill.enemies=[dead];
   const paid=stepDefense(kill,.1);

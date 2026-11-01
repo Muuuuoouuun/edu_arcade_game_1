@@ -221,6 +221,7 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
  };
  const handleEnemyKey=(event:KeyboardEvent<SVGGElement>,enemy:Enemy)=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();event.stopPropagation();activateEnemy(enemy);}};
  const activeEffects=s.effects;
+ const breach=activeEffects.filter(e=>e.kind==='breach').at(-1);
  const dashEffect=activeEffects.filter(e=>e.kind==='dash').at(-1);
  const units:{id:string;y:number;render:ReactNode}[]=[];
  for(const t of s.towers){const p=slots.find(slot=>slot.id===t.slot);if(p)units.push({id:`tower-${t.slot}`,y:p.y,render:<TowerUnit tower={t} position={p} state={s} reduced={reduced}/>});}
@@ -240,6 +241,7 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
    {units.sort((a,b)=>a.y-b.y).map(unit=><g key={unit.id}>{unit.render}</g>)}
    <AttackTrails attacks={s.attacks} reduced={reduced}/><ProjectileLayer projectiles={s.projectiles} reduced={reduced}/><EffectLayer effects={activeEffects} reduced={reduced}/>
   </svg>
+  {breach&&!reduced?<div className="def-breach-flash" style={{opacity:Math.max(0,1-(breach.age??0)/(breach.maxLife??.6))*Math.min(1,.45+(breach.force??1)*.12)}} aria-hidden="true"/>:null}
   <div className="def-town-label" style={{left:'93%',top:'54%'}}>마을 <b>{s.hp}</b></div>{stage.expanded?<div className={`def-town-label ${s.outpostHp<=0?'fallen':''}`} style={{left:'92%',top:'23%'}}>구조 <b>{s.outpostHp}</b></div>:null}
   {availableSlots.map(p=>{const tower=s.towers.find(t=>t.slot===p.id);return <button key={p.id} className={`def-build-pad ${tower?'occupied':''} ${selectedSlot===p.id?'selected':''}`} style={{left:`${p.x/9}%`,top:`${p.y/6}%`}} onClick={event=>{event.stopPropagation();activateSlot(p.id);}} aria-label={`${p.id+1}번 건설 지점 · ${terrainLabel[p.terrain]}${tower?` · ${TOWERS[tower.kind].name} 레벨 ${tower.level}`:''}`} aria-pressed={selectedSlot===p.id} disabled={!movingAllowed}>{tower?<span className="def-pad-selected">{selectedSlot===p.id?'선택':''}</span>:<><span aria-hidden="true">+</span><small>{p.terrain==='high'?'고지':p.terrain==='water'?'물가':p.terrain==='ice'?'빙판':p.id+1}</small></>}</button>})}
   {stage.climate==='rain'?<div className="def-weather-rain" style={{backgroundPosition:`${-weatherTime*50}px ${weatherTime*185}px`}} aria-hidden="true"/>:null}

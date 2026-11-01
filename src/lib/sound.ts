@@ -3,7 +3,7 @@ let enabled = true;
 let noiseBuffer: AudioBuffer | null = null;
 const activeVoices = new Set<() => void>();
 
-export type CombatSoundKind = 'arrow' | 'cast' | 'cannon' | 'impact' | 'slash' | 'freeze' | 'skill';
+export type CombatSoundKind = 'arrow' | 'cast' | 'cannon' | 'impact' | 'slash' | 'freeze' | 'skill' | 'breach';
 type Layer = {
   from: number; to: number; gain: number; duration: number;
   wave?: OscillatorType; noise?: BiquadFilterType; delay?: number; attack?: number;
@@ -23,6 +23,10 @@ const COMBAT_SOUNDS: Record<CombatSoundKind, CombatSound> = {
   cannon: { cooldown: 0.2, layers: [
     { wave: 'sine', from: 100, to: 38, gain: 0.045, duration: 0.21 },
     { noise: 'lowpass', from: 780, to: 100, gain: 0.025, duration: 0.14 },
+  ] },
+  breach: { cooldown: 0.25, layers: [
+    { wave: 'sine', from: 150, to: 46, gain: 0.04, duration: 0.24 },
+    { wave: 'triangle', from: 330, to: 180, gain: 0.014, duration: 0.16 },
   ] },
   impact: { cooldown: 0.08, layers: [
     { wave: 'triangle', from: 180, to: 58, gain: 0.028, duration: 0.105 },

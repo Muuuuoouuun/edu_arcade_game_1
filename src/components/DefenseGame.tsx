@@ -39,6 +39,8 @@ function combatFeedback(before: DefenseState, next: DefenseState) {
   if (before === next || next.paused) return;
   const fresh = next.effects.filter(effect => effect.id >= before.nextId);
   if (fresh.some(effect => effect.kind === 'dash')) { playCombatSound('slash', (next.heroPosition.x - 450) / 450); return; }
+  const breach = fresh.find(effect => effect.kind === 'breach');
+  if (breach) { playCombatSound('breach', (breach.to.x - 450) / 450); return; }
   const heavy = fresh.find(effect => effect.kind === 'skill' || effect.kind === 'interrupt' || effect.kind === 'freeze' || effect.kind === 'shockwave');
   if (heavy) {
     playCombatSound(heavy.kind === 'freeze' ? 'freeze' : heavy.kind === 'shockwave' ? 'impact' : 'skill', (heavy.to.x - 450) / 450);
