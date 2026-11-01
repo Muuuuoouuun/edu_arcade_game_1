@@ -178,6 +178,7 @@ export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];re
     <ellipse rx={30+(reduced?0:p*24)} ry={11+(reduced?0:p*9)} fill="none" stroke={kind==='build'?'#e8d9af':color} strokeWidth={kind==='build'?2:2.5}/>
     {!reduced&&kind==='build'?[-1,1].map(side=><path key={side} d="M-8 0Q0-5 8 0" transform={`translate(${side*(23+p*18)},${p*6})`} fill="none" stroke="#e1d4b6" strokeWidth={3*(1-p)} opacity=".5"/>):null}
    </g>;
+   if(kind==='breach'){const r=30+(reduced?30:p*(46+(e.force??1)*9));return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} opacity={fade*.9} data-effect-ground="breach"><ellipse rx={r} ry={r*.38} fill="#d9433a24" stroke="#ff7b6b" strokeWidth={Math.min(6,2+(e.force??1)*.5)}/></g>;}
    if(!['shockwave','skill','impact','freeze','interrupt'].includes(kind)||(kind==='impact'&&!detail))return null;
    const wide=kind==='skill'||kind==='shockwave'||kind==='interrupt';
    const radius=wide?35+p*(e.force?Math.min(145,e.force):100):12+p*30;
@@ -191,6 +192,10 @@ export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];re
     <g transform={`translate(0,${-67-(reduced?0:p*24)})`} stroke={color} strokeWidth="2.3" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="m-8 0 8-7 8 7M-8-7l8-7 8 7"/></g>
     {!reduced?[-1,1].map(side=><g key={side} opacity={(1-p)*.7}><path d={`M${side*28} ${-15-p*30}v-15`} stroke={color} strokeWidth="1.8"/><path d={`M${side*36} ${-5-p*45}v-7`} stroke={color} strokeWidth="1.3"/></g>):null}
    </>:!reduced?<g opacity={(1-p)*.4}>{[-1,1].map(side=><ellipse key={side} cx={side*(24+p*22)} cy={5-p*4} rx={5+p*7} ry={3+p*3} fill="#dfd4b7"/>)}</g>:null}
+  </g>;
+  if(kind==='breach')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y-27})`} opacity={fade} data-effect="breach">
+   <circle r={reduced?18:12+p*(28+Math.min(8,e.force??1)*4)} fill="#ff5f4e55"/>
+   {e.text?<text x={Math.max(44,Math.min(856,e.to.x))-e.to.x} y={-34-(reduced?0:p*20)} textAnchor="middle" className="def-float-number def-float-breach">{e.text}</text>:null}
   </g>;
   if(kind==='chain')return <g key={e.id} opacity={fade} data-effect="chain"><Lightning effect={e}/><circle cx={e.to.x} cy={e.to.y-25} r={12+p*12} fill="url(#def-blue-core)"/></g>;
   if(kind==='death'){

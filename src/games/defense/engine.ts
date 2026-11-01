@@ -53,7 +53,7 @@ export function damageMultiplier(kind:EnemyKind,element:Element):number {
   return 1;
 }
 function effect(s:DefenseState,from:Point,to:Point,element:Element,text?:string,kind:Effect['kind']='impact',extra:Partial<Effect>={}) {
-  const life=kind==='death' ? .7 : kind==='skill' ? .85 : kind==='shockwave' ? .5 : kind==='coin' ? .9 : kind==='build' ? .65 : kind==='upgrade' ? .8 : kind==='dash' ? .35 : .4;
+  const life=kind==='death' ? .7 : kind==='skill' ? .85 : kind==='shockwave' ? .5 : kind==='coin' ? .9 : kind==='build' ? .65 : kind==='upgrade' ? .8 : kind==='dash' ? .35 : kind==='breach' ? .6 : .4;
   s.effects.push({id:s.nextId++,from:{x:from.x,y:from.y},to:{x:to.x,y:to.y},element,life,age:0,maxLife:life,kind,...(text?{text}:{}),...extra});
   if(s.effects.length>100)s.effects.splice(0,s.effects.length-100);
 }
@@ -400,7 +400,7 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
   for(const e of escaped){
     const loss=e.kind==='boss'||e.kind==='frostboss'?8:1;
     if(e.path===1)s.outpostHp=Math.max(0,s.outpostHp-loss);else s.hp=Math.max(0,s.hp-loss);
-    s.leaks++;effect(s,e,e,'physical','돌파!');
+    s.leaks++;effect(s,e,e,'physical','돌파!','breach',{force:loss});
   }
   s.enemies=s.enemies.filter(e=>e.progress<lengths[e.path]);
   s.questProgress=stage.questType==='hunt'?s.kills:stage.questType==='outpost'?s.outpostHp:s.hp;
