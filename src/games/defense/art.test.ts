@@ -32,20 +32,20 @@ test('only matching upgraded branches use the loaded battle renders; base art an
   assert.equal(mastered?.nativeFacing??1,facing,'Lv.3 keeps the facing of its base render');
   assert.equal(mastered?.viewBox,specialized?.viewBox,'Lv.3 shares the Lv.2 crop so the ground anchor is unchanged');
   assert.equal(specialized?.nativeFacing??1,facing);
-  assert.equal(art.towerSpriteAsset(kind)?.src,'/defense/tower-models.png');
-  assert.equal(art.towerSpriteAsset(kind,branch,1)?.src,'/defense/tower-models.png');
+  assert.equal(art.towerSpriteAsset(kind)?.src,'/defense/tower-models.webp');
+  assert.equal(art.towerSpriteAsset(kind,branch,1)?.src,'/defense/tower-models.webp');
  }
- assert.equal(art.towerSpriteAsset('cannon',null,2)?.src,'/defense/tower-models.png','an unspecialized cannon keeps the atlas');
- assert.equal(art.spriteAsset(4).src,'/defense/tower-models.png');
- assert.equal(art.spriteAsset(5).src,'/defense/tower-models.png');
- assert.equal(art.spriteAsset(6).src,'/defense/tower-models.png');
+ assert.equal(art.towerSpriteAsset('cannon',null,2)?.src,'/defense/tower-models.webp','an unspecialized cannon keeps the atlas');
+ assert.equal(art.spriteAsset(4).src,'/defense/tower-models.webp');
+ assert.equal(art.spriteAsset(5).src,'/defense/tower-models.webp');
+ assert.equal(art.spriteAsset(6).src,'/defense/tower-models.webp');
  assert.equal(requests.some(src=>src.endsWith('.glb')),false,'the battle loader must not fetch realtime models');
 });
 
 test('a failed model image falls back to the same specialization without suppressing other loaded models',async()=>{
  const {art}=await loadWithImageResults(src=>src.endsWith('/water-cannon-game.webp'),'partial-failure');
  const water=art.towerSpriteAsset('cannon','water',2),base=art.towerSpriteAsset('cannon');
- assert.equal(water?.src,'/defense/tower-models.png');
+ assert.equal(water?.src,'/defense/tower-models.webp');
  assert.notEqual(water?.viewBox,base?.viewBox,'the water specialization keeps its own atlas frame');
  assert.equal(art.towerSpriteAsset('magic','fire',2)?.src,'/defense/models/fire-tower-game.webp');
  assert.equal(art.towerSpriteAsset('crossbow','pierce',2)?.src,'/defense/models/piercing-ballista-game.webp');
@@ -53,13 +53,13 @@ test('a failed model image falls back to the same specialization without suppres
 
 test('a failed Lightning render falls back to the atlas without touching the Fire tower',async()=>{
  const {art}=await loadWithImageResults(src=>src.endsWith('/lightning-tower-game.webp'),'lightning-failure');
- assert.equal(art.towerSpriteAsset('magic','lightning',2)?.src,'/defense/tower-models.png');
+ assert.equal(art.towerSpriteAsset('magic','lightning',2)?.src,'/defense/tower-models.webp');
  assert.equal(art.towerSpriteAsset('magic','fire',2)?.src,'/defense/models/fire-tower-game.webp');
 });
 
 test('a failed Rapid crossbow render falls back to the atlas without touching the Pierce ballista',async()=>{
  const {art}=await loadWithImageResults(src=>src.endsWith('/rapid-crossbow-game.webp'),'rapid-failure');
- assert.equal(art.towerSpriteAsset('crossbow','rapid',2)?.src,'/defense/tower-models.png');
+ assert.equal(art.towerSpriteAsset('crossbow','rapid',2)?.src,'/defense/tower-models.webp');
  assert.equal(art.towerSpriteAsset('crossbow','pierce',2)?.src,'/defense/models/piercing-ballista-game.webp');
 });
 
@@ -105,8 +105,8 @@ test('a complete dwarf render set shares its body scale and ground anchor across
  }
  assert.equal(art.idleSpriteAsset('mage'),null);
  assert.equal(art.idleSpriteAsset('wolf'),null);
- assert.equal(art.actionSpriteAsset('barbarian','strike')?.src,'/defense/melee-motion.png');
- assert.equal(art.actionSpriteAsset('mage','strike')?.src,'/defense/ranged-motion.png');
+ assert.equal(art.actionSpriteAsset('barbarian','strike')?.src,'/defense/melee-motion.webp');
+ assert.equal(art.actionSpriteAsset('mage','strike')?.src,'/defense/ranged-motion.webp');
  assert.equal(art.spriteAsset(0).src,'/defense/atlas.png');
  assert.equal(requests.filter(src=>/\/dwarf-.*-game\.webp$/.test(src)).length,4);
  assert.equal(requests.some(src=>src.endsWith('.glb')),false,'battle must not request articulated realtime models');
@@ -118,7 +118,7 @@ test('any missing dwarf pose keeps the whole actor on its existing atlas',async(
   assert.equal(art.idleSpriteAsset('dwarf'),null);
   assert.equal(art.spriteAsset(2).src,'/defense/atlas.png');
   for(const pose of ['windup','strike','recover'] as const)
-   assert.equal(art.actionSpriteAsset('dwarf',pose)?.src,'/defense/melee-motion.png',`${missing} failure keeps ${pose} in the same art style`);
+   assert.equal(art.actionSpriteAsset('dwarf',pose)?.src,'/defense/melee-motion.webp',`${missing} failure keeps ${pose} in the same art style`);
   assert.equal(art.towerSpriteAsset('magic','fire',2)?.src,'/defense/models/fire-tower-game.webp');
  }
 });
@@ -146,7 +146,7 @@ test('a delayed final dwarf frame does not switch the actor prematurely or dupli
   for(const [src,resolve] of pending)if(src!==last)resolve();
   assert.equal(art.idleSpriteAsset('dwarf'),null);
   assert.equal(art.spriteAsset(2).src,'/defense/atlas.png');
-  assert.equal(art.actionSpriteAsset('dwarf','strike')?.src,'/defense/melee-motion.png');
+  assert.equal(art.actionSpriteAsset('dwarf','strike')?.src,'/defense/melee-motion.webp');
   assert.ok(pending.has(last));pending.get(last)!();await preload;
   assert.equal(art.idleSpriteAsset('dwarf')?.src,'/defense/models/dwarf-idle-game.webp');
   assert.equal(art.actionSpriteAsset('dwarf','strike')?.src,'/defense/models/dwarf-strike-game.webp');
