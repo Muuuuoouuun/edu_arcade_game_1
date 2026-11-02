@@ -166,10 +166,12 @@ export function playCombatSound(kind: CombatSoundKind, pan = 0): void {
       (typeof document !== 'undefined' && document.hidden)) return;
     if (!Object.hasOwn(COMBAT_SOUNDS, kind)) return;
     const sound = COMBAT_SOUNDS[kind], now = context.currentTime;
-    if (!Number.isFinite(now) || now - lastCombatStart < 0.05 ||
+    // The one-shot surge warning must not lose a race against routine shots on the same frame.
+    const urgent = kind === 'surge';
+    if (!Number.isFinite(now) || (!urgent && now - lastCombatStart < 0.05) ||
       now - (lastKindStart[kind] ?? -Infinity) < sound.cooldown) return;
     while (combatStarts.length && combatStarts[0] <= now - 1) combatStarts.shift();
-    if (combatStarts.length >= 14) return;
+    if (!urgent && combatStarts.length >= 14) return;
     if (synthesize(context, sound.layers, 0.7, pan)) {
       combatStarts.push(now);
       lastCombatStart = now;
