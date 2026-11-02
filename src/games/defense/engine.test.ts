@@ -519,9 +519,12 @@ test('a wave cleared without any breach pays a one-time flawless bonus; a breach
   const done=stepDefense(clean,.1);
   assert.equal(done.phase,'intermission');assert.equal(done.coins,240+45+FLAWLESS_BONUS);assert.match(done.notice,/완벽 방어/);
   assert.equal(advance(done,2).coins,done.coins,'bonus is paid once');
+  assert.equal(done.effects.filter(e=>e.kind==='coin'&&e.text===`+${FLAWLESS_BONUS} 완벽!`).length,1,'a visible cue marks the bonus');
+  const promo=stepDefense({...battlefield(),wave:2,spawned:waveSize(1,2),promotion:null},.1);
+  assert.equal(promo.phase,'promotion');assert.match(promo.notice,/완벽 방어/);
   const leaky=battlefield();const wood=enemy('wood',1);wood.progress=10000;leaky.enemies=[wood];
   const after=advance(leaky,3);
-  assert.equal(after.phase,'intermission');assert.equal(after.leaks,1);assert.equal(after.coins,240+45);assert.doesNotMatch(after.notice,/완벽/);
+  assert.equal(after.phase,'intermission');assert.equal(after.leaks,1);assert.equal(after.coins,240+45);assert.doesNotMatch(after.notice,/완벽/);assert.equal(after.effects.some(e=>e.text?.includes('완벽')),false);
   const later={...after,phase:'intermission' as const};const next=actDefense(later,{type:'start-wave'});
   assert.equal(next.waveStartLeaks,1,'previous-wave leaks do not spoil the next wave');
 });
