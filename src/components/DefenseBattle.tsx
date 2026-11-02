@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { DefenseBoard, DefenseSprite } from './DefenseBoard';
 import { DefenseForecast } from './DefenseForecast';
+import { resolveZoomPreference } from './defenseFrame';
 import { Dialog } from './Dialog';
 import { Icon } from './Icon';
 import { BRANCHES, HEROES, TOWERS, getSlots, getStage, stageLabel } from '../games/defense/data';
@@ -13,7 +14,7 @@ import type { DefenseThemeId } from '../games/defense/themes';
 import '../defense-mobile.css';
 
 const ZOOM_KEY = 'arcana.battle-zoom';
-const readZoomPreference = () => { try { return localStorage.getItem(ZOOM_KEY) === '1'; } catch { return false; } };
+const readZoomPreference = () => { try { return resolveZoomPreference(localStorage.getItem(ZOOM_KEY)); } catch { return false; } };
 const writeZoomPreference = (on: boolean) => { try { localStorage.setItem(ZOOM_KEY, on ? '1' : '0'); } catch { /* preference only */ } };
 
 export type BattlePanel = { kind: 'build'; slot: number } | { kind: 'candidates'; slots: number[] } | { kind: 'recruit' | 'scout' | 'party' };

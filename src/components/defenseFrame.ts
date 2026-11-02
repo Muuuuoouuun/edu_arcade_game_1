@@ -7,3 +7,9 @@ export function shouldPublishDefenseFrame(before: DefenseState, next: DefenseSta
   const finishedEffects = (before.phase === 'won' || before.phase === 'lost') && before.effects.length > 0 && next.effects.length === 0;
   return next !== lastPublished && (elapsedMs >= 32 || before.phase !== next.phase || finishedEffects);
 }
+
+/** Portrait phones leave the 3:2 board with unused height, so the enlarged view
+ * is the default until a player explicitly picks the full view ('0'). */
+export function resolveZoomPreference(stored: string | null): boolean {
+  return stored !== '0';
+}
