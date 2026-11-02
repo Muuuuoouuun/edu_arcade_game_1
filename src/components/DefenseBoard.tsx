@@ -10,6 +10,7 @@ import type { CombatAttack, DefenseState, Effect, Element, Enemy, HeroId, Point,
 import { AttackTrails, DashTrail, DefenseFxDefs, EffectLayer, FX_COLORS, ProjectileLayer } from './DefenseEffects';
 import { BoardTapTracker, clientToBoard, resolveBoardTap } from './defenseInput';
 import type { ScreenMatrix } from './defenseInput';
+import { unitScale } from './defenseFrame';
 import '../defense-board.css';
 
 const clamp = (v:number) => Math.max(0,Math.min(1,v));
@@ -42,8 +43,8 @@ const Sprite=memo(function Sprite({index,x=0,y=0,size=70,flip=false,art:override
  </g>;
 });
 function attackPhase(a:CombatAttack):ActionPose {return a.elapsed<a.hitAt?'windup':a.elapsed<a.hitAt+.12?'strike':'recover';}
-function Actor({actor,position,facing,moving,velocity,dashTime=0,attack,skill,time,reduced,promoted=false,leader=false}:{actor:HeroId|'wolf';position:Point;facing:-1|1;moving:boolean;velocity?:Point;dashTime?:number;attack?:CombatAttack;skill?:Effect;time:number;reduced:boolean;promoted?:boolean;leader?:boolean}){
- const wolf=actor==='wolf',index=wolf?18:HEROES[actor].sprite,size=wolf?73:promoted?94:84;
+function Actor({unit=1,actor,position,facing,moving,velocity,dashTime=0,attack,skill,time,reduced,promoted=false,leader=false}:{unit?:number;actor:HeroId|'wolf';position:Point;facing:-1|1;moving:boolean;velocity?:Point;dashTime?:number;attack?:CombatAttack;skill?:Effect;time:number;reduced:boolean;promoted?:boolean;leader?:boolean}){
+ const wolf=actor==='wolf',index=wolf?18:HEROES[actor].sprite,size=(wolf?73:promoted?94:84)*unit;
  const dashing=dashTime>0,speed=velocity?Math.hypot(velocity.x,velocity.y):moving?180:0,pace=clamp(speed/230);
  const skillAge=skill?.age??Infinity,casting=skillAge<.5;
  const phase=casting?(skillAge<.18?'strike':'recover'):dashing?null:attack?attackPhase(attack):null;
@@ -72,8 +73,8 @@ function Actor({actor,position,facing,moving,velocity,dashTime=0,attack,skill,ti
   {wolf?<text y="20" textAnchor="middle" className="def-pet-label">달빛 늑대</text>:null}
  </g>;
 }
-function EnemyUnit({enemy:e,state:s,reduced,onActivate,onKey}:{enemy:Enemy;state:DefenseState;reduced:boolean;onActivate:()=>void;onKey:(e:KeyboardEvent<SVGGElement>)=>void}){
- const size=e.kind==='frostboss'?135:e.kind==='boss'?115:e.kind==='sprout'?54:e.kind==='frostwolf'?73:68;
+function EnemyUnit({unit=1,enemy:e,state:s,reduced,onActivate,onKey}:{unit?:number;enemy:Enemy;state:DefenseState;reduced:boolean;onActivate:()=>void;onKey:(e:KeyboardEvent<SVGGElement>)=>void}){
+ const size=(e.kind==='frostboss'?135:e.kind==='boss'?115:e.kind==='sprout'?54:e.kind==='frostwolf'?73:68)*unit;
  const boss=e.kind==='boss'||e.kind==='frostboss';
  const facing=e.facing??(positionOnPath(e.path,e.progress+4,s.stage).x>=e.x?1:-1);
  const charging=e.kind==='frostboss'&&s.bossCharge>0,enraged=e.kind==='boss'&&e.hp<e.maxHp*.5;
@@ -153,7 +154,7 @@ const Terrain=memo(function Terrain({stageId}:{stageId:number}){
 
 export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSelect,onMove,aimingDash=false,onSelectCandidates,onCancelAim,themeId='verdant'}:{state:DefenseState;selectedSlot:number|null;onSelect:(id:number)=>void;onMove:(p:Point)=>void;aimingDash?:boolean;onSelectCandidates?:(ids:number[])=>void;onCancelAim?:()=>void;themeId?:DefenseThemeId}){
  const stage=getStage(s.stage),snow=getRegion(s.stage)==='snow',slots=getSlots(s.stage),availableSlots=slots.filter(slot=>slot.unlock<=s.stage);
- const reduced=useReducedMotion();
+ const reduced=useReducedMotion(),[unit,setUnit]=useState(1);
  const mapRef=useRef<SVGSVGElement>(null),boardRef=useRef<HTMLDivElement>(null),tapRef=useRef(new BoardTapTracker());
  const movingAllowed=!s.paused&&['prep','wave','intermission'].includes(s.phase),enemyKinds=[...new Set(s.enemies.map(e=>e.kind))];
  const controls=useRef({allowed:movingAllowed,aimingDash,onMove,onSelect,onSelectCandidates,onCancelAim,slots:availableSlots});
@@ -177,8 +178,9 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
    const next=mapRef.current?.getBoundingClientRect();
    if(size&&next&&(Math.abs(size.width-next.width)>.01||Math.abs(size.height-next.height)>.01))cancel();
    size=next;
+   if(next)setUnit(unitScale(next.width));
   });
-  if(mapRef.current)observer?.observe(mapRef.current);
+  if(mapRef.current){observer?.observe(mapRef.current);setUnit(unitScale(mapRef.current.getBoundingClientRect().width));}
   return()=>{observer?.disconnect();window.removeEventListener('resize',cancel);window.removeEventListener('orientationchange',cancel);window.removeEventListener('blur',cancel);window.visualViewport?.removeEventListener('resize',cancel);document.removeEventListener('visibilitychange',hide);tapRef.current.reset();};
  },[cancelInput]);
  const isBattleTarget=(target:EventTarget|null)=>target instanceof Element&&(mapRef.current?.contains(target)||Boolean(target.closest('.def-build-pad')));
@@ -225,10 +227,10 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
  const dashEffect=activeEffects.filter(e=>e.kind==='dash').at(-1);
  const units:{id:string;y:number;render:ReactNode}[]=[];
  for(const t of s.towers){const p=slots.find(slot=>slot.id===t.slot);if(p)units.push({id:`tower-${t.slot}`,y:p.y,render:<TowerUnit tower={t} position={p} state={s} reduced={reduced}/>});}
- for(const e of s.enemies)units.push({id:`enemy-${e.id}`,y:e.y,render:<EnemyUnit enemy={e} state={s} reduced={reduced} onActivate={()=>activateEnemy(e)} onKey={ev=>handleEnemyKey(ev,e)}/>});
- if(s.mercenary)units.push({id:'merc',y:s.mercenaryPosition.y,render:<Actor actor={s.mercenary} position={s.mercenaryPosition} facing={s.mercenaryFacing} moving={distance(s.mercenaryPosition,{x:s.heroPosition.x+38,y:s.heroPosition.y+35})>2} attack={s.attacks.find(a=>a.source==='mercenary')} time={s.time} reduced={reduced}/>});
- if(s.pet)units.push({id:'pet',y:s.pet.position.y,render:<Actor actor="wolf" position={s.pet.position} facing={s.pet.facing} moving={distance(s.pet.position,s.pet.target)>2} attack={s.attacks.find(a=>a.source==='pet')} time={s.time} reduced={reduced}/>});
- units.push({id:'hero',y:s.heroPosition.y,render:<Actor actor={s.hero} position={s.heroPosition} facing={s.heroFacing} moving={Math.hypot(s.heroVelocity.x,s.heroVelocity.y)>5||distance(s.heroPosition,s.heroTarget)>2} velocity={s.heroVelocity} dashTime={s.dashTime} attack={s.attacks.find(a=>a.source==='hero')} time={s.time} reduced={reduced} promoted={Boolean(s.promotion)} skill={s.effects.filter(e=>e.kind==='skill').at(-1)} leader/>});
+ for(const e of s.enemies)units.push({id:`enemy-${e.id}`,y:e.y,render:<EnemyUnit unit={unit} enemy={e} state={s} reduced={reduced} onActivate={()=>activateEnemy(e)} onKey={ev=>handleEnemyKey(ev,e)}/>});
+ if(s.mercenary)units.push({id:'merc',y:s.mercenaryPosition.y,render:<Actor unit={unit} actor={s.mercenary} position={s.mercenaryPosition} facing={s.mercenaryFacing} moving={distance(s.mercenaryPosition,{x:s.heroPosition.x+38,y:s.heroPosition.y+35})>2} attack={s.attacks.find(a=>a.source==='mercenary')} time={s.time} reduced={reduced}/>});
+ if(s.pet)units.push({id:'pet',y:s.pet.position.y,render:<Actor unit={unit} actor="wolf" position={s.pet.position} facing={s.pet.facing} moving={distance(s.pet.position,s.pet.target)>2} attack={s.attacks.find(a=>a.source==='pet')} time={s.time} reduced={reduced}/>});
+ units.push({id:'hero',y:s.heroPosition.y,render:<Actor unit={unit} actor={s.hero} position={s.heroPosition} facing={s.heroFacing} moving={Math.hypot(s.heroVelocity.x,s.heroVelocity.y)>5||distance(s.heroPosition,s.heroTarget)>2} velocity={s.heroVelocity} dashTime={s.dashTime} attack={s.attacks.find(a=>a.source==='hero')} time={s.time} reduced={reduced} promoted={Boolean(s.promotion)} skill={s.effects.filter(e=>e.kind==='skill').at(-1)} leader/>});
  const weatherTime=reduced?0:s.time;
  return <div ref={boardRef} onPointerDownCapture={pointerDown} onPointerMoveCapture={pointerMove} onPointerUpCapture={pointerUp} onPointerCancelCapture={()=>cancelInput(true)} onLostPointerCapture={event=>{if(tapRef.current.has(event.pointerId))cancelInput(true);}} onClickCapture={preventPointerClick} className={`def-board ${snow?'def-snow':''} ${stage.climate==='rain'?'def-rain':''} ${stage.climate==='blizzard'?'def-blizzard':''} ${s.paused?'def-paused':''} ${reduced?'def-reduced-motion':''} ${s.freeze>0?'def-frozen':''}`} data-testid="defense-board" data-theme={themeId} data-enemies={s.enemies.length} data-game-time={s.time.toFixed(3)}>
   <svg ref={mapRef} className="def-map" viewBox="0 0 900 600" tabIndex={0} aria-label={`${snow?'서리산맥':'청록의 숲'} 전장. 땅을 누르면 영웅이 이동합니다. 전장에 초점을 두고 방향키로도 이동할 수 있어요. 건설 지점을 선택해 타워를 세우세요.`} onKeyDown={moveWithKeys}>
