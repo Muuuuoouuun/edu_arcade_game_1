@@ -80,7 +80,7 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
       <span className={`battle-health ${state.hp <= 5 ? 'danger' : ''}`} aria-label={`마을 체력 ${state.hp}`}><small>마을</small><Heart/><b>{state.hp}</b></span>
       {stage.expanded ? <span className={`battle-health ${state.outpostHp <= 4 ? 'danger' : ''}`} aria-label={`외곽 마을 체력 ${state.outpostHp}`}><small>외곽</small><Heart/><b>{state.outpostHp}</b></span> : null}
       <span className="battle-coins" aria-label={`전투 코인 ${state.coins}`}><Coin/><b>{state.coins}</b></span>
-      <span className="battle-wave" aria-label={`웨이브 ${state.wave} / 4`}><small>웨이브</small><b>{state.wave}/4</b><i className="battle-wave-pips" aria-hidden="true">{[1, 2, 3, 4].map(n => <em key={n} className={n < state.wave || (n === state.wave && state.phase === 'intermission') ? 'done' : n === state.wave ? 'now' : ''}/>)}</i></span>
+      <span className="battle-wave" aria-label={`웨이브 ${state.wave} / 4`}><small>웨이브</small><b>{state.wave}/4</b><i className="battle-wave-pips" aria-hidden="true">{[1, 2, 3, 4].map(n => <em key={n} className={n < state.wave || (n === state.wave && ['intermission', 'promotion', 'won'].includes(state.phase)) ? 'done' : n === state.wave ? 'now' : ''}/>)}</i></span>
       <button className="battle-pause" onClick={onPause} disabled={terminal} aria-label="디펜스 일시정지"><Icon name="pause" size={20}/></button>
     </header>
     <div className="battle-body">
