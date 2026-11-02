@@ -6,7 +6,7 @@ import { Dialog } from './Dialog';
 import { Icon } from './Icon';
 import { BRANCHES, HEROES, TOWERS, getSlots, getStage, stageLabel } from '../games/defense/data';
 import { DIFFICULTIES } from '../games/defense/difficulty';
-import { allowedBranches, questStatus, upgradeCost } from '../games/defense/engine';
+import { allowedBranches, inSurge, questStatus, upgradeCost, waveSize } from '../games/defense/engine';
 import type { TacticalAction } from '../games/defense/engine';
 import { towerSpriteAsset } from '../games/defense/art';
 import type { Campaign, DefenseState, Point, TowerKind } from '../games/defense/types';
@@ -69,10 +69,12 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
     const viewport = mapViewport.current;
     if (viewport) viewport.scrollLeft = zoomed ? heroX.current / 900 * mapWidth - viewport.clientWidth / 2 : 0;
   }, [mapWidth, zoomed]);
+  const planSize = state.phase === 'wave' ? waveSize(state.stage, state.wave, state.difficulty) : 0;
+  const surging = state.phase === 'wave' && !state.paused && state.spawned < planSize && inSurge(state.wave, state.spawned, planSize);
   const startAria = state.phase === 'wave' ? `웨이브 ${state.wave}/4 진행 중` : state.phase === 'intermission' ? '다음 웨이브 시작' : '웨이브 시작';
   const startLabel = state.phase === 'wave' ? `${state.wave}/4 진행` : state.phase === 'intermission' ? '다음 웨이브' : '시작';
 
-  return <main className={`battle-page battle-${stage.region} ${aimingDash ? 'battle-aiming' : ''} ${largeText ? 'battle-large-text' : ''}`} id="main" aria-label="아르카나 수비대 전투" data-phase={state.phase} data-paused={state.paused} data-aiming={aimingDash} data-dash-cooldown={state.dashCooldown.toFixed(2)} data-hero-x={state.heroPosition.x.toFixed(1)} data-hero-y={state.heroPosition.y.toFixed(1)}>
+  return <main className={`battle-page battle-${stage.region} ${aimingDash ? 'battle-aiming' : ''} ${surging ? 'battle-surge' : ''} ${largeText ? 'battle-large-text' : ''}`} id="main" aria-label="아르카나 수비대 전투" data-phase={state.phase} data-paused={state.paused} data-aiming={aimingDash} data-dash-cooldown={state.dashCooldown.toFixed(2)} data-hero-x={state.heroPosition.x.toFixed(1)} data-hero-y={state.heroPosition.y.toFixed(1)}>
     <span className="battle-font-probe" ref={fontProbe} aria-hidden="true"/>
     <header className="battle-hud">
       <button className="battle-stage" onClick={() => onPanel({ kind: 'party' })} disabled={terminal || state.paused || state.phase === 'promotion'} aria-label="원정 정보와 전술 메뉴">{stageLabel(state.stage)}</button>
@@ -110,7 +112,7 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
             </div>
           </div>
         </div>
-        <div className={`battle-input-note ${aimingDash ? 'aiming' : ''}`} role="status">{aimingDash ? '전장을 탭하면 돌진 · 전투는 계속돼요' : state.paused ? '전술 선택 중 · 전투가 멈췄어요' : state.phase === 'prep' ? '건설 지점에 타워를 세우고 시작하세요' : '땅을 탭해 영웅 이동'}</div>
+        <div className={`battle-input-note ${aimingDash ? 'aiming' : ''}`} role="status">{aimingDash ? '전장을 탭하면 돌진 · 전투는 계속돼요' : surging ? '무리가 몰려와요! 방어선을 단단히!' : state.paused ? '전술 선택 중 · 전투가 멈췄어요' : state.phase === 'prep' ? '건설 지점에 타워를 세우고 시작하세요' : '땅을 탭해 영웅 이동'}</div>
         <button className="battle-portrait-summary" onClick={() => onPanel({ kind: 'party' })} disabled={!canAct} aria-label="원정 정보와 전술 메뉴">
           <DefenseSprite index={hero.sprite}/><span><strong>{hero.name} <small>{DIFFICULTIES[state.difficulty].name}</small></strong><span>{stageLabel(state.stage)} · {stage.name}</span><small>{stage.expanded ? '두 마을을 함께 지켜 주세요' : '땅 탭 이동 · 공격은 자동'}</small></span><Icon name="back" size={18}/>
         </button>
