@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getPaths, getSlots } from '../games/defense/data';
 import { actionSpriteAsset, idleSpriteAsset, monsterSpriteAsset, spriteAsset, towerSpriteAsset } from '../games/defense/art';
@@ -169,6 +169,8 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
   if(force||pending||controls.current.aimingDash)controls.current.onCancelAim?.();
  },[]);
  useEffect(()=>{cancelInput();},[cancelInput,s.stage,s.phase,s.paused]);
+ // Measure before first paint so narrow boards never flash one frame of unscaled units.
+ useLayoutEffect(()=>{if(mapRef.current)setUnit(unitScale(mapRef.current.getBoundingClientRect().width));},[]);
  useEffect(()=>{
   const cancel=()=>cancelInput(),hide=()=>{if(document.hidden)cancel();};
   window.addEventListener('resize',cancel);window.addEventListener('orientationchange',cancel);window.addEventListener('blur',cancel);
