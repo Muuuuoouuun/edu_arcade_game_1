@@ -3,7 +3,7 @@ let enabled = true;
 let noiseBuffer: AudioBuffer | null = null;
 const activeVoices = new Set<() => void>();
 
-export type CombatSoundKind = 'arrow' | 'cast' | 'cannon' | 'impact' | 'slash' | 'freeze' | 'skill' | 'breach';
+export type CombatSoundKind = 'arrow' | 'cast' | 'cannon' | 'impact' | 'slash' | 'freeze' | 'skill' | 'breach' | 'surge';
 type Layer = {
   from: number; to: number; gain: number; duration: number;
   wave?: OscillatorType; noise?: BiquadFilterType; delay?: number; attack?: number;
@@ -27,6 +27,12 @@ const COMBAT_SOUNDS: Record<CombatSoundKind, CombatSound> = {
   breach: { cooldown: 0.25, layers: [
     { wave: 'sine', from: 150, to: 46, gain: 0.04, duration: 0.24 },
     { wave: 'triangle', from: 330, to: 180, gain: 0.014, duration: 0.16 },
+  ] },
+  // A low two-step horn: rising and unmistakably different from the single-hit breach thud.
+  surge: { cooldown: 1, layers: [
+    { wave: 'triangle', from: 110, to: 150, gain: 0.03, duration: 0.2, attack: 0.03 },
+    { wave: 'triangle', from: 150, to: 220, gain: 0.032, duration: 0.26, delay: 0.17, attack: 0.03 },
+    { noise: 'lowpass', from: 500, to: 150, gain: 0.014, duration: 0.3, delay: 0.1 },
   ] },
   impact: { cooldown: 0.08, layers: [
     { wave: 'triangle', from: 180, to: 58, gain: 0.028, duration: 0.105 },
@@ -160,10 +166,12 @@ export function playCombatSound(kind: CombatSoundKind, pan = 0): void {
       (typeof document !== 'undefined' && document.hidden)) return;
     if (!Object.hasOwn(COMBAT_SOUNDS, kind)) return;
     const sound = COMBAT_SOUNDS[kind], now = context.currentTime;
-    if (!Number.isFinite(now) || now - lastCombatStart < 0.05 ||
+    // The one-shot surge warning must not lose a race against routine shots on the same frame.
+    const urgent = kind === 'surge';
+    if (!Number.isFinite(now) || (!urgent && now - lastCombatStart < 0.05) ||
       now - (lastKindStart[kind] ?? -Infinity) < sound.cooldown) return;
     while (combatStarts.length && combatStarts[0] <= now - 1) combatStarts.shift();
-    if (combatStarts.length >= 14) return;
+    if (!urgent && combatStarts.length >= 14) return;
     if (synthesize(context, sound.layers, 0.7, pan)) {
       combatStarts.push(now);
       lastCombatStart = now;

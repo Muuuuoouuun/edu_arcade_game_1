@@ -3,6 +3,7 @@ import type { CombatSoundKind } from './sound.ts';
 // Only the moments that matter get a buzz; frequent shots stay silent so it never turns into noise.
 const PATTERNS: Partial<Record<CombatSoundKind, number | number[]>> = {
   breach: [45, 35, 70],
+  surge: [30, 50, 50],
   skill: 22,
   freeze: 16,
 };

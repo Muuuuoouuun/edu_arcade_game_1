@@ -1,4 +1,5 @@
 import type { DefenseState } from '../games/defense/types.ts';
+import { SURGE_NOTICE } from '../games/defense/engine.ts';
 import type { CombatSoundKind } from '../lib/sound.ts';
 
 export type CombatCue = { kind: CombatSoundKind; pan: number };
@@ -14,6 +15,8 @@ export function combatCueFor(before: DefenseState, next: DefenseState): CombatCu
   const fresh = next.effects.filter(effect => effect.id >= before.nextId);
   const breach = fresh.find(effect => effect.kind === 'breach');
   if (breach) return { kind: 'breach', pan: pan(breach.to.x) };
+  // Fires once per pack: the engine writes the notice on the single spawn that opens the surge.
+  if (next.notice === SURGE_NOTICE && before.notice !== SURGE_NOTICE) return { kind: 'surge', pan: 0 };
   if (fresh.some(effect => effect.kind === 'dash')) return { kind: 'slash', pan: pan(next.heroPosition.x) };
   const heavy = fresh.find(effect => effect.kind === 'skill' || effect.kind === 'interrupt' || effect.kind === 'freeze' || effect.kind === 'shockwave');
   if (heavy) return { kind: heavy.kind === 'freeze' ? 'freeze' : heavy.kind === 'shockwave' ? 'impact' : 'skill', pan: pan(heavy.to.x) };

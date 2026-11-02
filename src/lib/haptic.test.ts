@@ -6,6 +6,7 @@ test('only costly or heavy moments vibrate; routine shots stay quiet', () => {
   assert.deepEqual(hapticPattern('breach'), [45, 35, 70]);
   assert.equal(hapticPattern('skill'), 22);
   assert.equal(hapticPattern('freeze'), 16);
+  assert.deepEqual(hapticPattern('surge'), [30, 50, 50]);
   for (const kind of ['arrow', 'cast', 'cannon', 'impact', 'slash'] as const) assert.equal(hapticPattern(kind), null);
 });
 
