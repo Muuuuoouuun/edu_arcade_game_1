@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDefense, stepDefense } from '../games/defense/engine.ts';
 import type { DefenseState } from '../games/defense/types.ts';
-import { resolveZoomPreference, shouldPublishDefenseFrame } from './defenseFrame.ts';
+import { resolveZoomPreference, nextZoomState, shouldPublishDefenseFrame } from './defenseFrame.ts';
 
 test('the last terminal effect is published inside the frame throttle so the result can appear', () => {
   for (const phase of ['won', 'lost'] as const) {
@@ -32,4 +32,10 @@ test('enlarged battle view is the default and only an explicit full-view choice 
   assert.equal(resolveZoomPreference(null), true);
   assert.equal(resolveZoomPreference('1'), true);
   assert.equal(resolveZoomPreference('0'), false);
+});
+
+test('zoom wish survives a layout without room and returns when room comes back', () => {
+  assert.equal(nextZoomState(true, false), false);
+  assert.equal(nextZoomState(true, true), true);
+  assert.equal(nextZoomState(false, true), false);
 });
