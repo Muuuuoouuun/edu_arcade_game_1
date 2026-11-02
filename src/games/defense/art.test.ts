@@ -193,3 +193,9 @@ test('the wood soldier uses its baked poses with one crop band and falls back to
  const {art:failed}=await loadWithImageResults(src=>src.includes('wood-soldier'),'wood-failed');
  assert.equal(failed.monsterSpriteAsset('wood','walk-a')?.src,'/defense/monster-models.webp','the illustrated soldier remains');
 });
+
+test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
+ const {requests}=await loadWithImageResults(()=>false,'monster-preload');
+ for(const id of ['insulator-slime','stone-golem','wood-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')).length,3);
+});
