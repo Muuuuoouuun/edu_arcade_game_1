@@ -525,6 +525,8 @@ test('a wave cleared without any breach pays a one-time flawless bonus; a breach
   const leaky=battlefield();const wood=enemy('wood',1);wood.progress=10000;leaky.enemies=[wood];
   const after=advance(leaky,3);
   assert.equal(after.phase,'intermission');assert.equal(after.leaks,1);assert.equal(after.coins,240+45);assert.doesNotMatch(after.notice,/완벽/);assert.equal(after.effects.some(e=>e.text?.includes('완벽')),false);
+  const plain=battlefield();assert.equal(stepDefense(plain,.1).effects.filter(e=>e.kind==='coin'&&e.text==='+45 방어!').length,0,'flawless shows the bonus cue instead');
+  const slip=battlefield();const w2=enemy('wood',1);w2.progress=10000;slip.enemies=[w2];const slipDone=stepDefense(slip,.1);assert.ok(slipDone.effects.some(e=>e.kind==='breach'));assert.equal(slipDone.effects.filter(e=>e.kind==='coin'&&e.text==='+45 방어!').length,1,'a normal clear still shows its payout');
   const later={...after,phase:'intermission' as const};const next=actDefense(later,{type:'start-wave'});
   assert.equal(next.waveStartLeaks,1,'previous-wave leaks do not spoil the next wave');
 });

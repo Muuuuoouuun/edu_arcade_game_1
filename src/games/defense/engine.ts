@@ -418,7 +418,7 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
     const flawless=s.leaks===s.waveStartLeaks;
     s.coins+=45+(flawless?FLAWLESS_BONUS:0);s.skillCooldown=0;
     const perfect=flawless?' (완벽 방어 +'+FLAWLESS_BONUS+')':'';s.attacks=[];s.projectiles=[];s.bossCharge=0;s.freeze=0;
-    if(flawless)effect(s,s.heroPosition,s.heroPosition,'physical',`+${FLAWLESS_BONUS} 완벽!`,'coin');
+    effect(s,s.heroPosition,s.heroPosition,'physical',flawless?`+${FLAWLESS_BONUS} 완벽!`:'+45 방어!','coin');
     if(s.wave>=4){s.phase='won';s.notice='방어 성공! 수비대의 소문이 퍼지고 있어요.'+perfect;}
     else if(s.wave===2&&!s.promotion){s.phase='promotion';s.notice='전직할 시간! 수비대의 힘을 선택하세요.'+perfect;}
     else{s.phase='intermission';s.notice=flawless?`완벽 방어! 전투 코인 +${45+FLAWLESS_BONUS} · 필살기 충전`:'웨이브 방어 성공! 전투 코인 +45 · 필살기 충전';}
