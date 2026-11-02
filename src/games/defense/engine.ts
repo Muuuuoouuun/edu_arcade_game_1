@@ -34,11 +34,13 @@ export function positionOnPath(path:number,progress:number,stage=1):Point {
   }
   return {...points[points.length-1]};
 }
+/** Extra battle coins for a wave cleared with no breach (design experiment: rewards clean defense). */
+export const FLAWLESS_BONUS=25;
 export function createDefense(stage:number,hero:HeroId,training=0,difficulty:Difficulty='standard'):DefenseState {
   const id=Math.max(1,Math.min(STAGE_COUNT,Math.trunc(stage)||1)),data=getStage(id);
   const mode=getDifficulty(difficulty),settings=DIFFICULTIES[mode];
   const chosen=HERO_ORDER.includes(hero)?hero:'mage',position=data.region==='snow'?{x:440,y:390}:{x:440,y:355};
-  return {stage:id,difficulty:mode,phase:'prep',paused:false,speed:1,time:0,wave:0,coins:(data.region==='snow'?280:240)+settings.startingCoins,hp:20,outpostHp:12,kills:0,leaks:0,enemies:[],towers:[],effects:[],attacks:[],projectiles:[],hero:chosen,heroPosition:position,heroTarget:{...position},heroVelocity:{x:0,y:0},dashCooldown:0,dashTime:0,heroFacing:-1,mercenaryPosition:{x:position.x+38,y:position.y+35},mercenaryFacing:-1,pet:chosen==='druid'?{position:{x:position.x+28,y:position.y-22},target:{x:position.x+28,y:position.y-22},facing:-1}:null,heroCooldown:0,mercenary:null,mercCooldown:0,petCooldown:0,skillCooldown:0,bossCharge:0,freeze:0,bossCycle:8,promotion:null,spawned:0,spawnTimer:0,nextId:1,training:Math.max(0,Math.min(5,Math.trunc(training)||0)),notice:data.region==='snow'?'빙판 위의 적은 빨라져요. 고지대와 화염 타워를 활용하세요.':'빛나는 건설 지점을 선택해 타워를 세우세요.',questProgress:data.questType==='hunt'?0:data.questType==='outpost'?12:20};
+  return {stage:id,difficulty:mode,phase:'prep',paused:false,speed:1,time:0,wave:0,coins:(data.region==='snow'?280:240)+settings.startingCoins,hp:20,outpostHp:12,kills:0,leaks:0,waveStartLeaks:0,enemies:[],towers:[],effects:[],attacks:[],projectiles:[],hero:chosen,heroPosition:position,heroTarget:{...position},heroVelocity:{x:0,y:0},dashCooldown:0,dashTime:0,heroFacing:-1,mercenaryPosition:{x:position.x+38,y:position.y+35},mercenaryFacing:-1,pet:chosen==='druid'?{position:{x:position.x+28,y:position.y-22},target:{x:position.x+28,y:position.y-22},facing:-1}:null,heroCooldown:0,mercenary:null,mercCooldown:0,petCooldown:0,skillCooldown:0,bossCharge:0,freeze:0,bossCycle:8,promotion:null,spawned:0,spawnTimer:0,nextId:1,training:Math.max(0,Math.min(5,Math.trunc(training)||0)),notice:data.region==='snow'?'빙판 위의 적은 빨라져요. 고지대와 화염 타워를 활용하세요.':'빛나는 건설 지점을 선택해 타워를 세우세요.',questProgress:data.questType==='hunt'?0:data.questType==='outpost'?12:20};
 }
 
 export function damageMultiplier(kind:EnemyKind,element:Element):number {
@@ -259,7 +261,7 @@ function applyDefenseAction(state:DefenseState,action:DefenseAction):DefenseStat
   const s=copy(state);
   if(action.type==='start-wave') {
     if(s.phase!=='prep'&&s.phase!=='intermission') return state;
-    s.phase='wave';s.wave++;s.spawned=0;s.spawnTimer=.4;s.effects=[];s.notice=getStage(s.stage).expanded&&s.wave===4?`${s.stage===8?'서리군주':'고목왕'}가 다가옵니다. 두 거점을 지켜주세요!`:`웨이브 ${s.wave} 시작!`;
+    s.phase='wave';s.wave++;s.waveStartLeaks=s.leaks;s.spawned=0;s.spawnTimer=.4;s.effects=[];s.notice=getStage(s.stage).expanded&&s.wave===4?`${s.stage===8?'서리군주':'고목왕'}가 다가옵니다. 두 거점을 지켜주세요!`:`웨이브 ${s.wave} 시작!`;
   } else if(action.type==='build') {
     const slot=getSlots(s.stage).find(p=>p.id===action.slot),kind=TOWERS[action.kind];
     if(!slot||slot.unlock>s.stage||!kind||s.towers.some(t=>t.slot===action.slot)||s.phase==='promotion') return state;
@@ -407,10 +409,11 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
   if(s.hp<=0){stopDash(s);s.phase='lost';s.attacks=[];s.projectiles=[];s.notice='마을이 무너졌어요. 배치를 바꾸고 다시 도전해요.';return s;}
   if(s.spawned>=plan.length&&s.enemies.length===0){
     stopDash(s);
-    s.coins+=45;s.skillCooldown=0;s.attacks=[];s.projectiles=[];s.bossCharge=0;s.freeze=0;
+    const flawless=s.leaks===s.waveStartLeaks;
+    s.coins+=45+(flawless?FLAWLESS_BONUS:0);s.skillCooldown=0;s.attacks=[];s.projectiles=[];s.bossCharge=0;s.freeze=0;
     if(s.wave>=4){s.phase='won';s.notice='방어 성공! 수비대의 소문이 퍼지고 있어요.';}
     else if(s.wave===2&&!s.promotion){s.phase='promotion';s.notice='전직할 시간! 수비대의 힘을 선택하세요.';}
-    else{s.phase='intermission';s.notice='웨이브 방어 성공! 전투 코인 +45 · 필살기 충전';}
+    else{s.phase='intermission';s.notice=flawless?`완벽 방어! 전투 코인 +${45+FLAWLESS_BONUS} · 필살기 충전`:'웨이브 방어 성공! 전투 코인 +45 · 필살기 충전';}
   }
   return s;
 }
