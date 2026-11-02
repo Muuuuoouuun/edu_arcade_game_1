@@ -538,4 +538,5 @@ test('questStatus reads live village, outpost and hunt goals without changing st
   assert.equal(questStatus({ ...hunt, questProgress: 60 }).met, true);
   assert.equal(questStatus({ ...hunt, questProgress: 60 }).lowerIsLoss, false);
   assert.equal(questStatus({ ...createDefense(4, 'mage'), outpostHp: 0 }).met, false);
+  assert.equal(questStatus(createDefense(4, 'mage')).unit, '외곽');
 });
