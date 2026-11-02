@@ -71,7 +71,7 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
     const viewport = mapViewport.current;
     if (viewport) viewport.scrollLeft = zoomed ? heroX.current / 900 * mapWidth - viewport.clientWidth / 2 : 0;
   }, [mapWidth, zoomed]);
-  const startLabel = state.phase === 'wave' ? `${state.wave}/4 진행` : state.phase === 'intermission' ? '다음 W' : '시작';
+  const startLabel = state.phase === 'wave' ? `${state.wave}/4 진행` : state.phase === 'intermission' ? '다음 웨이브' : '시작';
 
   return <main className={`battle-page battle-${stage.region} ${aimingDash ? 'battle-aiming' : ''} ${largeText ? 'battle-large-text' : ''}`} id="main" aria-label="아르카나 수비대 전투" data-phase={state.phase} data-paused={state.paused} data-aiming={aimingDash} data-dash-cooldown={state.dashCooldown.toFixed(2)} data-hero-x={state.heroPosition.x.toFixed(1)} data-hero-y={state.heroPosition.y.toFixed(1)}>
     <span className="battle-font-probe" ref={fontProbe} aria-hidden="true"/>
@@ -80,7 +80,7 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
       <span className={`battle-health ${state.hp <= 5 ? 'danger' : ''}`} aria-label={`마을 체력 ${state.hp}`}><small>마을</small><Heart/><b>{state.hp}</b></span>
       {stage.expanded ? <span className={`battle-health ${state.outpostHp <= 4 ? 'danger' : ''}`} aria-label={`외곽 마을 체력 ${state.outpostHp}`}><small>외곽</small><Heart/><b>{state.outpostHp}</b></span> : null}
       <span className="battle-coins" aria-label={`전투 코인 ${state.coins}`}><Coin/><b>{state.coins}</b></span>
-      <span className="battle-wave" aria-label={`웨이브 ${state.wave} / 4`}><small>웨이브</small><b>{state.wave}/4</b></span>
+      <span className="battle-wave" aria-label={`웨이브 ${state.wave} / 4`}><small>웨이브</small><b>{state.wave}/4</b><i className="battle-wave-pips" aria-hidden="true">{[1, 2, 3, 4].map(n => <em key={n} className={n < state.wave || (n === state.wave && state.phase === 'intermission') ? 'done' : n === state.wave ? 'now' : ''}/>)}</i></span>
       <button className="battle-pause" onClick={onPause} disabled={terminal} aria-label="디펜스 일시정지"><Icon name="pause" size={20}/></button>
     </header>
     <div className="battle-body">
