@@ -168,3 +168,16 @@ test('the insulator slime uses its baked poses with one ground band and falls ba
  assert.equal(failed.spriteAsset(13).src,'/defense/atlas.png','the original sprite remains');
  assert.equal(failed.monsterSpriteAsset('wood','walk-a')?.src,'/defense/monster-models.webp','other monsters are unaffected');
 });
+
+test('the stone golem uses its baked poses with one crop band and falls back to the atlas when the render fails',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'golem-ok');
+ const poses=(['walk-a','walk-b','hit'] as const).map(pose=>art.monsterSpriteAsset('stone',pose));
+ assert.ok(poses.every(asset=>asset?.src==='/defense/models/stone-golem-atlas.webp'));
+ const boxes=poses.map(asset=>asset!.viewBox.split(' ').map(Number));
+ assert.equal(new Set(boxes.map(([,y,w,h])=>`${y},${w},${h}`)).size,1,'every pose shares a crop band so the feet stay on the ground');
+ assert.ok(boxes.every(([x,,w],i)=>x>=i*384&&x+w<=(i+1)*384),'each crop stays inside its own 384px atlas cell');
+ assert.equal(art.monsterSpriteAsset('stone','death')?.viewBox,poses[2]?.viewBox);
+ assert.equal(art.spriteAsset(11).src,'/defense/models/stone-golem-atlas.webp');
+ const {art:failed}=await loadWithImageResults(src=>src.includes('stone-golem'),'golem-failed');
+ assert.equal(failed.monsterSpriteAsset('stone','walk-a')?.src,'/defense/monster-models.webp','the illustrated golem remains');
+});

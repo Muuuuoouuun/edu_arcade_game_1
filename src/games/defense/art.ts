@@ -75,13 +75,17 @@ export function towerSpriteAsset(kind:TowerKind,branch:Branch|null=null,level=1)
 }
 export type MonsterPose='walk-a'|'walk-b'|'hit'|'idle'|'charge'|'death';
 type ModelFrame=[number,number,number,number];
-type MonsterModel={span:number;frames:ModelFrame[];atlas?:{src:string;width:number;height:number}};
+type MonsterModel={span:number;frames:ModelFrame[];atlas?:{src:string;width:number;height:number};fallback?:MonsterModel};
 /** The insulator slime is a baked Blender render (tools/blender/build_slime.py): 384px frames, walk-a/walk-b/hit. */
 export const SLIME_ATLAS={src:'/defense/models/insulator-slime-atlas.webp',width:1152,height:384};
+/** The stone golem is a baked Blender render (tools/blender/build_golem.py): 384px frames, walk-a/walk-b/hit, one shared crop band. */
+export const GOLEM_ATLAS={src:'/defense/models/stone-golem-atlas.webp',width:1152,height:384};
 const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
  wood:{span:330,frames:[[38,59,324,323],[405,66,286,316],[761,62,325,320]]},
  ice:{span:345,frames:[[53,399,309,353],[416,403,295,349],[776,401,310,351]]},
- stone:{span:340,frames:[[26,759,372,326],[414,757,326,328],[779,761,307,324]]},
+ stone:{span:260,frames:[[22,68,340,255],[406,68,340,255],[790,68,340,255]],atlas:GOLEM_ATLAS,
+  // Previous illustrated frames keep the creature on screen if the baked render fails to load.
+  fallback:{span:340,frames:[[26,759,372,326],[414,757,326,328],[779,761,307,324]]}},
  frostwolf:{span:350,frames:[[15,1101,365,304],[394,1105,347,300],[756,1087,330,318]]},
  insulator:{span:330,frames:[[39,81,317,242],[423,81,317,242],[807,81,317,242]],atlas:SLIME_ATLAS},
 };
@@ -91,7 +95,8 @@ const BOSS_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
 };
 /** A common pixels-to-world scale per creature prevents pose changes resizing the body. */
 export function monsterSpriteAsset(kind:EnemyKind,pose:MonsterPose):SpriteAsset|null {
- const boss=kind==='boss'||kind==='frostboss',model=(boss?BOSS_MODELS:MONSTER_MODELS)[kind];if(!model)return null;
+ const boss=kind==='boss'||kind==='frostboss';let model=(boss?BOSS_MODELS:MONSTER_MODELS)[kind];if(!model)return null;
+ if(model.atlas&&model.fallback&&!motionLoaded.has(model.atlas.src))model=model.fallback;
  const atlas=model.atlas,src=atlas?.src??(boss?'/defense/boss-models.webp':'/defense/monster-models.webp');if(!motionLoaded.has(src))return null;
  const frame=boss?(pose==='charge'?1:pose==='hit'?2:pose==='death'?3:0):(pose==='hit'||pose==='death'?2:pose==='walk-b'?1:0);
  const [x,y,w,h]=model.frames[frame];
@@ -110,7 +115,7 @@ export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAss
 /** Load while preparing in camp; slow or failed requests keep the existing idle art. */
 export function preloadDefenseMotion():Promise<void> {
  if(typeof Image==='undefined')return Promise.resolve();
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/monster-models.webp','/defense/boss-models.webp',SLIME_ATLAS.src,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...Object.values(DWARF_RENDERS).map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/monster-models.webp','/defense/boss-models.webp',SLIME_ATLAS.src,GOLEM_ATLAS.src,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...Object.values(DWARF_RENDERS).map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
   const asset=new Image();
   asset.onload=()=>{motionLoaded.add(src);asset.onload=null;asset.onerror=null;resolve();};
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
