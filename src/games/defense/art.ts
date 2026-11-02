@@ -80,8 +80,12 @@ type MonsterModel={span:number;frames:ModelFrame[];atlas?:{src:string;width:numb
 export const SLIME_ATLAS={src:'/defense/models/insulator-slime-atlas.webp',width:1152,height:384};
 /** The stone golem is a baked Blender render (tools/blender/build_golem.py): 384px frames, walk-a/walk-b/hit, one shared crop band. */
 export const GOLEM_ATLAS={src:'/defense/models/stone-golem-atlas.webp',width:1152,height:384};
+/** The wood soldier is a baked Blender render (tools/blender/build_wood.py): 384px frames, walk-a/walk-b/hit, one shared crop band. */
+export const WOOD_ATLAS={src:'/defense/models/wood-soldier-atlas.webp',width:1152,height:384};
 const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
- wood:{span:330,frames:[[38,59,324,323],[405,66,286,316],[761,62,325,320]]},
+ wood:{span:360,frames:[[0,8,384,364],[384,8,384,364],[768,8,384,364]],atlas:WOOD_ATLAS,
+  // Previous illustrated frames keep the creature on screen if the baked render fails to load.
+  fallback:{span:330,frames:[[38,59,324,323],[405,66,286,316],[761,62,325,320]]}},
  ice:{span:345,frames:[[53,399,309,353],[416,403,295,349],[776,401,310,351]]},
  stone:{span:260,frames:[[22,68,340,255],[406,68,340,255],[790,68,340,255]],atlas:GOLEM_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
@@ -115,7 +119,7 @@ export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAss
 /** Load while preparing in camp; slow or failed requests keep the existing idle art. */
 export function preloadDefenseMotion():Promise<void> {
  if(typeof Image==='undefined')return Promise.resolve();
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/monster-models.webp','/defense/boss-models.webp',SLIME_ATLAS.src,GOLEM_ATLAS.src,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...Object.values(DWARF_RENDERS).map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/monster-models.webp','/defense/boss-models.webp',SLIME_ATLAS.src,GOLEM_ATLAS.src,WOOD_ATLAS.src,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...Object.values(DWARF_RENDERS).map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
   const asset=new Image();
   asset.onload=()=>{motionLoaded.add(src);asset.onload=null;asset.onerror=null;resolve();};
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
