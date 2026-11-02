@@ -47,10 +47,8 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
     const resize = () => {
       const { width, height } = element.getBoundingClientRect();
       const portrait = window.matchMedia('(orientation: portrait)').matches;
-      // Reserve the 48px edge controls before enabling zoom, so adding them
-      // cannot invalidate the measurement and strand a disabled zoom toggle.
-      const zoomHeight = height - (zoomed ? 0 : 48) - 12;
-      const room = portrait && zoomHeight * 1.5 > width * 1.1;
+      // The edge buttons live in the camera row, so zooming never changes this space's height.
+      const room = portrait && (height - 12) * 1.5 > width * 1.1;
       const enlarged = zoomed && room;
       const next = Math.max(0, Math.min(width * (enlarged ? 1.7 : 1), (height - (enlarged ? 12 : 0)) * 1.5));
       setCanZoom(room);
@@ -92,9 +90,11 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
         <button className="battle-start" onClick={onStart} disabled={!canAct || !['prep', 'intermission'].includes(state.phase)} aria-label={state.phase === 'intermission' ? '다음 웨이브 시작' : '웨이브 시작'}><Icon name="play" size={18}/><span>{startLabel}</span></button>
       </nav>
       <section className="battle-map-column" aria-label="방어 전장">
-        <div className="battle-camera" role="group" aria-label="전장 시야">
+        <div className={`battle-camera ${zoomed && canZoom ? 'is-zoomed' : ''}`} role="group" aria-label="전장 시야">
+          {zoomed && canZoom ? <button onClick={() => { if (mapViewport.current) mapViewport.current.scrollLeft = 0; }} aria-label="적 진입로 보기">← 진입로</button> : null}
           <span>{zoomed && canZoom ? '확대 · 좌우로 밀어 보기' : '전체 전장'}</span>
-          {zoomed && canZoom ? <button onClick={focusHero} aria-label="영웅 위치 보기">영웅 위치</button> : null}
+          {zoomed && canZoom ? <button onClick={focusHero} aria-label="영웅 위치 보기">영웅</button> : null}
+          {zoomed && canZoom ? <button onClick={() => { if (mapViewport.current) mapViewport.current.scrollLeft = mapViewport.current.scrollWidth; }} aria-label={stage.expanded ? '두 마을 보기' : '마을 보기'}>{stage.expanded ? '두 마을' : '마을'} →</button> : null}
           <button onClick={() => { onCancelAim(); const next = !(zoomed && canZoom); writeZoomPreference(next); wantZoom.current = next; setZoomed(next); }} disabled={!canZoom} aria-pressed={zoomed && canZoom} aria-label="전장 확대">{zoomed && canZoom ? '전체 보기' : '확대 보기'}</button>
         </div>
         <div className="battle-map-space" ref={mapSpace}>
@@ -109,10 +109,6 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
             </div>
           </div>
         </div>
-        {zoomed ? <nav className="battle-camera-edges" aria-label="전장 양쪽 보기">
-          <button disabled={!canZoom} onClick={() => { if (mapViewport.current) mapViewport.current.scrollLeft = 0; }}>← 적 진입로</button>
-          <button disabled={!canZoom} onClick={() => { if (mapViewport.current) mapViewport.current.scrollLeft = mapViewport.current.scrollWidth; }}>{stage.expanded ? '두 마을' : '마을'} →</button>
-        </nav> : null}
         <div className={`battle-input-note ${aimingDash ? 'aiming' : ''}`} role="status">{aimingDash ? '전장을 탭하면 돌진 · 전투는 계속돼요' : state.paused ? '전술 선택 중 · 전투가 멈췄어요' : state.phase === 'prep' ? '건설 지점에 타워를 세우고 시작하세요' : '땅을 탭해 영웅 이동'}</div>
         <button className="battle-portrait-summary" onClick={() => onPanel({ kind: 'party' })} disabled={!canAct} aria-label="원정 정보와 전술 메뉴">
           <DefenseSprite index={hero.sprite}/><span><strong>{hero.name} <small>{DIFFICULTIES[state.difficulty].name}</small></strong><span>{stageLabel(state.stage)} · {stage.name}</span><small>{stage.expanded ? '두 마을을 함께 지켜 주세요' : '땅 탭 이동 · 공격은 자동'}</small></span><Icon name="back" size={18}/>
