@@ -154,3 +154,17 @@ test('a delayed final dwarf frame does not switch the actor prematurely or dupli
   if(previous)Object.defineProperty(globalThis,'Image',previous);else Reflect.deleteProperty(globalThis,'Image');
  }
 });
+
+test('the insulator slime uses its baked poses with one ground band and falls back to the atlas when the render fails',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'slime-ok');
+ const poses=(['walk-a','walk-b','hit'] as const).map(pose=>art.monsterSpriteAsset('insulator',pose));
+ assert.ok(poses.every(asset=>asset?.src==='/defense/models/insulator-slime-atlas.webp'));
+ const boxes=poses.map(asset=>asset!.viewBox.split(' ').map(Number));
+ assert.equal(new Set(boxes.map(([,y,w,h])=>`${y},${w},${h}`)).size,1,'every pose shares a crop height and ground band');
+ assert.equal(art.monsterSpriteAsset('insulator','death')?.viewBox,poses[2]?.viewBox);
+ assert.equal(art.spriteAsset(13).src,'/defense/models/insulator-slime-atlas.webp');
+ const {art:failed}=await loadWithImageResults(src=>src.includes('insulator-slime'),'slime-failed');
+ assert.equal(failed.monsterSpriteAsset('insulator','walk-a'),null);
+ assert.equal(failed.spriteAsset(13).src,'/defense/atlas.png','the original sprite remains');
+ assert.equal(failed.monsterSpriteAsset('wood','walk-a')?.src,'/defense/monster-models.webp','other monsters are unaffected');
+});
