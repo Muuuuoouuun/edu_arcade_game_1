@@ -69,6 +69,7 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
     const viewport = mapViewport.current;
     if (viewport) viewport.scrollLeft = zoomed ? heroX.current / 900 * mapWidth - viewport.clientWidth / 2 : 0;
   }, [mapWidth, zoomed]);
+  const startAria = state.phase === 'wave' ? `웨이브 ${state.wave}/4 진행 중` : state.phase === 'intermission' ? '다음 웨이브 시작' : '웨이브 시작';
   const startLabel = state.phase === 'wave' ? `${state.wave}/4 진행` : state.phase === 'intermission' ? '다음 웨이브' : '시작';
 
   return <main className={`battle-page battle-${stage.region} ${aimingDash ? 'battle-aiming' : ''} ${largeText ? 'battle-large-text' : ''}`} id="main" aria-label="아르카나 수비대 전투" data-phase={state.phase} data-paused={state.paused} data-aiming={aimingDash} data-dash-cooldown={state.dashCooldown.toFixed(2)} data-hero-x={state.heroPosition.x.toFixed(1)} data-hero-y={state.heroPosition.y.toFixed(1)}>
@@ -87,7 +88,7 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
         <button className="battle-recruit" onClick={() => onPanel({ kind: 'recruit' })} disabled={!canAct || campaign.visitors.length < 2}>용병</button>
         <button className="battle-scout" onClick={() => onPanel({ kind: 'scout' })} disabled={!canAct}>정찰</button>
         <button className="battle-speed" onClick={onSpeed} disabled={!canAct} aria-label={`전투 속도 ${state.speed}배`}>{state.speed}×</button>
-        <button className="battle-start" onClick={onStart} disabled={!canAct || !['prep', 'intermission'].includes(state.phase)} aria-label={state.phase === 'intermission' ? '다음 웨이브 시작' : '웨이브 시작'}><Icon name="play" size={18}/><span>{startLabel}</span></button>
+        <button className="battle-start" onClick={onStart} disabled={!canAct || !['prep', 'intermission'].includes(state.phase)} aria-label={startAria}><Icon name="play" size={18}/><span>{startLabel}</span></button>
       </nav>
       <section className="battle-map-column" aria-label="방어 전장">
         <div className={`battle-camera ${zoomed && canZoom ? 'is-zoomed' : ''}`} role="group" aria-label="전장 시야">
