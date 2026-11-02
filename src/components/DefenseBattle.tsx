@@ -69,7 +69,8 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
     const viewport = mapViewport.current;
     if (viewport) viewport.scrollLeft = zoomed ? heroX.current / 900 * mapWidth - viewport.clientWidth / 2 : 0;
   }, [mapWidth, zoomed]);
-  const surging = state.phase === 'wave' && !state.paused && inSurge(state.wave, state.spawned, waveSize(state.stage, state.wave, state.difficulty));
+  const planSize = state.phase === 'wave' ? waveSize(state.stage, state.wave, state.difficulty) : 0;
+  const surging = state.phase === 'wave' && !state.paused && state.spawned < planSize && inSurge(state.wave, state.spawned, planSize);
   const startAria = state.phase === 'wave' ? `웨이브 ${state.wave}/4 진행 중` : state.phase === 'intermission' ? '다음 웨이브 시작' : '웨이브 시작';
   const startLabel = state.phase === 'wave' ? `${state.wave}/4 진행` : state.phase === 'intermission' ? '다음 웨이브' : '시작';
 

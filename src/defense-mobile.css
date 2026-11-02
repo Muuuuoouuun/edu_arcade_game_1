@@ -170,7 +170,7 @@ body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-in
  .battle-commands .battle-dash{order:2}
  .battle-commands small{font-size:.6rem;margin-top:3px}
  .battle-commands>button>svg{width:23px;height:23px;flex-shrink:0}
- .battle-input-note,.battle-aiming .battle-input-note{display:block;position:static;transform:none;width:auto;max-width:none;min-height:30px;flex-shrink:0;padding:5px 4px;margin-top:4px;background:none}
+ .battle-input-note,.battle-aiming .battle-input-note,.battle-surge .battle-input-note{display:block;position:static;transform:none;width:auto;max-width:none;min-height:30px;flex-shrink:0;padding:5px 4px;margin-top:4px;background:none}
  .battle-portrait-summary{display:flex;align-items:center;gap:10px;min-height:76px;padding:8px 6px;text-align:left;background:none;border:0;color:#f9efd8;flex-shrink:0}
  .battle-portrait-summary>.def-sprite{width:57px;height:62px;flex-shrink:0}
  .battle-portrait-summary>span{flex:1;min-width:0}
