@@ -43,7 +43,7 @@ body:has(.battle-page){overflow:hidden;background:#102c25}
 .battle-map-size .def-build-pad.occupied{border-color:transparent;background:transparent;box-shadow:none}
 .battle-map-size .def-build-pad.occupied.selected{border:2px solid #ffe298;box-shadow:0 0 0 3px #a77b284d}
 .battle-input-note{display:none;pointer-events:none;font-size:.75rem;text-align:center;line-height:1.5}
-.battle-aiming .battle-input-note{display:block;position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:max-content;max-width:95%;padding:5px 12px;border-radius:5px;background:#173e32ef;color:#ffdf8a}
+.battle-aiming .battle-input-note,.battle-surge .battle-input-note{display:block;position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:max-content;max-width:95%;padding:5px 12px;border-radius:5px;background:#173e32ef;color:#ffdf8a}
 .battle-aiming .battle-map-size{outline:2px solid #f6d581;outline-offset:3px;border-radius:7px}
 .battle-commands{grid-column:3;grid-row:1;display:flex;flex-direction:column;justify-content:flex-end;gap:16px;padding-bottom:8px}
 .battle-commands button{min-height:72px;border:1px solid #c6a15d;border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:1.1rem;line-height:1.15;box-shadow:inset 0 0 0 2px #ffffff20}
