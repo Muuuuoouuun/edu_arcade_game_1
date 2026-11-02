@@ -323,6 +323,12 @@ export function questSatisfied(s:DefenseState):boolean {
   const stage=getStage(s.stage);
   return stage.questType==='hunt'?s.questProgress>=stage.questGoal:stage.questType==='outpost'?s.outpostHp>=stage.questGoal:s.hp>=stage.questGoal;
 }
+/** Live read-out of the optional quest for the tactical panel. Display only: it never gates rewards. */
+export function questStatus(s:DefenseState):{current:number;goal:number;met:boolean;unit:string;lowerIsLoss:boolean} {
+  const stage=getStage(s.stage),hunt=stage.questType==='hunt';
+  const current=hunt?s.questProgress:stage.questType==='outpost'?s.outpostHp:s.hp;
+  return {current,goal:stage.questGoal,met:current>=stage.questGoal,unit:hunt?'마리':'체력',lowerIsLoss:!hunt};
+}
 export function questComplete(s:DefenseState):boolean {return s.phase==='won'&&questSatisfied(s);}
 
 export function stepDefense(state:DefenseState,dt:number):DefenseState {

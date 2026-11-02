@@ -6,7 +6,7 @@ import { Dialog } from './Dialog';
 import { Icon } from './Icon';
 import { BRANCHES, HEROES, TOWERS, getSlots, getStage, stageLabel } from '../games/defense/data';
 import { DIFFICULTIES } from '../games/defense/difficulty';
-import { allowedBranches, upgradeCost } from '../games/defense/engine';
+import { allowedBranches, questStatus, upgradeCost } from '../games/defense/engine';
 import type { TacticalAction } from '../games/defense/engine';
 import { towerSpriteAsset } from '../games/defense/art';
 import type { Campaign, DefenseState, Point, TowerKind } from '../games/defense/types';
@@ -131,6 +131,7 @@ export function DefenseTacticalPanel({ panel, state, campaign, active, onClose, 
   const slot = panel.kind === 'build' ? getSlots(state.stage).find(item => item.id === panel.slot) : null;
   const tower = slot ? state.towers.find(item => item.slot === slot.id) : null;
   const stage = getStage(state.stage), hero = HEROES[state.hero];
+  const quest = questStatus(state);
   const title = panel.kind === 'build' ? `${panel.slot + 1}번 · ${tower ? TOWERS[tower.kind].name : '타워 건설'}` : panel.kind === 'candidates' ? '건설 지점 선택' : panel.kind === 'recruit' ? '용병 고용' : panel.kind === 'scout' ? '정찰' : '수비대 전술';
   const refund = tower ? Math.floor((TOWERS[tower.kind].cost + (tower.level >= 2 ? 80 : 0) + (tower.level >= 3 ? 120 : 0)) * .75) : 0;
   const costLabel = (cost: number) => state.coins < cost ? `${cost - state.coins} 부족` : `${cost} 코인`;
@@ -144,7 +145,7 @@ export function DefenseTacticalPanel({ panel, state, campaign, active, onClose, 
       </> : <div className="tactical-towers">{(['crossbow', 'magic', 'cannon'] as TowerKind[]).map(kind => <button key={kind} disabled={state.coins < TOWERS[kind].cost} onClick={() => onBuy({ type: 'build', slot: slot.id, kind })}><DefenseSprite index={TOWERS[kind].sprite}/><strong>{TOWERS[kind].name}</strong><span>{kind === 'crossbow' ? '빠른 단일 공격' : kind === 'magic' ? '속성 마법 공격' : '충격 범위 공격'}</span><b>{costLabel(TOWERS[kind].cost)}</b></button>)}</div> : null}
       {panel.kind === 'recruit' ? state.mercenary ? <div className="tactical-hired"><DefenseSprite index={HEROES[state.mercenary].sprite}/><strong>{HEROES[state.mercenary].name}</strong><p>이번 원정에 함께하고 있어요.</p></div> : <div className="tactical-recruits">{campaign.visitors.filter(id => id !== state.hero).map(id => <button key={id} disabled={state.coins < 120} onClick={() => onBuy({ type: 'hire', hero: id })}><DefenseSprite index={HEROES[id].sprite}/><span><strong>{HEROES[id].name}</strong><small>{HEROES[id].role}</small></span><b>{costLabel(120)}</b></button>)}{campaign.visitors.length < 2 ? <p>첫 마을을 지키면 새로운 동료가 찾아옵니다.</p> : null}</div> : null}
       {panel.kind === 'scout' ? <DefenseForecast stage={state.stage} wave={state.wave} phase={state.phase} difficulty={state.difficulty} spawned={state.spawned} alive={state.enemies.length} expanded/> : null}
-      {panel.kind === 'party' ? <div className="tactical-party"><div className="tactical-hero"><DefenseSprite index={hero.sprite}/><div><h3>{hero.name}</h3><p>{hero.role}</p><small>{hero.description}</small></div></div><p>{stageLabel(state.stage)} {stage.name} · {DIFFICULTIES[state.difficulty].name}</p><div className="tactical-menu"><button onClick={() => onPanel({ kind: 'recruit' })}>용병 고용</button><button onClick={() => onPanel({ kind: 'scout' })}>적 편성 정찰</button></div><div className="tactical-quest"><strong>추가 퀘스트</strong><p>{stage.quest}</p><small>{campaign.questClaimed.includes(state.stage) ? '추가 보상 수령 완료' : `클리어 시 추가 ${stage.questReward} G`}</small></div><p className="tactical-help">공격은 자동 · 땅을 눌러 이동<br/>돌진: 위치 선택 · 필살기: 즉시 발동</p></div> : null}
+      {panel.kind === 'party' ? <div className="tactical-party"><div className="tactical-hero"><DefenseSprite index={hero.sprite}/><div><h3>{hero.name}</h3><p>{hero.role}</p><small>{hero.description}</small></div></div><p>{stageLabel(state.stage)} {stage.name} · {DIFFICULTIES[state.difficulty].name}</p>{state.phase === 'won' || state.phase === 'lost' ? null : <p className={`tactical-quest-live ${quest.met ? 'met' : 'risk'}`} role="status">{`추가 퀘스트 · `}{quest.met ? (quest.lowerIsLoss ? `지금 달성 중 · ${quest.unit} ${quest.current}/${quest.goal}` : `목표 달성 · ${quest.current}/${quest.goal}${quest.unit}`) : (quest.lowerIsLoss ? `기준 미달 · ${quest.unit} ${quest.current}/${quest.goal}` : `진행 ${quest.current}/${quest.goal}${quest.unit}`)}</p>}<div className="tactical-menu"><button onClick={() => onPanel({ kind: 'recruit' })}>용병 고용</button><button onClick={() => onPanel({ kind: 'scout' })}>적 편성 정찰</button></div><div className="tactical-quest"><strong>추가 퀘스트</strong><p>{stage.quest}</p><small>{campaign.questClaimed.includes(state.stage) ? '추가 보상 수령 완료' : `클리어 시 추가 ${stage.questReward} G`}</small></div><p className="tactical-help">공격은 자동 · 땅을 눌러 이동<br/>돌진: 위치 선택 · 필살기: 즉시 발동</p></div> : null}
     </div>
   </Dialog>;
 }
