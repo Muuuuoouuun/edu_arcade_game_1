@@ -100,6 +100,7 @@ body:has(.battle-page){overflow:hidden;background:#102c25}
 .tactical-hero small,.tactical-quest small{font-size:.7rem;color:#6b735b;line-height:1.5}
 .tactical-menu{display:flex;gap:8px;margin:12px 0}
 .tactical-menu button{flex:1}
+.tactical-quest-live{margin:4px 0 8px;font-weight:800;font-size:.78rem}.tactical-quest-live.met{color:#2f6b3a}.tactical-quest-live.risk{color:#9a4b1f}
 .tactical-quest{border-top:1px solid #cab78c;padding-top:12px;font-size:.8rem;line-height:1.6}
 .tactical-help{color:#6b735b}
 .tactical-maxed{grid-column:1/-1;display:flex;align-items:center;gap:8px;min-height:70px;font-family:Jua,sans-serif}

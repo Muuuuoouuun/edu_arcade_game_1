@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { actDefense, allowedBranches, createDefense, FLAWLESS_BONUS, damageMultiplier, positionOnPath, petPosition, questSatisfied, questComplete, stepDefense, towerRange, waveSize } from './engine.ts';
+import { actDefense, allowedBranches, createDefense, FLAWLESS_BONUS, damageMultiplier, positionOnPath, petPosition, questSatisfied, questComplete, questStatus, stepDefense, towerRange, waveSize } from './engine.ts';
 import { ENEMIES, PATHS, SLOTS, STAGES, HERO_ORDER, STAGE_COUNT, getStage, getSlots, getPaths, getRegion, stageLabel } from './data.ts';
 import { DIFFICULTIES, getWavePlan } from './difficulty.ts';
 import type { Difficulty, DefenseAction, DefenseState, Enemy, EnemyKind } from './types.ts';
@@ -527,4 +527,16 @@ test('a wave cleared without any breach pays a one-time flawless bonus; a breach
   assert.equal(after.phase,'intermission');assert.equal(after.leaks,1);assert.equal(after.coins,240+45);assert.doesNotMatch(after.notice,/완벽/);assert.equal(after.effects.some(e=>e.text?.includes('완벽')),false);
   const later={...after,phase:'intermission' as const};const next=actDefense(later,{type:'start-wave'});
   assert.equal(next.waveStartLeaks,1,'previous-wave leaks do not spoil the next wave');
+});
+
+test('questStatus reads live village, outpost and hunt goals without changing state', () => {
+  const base = createDefense(1, 'mage');
+  assert.deepEqual(questStatus(base), { current: base.hp, goal: 15, met: base.hp >= 15, unit: '체력', lowerIsLoss: true });
+  assert.equal(questStatus({ ...base, hp: 14 }).met, false);
+  const hunt = createDefense(6, 'mage');
+  assert.equal(questStatus({ ...hunt, questProgress: 59 }).met, false);
+  assert.equal(questStatus({ ...hunt, questProgress: 60 }).met, true);
+  assert.equal(questStatus({ ...hunt, questProgress: 60 }).lowerIsLoss, false);
+  assert.equal(questStatus({ ...createDefense(4, 'mage'), outpostHp: 0 }).met, false);
+  assert.equal(questStatus(createDefense(4, 'mage')).unit, '외곽');
 });
