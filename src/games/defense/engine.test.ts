@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { actDefense, allowedBranches, createDefense, FLAWLESS_BONUS, damageMultiplier, positionOnPath, petPosition, questSatisfied, questComplete, questStatus, stepDefense, towerRange, waveSize } from './engine.ts';
+import { actDefense, allowedBranches, createDefense, FLAWLESS_BONUS, damageMultiplier, positionOnPath, petPosition, questSatisfied, questComplete, questStatus, stepDefense, towerRange, waveSize, surgeStart, inSurge, SURGE_INTERVAL, SURGE_MIN_GAP } from './engine.ts';
 import { ENEMIES, PATHS, SLOTS, STAGES, HERO_ORDER, STAGE_COUNT, getStage, getSlots, getPaths, getRegion, stageLabel } from './data.ts';
 import { DIFFICULTIES, getWavePlan } from './difficulty.ts';
 import type { Difficulty, DefenseAction, DefenseState, Enemy, EnemyKind } from './types.ts';
@@ -510,7 +510,7 @@ test('difficulty forecasts match actual spawn counts, order, timing, health and 
     }
     assert.deepEqual(actual,plan,`${stage}/${wave}/${mode}`);assert.equal(waveSize(stage,wave,mode),actual.length);
     const spacing=Math.max(.85,1.45-data.order*.09-wave*.05)*config.spawnInterval;
-    for(let i=1;i<times.length;i++)assert.ok(Math.abs(times[i]-times[i-1]-spacing)<.100001);
+    for(let i=1;i<times.length;i++)assert.ok(Math.abs(times[i]-times[i-1]-(inSurge(wave,i,plan.length)?Math.max(SURGE_MIN_GAP,spacing*SURGE_INTERVAL):spacing))<.100001);
   }
 });
 test('a wave cleared without any breach pays a one-time flawless bonus; a breach during that wave removes it',()=>{
@@ -541,4 +541,34 @@ test('questStatus reads live village, outpost and hunt goals without changing st
   assert.equal(questStatus({ ...hunt, questProgress: 60 }).lowerIsLoss, false);
   assert.equal(questStatus({ ...createDefense(4, 'mage'), outpostHp: 0 }).met, false);
   assert.equal(questStatus(createDefense(4, 'mage')).unit, '외곽');
+});
+
+// Spawn times for a wave with no towers/hero interference: only the stream timing is measured.
+function spawnTimes(stage:number,wave:number):number[] {
+  let s:DefenseState={...createDefense(stage,'mage'),phase:'wave',wave,spawned:0,spawnTimer:.4,heroCooldown:99};
+  const times:number[]=[],size=waveSize(stage,wave);let seen=0;
+  for(let i=0;i<4000&&seen<size;i++){s=stepDefense(s,.05);if(s.spawned>seen){seen=s.spawned;times.push(s.time);}}
+  return times;
+}
+
+test('waves 2-3 end with a faster surge pack; waves 1 and 4 keep a steady stream',()=>{
+  for(const [stage,wave] of [[1,2],[1,3],[3,2],[6,3]]) {
+    const t=spawnTimes(stage,wave),gaps=t.slice(1).map((v,i)=>v-t[i]),from=surgeStart(t.length);
+    assert.equal(t.length,waveSize(stage,wave));
+    const calm=gaps.slice(0,from-1),surge=gaps.slice(from);
+    assert.ok(Math.min(...calm)>Math.max(...surge)+.05,`stage ${stage} wave ${wave}: calm ${calm} surge ${surge}`);
+  }
+  for(const [stage,wave] of [[1,1],[4,4]]) {
+    const times=spawnTimes(stage,wave),gaps=times.slice(1).map((v,i)=>v-times[i]);
+    assert.equal(times.length,waveSize(stage,wave));
+    assert.ok(Math.max(...gaps)-Math.min(...gaps)<.11,`stage ${stage} wave ${wave} should stay steady`);
+  }
+});
+
+test('the surge notice appears once in waves 2-3 and never in waves 1 or 4',()=>{
+  for(const wave of [1,2,3,4]) {
+    let s:DefenseState={...createDefense(4,'mage'),phase:'wave',wave,spawned:0,spawnTimer:.4,heroCooldown:99},hits=0;
+    for(let i=0;i<4000&&s.spawned<waveSize(4,wave);i++){const before=s.notice;s=stepDefense(s,.05);if(s.notice!==before&&s.notice.includes('몰려와요'))hits++;}
+    assert.equal(hits,wave===2||wave===3?1:0,`wave ${wave}`);
+  }
 });
