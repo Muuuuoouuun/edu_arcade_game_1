@@ -13,3 +13,8 @@ export function shouldPublishDefenseFrame(before: DefenseState, next: DefenseSta
 export function resolveZoomPreference(stored: string | null): boolean {
   return stored !== '0';
 }
+
+/** The zoom shown on screen: the player's wish, but only while the layout has room for it. */
+export function nextZoomState(wanted: boolean, room: boolean): boolean {
+  return wanted && room;
+}
