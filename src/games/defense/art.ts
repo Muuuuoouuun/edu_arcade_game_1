@@ -97,6 +97,8 @@ const BOSS_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
  boss:{span:345,frames:[[42,105,349,340],[490,50,382,395],[933,111,393,334],[1381,177,363,268]]},
  frostboss:{span:355,frames:[[36,500,385,363],[483,448,402,415],[932,512,402,351],[1365,584,392,279]]},
 };
+/** Every baked monster atlas is preloaded from the model table, so a new bake cannot be forgotten in the loader. */
+const MONSTER_ATLAS_SOURCES=[...new Set(Object.values(MONSTER_MODELS).flatMap(model=>model.atlas?[model.atlas.src]:[]))];
 /** A common pixels-to-world scale per creature prevents pose changes resizing the body. */
 export function monsterSpriteAsset(kind:EnemyKind,pose:MonsterPose):SpriteAsset|null {
  const boss=kind==='boss'||kind==='frostboss';let model=(boss?BOSS_MODELS:MONSTER_MODELS)[kind];if(!model)return null;
@@ -119,7 +121,7 @@ export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAss
 /** Load while preparing in camp; slow or failed requests keep the existing idle art. */
 export function preloadDefenseMotion():Promise<void> {
  if(typeof Image==='undefined')return Promise.resolve();
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/monster-models.webp','/defense/boss-models.webp',SLIME_ATLAS.src,GOLEM_ATLAS.src,WOOD_ATLAS.src,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...Object.values(DWARF_RENDERS).map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/monster-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...Object.values(DWARF_RENDERS).map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
   const asset=new Image();
   asset.onload=()=>{motionLoaded.add(src);asset.onload=null;asset.onerror=null;resolve();};
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
