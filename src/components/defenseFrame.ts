@@ -18,3 +18,9 @@ export function resolveZoomPreference(stored: string | null): boolean {
 export function nextZoomState(wanted: boolean, room: boolean): boolean {
   return wanted && room;
 }
+
+// Units are authored for a ~900-unit board; on a narrow rendered board they shrink below ~25px, so grow them (capped to keep roads and pads usable).
+export function unitScale(boardWidthPx: number): number {
+  if (!(boardWidthPx > 0)) return 1;
+  return Math.min(1.25, Math.max(1, 520 / boardWidthPx * 0.82 + 0.18));
+}
