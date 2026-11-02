@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDefense, stepDefense } from '../games/defense/engine.ts';
 import type { DefenseState } from '../games/defense/types.ts';
-import { shouldPublishDefenseFrame } from './defenseFrame.ts';
+import { resolveZoomPreference, shouldPublishDefenseFrame } from './defenseFrame.ts';
 
 test('the last terminal effect is published inside the frame throttle so the result can appear', () => {
   for (const phase of ['won', 'lost'] as const) {
@@ -26,4 +26,10 @@ test('ordinary frames stay throttled and terminal phase changes publish immediat
   assert.equal(shouldPublishDefenseFrame(before, movement, before, 32), true);
   assert.equal(shouldPublishDefenseFrame(before, { ...movement, phase: 'lost' }, before, 16), true);
   assert.equal(shouldPublishDefenseFrame(before, before, before, 40), false);
+});
+
+test('enlarged battle view is the default and only an explicit full-view choice opts out', () => {
+  assert.equal(resolveZoomPreference(null), true);
+  assert.equal(resolveZoomPreference('1'), true);
+  assert.equal(resolveZoomPreference('0'), false);
 });
