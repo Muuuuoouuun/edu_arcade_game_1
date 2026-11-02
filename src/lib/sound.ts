@@ -3,7 +3,7 @@ let enabled = true;
 let noiseBuffer: AudioBuffer | null = null;
 const activeVoices = new Set<() => void>();
 
-export type CombatSoundKind = 'arrow' | 'cast' | 'cannon' | 'impact' | 'slash' | 'freeze' | 'skill' | 'breach';
+export type CombatSoundKind = 'arrow' | 'cast' | 'cannon' | 'impact' | 'slash' | 'freeze' | 'skill' | 'breach' | 'surge';
 type Layer = {
   from: number; to: number; gain: number; duration: number;
   wave?: OscillatorType; noise?: BiquadFilterType; delay?: number; attack?: number;
@@ -27,6 +27,12 @@ const COMBAT_SOUNDS: Record<CombatSoundKind, CombatSound> = {
   breach: { cooldown: 0.25, layers: [
     { wave: 'sine', from: 150, to: 46, gain: 0.04, duration: 0.24 },
     { wave: 'triangle', from: 330, to: 180, gain: 0.014, duration: 0.16 },
+  ] },
+  // A low two-step horn: rising and unmistakably different from the single-hit breach thud.
+  surge: { cooldown: 1, layers: [
+    { wave: 'triangle', from: 110, to: 150, gain: 0.03, duration: 0.2, attack: 0.03 },
+    { wave: 'triangle', from: 150, to: 220, gain: 0.032, duration: 0.26, delay: 0.17, attack: 0.03 },
+    { noise: 'lowpass', from: 500, to: 150, gain: 0.014, duration: 0.3, delay: 0.1 },
   ] },
   impact: { cooldown: 0.08, layers: [
     { wave: 'triangle', from: 180, to: 58, gain: 0.028, duration: 0.105 },

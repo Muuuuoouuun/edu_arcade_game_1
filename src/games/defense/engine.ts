@@ -24,6 +24,7 @@ function battlePlan(stage:number,wave:number,difficulty:Difficulty):readonly Ene
 /** Design experiment (hypothesis, unplaytested): waves 2-3 end with a faster pack so the stream has a rhythm. */
 export const SURGE_INTERVAL=.7;
 export const SURGE_MIN_GAP=.55;
+export const SURGE_NOTICE='무리가 몰려와요! 방어선을 단단히!';
 export const surgeStart=(size:number)=>Math.ceil(size*2/3);
 export const inSurge=(wave:number,spawned:number,size:number)=>wave>1&&wave<4&&spawned>=surgeStart(size);
 export const waveSize = (stage:number,wave:number,difficulty:Difficulty='standard') => battlePlan(stage,wave,difficulty).length;
@@ -359,7 +360,7 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
     const hp=Math.round(base.hp*(stage.region==='snow'?1.1+stage.order*.12:.75+s.stage*.15)*(1+(s.wave-1)*.16)*settings.enemyHp);
     s.enemies.push({id:s.nextId++,kind,hp,maxHp:hp,progress:0,path,speed:base.speed*settings.enemySpeed,...positionOnPath(path,0,s.stage),wet:0,burn:0,slow:0,hit:0,knockVelocity:0,knockCooldown:0,recoil:0,facing:1});
     s.spawned++;const gap=Math.max(.85,1.45-stage.order*.09-s.wave*.05)*settings.spawnInterval;s.spawnTimer+=inSurge(s.wave,s.spawned,plan.length)?Math.max(SURGE_MIN_GAP,gap*SURGE_INTERVAL):gap;
-    if(inSurge(s.wave,s.spawned,plan.length)&&s.spawned===surgeStart(plan.length))s.notice='무리가 몰려와요! 방어선을 단단히!';
+    if(inSurge(s.wave,s.spawned,plan.length)&&s.spawned===surgeStart(plan.length))s.notice=SURGE_NOTICE;
     if(kind==='boss')s.notice='고목왕: 체력이 절반이 되면 돌진해요!';
     if(kind==='frostboss'){s.bossCycle=6;s.notice='서리군주 등장! 충전할 때 필살기로 눈보라를 끊으세요.';}
   }
