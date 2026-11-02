@@ -25,6 +25,7 @@ body:has(.battle-page){overflow:hidden;background:#102c25}
 .battle-party .def-sprite{width:42px;height:45px;flex-shrink:0}
 .battle-utilities .battle-speed{background:#173e32;color:#fff5df;box-shadow:none}
 .battle-utilities .battle-start{background:#f4cc6c;color:#44331e;box-shadow:inset 0 0 0 2px #ffeab2}
+.battle-page[data-phase=wave][data-paused=false] .battle-utilities .battle-start:disabled{opacity:1;background:#173e32;color:#f4cc6c;border-color:#a98c54;box-shadow:none}
 .battle-map-column{grid-column:2;grid-row:1;min-height:0;min-width:0;display:flex;flex-direction:column;position:relative}
 .battle-map-space{min-height:0;min-width:0;flex:1;display:flex;justify-content:center;align-items:center}
 .battle-map-viewport{width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:#c6a15d #102c25;border-radius:7px}
