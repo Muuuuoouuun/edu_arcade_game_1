@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { actDefense, allowedBranches, createDefense, damageMultiplier, positionOnPath, petPosition, questSatisfied, questComplete, stepDefense, towerRange, waveSize } from './engine.ts';
+import { actDefense, allowedBranches, createDefense, FLAWLESS_BONUS, damageMultiplier, positionOnPath, petPosition, questSatisfied, questComplete, stepDefense, towerRange, waveSize } from './engine.ts';
 import { ENEMIES, PATHS, SLOTS, STAGES, HERO_ORDER, STAGE_COUNT, getStage, getSlots, getPaths, getRegion, stageLabel } from './data.ts';
 import { DIFFICULTIES, getWavePlan } from './difficulty.ts';
 import type { Difficulty, DefenseAction, DefenseState, Enemy, EnemyKind } from './types.ts';
@@ -79,7 +79,7 @@ test('pause freezes combat, controls, timers and money; invalid time cannot adva
 test('waves require defeated or escaped enemies; promotion is a deliberate mid-battle choice',()=>{
   const base=battlefield();base.wave=2;base.spawned=waveSize(1,2);
   let s=stepDefense(base,.1);
-  assert.equal(s.phase,'promotion');assert.equal(s.coins,285);
+  assert.equal(s.phase,'promotion');assert.equal(s.coins,285+FLAWLESS_BONUS);
   assert.equal(actDefense(s,{type:'start-wave'}),s);
   s=actDefense(s,{type:'promote',choice:'control'});
   assert.equal(s.phase,'intermission');assert.equal(s.promotion,'control');
@@ -142,7 +142,7 @@ test('a leak raises one breach effect sized to the lost HP without changing the 
 test('kills pay once, main leaks cause loss, and losing the expanded village only fails its quest',()=>{
   const kill=battlefield();const dead=enemy('sprout',1);dead.hp=0;kill.enemies=[dead];
   const paid=stepDefense(kill,.1);
-  assert.equal(paid.kills,1);assert.equal(paid.coins,240+14+45);
+  assert.equal(paid.kills,1);assert.equal(paid.coins,240+14+45+FLAWLESS_BONUS);
   const settled=advance(paid,2);assert.equal(settled.coins,paid.coins);assert.equal(settled.kills,paid.kills);assert.equal(settled.effects.length,0);
   const leak=battlefield();leak.hp=1;const escaped=enemy('wood',1);escaped.progress=10000;leak.enemies=[escaped];
   assert.equal(stepDefense(leak,.1).phase,'lost');
@@ -391,7 +391,7 @@ test('airborne arrows can hit another real body after their target dies, or miss
 test('wave completion clears remaining projectiles and windups without duplicate rewards',()=>{
   const airborne=until(rangedBattle(),s=>s.projectiles.length>0);airborne.enemies[0].hp=0;
   const finished=stepDefense(airborne,.02);assert.equal(finished.phase,'intermission');assert.equal(finished.projectiles.length,0);assert.equal(finished.attacks.length,0);
-  assert.equal(finished.kills,1);assert.equal(finished.coins,240+14+45);
+  assert.equal(finished.kills,1);assert.equal(finished.coins,240+14+45+FLAWLESS_BONUS);
   const rest=advance(finished,3);assert.equal(rest.kills,1);assert.equal(rest.coins,finished.coins);
   for(const phase of ['won','lost'] as const){
     const ended={...airborne,phase,effects:finished.effects};
@@ -512,4 +512,16 @@ test('difficulty forecasts match actual spawn counts, order, timing, health and 
     const spacing=Math.max(.85,1.45-data.order*.09-wave*.05)*config.spawnInterval;
     for(let i=1;i<times.length;i++)assert.ok(Math.abs(times[i]-times[i-1]-spacing)<.100001);
   }
+});
+test('a wave cleared without any breach pays a one-time flawless bonus; a breach during that wave removes it',()=>{
+  const clean=battlefield();const started=actDefense({...createDefense(1,'mage'),phase:'prep'},{type:'start-wave'});
+  assert.equal(started.waveStartLeaks,0);
+  const done=stepDefense(clean,.1);
+  assert.equal(done.phase,'intermission');assert.equal(done.coins,240+45+FLAWLESS_BONUS);assert.match(done.notice,/완벽 방어/);
+  assert.equal(advance(done,2).coins,done.coins,'bonus is paid once');
+  const leaky=battlefield();const wood=enemy('wood',1);wood.progress=10000;leaky.enemies=[wood];
+  const after=advance(leaky,3);
+  assert.equal(after.phase,'intermission');assert.equal(after.leaks,1);assert.equal(after.coins,240+45);assert.doesNotMatch(after.notice,/완벽/);
+  const later={...after,phase:'intermission' as const};const next=actDefense(later,{type:'start-wave'});
+  assert.equal(next.waveStartLeaks,1,'previous-wave leaks do not spoil the next wave');
 });
