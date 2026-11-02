@@ -71,10 +71,12 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
   }, [mapWidth, zoomed]);
   const planSize = state.phase === 'wave' ? waveSize(state.stage, state.wave, state.difficulty) : 0;
   const surging = state.phase === 'wave' && !state.paused && state.spawned < planSize && inSurge(state.wave, state.spawned, planSize);
+  // Prep-only nudges: ring the empty pads until a first tower stands, then glow the start button.
+  const nudge = state.phase === 'prep' && state.towers.length === 0 ? 'pads' : ['prep', 'intermission'].includes(state.phase) && !state.paused && state.towers.length > 0 ? 'start' : '';
   const startAria = state.phase === 'wave' ? `웨이브 ${state.wave}/4 진행 중` : state.phase === 'intermission' ? '다음 웨이브 시작' : '웨이브 시작';
   const startLabel = state.phase === 'wave' ? `${state.wave}/4 진행` : state.phase === 'intermission' ? '다음 웨이브' : '시작';
 
-  return <main className={`battle-page battle-${stage.region} ${aimingDash ? 'battle-aiming' : ''} ${surging ? 'battle-surge' : ''} ${largeText ? 'battle-large-text' : ''}`} id="main" aria-label="아르카나 수비대 전투" data-phase={state.phase} data-paused={state.paused} data-aiming={aimingDash} data-dash-cooldown={state.dashCooldown.toFixed(2)} data-hero-x={state.heroPosition.x.toFixed(1)} data-hero-y={state.heroPosition.y.toFixed(1)}>
+  return <main className={`battle-page battle-${stage.region} ${aimingDash ? 'battle-aiming' : ''} ${surging ? 'battle-surge' : ''} ${nudge ? `battle-nudge-${nudge}` : ''} ${largeText ? 'battle-large-text' : ''}`} id="main" aria-label="아르카나 수비대 전투" data-phase={state.phase} data-paused={state.paused} data-aiming={aimingDash} data-dash-cooldown={state.dashCooldown.toFixed(2)} data-hero-x={state.heroPosition.x.toFixed(1)} data-hero-y={state.heroPosition.y.toFixed(1)}>
     <span className="battle-font-probe" ref={fontProbe} aria-hidden="true"/>
     <header className="battle-hud">
       <button className="battle-stage" onClick={() => onPanel({ kind: 'party' })} disabled={terminal || state.paused || state.phase === 'promotion'} aria-label="원정 정보와 전술 메뉴">{stageLabel(state.stage)}</button>

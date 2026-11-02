@@ -208,3 +208,8 @@ body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-in
 .battle-wave-pips em.now{background:#f4cc6c;box-shadow:none}
 .battle-wave-pips em.done{background:#8fd18f;box-shadow:none}
 @media (max-width:760px){.battle-utilities .battle-start{font-size:.8rem}.battle-utilities .battle-start svg{display:none}}
+@keyframes battle-pad-ring{0%{transform:scale(1);opacity:1}100%{transform:scale(1.6);opacity:0}}
+@keyframes battle-start-glow{50%{box-shadow:inset 0 0 0 2px #ffeab2,0 0 0 4px #f4cc6c88}}
+.battle-nudge-pads:not([data-paused=true]) .battle-map-size .def-build-pad:not(.occupied)::after{content:'';position:absolute;inset:4px;border:3px solid #ffd45a;border-radius:50%;box-shadow:0 0 0 1px #213a3a99;pointer-events:none;animation:battle-pad-ring 1.6s ease-out infinite}
+.battle-nudge-start .battle-utilities .battle-start:not(:disabled){animation:battle-start-glow 1.4s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){.battle-nudge-pads .def-build-pad::after,.battle-nudge-start .battle-start{animation:none!important}}
