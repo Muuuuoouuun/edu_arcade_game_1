@@ -31,6 +31,10 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
   const canAct = !state.paused && !terminal && state.phase !== 'promotion';
   const skillReady = canAct && state.phase === 'wave' && state.skillCooldown === 0 && state.enemies.length > 0;
   const dashReady = canAct && state.phase === 'wave' && state.dashCooldown === 0;
+  // A dimmed action button should say when it comes back, not look broken.
+  const idleHint = state.phase === 'wave' ? '' : '웨이브 중 사용';
+  const skillHint = state.skillCooldown > 0 ? `${Math.ceil(state.skillCooldown)}초` : state.phase === 'wave' && state.enemies.length === 0 ? '적이 나오면' : idleHint || hero.skill;
+  const dashHint = state.dashCooldown > 0 ? `${Math.ceil(state.dashCooldown)}초` : aimingDash ? '한 번 더 눌러 취소' : idleHint || '위치를 골라 질주';
   const mapSpace = useRef<HTMLDivElement>(null);
   const mapViewport = useRef<HTMLDivElement>(null);
   const lastMapScroll = useRef(-Infinity);
@@ -143,8 +147,8 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
         {storageFailed ? <p className="battle-save-warning" role="status">진행을 저장할 수 없어요. 창을 닫기 전 확인해 주세요.</p> : null}
       </section>
       <nav className="battle-commands" aria-label="영웅 액션">
-        <button className="battle-skill" disabled={!skillReady} onClick={onSkill} aria-label="필살기 사용"><Icon name="star" size={25}/><span>필살기<small>{state.skillCooldown > 0 ? `${Math.ceil(state.skillCooldown)}초` : hero.skill}</small></span></button>
-        <button className={`battle-dash ${aimingDash ? 'selected' : ''}`} disabled={!dashReady} onClick={onDash} aria-label={aimingDash ? '돌진 조준 취소' : '영웅 돌진 위치 선택'} aria-pressed={aimingDash}><DashIcon/><span>{aimingDash ? largeText ? '취소' : '돌진 취소' : '돌진'}<small>{state.dashCooldown > 0 ? `${Math.ceil(state.dashCooldown)}초` : aimingDash ? '한 번 더 눌러 취소' : '위치를 골라 질주'}</small></span></button>
+        <button className={`battle-skill ${skillReady ? 'is-ready' : ''}`} disabled={!skillReady} onClick={onSkill} aria-label="필살기 사용"><Icon name="star" size={25}/><span>필살기<small>{skillHint}</small></span></button>
+        <button className={`battle-dash ${aimingDash ? 'selected' : ''}`} disabled={!dashReady} onClick={onDash} aria-label={aimingDash ? '돌진 조준 취소' : '영웅 돌진 위치 선택'} aria-pressed={aimingDash}><DashIcon/><span>{aimingDash ? largeText ? '취소' : '돌진 취소' : '돌진'}<small>{dashHint}</small></span></button>
       </nav>
     </div>
   </main>;
