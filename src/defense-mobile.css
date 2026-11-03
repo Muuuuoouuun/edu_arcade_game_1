@@ -220,3 +220,10 @@ body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-in
 .battle-edge-threat span{font-size:.7rem}
 @media(prefers-reduced-motion:no-preference){.battle-edge-threat{animation:battle-edge-pop .25s ease-out}}
 @keyframes battle-edge-pop{from{opacity:0;transform:translateY(-50%) scale(.7)}}
+/* Village-hit feedback: HP chip pulse + red edge flash (decorative, never intercepts touches). */
+.battle-breach-flash{position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:7px;box-shadow:inset 0 0 0 3px #ff7b6bcc,inset 0 0 38px #d9433a99;opacity:0}
+@media(prefers-reduced-motion:no-preference){.battle-breach-flash{animation:battle-breach-flash .55s ease-out}.battle-health.is-hit{animation:battle-health-hit .5s ease-out}}
+@media(prefers-reduced-motion:reduce){.battle-breach-flash{animation:battle-breach-flash-still .35s steps(1,end)}.battle-health.is-hit{animation:none}}
+@keyframes battle-breach-flash{0%{opacity:1}100%{opacity:0}}
+@keyframes battle-breach-flash-still{0%{opacity:.8}100%{opacity:0}}
+@keyframes battle-health-hit{0%{transform:scale(1.18);background:#a33a30}100%{transform:scale(1)}}
