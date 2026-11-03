@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDefense, stepDefense } from '../games/defense/engine.ts';
 import type { DefenseState } from '../games/defense/types.ts';
-import { resolveZoomPreference, unitScale, nextZoomState, shouldPublishDefenseFrame } from './defenseFrame.ts';
+import { resolveZoomPreference, unitScale, hpBarScale, nextZoomState, shouldPublishDefenseFrame } from './defenseFrame.ts';
 
 test('the last terminal effect is published inside the frame throttle so the result can appear', () => {
   for (const phase of ['won', 'lost'] as const) {
@@ -58,4 +58,12 @@ test('offscreenThreats counts enemies hidden beyond each zoomed edge and aims th
   assert.ok(t.leftTo >= 0 && t.leftTo <= 600 && t.rightTo >= 0 && t.rightTo <= 600);
   const mid = offscreenThreats([400], 300, 300, 900);
   assert.equal(mid.left + mid.right, 0);
+});
+
+test('hpBarScale grows the monster health bar on phone boards and leaves desktop alone', () => {
+  assert.equal(hpBarScale(0), 1);
+  assert.equal(hpBarScale(NaN), 1);
+  assert.equal(hpBarScale(1300), 1);
+  assert.ok(5.5 * hpBarScale(636) * (636 / 900) >= 4.9);
+  assert.ok(hpBarScale(100) <= 1.5);
 });
