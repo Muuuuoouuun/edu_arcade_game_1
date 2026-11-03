@@ -5,7 +5,7 @@ import { getStage, STAGE_COUNT, STAGES } from './data.ts';
 import { createDefense } from './engine.ts';
 import {
   acknowledgeVisitor, campaignFacilities, campaignRequest, completeRun, createCampaign, lossAdvice, resultFollowUp, readCampaign, selectDifficulty, selectHero,
-  stageUnlocked, territoryProgress, trainCampaign, trainingCost, writeCampaign,
+  stageReason, stageUnlocked, territoryProgress, trainCampaign, trainingCost, writeCampaign,
 } from './campaign.ts';
 
 function result(stage = 1, overrides: Partial<DefenseState> = {}): DefenseState {
@@ -392,4 +392,15 @@ test('lossAdvice names one change from the final state and only after a loss', (
   assert.match(lossAdvice(lost({ coins: 10 }))!, /강화하지 않은/);
   assert.match(lossAdvice(lost({ towers: [{ ...tower, level: 2 }], leaks: 7 }))!, /7마리/);
   assert.equal(lossAdvice(lost({ towers: [{ ...tower, level: 2 }] })), null);
+});
+
+test('stageReason names the companion, the region opened, or the open quest without gating anything', () => {
+  const fresh = createCampaign();
+  assert.deepEqual(stageReason(fresh, 1), { kind: 'visitor', hero: 'elf' });
+  assert.deepEqual(stageReason(fresh, 4), { kind: 'region' });
+  assert.deepEqual(stageReason(fresh, 6), { kind: 'quest', reward: 80 });
+  const cleared = completeRun(fresh, 'reason-1', result(1, { hp: 12 })).campaign;
+  assert.deepEqual(stageReason(cleared, 1), { kind: 'quest', reward: 80 });
+  const claimed = completeRun(cleared, 'reason-2', result(1)).campaign;
+  assert.equal(stageReason(claimed, 1), null);
 });
