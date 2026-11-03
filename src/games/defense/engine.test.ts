@@ -572,3 +572,17 @@ test('the surge notice appears once in waves 2-3 and never in waves 1 or 4',()=>
     assert.equal(hits,wave===2||wave===3?1:0,`wave ${wave}`);
   }
 });
+
+test('a boss kill adds one shockwave and a labelled coin without changing the bounty',()=>{
+  const kill=(kind:EnemyKind)=>{const s=battlefield(kind==='frostboss'?8:4),e=enemy(kind,1);e.hp=0;e.speed=0;const spare=enemy('stone',2,100,100);spare.speed=0;s.enemies=[e,spare];const before=s.coins;const next=stepDefense(s,.05);return {next,gain:next.coins-before};};
+  for(const kind of ['boss','frostboss'] as const){
+    const {next,gain}=kill(kind);
+    assert.equal(gain,100);assert.equal(next.kills,1);
+    assert.equal(next.effects.filter(e=>e.kind==='shockwave').length,1);
+    assert.equal(next.effects.filter(e=>e.kind==='death').length,1);
+    assert.ok(next.effects.some(e=>e.kind==='coin'&&e.text==='+100 처치!'));
+  }
+  const {next,gain}=kill('wood');
+  assert.equal(gain,17);assert.equal(next.effects.filter(e=>e.kind==='shockwave').length,0);
+  assert.ok(next.effects.some(e=>e.kind==='coin'&&e.text==='+17'));
+});
