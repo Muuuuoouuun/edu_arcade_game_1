@@ -70,7 +70,9 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
   useEffect(() => {
     const prev = prevHp.current; prevHp.current = { hp: state.hp, outpost: state.outpostHp };
     const main = state.hp < prev.hp, outpost = state.outpostHp < prev.outpost;
-    if (main || outpost) setHitTown(old => ({ main: old.main + (main ? 1 : 0), outpost: old.outpost + (outpost ? 1 : 0) }));
+    // HP only rises when a new run starts (the component outlives stages), so forget old hits then.
+    if (state.hp > prev.hp || state.outpostHp > prev.outpost) setHitTown({ main: 0, outpost: 0 });
+    else if (main || outpost) setHitTown(old => ({ main: old.main + (main ? 1 : 0), outpost: old.outpost + (outpost ? 1 : 0) }));
   }, [state.hp, state.outpostHp]);
   const hitCount = hitTown.main + hitTown.outpost;
   const focusHero = () => {
