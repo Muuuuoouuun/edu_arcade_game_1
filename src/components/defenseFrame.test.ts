@@ -48,3 +48,14 @@ test('units grow on a narrow board but stay unchanged on wide boards and bad mea
   assert.equal(unitScale(375), 1.25);
   assert.ok(unitScale(450) > 1 && unitScale(450) < 1.25);
 });
+
+test('offscreenThreats counts enemies hidden beyond each zoomed edge and aims the camera', async () => {
+  const { offscreenThreats } = await import('./defenseFrame.ts');
+  const none = offscreenThreats([100, 800], 0, 300, 300);
+  assert.deepEqual([none.left, none.right], [0, 0]); // full view hides nothing
+  const t = offscreenThreats([50, 400, 880], 300, 300, 900); // 900px map, view spans 300..600
+  assert.deepEqual([t.left, t.right], [1, 1]);
+  assert.ok(t.leftTo >= 0 && t.leftTo <= 600 && t.rightTo >= 0 && t.rightTo <= 600);
+  const mid = offscreenThreats([400], 300, 300, 900);
+  assert.equal(mid.left + mid.right, 0);
+});
