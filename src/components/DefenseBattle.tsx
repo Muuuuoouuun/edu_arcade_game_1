@@ -73,6 +73,8 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
     if (viewport) viewport.scrollLeft = zoomed ? heroX.current / 900 * mapWidth - viewport.clientWidth / 2 : 0;
   }, [mapWidth, zoomed]);
   const threats = offscreenThreats(state.enemies.map(e => e.x), scrollLeft, viewWidth, mapWidth);
+  // Scroll events only update scrollLeft during waves, so resync when a wave begins or the view changes.
+  useLayoutEffect(() => { setScrollLeft(Math.round(mapViewport.current?.scrollLeft ?? 0)); }, [state.phase, state.paused, zoomed, mapWidth]);
   const planSize = state.phase === 'wave' ? waveSize(state.stage, state.wave, state.difficulty) : 0;
   const surging = state.phase === 'wave' && !state.paused && state.spawned < planSize && inSurge(state.wave, state.spawned, planSize);
   // Prep-only nudges: ring the empty pads until a first tower stands, then glow the start button.
@@ -108,7 +110,7 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
         </div>
         <div className="battle-map-space" ref={mapSpace}>
           <div className={`battle-map-viewport ${zoomed && canZoom ? 'is-zoomed' : ''}`} ref={mapViewport} tabIndex={zoomed && canZoom ? 0 : undefined} role="region" aria-label="전장 지도. 확대 시 좌우로 스크롤할 수 있어요"
-            onScroll={event => { lastMapScroll.current = performance.now(); onCancelAim(); setScrollLeft(Math.round(event.currentTarget.scrollLeft)); }}
+            onScroll={event => { lastMapScroll.current = performance.now(); onCancelAim(); if (zoomed && state.phase === 'wave') setScrollLeft(Math.round(event.currentTarget.scrollLeft)); }}
             onPointerDownCapture={event => {
               // A touch that stops momentum must not also issue a movement/build command.
               if (performance.now() - lastMapScroll.current < 140) event.stopPropagation();
@@ -117,9 +119,9 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
               <DefenseBoard state={state} themeId={themeId} selectedSlot={selectedSlot} aimingDash={aimingDash} onSelect={slot => onPanel({ kind: 'build', slot })} onSelectCandidates={onCandidates} onCancelAim={onCancelAim} onMove={onMove}/>
             </div>
           </div>
-          {zoomed && canZoom && state.phase === 'wave' ? <>
-            {threats.left ? <button className="battle-edge-threat is-left" onClick={() => { if (mapViewport.current) mapViewport.current.scrollLeft = threats.leftTo; }} aria-label={`왼쪽 화면 밖 적 ${threats.left}마리 보기`}><span aria-hidden="true">◀</span><b>{threats.left}</b></button> : null}
-            {threats.right ? <button className="battle-edge-threat is-right" onClick={() => { if (mapViewport.current) mapViewport.current.scrollLeft = threats.rightTo; }} aria-label={`오른쪽 화면 밖 적 ${threats.right}마리 보기`}><b>{threats.right}</b><span aria-hidden="true">▶</span></button> : null}
+          {zoomed && canZoom && state.phase === 'wave' && !state.paused ? <>
+            {threats.left ? <button className="battle-edge-threat is-left" onClick={() => { if (mapViewport.current && performance.now() - lastMapScroll.current >= 140) mapViewport.current.scrollLeft = threats.leftTo; }} aria-label={`왼쪽 화면 밖 적 ${threats.left}마리 보기`}><span aria-hidden="true">◀</span><b>{threats.left}</b></button> : null}
+            {threats.right ? <button className="battle-edge-threat is-right" onClick={() => { if (mapViewport.current && performance.now() - lastMapScroll.current >= 140) mapViewport.current.scrollLeft = threats.rightTo; }} aria-label={`오른쪽 화면 밖 적 ${threats.right}마리 보기`}><b>{threats.right}</b><span aria-hidden="true">▶</span></button> : null}
           </> : null}
         </div>
         <div className={`battle-input-note ${aimingDash ? 'aiming' : ''}`} role="status">{aimingDash ? '전장을 탭하면 돌진 · 전투는 계속돼요' : surging ? '무리가 몰려와요! 방어선을 단단히!' : state.paused ? '전술 선택 중 · 전투가 멈췄어요' : state.phase === 'prep' ? '건설 지점에 타워를 세우고 시작하세요' : '땅을 탭해 영웅 이동'}</div>
