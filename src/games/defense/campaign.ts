@@ -189,6 +189,22 @@ export function campaignRequest(campaign: Campaign): CampaignRequest | null {
   } : null;
 }
 
+export type StageReason =
+  | { kind: 'visitor'; hero: HeroId }
+  | { kind: 'region' }
+  | { kind: 'quest'; reward: number };
+
+/** Why to enter a stage: the companion it brings, the region it opens, or its unclaimed optional quest. Reads state only. */
+export function stageReason(campaign: Campaign, stageId: number): StageReason | null {
+  const stage = getStage(stageId);
+  if (!campaign.cleared.includes(stage.id)) {
+    if (stage.visitor && !campaign.visitors.includes(stage.visitor)) return { kind: 'visitor', hero: stage.visitor };
+    const next = STAGES.find(candidate => candidate.id === stage.id + 1);
+    if (next && next.region !== stage.region && !stageUnlocked(campaign, next.id)) return { kind: 'region' };
+  }
+  return campaign.questClaimed.includes(stage.id) ? null : { kind: 'quest', reward: stage.questReward };
+}
+
 export type TerritoryProgress = { rescued: number; total: number; questsLeft: number };
 
 /** Derived camp hook: villages rescued so far and optional quests still open on cleared stages. Reads state only. */
