@@ -1,5 +1,6 @@
 import type { Campaign, DefenseState, Difficulty, HeroId } from './types.ts';
-import { getStage, HERO_ORDER, STAGE_COUNT, STAGES, TOWERS } from './data.ts';
+import { getStage, HERO_ORDER, STAGE_COUNT, STAGES, TOWERS, getSlots } from './data.ts';
+import { upgradeCost } from './engine.ts';
 import { DIFFICULTIES, getDifficulty } from './difficulty.ts';
 
 const KEY = 'playground:defense:v1';
@@ -228,7 +229,10 @@ export function lossAdvice(state: DefenseState): string | null {
   if (state.phase !== 'lost') return null;
   if (state.towers.length === 0) return '타워를 세우지 못했어요. 첫 웨이브 전에 길목 옆에 타워부터 세워 보세요.';
   const cheapest = Math.min(...Object.values(TOWERS).map(tower => tower.cost));
-  if (state.coins >= cheapest) return `전투 코인 ${state.coins}개를 쓰지 못했어요. 웨이브 사이에 타워를 짓거나 강화해 보세요.`;
+  const openSlot = getSlots(state.stage).some(slot => slot.unlock <= state.stage && !state.towers.some(tower => tower.slot === slot.id));
+  const canSpend = (openSlot && state.coins >= cheapest) ||
+    state.towers.some(tower => tower.level < 3 && state.coins >= upgradeCost(tower));
+  if (canSpend) return `전투 코인 ${state.coins}개를 쓰지 못했어요. 웨이브 사이에 타워를 짓거나 강화해 보세요.`;
   if (state.towers.every(tower => tower.level === 1) && state.wave >= 2) return '강화하지 않은 타워뿐이었어요. 2단계에서 갈래를 고르면 더 단단해져요.';
   return state.leaks > 0 ? `적 ${state.leaks}마리가 길을 뚫었어요. 돌파한 길목 근처에 타워를 더해 보세요.` : null;
 }
