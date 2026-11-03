@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { DefenseBoard, DefenseSprite } from './DefenseBoard';
 import { DefenseForecast } from './DefenseForecast';
 import { nextZoomState, offscreenThreats, resolveZoomPreference } from './defenseFrame';
@@ -64,6 +64,17 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
     const observer = new ResizeObserver(resize); observer.observe(element); if (fontProbe.current) observer.observe(fontProbe.current); resize();
     return () => observer.disconnect();
   }, [zoomed]);
+  // Village damage must be felt even when the breach happens off-screen on the zoomed camera: pulse the HP chip and flash the map edge.
+  const prevHp = useRef({ hp: state.hp, outpost: state.outpostHp });
+  const [hitTown, setHitTown] = useState({ main: 0, outpost: 0 });
+  useEffect(() => {
+    const prev = prevHp.current; prevHp.current = { hp: state.hp, outpost: state.outpostHp };
+    const main = state.hp < prev.hp, outpost = state.outpostHp < prev.outpost;
+    // HP only rises when a new run starts (the component outlives stages), so forget old hits then.
+    if (state.hp > prev.hp || state.outpostHp > prev.outpost) setHitTown({ main: 0, outpost: 0 });
+    else if (main || outpost) setHitTown(old => ({ main: old.main + (main ? 1 : 0), outpost: old.outpost + (outpost ? 1 : 0) }));
+  }, [state.hp, state.outpostHp]);
+  const hitCount = hitTown.main + hitTown.outpost;
   const focusHero = () => {
     const viewport = mapViewport.current;
     if (viewport) viewport.scrollLeft = heroX.current / 900 * mapWidth - viewport.clientWidth / 2;
@@ -86,8 +97,8 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
     <span className="battle-font-probe" ref={fontProbe} aria-hidden="true"/>
     <header className="battle-hud">
       <button className="battle-stage" onClick={() => onPanel({ kind: 'party' })} disabled={terminal || state.paused || state.phase === 'promotion'} aria-label="원정 정보와 전술 메뉴">{stageLabel(state.stage)}</button>
-      <span className={`battle-health ${state.hp <= 5 ? 'danger' : ''}`} aria-label={`마을 체력 ${state.hp}`}><small>마을</small><Heart/><b>{state.hp}</b></span>
-      {stage.expanded ? <span className={`battle-health ${state.outpostHp <= 4 ? 'danger' : ''}`} aria-label={`외곽 마을 체력 ${state.outpostHp}`}><small>외곽</small><Heart/><b>{state.outpostHp}</b></span> : null}
+      <span key={`m${hitTown.main}`} className={`battle-health ${state.hp <= 5 ? 'danger' : ''} ${hitTown.main ? 'is-hit' : ''}`} aria-label={`마을 체력 ${state.hp}`}><small>마을</small><Heart/><b>{state.hp}</b></span>
+      {stage.expanded ? <span key={`o${hitTown.outpost}`} className={`battle-health ${state.outpostHp <= 4 ? 'danger' : ''} ${hitTown.outpost ? 'is-hit' : ''}`} aria-label={`외곽 마을 체력 ${state.outpostHp}`}><small>외곽</small><Heart/><b>{state.outpostHp}</b></span> : null}
       <span className="battle-coins" aria-label={`전투 코인 ${state.coins}`}><Coin/><b>{state.coins}</b></span>
       <span className="battle-wave" aria-label={`웨이브 ${state.wave} / 4`}><small>웨이브</small><b>{state.wave}/4</b><i className="battle-wave-pips" aria-hidden="true">{[1, 2, 3, 4].map(n => <em key={n} className={n < state.wave || (n === state.wave && ['intermission', 'promotion', 'won'].includes(state.phase)) ? 'done' : n === state.wave ? 'now' : ''}/>)}</i></span>
       <button className="battle-pause" onClick={onPause} disabled={terminal} aria-label="디펜스 일시정지"><Icon name="pause" size={20}/></button>
@@ -109,6 +120,7 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
           <button onClick={() => { onCancelAim(); const next = !(zoomed && canZoom); writeZoomPreference(next); wantZoom.current = next; setZoomed(next); }} disabled={!canZoom} aria-pressed={zoomed && canZoom} aria-label="전장 확대">{zoomed && canZoom ? '전체 보기' : '확대 보기'}</button>
         </div>
         <div className="battle-map-space" ref={mapSpace}>
+          {hitCount ? <i key={hitCount} className="battle-breach-flash" aria-hidden="true"/> : null}
           <div className={`battle-map-viewport ${zoomed && canZoom ? 'is-zoomed' : ''}`} ref={mapViewport} tabIndex={zoomed && canZoom ? 0 : undefined} role="region" aria-label="전장 지도. 확대 시 좌우로 스크롤할 수 있어요"
             onScroll={event => { lastMapScroll.current = performance.now(); onCancelAim(); if (zoomed && state.phase === 'wave') setScrollLeft(Math.round(event.currentTarget.scrollLeft)); }}
             onPointerDownCapture={event => {
