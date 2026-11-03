@@ -24,3 +24,22 @@ export function unitScale(boardWidthPx: number): number {
   if (!(boardWidthPx > 0)) return 1;
   return Math.min(1.25, Math.max(1, 520 / boardWidthPx * 0.82 + 0.18));
 }
+
+/** Enemies hidden past either edge of the zoomed camera. `leftTo`/`rightTo` are the
+ * scrollLeft that brings the nearest hidden enemy to the edge side of the view. */
+export type OffscreenThreats = { left: number; right: number; leftTo: number; rightTo: number };
+export function offscreenThreats(enemyXs: readonly number[], scrollLeft: number, viewWidth: number, mapWidth: number, boardUnits = 900): OffscreenThreats {
+  const out: OffscreenThreats = { left: 0, right: 0, leftTo: 0, rightTo: 0 };
+  if (!(mapWidth > viewWidth + 1) || !(viewWidth > 0)) return out;
+  const margin = 6, max = mapWidth - viewWidth;
+  let nearestLeft = -Infinity, nearestRight = Infinity;
+  for (const x of enemyXs) {
+    const px = x / boardUnits * mapWidth;
+    if (px < scrollLeft - margin) { out.left++; nearestLeft = Math.max(nearestLeft, px); }
+    else if (px > scrollLeft + viewWidth + margin) { out.right++; nearestRight = Math.min(nearestRight, px); }
+  }
+  const clamp = (v: number) => Math.max(0, Math.min(max, v));
+  if (out.left) out.leftTo = clamp(nearestLeft - viewWidth * .25);
+  if (out.right) out.rightTo = clamp(nearestRight - viewWidth * .75);
+  return out;
+}

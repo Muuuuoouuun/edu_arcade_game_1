@@ -213,3 +213,10 @@ body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-in
 .battle-nudge-pads:not([data-paused=true]) .battle-map-size .def-build-pad:not(.occupied)::after{content:'';position:absolute;inset:4px;border:3px solid #ffd45a;border-radius:50%;box-shadow:0 0 0 1px #213a3a99;pointer-events:none;animation:battle-pad-ring 1.6s ease-out infinite}
 .battle-nudge-start .battle-utilities .battle-start:not(:disabled){animation:battle-start-glow 1.4s ease-in-out infinite}
 @media(prefers-reduced-motion:reduce){.battle-nudge-pads .def-build-pad::after,.battle-nudge-start .battle-start{animation:none!important}}
+/* Zoomed portrait camera hides the lane edges; these badges count enemies out of view and jump the camera to them. */
+.battle-map-space{position:relative}
+.battle-edge-threat{position:absolute;top:50%;transform:translateY(-50%);z-index:4;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;gap:3px;padding:0 8px;border:2px solid #ffd7c8;border-radius:22px;background:#b3412dee;color:#fff;font-size:.95rem;box-shadow:0 2px 6px #0007}
+.battle-edge-threat.is-left{left:4px}.battle-edge-threat.is-right{right:4px}
+.battle-edge-threat span{font-size:.7rem}
+@media(prefers-reduced-motion:no-preference){.battle-edge-threat{animation:battle-edge-pop .25s ease-out}}
+@keyframes battle-edge-pop{from{opacity:0;transform:translateY(-50%) scale(.7)}}
