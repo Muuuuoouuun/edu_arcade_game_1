@@ -76,14 +76,9 @@ export function towerSpriteAsset(kind:TowerKind,branch:Branch|null=null,level=1)
 export type MonsterPose='walk-a'|'walk-b'|'hit'|'idle'|'charge'|'death';
 type ModelFrame=[number,number,number,number];
 type MonsterModel={span:number;frames:ModelFrame[];atlas?:{src:string;width:number;height:number};fallback?:MonsterModel};
-/** The insulator slime is a baked Blender render (tools/blender/build_slime.py): 384px frames, walk-a/walk-b/hit. */
-export const SLIME_ATLAS={src:'/defense/models/insulator-slime-atlas.webp',width:1152,height:384};
-/** The stone golem is a baked Blender render (tools/blender/build_golem.py): 384px frames, walk-a/walk-b/hit, one shared crop band. */
-export const GOLEM_ATLAS={src:'/defense/models/stone-golem-atlas.webp',width:1152,height:384};
-/** The wood soldier is a baked Blender render (tools/blender/build_wood.py): 384px frames, walk-a/walk-b/hit, one shared crop band. */
-export const WOOD_ATLAS={src:'/defense/models/wood-soldier-atlas.webp',width:1152,height:384};
-/** The ice knight is a baked Blender render (tools/blender/build_ice.py): 384px frames, walk-a/walk-b/hit, one shared crop band. */
-export const ICE_ATLAS={src:'/defense/models/ice-knight-atlas.webp',width:1152,height:384};
+/** Baked Blender monster renders (tools/blender/build_<name>.py): 384px frames, walk-a/walk-b/hit, one shared crop band. */
+const bakedAtlas=(file:string)=>({src:`/defense/models/${file}-atlas.webp`,width:1152,height:384});
+const SLIME_ATLAS=bakedAtlas('insulator-slime'),GOLEM_ATLAS=bakedAtlas('stone-golem'),WOOD_ATLAS=bakedAtlas('wood-soldier'),ICE_ATLAS=bakedAtlas('ice-knight');
 const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
  wood:{span:360,frames:[[0,8,384,364],[384,8,384,364],[768,8,384,364]],atlas:WOOD_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
