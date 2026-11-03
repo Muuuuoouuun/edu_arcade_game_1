@@ -166,7 +166,7 @@ test('the insulator slime uses its baked poses with one ground band and falls ba
  const {art:failed}=await loadWithImageResults(src=>src.includes('insulator-slime'),'slime-failed');
  assert.equal(failed.monsterSpriteAsset('insulator','walk-a'),null);
  assert.equal(failed.spriteAsset(13).src,'/defense/atlas.png','the original sprite remains');
- assert.equal(failed.monsterSpriteAsset('ice','walk-a')?.src,'/defense/monster-models.webp','other monsters are unaffected');
+ assert.equal(failed.monsterSpriteAsset('frostwolf','walk-a')?.src,'/defense/monster-models.webp','other monsters are unaffected');
 });
 
 test('the stone golem uses its baked poses with one crop band and falls back to the atlas when the render fails',async()=>{
@@ -194,8 +194,20 @@ test('the wood soldier uses its baked poses with one crop band and falls back to
  assert.equal(failed.monsterSpriteAsset('wood','walk-a')?.src,'/defense/monster-models.webp','the illustrated soldier remains');
 });
 
+test('the ice knight uses its baked poses with one crop band and falls back to the illustrated atlas when the render fails',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'ice-ok');
+ const poses=(['walk-a','walk-b','hit'] as const).map(pose=>art.monsterSpriteAsset('ice',pose));
+ assert.ok(poses.every(asset=>asset?.src==='/defense/models/ice-knight-atlas.webp'));
+ const boxes=poses.map(asset=>asset!.viewBox.split(' ').map(Number));
+ assert.equal(new Set(boxes.map(([,y,w,h])=>`${y},${w},${h}`)).size,1,'every pose shares a crop band so the feet stay on the ground');
+ assert.ok(boxes.every(([x,,w],i)=>x>=i*384&&x+w<=(i+1)*384),'each crop stays inside its own 384px atlas cell');
+ assert.equal(art.spriteAsset(10).src,'/defense/models/ice-knight-atlas.webp');
+ const {art:failed}=await loadWithImageResults(src=>src.includes('ice-knight'),'ice-failed');
+ assert.equal(failed.monsterSpriteAsset('ice','walk-a')?.src,'/defense/monster-models.webp','the illustrated knight remains');
+});
+
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
- for(const id of ['insulator-slime','stone-golem','wood-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')).length,3);
+ for(const id of ['insulator-slime','stone-golem','wood-soldier','ice-knight'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')).length,4);
 });
