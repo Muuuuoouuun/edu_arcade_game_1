@@ -25,6 +25,13 @@ export function unitScale(boardWidthPx: number): number {
   return Math.min(1.25, Math.max(1, 520 / boardWidthPx * 0.82 + 0.18));
 }
 
+/** Monster health bars are authored at 5.5 board units; keep them at least ~5px tall on small
+ * screens (the zoomed phone board renders ~0.7px per unit) without growing them on desktop. */
+export function hpBarScale(boardWidthPx: number): number {
+  if (!(boardWidthPx > 0)) return 1;
+  return Math.min(1.5, Math.max(1, 5 / (5.5 * (boardWidthPx / 900))));
+}
+
 /** Enemies hidden past either edge of the zoomed camera. `leftTo`/`rightTo` are the
  * scrollLeft that brings the nearest hidden enemy to the edge side of the view. */
 export type OffscreenThreats = { left: number; right: number; leftTo: number; rightTo: number };

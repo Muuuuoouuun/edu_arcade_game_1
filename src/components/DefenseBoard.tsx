@@ -10,7 +10,7 @@ import type { CombatAttack, DefenseState, Effect, Element, Enemy, HeroId, Point,
 import { AttackTrails, DashTrail, DefenseFxDefs, EffectLayer, FX_COLORS, ProjectileLayer } from './DefenseEffects';
 import { BoardTapTracker, clientToBoard, resolveBoardTap } from './defenseInput';
 import type { ScreenMatrix } from './defenseInput';
-import { unitScale } from './defenseFrame';
+import { hpBarScale, unitScale } from './defenseFrame';
 import '../defense-board.css';
 
 const clamp = (v:number) => Math.max(0,Math.min(1,v));
@@ -73,7 +73,7 @@ function Actor({unit=1,actor,position,facing,moving,velocity,dashTime=0,attack,s
   {wolf?<text y="20" textAnchor="middle" className="def-pet-label">달빛 늑대</text>:null}
  </g>;
 }
-function EnemyUnit({unit=1,enemy:e,state:s,reduced,onActivate,onKey}:{unit?:number;enemy:Enemy;state:DefenseState;reduced:boolean;onActivate:()=>void;onKey:(e:KeyboardEvent<SVGGElement>)=>void}){
+function EnemyUnit({unit=1,hpScale=1,enemy:e,state:s,reduced,onActivate,onKey}:{unit?:number;hpScale?:number;enemy:Enemy;state:DefenseState;reduced:boolean;onActivate:()=>void;onKey:(e:KeyboardEvent<SVGGElement>)=>void}){
  const size=(e.kind==='frostboss'?135:e.kind==='boss'?115:e.kind==='sprout'?54:e.kind==='frostwolf'?73:68)*unit;
  const boss=e.kind==='boss'||e.kind==='frostboss';
  const facing=e.facing??(positionOnPath(e.path,e.progress+4,s.stage).x>=e.x?1:-1);
@@ -91,6 +91,7 @@ function EnemyUnit({unit=1,enemy:e,state:s,reduced,onActivate,onKey}:{unit?:numb
  const modelHeight=hpArt?size*(hpArt.displayScale??1)*Math.min(1,hpHeight/hpWidth):size;
  // Reserve room for a boss's raised arms so the health bar stays fixed through its cast.
  const hpY=-Math.max(size*.91,modelHeight-size*.1)-8;
+ const hpW=(boss?68:44)*hpScale,hpH=(boss?7:5.5)*hpScale;
  return <g className={`def-monster ${e.hit>0?'def-hit':''} ${knock?'def-knocked':''} ${boss?'def-boss-model':''}`} transform={`translate(${e.x},${e.y})`} data-enemy={e.kind} data-monster-pose={motionPose} data-boss-state={charging?'casting':enraged?'enraged':undefined} data-progress={e.progress.toFixed(2)} data-knockback={(e.knockVelocity??0).toFixed(1)} role="button" tabIndex={0} aria-label={`${ENEMIES[e.kind].name} 위치로 이동, 체력 ${Math.ceil(e.hp)}, ${ENEMIES[e.kind].elementHint}`} onKeyDown={onKey} onClick={ev=>{ev.stopPropagation();onActivate();}}>
   <title>{ENEMIES[e.kind].name} · {ENEMIES[e.kind].elementHint}</title>
   {charging?<g opacity=".75"><ellipse rx={35+(2.5-s.bossCharge)*10} ry={12+(2.5-s.bossCharge)*4} fill="#91d9ff16" stroke="#bcf2ff" strokeWidth="2"/><g transform={`scale(1,.38) rotate(${reduced?0:s.time*34})`}><path d="M-48 0 24-42 24 42ZM48 0-24-42-24 42Z" fill="none" stroke="#daf6ff" strokeWidth="1.2" opacity=".6"/></g><circle cy="-52" r={22+(2.5-s.bossCharge)*9} fill="url(#def-blue-core)" opacity=".38"/></g>:null}
@@ -99,7 +100,7 @@ function EnemyUnit({unit=1,enemy:e,state:s,reduced,onActivate,onKey}:{unit?:numb
   <Sprite index={ENEMIES[e.kind].sprite} size={size} flip={facing<0} art={art} pose={`translate(${shake},${bob}) rotate(${lean}) scale(${reduced?1:1+hit*.07},${reduced?1:1-hit*.06})`} shadowScale={1+bob*.025}/>
   {e.burn>0?<g opacity=".75"><circle cy="-24" r={reduced?14:18+Math.sin(s.time*11+e.id)*2} fill="url(#def-fire-core)"/>{!reduced?<path d="M-10-22q-7-11-3-18q1 10 8 13M6-27q-1-12 5-16q-4 12 0 17" fill="none" stroke="#ffc05d" strokeWidth="2" strokeLinecap="round"/>:null}</g>:null}
   {e.wet>0?<path d="M22-46q-10 13 0 13q10 0 0-13" fill="#84e4ff" stroke="#d8fbff" strokeWidth=".9"/>:null}
-  <rect x={boss?-34:-22} y={hpY} width={boss?68:44} height={boss?7:5.5} rx="3" fill="#193322" stroke="#e8edd966" strokeWidth=".6"/><rect x={boss?-34:-22} y={hpY} width={(boss?68:44)*clamp(e.hp/e.maxHp)} height={boss?7:5.5} rx="3" fill={e.kind==='frostboss'?'#91d8f5':e.kind==='boss'?'#d176ed':'#e7ab69'}/>
+  <rect x={-hpW/2} y={hpY} width={hpW} height={hpH} rx={hpH/2} fill="#102418" stroke="#0a1610cc" strokeWidth={1.2*hpScale}/><rect x={-hpW/2} y={hpY} width={hpW*clamp(e.hp/e.maxHp)} height={hpH} rx={hpH/2} fill={e.kind==='frostboss'?'#91d8f5':e.kind==='boss'?'#d176ed':'#e7ab69'}/>
  </g>;
 }
 function TowerUnit({tower:t,position:p,state:s,reduced}:{tower:Tower;position:Point;state:DefenseState;reduced:boolean}){
@@ -154,7 +155,7 @@ const Terrain=memo(function Terrain({stageId}:{stageId:number}){
 
 export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSelect,onMove,aimingDash=false,onSelectCandidates,onCancelAim,themeId='verdant'}:{state:DefenseState;selectedSlot:number|null;onSelect:(id:number)=>void;onMove:(p:Point)=>void;aimingDash?:boolean;onSelectCandidates?:(ids:number[])=>void;onCancelAim?:()=>void;themeId?:DefenseThemeId}){
  const stage=getStage(s.stage),snow=getRegion(s.stage)==='snow',slots=getSlots(s.stage),availableSlots=slots.filter(slot=>slot.unlock<=s.stage);
- const reduced=useReducedMotion(),[unit,setUnit]=useState(1);
+ const reduced=useReducedMotion(),[unit,setUnit]=useState(1),[hpScale,setHpScale]=useState(1);
  const mapRef=useRef<SVGSVGElement>(null),boardRef=useRef<HTMLDivElement>(null),tapRef=useRef(new BoardTapTracker());
  const movingAllowed=!s.paused&&['prep','wave','intermission'].includes(s.phase),enemyKinds=[...new Set(s.enemies.map(e=>e.kind))];
  const controls=useRef({allowed:movingAllowed,aimingDash,onMove,onSelect,onSelectCandidates,onCancelAim,slots:availableSlots});
@@ -170,7 +171,7 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
  },[]);
  useEffect(()=>{cancelInput();},[cancelInput,s.stage,s.phase,s.paused]);
  // Measure before first paint so narrow boards never flash one frame of unscaled units.
- useLayoutEffect(()=>{if(mapRef.current)setUnit(unitScale(mapRef.current.getBoundingClientRect().width));},[]);
+ useLayoutEffect(()=>{if(mapRef.current){const w=mapRef.current.getBoundingClientRect().width;setUnit(unitScale(w));setHpScale(hpBarScale(w));}},[]);
  useEffect(()=>{
   const cancel=()=>cancelInput(),hide=()=>{if(document.hidden)cancel();};
   window.addEventListener('resize',cancel);window.addEventListener('orientationchange',cancel);window.addEventListener('blur',cancel);
@@ -180,9 +181,9 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
    const next=mapRef.current?.getBoundingClientRect();
    if(size&&next&&(Math.abs(size.width-next.width)>.01||Math.abs(size.height-next.height)>.01))cancel();
    size=next;
-   if(next)setUnit(unitScale(next.width));
+   if(next){setUnit(unitScale(next.width));setHpScale(hpBarScale(next.width));}
   });
-  if(mapRef.current){observer?.observe(mapRef.current);setUnit(unitScale(mapRef.current.getBoundingClientRect().width));}
+  if(mapRef.current){observer?.observe(mapRef.current);{const w=mapRef.current.getBoundingClientRect().width;setUnit(unitScale(w));setHpScale(hpBarScale(w));}}
   return()=>{observer?.disconnect();window.removeEventListener('resize',cancel);window.removeEventListener('orientationchange',cancel);window.removeEventListener('blur',cancel);window.visualViewport?.removeEventListener('resize',cancel);document.removeEventListener('visibilitychange',hide);tapRef.current.reset();};
  },[cancelInput]);
  const isBattleTarget=(target:EventTarget|null)=>target instanceof Element&&(mapRef.current?.contains(target)||Boolean(target.closest('.def-build-pad')));
@@ -229,7 +230,7 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
  const dashEffect=activeEffects.filter(e=>e.kind==='dash').at(-1);
  const units:{id:string;y:number;render:ReactNode}[]=[];
  for(const t of s.towers){const p=slots.find(slot=>slot.id===t.slot);if(p)units.push({id:`tower-${t.slot}`,y:p.y,render:<TowerUnit tower={t} position={p} state={s} reduced={reduced}/>});}
- for(const e of s.enemies)units.push({id:`enemy-${e.id}`,y:e.y,render:<EnemyUnit unit={unit} enemy={e} state={s} reduced={reduced} onActivate={()=>activateEnemy(e)} onKey={ev=>handleEnemyKey(ev,e)}/>});
+ for(const e of s.enemies)units.push({id:`enemy-${e.id}`,y:e.y,render:<EnemyUnit unit={unit} hpScale={hpScale} enemy={e} state={s} reduced={reduced} onActivate={()=>activateEnemy(e)} onKey={ev=>handleEnemyKey(ev,e)}/>});
  if(s.mercenary)units.push({id:'merc',y:s.mercenaryPosition.y,render:<Actor unit={unit} actor={s.mercenary} position={s.mercenaryPosition} facing={s.mercenaryFacing} moving={distance(s.mercenaryPosition,{x:s.heroPosition.x+38,y:s.heroPosition.y+35})>2} attack={s.attacks.find(a=>a.source==='mercenary')} time={s.time} reduced={reduced}/>});
  if(s.pet)units.push({id:'pet',y:s.pet.position.y,render:<Actor unit={unit} actor="wolf" position={s.pet.position} facing={s.pet.facing} moving={distance(s.pet.position,s.pet.target)>2} attack={s.attacks.find(a=>a.source==='pet')} time={s.time} reduced={reduced}/>});
  units.push({id:'hero',y:s.heroPosition.y,render:<Actor unit={unit} actor={s.hero} position={s.heroPosition} facing={s.heroFacing} moving={Math.hypot(s.heroVelocity.x,s.heroVelocity.y)>5||distance(s.heroPosition,s.heroTarget)>2} velocity={s.heroVelocity} dashTime={s.dashTime} attack={s.attacks.find(a=>a.source==='hero')} time={s.time} reduced={reduced} promoted={Boolean(s.promotion)} skill={s.effects.filter(e=>e.kind==='skill').at(-1)} leader/>});
