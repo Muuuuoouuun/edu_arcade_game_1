@@ -586,3 +586,14 @@ test('a boss kill adds one shockwave and a labelled coin without changing the bo
   assert.equal(gain,17);assert.equal(next.effects.filter(e=>e.kind==='shockwave').length,0);
   assert.ok(next.effects.some(e=>e.kind==='coin'&&e.text==='+17'));
 });
+
+test('several ordinary kills in one tick share a single summed coin popup while coins and deaths stay per-enemy',()=>{
+  const s=battlefield(4);const a=enemy('wood',1),b=enemy('stone',2,100,100),c=enemy('sprout',3,120,120);
+  for(const e of [a,b,c]){e.hp=0;e.speed=0;}
+  const spare=enemy('stone',4,300,300);spare.speed=0;s.enemies=[a,b,c,spare];const before=s.coins;
+  const next=stepDefense(s,.05);
+  assert.equal(next.coins-before,17+19+14);assert.equal(next.kills,3);
+  assert.equal(next.effects.filter(e=>e.kind==='death').length,3);
+  const coins=next.effects.filter(e=>e.kind==='coin');
+  assert.equal(coins.length,1);assert.equal(coins[0].text,'+50 ×3');
+});
