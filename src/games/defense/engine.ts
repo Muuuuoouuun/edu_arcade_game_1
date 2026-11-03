@@ -80,14 +80,18 @@ function hit(s:DefenseState,e:Enemy,amount:number,element:Element,from:Point,for
 }
 function reap(s:DefenseState) {
   const dead=s.enemies.filter(e=>e.hp<=0);
+  const crowd=dead.filter(e=>e.kind!=='boss'&&e.kind!=='frostboss');
+  const merged=crowd.length>1;let mergedSum=0;
   for(const enemy of dead){
     const bounty=enemy.kind==='boss'||enemy.kind==='frostboss'?100:enemy.kind==='frostwolf'?16:enemy.kind==='stone'?19:enemy.kind==='wood'?17:14;
     s.coins+=bounty;s.kills++;
     const boss=enemy.kind==='boss'||enemy.kind==='frostboss';
-    effect(s,enemy,enemy,'physical',boss?`+${bounty} 처치!`:`+${bounty}`,'coin');
+    if(merged&&!boss)mergedSum+=bounty;
+    else effect(s,enemy,enemy,'physical',boss?`+${bounty} 처치!`:`+${bounty}`,'coin');
     if(boss)effect(s,enemy,enemy,'impact','','shockwave',{force:6});
     effect(s,enemy,enemy,'physical',undefined,'death',{targetSprite:ENEMIES[enemy.kind].sprite,targetId:enemy.id,targetKind:enemy.kind,targetFacing:enemy.facing||1,force:enemy.knockVelocity||0});
   }
+  if(merged){const last=crowd[crowd.length-1];effect(s,last,last,'physical',`+${mergedSum} ×${crowd.length}`,'coin');}
   s.enemies=s.enemies.filter(e=>e.hp>0);
   if(!s.enemies.some(e=>e.kind==='frostboss')){s.bossCharge=0;s.freeze=0;}
   if(getStage(s.stage).questType==='hunt')s.questProgress=s.kills;
