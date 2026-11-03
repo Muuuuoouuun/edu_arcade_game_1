@@ -83,7 +83,9 @@ function reap(s:DefenseState) {
   for(const enemy of dead){
     const bounty=enemy.kind==='boss'||enemy.kind==='frostboss'?100:enemy.kind==='frostwolf'?16:enemy.kind==='stone'?19:enemy.kind==='wood'?17:14;
     s.coins+=bounty;s.kills++;
-    effect(s,enemy,enemy,'physical',`+${bounty}`,'coin');
+    const boss=enemy.kind==='boss'||enemy.kind==='frostboss';
+    effect(s,enemy,enemy,'physical',boss?`+${bounty} 처치!`:`+${bounty}`,'coin');
+    if(boss)effect(s,enemy,enemy,'impact','','shockwave',{force:6});
     effect(s,enemy,enemy,'physical',undefined,'death',{targetSprite:ENEMIES[enemy.kind].sprite,targetId:enemy.id,targetKind:enemy.kind,targetFacing:enemy.facing||1,force:enemy.knockVelocity||0});
   }
   s.enemies=s.enemies.filter(e=>e.hp>0);
