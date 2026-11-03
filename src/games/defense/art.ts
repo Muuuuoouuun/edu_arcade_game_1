@@ -82,11 +82,15 @@ export const SLIME_ATLAS={src:'/defense/models/insulator-slime-atlas.webp',width
 export const GOLEM_ATLAS={src:'/defense/models/stone-golem-atlas.webp',width:1152,height:384};
 /** The wood soldier is a baked Blender render (tools/blender/build_wood.py): 384px frames, walk-a/walk-b/hit, one shared crop band. */
 export const WOOD_ATLAS={src:'/defense/models/wood-soldier-atlas.webp',width:1152,height:384};
+/** The ice knight is a baked Blender render (tools/blender/build_ice.py): 384px frames, walk-a/walk-b/hit, one shared crop band. */
+export const ICE_ATLAS={src:'/defense/models/ice-knight-atlas.webp',width:1152,height:384};
 const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
  wood:{span:360,frames:[[0,8,384,364],[384,8,384,364],[768,8,384,364]],atlas:WOOD_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
   fallback:{span:330,frames:[[38,59,324,323],[405,66,286,316],[761,62,325,320]]}},
- ice:{span:345,frames:[[53,399,309,353],[416,403,295,349],[776,401,310,351]]},
+ ice:{span:360,frames:[[0,4,384,372],[384,4,384,372],[768,4,384,372]],atlas:ICE_ATLAS,
+  // Previous illustrated frames keep the creature on screen if the baked render fails to load.
+  fallback:{span:345,frames:[[53,399,309,353],[416,403,295,349],[776,401,310,351]]}},
  stone:{span:260,frames:[[22,68,340,255],[406,68,340,255],[790,68,340,255]],atlas:GOLEM_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
   fallback:{span:340,frames:[[26,759,372,326],[414,757,326,328],[779,761,307,324]]}},
