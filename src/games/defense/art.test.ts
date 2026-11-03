@@ -211,3 +211,16 @@ test('every baked monster atlas is requested by the preloader, and the unbaked o
  for(const id of ['insulator-slime','stone-golem','wood-soldier','ice-knight'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
  assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')).length,4);
 });
+
+test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
+ const kinds=['wood','ice','stone','frostwolf','insulator','boss','frostboss'] as const,poses=['idle','walk-a','walk-b','hit','charge','death'] as const;
+ for(const [scenario,failed] of [['bounds-ok',()=>false],['bounds-fallback',(src:string)=>src.includes('-atlas.webp')]] as const){
+  const {art}=await loadWithImageResults(failed,scenario);
+  for(const kind of kinds)for(const pose of poses){
+   const asset=art.monsterSpriteAsset(kind,pose);
+   if(!asset){assert.ok(scenario==='bounds-fallback'&&kind==='insulator',`${kind}/${pose} has art unless it is the unbacked slime`);continue;}
+   const [x,y,w,h]=asset.viewBox.split(' ').map(Number);
+   assert.ok(x>=0&&y>=0&&w>0&&h>0&&x+w<=asset.width&&y+h<=asset.height,`${scenario} ${kind}/${pose} ${asset.viewBox} fits ${asset.width}x${asset.height}`);
+  }
+ }
+});
