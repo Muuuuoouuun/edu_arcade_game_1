@@ -52,7 +52,7 @@ body:has(.battle-page){overflow:hidden;background:#102c25}
 .battle-commands .battle-dash{order:1;background:#214b3b;color:#fff4d4}
 .battle-commands button:disabled{opacity:.72;filter:saturate(.55)}
 .battle-commands .battle-skill.is-ready{animation:battle-skill-ready 1.6s ease-in-out infinite}
-@keyframes battle-skill-ready{50%{box-shadow:inset 0 0 0 2px #ffe8ac,0 3px 0 #825c25,0 0 14px 3px #ffd36a99}}
+@keyframes battle-skill-ready{50%{filter:drop-shadow(0 0 7px #ffd36acc)}}
 @media(prefers-reduced-motion:reduce){.battle-commands .battle-skill.is-ready{animation:none}}
 .battle-commands .battle-dash.selected{background:#fff0b5;color:#153b2e;border:2px solid #ffcf54}
 .battle-portrait-summary{display:none}
