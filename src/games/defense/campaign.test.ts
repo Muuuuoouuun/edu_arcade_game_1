@@ -4,7 +4,7 @@ import type { Campaign, DefenseState } from './types.ts';
 import { getStage, STAGE_COUNT, STAGES } from './data.ts';
 import { createDefense } from './engine.ts';
 import {
-  acknowledgeVisitor, campaignFacilities, campaignRequest, completeRun, createCampaign, resultFollowUp, readCampaign, selectDifficulty, selectHero,
+  acknowledgeVisitor, campaignFacilities, campaignRequest, completeRun, createCampaign, lossAdvice, resultFollowUp, readCampaign, selectDifficulty, selectHero,
   stageUnlocked, territoryProgress, trainCampaign, trainingCost, writeCampaign,
 } from './campaign.ts';
 
@@ -381,4 +381,15 @@ test('territory progress counts rescued villages and open optional quests on cle
   assert.deepEqual(territoryProgress(cleared), { rescued: 1, total: STAGE_COUNT, questsLeft: 1 });
   const claimed = completeRun(cleared, 'territory-2', result(1)).campaign;
   assert.equal(territoryProgress(claimed).questsLeft, 0);
+});
+
+test('lossAdvice names one change from the final state and only after a loss', () => {
+  const tower = { slot: 0, kind: 'crossbow' as const, level: 1, branch: null, cooldown: 0 };
+  const lost = (o: Partial<DefenseState>) => result(1, { phase: 'lost', hp: 0, wave: 2, coins: 0, towers: [tower], leaks: 0, ...o });
+  assert.equal(lossAdvice(result(1)), null);
+  assert.match(lossAdvice(lost({ towers: [] }))!, /타워를 세우지 못/);
+  assert.match(lossAdvice(lost({ coins: 150 }))!, /코인 150개/);
+  assert.match(lossAdvice(lost({ coins: 10 }))!, /강화하지 않은/);
+  assert.match(lossAdvice(lost({ towers: [{ ...tower, level: 2 }], leaks: 7 }))!, /7마리/);
+  assert.equal(lossAdvice(lost({ towers: [{ ...tower, level: 2 }] })), null);
 });
