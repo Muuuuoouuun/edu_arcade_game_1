@@ -166,7 +166,7 @@ test('the insulator slime uses its baked poses with one ground band and falls ba
  const {art:failed}=await loadWithImageResults(src=>src.includes('insulator-slime'),'slime-failed');
  assert.equal(failed.monsterSpriteAsset('insulator','walk-a'),null);
  assert.equal(failed.spriteAsset(13).src,'/defense/atlas.png','the original sprite remains');
- assert.equal(failed.monsterSpriteAsset('frostwolf','walk-a')?.src,'/defense/monster-models.webp','other monsters are unaffected');
+ assert.equal(failed.monsterSpriteAsset('frostwolf','walk-a')?.src,'/defense/models/frost-wolf-atlas.webp','other monsters are unaffected');
 });
 
 test('the stone golem uses its baked poses with one crop band and falls back to the atlas when the render fails',async()=>{
@@ -206,10 +206,21 @@ test('the ice knight uses its baked poses with one crop band and falls back to t
  assert.equal(failed.monsterSpriteAsset('ice','walk-a')?.src,'/defense/monster-models.webp','the illustrated knight remains');
 });
 
+test('the frost wolf uses its baked poses with one crop band and falls back to the illustrated atlas when the render fails',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'wolf-ok');
+ const poses=(['walk-a','walk-b','hit'] as const).map(pose=>art.monsterSpriteAsset('frostwolf',pose));
+ assert.ok(poses.every(asset=>asset?.src==='/defense/models/frost-wolf-atlas.webp'));
+ const boxes=poses.map(asset=>asset!.viewBox.split(' ').map(Number));
+ assert.equal(new Set(boxes.map(([,y,w,h])=>`${y},${w},${h}`)).size,1,'every pose shares a crop band so the paws stay on the ground');
+ assert.ok(boxes.every(([x,,w],i)=>x>=i*384&&x+w<=(i+1)*384),'each crop stays inside its own 384px atlas cell');
+ const {art:failed}=await loadWithImageResults(src=>src.includes('frost-wolf'),'wolf-failed');
+ assert.equal(failed.monsterSpriteAsset('frostwolf','walk-a')?.src,'/defense/monster-models.webp','the illustrated wolf remains');
+});
+
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
- for(const id of ['insulator-slime','stone-golem','wood-soldier','ice-knight'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')).length,4);
+ for(const id of ['insulator-slime','stone-golem','wood-soldier','ice-knight','frost-wolf'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')).length,5);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{

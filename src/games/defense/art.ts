@@ -78,7 +78,7 @@ type ModelFrame=[number,number,number,number];
 type MonsterModel={span:number;frames:ModelFrame[];atlas?:{src:string;width:number;height:number};fallback?:MonsterModel};
 /** Baked Blender monster renders (tools/blender/build_<name>.py): 384px frames, walk-a/walk-b/hit, one shared crop band. */
 const bakedAtlas=(file:string)=>({src:`/defense/models/${file}-atlas.webp`,width:1152,height:384});
-const SLIME_ATLAS=bakedAtlas('insulator-slime'),GOLEM_ATLAS=bakedAtlas('stone-golem'),WOOD_ATLAS=bakedAtlas('wood-soldier'),ICE_ATLAS=bakedAtlas('ice-knight');
+const SLIME_ATLAS=bakedAtlas('insulator-slime'),GOLEM_ATLAS=bakedAtlas('stone-golem'),WOOD_ATLAS=bakedAtlas('wood-soldier'),ICE_ATLAS=bakedAtlas('ice-knight'),WOLF_ATLAS=bakedAtlas('frost-wolf');
 const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
  wood:{span:360,frames:[[0,8,384,364],[384,8,384,364],[768,8,384,364]],atlas:WOOD_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
@@ -89,7 +89,9 @@ const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
  stone:{span:260,frames:[[22,68,340,255],[406,68,340,255],[790,68,340,255]],atlas:GOLEM_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
   fallback:{span:340,frames:[[26,759,372,326],[414,757,326,328],[779,761,307,324]]}},
- frostwolf:{span:350,frames:[[15,1101,365,304],[394,1105,347,300],[756,1087,330,318]]},
+ frostwolf:{span:315,frames:[[6,68,360,242],[390,68,360,242],[774,68,360,242]],atlas:WOLF_ATLAS,
+  // Previous illustrated frames keep the creature on screen if the baked render fails to load.
+  fallback:{span:350,frames:[[15,1101,365,304],[394,1105,347,300],[756,1087,330,318]]}},
  insulator:{span:330,frames:[[39,81,317,242],[423,81,317,242],[807,81,317,242]],atlas:SLIME_ATLAS},
 };
 const BOSS_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
