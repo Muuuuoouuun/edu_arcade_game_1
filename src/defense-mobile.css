@@ -138,7 +138,7 @@ body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-in
  .battle-hud .battle-stage{display:none}
  .battle-hud>span{gap:3px;padding:3px 5px;min-width:max-content;flex:1 1 auto}
  .battle-hud b{font-size:1rem}
- .battle-hud small{font-size:.72rem}
+ .battle-hud small{font-size:.75rem}
  .battle-hud svg{width:16px;height:16px}
  .battle-hud .battle-wave small{display:none}
  .battle-hud .battle-pause{width:44px;min-width:44px;min-height:44px}
@@ -168,7 +168,7 @@ body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-in
  .battle-commands button,.battle-commands .battle-skill{min-height:48px;flex-direction:row;padding:5px 8px;font-size:1rem;border-radius:8px;gap:8px;box-shadow:inset 0 0 0 2px #ffffff20}
  .battle-commands .battle-skill{order:1}
  .battle-commands .battle-dash{order:2}
- .battle-commands small{font-size:.72rem;margin-top:2px}
+ .battle-commands small{font-size:.75rem;margin-top:2px}
  .battle-commands>button>svg{width:23px;height:23px;flex-shrink:0}
  .battle-input-note,.battle-aiming .battle-input-note,.battle-surge .battle-input-note{display:block;position:static;transform:none;width:auto;max-width:none;min-height:30px;flex-shrink:0;padding:5px 4px;margin-top:4px;background:none}
  .battle-portrait-summary{display:flex;align-items:center;gap:10px;min-height:76px;padding:8px 6px;text-align:left;background:none;border:0;color:#f9efd8;flex-shrink:0}
@@ -196,7 +196,7 @@ body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-in
  .battle-portrait-summary>span>small{display:none}
 }
 @media(orientation:portrait) and (max-width:420px){.battle-camera.is-zoomed>span{display:none}.battle-camera.is-zoomed{justify-content:space-between}}
-@media(orientation:portrait) and (max-width:360px){.battle-hud .battle-health svg{display:none}.battle-hud small{font-size:.7rem}}
+@media(orientation:portrait) and (max-width:360px){.battle-hud .battle-health svg{display:none}.battle-hud small{font-size:.75rem}}
 .battle-large-text .battle-portrait-summary,.battle-large-text .battle-input-note,.battle-large-text .battle-commands small,.battle-large-text .battle-commands>button>svg,.battle-large-text .battle-start svg{display:none}
 .battle-large-text .battle-camera>span{display:none}
 .battle-large-text .battle-utilities button,.battle-large-text .battle-commands button{white-space:nowrap}
