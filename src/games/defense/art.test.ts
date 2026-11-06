@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import type { Projectile } from './types.ts';
+import type { CombatAttack, Projectile } from './types.ts';
 
 type Art = typeof import('./art.ts');
 
@@ -159,7 +159,6 @@ test('a complete dwarf render set shares its body scale and ground anchor across
    assert.equal(frame?.[key],idle?.[key],`${pose} must keep the same ${key}`);
  }
  assert.equal(art.idleSpriteAsset('barbarian'),null);
- assert.equal(art.idleSpriteAsset('wolf'),null);
  assert.equal(art.actionSpriteAsset('barbarian','strike')?.src,'/defense/melee-motion.webp');
  assert.equal(art.spriteAsset(0).src,'/defense/atlas.png');
  assert.equal(requests.filter(src=>/\/dwarf-.*-game\.webp$/.test(src)).length,12);
@@ -287,7 +286,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')).length,9);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')).length,9);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -642,5 +641,45 @@ test('a missing Luna cast or walk image falls back as a whole without disabling 
   assert.equal(art.directionalActionSpriteAsset('druid','strike',{x:0,y:0},{x:80,y:0}),null);
   assert.equal(art.actionSpriteAsset('druid','strike')?.src,'/defense/ranged-motion.webp');assert.ok(art.idleSpriteAsset('dwarf'));
   assert.equal(art.druidCastSocket({x:0,y:0},{x:80,y:0},84),null);
+ }
+});
+
+test('the companion wolf keeps one body across eight bite directions and grounded walk poses',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'pet-wolf-ready');
+ const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/moonlight-wolf.json',import.meta.url),'utf8'));
+ const luna=JSON.parse(readFileSync(new URL('../../../public/defense/models/luna-druid.json',import.meta.url),'utf8'));
+ for(let d=0;d<8;d++){
+  const angle=d*Math.PI/4,heading={x:Math.cos(angle),y:Math.sin(angle)},from={x:300,y:200},to={x:from.x+heading.x*65,y:from.y+heading.y*65};
+  const idle=art.directionalLocomotionSpriteAsset('wolf',heading,null)!;assert.equal(idle.src,`/defense/models/moonlight-bite-${d}-atlas.webp`);assert.equal(idle.viewBox,'0 0 256 256');
+  for(let f=0;f<8;f++){const walk=art.directionalLocomotionSpriteAsset('wolf',heading,f*8)!;assert.equal(walk.src,`/defense/models/moonlight-walk-${d}-atlas.webp`);assert.equal(walk.viewBox,`${f*256} 0 256 256`);assert.equal(walk.groundY,idle.groundY);assert.equal(walk.displayScale,idle.displayScale);assert.equal(walk.oriented,true);}
+  for(const [pose,index] of [['windup',1],['strike',2],['recover',3]] as const){
+   const asset=art.directionalActionSpriteAsset('wolf',pose,from,to)!;assert.equal(asset.viewBox,`${index*256} 0 256 256`);assert.equal(asset.displayScale,idle.displayScale);
+   assert.equal(art.directionalActionSpriteAsset('wolf',pose,from,to,true)!.viewBox,`${pose==='strike'?512:0} 0 256 256`);
+   for(const size of [73,91.25]){const p=art.petBiteSocket(from,to,size,pose)!;const [x,y]=meta.directions.bite[d].poses[index].socket;assert.ok(Math.abs(p.x-(x-192)/384*meta.frame.display_scale*size)<.0001);assert.ok(Math.abs(p.y-(y-330)/384*meta.frame.display_scale*size)<.0001);}
+  }
+  const bounds=meta.directions.bite[d].poses[0].bounds,lunaBounds=luna.directions.cast[d].poses[0].bounds;
+  const ratio=(bounds[3]-bounds[1])*73/((lunaBounds[3]-lunaBounds[1])*84);assert.ok(ratio>.4&&ratio<.85,`direction ${d} companion/owner height ${ratio}`);
+ }
+ assert.equal(requests.filter(u=>u.includes('/moonlight-')).length,16);assert.ok(!requests.some(u=>u.endsWith('.glb')));
+ assert.equal(art.spriteAsset(18).src,'/defense/snow-atlas.png','portrait retains the original companion concept');
+ assert.equal(art.monsterSpriteAsset('frostwolf','idle')!.src,'/defense/models/frost-wolf-atlas.webp','enemy model is independent');
+});
+
+test('the modeled bite cue exists only at contact and follows the current mouth position',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'pet-contact');
+ const a={actor:'wolf',source:'pet',from:{x:200,y:200},to:{x:280,y:200},elapsed:.13,hitAt:.13,duration:.41} as CombatAttack;
+ for(const elapsed of [-1,0,.129,.25,.41,NaN])assert.equal(art.petBiteContact({...a,elapsed},73),null);
+ for(const elapsed of [.13,.18,.249])assert.deepEqual(art.petBiteContact({...a,elapsed},73),art.petBiteSocket(a.from,a.to,73));
+ const moved={x:275,y:150};assert.deepEqual(art.petBiteContact(a,91.25,moved),art.petBiteSocket(moved,a.to,91.25));assert.notDeepEqual(art.petBiteContact(a,73,moved),art.petBiteContact(a,73));
+ assert.equal(art.petBiteContact({...a,actor:'dwarf'},73),null);assert.equal(art.petBiteContact({...a,duration:.1},73),null);
+ for(const size of [0,-1,NaN])assert.equal(art.petBiteContact(a,size),null);
+});
+
+test('a missing companion bite or walk atlas uses one illustrated set without changing enemies or the owner',async()=>{
+ for(const name of ['moonlight-bite-4-atlas.webp','moonlight-walk-7-atlas.webp']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(name),'pet-failed-'+name);
+  assert.equal(art.idleSpriteAsset('wolf'),null);assert.equal(art.walkingSpriteAsset('wolf',20),null);assert.equal(art.directionalActionSpriteAsset('wolf','strike',{x:0,y:0},{x:60,y:0}),null);
+  assert.equal(art.actionSpriteAsset('wolf','strike')!.src,'/defense/melee-motion.webp');assert.ok(art.idleSpriteAsset('druid'));assert.ok(art.monsterWalkingSpriteAsset('frostwolf',10));
+  assert.equal(art.petBiteContact({actor:'wolf',elapsed:.13,hitAt:.13,duration:.41,from:{x:0,y:0},to:{x:60,y:0}} as CombatAttack,73),null);
  }
 });

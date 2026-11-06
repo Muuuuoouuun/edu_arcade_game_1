@@ -756,3 +756,17 @@ test('Luna bolts keep their launch pose and size through tracking, movement and 
  const merc=until({...state,hero:'dwarf',heroCooldown:99,mercenary:'druid',mercenaryPosition:{...state.heroPosition},mercCooldown:0,promotion:'power'},s=>s.projectiles.some(p=>p.actor==='druid'));
  assert.equal(merc.projectiles.find(p=>p.actor==='druid')!.sourceSize,84,'leader promotion cannot enlarge a mercenary bolt origin');
 });
+
+test('the companion animates while catching a moving owner each frame, then settles without advancing idle time',()=>{
+ for(const owner of ['hero','mercenary'] as const){
+  let state=createDefense(1,owner==='hero'?'druid':'mage');
+  if(owner==='mercenary')state=actDefense(state,{type:'hire',hero:'druid'});
+  state=actDefense(state,{type:'move',point:{x:180,y:170}});const initial=state,original=structuredClone(state);let reachedWhileMoving=false;
+  for(let i=0;i<600;i++){
+   const before=state;state=stepDefense(state,1/60);const travel=Math.hypot(state.pet!.position.x-before.pet!.position.x,state.pet!.position.y-before.pet!.position.y);
+   if(travel>.001){assert.ok(state.locomotion.pet.speed>0);assert.ok(Math.abs(state.locomotion.pet.speed-travel*60)<1e-6);if(Math.hypot(state.pet!.position.x-state.pet!.target.x,state.pet!.position.y-state.pet!.target.y)<.01)reachedWhileMoving=true;}
+   if(i===10){const frozen=actDefense(state,{type:'pause'});assert.equal(stepDefense(frozen,.1),frozen);}
+  }
+  assert.ok(reachedWhileMoving,'a faster companion can reach each following target without standing still');assert.equal(state.locomotion.pet.speed,0);assert.equal(stepDefense(state,.1),state);assert.ok(state.locomotion.pet.distance>0);assert.deepEqual(initial,original);
+ }
+});

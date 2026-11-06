@@ -260,7 +260,8 @@ function advanceActors(s:DefenseState,dt:number,combat:boolean) {
   s.locomotion={
     hero:advanceLocomotion(s.locomotion.hero,before.hero,s.heroPosition,dt,distance(s.heroPosition,s.heroTarget)>.01,dashing),
     mercenary:s.mercenary?advanceLocomotion(s.locomotion.mercenary,before.mercenary,s.mercenaryPosition,dt,distance(s.mercenaryPosition,mercTarget)>.01):{distance:0,speed:0},
-    pet:s.pet&&before.pet?advanceLocomotion(s.locomotion.pet,before.pet,s.pet.position,dt,distance(s.pet.position,s.pet.target)>.01):{distance:0,speed:0},
+    // A faster companion can reach its moving target every frame and still be walking.
+    pet:s.pet&&before.pet?advanceLocomotion(s.locomotion.pet,before.pet,s.pet.position,dt,true):{distance:0,speed:0},
   };
 }
 function advanceEffects(s:DefenseState,dt:number) {
@@ -386,7 +387,10 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
   }
   const combat=state.phase==='wave';
   const mercTarget={x:Math.min(875,state.heroPosition.x+38),y:Math.min(565,state.heroPosition.y+35)};
-  if(!combat&&distance(state.heroPosition,state.heroTarget)<.01&&Math.hypot(state.heroVelocity.x,state.heroVelocity.y)<.01&&(!state.mercenary||distance(state.mercenaryPosition,mercTarget)<.01)&&(!state.pet||distance(state.pet.position,state.pet.target)<.01)&&state.effects.length===0)return state;
+  if(!combat&&distance(state.heroPosition,state.heroTarget)<.01&&Math.hypot(state.heroVelocity.x,state.heroVelocity.y)<.01&&(!state.mercenary||distance(state.mercenaryPosition,mercTarget)<.01)&&(!state.pet||distance(state.pet.position,state.pet.target)<.01)&&state.effects.length===0){
+    // Settle the last measured step without advancing an otherwise idle simulation.
+    return state.locomotion.pet.speed>0?{...state,locomotion:{...state.locomotion,pet:{...state.locomotion.pet,speed:0}}}:state;
+  }
   const s=copy(state),delta=Math.min(.1,dt),stage=getStage(s.stage),lengths=pathLengths(s.stage),settings=DIFFICULTIES[getDifficulty(s.difficulty)];
   const plan=battlePlan(s.stage,s.wave,s.difficulty);
   s.time+=delta;advanceEffects(s,delta);advanceActors(s,delta,combat);
