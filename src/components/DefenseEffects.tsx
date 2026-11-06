@@ -166,7 +166,7 @@ export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];re
  const sparkCounts=new Map<number,number>();
  if(!reduced&&layer==='front'){
   let remaining=64;
-  for(let i=effects.length-1;i>=0&&remaining>0;i--){const kind=effectKind(effects[i]),wanted=kind==='death'?6:kind==='shockwave'?8:kind==='impact'?4:0;if(wanted){const count=Math.min(wanted,remaining);sparkCounts.set(effects[i].id,count);remaining-=count;}}
+  for(let i=effects.length-1;i>=0&&remaining>0;i--){const kind=effectKind(effects[i]),wanted=kind==='death'?6:kind==='shockwave'?8:kind==='impact'?(effects[i].text?.includes('약점')?6:4):0;if(wanted){const count=Math.min(wanted,remaining);sparkCounts.set(effects[i].id,count);remaining-=count;}}
  }
  return <g className={`def-effects def-effects-${layer}`} aria-hidden="true" pointerEvents="none">{effects.map((e,index)=>{
   const life=e.maxLife??(e.text?.startsWith('+') ? .8 : .45),age=e.age??Math.max(0,life-e.life),p=clamp(age/life);
