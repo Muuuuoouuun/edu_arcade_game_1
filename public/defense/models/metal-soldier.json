@@ -26,7 +26,7 @@
  },
  "render": {
   "engine": "Cycles CPU",
-  "samples": 64,
+  "samples": 48,
   "transparent": true
  },
  "mesh_objects": 46,
