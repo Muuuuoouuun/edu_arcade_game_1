@@ -226,7 +226,7 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
  const dashEffect=activeEffects.filter(e=>e.kind==='dash').at(-1);
  const actorMotion=(actor:'hero'|'mercenary'|'pet')=>s.phase==='won'||s.phase==='lost'?{...s.locomotion[actor],speed:0}:s.locomotion[actor];
  const units:{id:string;y:number;render:ReactNode}[]=[];
- if(terrainAsset&&!snow)for(const y of [430,...(stage.expanded?[235]:[])])units.push({id:`bridge-front-${y}`,y:y+25,render:<BridgeFrontRail y={y}/>});
+ if(terrainAsset&&!snow)for(const y of [430,...(stage.expanded?[235]:[])])units.push({id:`bridge-front-${y}`,y:y+25,render:<BridgeFrontRail y={y} asset={terrainAsset}/>});
  for(const t of s.towers){const p=slots.find(slot=>slot.id===t.slot);if(p)units.push({id:`tower-${t.slot}`,y:p.y,render:<TowerUnit tower={t} position={p} state={s} reduced={reduced}/>});}
  for(const e of s.enemies)units.push({id:`enemy-${e.id}`,y:e.y,render:<EnemyUnit unit={unit} hpScale={hpScale} enemy={e} state={s} reduced={reduced} onActivate={()=>activateEnemy(e)} onKey={ev=>handleEnemyKey(ev,e)}/>});
  if(s.mercenary)units.push({id:'merc',y:s.mercenaryPosition.y,render:<Actor unit={unit} actor={s.mercenary} position={s.mercenaryPosition} facing={s.mercenaryFacing} motion={actorMotion('mercenary')} attack={s.attacks.find(a=>a.source==='mercenary')} time={s.time} reduced={reduced}/>});

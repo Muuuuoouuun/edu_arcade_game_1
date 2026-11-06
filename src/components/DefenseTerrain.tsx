@@ -1,25 +1,30 @@
 import { memo, useEffect, useState } from 'react';
 import { getStage, getPaths } from '../games/defense/data';
+import { BRIDGE_FRONT, hasModeledBridge, loadTerrainAsset, terrainAssetPlan } from '../games/defense/terrainAssets';
 import type { Point } from '../games/defense/types';
 const distance=(a:Point,b:Point)=>Math.hypot(a.x-b.x,a.y-b.y);
 
 export function useTerrainAsset(stageId:number):string|null {
- const stage=getStage(stageId),src=`/defense/terrain/${stage.region}-${stage.expanded?'expanded':'single'}.webp`;
+ const plan=terrainAssetPlan(stageId);
  const [ready,setReady]=useState('');
  useEffect(()=>{
-  let cancelled=false;
-  const img=new Image();
-  img.onload=()=>{if(!cancelled)setReady(src);};
-  img.onerror=()=>{if(!cancelled)setReady('');};
-  img.src=src;
-  return()=>{cancelled=true;img.onload=null;img.onerror=null;};
- },[src]);
- return ready===src?src:null;
+  let cancelled=false;const images:HTMLImageElement[]=[];
+  const load=(src:string)=>new Promise<boolean>(resolve=>{
+   const img=new Image();images.push(img);
+   img.onload=()=>{img.onload=null;img.onerror=null;resolve(true);};
+   img.onerror=()=>{img.onload=null;img.onerror=null;resolve(false);};
+   img.src=src;
+  });
+  void loadTerrainAsset(stageId,load).then(src=>{if(!cancelled)setReady(src??'');});
+  return()=>{cancelled=true;for(const img of images){img.onload=null;img.onerror=null;}};
+ },[stageId]);
+ return ready===plan.preferred||ready===plan.fallback?ready:null;
 }
 
 /** Front railing joins the same Y-sort as units, so feet pass behind it. */
-export function BridgeFrontRail({y}:{y:number}) {
- return <g className="def-bridge-front" pointerEvents="none" aria-hidden="true">
+export function BridgeFrontRail({y,asset}:{y:number;asset:string|null}) {
+ if(hasModeledBridge(asset))return <g className="def-bridge-front" data-bridge-model="baked" data-sort-y={y+BRIDGE_FRONT.sortYOffset} pointerEvents="none" aria-hidden="true"><image href={BRIDGE_FRONT.src} x={BRIDGE_FRONT.x} y={y+BRIDGE_FRONT.yOffset} width={BRIDGE_FRONT.width} height={BRIDGE_FRONT.height}/></g>;
+ return <g className="def-bridge-front" data-bridge-model="legacy" pointerEvents="none" aria-hidden="true">
   {[620,650,680,710,738].map(x=><g key={x}>
    <path d={`M${x-2} ${y+25}v-19h4v19Z`} fill="#694727" stroke="#392e20" strokeWidth=".8"/>
    <path d={`M${x-2} ${y+6}l2-2 3 1-1 3Z`} fill="#cfa567"/>

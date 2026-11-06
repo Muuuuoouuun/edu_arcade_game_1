@@ -27,6 +27,7 @@
     "models:dwarf-walk": "blender -b --python tools/blender/build_dwarf_walk.py && node tools/build-hero-sprites.mjs --walk",
     "models:wolf": "blender -b --python tools/blender/build_wolf.py",
     "models:wood": "blender -b --python tools/blender/build_wood.py",
+    "models:bridge": "node --experimental-strip-types tools/export-terrain-layout.ts && blender --python-exit-code 1 -b --python tools/blender/build_terrain.py -- --bridge",
     "models:terrain": "node --experimental-strip-types tools/export-terrain-layout.ts && blender -b --python tools/blender/build_terrain.py"
   },
   "dependencies": {

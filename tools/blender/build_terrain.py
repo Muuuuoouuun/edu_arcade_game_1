@@ -2,6 +2,7 @@
 Run after tools/export-terrain-layout.ts; no generated illustration is an input.
 """
 import bpy
+import argparse, sys
 import json
 import math
 import random
@@ -22,6 +23,9 @@ ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT/'art-source/defense'
 OUT = ROOT/'public/defense/terrain'
 OUT.mkdir(parents=True,exist_ok=True)
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from forest_bridge import build_bridge
+p=argparse.ArgumentParser();p.add_argument('--bridge',action='store_true');args=p.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 layout=json.loads((SOURCE/'terrain-layout.json').read_text())
 
 def position(x,y,z):
@@ -32,6 +36,7 @@ def material(name,color,rough=.8,grain=False):
     m=bpy.data.materials.new(name);m.diffuse_color=(*color,1);m.use_nodes=True
     node=m.node_tree.nodes.get('Principled BSDF')
     node.inputs['Roughness'].default_value=rough
+    node.inputs['Base Color'].default_value=(*color,1)
     nodes=m.node_tree.nodes;links=m.node_tree.links
     # World coordinates keep the surface continuous across individual road quads.
     geometry=nodes.new('ShaderNodeNewGeometry')
@@ -86,6 +91,9 @@ def ribbon(name,points,width,z,top,side):
     outline=LineString([tuple(p) for p in points]).buffer(width/2,cap_style='flat',join_style='round')
     assert outline.is_valid and outline.geom_type=='Polygon' and not outline.interiors
     regions=[outline]
+    if args.bridge and not snow:
+        for bridge_y in bridge_ys:outline=outline.difference(box(628,bridge_y-38,728,bridge_y+38))
+        regions=list(outline.geoms) if outline.geom_type=='MultiPolygon' else [outline]
     if callable(top):
         # Split at the exact gameplay ice boundaries, including triangles at a bend.
         regions=[outline.intersection(box(left,-1000,right,1600)) for left,right in [(-1000,300),(300,520),(520,1900)]]
@@ -109,6 +117,9 @@ def ribbon(name,points,width,z,top,side):
 
 manifest={'projection':{'width':900,'height':600,'camera':'orthographic','ground_plane':'X=(x-450), Y=(300-y-.6z)/.8'},'variants':[]}
 for variant in layout['variants']:
+    if args.bridge and variant['id'].startswith('snow'):continue
+    bridge_ys=[430]+([235] if len(variant['paths'])==2 else [])
+    fronts=[];bridge_parts=[]
     bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
     rng=random.Random(143)
     snow=variant['id'].startswith('snow')
@@ -133,6 +144,7 @@ for variant in layout['variants']:
             tangent=(b-a).normalized();normal=Vector((-tangent.y,tangent.x))
             for k in range(int(length/23)):
                 center=a+tangent*(k*23+11)
+                if args.bridge and not snow and 624<center.x<732 and any(abs(center.y-y)<42 for y in bridge_ys):continue
                 for side in (-1,1):
                     c=center+normal*side*(25+rng.uniform(-1,1))
                     half=rng.uniform(7.5,10)
@@ -155,7 +167,11 @@ for variant in layout['variants']:
             tile('High ground / access stair',x,y+17+step*4,23,6,16-step*5,stone,dark,7)
         # Masonry face seams appear on the front retaining wall.
         for dx in (-16,0,16):tile('High ground / front block',x+dx,y+17,13,3,12,stone,dark,8)
-    if not snow:
+    if args.bridge:
+        for y in bridge_ys:
+            base,front=build_bridge(y,position,tile,stone,dark,wood,rim,iron);bridge_parts.append(base+front);fronts.extend(front)
+            for obj in front:obj.hide_render=True
+    elif not snow:
         for y in [430]+([235] if len(variant['paths'])==2 else []):
             tile('Bridge / crossbeam',677,y,124,48,17,wood,dark)
             for x in range(620,739,9):
@@ -187,11 +203,15 @@ for variant in layout['variants']:
             actual=[v.x*900,(1-v.y)*600]
             assert abs(actual[0]-p['x'])<.01 and abs(actual[1]-p['y'])<.01,actual
             anchors.append({'logical':[p['x'],p['y']],'projected':[round(n,4) for n in actual]})
-    png=SOURCE/f"terrain-{variant['id']}.png";webp=OUT/f"{variant['id']}.webp"
+    suffix="-bridge" if args.bridge else ""
+    png=SOURCE/f"terrain-{variant['id']}{suffix}.png";webp=OUT/f"{variant['id']}{suffix}.webp"
     scene.render.filepath=str(png);bpy.ops.render.render(write_still=True)
     subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(png),'-c:v','libwebp','-quality','90',str(webp)],check=True)
     bpy.context.preferences.filepaths.save_version=0
-    bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE/f"terrain-{variant['id']}.blend"))
+    bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE/f"terrain-{variant['id']}{suffix}.blend"))
     manifest['variants'].append({'id':variant['id'],'file':webp.name,'bytes':webp.stat().st_size,'sha256':hashlib.sha256(webp.read_bytes()).hexdigest(),'path_anchors':anchors})
-(OUT/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+    if args.bridge and variant['id']=='forest-single':
+        from export_bridge import export_bridge
+        manifest['bridge']=export_bridge(scene,bridge_parts[0],fronts,ROOT,OUT,SOURCE)
+(OUT/('bridge-manifest.json' if args.bridge else 'manifest.json')).write_text(json.dumps(manifest,indent=2)+'\n')
 print('ARCANA_TERRAIN_COMPLETE')

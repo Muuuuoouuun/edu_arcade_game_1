@@ -13,6 +13,7 @@ const models = [
  {id:'dwarf-guardian',name:'브론 · 드워프 공병',kind:'DWARF GUARDIAN',detail:'강철 · 청동 · 가죽',description:'두꺼운 갑옷과 땋은 수염, 묵직한 망치로 드워프 공병의 실루엣을 만들었습니다. 망치를 들어 강타하고 원래 자세로 돌아옵니다.',source:'dwarf.blend',command:'npm run models:dwarf',action:'▶ 망치 강타',clip:'dwarf-hammer-attack'},
  {id:'wood-soldier',name:'나무 병사 · 통나무 파수꾼',kind:'LIVING LOG SOLDIER',detail:'통나무 · 나이테 · 뿌리 관절',description:'밝은 나이테 단면과 가지 뿔로 재료를 구분합니다. 발 접지와 팔의 엇갈림, 잎의 후속 움직임을 한 주기의 보행으로 확인하세요.',source:'wood-soldier.blend',command:'npm run models:wood',action:'▶ 보행 재생',clip:'wood-soldier-walk',loop:true},
  {id:'frost-wolf',name:'서리늑대 · 은서리 야수',kind:'SILVERFROST WOLF',detail:'회백색 털 · 짙은 발 · 청백색 눈',description:'은서리 늑대 컨셉의 낮은 몸과 긴 다리를 전투 크기에 맞췄습니다. 대각선으로 짝을 이루는 발의 접지와 목·꼬리의 후속 움직임을 확인하세요.',source:'frost-wolf.blend',command:'npm run models:wolf',action:'▶ 보행 재생',clip:'frost-wolf-trot',loop:true},
+ {id:'forest-bridge',static:true,name:'숲 마을 교량',kind:'VILLAGE CROSSING',detail:'석조 아치 · 목재 상판',description:'석재 아치와 교대가 목재 상판을 받칩니다. 앞 난간을 별도로 렌더해 전투에서 유닛과 앞뒤가 맞도록 표시합니다.',source:'forest-bridge.blend',command:'npm run models:bridge',action:'정적 구조물'},
 ];
 const $ = <T extends HTMLElement>(id:string) => document.getElementById(id) as T;
 const stage = $<HTMLDivElement>('model-stage'), status = $<HTMLParagraphElement>('model-loading'), fallback = $<HTMLImageElement>('model-fallback');
@@ -37,7 +38,7 @@ function release(object:Object3D) {
  materials(object).forEach(material => material.dispose());
 }
 // Match the dwarf render's front three-quarter view so its hammer clears the face.
-function resetView() {pivot.rotation.y = currentModelId==='dwarf-guardian'?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,2.0,0);controls?.update();}
+function resetView() {pivot.rotation.y = currentModelId==='dwarf-guardian'?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,currentModelId==='forest-bridge'?1:2.0,0);controls?.update();}
 function stopAction() {
  attackAction?.stop(); shotAt = -Infinity; stage.dataset.action = 'idle'; shoot.textContent=models.find(model=>model.id===currentModelId)?.action??'▶ 동작 재생'; redraw = true;
 }
@@ -50,7 +51,8 @@ function clearModel() {
 }
 function setReady(ready:boolean) {
  const missingAttack = !!models.find(model=>model.id===currentModelId)?.clip&&!attackAction;
- shoot.disabled = !ready || reduced.matches || missingAttack;
+ const staticModel=!!models.find(model=>model.id===currentModelId)?.static;
+ shoot.hidden=staticModel;shoot.disabled = staticModel || !ready || reduced.matches || missingAttack;
  rotate.disabled = !ready || reduced.matches;
  wire.disabled = !ready; reset.disabled = !ready;
  shoot.title = reduced.matches?'동작 줄이기 설정으로 공격 모션을 멈췄어요.':ready&&missingAttack?'이 모델에 재생할 모션이 없습니다.':'';
@@ -105,7 +107,7 @@ async function select(index:number) {
   if(ticket!==generation){release(gltf.scene);return;}
   // Keep normalization outside the animated scene: clip tracks own their local transforms.
   current = new Group(); current.add(gltf.scene);
-  const box = new Box3().setFromObject(current), size = box.getSize(new Vector3()), center = box.getCenter(new Vector3()), scale = 4.6/Math.max(size.y,.01);
+  const box = new Box3().setFromObject(current), size = box.getSize(new Vector3()), center = box.getCenter(new Vector3()), scale = model.static?6.5/Math.max(size.x,size.y,size.z,.01):4.6/Math.max(size.y,.01);
   current.scale.setScalar(scale); current.position.set(-center.x*scale,-box.min.y*scale,-center.z*scale); pivot.add(current);
   let triangles = 0, meshes = 0;
   current.traverse(node => {if(node instanceof Mesh){node.castShadow = true;node.receiveShadow = true;meshes++;triangles += (node.geometry.index?.count??node.geometry.attributes.position.count)/3;}});
@@ -133,7 +135,7 @@ models.forEach((model,index) => {
  button.onclick = () => {void select(index);}; $('model-list').append(button);
 });
 shoot.onclick = () => {
- if(!current||reduced.matches)return;
+ if(!current||reduced.matches||models.find(model=>model.id===currentModelId)?.static)return;
  const looping=models.find(model=>model.id===currentModelId)?.loop;
  if(looping&&attackAction?.isRunning()){stopAction();return;}
  shotAt = elapsed; redraw = true; stage.dataset.action = looping?'walking':'firing';
@@ -146,12 +148,17 @@ wire.onclick = () => {
  currentMaterials.forEach(material => {material.wireframe = wireEnabled;});
 };
 reset.onclick = () => {redraw = true;resetView();};
-reduced.addEventListener('change',() => {
- if(reduced.matches){automatic = false;rotate.setAttribute('aria-pressed','false');stopAction();}
+let reducedMode=reduced.matches;
+function syncReducedMotion(){
+ reducedMode=reduced.matches;
+ if(reducedMode){automatic = false;rotate.setAttribute('aria-pressed','false');stopAction();}
  setReady(!!current); redraw = true;
-});
+}
+reduced.addEventListener('change',syncReducedMotion);
 
 function draw(now:number) {
+ // Some embedded browsers update matches before dispatching the change event.
+ if(reducedMode!==reduced.matches)syncReducedMotion();
  const dt = Math.min(1,(now-last)/1000); last = now;
  if(!document.hidden){
   elapsed += dt;
