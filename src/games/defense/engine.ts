@@ -106,6 +106,12 @@ function orderedTargets(s:DefenseState,from:Point,range:number) {
 function ownerPosition(s:DefenseState,source:AttackSource,slot?:number):Point {
   return source==='hero'?s.heroPosition:source==='mercenary'?s.mercenaryPosition:source==='pet'?s.pet?.position||s.heroPosition:getSlots(s.stage)[slot||0];
 }
+/** Keep the last authored facing after recovery; this is presentation state only. */
+function aimLocomotion(s:DefenseState,source:AttackSource,from:Point,to:Point) {
+  if(source==='tower')return;
+  const length=distance(from,to);
+  if(length>.001)s.locomotion={...s.locomotion,[source]:{...s.locomotion[source],heading:{x:(to.x-from.x)/length,y:(to.y-from.y)/length}}};
+}
 function queueAttack(s:DefenseState,source:AttackSource,actor:AttackActor,from:Point,range:number,damage:number,element:Element,options:{slot?:number;area?:number;chain?:boolean;pierce?:boolean;force?:number}={}) {
   if(s.attacks.some(a=>a.source===source&&a.sourceSlot===options.slot&&!a.fired))return false;
   const target=orderedTargets(s,from,range)[0];if(!target)return false;
@@ -115,6 +121,7 @@ function queueAttack(s:DefenseState,source:AttackSource,actor:AttackActor,from:P
   const duration=hitAt+(melee?.28:.18);
   const facing=target.x<from.x?-1:1;
   if(source==='hero')s.heroFacing=facing;else if(source==='mercenary')s.mercenaryFacing=facing;else if(source==='pet'&&s.pet)s.pet.facing=facing;
+  aimLocomotion(s,source,from,target);
   if(source==='tower'){const tower=s.towers.find(t=>t.slot===options.slot);if(tower)tower.aim={...target};}
   s.attacks.push({id:s.nextId++,source,...(options.slot!==undefined?{sourceSlot:options.slot}:{}),actor,kind,from:{...from},to:{x:target.x,y:target.y},targetId:target.id,range,damage,element,area:options.area||0,force:options.force||0,chain:options.chain||false,pierce:options.pierce||false,splashLimit:source==='tower'?2:99,splashDamage:source==='tower'?.4:.7,elapsed:0,duration,hitAt,fired:false});
   return true;
@@ -142,6 +149,7 @@ function launch(s:DefenseState,a:CombatAttack) {
   a.from={...from};
   if(!target)return; // A completed windup cannot strike a target already defeated.
   a.to={x:target.x,y:target.y};
+  aimLocomotion(s,a.source,from,a.to);
   if(a.actor==='wolf'||a.actor==='dwarf'||a.actor==='barbarian'){
     if(target&&distance(from,target)<=a.range+22){resolveHit(s,target,a,from);if(a.actor==='wolf')target.slow=Math.max(target.slow,1.6);}
     else effect(s,from,a.to,a.element,undefined,'shockwave',{force:22});

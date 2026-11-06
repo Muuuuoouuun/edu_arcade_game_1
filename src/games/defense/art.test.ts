@@ -288,7 +288,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')).length,9);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')).length,9);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -414,5 +414,30 @@ test('a missing water action asset falls back only for its own upgrade level',as
    assert.ok(art.towerSpriteAsset('cannon','water',level),'authored fallback remains available');
    if(level===3&&file.includes('atlas'))assert.equal(art.towerSpriteAsset('cannon','water',3)?.src,'/defense/models/water-cannon-lv3-game.webp');
   }
+ }
+});
+
+test('Bron locomotion shares attack projection, never mirrors hands, and falls back as one set',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'dwarf-locomotion');
+ for(let direction=0;direction<8;direction++){
+  const angle=direction*Math.PI/4,heading={x:Math.cos(angle),y:Math.sin(angle)};
+  const attack=art.directionalActionSpriteAsset('dwarf','strike',{x:0,y:0},heading)!;
+  const frames=Array.from({length:8},(_,i)=>art.directionalLocomotionSpriteAsset('dwarf',heading,i*8)!);
+  assert.equal(new Set(frames.map(f=>f.viewBox)).size,8);
+  const rest=art.directionalLocomotionSpriteAsset('dwarf',heading,null)!;
+  assert.equal(rest.viewBox,'2048 0 256 256');
+  for(const f of [...frames,rest]){
+   assert.ok(f.src.endsWith(`dwarf-locomotion-${direction}-atlas.webp`));
+   assert.equal(f.oriented,true);assert.equal(f.groundY!/256,attack.groundY!/384);assert.equal(f.displayScale,attack.displayScale);
+   const [x,y,w,h]=f.viewBox.split(' ').map(Number);assert.ok(x+w<=f.width&&y+h<=f.height);
+  }
+ }
+ assert.equal(art.directionalLocomotionSpriteAsset('mage',{x:1,y:0},0),null);
+ assert.equal(art.directionalLocomotionSpriteAsset('dwarf',{x:0,y:0},0),null);
+ assert.ok(!requests.some(s=>s.endsWith('.glb')));
+ for(const file of ['dwarf-locomotion-3-atlas.webp','dwarf-idle-game.webp']){
+  const {art:failed}=await loadWithImageResults(s=>s.endsWith(file),'locomotion-missing-'+file);
+  for(let i=0;i<8;i++)assert.equal(failed.directionalLocomotionSpriteAsset('dwarf',{x:Math.cos(i),y:Math.sin(i)},0),null);
+  assert.equal(Boolean(failed.walkingSpriteAsset('dwarf',0)),file!=='dwarf-idle-game.webp');
  }
 });

@@ -31,7 +31,8 @@
     "models:terrain": "node --experimental-strip-types tools/export-terrain-layout.ts && blender -b --python tools/blender/build_terrain.py",
     "models:wolf-collapse": "blender --python-exit-code 1 -b --python tools/blender/build_wolf_collapse.py",
     "models:forest-gate": "blender --python-exit-code 1 -b --python tools/blender/build_forest_gate.py",
-    "models:forest-gate-impact": "blender --python-exit-code 1 -b --python tools/blender/build_forest_gate_impact.py"
+    "models:forest-gate-impact": "blender --python-exit-code 1 -b --python tools/blender/build_forest_gate_impact.py",
+    "models:dwarf-locomotion": "blender --python-exit-code 1 -b --python tools/blender/build_dwarf_locomotion.py"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

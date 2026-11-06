@@ -1,13 +1,14 @@
 import type { Point } from './types.ts';
 import type { EnemyKind } from './types.ts';
 
-export type Locomotion = { distance: number; speed: number };
+export type Locomotion = { distance: number; speed: number; heading?: Point };
 
 /** Visual travel belongs to simulation state, never render cadence or wall time. */
 export function advanceLocomotion(previous: Locomotion, from: Point, to: Point, dt: number, moving: boolean, dashing = false): Locomotion {
   const travel = Math.hypot(to.x - from.x, to.y - from.y);
   return {
     distance: previous.distance + (dashing ? 0 : travel),
+    ...(travel > .001 ? { heading: { x: (to.x-from.x)/travel, y: (to.y-from.y)/travel } } : previous.heading ? { heading: previous.heading } : {}),
     speed: moving && !dashing && dt > 0 ? travel / dt : 0,
   };
 }

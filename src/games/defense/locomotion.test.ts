@@ -74,3 +74,39 @@ test('enemy feet slow with movement, pause with battle and face the road while k
  const split=stepDefense(stepDefense(state,.05),.05);
  assert.ok(Math.abs(split.enemies[0].walkDistance!-normal.enemies[0].walkDistance!)<1e-9,'render cadence cannot change travelled distance');
 });
+
+test('direction follows actual travel and persists at a stop without changing the prior state',()=>{
+ const previous={distance:12,speed:0,heading:{x:1,y:0}};
+ const north=advanceLocomotion(previous,{x:20,y:20},{x:20,y:12},.1,true);
+ assert.deepEqual(north.heading,{x:0,y:-1});
+ const stop=advanceLocomotion(north,{x:20,y:12},{x:20,y:12},.1,false);
+ assert.deepEqual(stop.heading,north.heading);assert.equal(stop.speed,0);
+ assert.deepEqual(previous,{distance:12,speed:0,heading:{x:1,y:0}});
+});
+
+test('Bron keeps the last attack direction after recovery while stationary and changes it on travel',()=>{
+ const initial=createDefense(1,'dwarf');
+ const position={x:440,y:355};
+ let state={...initial,phase:'wave' as const,wave:1,spawned:waveSize(1,1),spawnTimer:99,
+  enemies:[{id:1,kind:'wood' as const,x:440,y:325,hp:1000,maxHp:1000,progress:0,path:0,speed:0,wet:0,burn:0,slow:0,hit:0}],heroPosition:position,heroTarget:position};
+ // Enemy movement follows its path before targeting. Put the hero directly below that path point.
+ state.heroPosition={x:90,y:210};state.heroTarget={...state.heroPosition};
+ state.enemies[0]={...state.enemies[0],...positionOnPath(0,90),progress:90};
+ const attacked=stepDefense(state,.01);
+ assert.ok(attacked.attacks.some(a=>a.source==='hero'));
+ assert.ok(attacked.locomotion.hero.heading!.y<-.9);
+ assert.equal(initial.locomotion.hero.heading,undefined);
+ let retargeted={...attacked,enemies:attacked.enemies.map(e=>({...e,progress:170}))};
+ for(let i=0;i<3;i++)retargeted=stepDefense(retargeted,.1);
+ const finalAttack=retargeted.attacks.find(a=>a.source==='hero')!;
+ assert.ok(finalAttack.fired);
+ const heading=retargeted.locomotion.hero.heading!,dx=finalAttack.to.x-finalAttack.from.x,dy=finalAttack.to.y-finalAttack.from.y;
+ assert.ok(Math.abs(heading.x-dx/Math.hypot(dx,dy))<1e-8,'release updates the final direction when the target moved');
+ const prior=JSON.stringify(attacked.locomotion);
+ let recovered:typeof attacked={...retargeted,enemies:[],heroCooldown:99};
+ for(let i=0;i<60;i++)recovered=stepDefense(recovered,.02);
+ assert.deepEqual(recovered.locomotion.hero.heading,retargeted.locomotion.hero.heading);
+ assert.equal(JSON.stringify(attacked.locomotion),prior);
+ const moved=stepDefense(actDefense(recovered,{type:'move',point:{x:200,y:210}}),.1);
+ assert.ok(moved.locomotion.hero.heading!.x>.9);
+});

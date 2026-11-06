@@ -3,7 +3,7 @@ import { attackOctant } from './action.ts';
 import { WATER_CANNON_MUZZLES } from './waterCannonMuzzles.ts';
 import { WATER_CANNON_LV3_MUZZLES } from './waterCannonLv3Muzzles.ts';
 import type { Branch, EnemyKind, HeroId, Point, Projectile, TowerKind } from './types';
-export type SpriteAsset = {src:string;viewBox:string;width:number;height:number;displayScale?:number;nativeFacing?:-1|1;groundY?:number};
+export type SpriteAsset = {src:string;viewBox:string;width:number;height:number;displayScale?:number;nativeFacing?:-1|1;groundY?:number;oriented?:boolean};
 export type ActionPose = 'windup'|'strike'|'recover';
 // Source frames are shared by tactical units, portraits and the growing village.
 const ORIGINAL = [[38,65,275,250],[350,65,265,255],[675,65,225,255],[950,65,280,260],[40,380,260,260],[355,360,240,280],[650,385,260,260],[965,355,270,290],[40,690,245,210],[330,650,280,270],[660,665,250,245],[965,675,270,240],[20,940,280,250],[335,950,270,250],[635,915,300,285],[960,950,270,250]];
@@ -47,6 +47,14 @@ export function directionalActionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose
  if(actor!=='dwarf'||direction===null||!dwarfModelReady()||!DWARF_DIRECTIONS.every(src=>motionLoaded.has(src)))return null;
  const frame=pose==='windup'?0:pose==='strike'?1:2;
  return {src:DWARF_DIRECTIONS[direction],viewBox:`${frame*384} 0 384 384`,width:1152,height:384,displayScale:1.2*6.8/5.8,groundY:330};
+}
+const DWARF_LOCOMOTION=Array.from({length:8},(_,i)=>`/defense/models/dwarf-locomotion-${i}-atlas.webp`);
+/** One complete direction set shares the attack camera; frame 8 is a neutral stop. */
+export function directionalLocomotionSpriteAsset(actor:HeroId|'wolf',heading:Point,distance:number|null):SpriteAsset|null {
+ const direction=attackOctant({x:0,y:0},heading);
+ if(actor!=='dwarf'||direction===null||!dwarfModelReady()||!DWARF_LOCOMOTION.every(src=>motionLoaded.has(src)))return null;
+ const frame=distance===null?8:walkFrame(distance);
+ return {src:DWARF_LOCOMOTION[direction],viewBox:`${frame*256} 0 256 256`,width:2304,height:256,displayScale:1.2*6.8/5.8,groundY:220,oriented:true};
 }
 export function idleSpriteAsset(actor:HeroId|'wolf'):SpriteAsset|null {
  return actor==='dwarf'&&dwarfModelReady()?DWARF_RENDERS.idle:null;
@@ -184,7 +192,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...DWARF_DIRECTIONS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...DWARF_DIRECTIONS,...DWARF_LOCOMOTION,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;
