@@ -11,7 +11,7 @@ export type Enemy = Point & { id:number; kind:EnemyKind; hp:number; maxHp:number
 export type Effect = { id:number; from:Point; to:Point; element:Element; life:number; text?:string; kind?:'impact'|'coin'|'death'|'skill'|'shockwave'|'chain'|'freeze'|'interrupt'|'build'|'upgrade'|'dash'|'breach'; age?:number; maxLife?:number; force?:number; targetSprite?:number; targetId?:number; sourceSlot?:number; targetKind?:EnemyKind; targetFacing?:-1|1 };
 export type DefenseState = {
  stage:number; phase:'prep'|'wave'|'intermission'|'promotion'|'won'|'lost'; paused:boolean; speed:1|2;
- time:number; wave:number; coins:number; hp:number; outpostHp:number; kills:number; leaks:number;
+ time:number; wave:number; coins:number; hp:number; outpostHp:number; kills:number; leaks:number; weakHits?:number;
  difficulty:Difficulty; heroVelocity:Point; dashCooldown:number; dashTime:number;
  enemies:Enemy[]; towers:Tower[]; effects:Effect[]; attacks:CombatAttack[]; projectiles:Projectile[]; hero:HeroId; heroPosition:Point; heroTarget:Point; heroFacing:-1|1; mercenaryPosition:Point; mercenaryFacing:-1|1; pet:PetState|null; heroCooldown:number;
  mercenary:HeroId|null; mercCooldown:number; petCooldown:number; skillCooldown:number; bossCharge:number; freeze:number; bossCycle:number; promotion:'power'|'control'|null;
