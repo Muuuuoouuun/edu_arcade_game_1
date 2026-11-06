@@ -13,9 +13,10 @@ export function attackOctant(from:Point,to:Point):number|null {
 
 export function projectileScreenPosition(p:Projectile,launchOffset:Point={x:0,y:0}) {
   const blend=1-Math.max(0,Math.min(1,p.progress)),duration=Math.max(.1,p.duration);
+  const offsetSpeed=p.progress>=0&&p.progress<1?1/duration:0;
   const heightSpeed=p.arcHeight?4*p.arcHeight*(1-2*p.progress)/duration:0;
   return {x:p.position.x+launchOffset.x*blend,y:p.position.y-27-p.height+launchOffset.y*blend,
-    angle:Math.atan2(p.velocity.y-heightSpeed-launchOffset.y/duration,p.velocity.x-launchOffset.x/duration)*180/Math.PI};
+    angle:Math.atan2(p.velocity.y-heightSpeed-launchOffset.y*offsetSpeed,p.velocity.x-launchOffset.x*offsetSpeed)*180/Math.PI};
 }
 
 /** Swept collision prevents a fast dash skipping targets between simulation steps. */

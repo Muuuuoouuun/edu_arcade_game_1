@@ -77,3 +77,15 @@ test('muzzle presentation starts at the barrel and converges to the unchanged la
  assert.deepEqual(p.position,{x:100,y:200});
  assert.equal(projectileScreenPosition(p).y,173,'other projectiles keep the existing presentation');
 });
+
+test('ballista launch origin fades to the unchanged collision path',()=>{
+ const from={x:300,y:200},to={x:450,y:240};
+ const p={from,to,position:from,progress:0,duration:.4,arcHeight:0,height:0,velocity:{x:375,y:100}} as Projectile;
+ const offset={x:12,y:-20};
+ assert.deepEqual(projectileScreenPosition(p,offset),{x:312,y:153,angle:Math.atan2(150,345)*180/Math.PI});
+ const landed={...p,position:to,progress:1};
+ assert.equal(projectileScreenPosition(landed,offset).x,projectileScreenPosition(landed).x);
+ assert.equal(projectileScreenPosition(landed,offset).y,projectileScreenPosition(landed).y);
+ assert.equal(projectileScreenPosition(landed,offset).angle,projectileScreenPosition(landed).angle,'a piercing arrow must point along its actual velocity once the launch offset has faded');
+ assert.equal(projectileScreenPosition({...landed,progress:1.2},offset).angle,projectileScreenPosition(landed).angle);
+});

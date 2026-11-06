@@ -32,7 +32,9 @@
     "models:wolf-collapse": "blender --python-exit-code 1 -b --python tools/blender/build_wolf_collapse.py",
     "models:forest-gate": "blender --python-exit-code 1 -b --python tools/blender/build_forest_gate.py",
     "models:forest-gate-impact": "blender --python-exit-code 1 -b --python tools/blender/build_forest_gate_impact.py",
-    "models:dwarf-locomotion": "blender --python-exit-code 1 -b --python tools/blender/build_dwarf_locomotion.py"
+    "models:dwarf-locomotion": "blender --python-exit-code 1 -b --python tools/blender/build_dwarf_locomotion.py",
+    "models:ballista-action": "blender --python-exit-code 1 -b --python tools/blender/build_ballista_action.py --",
+    "models:ballista-action-lv3": "blender --python-exit-code 1 -b --python tools/blender/build_ballista_action.py -- --level 3"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

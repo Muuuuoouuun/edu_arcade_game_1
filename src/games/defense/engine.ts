@@ -150,6 +150,7 @@ function launch(s:DefenseState,a:CombatAttack) {
   if(!target)return; // A completed windup cannot strike a target already defeated.
   a.to={x:target.x,y:target.y};
   aimLocomotion(s,a.source,from,a.to);
+  if(a.source==='tower'&&a.actor==='crossbow'&&a.pierce){const tower=s.towers.find(t=>t.slot===a.sourceSlot);if(tower)tower.aim={...a.to};}
   if(a.actor==='wolf'||a.actor==='dwarf'||a.actor==='barbarian'){
     if(target&&distance(from,target)<=a.range+22){resolveHit(s,target,a,from);if(a.actor==='wolf')target.slow=Math.max(target.slow,1.6);}
     else effect(s,from,a.to,a.element,undefined,'shockwave',{force:22});
@@ -159,7 +160,7 @@ function launch(s:DefenseState,a:CombatAttack) {
   const speed=kind==='arrow'?650:kind==='bolt'?460:390;
   const dx=a.to.x-from.x,dy=a.to.y-from.y,len=Math.max(1,Math.hypot(dx,dy));
   const duration=kind==='shell'?Math.max(.3,Math.min(.9,len/speed)):len/speed;
-  s.projectiles.push({...a,...(a.source==='tower'?{sourceLevel:s.towers.find(t=>t.slot===a.sourceSlot)?.level}:{}),id:s.nextId++,kind,position:{...from},previous:{...from},from:{...from},to:{...a.to},velocity:{x:dx/len*speed,y:dy/len*speed},targetId:target?.id||null,elapsed:0,duration,progress:0,arcHeight:kind==='shell'?55+len*.12:0,height:0,radius:kind==='shell'?9:kind==='arrow'?5:9,speed,hitIds:[],remainingHits:a.pierce?2:1});
+  s.projectiles.push({...a,...(a.source==='tower'&&a.actor==='crossbow'&&a.pierce?{launchAim:{...a.to}}:{}),...(a.source==='tower'?{sourceLevel:s.towers.find(t=>t.slot===a.sourceSlot)?.level}:{}),id:s.nextId++,kind,position:{...from},previous:{...from},from:{...from},to:{...a.to},velocity:{x:dx/len*speed,y:dy/len*speed},targetId:target?.id||null,elapsed:0,duration,progress:0,arcHeight:kind==='shell'?55+len*.12:0,height:0,radius:kind==='shell'?9:kind==='arrow'?5:9,speed,hitIds:[],remainingHits:a.pierce?2:1});
   if(a.source==='tower'){const tower=s.towers.find(t=>t.slot===a.sourceSlot);if(tower)tower.recoil=.24;}
 }
 function advanceAttacks(s:DefenseState,dt:number) {

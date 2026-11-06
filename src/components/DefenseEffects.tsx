@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, waterCannonProjectileOffset } from '../games/defense/art';
+import { monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, ballistaProjectileOffset, waterCannonProjectileOffset } from '../games/defense/art';
 import { projectileScreenPosition } from '../games/defense/action';
 import type { CombatAttack, Effect, Element, Point, Projectile } from '../games/defense/types';
 
@@ -42,7 +42,7 @@ export function DashTrail({effect,position,remaining,reduced}:{effect?:Effect;po
 export function ProjectileLayer({projectiles,reduced}:{projectiles:Projectile[];reduced:boolean}) {
   return <g className="def-projectiles" aria-hidden="true" pointerEvents="none">{projectiles.map((p,index)=>{
     const detail=!reduced&&index>=projectiles.length-24;
-    const {x,y,angle}=projectileScreenPosition(p,waterCannonProjectileOffset(p));
+    const {x,y,angle}=projectileScreenPosition(p,ballistaProjectileOffset(p)??waterCannonProjectileOffset(p));
     const water=p.element==='water',lightning=p.element==='lightning',green=p.actor==='druid';
     return <g key={p.id} data-projectile={p.kind} data-element={p.element} data-progress={p.progress.toFixed(3)}>
       {p.kind==='shell'?<ellipse cx={p.position.x} cy={p.position.y-1} rx={Math.max(3,9-p.height*.025)} ry="3.3" fill="#142e39" opacity={Math.max(.12,.35-p.height*.002)}/>:null}

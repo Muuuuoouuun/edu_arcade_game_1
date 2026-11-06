@@ -288,7 +288,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')).length,9);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')).length,9);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -439,5 +439,45 @@ test('Bron locomotion shares attack projection, never mirrors hands, and falls b
   const {art:failed}=await loadWithImageResults(s=>s.endsWith(file),'locomotion-missing-'+file);
   for(let i=0;i<8;i++)assert.equal(failed.directionalLocomotionSpriteAsset('dwarf',{x:Math.cos(i),y:Math.sin(i)},0),null);
   assert.equal(Boolean(failed.walkingSpriteAsset('dwarf',0)),file!=='dwarf-idle-game.webp');
+ }
+});
+
+test('ballista release and reload keep the fixed base projection and authored socket at both levels',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'ballista-action');const from={x:300,y:200};
+ for(const level of [2,3]){
+  const id='piercing-ballista'+(level===3?'-lv3':'')+'-action';
+  const metadata=JSON.parse(readFileSync(new URL(`../../../public/defense/models/${id}.json`,import.meta.url),'utf8'));
+  for(let direction=0;direction<8;direction++){
+   const a=direction*Math.PI/4,to={x:from.x+100*Math.cos(a),y:from.y+100*Math.sin(a)};
+   for(const [recoil,pose] of [[0,0],[.24,1],[.16001,1],[.16,2],[.08001,2],[.08,3],[.001,3],[-1,0],[NaN,0],[Infinity,0]]){
+    const render=art.ballistaActionSpriteAsset('crossbow','pierce',level,from,to,recoil)!;
+    assert.equal(render.pose,pose);assert.equal(render.direction,direction);
+    assert.equal(render.asset.displayScale,art.towerSpriteAsset('crossbow','pierce',level)!.displayScale);
+    const [x,y,w,h]=render.asset.viewBox.split(' ').map(Number);assert.ok(x+w<=render.asset.width&&y+h<=render.asset.height);
+    const [mx,my]=metadata.directions[direction].poses[pose].muzzle,scale=1.16*(level===3?1.025:1),size=92+level*4;
+    assert.ok(Math.abs(render.muzzle.x-(mx-320)/576*scale*size)<.001);
+    assert.ok(Math.abs(render.muzzle.y-(.1+(my-600)/576*scale)*size)<.001);
+    assert.equal(art.ballistaActionSpriteAsset('crossbow','pierce',level,from,to,recoil,true)?.pose,0);
+   }
+   const shot={source:'tower',actor:'crossbow',pierce:true,sourceLevel:level,from,to,launchAim:{...to}} as Projectile;
+   const before=structuredClone(shot),offset=art.ballistaProjectileOffset(shot);
+   assert.ok(offset);assert.deepEqual(shot,before,'rendering must not mutate simulation');
+   assert.deepEqual(art.ballistaProjectileOffset({...shot,to:{x:999,y:999}}),offset,'tracking cannot rotate the recorded launch socket');
+   assert.equal(art.ballistaProjectileOffset({...shot,launchAim:undefined}),undefined,'older projectiles preserve their previous screen path');
+  }
+ }
+ assert.equal(art.ballistaActionSpriteAsset('crossbow','rapid',2,from,{x:400,y:200}),null);
+ assert.equal(art.ballistaActionSpriteAsset('crossbow','pierce',1,from,{x:400,y:200}),null);
+ assert.ok(!requests.some(u=>u.endsWith('.glb')));
+});
+
+test('missing ballista action images only disable their own level and retain existing fallback',async()=>{
+ for(const [level,files] of [[2,['ballista-action-3-atlas.webp','piercing-ballista-game.webp']],[3,['ballista-lv3-action-3-atlas.webp','piercing-ballista-lv3-game.webp']]] as const){
+  for(const file of files){const {art}=await loadWithImageResults(s=>s.endsWith(file),'ballista-fail-'+file);const from={x:0,y:0},to={x:100,y:0};
+   assert.equal(art.ballistaActionSpriteAsset('crossbow','pierce',level,from,to),null);
+   assert.ok(art.ballistaActionSpriteAsset('crossbow','pierce',level===2?3:2,from,to));
+   assert.ok(art.towerSpriteAsset('crossbow','pierce',level));
+   assert.ok(art.waterCannonActionSpriteAsset('cannon','water',2,from,to));
+  }
  }
 });

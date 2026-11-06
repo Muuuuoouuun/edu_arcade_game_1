@@ -693,3 +693,21 @@ test('a tower strikes the enemy furthest along the road, not the nearest or olde
   const next=stepDefense(s,.02);
   assert.equal(next.attacks[0]?.targetId,2);
 });
+
+test('ballista release keeps the actual launch aim and level through tracking, upgrade and sale',()=>{
+ const s=rangedBattle('crossbow');s.coins=1000;s.towers[0].level=2;s.towers[0].branch='pierce';
+ const windup=stepDefense(s,.02);assert.equal(windup.towers[0].recoil??0,0);assert.equal(windup.projectiles.length,0);
+ const changed={...windup,enemies:windup.enemies.map(e=>({...e,progress:e.progress+25,speed:35}))};
+ const fired=until(changed,n=>n.projectiles.length>0),shot=fired.projectiles[0];
+ assert.ok(shot.launchAim);assert.deepEqual(shot.launchAim,shot.to);assert.deepEqual(fired.towers[0].aim,shot.launchAim);
+ assert.equal(shot.sourceLevel,2);assert.ok(fired.towers[0].recoil!>0);
+ const snapshot=structuredClone(shot.launchAim),tracked=stepDefense(fired,.02);
+ assert.deepEqual(tracked.projectiles[0].launchAim,snapshot);assert.deepEqual(shot.launchAim,snapshot);
+ assert.notDeepEqual(tracked.projectiles[0].to,snapshot,'tracking target moves while the launch socket stays fixed');
+ const paused=actDefense(fired,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+ const upgraded=actDefense(fired,{type:'upgrade',slot:2});assert.equal(upgraded.towers[0].level,3);
+ assert.equal(upgraded.projectiles[0].sourceLevel,2);assert.deepEqual(upgraded.projectiles[0].launchAim,snapshot);
+ const sold=actDefense(fired,{type:'sell',slot:2});assert.equal(sold.towers.length,0);assert.deepEqual(sold.projectiles[0].launchAim,snapshot);
+ const next=until({...upgraded,projectiles:[]},n=>n.projectiles.some(p=>p.sourceLevel===3));assert.ok(next.projectiles.some(p=>p.sourceLevel===3&&p.launchAim));
+ const empty=until({...windup,enemies:[]},n=>n.attacks.length===0);assert.equal(empty.projectiles.length,0);assert.equal(empty.towers[0].recoil??0,0);
+});

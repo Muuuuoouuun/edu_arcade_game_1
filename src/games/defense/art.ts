@@ -1,5 +1,7 @@
 import { enemyWalkFrame, walkFrame } from './locomotion.ts';
 import { attackOctant } from './action.ts';
+import { BALLISTA_MUZZLES } from './ballistaMuzzles.ts';
+import { BALLISTA_LV3_MUZZLES } from './ballistaLv3Muzzles.ts';
 import { WATER_CANNON_MUZZLES } from './waterCannonMuzzles.ts';
 import { WATER_CANNON_LV3_MUZZLES } from './waterCannonLv3Muzzles.ts';
 import type { Branch, EnemyKind, HeroId, Point, Projectile, TowerKind } from './types';
@@ -103,6 +105,25 @@ export function waterCannonActionSpriteAsset(kind:TowerKind,branch:Branch|null,l
  const [x,y]=(mastered?WATER_CANNON_LV3_MUZZLES:WATER_CANNON_MUZZLES)[direction][pose],size=92+level*4;
  return {direction,pose,muzzle:{x:x*size,y:y*size},asset:{src:atlases[direction],viewBox:`${pose*384+19.2} 14.4 345.6 345.6`,width:1152,height:384,displayScale:1.16*(mastered?1.025:1)} as SpriteAsset};
 }
+const BALLISTA_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/ballista-action-${i}-atlas.webp`);
+const BALLISTA_LV3_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/ballista-lv3-action-${i}-atlas.webp`);
+/** Release only after the engine fires; the foundation never recoils with the bow. */
+export function ballistaActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,from:Point,to:Point,recoil=0,reduced=false) {
+ const direction=attackOctant(from,to);
+ if(kind!=='crossbow'||branch!=='pierce'||(level!==2&&level!==3)||direction===null)return null;
+ const mastered=level===3,atlases=mastered?BALLISTA_LV3_ACTION_ATLASES:BALLISTA_ACTION_ATLASES;
+ const base=mastered?BAKED_TOWERS.crossbow.mastered!:BAKED_TOWERS.crossbow.asset;
+ if(!motionLoaded.has(base.src)||!atlases.every(src=>motionLoaded.has(src)))return null;
+ const pose=reduced||!Number.isFinite(recoil)||recoil<=0?0:recoil>.16?1:recoil>.08?2:3;
+ const [x,y]=(mastered?BALLISTA_LV3_MUZZLES:BALLISTA_MUZZLES)[direction][pose],size=92+level*4;
+ return {direction,pose,muzzle:{x:x*size,y:y*size},asset:{src:atlases[direction],viewBox:`${pose*256+12.8} 9.6 230.4 230.4`,width:1024,height:256,displayScale:1.16*(mastered?1.025:1)} as SpriteAsset};
+}
+/** Keep a released arrow at its launch-level socket even if the tower upgrades or sells. */
+export function ballistaProjectileOffset(p:Projectile):Point|undefined {
+ if(p.source!=='tower'||p.actor!=='crossbow'||!p.pierce||!p.launchAim||(p.sourceLevel!==2&&p.sourceLevel!==3))return undefined;
+ const render=ballistaActionSpriteAsset('crossbow','pierce',p.sourceLevel,p.from,p.launchAim);
+ return render?{x:render.muzzle.x,y:12+render.muzzle.y+27}:undefined;
+}
 /** Presentation offset fades to zero on landing; collision coordinates stay untouched. */
 export function waterCannonProjectileOffset(p:Projectile):Point|undefined {
  if(p.source!=='tower'||p.actor!=='cannon'||p.element!=='water'||(p.sourceLevel!==2&&p.sourceLevel!==3))return undefined;
@@ -192,7 +213,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...DWARF_DIRECTIONS,...DWARF_LOCOMOTION,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...DWARF_DIRECTIONS,...DWARF_LOCOMOTION,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

@@ -7,7 +7,7 @@ import type { Locomotion } from '../games/defense/locomotion';
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getSlots } from '../games/defense/data';
-import { actionSpriteAsset, directionalActionSpriteAsset, directionalLocomotionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset, waterCannonActionSpriteAsset } from '../games/defense/art';
+import { actionSpriteAsset, directionalActionSpriteAsset, directionalLocomotionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset, ballistaActionSpriteAsset, waterCannonActionSpriteAsset } from '../games/defense/art';
 import type { SpriteAsset, ActionPose } from '../games/defense/art';
 import type { DefenseThemeId } from '../games/defense/themes';
 import { DefenseThemeScenery, ModeledGate, useGateAsset, useGateImpactAsset } from './DefenseThemeScenery';
@@ -127,7 +127,7 @@ function TowerUnit({tower:t,position:p,state:s,reduced}:{tower:Tower;position:Po
  const progress=placement?clamp((placement.age??0)/(placement.maxLife??.8)):1,ease=1-Math.pow(1-progress,3),building=placement?.kind==='build';
  const lift=reduced?0:building?(1-ease)*12:0,scale=reduced?1:building?.86+.14*ease:1;
  const rock=reduced?0:dx*(windup*1.7-recoil*(t.kind==='cannon'?3.5:1.8));
- const articulated=waterCannonActionSpriteAsset(t.kind,t.branch,t.level,p,aim,t.recoil??0,reduced);
+ const articulated=ballistaActionSpriteAsset(t.kind,t.branch,t.level,p,aim,t.recoil??0,reduced)??waterCannonActionSpriteAsset(t.kind,t.branch,t.level,p,aim,t.recoil??0,reduced);
  const shot=recoil>.02,flash=recoil>.48,muzzle=articulated?.muzzle??{x:dx*23,y:-55+dy*13};
  const art=articulated?.asset??towerSpriteAsset(t.kind,t.branch,t.level);
  return <g className={`def-tower def-tower-${t.kind} ${s.freeze>0?'def-tower-frozen':''}`} transform={`translate(${p.x},${p.y+12})`} data-action-frame={articulated?.pose} data-aim-octant={articulated?.direction} data-tower={t.kind} data-branch={t.branch??'base'} data-level={t.level} data-recoil={recoil.toFixed(2)} data-tower-phase={phase??'idle'}>
@@ -141,7 +141,7 @@ function TowerUnit({tower:t,position:p,state:s,reduced}:{tower:Tower;position:Po
    <g transform={`scale(1,.45) rotate(${reduced?0:s.time*(t.branch==='lightning'?42:23)+t.slot*31})`} opacity={.38+windup*.35}><path d="M-16 0A16 16 0 0 1 9-13M16 0A16 16 0 0 1-9 13" fill="none" stroke={t.branch==='fire'?'#ffcf88':'#b8efff'} strokeWidth="2"/><circle cx="16" r="2.2" fill={color}/><circle cx="-16" r="2.2" fill={color}/></g>
    {windup>0&&t.branch==='lightning'?<path d={`M-13 6-6 ${-5-windup*8} 0 2 8 ${-10-windup*5} 14 4`} fill="none" stroke="#e1fbff" strokeWidth="1.5" opacity={windup}/>:null}
   </g>:null}
-  {windup>0&&t.kind==='crossbow'?<g transform={`translate(${muzzle.x-dx*windup*5},${muzzle.y-dy*windup*5}) rotate(${angle})`} opacity={.45+windup*.5}><path d="M-12 0H10m-9-5 5 5-5 5" fill="none" stroke="#f0dab0" strokeWidth="1.5"/><path d={`M-4-13 ${-5-windup*5} 0-4 13`} fill="none" stroke="#c2b793" strokeWidth="1"/></g>:null}
+  {windup>0&&t.kind==='crossbow'&&!articulated?<g transform={`translate(${muzzle.x-dx*windup*5},${muzzle.y-dy*windup*5}) rotate(${angle})`} opacity={.45+windup*.5}><path d="M-12 0H10m-9-5 5 5-5 5" fill="none" stroke="#f0dab0" strokeWidth="1.5"/><path d={`M-4-13 ${-5-windup*5} 0-4 13`} fill="none" stroke="#c2b793" strokeWidth="1"/></g>:null}
   {windup>0&&t.kind==='cannon'?<circle cx={muzzle.x} cy={muzzle.y} r={5+windup*4} fill={`url(#${t.branch==='water'?'def-blue-core':'def-fire-core'})`} opacity={windup*.6}/>:null}
   {flash?<g transform={`translate(${muzzle.x},${muzzle.y}) rotate(${angle})`} opacity={recoil}>
    <circle r={reduced?8:t.kind==='cannon'?23:15} fill={`url(#${element==='fire'||element==='impact'?'def-fire-core':'def-blue-core'})`}/>
