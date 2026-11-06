@@ -71,6 +71,7 @@ export const enemyMass = (kind:EnemyKind) => ({sprout:.8,wood:1.4,ice:1.8,stone:
 function hit(s:DefenseState,e:Enemy,amount:number,element:Element,from:Point,force=0) {
   if(e.hp<=0)return;
   const multiplier=damageMultiplier(e.kind,element);
+  if(multiplier>1)s.weakHits=(s.weakHits||0)+1;
   e.hp-=amount*multiplier;e.hit=.16;e.recoil=.22;
   if(element==='fire')e.burn=Math.max(e.burn,2.5);
   if(element==='water'){e.wet=5;e.slow=2.7;}

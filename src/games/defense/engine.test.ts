@@ -114,12 +114,14 @@ test('hit numbers label weak, resisted and neutral matchups without changing dam
     const s=battlefield();s.towers=[{slot:2,kind:'cannon',branch,level:2,cooldown:0}];
     const e=enemy(kind,1);e.progress=410;e.speed=0;Object.assign(e,positionOnPath(0,e.progress));s.enemies=[e];
     const next=advance(s,1);
-    return {texts:next.effects.filter(f=>f.targetId===1&&f.text).map(f=>f.text as string),hp:next.enemies[0]?.hp??0};
+    return {texts:next.effects.filter(f=>f.targetId===1&&f.text).map(f=>f.text as string),hp:next.enemies[0]?.hp??0,weakHits:next.weakHits||0};
   };
   const resisted=labels('wood','water'),weak=labels('wood','fire');
   assert.ok(resisted.texts.length>0&&resisted.texts.every(t=>t.startsWith('내성 ')),'water vs wood is labelled as resisted');
   assert.ok(weak.texts.length>0&&weak.texts.every(t=>t.startsWith('약점! ')),'fire vs wood is labelled as weak');
   assert.ok(resisted.hp<ENEMIES.wood.hp,'resisted hits still deal damage');
+  assert.equal(resisted.weakHits,0,'resisted hits are not counted as weak hits');
+  assert.equal(weak.weakHits,weak.texts.length,'every weak label is counted exactly once');
 });
 
 test('water attacks slow and wet a group and rain supplies a natural conductive state',()=>{
