@@ -7,13 +7,13 @@ import type { Locomotion } from '../games/defense/locomotion';
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getSlots } from '../games/defense/data';
-import { actionSpriteAsset, hammerSequenceSpriteAsset, hammerContactTrail, mageCastSocket, taoSealSocket, directionalActionSpriteAsset, directionalLocomotionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset, ballistaActionSpriteAsset, waterCannonActionSpriteAsset } from '../games/defense/art';
+import { actionSpriteAsset, hammerSequenceSpriteAsset, hammerContactTrail, mageCastSocket, taoSealSocket, druidCastSocket, directionalActionSpriteAsset, directionalLocomotionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset, ballistaActionSpriteAsset, waterCannonActionSpriteAsset } from '../games/defense/art';
 import type { SpriteAsset, ActionPose } from '../games/defense/art';
 import type { DefenseThemeId } from '../games/defense/themes';
 import { DefenseThemeScenery, ModeledGate, useGateAsset, useGateImpactAsset } from './DefenseThemeScenery';
 import { towerRange, positionOnPath } from '../games/defense/engine';
 import type { CombatAttack, DefenseState, Effect, Element, Enemy, HeroId, Point, Tower } from '../games/defense/types';
-import { AttackTrails, DashTrail, DefenseFxDefs, EffectLayer, FX_COLORS, ProjectileLayer } from './DefenseEffects';
+import { AttackTrails, DashTrail, DefenseFxDefs, EffectLayer, FX_COLORS, hitCore, ProjectileLayer } from './DefenseEffects';
 import { BoardTapTracker, clientToBoard, resolveBoardTap } from './defenseInput';
 import type { ScreenMatrix } from './defenseInput';
 import { hpBarScale, unitScale } from './defenseFrame';
@@ -54,19 +54,19 @@ function Actor({unit=1,actor,position,facing,motion,velocity,dashTime=0,attack,s
  const dashing=dashTime>0,moving=motion.speed>.5,speed=dashing&&velocity?Math.hypot(velocity.x,velocity.y):motion.speed,pace=clamp(speed/230);
  const skillAge=skill?.age??Infinity,casting=skillAge<.5;
  const phase=casting?(skillAge<.18?'strike':'recover'):dashing?null:attack?attackPhase(attack):null;
- const orientedRest=!phase&&(!dashing||actor==='mage'||actor==='elf'||actor==='tao')?directionalLocomotionSpriteAsset(actor,motion.heading??{x:facing,y:0},moving&&!dashing&&!reduced?motion.distance:null):null;
+ const orientedRest=!phase&&(!dashing||actor==='mage'||actor==='elf'||actor==='tao'||actor==='druid')?directionalLocomotionSpriteAsset(actor,motion.heading??{x:facing,y:0},moving&&!dashing&&!reduced?motion.distance:null):null;
  const walking=!phase&&!dashing&&moving&&!reduced?orientedRest??walkingSpriteAsset(actor,motion.distance):null;
  const hammer=attack&&phase&&!casting&&!dashing?hammerSequenceSpriteAsset(actor,attack,reduced):null;
- const skillDirection=(actor==='mage'||actor==='elf'||actor==='tao')&&casting&&phase?directionalActionSpriteAsset(actor,phase,position,{x:position.x+(motion.heading?.x??facing),y:position.y+(motion.heading?.y??0)},reduced):null;
- const directional=hammer??skillDirection??(attack&&phase&&!casting&&!dashing?directionalActionSpriteAsset(actor,phase,actor==='mage'||actor==='elf'||actor==='tao'?position:attack.from,attack.to,reduced):null);
- const castSocket=(actor==='mage'||actor==='tao')&&attack&&directional?(actor==='mage'?mageCastSocket:taoSealSocket)(position,attack.to,size,reduced&&phase!=='strike'?'idle':phase??'idle'):null;
+ const skillDirection=(actor==='mage'||actor==='elf'||actor==='tao'||actor==='druid')&&casting&&phase?directionalActionSpriteAsset(actor,phase,position,{x:position.x+(motion.heading?.x??facing),y:position.y+(motion.heading?.y??0)},reduced):null;
+ const directional=hammer??skillDirection??(attack&&phase&&!casting&&!dashing?directionalActionSpriteAsset(actor,phase,actor==='mage'||actor==='elf'||actor==='tao'||actor==='druid'?position:attack.from,attack.to,reduced):null);
+ const castSocket=(actor==='mage'||actor==='tao'||actor==='druid')&&attack&&directional?(actor==='mage'?mageCastSocket:actor==='tao'?taoSealSocket:druidCastSocket)(position,attack.to,size,reduced&&phase!=='strike'?'idle':phase??'idle'):null;
  const hammerTrail=hammer&&!reduced&&attack?hammerContactTrail(attack,size):null;
  const art=directional??(phase?actionSpriteAsset(actor,phase):walking??orientedRest??idleSpriteAsset(actor));
  const aim=!dashing&&attack&&Math.abs(attack.to.x-attack.from.x)>.5?(attack.to.x>attack.from.x?1:-1):facing;
  let bob=0,lean=0,offset=0,sx=1,sy=1;
  if(!reduced){
   if(dashing){lean=(velocity?.x??aim*speed)/Math.max(1,speed)*14;bob=-2;sx=1.045;sy=.955;}
-  else if(casting&&!((actor==='mage'||actor==='elf'||actor==='tao')&&directional)){
+  else if(casting&&!((actor==='mage'||actor==='elf'||actor==='tao'||actor==='druid')&&directional)){
    const power=1-clamp(skillAge/.5),melee=actor==='barbarian'||actor==='dwarf';
    offset=aim*power*(melee?14:5);lean=aim*power*(melee?12:-5);bob=-Math.sin(clamp(skillAge/.5)*Math.PI)*(melee?3:5);sx=1+power*.04;sy=1-power*.04;
   }else if(attack&&!directional){
@@ -76,14 +76,14 @@ function Actor({unit=1,actor,position,facing,motion,velocity,dashTime=0,attack,s
   }else if(moving&&!walking&&!directional){const stride=Math.sin(motion.distance/WALK_STRIDE*Math.PI*2);bob=-Math.abs(stride)*(wolf?3.8:3)*pace;lean=(velocity?velocity.x/230:facing*.6)*6+stride*1.5*pace;sx=1+Math.abs(stride)*.025*pace;sy=1-Math.abs(stride)*.018*pace;}
   else if(!walking&&!directional&&!orientedRest)sy=1+Math.sin(time*2.3+index)*.008;
  }
- return <g className={`def-motion-actor ${wolf?'def-pet':leader?'def-hero':'def-merc'} ${casting?'def-skill-cast':''} ${dashing?'def-dashing':''}`} transform={`translate(${position.x},${position.y})`} data-actor={actor} data-walk-distance={motion.distance.toFixed(2)} data-walk-frame={walking?.viewBox} data-motion-asset={art?.src} data-heading={motion.heading?`${motion.heading.x.toFixed(3)},${motion.heading.y.toFixed(3)}`:undefined} data-tao-frame={actor==='tao'&&art?.src.includes('/cheongun-')?Number(art.viewBox.split(' ')[0])/256:undefined} data-elf-frame={actor==='elf'&&art?.src.includes('/riel-')?Number(art.viewBox.split(' ')[0])/256:undefined} data-mage-frame={actor==='mage'&&art?.src.includes('/ian-')?Number(art.viewBox.split(' ')[0])/256:undefined} data-hammer-frame={hammer?Number(hammer.viewBox.split(' ')[0])/256:undefined} data-attack-phase={phase??(dashing?'dash':moving?'walk':'idle')} data-skill-phase={casting?phase:undefined} data-facing={aim} data-dashing={leader?dashing:undefined} data-velocity={leader?`${Math.round(velocity?.x??0)},${Math.round(velocity?.y??0)}`:undefined}>
+ return <g className={`def-motion-actor ${wolf?'def-pet':leader?'def-hero':'def-merc'} ${casting?'def-skill-cast':''} ${dashing?'def-dashing':''}`} transform={`translate(${position.x},${position.y})`} data-actor={actor} data-walk-distance={motion.distance.toFixed(2)} data-walk-frame={walking?.viewBox} data-motion-asset={art?.src} data-heading={motion.heading?`${motion.heading.x.toFixed(3)},${motion.heading.y.toFixed(3)}`:undefined} data-druid-frame={actor==='druid'&&art?.src.includes('/luna-')?Number(art.viewBox.split(' ')[0])/256:undefined} data-tao-frame={actor==='tao'&&art?.src.includes('/cheongun-')?Number(art.viewBox.split(' ')[0])/256:undefined} data-elf-frame={actor==='elf'&&art?.src.includes('/riel-')?Number(art.viewBox.split(' ')[0])/256:undefined} data-mage-frame={actor==='mage'&&art?.src.includes('/ian-')?Number(art.viewBox.split(' ')[0])/256:undefined} data-hammer-frame={hammer?Number(hammer.viewBox.split(' ')[0])/256:undefined} data-attack-phase={phase??(dashing?'dash':moving?'walk':'idle')} data-skill-phase={casting?phase:undefined} data-facing={aim} data-dashing={leader?dashing:undefined} data-velocity={leader?`${Math.round(velocity?.x??0)},${Math.round(velocity?.y??0)}`:undefined}>
   {leader?<ellipse cy="1" rx="30" ry="12" fill="#d3f8a129" stroke="#e3f6a5" strokeWidth="1.8" opacity=".85"/>:wolf?<ellipse cy="1" rx="23" ry="8" fill="#c9f3ff25" stroke="#cfeddd" strokeWidth="1"/>:null}
   {moving&&!dashing&&!reduced?<g opacity={.2*pace}><ellipse cx={-facing*17} cy="3" rx="10" ry="3" fill="#f2dec4"/><ellipse cx={-facing*28} cy="5" rx="5" ry="2" fill="#f2dec4"/></g>:null}
   {casting?<ellipse cy="-4" rx={32+(reduced?0:skillAge*26)} ry="12" fill="none" stroke={actor==='druid'?'#c4ef96':actor==='mage'?'#ffc585':'#d5f5ff'} strokeWidth="2" opacity={1-skillAge*1.7}/>:null}
   <Sprite index={index} size={size} flip={!directional&&!art?.oriented&&((aim<0)!==(art?.nativeFacing===-1))} art={art} pose={`translate(${offset},${bob}) rotate(${lean}) scale(${sx},${sy})`} shadowScale={1+bob*.02}/>
   {hammerTrail&&attack?<path data-hammer-trail="modeled" d={hammerTrail.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(3)} ${p.y.toFixed(3)}`).join(' ')} fill="none" stroke="#d6edf7" strokeWidth={2.5*unit} strokeLinecap="round" strokeLinejoin="round" opacity={.55*(1-clamp((attack.elapsed-attack.hitAt)/((attack.duration-attack.hitAt)*.22)))}/>:null}
-  {castSocket&&attack&&phase==='windup'?<circle data-cast-socket={actor} cx={castSocket.x} cy={castSocket.y} r={5+4*clamp(attack.elapsed/attack.hitAt)} fill={`url(#${actor==='tao'?'def-blue-core':'def-fire-core'})`} opacity=".55"/>:null}
-  {attack&&phase==='windup'&&attack.kind==='spell'&&!castSocket?<g transform="translate(0,-43)" opacity={.35+.35*clamp(attack.elapsed/Math.max(.05,attack.hitAt))}><circle cx={aim*24} cy="-5" r={7+clamp(attack.elapsed/Math.max(.05,attack.hitAt))*9} fill={`url(#${attack.element==='fire'?'def-fire-core':attack.actor==='druid'?'def-green-core':'def-blue-core'})`}/></g>:null}
+  {castSocket&&attack&&phase==='windup'?<circle data-cast-socket={actor} cx={castSocket.x} cy={castSocket.y} r={5+4*clamp(attack.elapsed/attack.hitAt)} fill={`url(#${actor==='tao'?'def-spark-core':actor==='druid'?'def-green-core':'def-fire-core'})`} opacity=".55"/>:null}
+  {attack&&phase==='windup'&&attack.kind==='spell'&&!castSocket?<g transform="translate(0,-43)" opacity={.35+.35*clamp(attack.elapsed/Math.max(.05,attack.hitAt))}><circle cx={aim*24} cy="-5" r={7+clamp(attack.elapsed/Math.max(.05,attack.hitAt))*9} fill={`url(#${attack.element==='fire'?'def-fire-core':attack.actor==='druid'?'def-green-core':attack.element==='water'||attack.element==='lightning'?hitCore(attack.element):'def-blue-core'})`}/></g>:null}
   {promoted?<text y={-size*.92} fill="#ffe3a2" fontSize="18" textAnchor="middle" className="def-world-label">✦</text>:null}
   {wolf?<text y="20" textAnchor="middle" className="def-pet-label">달빛 늑대</text>:null}
  </g>;
@@ -128,7 +128,7 @@ function TowerUnit({tower:t,position:p,state:s,reduced}:{tower:Tower;position:Po
  const length=Math.max(1,distance(p,aim)),dx=(aim.x-p.x)/length,dy=(aim.y-p.y)/length,angle=Math.atan2(dy,dx)*180/Math.PI;
  const recoil=clamp((t.recoil??0)/.24),phase=attack?attackPhase(attack):null,windup=phase==='windup'&&attack?clamp(attack.elapsed/attack.hitAt):0;
  const element:Element=t.branch==='fire'?'fire':t.branch==='lightning'?'lightning':t.branch==='water'?'water':t.kind==='cannon'?'impact':t.kind==='magic'?'fire':'physical';
- const color=FX_COLORS[element],core=t.branch==='fire'?'def-fire-core':'def-blue-core';
+ const color=FX_COLORS[element],core=element==='water'||element==='lightning'||t.branch==='fire'?hitCore(element):'def-blue-core';
  const placement=s.effects.filter(e=>e.sourceSlot===t.slot&&(e.kind==='build'||e.kind==='upgrade')).at(-1);
  const progress=placement?clamp((placement.age??0)/(placement.maxLife??.8)):1,ease=1-Math.pow(1-progress,3),building=placement?.kind==='build';
  const lift=reduced?0:building?(1-ease)*12:0,scale=reduced?1:building?.86+.14*ease:1;
@@ -148,9 +148,9 @@ function TowerUnit({tower:t,position:p,state:s,reduced}:{tower:Tower;position:Po
    {windup>0&&t.branch==='lightning'?<path d={`M-13 6-6 ${-5-windup*8} 0 2 8 ${-10-windup*5} 14 4`} fill="none" stroke="#e1fbff" strokeWidth="1.5" opacity={windup}/>:null}
   </g>:null}
   {windup>0&&t.kind==='crossbow'&&!articulated?<g transform={`translate(${muzzle.x-dx*windup*5},${muzzle.y-dy*windup*5}) rotate(${angle})`} opacity={.45+windup*.5}><path d="M-12 0H10m-9-5 5 5-5 5" fill="none" stroke="#f0dab0" strokeWidth="1.5"/><path d={`M-4-13 ${-5-windup*5} 0-4 13`} fill="none" stroke="#c2b793" strokeWidth="1"/></g>:null}
-  {windup>0&&t.kind==='cannon'?<circle cx={muzzle.x} cy={muzzle.y} r={5+windup*4} fill={`url(#${t.branch==='water'?'def-blue-core':'def-fire-core'})`} opacity={windup*.6}/>:null}
+  {windup>0&&t.kind==='cannon'?<circle cx={muzzle.x} cy={muzzle.y} r={5+windup*4} fill={`url(#${t.branch==='water'?'def-water-core':'def-fire-core'})`} opacity={windup*.6}/>:null}
   {flash?<g transform={`translate(${muzzle.x},${muzzle.y}) rotate(${angle})`} opacity={recoil}>
-   <circle r={reduced?8:t.kind==='cannon'?23:15} fill={`url(#${element==='fire'||element==='impact'?'def-fire-core':'def-blue-core'})`}/>
+   <circle r={reduced?8:t.kind==='cannon'?23:15} fill={`url(#${element==='fire'||element==='impact'?'def-fire-core':element==='water'||element==='lightning'?hitCore(element):'def-blue-core'})`}/>
    {!reduced?<path d={t.kind==='crossbow'?'M-2-3 20 0-22 3Z':'m0-4 22-5-9 9 9 9-22-5-7-4Z'} fill={element==='water'?'#d9fcff':'#fff3c3'} opacity=".85"/>:null}
   </g>:null}
   {shot&&!reduced&&t.kind==='cannon'?<g transform={`translate(${muzzle.x+dx*(1-recoil)*14},${muzzle.y-10*(1-recoil)})`} opacity={recoil*.3}><ellipse rx={7+(1-recoil)*10} ry={5+(1-recoil)*7} fill={t.branch==='water'?'#caedee':'#dfd6bd'}/><ellipse cx={-dx*10} cy="-5" rx={5+(1-recoil)*5} ry="5" fill={t.branch==='water'?'#e5faff':'#f1e9d9'}/></g>:null}

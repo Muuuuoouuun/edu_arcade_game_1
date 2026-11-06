@@ -158,10 +158,9 @@ test('a complete dwarf render set shares its body scale and ground anchor across
   for(const key of ['viewBox','width','height','displayScale','nativeFacing','groundY'] as const)
    assert.equal(frame?.[key],idle?.[key],`${pose} must keep the same ${key}`);
  }
- assert.equal(art.idleSpriteAsset('druid'),null);
+ assert.equal(art.idleSpriteAsset('barbarian'),null);
  assert.equal(art.idleSpriteAsset('wolf'),null);
  assert.equal(art.actionSpriteAsset('barbarian','strike')?.src,'/defense/melee-motion.webp');
- assert.equal(art.actionSpriteAsset('druid','strike')?.src,'/defense/ranged-motion.webp');
  assert.equal(art.spriteAsset(0).src,'/defense/atlas.png');
  assert.equal(requests.filter(src=>/\/dwarf-.*-game\.webp$/.test(src)).length,12);
  assert.equal(requests.some(src=>src.endsWith('.glb')),false,'battle must not request articulated realtime models');
@@ -288,7 +287,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')).length,9);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')).length,9);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -313,7 +312,7 @@ test('walk frames require a complete walk and base set and preserve the shared g
   for(const key of ['viewBox','width','height','displayScale','groundY','nativeFacing'] as const)assert.equal(frame[key],idle[key]);
  }
  assert.equal(art.walkingSpriteAsset('dwarf',64)?.src,art.walkingSpriteAsset('dwarf',0)?.src);
- assert.equal(art.walkingSpriteAsset('druid',8),null);
+ assert.equal(art.walkingSpriteAsset('barbarian',8),null);
  for(const missing of ['walk-3','strike']){
   const {art:partial}=await loadWithImageResults(src=>src.endsWith(`/dwarf-${missing}-game.webp`),`walk-missing-${missing}`);
   assert.equal(partial.walkingSpriteAsset('dwarf',8),null);
@@ -345,7 +344,7 @@ test('dwarf directional attacks share the idle scale and ground and fall back as
  }
  assert.equal(requests.filter(src=>src.includes('/dwarf-attack-')).length,8);
  assert.equal(art.directionalActionSpriteAsset('dwarf','strike',from,from),null);
- assert.equal(art.directionalActionSpriteAsset('druid','strike',from,{x:250,y:200}),null);
+ assert.equal(art.directionalActionSpriteAsset('barbarian','strike',from,{x:250,y:200}),null);
  for(const failedFile of ['dwarf-attack-6-atlas.webp','dwarf-windup-game.webp']){
   const {art:failed}=await loadWithImageResults(src=>src.endsWith(failedFile),failedFile);
   for(const pose of ['windup','strike','recover'] as const)assert.equal(failed.directionalActionSpriteAsset('dwarf',pose,from,{x:250,y:200}),null);
@@ -432,7 +431,7 @@ test('Bron locomotion shares attack projection, never mirrors hands, and falls b
    const [x,y,w,h]=f.viewBox.split(' ').map(Number);assert.ok(x+w<=f.width&&y+h<=f.height);
   }
  }
- assert.equal(art.directionalLocomotionSpriteAsset('druid',{x:1,y:0},0),null);
+ assert.equal(art.directionalLocomotionSpriteAsset('barbarian',{x:1,y:0},0),null);
  assert.equal(art.directionalLocomotionSpriteAsset('dwarf',{x:0,y:0},0),null);
  assert.ok(!requests.some(s=>s.endsWith('.glb')));
  for(const file of ['dwarf-locomotion-3-atlas.webp','dwarf-idle-game.webp']){
@@ -614,5 +613,34 @@ test('a missing Cheongun cast or walk image falls back as a whole without disabl
   assert.equal(art.directionalActionSpriteAsset('tao','strike',{x:0,y:0},{x:80,y:0}),null);
   assert.equal(art.actionSpriteAsset('tao','strike')?.src,'/defense/ranged-motion.webp');assert.ok(art.idleSpriteAsset('dwarf'));
   assert.equal(art.taoSealSocket({x:0,y:0},{x:80,y:0},84),null);
+ }
+});
+
+test('Luna uses one complete modeled body and projection for idle, walking and eight cast directions',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'luna-ready');
+ const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/luna-druid.json',import.meta.url),'utf8'));
+ for(let d=0;d<8;d++){
+  const angle=d*Math.PI/4,heading={x:Math.cos(angle),y:Math.sin(angle)},from={x:300,y:200},to={x:from.x+heading.x*80,y:from.y+heading.y*80};
+  const idle=art.directionalLocomotionSpriteAsset('druid',heading,null)!;assert.equal(idle.src,`/defense/models/luna-cast-${d}-atlas.webp`);assert.equal(idle.viewBox,'0 0 256 256');
+  for(let frame=0;frame<8;frame++){const walk=art.directionalLocomotionSpriteAsset('druid',heading,frame*8)!;assert.equal(walk.viewBox,`${frame*256} 0 256 256`);assert.equal(walk.groundY,idle.groundY);assert.equal(walk.displayScale,idle.displayScale);assert.equal(walk.oriented,true);}
+  for(const [pose,index] of [['windup',1],['strike',2],['recover',3]] as const){
+   const asset=art.directionalActionSpriteAsset('druid',pose,from,to)!;assert.equal(asset.viewBox,`${index*256} 0 256 256`);assert.equal(asset.groundY,idle.groundY);assert.equal(asset.displayScale,idle.displayScale);
+   assert.equal(art.directionalActionSpriteAsset('druid',pose,from,to,true)!.viewBox,`${pose==='strike'?512:0} 0 256 256`);
+   for(const size of [84,94,105,117.5]){const socket=art.druidCastSocket(from,to,size,pose)!;const [x,y]=meta.directions.cast[d].poses[index].socket;assert.ok(Math.abs(socket.x-(x-192)/384*meta.frame.display_scale*size)<.0001);assert.ok(Math.abs(socket.y-(y-330)/384*meta.frame.display_scale*size)<.0001);}
+  }
+  const shot={source:'hero',actor:'druid',sourceSize:84,from,to,launchAim:{...to}} as Projectile,original=structuredClone(shot),offset=art.druidProjectileOffset(shot,1.25)!;
+  const socket=art.druidCastSocket(from,to,105)!;assert.deepEqual(offset,{x:socket.x,y:socket.y+27});assert.deepEqual(shot,original);
+  assert.deepEqual(art.druidProjectileOffset({...shot,to:{x:999,y:999}},1.25),offset);assert.equal(art.druidProjectileOffset({...shot,launchAim:undefined}),undefined);
+ }
+ assert.equal(requests.filter(u=>u.includes('/luna-')).length,16);assert.ok(!requests.some(u=>u.endsWith('.glb')));assert.equal(art.spriteAsset(17).src,'/defense/snow-atlas.png','portraits retain the concept illustration');
+});
+
+test('a missing Luna cast or walk image falls back as a whole without disabling other models',async()=>{
+ for(const file of ['luna-cast-4-atlas.webp','luna-walk-7-atlas.webp']){
+  const {art}=await loadWithImageResults(s=>s.endsWith(file),'luna-fail-'+file);
+  assert.equal(art.idleSpriteAsset('druid'),null);assert.equal(art.walkingSpriteAsset('druid',20),null);
+  assert.equal(art.directionalActionSpriteAsset('druid','strike',{x:0,y:0},{x:80,y:0}),null);
+  assert.equal(art.actionSpriteAsset('druid','strike')?.src,'/defense/ranged-motion.webp');assert.ok(art.idleSpriteAsset('dwarf'));
+  assert.equal(art.druidCastSocket({x:0,y:0},{x:80,y:0},84),null);
  }
 });

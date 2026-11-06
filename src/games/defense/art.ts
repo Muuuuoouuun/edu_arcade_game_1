@@ -2,6 +2,7 @@ import { enemyWalkFrame, walkFrame } from './locomotion.ts';
 import { attackOctant, dwarfHammerFrame } from './action.ts';
 import { MAGE_SOCKETS } from './mageSockets.ts';
 import { ELF_SOCKETS } from './elfSockets.ts';
+import { DRUID_SOCKETS } from './druidSockets.ts';
 import { TAO_SOCKETS } from './taoSockets.ts';
 import { DWARF_HAMMER_TRAIL } from './dwarfHammerTrail.ts';
 import { BALLISTA_MUZZLES } from './ballistaMuzzles.ts';
@@ -58,6 +59,25 @@ export function mageProjectileOffset(p:Projectile,unit=1):Point|undefined {
  const socket=mageCastSocket(p.from,p.launchAim,p.sourceSize*unit);
  return socket?{x:socket.x,y:socket.y+27}:undefined;
 }
+const DRUID_CAST=Array.from({length:8},(_,i)=>`/defense/models/luna-cast-${i}-atlas.webp`);
+const DRUID_WALK=Array.from({length:8},(_,i)=>`/defense/models/luna-walk-${i}-atlas.webp`);
+function druidModelReady(){return [...DRUID_CAST,...DRUID_WALK].every(src=>motionLoaded.has(src));}
+function druidAsset(direction:number,mode:'cast'|'walk',frame:number):SpriteAsset|null {
+ if(!druidModelReady())return null;
+ return {src:(mode==='cast'?DRUID_CAST:DRUID_WALK)[direction],viewBox:`${frame*256} 0 256 256`,width:mode==='cast'?1024:2048,height:256,groundY:220,displayScale:1.2*6.8/5.8,oriented:true};
+}
+export function druidCastSocket(from:Point,to:Point,size:number,pose:ActionPose|'idle'='strike'):Point|null {
+ const direction=attackOctant(from,to);
+ if(direction===null||!druidModelReady()||!Number.isFinite(size)||size<=0)return null;
+ const frame=pose==='idle'?0:pose==='windup'?1:pose==='strike'?2:3;
+ const [x,y]=DRUID_SOCKETS[direction][frame];return {x:x*size,y:y*size};
+}
+/** Use the launch-time pose and size; following, promotion and moving cannot move a released bolt's origin. */
+export function druidProjectileOffset(p:Projectile,unit=1):Point|undefined {
+ if(p.actor!=='druid'||!p.launchAim||(p.source!=='hero'&&p.source!=='mercenary')||(p.sourceSize!==84&&p.sourceSize!==94))return undefined;
+ const socket=druidCastSocket(p.from,p.launchAim,p.sourceSize*unit);
+ return socket?{x:socket.x,y:socket.y+27}:undefined;
+}
 const TAO_CAST=Array.from({length:8},(_,i)=>`/defense/models/cheongun-cast-${i}-atlas.webp`);
 const TAO_WALK=Array.from({length:8},(_,i)=>`/defense/models/cheongun-walk-${i}-atlas.webp`);
 function taoModelReady(){return [...TAO_CAST,...TAO_WALK].every(src=>motionLoaded.has(src));}
@@ -107,6 +127,7 @@ const DWARF_DIRECTIONS=Array.from({length:8},(_,i)=>`/defense/models/dwarf-attac
 /** Rotate the authored model instead of mirroring its asymmetric hammer/shield. */
 export function directionalActionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose,from:Point,to:Point,reduced=false):SpriteAsset|null {
  const direction=attackOctant(from,to);
+ if(actor==='druid'&&direction!==null)return druidAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='tao'&&direction!==null)return taoAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='elf'&&direction!==null)return elfAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='mage'&&direction!==null)return mageAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
@@ -132,6 +153,7 @@ const DWARF_LOCOMOTION=Array.from({length:8},(_,i)=>`/defense/models/dwarf-locom
 /** One complete direction set shares the attack camera; frame 8 is a neutral stop. */
 export function directionalLocomotionSpriteAsset(actor:HeroId|'wolf',heading:Point,distance:number|null):SpriteAsset|null {
  const direction=attackOctant({x:0,y:0},heading);
+ if(actor==='druid'&&direction!==null)return druidAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
  if(actor==='tao'&&direction!==null)return taoAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
  if(actor==='elf'&&direction!==null)return elfAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
  if(actor==='mage'&&direction!==null)return mageAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
@@ -140,13 +162,14 @@ export function directionalLocomotionSpriteAsset(actor:HeroId|'wolf',heading:Poi
  return {src:DWARF_LOCOMOTION[direction],viewBox:`${frame*256} 0 256 256`,width:2304,height:256,displayScale:1.2*6.8/5.8,groundY:220,oriented:true};
 }
 export function idleSpriteAsset(actor:HeroId|'wolf'):SpriteAsset|null {
- return actor==='tao'?taoAsset(1,'cast',0):actor==='elf'?elfAsset(1,'cast',0):actor==='mage'?mageAsset(1,'cast',0):actor==='dwarf'&&dwarfModelReady()?DWARF_RENDERS.idle:null;
+ return actor==='druid'?druidAsset(1,'cast',0):actor==='tao'?taoAsset(1,'cast',0):actor==='elf'?elfAsset(1,'cast',0):actor==='mage'?mageAsset(1,'cast',0):actor==='dwarf'&&dwarfModelReady()?DWARF_RENDERS.idle:null;
 }
 const DWARF_WALK = Array.from({length:8},(_,i):SpriteAsset=>({
  ...DWARF_RENDERS.idle,src:`/defense/models/dwarf-walk-${i}-game.webp`,
 }));
 /** A partial walk set keeps the existing modeled idle pose, never mixes styles. */
 export function walkingSpriteAsset(actor:HeroId|'wolf',distance:number):SpriteAsset|null {
+ if(actor==='druid')return druidAsset(1,'walk',walkFrame(distance));
  if(actor==='tao')return taoAsset(1,'walk',walkFrame(distance));
  if(actor==='elf')return elfAsset(1,'walk',walkFrame(distance));
  if(actor==='mage')return mageAsset(1,'walk',walkFrame(distance));
@@ -280,6 +303,7 @@ export function monsterDeathSpriteAsset(kind:EnemyKind,progress:number,reduced=f
 }
 /** Long weapons need a larger viewport to keep the actor's body size consistent. */
 export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAsset|null {
+ if(actor==='druid'&&druidModelReady())return druidAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='tao'&&taoModelReady())return taoAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='elf'&&elfModelReady())return elfAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='mage'&&mageModelReady())return mageAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);
@@ -300,7 +324,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

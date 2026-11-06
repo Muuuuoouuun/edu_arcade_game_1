@@ -6,6 +6,8 @@ import { PMREMGenerator } from 'three';
 import './model-lab.css';
 
 const models = [
+ {id:'luna-druid',name:'루나 · 숲의 드루이드',kind:'WOODLAND DRUID',detail:'여우 귀 · 구리빛 머리 · 잎 지팡이',description:'지팡이를 모아 준비한 뒤 수정 끝을 앞으로 내밀어 시전합니다. 두 발은 지면을 짚고 귀·머리카락·망토가 뒤따라 움직입니다.',source:'luna-druid.blend',command:'npm run models:druid',action:'▶ 숲의 시전',clip:'luna-cast'},
+ {id:'luna-druid-walk',name:'루나 · 방향 보행',kind:'WOODLAND DRUID',detail:'양발 지지 · 옷자락 · 머리카락',description:'지팡이를 들고 양발의 지지와 회수를 번갈아 이어갑니다. 여덟 방향 전투 이미지도 같은 원본으로 렌더합니다.',source:'luna-druid-walk.blend',command:'npm run models:druid',action:'▶ 보행 재생',clip:'luna-walk',loop:true},
  {id:'cheongun-tao',name:'청운 · 부적술사',kind:'TALISMAN CASTER',detail:'청록 도포 · 넓은 소매 · 붉은 매듭',description:'부적을 들어 올린 뒤 팔을 뻗어 시전합니다. 두 발은 지면을 짚고 소매·종이 끝·머리카락이 뒤따라 움직입니다.',source:'cheongun-tao.blend',command:'npm run models:tao',action:'▶ 부적 시전',clip:'cheongun-cast'},
  {id:'cheongun-tao-walk',name:'청운 · 방향 보행',kind:'TALISMAN CASTER',detail:'도포 자락 · 장화 · 발 접지',description:'장화의 지지와 회수를 번갈아 연결하고 도포 자락과 머리카락이 따라 움직입니다. 전투도 같은 원본에서 여덟 방향으로 렌더합니다.',source:'cheongun-tao-walk.blend',command:'npm run models:tao',action:'▶ 보행 재생',clip:'cheongun-walk',loop:true},
  {id:'riel-archer',name:'리엘 · 숲 명사수',kind:'FOREST ARCHER',detail:'초록 후드 · 금발 · 곡선 활',description:'두 발로 버티고 활대와 시위를 당겼다가 화살을 놓습니다. 팔·시위·화살의 실제 움직임과 복귀를 확인하세요.',source:'riel-archer.blend',command:'npm run models:elf',action:'▶ 활 발사',clip:'riel-cast'},
@@ -48,7 +50,7 @@ function release(object:Object3D) {
  materials(object).forEach(material => material.dispose());
 }
 // Match the dwarf render's front three-quarter view so its hammer clears the face.
-function resetView() {pivot.rotation.y = (currentModelId.startsWith('dwarf-')||currentModelId.startsWith('ian-')||currentModelId.startsWith('riel-')||currentModelId.startsWith('cheongun-'))?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,currentModelId==='forest-bridge'?1:2.0,0);controls?.update();}
+function resetView() {pivot.rotation.y = (currentModelId.startsWith('dwarf-')||currentModelId.startsWith('ian-')||currentModelId.startsWith('riel-')||currentModelId.startsWith('cheongun-')||currentModelId.startsWith('luna-'))?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,currentModelId==='forest-bridge'?1:2.0,0);controls?.update();}
 function stopAction() {
  attackAction?.stop(); shotAt = -Infinity; stage.dataset.action = 'idle'; shoot.textContent=models.find(model=>model.id===currentModelId)?.action??'▶ 동작 재생'; redraw = true;
 }
