@@ -10,7 +10,7 @@ export function spriteAsset(index:number):SpriteAsset {
  // Portraits crop out the shared action-frame margin; battle keeps the full frame.
  if(index===2){const model=idleSpriteAsset('dwarf');if(model)return {...model,viewBox:'180 172 392 430'};}
  if(index>=4&&index<=6){const model=towerSpriteAsset((['crossbow','magic','cannon'] as const)[index-4]);if(model)return model;}
- const kind=({9:'wood',10:'ice',11:'stone',13:'insulator',14:'boss',19:'frostwolf',20:'frostboss'} as Record<number,EnemyKind>)[index];
+ const kind=({9:'wood',10:'ice',11:'stone',12:'metal',13:'insulator',14:'boss',19:'frostwolf',20:'frostboss'} as Record<number,EnemyKind>)[index];
  if(kind){const model=monsterSpriteAsset(kind,'idle');if(model)return model;}
  if(index<16) return {src:'/defense/atlas.png',viewBox:ORIGINAL[index].join(' '),width:1254,height:1254};
  if(index<22)return {src:'/defense/snow-atlas.png',viewBox:SNOW[index-16].join(' '),width:1024,height:1536};
@@ -87,7 +87,7 @@ type ModelFrame=[number,number,number,number];
 type MonsterModel={span:number;frames:ModelFrame[];atlas?:{src:string;width:number;height:number};fallback?:MonsterModel};
 /** Baked Blender monster renders (tools/blender/build_<name>.py): 384px frames, walk-a/walk-b/hit, one shared crop band. */
 const bakedAtlas=(file:string)=>({src:`/defense/models/${file}-atlas.webp`,width:1152,height:384});
-const SLIME_ATLAS=bakedAtlas('insulator-slime'),GOLEM_ATLAS=bakedAtlas('stone-golem'),WOOD_ATLAS=bakedAtlas('wood-soldier'),ICE_ATLAS=bakedAtlas('ice-knight'),WOLF_ATLAS=bakedAtlas('frost-wolf');
+const SLIME_ATLAS=bakedAtlas('insulator-slime'),GOLEM_ATLAS=bakedAtlas('stone-golem'),WOOD_ATLAS=bakedAtlas('wood-soldier'),ICE_ATLAS=bakedAtlas('ice-knight'),WOLF_ATLAS=bakedAtlas('frost-wolf'),METAL_ATLAS=bakedAtlas('metal-soldier');
 const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
  wood:{span:360,frames:[[0,8,384,364],[384,8,384,364],[768,8,384,364]],atlas:WOOD_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
@@ -101,6 +101,8 @@ const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
  frostwolf:{span:315,frames:[[6,68,360,242],[390,68,360,242],[774,68,360,242]],atlas:WOLF_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
   fallback:{span:350,frames:[[15,1101,365,304],[394,1105,347,300],[756,1087,330,318]]}},
+ // No illustrated pose set exists for the metal soldier: if the render fails the single atlas.png frame stays.
+ metal:{span:260,frames:[[22,67,340,255],[406,67,340,255],[790,67,340,255]],atlas:METAL_ATLAS},
  insulator:{span:330,frames:[[39,81,317,242],[423,81,317,242],[807,81,317,242]],atlas:SLIME_ATLAS},
 };
 const BOSS_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
