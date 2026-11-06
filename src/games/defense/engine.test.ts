@@ -597,3 +597,19 @@ test('several ordinary kills in one tick share a single summed coin popup while 
   const coins=next.effects.filter(e=>e.kind==='coin');
   assert.equal(coins.length,1);assert.equal(coins[0].text,'+50 ×3');
 });
+
+test('a tower re-aims when its windup target falls; out-of-range or empty fields stay a clean miss',()=>{
+  const s=rangedBattle('cannon');s.enemies=[positionedEnemy('metal',1,410),positionedEnemy('metal',2,430)];
+  const winding=stepDefense(s,.02),lead=winding.attacks[0].targetId,other=lead===1?2:1;
+  const survivor=winding.enemies.filter(e=>e.id===other);
+  const fired=until({...winding,enemies:survivor},n=>n.projectiles.length>0);
+  assert.equal(fired.projectiles[0].targetId,other);assert.equal(fired.towers[0].aim?.x,survivor[0].x);
+  const empty=until({...winding,enemies:[]},n=>n.attacks.length===0);assert.equal(empty.projectiles.length,0);
+  const far=until({...winding,enemies:[positionedEnemy('metal',3,900)]},n=>n.attacks.length===0);assert.equal(far.projectiles.length,0);
+});
+
+test('hero attacks carry a finite splash limit so a saved battle survives JSON',()=>{
+  const s=battlefield();s.hero='barbarian';s.heroCooldown=0;s.enemies=[positionedEnemy('metal',1,410)];
+  const a=until(s,n=>n.attacks.some(x=>x.source==='hero')).attacks.find(x=>x.source==='hero');assert.ok(a);
+  assert.ok(Number.isFinite(a.splashLimit));assert.equal(JSON.parse(JSON.stringify(a)).splashLimit,a.splashLimit);
+});
