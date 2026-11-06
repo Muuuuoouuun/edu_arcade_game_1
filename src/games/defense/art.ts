@@ -94,7 +94,7 @@ const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
   fallback:{span:350,frames:[[15,1101,365,304],[394,1105,347,300],[756,1087,330,318]]}},
  // No illustrated pose set exists for the metal soldier: if the render fails the single atlas.png frame stays.
  metal:{span:260,frames:[[22,67,340,255],[406,67,340,255],[790,67,340,255]],atlas:METAL_ATLAS},
- insulator:{span:330,frames:[[39,81,317,242],[423,81,317,242],[807,81,317,242]],atlas:SLIME_ATLAS},
+ insulator:{span:330,frames:[[39,78,317,245],[423,78,317,245],[807,78,317,245]],atlas:SLIME_ATLAS},
 };
 const BOSS_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
  boss:{span:345,frames:[[42,105,349,340],[490,50,382,395],[933,111,393,334],[1381,177,363,268]]},
