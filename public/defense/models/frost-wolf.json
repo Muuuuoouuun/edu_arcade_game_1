@@ -2,8 +2,9 @@
  "id": "frost-wolf",
  "source": "art-source/defense/frost-wolf.blend",
  "generator": "tools/blender/build_wolf.py",
+ "reference": "art-source/defense/concepts/2026-10-29/beasts/silverfrost-wolf.png",
  "blender": "4.3.2",
- "kind": "baked 2.5D sprite atlas (not a GLB)",
+ "kind": "articulated GLB and baked 2.5D atlases",
  "nativeFacing": 1,
  "frame": {
   "width": 384,
@@ -12,7 +13,13 @@
    192.0,
    284.49
   ],
-  "orthographic_scale": 6.400000095367432
+  "orthographic_scale": 6.400000095367432,
+  "common_crop": [
+   8,
+   100,
+   368,
+   228
+  ]
  },
  "atlas": {
   "file": "frost-wolf-atlas.webp",
@@ -24,11 +31,38 @@
   "width": 1152,
   "height": 384
  },
+ "walk": {
+  "file": "frost-wolf-trot-atlas.webp",
+  "frames": 8,
+  "width": 3072,
+  "height": 384,
+  "stride_world": 40,
+  "clip": "frost-wolf-trot",
+  "duration_seconds": 0.8,
+  "rig": "articulated rigid parts; diagonal trot, no skin"
+ },
  "render": {
   "engine": "Cycles CPU",
-  "samples": 96,
+  "samples": 64,
   "transparent": true
  },
- "mesh_objects": 63,
- "evaluated_polygons": 1981
+ "mesh_objects": 66,
+ "polygons": 1856,
+ "files": [
+  {
+   "file": "frost-wolf-atlas.webp",
+   "bytes": 24084,
+   "sha256": "1b287625df49041b044e6c5be25fe8e24902fcec7449787e2203ab9893b421d2"
+  },
+  {
+   "file": "frost-wolf-trot-atlas.webp",
+   "bytes": 62356,
+   "sha256": "544ff989a3de9ae771b91c5a86c5f5c99cf3d671b79c9f4806c0332903772ee0"
+  },
+  {
+   "file": "frost-wolf.glb",
+   "bytes": 257028,
+   "sha256": "5615c1a0c51ecc4f1f013aa39f07892fa5b9b9c137cfbd93e4c87b4cb4afc9e5"
+  }
+ ]
 }

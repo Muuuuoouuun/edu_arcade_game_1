@@ -3,6 +3,23 @@ import assert from 'node:assert/strict';
 
 type Art = typeof import('./art.ts');
 
+test('wolf trot keeps eight frames on the base pose ground and never mixes a partial model set',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'wolf-trot-ready');
+ const base=art.monsterSpriteAsset('frostwolf','hit')!;
+ const frames=Array.from({length:8},(_,i)=>art.monsterWalkingSpriteAsset('frostwolf',i*5)!);
+ assert.equal(new Set(frames.map(f=>f.viewBox)).size,8);
+ for(const frame of frames){
+  assert.equal(frame.groundY,base.groundY);assert.equal(frame.displayScale,base.displayScale);
+  const [x,y,w,h]=frame.viewBox.split(' ').map(Number);assert.ok(x+w<=frame.width&&y+h<=frame.height);
+ }
+ for(const file of ['frost-wolf-atlas.webp','frost-wolf-trot-atlas.webp']){
+  const {art:failed}=await loadWithImageResults(src=>src.endsWith('/'+file),`wolf-trot-missing-${file}`);
+  assert.equal(failed.monsterWalkingSpriteAsset('frostwolf',10),null);
+  assert.equal(failed.monsterSpriteAsset('frostwolf','hit')?.src,file==='frost-wolf-atlas.webp'?'/defense/monster-models.webp':base.src);
+  assert.ok(failed.monsterWalkingSpriteAsset('wood',10),'wolf loading cannot disable wood gait');
+ }
+});
+
 test('wood gait uses all eight frames at a fixed ground anchor and falls back as a complete set',async()=>{
  const {art}=await loadWithImageResults(()=>false,'wood-gait');
  const base=art.monsterSpriteAsset('wood','hit')!;
@@ -250,8 +267,8 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
- for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')).length,7);
+ for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')).length,8);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{

@@ -11,6 +11,7 @@ const models = [
  {id:'water-cannon',name:'물폭탄포',kind:'HYDRAULIC TOWER',detail:'황동 · 유리 · 물',description:'유리 탱크와 배관이 압력 포신으로 연결됩니다. 포신 반동과 물 코어의 움직임을 확인하세요.',source:'towers.blend',command:'npm run models:build',action:'▶ 발사 동작'},
  {id:'dwarf-guardian',name:'브론 · 드워프 공병',kind:'DWARF GUARDIAN',detail:'강철 · 청동 · 가죽',description:'두꺼운 갑옷과 땋은 수염, 묵직한 망치로 드워프 공병의 실루엣을 만들었습니다. 망치를 들어 강타하고 원래 자세로 돌아옵니다.',source:'dwarf.blend',command:'npm run models:dwarf',action:'▶ 망치 강타',clip:'dwarf-hammer-attack'},
  {id:'wood-soldier',name:'나무 병사 · 통나무 파수꾼',kind:'LIVING LOG SOLDIER',detail:'통나무 · 나이테 · 뿌리 관절',description:'밝은 나이테 단면과 가지 뿔로 재료를 구분합니다. 발 접지와 팔의 엇갈림, 잎의 후속 움직임을 한 주기의 보행으로 확인하세요.',source:'wood-soldier.blend',command:'npm run models:wood',action:'▶ 보행 재생',clip:'wood-soldier-walk',loop:true},
+ {id:'frost-wolf',name:'서리늑대 · 은서리 야수',kind:'SILVERFROST WOLF',detail:'회백색 털 · 짙은 발 · 청백색 눈',description:'은서리 늑대 컨셉의 낮은 몸과 긴 다리를 전투 크기에 맞췄습니다. 대각선으로 짝을 이루는 발의 접지와 목·꼬리의 후속 움직임을 확인하세요.',source:'frost-wolf.blend',command:'npm run models:wolf',action:'▶ 보행 재생',clip:'frost-wolf-trot',loop:true},
 ];
 const $ = <T extends HTMLElement>(id:string) => document.getElementById(id) as T;
 const stage = $<HTMLDivElement>('model-stage'), status = $<HTMLParagraphElement>('model-loading'), fallback = $<HTMLImageElement>('model-fallback');
