@@ -268,7 +268,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')).length,8);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/water-action-')).length,8);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -331,4 +331,28 @@ test('dwarf directional attacks share the idle scale and ground and fall back as
   for(const pose of ['windup','strike','recover'] as const)assert.equal(failed.directionalActionSpriteAsset('dwarf',pose,from,{x:250,y:200}),null);
   assert.ok(failed.actionSpriteAsset('dwarf','strike'),'legacy model or illustration remains available');
  }
+});
+
+
+test('water cannon rotates its complete Lv.2 set and uses only actual recoil to select poses',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'water-action');const from={x:300,y:200};
+ for(let i=0;i<8;i++){
+  const to={x:300+Math.cos(i*Math.PI/4)*100,y:200+Math.sin(i*Math.PI/4)*100};
+  for(const [recoil,pose] of [[0,0],[.24,1],[.1,2]]){
+   const rendered=art.waterCannonActionSpriteAsset('cannon','water',2,from,to,recoil)!;
+   assert.equal(rendered.direction,i);assert.equal(rendered.pose,pose);
+   assert.equal(rendered.asset.src,`/defense/models/water-action-${i}-atlas.webp`);
+   assert.ok(Number.isFinite(rendered.muzzle.x)&&Number.isFinite(rendered.muzzle.y));
+   assert.equal(rendered.asset.displayScale,art.towerSpriteAsset('cannon','water',2)!.displayScale);
+  }
+  assert.equal(art.waterCannonActionSpriteAsset('cannon','water',2,from,to,.24,true)?.pose,0);
+ }
+ assert.equal(requests.filter(src=>src.includes('/water-action-')).length,8);
+ const to={x:400,y:200};
+ assert.equal(art.waterCannonActionSpriteAsset('cannon','water',3,from,to),null);
+ assert.equal(art.waterCannonActionSpriteAsset('cannon','crush',2,from,to),null);
+ assert.equal(art.waterCannonActionSpriteAsset('cannon','water',2,from,from),null);
+ const {art:failed}=await loadWithImageResults(src=>src.endsWith('water-action-3-atlas.webp'),'water-action-failure');
+ assert.equal(failed.waterCannonActionSpriteAsset('cannon','water',2,from,to),null);
+ assert.equal(failed.towerSpriteAsset('cannon','water',2)?.src,'/defense/models/water-cannon-game.webp');
 });

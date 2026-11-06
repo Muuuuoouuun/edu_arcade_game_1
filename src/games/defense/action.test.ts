@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDefense, actDefense, stepDefense, positionOnPath } from './engine.ts';
-import { attackOctant, DASH_DAMAGE, distanceToSegment, knockbackPresentation } from './action.ts';
-import type { Enemy } from './types.ts';
+import { projectileScreenPosition, attackOctant, DASH_DAMAGE, distanceToSegment, knockbackPresentation } from './action.ts';
+import type { Enemy, Projectile } from './types.ts';
 
 function battle(hp=1000) {
   const state=createDefense(4,'dwarf');
@@ -62,4 +62,18 @@ test('attack octants preserve vertical aim, wrap west and ignore invalid or coin
  assert.equal(attackOctant(from,from),null);
  assert.equal(attackOctant(from,{x:NaN,y:200}),null);
  assert.equal(attackOctant(from,{x:Infinity,y:200}),null);
+});
+
+
+test('muzzle presentation starts at the barrel and converges to the unchanged landing point',()=>{
+ const p={position:{x:100,y:200},velocity:{x:150,y:60},height:0,arcHeight:80,duration:.6,progress:0} as Projectile;
+ const offset={x:20,y:-35};
+ const start=projectileScreenPosition(p,offset);assert.equal(start.x,120);assert.equal(start.y,138);
+ const middle=projectileScreenPosition({...p,position:{x:145,y:218},progress:.5,height:80},offset);
+ assert.equal(middle.x,155);assert.equal(middle.y,93.5);
+ const landed={...p,position:{x:190,y:236},progress:1};
+ assert.equal(projectileScreenPosition(landed,offset).x,190);
+ assert.equal(projectileScreenPosition(landed,offset).y,209);
+ assert.deepEqual(p.position,{x:100,y:200});
+ assert.equal(projectileScreenPosition(p).y,173,'other projectiles keep the existing presentation');
 });

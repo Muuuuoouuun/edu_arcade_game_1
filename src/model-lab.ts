@@ -8,7 +8,7 @@ import './model-lab.css';
 const models = [
  {id:'fire-tower',name:'화염 수정탑',kind:'ELEMENTAL TOWER',detail:'돌 · 청동 · 발광 수정',description:'층층이 쌓은 석재 위에 청동 발톱이 수정을 지탱합니다. 마력 코어가 회전하며 불꽃을 모읍니다.',source:'towers.blend',command:'npm run models:build',action:'▶ 발사 동작'},
  {id:'piercing-ballista',name:'관통 발리스타',kind:'SIEGE WEAPON',detail:'오크 · 황동 · 강철',description:'보강한 목재 프레임과 거대한 활대, 긴 관통탄을 조합했습니다. 발사 후 장전 장치가 복귀합니다.',source:'towers.blend',command:'npm run models:build',action:'▶ 발사 동작'},
- {id:'water-cannon',name:'물폭탄포',kind:'HYDRAULIC TOWER',detail:'황동 · 유리 · 물',description:'유리 탱크와 배관이 압력 포신으로 연결됩니다. 포신 반동과 물 코어의 움직임을 확인하세요.',source:'towers.blend',command:'npm run models:build',action:'▶ 발사 동작'},
+ {id:'water-cannon',asset:'water-cannon-action',clip:'water-cannon-fire',name:'물폭탄포',kind:'HYDRAULIC TOWER',detail:'황동 · 유리 · 물',description:'원형 기초 위에서 물탱크·배관·포신이 함께 조준합니다. 발사할 때 포신만 뒤로 밀리고 천천히 복귀합니다.',source:'water-cannon-action.blend',command:'npm run models:water-action',action:'▶ 발사 동작'},
  {id:'dwarf-guardian',name:'브론 · 드워프 공병',kind:'DWARF GUARDIAN',detail:'강철 · 청동 · 가죽',description:'두꺼운 갑옷과 땋은 수염, 묵직한 망치로 드워프 공병의 실루엣을 만들었습니다. 망치를 들어 강타하고 원래 자세로 돌아옵니다.',source:'dwarf.blend',command:'npm run models:dwarf',action:'▶ 망치 강타',clip:'dwarf-hammer-attack'},
  {id:'wood-soldier',name:'나무 병사 · 통나무 파수꾼',kind:'LIVING LOG SOLDIER',detail:'통나무 · 나이테 · 뿌리 관절',description:'밝은 나이테 단면과 가지 뿔로 재료를 구분합니다. 발 접지와 팔의 엇갈림, 잎의 후속 움직임을 한 주기의 보행으로 확인하세요.',source:'wood-soldier.blend',command:'npm run models:wood',action:'▶ 보행 재생',clip:'wood-soldier-walk',loop:true},
  {id:'frost-wolf',name:'서리늑대 · 은서리 야수',kind:'SILVERFROST WOLF',detail:'회백색 털 · 짙은 발 · 청백색 눈',description:'은서리 늑대 컨셉의 낮은 몸과 긴 다리를 전투 크기에 맞췄습니다. 대각선으로 짝을 이루는 발의 접지와 목·꼬리의 후속 움직임을 확인하세요.',source:'frost-wolf.blend',command:'npm run models:wolf',action:'▶ 보행 재생',clip:'frost-wolf-trot',loop:true},
@@ -92,15 +92,15 @@ async function select(index:number) {
  $('model-name').textContent = model.name; $('model-kind').textContent = model.kind; $('model-description').textContent = model.description;
  $('model-source').textContent = model.source; $('model-command').textContent = model.command; shoot.textContent = model.action;
  $('model-format').textContent = 'GLB · 실시간 3D'; $('model-hint').textContent = '드래그하여 회전 · 휠 또는 두 손가락으로 확대';
- fallback.src = `/defense/models/${model.id}.png`; fallback.alt = `${model.name}의 정사영 렌더 이미지`; fallback.hidden = true;
- $<HTMLAnchorElement>('download-model').href = `/defense/models/${model.id}.glb`;
+ fallback.src = `/defense/models/${model.asset??model.id}.png`; fallback.alt = `${model.name}의 정사영 렌더 이미지`; fallback.hidden = true;
+ $<HTMLAnchorElement>('download-model').href = `/defense/models/${model.asset??model.id}.glb`;
  document.querySelectorAll<HTMLButtonElement>('#model-list button').forEach((button,i) => button.setAttribute('aria-pressed',String(i===index)));
  clearModel(); stage.dataset.loaded = 'loading';
  delete stage.dataset.renderCalls; delete stage.dataset.renderTriangles;
  for(const id of ['triangle-count','mesh-count','material-count'])$(id).textContent = '—';
  if(!renderer){showFallback('이 환경에서는 3D 화면을 열 수 없어 렌더 이미지를 표시합니다.');return;}
  try {
-  const gltf = await loader.loadAsync(`/defense/models/${model.id}.glb`);
+  const gltf = await loader.loadAsync(`/defense/models/${model.asset??model.id}.glb`);
   if(ticket!==generation){release(gltf.scene);return;}
   // Keep normalization outside the animated scene: clip tracks own their local transforms.
   current = new Group(); current.add(gltf.scene);
@@ -128,7 +128,7 @@ async function select(index:number) {
 }
 models.forEach((model,index) => {
  const button = document.createElement('button'); button.type = 'button'; button.setAttribute('aria-pressed',String(index===0));
- button.innerHTML = `<img src="/defense/models/${model.id}.png" alt=""/><span><strong>${model.name}</strong><small>${model.detail}</small></span>`;
+ button.innerHTML = `<img src="/defense/models/${model.asset??model.id}.png" alt=""/><span><strong>${model.name}</strong><small>${model.detail}</small></span>`;
  button.onclick = () => {void select(index);}; $('model-list').append(button);
 });
 shoot.onclick = () => {

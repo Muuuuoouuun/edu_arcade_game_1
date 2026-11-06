@@ -46,3 +46,5 @@
 배포 이미지는 `public/defense/themes`의 1200px/600px WebP 8개, 총 1,769,914바이트다. 33개 PNG 원본은 계속 제작 자료로 보존한다. `npm run art:themes`로 FFmpeg/libwebp를 통해 비율을 유지한 크기 변환과 압축을 재현할 수 있다. 배경 삽화 속 도로는 실제 전투 지형으로 사용하지 않는다.
 
 - [브론의 8방향 망치 공격 구현](../arcana-dwarf-directional-attacks.md): 고정 카메라·같은 발 기준으로 실제 모델 방향과 전투 타격 벡터를 연결.
+
+- [물폭탄포 Lv.2 조준·반동 구현](../arcana-water-cannon-action.md): 기초 고정, 유압 상부 회전, 실제 발사 후 포신 반동과 포구 연결.

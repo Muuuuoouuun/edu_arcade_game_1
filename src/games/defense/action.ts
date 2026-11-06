@@ -1,4 +1,4 @@
-import type { Point } from './types.ts';
+import type { Point, Projectile } from './types.ts';
 
 export const DASH_DAMAGE = 36;
 export const DASH_IMPACT = 100;
@@ -9,6 +9,13 @@ export function attackOctant(from:Point,to:Point):number|null {
   const dx=to.x-from.x,dy=to.y-from.y;
   if(!Number.isFinite(dx)||!Number.isFinite(dy)||Math.hypot(dx,dy)<.5)return null;
   return (Math.round(Math.atan2(dy,dx)/(Math.PI/4))+8)%8;
+}
+
+export function projectileScreenPosition(p:Projectile,launchOffset:Point={x:0,y:0}) {
+  const blend=1-Math.max(0,Math.min(1,p.progress)),duration=Math.max(.1,p.duration);
+  const heightSpeed=p.arcHeight?4*p.arcHeight*(1-2*p.progress)/duration:0;
+  return {x:p.position.x+launchOffset.x*blend,y:p.position.y-27-p.height+launchOffset.y*blend,
+    angle:Math.atan2(p.velocity.y-heightSpeed-launchOffset.y/duration,p.velocity.x-launchOffset.x/duration)*180/Math.PI};
 }
 
 /** Swept collision prevents a fast dash skipping targets between simulation steps. */

@@ -614,3 +614,17 @@ test('hero attacks carry a finite splash limit so a saved battle survives JSON',
   const a=until(s,n=>n.attacks.some(x=>x.source==='hero')).attacks.find(x=>x.source==='hero');assert.ok(a);
   assert.ok(Number.isFinite(a.splashLimit));assert.equal(JSON.parse(JSON.stringify(a)).splashLimit,a.splashLimit);
 });
+
+
+test('water cannon recoil starts only on launch and a flying shell keeps its source level',()=>{
+ const s=rangedBattle('cannon');s.coins=1000;s.towers[0].level=2;s.towers[0].branch='water';
+ const windup=stepDefense(s,.02);assert.equal(windup.towers[0].recoil??0,0);
+ assert.equal(windup.projectiles.length,0);
+ const paused=actDefense(windup,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+ const fired=until(windup,n=>n.projectiles.length>0);assert.ok(fired.towers[0].recoil!>0);
+ assert.equal(fired.projectiles[0].sourceLevel,2);
+ const upgraded=actDefense(fired,{type:'upgrade',slot:2});assert.equal(upgraded.towers[0].level,3);
+ assert.equal(upgraded.projectiles[0].sourceLevel,2,'an upgrade must not move a flying shell origin');
+ const sold=actDefense(fired,{type:'sell',slot:2});assert.equal(sold.towers.length,0);assert.equal(sold.projectiles[0].sourceLevel,2);
+ const empty=until({...windup,enemies:[]},n=>n.attacks.length===0);assert.equal(empty.projectiles.length,0);assert.equal(empty.towers[0].recoil??0,0);
+});
