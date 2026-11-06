@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import type { Campaign, DefenseState } from './types.ts';
-import { getStage, STAGE_COUNT, STAGES } from './data.ts';
+import { getStage, HEROES, STAGE_COUNT, STAGES } from './data.ts';
 import { createDefense } from './engine.ts';
 import {
   acknowledgeVisitor, campaignFacilities, campaignRequest, completeRun, createCampaign, lossAdvice, resultFollowUp, readCampaign, selectDifficulty, selectHero,
@@ -403,4 +403,10 @@ test('stageReason names the companion, the region opened, or the open quest with
   assert.deepEqual(stageReason(cleared, 1), { kind: 'quest', reward: 80 });
   const claimed = completeRun(cleared, 'reason-2', result(1)).campaign;
   assert.equal(stageReason(claimed, 1), null);
+});
+
+test('every hero card has a distinct one-line trait short enough for a phone', () => {
+  const traits = Object.values(HEROES).map(hero => hero.trait);
+  assert.equal(new Set(traits).size, traits.length);
+  for (const trait of traits) assert.ok(trait.length > 0 && trait.length <= 20, trait);
 });

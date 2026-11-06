@@ -17,13 +17,13 @@ export function getStage(stage:number):StageDef { return STAGES.find(s=>s.id===s
 export function getRegion(stage:number):'forest'|'snow' { return getStage(stage).region; }
 export function stageLabel(stage:number):string { return getStage(stage).label; }
 
-export const HEROES: Record<HeroId,{name:string;role:string;description:string;skill:string;sprite:number;color:string}> = {
-  mage:{name:'이안',role:'인간 · 마법사',description:'나무를 태우고 얼음 갑옷을 녹이는 불꽃 공격.',skill:'유성 낙하',sprite:0,color:'#e4813f'},
-  elf:{name:'리엘',role:'엘프 · 명사수',description:'가장 긴 사거리로 빠른 적을 추격해요.',skill:'별빛 화살비',sprite:1,color:'#73aa65'},
-  dwarf:{name:'브론',role:'드워프 · 공병',description:'망치의 충격으로 돌과 얼음 갑옷을 부숴요.',skill:'대지 강타',sprite:2,color:'#c89b52'},
-  tao:{name:'청운',role:'동방 · 도사',description:'번개 부적으로 금속과 젖은 적을 연결해요.',skill:'뇌운 결계',sprite:3,color:'#69afb8'},
-  barbarian:{name:'카르',role:'바바리안 · 전사',description:'거대한 전투 망치로 가까운 적 무리와 얼음 갑옷을 부숴요.',skill:'산맥 가르기',sprite:16,color:'#ba7656'},
-  druid:{name:'루나',role:'수인 · 드루이드',description:'늑대 영물이 별도로 공격하고 적의 발을 붙잡아요.',skill:'덩굴의 포효',sprite:17,color:'#7fa87d'},
+export const HEROES: Record<HeroId,{name:string;role:string;description:string;skill:string;trait:string;sprite:number;color:string}> = {
+  mage:{name:'이안',role:'인간 · 마법사',description:'나무를 태우고 얼음 갑옷을 녹이는 불꽃 공격.',skill:'유성 낙하',trait:'불꽃에 맞은 적이 2.5초 동안 타요',sprite:0,color:'#e4813f'},
+  elf:{name:'리엘',role:'엘프 · 명사수',description:'가장 긴 사거리로 빠른 적을 추격해요.',skill:'별빛 화살비',trait:'사거리가 가장 길고 가장 빨리 쏴요',sprite:1,color:'#73aa65'},
+  dwarf:{name:'브론',role:'드워프 · 공병',description:'망치의 충격으로 돌과 얼음 갑옷을 부숴요.',skill:'대지 강타',trait:'망치 충격이 주변 적도 흔들어요',sprite:2,color:'#c89b52'},
+  tao:{name:'청운',role:'동방 · 도사',description:'번개 부적으로 금속과 젖은 적을 연결해요.',skill:'뇌운 결계',trait:'번개가 금속·젖은 적을 타고 이어져요',sprite:3,color:'#69afb8'},
+  barbarian:{name:'카르',role:'바바리안 · 전사',description:'거대한 전투 망치로 가까운 적 무리와 얼음 갑옷을 부숴요.',skill:'산맥 가르기',trait:'가장 큰 휩쓸기로 적을 멀리 밀어내요',sprite:16,color:'#ba7656'},
+  druid:{name:'루나',role:'수인 · 드루이드',description:'늑대 영물이 별도로 공격하고 적의 발을 붙잡아요.',skill:'덩굴의 포효',trait:'늑대가 따로 싸우며 적을 붙잡아요',sprite:17,color:'#7fa87d'},
 };
 export const TOWERS: Record<TowerKind,{name:string;cost:number;description:string;sprite:number}> = {
   crossbow:{name:'석궁탑',cost:70,description:'빠르고 안정적인 단일 공격',sprite:4},
