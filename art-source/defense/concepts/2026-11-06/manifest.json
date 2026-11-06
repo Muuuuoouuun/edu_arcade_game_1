@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "archive_date": "2026-11-06",
+  "timezone": "Asia/Seoul",
+  "count": 4,
+  "assets": [
+    {
+      "id": "verdant-heart",
+      "title": "녹음의 심장 — 고목왕의 습격",
+      "path": "art-source/defense/concepts/2026-11-06/verdant-heart.png",
+      "source_filename": "exec-58779308-c632-4c5d-b46d-30cd7ca10fd9.png",
+      "bytes": 3335729,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "460b1f4e5badcac237b816b6a037d5967691f21207056e9119f7199a21b977b3",
+      "generator": "image_gen",
+      "status": "concept-only",
+      "reference_paths": []
+    },
+    {
+      "id": "silverfrost-pass",
+      "title": "은서리 고개 — 빙각군주의 돌진",
+      "path": "art-source/defense/concepts/2026-11-06/silverfrost-pass.png",
+      "source_filename": "exec-902d15db-5012-4793-b0a4-18fedc28fd81.png",
+      "bytes": 3493797,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "f2e487ddc8cef3bba29320363e8f5d22391c460295e744938ccbbdeab77279cf",
+      "generator": "image_gen",
+      "status": "concept-only",
+      "reference_paths": []
+    },
+    {
+      "id": "brass-dunes",
+      "title": "황동 사막 — 뇌침 전갈왕",
+      "path": "art-source/defense/concepts/2026-11-06/brass-dunes.png",
+      "source_filename": "exec-79862d84-53a3-4bb4-bee7-b5fdd274b606.png",
+      "bytes": 3346184,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "12d8d7634f01cc8dc2f645827de99d73383b5681ecc6f737d6bfbf42ff177edc",
+      "generator": "image_gen",
+      "status": "concept-only",
+      "reference_paths": []
+    },
+    {
+      "id": "unryeong-mist",
+      "title": "운령 산성 — 먹안개 산군",
+      "path": "art-source/defense/concepts/2026-11-06/unryeong-mist.png",
+      "source_filename": "exec-66198bd4-e127-4f89-95e0-37dba4404083.png",
+      "bytes": 3752549,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "fc762cbc57ee9ff434ebc856d6845d27ed680f23d92342b371221f51cfe4563b",
+      "generator": "image_gen",
+      "status": "concept-only",
+      "reference_paths": [
+        "public/defense/themes/unryeong.webp"
+      ]
+    }
+  ]
+}

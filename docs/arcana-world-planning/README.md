@@ -13,6 +13,7 @@
 - [지형·모델·액션 구현](../arcana-terrain-action.md): 원격 브랜치 통합, 입체 지형 4종과 돌진 타격의 실제 적용 범위.
 - [3D 모델·보행 개선](../arcana-model-motion-development.md): Claude 원격 기획 반영, 통나무 병사 GLB·8단계 보행, 이동·넉백과 동작 연결.
 - [시안 갤러리](concept-gallery.md): 33장 원본을 주제별로 확인.
+- [지역별 전투 컨셉 확장](concept-expansion-2026-11-06.md): 2026-11-06 추가 시안 4장과 영웅·타워·기물·일반 적·보스 모델링 인계.
 - [에셋 목록](asset-manifest.json): 상대 경로, 원본 생성 파일명, 크기, 해상도, SHA-256.
 
 ## 결정 수준
