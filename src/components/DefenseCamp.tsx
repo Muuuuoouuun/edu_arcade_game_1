@@ -123,6 +123,7 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
               <DefenseSprite index={HEROES[id].sprite}/><span><strong>{HEROES[id].name}</strong><small>{HEROES[id].role}</small>{campaign.selectedHero===id?<em>출전 영웅</em>:null}</span>
             </button>)}
           </div>
+          <p className="camp-hero-trait" aria-live="polite"><b>{HEROES[campaign.selectedHero].name}</b>{HEROES[campaign.selectedHero].trait}</p>
           {nextVisitorStage?.visitor?<p className="camp-next-arrival"><Icon name="star" size={16}/>{nextVisitorStage.label} 방어를 마치면 <strong>{HEROES[nextVisitorStage.visitor].name}</strong>의 방문이 기다리고 있어요.</p>:<p className="camp-next-arrival"><Icon name="star" size={16}/>여섯 동료가 모였어요. 서로 다른 조합으로 원정에 도전해요.</p>}
         </section>
       </section>
