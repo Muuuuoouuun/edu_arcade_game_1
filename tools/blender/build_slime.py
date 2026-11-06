@@ -53,11 +53,10 @@ blob('core',(.1,0,.85),(.55,.5,.55),SLIME_DARK,root,24)
 blob('skirt',(0,0,.14),(1.4,1.2,.2),SLIME,root,40)
 for i,(x,y,s) in enumerate([(-1.25,.55,.26),(.9,-.95,.2),(-.5,-1.05,.17),(1.55,.35,.15)]):
  blob(f'drip-{i}',(x,y,s*.7),(s,s,s*.75),SLIME,root,16)
-# A bright band of the insulating shell: highlights the "blocks lightning" role.
-bpy.ops.mesh.primitive_torus_add(major_radius=1.05,minor_radius=.07,location=(0,0,.5));ring=bpy.context.object;ring.name='insulation-band';ring.scale=(1.0,.92,.5);ring.data.materials.append(INS);ring.parent=root
-bpy.ops.object.shade_smooth()
-for c in list(ring.users_collection):c.objects.unlink(ring)
-COL.objects.link(ring)
+# Leaf inclusions: resin flowed from the tree, so two leaves sit in the amber shell (replaces the cream band).
+LEAF=material('leaf inclusion',(.2,.42,.1),.5,.2)
+for i,(loc,sc,rot) in enumerate([((-.35,-.3,2.0),(.5,.2,.1),(.3,.35,.5)),((-.9,-.75,1.25),(.36,.15,.08),(.9,-.3,1.0))]):
+ leaf=blob(f'leaf-{i}',loc,sc,LEAF,root,16);leaf.rotation_euler=rot
 eyes=[]
 for name,y in (('eye-near',-.4),('eye-far',.34)):
  e=blob(name,(.95,y,1.3),(.32,.28,.36),EYE,root,20);pu=blob(name+'-pupil',(1.24,y*1.02,1.28),(.14,.14,.18),PUPIL,root,12);eyes+= [e,pu]

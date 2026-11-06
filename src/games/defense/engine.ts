@@ -113,7 +113,7 @@ function queueAttack(s:DefenseState,source:AttackSource,actor:AttackActor,from:P
   const facing=target.x<from.x?-1:1;
   if(source==='hero')s.heroFacing=facing;else if(source==='mercenary')s.mercenaryFacing=facing;else if(source==='pet'&&s.pet)s.pet.facing=facing;
   if(source==='tower'){const tower=s.towers.find(t=>t.slot===options.slot);if(tower)tower.aim={...target};}
-  s.attacks.push({id:s.nextId++,source,...(options.slot!==undefined?{sourceSlot:options.slot}:{}),actor,kind,from:{...from},to:{x:target.x,y:target.y},targetId:target.id,range,damage,element,area:options.area||0,force:options.force||0,chain:options.chain||false,pierce:options.pierce||false,splashLimit:source==='tower'?2:Infinity,splashDamage:source==='tower'?.4:.7,elapsed:0,duration,hitAt,fired:false});
+  s.attacks.push({id:s.nextId++,source,...(options.slot!==undefined?{sourceSlot:options.slot}:{}),actor,kind,from:{...from},to:{x:target.x,y:target.y},targetId:target.id,range,damage,element,area:options.area||0,force:options.force||0,chain:options.chain||false,pierce:options.pierce||false,splashLimit:source==='tower'?2:99,splashDamage:source==='tower'?.4:.7,elapsed:0,duration,hitAt,fired:false});
   return true;
 }
 function resolveHit(s:DefenseState,target:Enemy,profile:DamageProfile,from:Point,center:Point=target) {
@@ -129,7 +129,13 @@ function resolveHit(s:DefenseState,target:Enemy,profile:DamageProfile,from:Point
   }
 }
 function launch(s:DefenseState,a:CombatAttack) {
-  const from=ownerPosition(s,a.source,a.sourceSlot),target=s.enemies.find(e=>e.id===a.targetId&&e.hp>0);
+  const from=ownerPosition(s,a.source,a.sourceSlot);
+  let target=s.enemies.find(e=>e.id===a.targetId&&e.hp>0);
+  // A tower whose windup target fell re-aims at the front-most enemy still in range; melee stays committed.
+  if(!target&&a.source==='tower'){
+    target=orderedTargets(s,from,a.range)[0];
+    if(target){a.targetId=target.id;const tower=s.towers.find(t=>t.slot===a.sourceSlot);if(tower)tower.aim={x:target.x,y:target.y};}
+  }
   a.from={...from};
   if(!target)return; // A completed windup cannot strike a target already defeated.
   a.to={x:target.x,y:target.y};
