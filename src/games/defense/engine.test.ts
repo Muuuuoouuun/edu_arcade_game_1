@@ -616,3 +616,30 @@ test('hero attacks carry a finite splash limit so a saved battle survives JSON',
   const a=until(s,n=>n.attacks.some(x=>x.source==='hero')).attacks.find(x=>x.source==='hero');assert.ok(a);
   assert.ok(Number.isFinite(a.splashLimit));assert.equal(JSON.parse(JSON.stringify(a)).splashLimit,a.splashLimit);
 });
+
+test('damage multiplier table: every enemy × element pair is pinned so a balance edit shows up here',()=>{
+  const kinds:EnemyKind[]=['sprout','wood','ice','stone','metal','insulator','boss','frostwolf','frostboss'];
+  const elements=['physical','fire','lightning','impact','water'] as const;
+  const odd:Record<string,number>={
+    'sprout/fire':1.5,'sprout/water':.6,'wood/fire':1.5,'wood/water':.6,'boss/fire':1.5,'boss/water':.6,
+    'ice/fire':1.5,'ice/impact':1.5,'frostboss/fire':1.5,'frostboss/impact':1.5,'frostboss/water':.6,
+    'frostwolf/fire':1.5,'stone/impact':1.5,'stone/fire':.6,'insulator/lightning':.6,
+  };
+  for(const k of kinds)for(const el of elements)assert.equal(damageMultiplier(k,el),odd[`${k}/${el}`]??1,`${k}/${el}`);
+});
+
+test('each enemy kind pays its own bounty when defeated',()=>{
+  const expected:Record<EnemyKind,number>={sprout:14,wood:17,ice:14,stone:19,metal:14,insulator:14,boss:100,frostwolf:16,frostboss:100};
+  for(const kind of Object.keys(expected) as EnemyKind[]){
+    const s=battlefield(),e=enemy(kind,1);e.hp=0;e.speed=0;const spare=enemy('stone',2,100,100);spare.speed=0;s.enemies=[e,spare];
+    const before=s.coins,next=stepDefense(s,.05);
+    assert.equal(next.coins-before,expected[kind],kind);assert.equal(next.kills,1,kind);
+  }
+});
+
+test('a tower strikes the enemy furthest along the road, not the nearest or oldest',()=>{
+  const s=rangedBattle('crossbow');
+  s.enemies=[positionedEnemy('metal',1,450),positionedEnemy('metal',2,470),positionedEnemy('metal',3,400)]; // id 1 is nearest the tower (82), id 2 is furthest along but farther away (93)
+  const next=stepDefense(s,.02);
+  assert.equal(next.attacks[0]?.targetId,2);
+});
