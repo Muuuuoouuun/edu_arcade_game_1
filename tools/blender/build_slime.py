@@ -34,7 +34,7 @@ def material(name,color,rough=.2,coat=.6,emission=0,alpha=1):
  n.inputs['Subsurface Weight'].default_value=.25 if name.startswith('slime') else 0
  n.inputs['Subsurface Radius'].default_value=(.8,.2,1.0)
  return m
-SLIME=material('slime body',(.62,.33,.05),.14,.9);SLIME_DARK=material('slime core',(.3,.13,.02),.3,.4)
+SLIME=material('slime body',(.7,.38,.06),.14,.9);SLIME_DARK=material('slime core',(.3,.13,.02),.3,.4)
 EYE=material('eye white',(.95,.95,.9),.3,0);PUPIL=material('pupil',(.02,.01,.03),.4,0)
 INS=material('insulation spark ring',(.9,.78,.25),.35,.2,.25)
 
