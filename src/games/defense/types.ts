@@ -1,3 +1,4 @@
+import type { Locomotion } from './locomotion.ts';
 export type HeroId = 'mage' | 'elf' | 'dwarf' | 'tao' | 'barbarian' | 'druid';
 export type Difficulty = 'relaxed' | 'standard' | 'veteran';
 export type Element = 'physical' | 'fire' | 'lightning' | 'impact' | 'water';
@@ -13,6 +14,7 @@ export type DefenseState = {
  stage:number; phase:'prep'|'wave'|'intermission'|'promotion'|'won'|'lost'; paused:boolean; speed:1|2;
  time:number; wave:number; coins:number; hp:number; outpostHp:number; kills:number; leaks:number;
  difficulty:Difficulty; heroVelocity:Point; dashCooldown:number; dashTime:number;
+ locomotion:Record<'hero'|'mercenary'|'pet',Locomotion>;
  enemies:Enemy[]; towers:Tower[]; effects:Effect[]; attacks:CombatAttack[]; projectiles:Projectile[]; hero:HeroId; heroPosition:Point; heroTarget:Point; heroFacing:-1|1; mercenaryPosition:Point; mercenaryFacing:-1|1; pet:PetState|null; heroCooldown:number;
  mercenary:HeroId|null; mercCooldown:number; petCooldown:number; skillCooldown:number; bossCharge:number; freeze:number; bossCycle:number; promotion:'power'|'control'|null;
  spawned:number; spawnTimer:number; nextId:number; training:number; notice:string; questProgress:number;

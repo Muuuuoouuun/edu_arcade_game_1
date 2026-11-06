@@ -1,0 +1,212 @@
+{
+  "purpose": "Eight baked walk poses; enable only with the complete dwarf idle/attack set.",
+  "encoding": "WebP quality 88; shared transparent 640px camera, no resize or individual pose cropping.",
+  "model_metadata_sha256": "6e16a82965ae928ab5744913af92c01c21a71c2d22bbb3b54248cb893c5abd1b",
+  "ground": [
+    320.0002,
+    550
+  ],
+  "nativeFacing": 1,
+  "files": [
+    {
+      "id": "dwarf-walk-0",
+      "pose": "walk-0",
+      "source": "dwarf-walk-0.png",
+      "file": "dwarf-walk-0-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        197,
+        188,
+        556,
+        574
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        0,
+        0,
+        640,
+        640
+      ],
+      "source_bytes": 384342,
+      "bytes": 27986,
+      "source_sha256": "66d8ff25c849d719af04bce77efb6370ec79a21083b65a3c03c6a2c11ce461ce",
+      "sha256": "00bcb9f856900066dc496ce0372df8144afb2c8d696b8e3a2674049440309240"
+    },
+    {
+      "id": "dwarf-walk-1",
+      "pose": "walk-1",
+      "source": "dwarf-walk-1.png",
+      "file": "dwarf-walk-1-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        196,
+        179,
+        552,
+        569
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        0,
+        0,
+        640,
+        640
+      ],
+      "source_bytes": 382203,
+      "bytes": 27382,
+      "source_sha256": "dac57f10ba06df5503b3ad9cfc16474f19ee0fa404f433a4d3f6b196d1d26d70",
+      "sha256": "88ba8b9d31023b0d112e184e2a82bae604b7a4c96f422bad7822b1d6d340b493"
+    },
+    {
+      "id": "dwarf-walk-2",
+      "pose": "walk-2",
+      "source": "dwarf-walk-2.png",
+      "file": "dwarf-walk-2-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        196,
+        173,
+        550,
+        569
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        0,
+        0,
+        640,
+        640
+      ],
+      "source_bytes": 380728,
+      "bytes": 26784,
+      "source_sha256": "0cb7d54ba438aff0470c7bdf67b90c436c647cc187e80bbd3583bbe6133bb43d",
+      "sha256": "dc508124cd4c2c5bf97a2e71591983d3f59d9f675724288b3585d561196c9682"
+    },
+    {
+      "id": "dwarf-walk-3",
+      "pose": "walk-3",
+      "source": "dwarf-walk-3.png",
+      "file": "dwarf-walk-3-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        196,
+        179,
+        552,
+        579
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        0,
+        0,
+        640,
+        640
+      ],
+      "source_bytes": 378488,
+      "bytes": 26312,
+      "source_sha256": "304a5b9927bc5c22311cd22073418ff4b2e7fc173af1d6222806c4f7134f727d",
+      "sha256": "2ffe68754dca40252b464cef93270da7ca8ef207cabf5d6944bf29c5bf7aac86"
+    },
+    {
+      "id": "dwarf-walk-4",
+      "pose": "walk-4",
+      "source": "dwarf-walk-4.png",
+      "file": "dwarf-walk-4-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        197,
+        188,
+        556,
+        596
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        0,
+        0,
+        640,
+        640
+      ],
+      "source_bytes": 378201,
+      "bytes": 26320,
+      "source_sha256": "1e4291c55d27f8e74eee459d72ca7ec083ecca79f47c0fc2fe5510bdc08dca62",
+      "sha256": "04ce7d9c405985f12d54248406e6b060551e72acc9ff832b2abbc2fcd130d55b"
+    },
+    {
+      "id": "dwarf-walk-5",
+      "pose": "walk-5",
+      "source": "dwarf-walk-5.png",
+      "file": "dwarf-walk-5-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        197,
+        191,
+        561,
+        590
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        0,
+        0,
+        640,
+        640
+      ],
+      "source_bytes": 378321,
+      "bytes": 26652,
+      "source_sha256": "624c25445db60c402eed57219292d2617192d387bef81810f44fb432adca15a6",
+      "sha256": "a0d94fbc2d0f04e59a5d3256125a0595543370117b23883a00fbdd5defac1ef8"
+    },
+    {
+      "id": "dwarf-walk-6",
+      "pose": "walk-6",
+      "source": "dwarf-walk-6.png",
+      "file": "dwarf-walk-6-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        197,
+        190,
+        563,
+        585
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        0,
+        0,
+        640,
+        640
+      ],
+      "source_bytes": 380310,
+      "bytes": 26850,
+      "source_sha256": "4c7a6756e0ac767c67f0f30a938f764e4e4c1ecb90162471f10d3512d17e51b5",
+      "sha256": "85c37aadac6e6e7917eca7d8d749efc8956106c5d39517d62fe93ef2a4bfe8c7"
+    },
+    {
+      "id": "dwarf-walk-7",
+      "pose": "walk-7",
+      "source": "dwarf-walk-7.png",
+      "file": "dwarf-walk-7-game.webp",
+      "width": 640,
+      "height": 640,
+      "alpha_bbox": [
+        197,
+        191,
+        561,
+        580
+      ],
+      "alpha_threshold": 8,
+      "battle_crop": [
+        0,
+        0,
+        640,
+        640
+      ],
+      "source_bytes": 381742,
+      "bytes": 27502,
+      "source_sha256": "660bb93c6d1251566e75a225b6a121d0841e48662e45dcc8c2dc2ce084b61953",
+      "sha256": "1851e7240ea007d98c25164e20dcf092b7a9ebcefb7228e6eed4386eb9bff408"
+    }
+  ]
+}

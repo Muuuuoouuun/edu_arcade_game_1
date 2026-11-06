@@ -108,7 +108,7 @@ test('a complete dwarf render set shares its body scale and ground anchor across
  assert.equal(art.actionSpriteAsset('barbarian','strike')?.src,'/defense/melee-motion.webp');
  assert.equal(art.actionSpriteAsset('mage','strike')?.src,'/defense/ranged-motion.webp');
  assert.equal(art.spriteAsset(0).src,'/defense/atlas.png');
- assert.equal(requests.filter(src=>/\/dwarf-.*-game\.webp$/.test(src)).length,4);
+ assert.equal(requests.filter(src=>/\/dwarf-.*-game\.webp$/.test(src)).length,12);
  assert.equal(requests.some(src=>src.endsWith('.glb')),false,'battle must not request articulated realtime models');
 });
 
@@ -152,5 +152,23 @@ test('a delayed final dwarf frame does not switch the actor prematurely or dupli
   assert.equal(art.actionSpriteAsset('dwarf','strike')?.src,'/defense/models/dwarf-strike-game.webp');
  }finally{
   if(previous)Object.defineProperty(globalThis,'Image',previous);else Reflect.deleteProperty(globalThis,'Image');
+ }
+});
+
+
+test('walk frames require a complete walk and base set and preserve the shared ground anchor',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'walk-ready');
+ const idle=art.idleSpriteAsset('dwarf')!;
+ for(let i=0;i<8;i++){
+  const frame=art.walkingSpriteAsset('dwarf',i*8)!;
+  assert.equal(frame.src,`/defense/models/dwarf-walk-${i}-game.webp`);
+  for(const key of ['viewBox','width','height','displayScale','groundY','nativeFacing'] as const)assert.equal(frame[key],idle[key]);
+ }
+ assert.equal(art.walkingSpriteAsset('dwarf',64)?.src,art.walkingSpriteAsset('dwarf',0)?.src);
+ assert.equal(art.walkingSpriteAsset('mage',8),null);
+ for(const missing of ['walk-3','strike']){
+  const {art:partial}=await loadWithImageResults(src=>src.endsWith(`/dwarf-${missing}-game.webp`),`walk-missing-${missing}`);
+  assert.equal(partial.walkingSpriteAsset('dwarf',8),null);
+  if(missing==='walk-3')assert.equal(partial.idleSpriteAsset('dwarf')?.src,idle.src);
  }
 });

@@ -1,3 +1,4 @@
+import { advanceLocomotion, movementFacing } from './locomotion.ts';
 import { BRANCHES, ENEMIES, HERO_ORDER, STAGE_COUNT, TOWERS, getPaths, getSlots, getStage, getRegion } from './data.ts';
 import { DIFFICULTIES, getDifficulty, getWavePlan } from './difficulty.ts';
 import type { Difficulty, Branch, DefenseAction, DefenseState, Element, Enemy, EnemyKind, HeroId, Point, Tower, TowerKind, CombatAttack, Projectile, AttackSource, AttackActor, DamageProfile, Effect } from './types.ts';
@@ -38,7 +39,7 @@ export function createDefense(stage:number,hero:HeroId,training=0,difficulty:Dif
   const id=Math.max(1,Math.min(STAGE_COUNT,Math.trunc(stage)||1)),data=getStage(id);
   const mode=getDifficulty(difficulty),settings=DIFFICULTIES[mode];
   const chosen=HERO_ORDER.includes(hero)?hero:'mage',position=data.region==='snow'?{x:440,y:390}:{x:440,y:355};
-  return {stage:id,difficulty:mode,phase:'prep',paused:false,speed:1,time:0,wave:0,coins:(data.region==='snow'?280:240)+settings.startingCoins,hp:20,outpostHp:12,kills:0,leaks:0,enemies:[],towers:[],effects:[],attacks:[],projectiles:[],hero:chosen,heroPosition:position,heroTarget:{...position},heroVelocity:{x:0,y:0},dashCooldown:0,dashTime:0,heroFacing:-1,mercenaryPosition:{x:position.x+38,y:position.y+35},mercenaryFacing:-1,pet:chosen==='druid'?{position:{x:position.x+28,y:position.y-22},target:{x:position.x+28,y:position.y-22},facing:-1}:null,heroCooldown:0,mercenary:null,mercCooldown:0,petCooldown:0,skillCooldown:0,bossCharge:0,freeze:0,bossCycle:8,promotion:null,spawned:0,spawnTimer:0,nextId:1,training:Math.max(0,Math.min(5,Math.trunc(training)||0)),notice:data.region==='snow'?'빙판 위의 적은 빨라져요. 고지대와 화염 타워를 활용하세요.':'빛나는 건설 지점을 선택해 타워를 세우세요.',questProgress:data.questType==='hunt'?0:data.questType==='outpost'?12:20};
+  return {stage:id,difficulty:mode,phase:'prep',paused:false,speed:1,time:0,wave:0,coins:(data.region==='snow'?280:240)+settings.startingCoins,hp:20,outpostHp:12,kills:0,leaks:0,enemies:[],towers:[],effects:[],attacks:[],projectiles:[],hero:chosen,heroPosition:position,heroTarget:{...position},heroVelocity:{x:0,y:0},locomotion:{hero:{distance:0,speed:0},mercenary:{distance:0,speed:0},pet:{distance:0,speed:0}},dashCooldown:0,dashTime:0,heroFacing:-1,mercenaryPosition:{x:position.x+38,y:position.y+35},mercenaryFacing:-1,pet:chosen==='druid'?{position:{x:position.x+28,y:position.y-22},target:{x:position.x+28,y:position.y-22},facing:-1}:null,heroCooldown:0,mercenary:null,mercCooldown:0,petCooldown:0,skillCooldown:0,bossCharge:0,freeze:0,bossCycle:8,promotion:null,spawned:0,spawnTimer:0,nextId:1,training:Math.max(0,Math.min(5,Math.trunc(training)||0)),notice:data.region==='snow'?'빙판 위의 적은 빨라져요. 고지대와 화염 타워를 활용하세요.':'빛나는 건설 지점을 선택해 타워를 세우세요.',questProgress:data.questType==='hunt'?0:data.questType==='outpost'?12:20};
 }
 
 export function damageMultiplier(kind:EnemyKind,element:Element):number {
@@ -200,22 +201,28 @@ function advanceHero(s:DefenseState,dt:number,combat:boolean) {
       }
     }
   }
-  if(Math.abs(s.heroPosition.x-previous.x)>.05)s.heroFacing=s.heroPosition.x<previous.x?-1:1;
+  s.heroFacing=movementFacing(s.heroFacing,previous,s.heroPosition);
 }
 function stopDash(s:DefenseState) {
   if(s.dashTime>0){s.dashTime=0;s.heroTarget={...s.heroPosition};s.heroVelocity={x:0,y:0};}
 }
 function advanceActors(s:DefenseState,dt:number,combat:boolean) {
+  const before={hero:s.heroPosition,mercenary:s.mercenaryPosition,pet:s.pet?.position},dashing=s.dashTime>0;
   advanceHero(s,dt,combat);
   const mercTarget={x:Math.min(875,s.heroPosition.x+38),y:Math.min(565,s.heroPosition.y+35)};
-  const mercX=s.mercenaryPosition.x;s.mercenaryPosition=moveTowards(s.mercenaryPosition,mercTarget,220,dt);if(Math.abs(s.mercenaryPosition.x-mercX)>.05)s.mercenaryFacing=s.mercenaryPosition.x<mercX?-1:1;
+  s.mercenaryPosition=moveTowards(s.mercenaryPosition,mercTarget,220,dt);s.mercenaryFacing=movementFacing(s.mercenaryFacing,before.mercenary,s.mercenaryPosition);
   if(s.hero==='druid'||s.mercenary==='druid'){
     const owner=s.hero==='druid'?s.heroPosition:s.mercenaryPosition;
     s.pet??={position:{x:owner.x+28,y:owner.y-22},target:{...owner},facing:-1};
     const enemy=combat?orderedTargets(s,owner,240)[0]:undefined;
     s.pet.target=enemy?{x:Math.max(20,enemy.x-28),y:Math.min(560,enemy.y+18)}:{x:Math.min(875,owner.x+28),y:Math.max(35,owner.y-22)};
-    const petX=s.pet.position.x;s.pet.position=moveTowards(s.pet.position,s.pet.target,280,dt);if(Math.abs(s.pet.position.x-petX)>.05)s.pet.facing=s.pet.position.x<petX?-1:1;
+    const petBefore=s.pet.position;s.pet.position=moveTowards(s.pet.position,s.pet.target,280,dt);s.pet.facing=movementFacing(s.pet.facing,petBefore,s.pet.position);
   }else s.pet=null;
+  s.locomotion={
+    hero:advanceLocomotion(s.locomotion.hero,before.hero,s.heroPosition,dt,distance(s.heroPosition,s.heroTarget)>.01,dashing),
+    mercenary:s.mercenary?advanceLocomotion(s.locomotion.mercenary,before.mercenary,s.mercenaryPosition,dt,distance(s.mercenaryPosition,mercTarget)>.01):{distance:0,speed:0},
+    pet:s.pet&&before.pet?advanceLocomotion(s.locomotion.pet,before.pet,s.pet.position,dt,distance(s.pet.position,s.pet.target)>.01):{distance:0,speed:0},
+  };
 }
 function advanceEffects(s:DefenseState,dt:number) {
   s.effects=s.effects.map(e=>({...e,life:e.life-dt,age:(e.age||0)+dt})).filter(e=>e.life>0);

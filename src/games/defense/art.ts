@@ -1,3 +1,4 @@
+import { walkFrame } from './locomotion.ts';
 import type { Branch, EnemyKind, HeroId, TowerKind } from './types';
 export type SpriteAsset = {src:string;viewBox:string;width:number;height:number;displayScale?:number;nativeFacing?:-1|1;groundY?:number};
 export type ActionPose = 'windup'|'strike'|'recover';
@@ -38,6 +39,14 @@ const DWARF_RENDERS = Object.fromEntries(DWARF_POSES.map(pose=>[pose,{
 function dwarfModelReady(){return DWARF_POSES.every(pose=>motionLoaded.has(DWARF_RENDERS[pose].src));}
 export function idleSpriteAsset(actor:HeroId|'wolf'):SpriteAsset|null {
  return actor==='dwarf'&&dwarfModelReady()?DWARF_RENDERS.idle:null;
+}
+const DWARF_WALK = Array.from({length:8},(_,i):SpriteAsset=>({
+ ...DWARF_RENDERS.idle,src:`/defense/models/dwarf-walk-${i}-game.webp`,
+}));
+/** A partial walk set keeps the existing modeled idle pose, never mixes styles. */
+export function walkingSpriteAsset(actor:HeroId|'wolf',distance:number):SpriteAsset|null {
+ return actor==='dwarf'&&dwarfModelReady()&&DWARF_WALK.every(frame=>motionLoaded.has(frame.src))
+  ?DWARF_WALK[walkFrame(distance)]:null;
 }
 const TOWER_MODELS:MotionFrame[] = [
  [40,35,337,380,1],[432,24,460,391,1.15],[889,48,333,370,1],
@@ -106,7 +115,7 @@ export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAss
 /** Load while preparing in camp; slow or failed requests keep the existing idle art. */
 export function preloadDefenseMotion():Promise<void> {
  if(typeof Image==='undefined')return Promise.resolve();
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/monster-models.webp','/defense/boss-models.webp',...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...Object.values(DWARF_RENDERS).map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/monster-models.webp','/defense/boss-models.webp',...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
   const asset=new Image();
   asset.onload=()=>{motionLoaded.add(src);asset.onload=null;asset.onerror=null;resolve();};
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
