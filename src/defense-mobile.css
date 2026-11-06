@@ -39,8 +39,10 @@ body:has(.battle-page){overflow:hidden;background:#102c25}
 .battle-map-size .def-build-pad:not(:disabled):active{transform:translate(-50%,-50%) scale(.94)}
 .battle-map-size .def-build-pad>small{font-size:10px}
 .battle-map-size .def-build-pad:disabled{opacity:1;cursor:default}
-.battle-map-size .def-build-pad:disabled:not(.occupied){background:#f3e3b0;color:#38523b}
+.battle-map-size .def-build-pad:disabled:not(.occupied){background:#294b41;color:#f4e4b6}
 .battle-map-size .def-build-pad.occupied{border-color:transparent;background:transparent;box-shadow:none}
+.battle-map-size .def-build-pad:focus-visible{outline:3px solid #fff0b2;outline-offset:4px}
+.battle-map-size .def-build-pad.selected:not(.occupied){color:#294938}
 .battle-map-size .def-build-pad.occupied.selected{border:2px solid #ffe298;box-shadow:0 0 0 3px #a77b284d}
 .battle-input-note{display:none;pointer-events:none;font-size:.75rem;text-align:center;line-height:1.5}
 .battle-aiming .battle-input-note,.battle-surge .battle-input-note{display:block;position:absolute;bottom:5px;left:50%;transform:translateX(-50%);width:max-content;max-width:95%;padding:5px 12px;border-radius:5px;background:#173e32ef;color:#ffdf8a}
@@ -160,7 +162,8 @@ body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-in
  .battle-map-size .def-board{border-radius:5px}
  .battle-map-size .def-build-pad>span{font-size:20px}
  .battle-map-size .def-build-pad:not(.occupied){isolation:isolate;background:transparent;border:0;box-shadow:none}
- .battle-map-size .def-build-pad:not(.occupied)::before{content:'';position:absolute;inset:6px;border:1px solid #d3bf82;border-radius:50%;background:#f3e3b0;box-shadow:0 2px 1px #213a3a40;z-index:-1}
+ .battle-map-size .def-build-pad:not(.occupied)::before{content:'';position:absolute;inset:6px;border:1px solid #bda574;border-radius:50%;background:linear-gradient(145deg,#38584f,#193c35);box-shadow:0 2px 1px #142c2a80,inset 0 1px 2px #fff2c633;z-index:-1}
+ .battle-map-size .def-build-pad:not(.occupied).selected::before{background:#ffedb7;border-color:#ffe39c}
  .battle-map-size .def-build-pad:not(.occupied)>span{font-size:18px;line-height:18px}
  .battle-map-size .def-build-pad:not(.occupied)>small{font-size:10px;line-height:11px}
  .battle-utilities{grid-column:1;grid-row:2;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}

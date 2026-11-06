@@ -94,6 +94,8 @@ node tools/build-hero-sprites.mjs --walk
 
 ## 검증
 
+전투용 성문 4종과 지형 재질·메시 보정의 제작/재생성 절차는 [컨셉 아트와 전투 화면 연결](arcana-concept-art-integration.md)을 참고한다. 성문은 2D 일러스트이고 지형은 Blender 메시 베이크다.
+
 ```bash
 npm run build
 npm test

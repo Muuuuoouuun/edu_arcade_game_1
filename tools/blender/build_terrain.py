@@ -7,9 +7,16 @@ import math
 import random
 import subprocess
 import hashlib
+import site
 from pathlib import Path
 from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
+
+# Blender may omit Python's user site; install the pinned bake-only dependency there.
+site.addsitedir(site.getusersitepackages())
+from shapely import constrained_delaunay_triangles
+from shapely.geometry import LineString, box
+from shapely.geometry.polygon import orient
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT/'art-source/defense'
@@ -21,10 +28,25 @@ def position(x,y,z):
     # Camera's vertical projection: .8*Y + .6*Z. Top surfaces keep their logical XY.
     return ((x-450), (300-y-.6*z)/.8, z)
 
-def material(name,color,rough=.8):
+def material(name,color,rough=.8,grain=False):
     m=bpy.data.materials.new(name);m.diffuse_color=(*color,1);m.use_nodes=True
     node=m.node_tree.nodes.get('Principled BSDF')
-    node.inputs['Base Color'].default_value=(*color,1);node.inputs['Roughness'].default_value=rough
+    node.inputs['Roughness'].default_value=rough
+    nodes=m.node_tree.nodes;links=m.node_tree.links
+    # World coordinates keep the surface continuous across individual road quads.
+    geometry=nodes.new('ShaderNodeNewGeometry')
+    mapping=nodes.new('ShaderNodeVectorMath');mapping.operation='MULTIPLY'
+    mapping.inputs[1].default_value=(.12,1.8,.5) if grain else (1,1,1)
+    links.new(geometry.outputs['Position'],mapping.inputs[0])
+    noise=nodes.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=.32 if grain else .19
+    noise.inputs['Detail'].default_value=3;noise.inputs['Roughness'].default_value=.72
+    links.new(mapping.outputs[0],noise.inputs['Vector'])
+    ramp=nodes.new('ShaderNodeValToRGB')
+    ramp.color_ramp.elements[0].position=.15;ramp.color_ramp.elements[0].color=(*(v*.62 for v in color),1)
+    ramp.color_ramp.elements[1].position=.85;ramp.color_ramp.elements[1].color=(*(min(1,v*1.18) for v in color),1)
+    links.new(noise.outputs['Fac'],ramp.inputs[0]);links.new(ramp.outputs['Color'],node.inputs['Base Color'])
+    bump=nodes.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.24;bump.inputs['Distance'].default_value=.7 if grain else 1.1
+    links.new(noise.outputs['Fac'],bump.inputs['Height']);links.new(bump.outputs['Normal'],node.inputs['Normal'])
     return m
 
 def solid(name,polygon,height,top,side,depth=None):
@@ -40,8 +62,12 @@ def solid(name,polygon,height,top,side,depth=None):
     for face in mesh.polygons:face.material_index=0 if face.index==0 else 1
     return obj
 
+def soften(obj,width=.55):
+    bevel=obj.modifiers.new('Worn edges','BEVEL');bevel.width=width;bevel.segments=2
+    return obj
+
 def tile(name,x,y,w,h,z,top,side,depth=None):
-    return solid(name,[(x-w/2,y-h/2),(x-w/2,y+h/2),(x+w/2,y+h/2),(x+w/2,y-h/2)],z,top,side,depth)
+    return soften(solid(name,[(x-w/2,y-h/2),(x-w/2,y+h/2),(x+w/2,y+h/2),(x+w/2,y-h/2)],z,top,side,depth),min(.55,w*.1,h*.1))
 
 def smooth_path(points):
     p=[Vector((v['x'],v['y'])) for v in points];out=[p[0]]
@@ -54,18 +80,32 @@ def smooth_path(points):
     out.append(p[-1]);return out
 
 def ribbon(name,points,width,z,top,side):
-    samples=[points[0]]
-    for a,b in zip(points,points[1:]):
-        count=max(1,math.ceil((b-a).length/10))
-        samples.extend(a+(b-a)*(i/count) for i in range(1,count+1))
-    points=samples
-    left=[];right=[]
-    for i,p in enumerate(points):
-        tangent=(points[min(i+1,len(points)-1)]-points[max(0,i-1)]).normalized()
-        normal=Vector((-tangent.y,tangent.x))*width/2
-        left.append(tuple(p+normal));right.append(tuple(p-normal))
-    # Each quad is convex, so Blender never has to triangulate a winding concave road cap.
-    for i in range(len(points)-1):solid(name,[left[i],left[i+1],right[i+1],right[i]],z,top((points[i]+points[i+1])/2) if callable(top) else top,side)
+    # Offset strips fold over themselves when the inside bend radius is < half-width.
+    # Buffer/union first, then triangulate the simple outline: no overlapping caps,
+    # internal vertical walls or dark spikes at the snow road's tight bends.
+    outline=LineString([tuple(p) for p in points]).buffer(width/2,cap_style='flat',join_style='round')
+    assert outline.is_valid and outline.geom_type=='Polygon' and not outline.interiors
+    regions=[outline]
+    if callable(top):
+        # Split at the exact gameplay ice boundaries, including triangles at a bend.
+        regions=[outline.intersection(box(left,-1000,right,1600)) for left,right in [(-1000,300),(300,520),(520,1900)]]
+    for region in regions:
+        for shape in ([region] if region.geom_type=='Polygon' else region.geoms):
+            if shape.is_empty or shape.area<.001:continue
+            shape=orient(shape,sign=-1)
+            polygon=list(shape.exterior.coords)[:-1]
+            lookup={p:i for i,p in enumerate(polygon)}
+            triangles=constrained_delaunay_triangles(shape)
+            assert abs(sum(t.area for t in triangles.geoms)-shape.area)<.001
+            faces=[tuple(lookup[p] for p in orient(t,sign=-1).exterior.coords[:-1]) for t in triangles.geoms]
+            roof=[position(x,y,z) for x,y in polygon];n=len(roof);cap_count=len(faces)
+            floor=[(x,y,0) for x,y,_ in roof]
+            faces.extend((i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n))
+            mesh=bpy.data.meshes.new(name);mesh.from_pydata(roof+floor,[],faces);mesh.update()
+            obj=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(obj)
+            p=shape.representative_point()
+            mesh.materials.append(top(Vector((p.x,p.y))) if callable(top) else top);mesh.materials.append(side)
+            for face in mesh.polygons:face.material_index=0 if face.index<cap_count else 1
 
 manifest={'projection':{'width':900,'height':600,'camera':'orthographic','ground_plane':'X=(x-450), Y=(300-y-.6z)/.8'},'variants':[]}
 for variant in layout['variants']:
@@ -78,8 +118,9 @@ for variant in layout['variants']:
     cliff=material('Cut bank / shaded strata',(.19,.32,.39) if snow else (.19,.21,.14))
     stone=material('Stone / upper faces',(.60,.73,.77) if snow else (.43,.45,.32))
     dark=material('Stone / side faces',(.24,.36,.42) if snow else (.23,.27,.20))
-    wood=material('Bridge / oak planks',(.35,.19,.07))
-    rim=material('Bridge / pale endgrain',(.58,.36,.14))
+    wood=material('Bridge / oak planks',(.35,.19,.07),grain=True)
+    rim=material('Bridge / pale endgrain',(.58,.36,.14),grain=True)
+    moss=material('Shoulder / moss or frost',(.72,.85,.88) if snow else (.24,.32,.12))
     iron=material('Bridge / iron fasteners',(.09,.13,.13),.4)
     for lane,raw in enumerate(variant['paths']):
         path=smooth_path(raw)
@@ -93,9 +134,13 @@ for variant in layout['variants']:
             for k in range(int(length/23)):
                 center=a+tangent*(k*23+11)
                 for side in (-1,1):
-                    c=center+normal*side*25
-                    polygon=[tuple(c+tangent*u+normal*v) for u,v in [(-9,-3),(-9,3),(9,3),(9,-3)]]
-                    solid('Road / curb stone',polygon,16,stone,dark,7)
+                    c=center+normal*side*(25+rng.uniform(-1,1))
+                    half=rng.uniform(7.5,10)
+                    polygon=[tuple(c+tangent*(u+rng.uniform(-.7,.7))+normal*(v+rng.uniform(-.5,.5))) for u,v in [(-half,-2),(-half,2),(-half+2,3),(half-1,3),(half,1),(half,-2),(half-2,-3),(-half+1,-3)]]
+                    soften(solid('Road / worn curb stone',polygon,16+rng.uniform(-.6,.6),stone,dark,7))
+                    if k%3==0:
+                        c=center+normal*side*28
+                        tile('Shoulder / moss in joints',c.x,c.y,4,2,13,moss,cliff,1)
                 if k%2==0:
                     c=center+normal*rng.uniform(-10,10)
                     tile('Road / inset paver',c.x,c.y,5+rng.random()*6,3,14,stone,dark,2)
@@ -127,8 +172,9 @@ for variant in layout['variants']:
     scene.view_settings.view_transform='AgX';scene.view_settings.look='AgX - Medium High Contrast'
     world=bpy.data.worlds.new('Soft daylight');world.use_nodes=True
     world.node_tree.nodes['Background'].inputs[0].default_value=(.65,.75,.85,1)
-    world.node_tree.nodes['Background'].inputs[1].default_value=.65;scene.world=world
+    world.node_tree.nodes['Background'].inputs[1].default_value=.48;scene.world=world
     light_data=bpy.data.lights.new('Warm directional light','AREA');light_data.energy=2200000;light_data.shape='DISK';light_data.size=500
+    light_data.color=(1,.87,.68)
     light=bpy.data.objects.new('Warm directional light',light_data);scene.collection.objects.link(light)
     light.location=(-400,-200,1000);light.rotation_euler=(-light.location).to_track_quat('-Z','Y').to_euler()
     camera_data=bpy.data.cameras.new('Logical coordinate camera');camera=bpy.data.objects.new(camera_data.name,camera_data);scene.collection.objects.link(camera)

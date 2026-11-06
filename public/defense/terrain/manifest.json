@@ -9,8 +9,8 @@
     {
       "id": "forest-single",
       "file": "forest-single.webp",
-      "bytes": 39932,
-      "sha256": "f42bf9d300ef80f817fddfb6389ab36c13c8ad9b93cf43eebee3ca9ddd9c3cd1",
+      "bytes": 50150,
+      "sha256": "34f19cb1a337ebccaa6198024dc7ed0a54ecf5e7aa8fc3fa3891a83820c5aec1",
       "path_anchors": [
         {
           "logical": [
@@ -97,8 +97,8 @@
     {
       "id": "forest-expanded",
       "file": "forest-expanded.webp",
-      "bytes": 62652,
-      "sha256": "8ec1f49a9c0d5e01223dec3419efaf7de97bb2aa442498e545bf9b21e400cdc8",
+      "bytes": 81118,
+      "sha256": "c0ad8e365dbf5eb5347d02bd8bebb244db372604c7f2d8711ad752f812b66421",
       "path_anchors": [
         {
           "logical": [
@@ -245,8 +245,8 @@
     {
       "id": "snow-single",
       "file": "snow-single.webp",
-      "bytes": 37738,
-      "sha256": "c0605c9595054f73b5195700849d52ba86b455c15eff44fe3e4856a7fb72dc99",
+      "bytes": 50494,
+      "sha256": "56f711a5b3f263d606d8a144673f6945c3334d638029f69cd5da387c4d451ef6",
       "path_anchors": [
         {
           "logical": [
@@ -333,8 +333,8 @@
     {
       "id": "snow-expanded",
       "file": "snow-expanded.webp",
-      "bytes": 62944,
-      "sha256": "9fbf8e359e3458a4f0f81a6a57c48cffd7a1374224af74e35e35e6301ab6e4d9",
+      "bytes": 79680,
+      "sha256": "551a5d24e5dbae55bd2e6b84d076fa001fd1ccbe02fd47dece513a9242dadfba",
       "path_anchors": [
         {
           "logical": [
