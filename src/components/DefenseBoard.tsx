@@ -1,8 +1,10 @@
+import { knockbackPresentation } from '../games/defense/action';
+import { DefenseTerrain, BridgeFrontRail, useTerrainAsset } from './DefenseTerrain';
 import { WALK_STRIDE } from '../games/defense/locomotion';
 import type { Locomotion } from '../games/defense/locomotion';
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
-import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getPaths, getSlots } from '../games/defense/data';
+import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getSlots } from '../games/defense/data';
 import { actionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, spriteAsset, towerSpriteAsset } from '../games/defense/art';
 import type { SpriteAsset, ActionPose } from '../games/defense/art';
 import type { DefenseThemeId } from '../games/defense/themes';
@@ -82,6 +84,7 @@ function EnemyUnit({unit=1,hpScale=1,enemy:e,state:s,reduced,onActivate,onKey}:{
  const facing=e.facing??(positionOnPath(e.path,e.progress+4,s.stage).x>=e.x?1:-1);
  const charging=e.kind==='frostboss'&&s.bossCharge>0,enraged=e.kind==='boss'&&e.hp<e.maxHp*.5;
  const hit=clamp((e.recoil??e.hit)/.2),knock=(e.knockVelocity??0)>7;
+ const reaction=knockbackPresentation(e.knockVelocity??0);
  const gait=(Math.floor(e.progress/(e.kind==='stone'?28:e.kind==='frostwolf'?18:22))+e.id)%2;
  const motionPose=charging?'charge':e.hit>.02||knock?'hit':enraged?'charge':boss?'idle':reduced||gait===0?'walk-a':'walk-b';
  const art=monsterSpriteAsset(e.kind,motionPose);
@@ -99,8 +102,9 @@ function EnemyUnit({unit=1,hpScale=1,enemy:e,state:s,reduced,onActivate,onKey}:{
   <title>{ENEMIES[e.kind].name} · {ENEMIES[e.kind].elementHint}</title>
   {charging?<g opacity=".75"><ellipse rx={35+(2.5-s.bossCharge)*10} ry={12+(2.5-s.bossCharge)*4} fill="#91d9ff16" stroke="#bcf2ff" strokeWidth="2"/><g transform={`scale(1,.38) rotate(${reduced?0:s.time*34})`}><path d="M-48 0 24-42 24 42ZM48 0-24-42-24 42Z" fill="none" stroke="#daf6ff" strokeWidth="1.2" opacity=".6"/></g><circle cy="-52" r={22+(2.5-s.bossCharge)*9} fill="url(#def-blue-core)" opacity=".38"/></g>:null}
   {e.slow>0?<ellipse cy="2" rx={size*.36} ry="8" fill="#91d6ff36" stroke="#d3f6ff66" strokeWidth="1"/>:null}
-  {knock&&!reduced?<path d={`M${-facing*21} 3h${-facing*13}m${facing*5} 4h${-facing*8}`} stroke="#eadbc6" strokeWidth="3" strokeLinecap="round" opacity=".6"/>:null}
-  <Sprite index={ENEMIES[e.kind].sprite} size={size} flip={facing<0} art={art} pose={`translate(${shake},${bob}) rotate(${lean}) scale(${reduced?1:1+hit*.07},${reduced?1:1-hit*.06})`} shadowScale={1+bob*.025}/>
+  {!reduced&&reaction.streak?<path d={`M${-facing*21} 3h${-facing*20*reaction.strength}m${facing*5} 4h${-facing*12*reaction.strength}`} stroke="#eadbc6" strokeWidth="3" strokeLinecap="round" opacity={.65*reaction.strength}/>:null}
+  {!reduced&&reaction.bracing?<g opacity={Math.min(1,hit+.15)} data-impact-reaction="brace"><ellipse cy="3" rx={size*.3} ry="5" fill="#bbaa8b" opacity=".4"/><path d={`M${-size*.3} 2l-5-4M${size*.3} 2l5-4`} stroke="#d9c7a2" strokeWidth="2" strokeLinecap="round"/></g>:null}
+  <Sprite index={ENEMIES[e.kind].sprite} size={size} flip={facing<0} art={art} pose={`translate(${shake},${bob}) rotate(${lean}) scale(${reduced?1:1+hit*.07},${reduced?1:1-hit*.06-(reaction.bracing?.04:0)})`} shadowScale={1+bob*.025}/>
   {e.burn>0?<g opacity=".75"><circle cy="-24" r={reduced?14:18+Math.sin(s.time*11+e.id)*2} fill="url(#def-fire-core)"/>{!reduced?<path d="M-10-22q-7-11-3-18q1 10 8 13M6-27q-1-12 5-16q-4 12 0 17" fill="none" stroke="#ffc05d" strokeWidth="2" strokeLinecap="round"/>:null}</g>:null}
   {e.wet>0?<path d="M22-46q-10 13 0 13q10 0 0-13" fill="#84e4ff" stroke="#d8fbff" strokeWidth=".9"/>:null}
   <rect x={-hpW/2} y={hpY} width={hpW} height={hpH} rx={hpH/2} fill="#102418" stroke="#0a1610cc" strokeWidth={1.2*hpScale}/><rect x={-hpW/2} y={hpY} width={hpW*clamp(e.hp/e.maxHp)} height={hpH} rx={hpH/2} fill={e.kind==='frostboss'?'#91d8f5':e.kind==='boss'?'#d176ed':'#e7ab69'}/>
@@ -140,25 +144,9 @@ function TowerUnit({tower:t,position:p,state:s,reduced}:{tower:Tower;position:Po
   <text y="25" textAnchor="middle" className="def-tower-level">Lv.{t.level}</text>
  </g>;
 }
-const pathD=(path:Point[])=>{
- let d=`M${path[0].x} ${path[0].y}`;
- for(let i=1;i<path.length-1;i++){const a=path[i-1],p=path[i],b=path[i+1],r=18,al=distance(a,p),bl=distance(p,b);d+=`L${p.x-(p.x-a.x)/al*r} ${p.y-(p.y-a.y)/al*r}Q${p.x} ${p.y} ${p.x+(b.x-p.x)/bl*r} ${p.y+(b.y-p.y)/bl*r}`;}
- return d+`L${path.at(-1)!.x} ${path.at(-1)!.y}`;
-};
-const Terrain=memo(function Terrain({stageId}:{stageId:number}){
- const stage=getStage(stageId),snow=stage.region==='snow',paths=getPaths(stageId).slice(0,stage.expanded?2:1);
- return <g className="def-terrain">
-  <defs><linearGradient id="def-road" x1="0" y1="0" x2="0" y2="1"><stop stopColor={snow?'#dde9e8':'#d9be89'}/><stop offset="1" stopColor={snow?'#b6c8ca':'#c1a26b'}/></linearGradient><pattern id="def-gravel" width="79" height="37" patternUnits="userSpaceOnUse"><ellipse cx="8" cy="6" rx="3" ry="1.4" fill="#a8895666"/><ellipse cx="33" cy="20" rx="4" ry="1.8" fill="#e8d39a99"/><ellipse cx="65" cy="30" rx="2" ry="1.2" fill="#b58f5c77"/><path d="M15 31l7-1M54 8l5 1" stroke="#a9895966" strokeWidth="1"/></pattern><mask id="def-ice-mask"><rect width="900" height="600" fill="black"/>{paths.map((p,i)=><path key={i} d={pathD(p)} fill="none" stroke="white" strokeWidth="44"/>)}</mask><pattern id="def-ice-lines" width="50" height="35" patternUnits="userSpaceOnUse"><path d="M0 15 30 0M13 35 50 12" stroke="#effbff" strokeWidth="2" opacity=".65"/></pattern></defs>
-  <image href={snow?'/defense/snow.png':'/defense/forest.png'} width="900" height="600" preserveAspectRatio="xMidYMid slice"/>
-  {paths.map((p,i)=><g key={i}><path d={pathD(p)} fill="none" stroke={snow?'#70929788':'#89744499'} strokeWidth="52" strokeLinejoin="round"/><path d={pathD(p)} fill="none" stroke="url(#def-road)" strokeWidth="45" strokeLinejoin="round"/><path d={pathD(p)} fill="none" stroke="url(#def-gravel)" strokeWidth="43" strokeLinejoin="round"/></g>)}
-  {!snow?[430,...(stage.expanded?[235]:[])].map(y=><image key={y} href="/defense/bridge.png" x="620" y={y-52} width="180" height="103" preserveAspectRatio="none"/>):<g mask="url(#def-ice-mask)"><rect x="300" width="220" height="600" fill="#8fd5ee" opacity=".65"/><rect x="300" width="220" height="600" fill="url(#def-ice-lines)"/></g>}
-  {!stage.expanded?<g opacity=".9"><rect x="695" y="66" width="168" height="54" rx="9" fill="#1c463be0"/><text x="779" y="88" textAnchor="middle" fill="#f4ead3" fontSize="17" fontFamily="Jua">{snow?'산맥 피난소':'강 건너 마을'}</text><text x="779" y="108" textAnchor="middle" fill="#c4d8ba" fontSize="14">{snow?'2-4에서 길이 열립니다':'1-4에서 길이 열립니다'}</text></g>:null}
- </g>;
-});
-
 export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSelect,onMove,aimingDash=false,onSelectCandidates,onCancelAim,themeId='verdant'}:{state:DefenseState;selectedSlot:number|null;onSelect:(id:number)=>void;onMove:(p:Point)=>void;aimingDash?:boolean;onSelectCandidates?:(ids:number[])=>void;onCancelAim?:()=>void;themeId?:DefenseThemeId}){
  const stage=getStage(s.stage),snow=getRegion(s.stage)==='snow',slots=getSlots(s.stage),availableSlots=slots.filter(slot=>slot.unlock<=s.stage);
- const reduced=useReducedMotion(),[unit,setUnit]=useState(1),[hpScale,setHpScale]=useState(1);
+ const reduced=useReducedMotion(),terrainAsset=useTerrainAsset(s.stage),[unit,setUnit]=useState(1),[hpScale,setHpScale]=useState(1);
  const mapRef=useRef<SVGSVGElement>(null),boardRef=useRef<HTMLDivElement>(null),tapRef=useRef(new BoardTapTracker());
  const movingAllowed=!s.paused&&['prep','wave','intermission'].includes(s.phase),enemyKinds=[...new Set(s.enemies.map(e=>e.kind))];
  const controls=useRef({allowed:movingAllowed,aimingDash,onMove,onSelect,onSelectCandidates,onCancelAim,slots:availableSlots});
@@ -233,6 +221,7 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
  const dashEffect=activeEffects.filter(e=>e.kind==='dash').at(-1);
  const actorMotion=(actor:'hero'|'mercenary'|'pet')=>s.phase==='won'||s.phase==='lost'?{...s.locomotion[actor],speed:0}:s.locomotion[actor];
  const units:{id:string;y:number;render:ReactNode}[]=[];
+ if(terrainAsset&&!snow)for(const y of [430,...(stage.expanded?[235]:[])])units.push({id:`bridge-front-${y}`,y:y+25,render:<BridgeFrontRail y={y}/>});
  for(const t of s.towers){const p=slots.find(slot=>slot.id===t.slot);if(p)units.push({id:`tower-${t.slot}`,y:p.y,render:<TowerUnit tower={t} position={p} state={s} reduced={reduced}/>});}
  for(const e of s.enemies)units.push({id:`enemy-${e.id}`,y:e.y,render:<EnemyUnit unit={unit} hpScale={hpScale} enemy={e} state={s} reduced={reduced} onActivate={()=>activateEnemy(e)} onKey={ev=>handleEnemyKey(ev,e)}/>});
  if(s.mercenary)units.push({id:'merc',y:s.mercenaryPosition.y,render:<Actor unit={unit} actor={s.mercenary} position={s.mercenaryPosition} facing={s.mercenaryFacing} motion={actorMotion('mercenary')} attack={s.attacks.find(a=>a.source==='mercenary')} time={s.time} reduced={reduced}/>});
@@ -241,7 +230,7 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
  const weatherTime=reduced?0:s.time;
  return <div ref={boardRef} onPointerDownCapture={pointerDown} onPointerMoveCapture={pointerMove} onPointerUpCapture={pointerUp} onPointerCancelCapture={()=>cancelInput(true)} onLostPointerCapture={event=>{if(tapRef.current.has(event.pointerId))cancelInput(true);}} onClickCapture={preventPointerClick} className={`def-board ${snow?'def-snow':''} ${stage.climate==='rain'?'def-rain':''} ${stage.climate==='blizzard'?'def-blizzard':''} ${s.paused?'def-paused':''} ${reduced?'def-reduced-motion':''} ${s.freeze>0?'def-frozen':''}`} data-testid="defense-board" data-theme={themeId} data-enemies={s.enemies.length} data-game-time={s.time.toFixed(3)}>
   <svg ref={mapRef} className="def-map" viewBox="0 0 900 600" tabIndex={0} aria-label={`${snow?'서리산맥':'청록의 숲'} 전장. 땅을 누르면 영웅이 이동합니다. 전장에 초점을 두고 방향키로도 이동할 수 있어요. 건설 지점을 선택해 타워를 세우세요.`} onKeyDown={moveWithKeys}>
-   <Terrain stageId={s.stage}/><DefenseFxDefs/>
+   <DefenseTerrain stageId={s.stage} asset={terrainAsset}/><DefenseFxDefs/>
    {slot&&slot.unlock<=s.stage?<circle cx={slot.x} cy={slot.y} r={selectedTower?towerRange(selectedTower,s.stage):145} fill="#e6f5b91a" stroke="#f5e7a5" strokeWidth="2" strokeDasharray="7 6" pointerEvents="none"/>:null}
    <DefenseThemeScenery themeId={themeId} snow={snow} expanded={stage.expanded} outpostFallen={s.outpostHp<=0}/>
    <EffectLayer effects={activeEffects} reduced={reduced} layer="ground"/>

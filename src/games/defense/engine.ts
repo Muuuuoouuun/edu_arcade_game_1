@@ -1,3 +1,4 @@
+import { DASH_DAMAGE, DASH_HIT_RADIUS, DASH_IMPACT, distanceToSegment } from './action.ts';
 import { advanceLocomotion, movementFacing } from './locomotion.ts';
 import { BRANCHES, ENEMIES, HERO_ORDER, STAGE_COUNT, TOWERS, getPaths, getSlots, getStage, getRegion } from './data.ts';
 import { DIFFICULTIES, getDifficulty, getWavePlan } from './difficulty.ts';
@@ -47,7 +48,7 @@ export function createDefense(stage:number,hero:HeroId,training=0,difficulty:Dif
   const id=Math.max(1,Math.min(STAGE_COUNT,Math.trunc(stage)||1)),data=getStage(id);
   const mode=getDifficulty(difficulty),settings=DIFFICULTIES[mode];
   const chosen=HERO_ORDER.includes(hero)?hero:'mage',position=data.region==='snow'?{x:440,y:390}:{x:440,y:355};
-  return {stage:id,difficulty:mode,phase:'prep',paused:false,speed:1,time:0,wave:0,coins:(data.region==='snow'?280:240)+settings.startingCoins,hp:20,outpostHp:12,kills:0,leaks:0,waveStartLeaks:0,enemies:[],towers:[],effects:[],attacks:[],projectiles:[],hero:chosen,heroPosition:position,heroTarget:{...position},heroVelocity:{x:0,y:0},locomotion:{hero:{distance:0,speed:0},mercenary:{distance:0,speed:0},pet:{distance:0,speed:0}},dashCooldown:0,dashTime:0,heroFacing:-1,mercenaryPosition:{x:position.x+38,y:position.y+35},mercenaryFacing:-1,pet:chosen==='druid'?{position:{x:position.x+28,y:position.y-22},target:{x:position.x+28,y:position.y-22},facing:-1}:null,heroCooldown:0,mercenary:null,mercCooldown:0,petCooldown:0,skillCooldown:0,bossCharge:0,freeze:0,bossCycle:8,promotion:null,spawned:0,spawnTimer:0,nextId:1,training:Math.max(0,Math.min(5,Math.trunc(training)||0)),notice:data.region==='snow'?'빙판 위의 적은 빨라져요. 고지대와 화염 타워를 활용하세요.':'빛나는 건설 지점을 선택해 타워를 세우세요.',questProgress:data.questType==='hunt'?0:data.questType==='outpost'?12:20};
+  return {stage:id,difficulty:mode,phase:'prep',paused:false,speed:1,time:0,wave:0,coins:(data.region==='snow'?280:240)+settings.startingCoins,hp:20,outpostHp:12,kills:0,leaks:0,waveStartLeaks:0,enemies:[],towers:[],effects:[],attacks:[],projectiles:[],hero:chosen,heroPosition:position,heroTarget:{...position},heroVelocity:{x:0,y:0},locomotion:{hero:{distance:0,speed:0},mercenary:{distance:0,speed:0},pet:{distance:0,speed:0}},dashCooldown:0,dashTime:0,dashHitIds:[],heroFacing:-1,mercenaryPosition:{x:position.x+38,y:position.y+35},mercenaryFacing:-1,pet:chosen==='druid'?{position:{x:position.x+28,y:position.y-22},target:{x:position.x+28,y:position.y-22},facing:-1}:null,heroCooldown:0,mercenary:null,mercCooldown:0,petCooldown:0,skillCooldown:0,bossCharge:0,freeze:0,bossCycle:8,promotion:null,spawned:0,spawnTimer:0,nextId:1,training:Math.max(0,Math.min(5,Math.trunc(training)||0)),notice:data.region==='snow'?'빙판 위의 적은 빨라져요. 고지대와 화염 타워를 활용하세요.':'빛나는 건설 지점을 선택해 타워를 세우세요.',questProgress:data.questType==='hunt'?0:data.questType==='outpost'?12:20};
 }
 
 export function damageMultiplier(kind:EnemyKind,element:Element):number {
@@ -223,6 +224,14 @@ function stopDash(s:DefenseState) {
 function advanceActors(s:DefenseState,dt:number,combat:boolean) {
   const before={hero:s.heroPosition,mercenary:s.mercenaryPosition,pet:s.pet?.position},dashing=s.dashTime>0;
   advanceHero(s,dt,combat);
+  if(combat&&dashing){
+    for(const enemy of s.enemies){
+      if(enemy.hp<=0||s.dashHitIds.includes(enemy.id)||distanceToSegment(enemy,before.hero,s.heroPosition)>DASH_HIT_RADIUS)continue;
+      s.dashHitIds=[...s.dashHitIds,enemy.id];
+      hit(s,enemy,DASH_DAMAGE,'physical',s.heroPosition,DASH_IMPACT);
+    }
+    reap(s);
+  }
   const mercTarget={x:Math.min(875,s.heroPosition.x+38),y:Math.min(565,s.heroPosition.y+35)};
   s.mercenaryPosition=moveTowards(s.mercenaryPosition,mercTarget,220,dt);s.mercenaryFacing=movementFacing(s.mercenaryFacing,before.mercenary,s.mercenaryPosition);
   if(s.hero==='druid'||s.mercenary==='druid'){
@@ -314,11 +323,11 @@ function applyDefenseAction(state:DefenseState,action:DefenseAction):DefenseStat
     if(len<1)return state;
     const travel=Math.min(DASH_RANGE,len);
     s.heroTarget={x:s.heroPosition.x+dx/len*travel,y:s.heroPosition.y+dy/len*travel};
-    s.heroVelocity={x:dx/len*DASH_SPEED,y:dy/len*DASH_SPEED};s.dashTime=travel/DASH_SPEED;s.dashCooldown=DASH_COOLDOWN;
+    s.heroVelocity={x:dx/len*DASH_SPEED,y:dy/len*DASH_SPEED};s.dashTime=travel/DASH_SPEED;s.dashCooldown=DASH_COOLDOWN;s.dashHitIds=[];
     if(Math.abs(dx)>.01)s.heroFacing=dx<0?-1:1;
     s.attacks=s.attacks.filter(a=>a.source!=='hero'||a.fired);
     effect(s,s.heroPosition,s.heroTarget,'physical',undefined,'dash',{force:travel});
-    s.notice='질주! 빠르게 방어 위치를 바꿨어요.';
+    s.notice='돌파! 경로의 적을 한 번 타격하고 밀쳐내요.';
   } else if(action.type==='promote') {
     if(s.phase!=='promotion'||s.promotion||!['power','control'].includes(action.choice)) return state;
     s.promotion=action.choice;s.phase='intermission';s.notice=action.choice==='power'?'전직 완료! 공격력과 필살기가 강해졌어요.':'전직 완료! 사거리 증가 · 필살기에 둔화 효과!';

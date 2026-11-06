@@ -10,6 +10,7 @@
 - [교육 방향](education-direction.md): 전투 우선, 재료 관찰과 선택형 설명.
 - [모드·운영·맵 크기](modes-operations-maps.md): 임무 구성, 전투·마을 운영, S/M/L 전장과 랭킹 조건.
 - [모델링·움직임·재미](modeling-motion-and-fun.md): 모델 제작 기준, 보행·공격 연결, 안개재 체험 스테이지와 검증 순서.
+- [지형·모델·액션 구현](../arcana-terrain-action.md): 원격 브랜치 통합, 입체 지형 4종과 돌진 타격의 실제 적용 범위.
 - [시안 갤러리](concept-gallery.md): 33장 원본을 주제별로 확인.
 - [에셋 목록](asset-manifest.json): 상대 경로, 원본 생성 파일명, 크기, 해상도, SHA-256.
 
