@@ -88,7 +88,7 @@ function reap(s:DefenseState) {
     const boss=enemy.kind==='boss'||enemy.kind==='frostboss';
     if(merged&&!boss)mergedSum+=bounty;
     else effect(s,enemy,enemy,'physical',boss?`+${bounty} 처치!`:`+${bounty}`,'coin');
-    if(boss)effect(s,enemy,enemy,'impact','','shockwave',{force:6});
+    if(boss)effect(s,enemy,enemy,'impact','','shockwave',{force:145});
     effect(s,enemy,enemy,'physical',undefined,'death',{targetSprite:ENEMIES[enemy.kind].sprite,targetId:enemy.id,targetKind:enemy.kind,targetFacing:enemy.facing||1,force:enemy.knockVelocity||0});
   }
   if(merged){const last=crowd[crowd.length-1];effect(s,last,last,'physical',`+${mergedSum} ×${crowd.length}`,'coin');}
