@@ -248,3 +248,11 @@ test('every monster and boss crop stays inside its source sheet in each pose, fo
   }
  }
 });
+
+test('the illustrated monster sheet is requested only when a baked atlas fails to load',async()=>{
+ const {requests}=await loadWithImageResults(()=>false,'sheet-skipped');
+ assert.equal(requests.includes('/defense/monster-models.webp'),false,'a healthy load skips the fallback sheet');
+ const {art,requests:failedRequests}=await loadWithImageResults(src=>src.includes('wood-soldier'),'sheet-fetched');
+ assert.equal(failedRequests.filter(src=>src==='/defense/monster-models.webp').length,1);
+ assert.equal(art.monsterSpriteAsset('wood','walk-a')?.src,'/defense/monster-models.webp');
+});
