@@ -575,6 +575,19 @@ test('the surge notice appears once in waves 2-3 and never in waves 1 or 4',()=>
   }
 });
 
+test('wolf death records path facing and simulation age while rewards settle exactly once',()=>{
+ const state=battlefield(5),wolf={...enemy('frostwolf',1),hp:0,speed:0,facing:-1 as const};
+ state.enemies=[wolf,{...enemy('stone',2,100,100),speed:0}];
+ const killed=stepDefense(state,.02),death=killed.effects.find(effect=>effect.kind==='death')!;
+ assert.equal(killed.kills,1);assert.equal(killed.coins-state.coins,16);
+ assert.equal(death.targetKind,'frostwolf');assert.equal(death.targetFacing,1);assert.equal(death.maxLife,.7);
+ const paused=actDefense(killed,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+ const resumed=actDefense(paused,{type:'resume'}),later=stepDefense(resumed,.1);
+ const aged=later.effects.find(effect=>effect.id===death.id)!;assert.ok(Math.abs(aged.age!-(death.age!+.1))<1e-8);
+ const finished=advance(later,1);assert.equal(finished.effects.some(effect=>effect.id===death.id),false);
+ assert.equal(finished.kills,1);assert.equal(finished.coins,killed.coins);
+});
+
 test('a boss kill adds one shockwave and a labelled coin without changing the bounty',()=>{
   const kill=(kind:EnemyKind)=>{const s=battlefield(kind==='frostboss'?8:4),e=enemy(kind,1);e.hp=0;e.speed=0;const spare=enemy('stone',2,100,100);spare.speed=0;s.enemies=[e,spare];const before=s.coins;const next=stepDefense(s,.05);return {next,gain:next.coins-before};};
   for(const kind of ['boss','frostboss'] as const){

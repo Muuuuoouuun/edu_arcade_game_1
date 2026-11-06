@@ -28,7 +28,8 @@
     "models:wolf": "blender -b --python tools/blender/build_wolf.py",
     "models:wood": "blender -b --python tools/blender/build_wood.py",
     "models:bridge": "node --experimental-strip-types tools/export-terrain-layout.ts && blender --python-exit-code 1 -b --python tools/blender/build_terrain.py -- --bridge",
-    "models:terrain": "node --experimental-strip-types tools/export-terrain-layout.ts && blender -b --python tools/blender/build_terrain.py"
+    "models:terrain": "node --experimental-strip-types tools/export-terrain-layout.ts && blender -b --python tools/blender/build_terrain.py",
+    "models:wolf-collapse": "blender --python-exit-code 1 -b --python tools/blender/build_wolf_collapse.py"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

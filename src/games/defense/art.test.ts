@@ -5,6 +5,24 @@ import type { Projectile } from './types.ts';
 
 type Art = typeof import('./art.ts');
 
+test('wolf collapse follows simulation progress, keeps ground and falls back without a complete model set',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'wolf-collapse');
+ const base=art.monsterSpriteAsset('frostwolf','hit')!;
+ for(const [p,expected] of [[-.1,0],[0,0],[.239,0],[.24,1],[.48,2],[.72,3],[1,3],[NaN,0]]){
+  const {asset,frame}=art.monsterDeathSpriteAsset('frostwolf',p)!;
+  assert.equal(frame,expected);assert.equal(asset.groundY,base.groundY);assert.equal(asset.displayScale,base.displayScale);
+  const [x,y,w,h]=asset.viewBox.split(' ').map(Number);assert.ok(x+w<=asset.width&&y+h<=asset.height);
+  assert.equal(art.monsterDeathSpriteAsset('frostwolf',p,true)?.frame,3);
+ }
+ assert.equal(art.monsterDeathSpriteAsset('wood',.5),null);
+ assert.ok(!requests.some(src=>src.endsWith('.glb')));
+ for(const missing of ['frost-wolf-atlas.webp','frost-wolf-collapse-atlas.webp']){
+  const {art:failed}=await loadWithImageResults(src=>src.endsWith('/'+missing),'collapse-'+missing);
+  assert.equal(failed.monsterDeathSpriteAsset('frostwolf',.5),null);
+  assert.ok(failed.monsterSpriteAsset('frostwolf','death'));
+ }
+});
+
 test('wolf trot keeps eight frames on the base pose ground and never mixes a partial model set',async()=>{
  const {art}=await loadWithImageResults(()=>false,'wolf-trot-ready');
  const base=art.monsterSpriteAsset('frostwolf','hit')!;
@@ -270,7 +288,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')).length,8);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')).length,9);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{

@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { monsterSpriteAsset, spriteAsset, waterCannonProjectileOffset } from '../games/defense/art';
+import { monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, waterCannonProjectileOffset } from '../games/defense/art';
 import { projectileScreenPosition } from '../games/defense/action';
 import type { CombatAttack, Effect, Element, Point, Projectile } from '../games/defense/types';
 
@@ -160,7 +160,7 @@ const Lightning=memo(function Lightning({effect}:{effect:Effect}){
  }).join(' ');
  return <><polyline points={nodes} fill="none" stroke="#6ed5ef" strokeWidth="7" opacity=".4" strokeLinejoin="round"/><polyline points={nodes} fill="none" stroke="#d8fbff" strokeWidth="2.6" strokeLinejoin="round"/></>;
 },(before,after)=>before.effect.id===after.effect.id&&before.effect.from.x===after.effect.from.x&&before.effect.from.y===after.effect.from.y&&before.effect.to.x===after.effect.to.x&&before.effect.to.y===after.effect.to.y);
-export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];reduced:boolean;layer?:'ground'|'front'}){
+export function EffectLayer({effects,reduced,unit=1,layer='front'}:{effects:Effect[];reduced:boolean;unit?:number;layer?:'ground'|'front'}){
  // Keep every damage number, hit core, coin and death; cap only decorative fragments.
  const sparkCounts=new Map<number,number>();
  if(!reduced&&layer==='front'){
@@ -199,15 +199,17 @@ export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];re
   if(kind==='chain')return <g key={e.id} opacity={fade} data-effect="chain"><Lightning effect={e}/><circle cx={e.to.x} cy={e.to.y-25} r={12+p*12} fill="url(#def-blue-core)"/></g>;
   if(kind==='death'){
    const kind=e.targetKind??(e.targetSprite===20?'frostboss':e.targetSprite===14?'boss':undefined);
-   const deathArt=kind?monsterSpriteAsset(kind,'death'):null;
+   const collapse=kind?monsterDeathSpriteAsset(kind,p,reduced):null;
+   const deathArt=collapse?.asset??(kind?monsterSpriteAsset(kind,'death'):null);
    const art=deathArt??(typeof e.targetSprite==='number'?spriteAsset(e.targetSprite):null);
    const boss=kind==='boss'||kind==='frostboss';
-   const fall=reduced?0:p*(deathArt?3:10),scale=reduced?1:1-p*(boss?.08:.24),bodySize=e.targetSprite===20?135:e.targetSprite===14?115:e.targetSprite===8?54:e.targetSprite===19?73:68,size=bodySize*(art?.displayScale??1);
-   const [,,frameWidth,frameHeight]=art?.viewBox.split(' ').map(Number)??[0,0,1,1];
+   const fall=reduced||collapse?0:p*(deathArt?3:10),scale=reduced||collapse?1:1-p*(boss?.08:.24),bodySize=e.targetSprite===20?135:e.targetSprite===14?115:e.targetSprite===8?54:e.targetSprite===19?73:68,size=bodySize*(collapse?unit:1)*(art?.displayScale??1);
+   const [,frameY,frameWidth,frameHeight]=art?.viewBox.split(' ').map(Number)??[0,0,1,1];
    const width=size*Math.min(1,frameWidth/frameHeight),height=size*Math.min(1,frameHeight/frameWidth);
-   return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} data-effect="death">
-    {art?<g opacity={Math.min(1,(1-p)*(boss?1.6:.85))} transform={`translate(0,${fall}) rotate(${reduced||deathArt?0:(noise(e.id)>.5?1:-1)*p*13}) scale(${scale*(e.targetFacing===-1?-1:1)},${scale})`}><svg x={-width/2} y={bodySize*.1-height} width={width} height={height} viewBox={art.viewBox} preserveAspectRatio="xMidYMax meet" overflow="hidden"><image href={art.src} width={art.width} height={art.height}/></svg></g>:null}
-    {sparks>0?<g transform="translate(0,-20)"><Sparks effect={e} reduced={reduced} count={sparks}/></g>:null}
+   const bottom=collapse&&art?.groundY!==undefined?height*(1-(art.groundY-frameY)/frameHeight):bodySize*.1;
+   return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} data-effect="death" data-death-model={collapse?'collapse':undefined} data-death-frame={collapse?.frame}>
+    {art?<g opacity={collapse?Math.min(1,(1-p)/.3):Math.min(1,(1-p)*(boss?1.6:.85))} transform={`translate(0,${fall}) rotate(${reduced||deathArt?0:(noise(e.id)>.5?1:-1)*p*13}) scale(${scale*(e.targetFacing===-1?-1:1)},${scale})`}><svg x={-width/2} y={bottom-height} width={width} height={height} viewBox={art.viewBox} preserveAspectRatio="xMidYMax meet" overflow="hidden"><image href={art.src} width={art.width} height={art.height}/></svg></g>:null}
+    {sparks>0&&!collapse?<g transform="translate(0,-20)"><Sparks effect={e} reduced={reduced} count={sparks}/></g>:null}
    </g>;
   }
   if(kind==='coin')return <g key={e.id} transform={`translate(${(e.text?.length??0)>4?Math.max(40,Math.min(760,e.to.x)):e.to.x},${e.to.y-35-(reduced?0:p*37)})`} opacity={fade} data-effect="coin">

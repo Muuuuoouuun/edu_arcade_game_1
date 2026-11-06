@@ -238,11 +238,11 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
    <DefenseTerrain stageId={s.stage} asset={terrainAsset}/><DefenseFxDefs/>
    {slot&&slot.unlock<=s.stage?<circle cx={slot.x} cy={slot.y} r={selectedTower?towerRange(selectedTower,s.stage):145} fill="#e6f5b91a" stroke="#f5e7a5" strokeWidth="2" strokeDasharray="7 6" pointerEvents="none"/>:null}
    <DefenseThemeScenery themeId={themeId} snow={snow} expanded={stage.expanded} outpostFallen={s.outpostHp<=0}/>
-   <EffectLayer effects={activeEffects} reduced={reduced} layer="ground"/>
+   <EffectLayer effects={activeEffects} reduced={reduced} unit={unit} layer="ground"/>
    <DashTrail effect={dashEffect} position={s.heroPosition} remaining={s.dashTime} reduced={reduced}/>
    {!dashEffect&&distance(s.heroPosition,s.heroTarget)>5?<g className="def-move-destination" pointerEvents="none"><path d={`M${s.heroPosition.x} ${s.heroPosition.y}L${s.heroTarget.x} ${s.heroTarget.y}`} stroke="#e2f4bb" strokeDasharray="4 8" strokeWidth="1.5" opacity=".4"/><ellipse cx={s.heroTarget.x} cy={s.heroTarget.y} rx="16" ry="7" fill="none" stroke="#f1ffba" strokeWidth="2"/><path d={`M${s.heroTarget.x-6} ${s.heroTarget.y}h12M${s.heroTarget.x} ${s.heroTarget.y-4}v8`} stroke="#f1ffba" strokeWidth="1.4"/></g>:null}
    {units.sort((a,b)=>a.y-b.y).map(unit=><g key={unit.id}>{unit.render}</g>)}
-   <AttackTrails attacks={s.attacks} reduced={reduced}/><ProjectileLayer projectiles={s.projectiles} reduced={reduced}/><EffectLayer effects={activeEffects} reduced={reduced}/>
+   <AttackTrails attacks={s.attacks} reduced={reduced}/><ProjectileLayer projectiles={s.projectiles} reduced={reduced}/><EffectLayer effects={activeEffects} reduced={reduced} unit={unit}/>
   </svg>
   {breach&&!reduced?<div className="def-breach-flash" style={{opacity:Math.max(0,1-(breach.age??0)/(breach.maxLife??.6))*Math.min(1,.45+(breach.force??1)*.12)}} aria-hidden="true"/>:null}
   <div className="def-town-label" style={{right:'1.5%',top:'var(--town-label-top,74%)'}}>마을 <b>{s.hp}</b></div>{stage.expanded?<div className={`def-town-label ${s.outpostHp<=0?'fallen':''}`} style={{right:'1.5%',top:'11%'}}>구조 <b>{s.outpostHp}</b></div>:null}
