@@ -1,3 +1,4 @@
+import { gatePlacement } from '../games/defense/gateAssets';
 import { knockbackPresentation } from '../games/defense/action';
 import { DefenseTerrain, BridgeFrontRail, useTerrainAsset } from './DefenseTerrain';
 import { WALK_STRIDE, enemyStride, enemyWalkFrame } from '../games/defense/locomotion';
@@ -8,7 +9,7 @@ import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getSlots } from '../games
 import { actionSpriteAsset, directionalActionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset, waterCannonActionSpriteAsset } from '../games/defense/art';
 import type { SpriteAsset, ActionPose } from '../games/defense/art';
 import type { DefenseThemeId } from '../games/defense/themes';
-import { DefenseThemeScenery } from './DefenseThemeScenery';
+import { DefenseThemeScenery, ModeledGate, useGateAsset } from './DefenseThemeScenery';
 import { towerRange, positionOnPath } from '../games/defense/engine';
 import type { CombatAttack, DefenseState, Effect, Element, Enemy, HeroId, Point, Tower } from '../games/defense/types';
 import { AttackTrails, DashTrail, DefenseFxDefs, EffectLayer, FX_COLORS, ProjectileLayer } from './DefenseEffects';
@@ -151,6 +152,7 @@ function TowerUnit({tower:t,position:p,state:s,reduced}:{tower:Tower;position:Po
 }
 export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSelect,onMove,aimingDash=false,onSelectCandidates,onCancelAim,themeId='verdant'}:{state:DefenseState;selectedSlot:number|null;onSelect:(id:number)=>void;onMove:(p:Point)=>void;aimingDash?:boolean;onSelectCandidates?:(ids:number[])=>void;onCancelAim?:()=>void;themeId?:DefenseThemeId}){
  const stage=getStage(s.stage),snow=getRegion(s.stage)==='snow',slots=getSlots(s.stage),availableSlots=slots.filter(slot=>slot.unlock<=s.stage);
+ const gateAsset=useGateAsset(themeId,snow);
  const reduced=useReducedMotion(),terrainAsset=useTerrainAsset(s.stage),[unit,setUnit]=useState(1),[hpScale,setHpScale]=useState(1);
  const mapRef=useRef<SVGSVGElement>(null),boardRef=useRef<HTMLDivElement>(null),tapRef=useRef(new BoardTapTracker());
  const movingAllowed=!s.paused&&['prep','wave','intermission'].includes(s.phase),enemyKinds=[...new Set(s.enemies.map(e=>e.kind))];
@@ -226,6 +228,10 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
  const dashEffect=activeEffects.filter(e=>e.kind==='dash').at(-1);
  const actorMotion=(actor:'hero'|'mercenary'|'pet')=>s.phase==='won'||s.phase==='lost'?{...s.locomotion[actor],speed:0}:s.locomotion[actor];
  const units:{id:string;y:number;render:ReactNode}[]=[];
+ if(gateAsset==='modeled'){
+  units.push({id:'village-gate',y:gatePlacement().sortY,render:<ModeledGate/>});
+  if(stage.expanded)units.push({id:'outpost-gate',y:gatePlacement(true).sortY,render:<ModeledGate outpost fallen={s.outpostHp<=0}/>});
+ }
  if(terrainAsset&&!snow)for(const y of [430,...(stage.expanded?[235]:[])])units.push({id:`bridge-front-${y}`,y:y+25,render:<BridgeFrontRail y={y} asset={terrainAsset}/>});
  for(const t of s.towers){const p=slots.find(slot=>slot.id===t.slot);if(p)units.push({id:`tower-${t.slot}`,y:p.y,render:<TowerUnit tower={t} position={p} state={s} reduced={reduced}/>});}
  for(const e of s.enemies)units.push({id:`enemy-${e.id}`,y:e.y,render:<EnemyUnit unit={unit} hpScale={hpScale} enemy={e} state={s} reduced={reduced} onActivate={()=>activateEnemy(e)} onKey={ev=>handleEnemyKey(ev,e)}/>});
@@ -237,7 +243,7 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
   <svg ref={mapRef} className="def-map" viewBox="0 0 900 600" tabIndex={0} aria-label={`${snow?'서리산맥':'청록의 숲'} 전장. 땅을 누르면 영웅이 이동합니다. 전장에 초점을 두고 방향키로도 이동할 수 있어요. 건설 지점을 선택해 타워를 세우세요.`} onKeyDown={moveWithKeys}>
    <DefenseTerrain stageId={s.stage} asset={terrainAsset}/><DefenseFxDefs/>
    {slot&&slot.unlock<=s.stage?<circle cx={slot.x} cy={slot.y} r={selectedTower?towerRange(selectedTower,s.stage):145} fill="#e6f5b91a" stroke="#f5e7a5" strokeWidth="2" strokeDasharray="7 6" pointerEvents="none"/>:null}
-   <DefenseThemeScenery themeId={themeId} snow={snow} expanded={stage.expanded} outpostFallen={s.outpostHp<=0}/>
+   <DefenseThemeScenery assetMode={gateAsset} themeId={themeId} snow={snow} expanded={stage.expanded} outpostFallen={s.outpostHp<=0}/>
    <EffectLayer effects={activeEffects} reduced={reduced} unit={unit} layer="ground"/>
    <DashTrail effect={dashEffect} position={s.heroPosition} remaining={s.dashTime} reduced={reduced}/>
    {!dashEffect&&distance(s.heroPosition,s.heroTarget)>5?<g className="def-move-destination" pointerEvents="none"><path d={`M${s.heroPosition.x} ${s.heroPosition.y}L${s.heroTarget.x} ${s.heroTarget.y}`} stroke="#e2f4bb" strokeDasharray="4 8" strokeWidth="1.5" opacity=".4"/><ellipse cx={s.heroTarget.x} cy={s.heroTarget.y} rx="16" ry="7" fill="none" stroke="#f1ffba" strokeWidth="2"/><path d={`M${s.heroTarget.x-6} ${s.heroTarget.y}h12M${s.heroTarget.x} ${s.heroTarget.y-4}v8`} stroke="#f1ffba" strokeWidth="1.4"/></g>:null}
