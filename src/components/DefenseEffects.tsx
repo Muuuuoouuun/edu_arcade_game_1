@@ -57,9 +57,9 @@ export function ProjectileLayer({projectiles,reduced}:{projectiles:Projectile[];
           <path d="M-16 0H9" stroke="#473f31" strokeWidth="3.5" strokeLinecap="round"/><path d="M-16 -.5H9" stroke="#ebd39a" strokeWidth="1.6"/>
           <path d="m7-4 9 4-9 4 2-4Z" fill="#faf7db" stroke="#91875d" strokeWidth=".8"/><path d="m-14 0-7-5 1 5-1 5Z" fill="#c5e3b0" stroke="#648773" strokeWidth=".8"/>
         </>:p.kind==='shell'?<>
-          {detail?<><circle cx="-14" cy="2" r="5" fill={water?'#99dff3':'#e1c99e'} opacity=".25"/><circle cx="-25" cy="5" r="3" fill={water?'#99dff3':'#e1c99e'} opacity=".12"/></>:null}
-          <circle r={water?9:8} fill={water?'#5ca8c4':'#33494c'} stroke={water?'#c6f8ff':'#1f2f30'} strokeWidth="1.8"/><path d="M-4-4Q1-8 5-3" fill="none" stroke={water?'#eaffff':'#b6cbbe'} strokeWidth="2" strokeLinecap="round"/>
-          {water?<path d="M-5 2Q0-1 5 2" fill="none" stroke="#b1edff" strokeWidth="1.2"/>:<><path d="M-7-3-11-7" stroke="#c8a45e" strokeWidth="1.6"/><circle cx="-12" cy="-8" r="2.5" fill="#ffdb82"/></>}
+          {detail?<><circle cx="-14" cy="2" r="5" fill={water?'#8ff0dc':'#e1c99e'} opacity=".25"/><circle cx="-25" cy="5" r="3" fill={water?'#8ff0dc':'#e1c99e'} opacity=".12"/></>:null}
+          <circle r={water?9:8} fill={water?'#2fb3a3':'#33494c'} stroke={water?'#c8fff0':'#1f2f30'} strokeWidth="1.8"/><path d="M-4-4Q1-8 5-3" fill="none" stroke={water?'#eaffff':'#b6cbbe'} strokeWidth="2" strokeLinecap="round"/>
+          {water?<path d="M-5 2Q0-1 5 2" fill="none" stroke="#b8fff0" strokeWidth="1.2"/>:<><path d="M-7-3-11-7" stroke="#c8a45e" strokeWidth="1.6"/><circle cx="-12" cy="-8" r="2.5" fill="#ffdb82"/></>}
         </>:lightning?<>
           <circle r="18" fill="url(#def-spark-core)" opacity=".8"/>
           {detail?<path d="M-40 1-29-5-23 4-15-5-8 1" fill="none" stroke="#f2cf3a" strokeWidth="3" strokeLinecap="round" opacity=".65"/>:null}
@@ -67,7 +67,7 @@ export function ProjectileLayer({projectiles,reduced}:{projectiles:Projectile[];
         </>:<>
           {detail?<path d="M-43 0Q-20-14 3-7L9 0 3 7Q-20 14-43 0Z" fill={`url(#${water?'def-water-tail':green?'def-magic-tail':'def-flame-tail'})`}/>:null}
           <circle r="17" fill={`url(#${water?'def-water-core':green?'def-green-core':'def-fire-core'})`}/><ellipse rx="7" ry="6" fill={water?'#e4fff8':green?'#d7ffae':'#fff6bf'}/>
-          {detail?<><circle cx="-22" cy="-6" r="2.5" fill={water?'#acf0ff':green?'#b1e89d':'#ffce67'} opacity=".65"/><circle cx="-33" cy="5" r="1.8" fill={water?'#acf0ff':green?'#b1e89d':'#ffce67'} opacity=".35"/></>:null}
+          {detail?<><circle cx="-22" cy="-6" r="2.5" fill={water?'#9ff5de':green?'#b1e89d':'#ffce67'} opacity=".65"/><circle cx="-33" cy="5" r="1.8" fill={water?'#9ff5de':green?'#b1e89d':'#ffce67'} opacity=".35"/></>:null}
         </>}
       </g>
     </g>;
@@ -108,7 +108,7 @@ function DwarfThud({attack:a,direction,progress,contact,reduced}:{attack:CombatA
 function CastGlyph({attack:a,reduced}:{attack:CombatAttack;reduced:boolean}) {
  const charge=clamp(a.elapsed/a.hitAt),release=clamp((a.elapsed-a.hitAt)/.18),fade=a.elapsed<a.hitAt?.95:(1-release)*.9;
  const green=a.actor==='druid',lightning=a.actor==='tao';
- const rune=green?'#c9f59a':lightning?'#bff3ff':'#ffd27a';
+ const rune=green?'#c9f59a':lightning?'#fff08a':'#ffd27a';
  const facing=a.to.x<a.from.x?-1:1,hand={x:a.from.x+facing*24,y:a.from.y-48};
  return <g data-cast-glyph={a.actor} opacity={fade}>
   <ellipse cx={a.from.x} cy={a.from.y+3} rx={14+charge*12} ry={5+charge*4} fill="none" stroke={rune} strokeWidth="2.5" strokeDasharray={reduced?undefined:'5 4'} transform={reduced?undefined:`rotate(${charge*50} ${a.from.x} ${a.from.y+3})`}/>
