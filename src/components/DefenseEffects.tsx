@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { elfArrowSocket, elfProjectileOffset, mageProjectileOffset, mageCastSocket, hammerSequenceSpriteAsset, monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, ballistaProjectileOffset, waterCannonProjectileOffset } from '../games/defense/art';
+import { taoSealSocket, taoProjectileOffset, elfArrowSocket, elfProjectileOffset, mageProjectileOffset, mageCastSocket, hammerSequenceSpriteAsset, monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, ballistaProjectileOffset, waterCannonProjectileOffset } from '../games/defense/art';
 import { projectileScreenPosition } from '../games/defense/action';
 import type { CombatAttack, Effect, Element, Point, Projectile } from '../games/defense/types';
 
@@ -43,7 +43,7 @@ export function ProjectileLayer({projectiles,reduced,unit=1}:{projectiles:Projec
   return <g className="def-projectiles" aria-hidden="true" pointerEvents="none">{projectiles.map((p,index)=>{
     const detail=!reduced&&index>=projectiles.length-24;
     const elfOffset=elfProjectileOffset(p,unit);
-    const {x,y,angle}=projectileScreenPosition(p,elfOffset??mageProjectileOffset(p,unit)??ballistaProjectileOffset(p)??waterCannonProjectileOffset(p));
+    const {x,y,angle}=projectileScreenPosition(p,elfOffset??taoProjectileOffset(p,unit)??mageProjectileOffset(p,unit)??ballistaProjectileOffset(p)??waterCannonProjectileOffset(p));
     const water=p.element==='water',lightning=p.element==='lightning',green=p.actor==='druid';
     return <g key={p.id} data-projectile={p.kind} data-element={p.element} data-progress={p.progress.toFixed(3)}>
       {p.kind==='shell'?<ellipse cx={p.position.x} cy={p.position.y-1} rx={Math.max(3,9-p.height*.025)} ry="3.3" fill="#142e39" opacity={Math.max(.12,.35-p.height*.002)}/>:null}
@@ -104,13 +104,13 @@ function DwarfThud({attack:a,direction,progress,contact,reduced}:{attack:CombatA
 /** Hero spellcasting wind-up: a rune ring at the caster's feet and motes drawn into the wind-up orb (the orb itself is drawn by the actor). */
 function CastGlyph({attack:a,reduced}:{attack:CombatAttack;reduced:boolean}) {
  const charge=clamp(a.elapsed/a.hitAt),release=clamp((a.elapsed-a.hitAt)/.18),fade=a.elapsed<a.hitAt?.95:(1-release)*.9;
- const modeledMage=a.actor==='mage'&&!!mageCastSocket(a.from,a.to,84);
+ const modeledCaster=(a.actor==='mage'&&!!mageCastSocket(a.from,a.to,84))||(a.actor==='tao'&&!!taoSealSocket(a.from,a.to,84));
  const green=a.actor==='druid',lightning=a.actor==='tao';
  const rune=green?'#c9f59a':lightning?'#bff3ff':'#ffd27a';
  const facing=a.to.x<a.from.x?-1:1,hand={x:a.from.x+facing*24,y:a.from.y-48};
  return <g data-cast-glyph={a.actor} opacity={fade}>
   <ellipse cx={a.from.x} cy={a.from.y+3} rx={14+charge*12} ry={5+charge*4} fill="none" stroke={rune} strokeWidth="2.5" strokeDasharray={reduced?undefined:'5 4'} transform={reduced?undefined:`rotate(${charge*50} ${a.from.x} ${a.from.y+3})`}/>
-  {!reduced&&!modeledMage?[0,1,2].map(i=>{const ang=i*2.1+charge*4,r=(1-charge)*20+4;return <circle key={i} cx={hand.x+Math.cos(ang)*r} cy={hand.y+Math.sin(ang)*r*.7} r="1.8" fill={rune} opacity={.4+.5*charge}/>;}):null}
+  {!reduced&&!modeledCaster?[0,1,2].map(i=>{const ang=i*2.1+charge*4,r=(1-charge)*20+4;return <circle key={i} cx={hand.x+Math.cos(ang)*r} cy={hand.y+Math.sin(ang)*r*.7} r="1.8" fill={rune} opacity={.4+.5*charge}/>;}):null}
  </g>;
 }
 

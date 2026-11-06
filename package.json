@@ -37,7 +37,8 @@
     "models:ballista-action-lv3": "blender --python-exit-code 1 -b --python tools/blender/build_ballista_action.py -- --level 3",
     "models:dwarf-hammer": "blender --python-exit-code 1 -b --python tools/blender/build_dwarf_hammer.py --",
     "models:mage": "blender --python-exit-code 1 -b --python tools/blender/build_mage.py --",
-    "models:elf": "blender --python-exit-code 1 -b --python tools/blender/build_elf.py --"
+    "models:elf": "blender --python-exit-code 1 -b --python tools/blender/build_elf.py --",
+    "models:tao": "blender --python-exit-code 1 -b --python tools/blender/build_tao.py --"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
