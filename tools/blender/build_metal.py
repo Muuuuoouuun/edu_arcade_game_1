@@ -36,10 +36,10 @@ def material(name,color,rough=.8,emission=0,metal=0):
  n.inputs['Base Color'].default_value=(*color,1);n.inputs['Roughness'].default_value=rough;n.inputs['Metallic'].default_value=metal
  n.inputs['Emission Color'].default_value=(*color,1);n.inputs['Emission Strength'].default_value=emission
  return m
-# Plate #7a7f86, brass #c89b52, rust #8a5a3a, visor #f08a3c (cycle 10 palette), tuned for the shared studio light.
-PLATE=material('plate steel',(.8,.46,.2),.4,metal=.35);PLATE_DARK=material('plate shadow',(.34,.2,.11),.5,metal=.3)
+# Dark gunmetal plate (like the illustrated sprite), bright brass rims and a large orange visor so it separates from the brown stone/wood at 64px.
+PLATE=material('plate steel',(.2,.25,.33),.32,metal=.8);PLATE_DARK=material('plate shadow',(.06,.07,.09),.45,metal=.7)
 BRASS=material('brass rim',(.95,.7,.22),.35,metal=.5);RUST=material('rust edge',(.33,.15,.07),.85)
-VISOR=material('visor glow',(1,.2,.01),.3,3);SLIT=material('visor slit',(.03,.03,.035),.6)
+VISOR=material('visor glow',(1,.25,.02),.3,6);SLIT=material('visor slit',(.03,.03,.035),.6)
 
 def parent_to(o,parent):
  o.parent=parent
@@ -78,8 +78,8 @@ head=pivot('head',(.48,0,3.42),root)
 shell('helm',(0,0,0),(.5,.48,.46),PLATE,head)
 rim('helm-rim',(0,0,-.18),.47,.05,head)
 for i,(x,y,yaw) in enumerate(((.44,0,0),(.33,-.3,-48),(.33,.3,48))):
- bpy.ops.mesh.primitive_cube_add(size=1,location=(x,y,.02));o=bpy.context.object;o.name=f'visor-slit-{i}';o.scale=(.1,.34,.13);o.rotation_euler=(0,0,math.radians(yaw));o.data.materials.append(SLIT);parent_to(o,head)
- bpy.ops.mesh.primitive_cube_add(size=1,location=(x*1.08,y*1.08,.02));o=bpy.context.object;o.name=f'visor-glow-{i}';o.scale=(.07,.34,.11);o.rotation_euler=(0,0,math.radians(yaw));o.data.materials.append(VISOR);parent_to(o,head)
+ bpy.ops.mesh.primitive_cube_add(size=1,location=(x,y,.02));o=bpy.context.object;o.name=f'visor-slit-{i}';o.scale=(.1,.36,.2);o.rotation_euler=(0,0,math.radians(yaw));o.data.materials.append(SLIT);parent_to(o,head)
+ bpy.ops.mesh.primitive_cube_add(size=1,location=(x*1.08,y*1.08,.02));o=bpy.context.object;o.name=f'visor-glow-{i}';o.scale=(.07,.36,.17);o.rotation_euler=(0,0,math.radians(yaw));o.data.materials.append(VISOR);parent_to(o,head)
 rivet('helm-crest',(0,0,.47),head,.09)
 legs={};arms={}
 for side,y in (('near',-.62),('far',.62)):
@@ -106,7 +106,7 @@ scene=bpy.context.scene
 scene.view_settings.view_transform='Standard';scene.render.engine='CYCLES';scene.cycles.device='CPU';scene.cycles.samples=opts.samples;scene.cycles.use_denoising=False
 scene.render.resolution_x=opts.size;scene.render.resolution_y=opts.size;scene.render.resolution_percentage=100
 scene.render.image_settings.file_format='PNG';scene.render.image_settings.color_mode='RGBA';scene.render.film_transparent=True
-scene.world=bpy.data.worlds.new('studio');scene.world.use_nodes=True;scene.world.node_tree.nodes['Background'].inputs['Color'].default_value=(.6,.62,.7,1);scene.world.node_tree.nodes['Background'].inputs['Strength'].default_value=.15
+scene.world=bpy.data.worlds.new('studio');scene.world.use_nodes=True;scene.world.node_tree.nodes['Background'].inputs['Color'].default_value=(.6,.62,.7,1);scene.world.node_tree.nodes['Background'].inputs['Strength'].default_value=.7
 cam_data=bpy.data.cameras.new('Metal soldier shared orthographic camera');camera=bpy.data.objects.new(cam_data.name,cam_data);STUDIO.objects.link(camera);cam_data.type='ORTHO';cam_data.ortho_scale=6.6
 camera.location=(5,-10,6.9);target=Vector((0,0,1.9));camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler();scene.camera=camera
 for nm,loc,en,sz in (('key',(5,-5,8),300,3),('fill',(-6,-3,3),110,4),('rim',(-2,6,5),200,2)):

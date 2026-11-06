@@ -103,7 +103,7 @@ const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
   fallback:{span:350,frames:[[15,1101,365,304],[394,1105,347,300],[756,1087,330,318]]}},
  // No illustrated pose set exists for the metal soldier: if the render fails the single atlas.png frame stays.
  metal:{span:260,frames:[[22,67,340,255],[406,67,340,255],[790,67,340,255]],atlas:METAL_ATLAS},
- insulator:{span:330,frames:[[39,81,317,242],[423,81,317,242],[807,81,317,242]],atlas:SLIME_ATLAS},
+ insulator:{span:330,frames:[[39,78,317,245],[423,78,317,245],[787,78,317,245]],atlas:SLIME_ATLAS},
 };
 const BOSS_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
  boss:{span:345,frames:[[42,105,349,340],[490,50,382,395],[933,111,393,334],[1381,177,363,268]]},
@@ -133,10 +133,15 @@ export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAss
 /** Load while preparing in camp; slow or failed requests keep the existing idle art. */
 export function preloadDefenseMotion():Promise<void> {
  if(typeof Image==='undefined')return Promise.resolve();
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/monster-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
+ const load=(src:string)=>new Promise<void>(resolve=>{
   const asset=new Image();
   asset.onload=()=>{motionLoaded.add(src);asset.onload=null;asset.onerror=null;resolve();};
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
- }))).then(()=>undefined);
+ });
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+  // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
+  const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
+  return needed?load('/defense/monster-models.webp'):undefined;
+ });
 }
