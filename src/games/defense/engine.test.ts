@@ -639,7 +639,7 @@ test('each enemy kind pays its own bounty when defeated',()=>{
 
 test('a tower strikes the enemy furthest along the road, not the nearest or oldest',()=>{
   const s=rangedBattle('crossbow');
-  s.enemies=[positionedEnemy('metal',1,400),positionedEnemy('metal',2,425),positionedEnemy('metal',3,390)];
+  s.enemies=[positionedEnemy('metal',1,450),positionedEnemy('metal',2,470),positionedEnemy('metal',3,400)]; // id 1 is nearest the tower (82), id 2 is furthest along but farther away (93)
   const next=stepDefense(s,.02);
   assert.equal(next.attacks[0]?.targetId,2);
 });
