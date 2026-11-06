@@ -16,14 +16,22 @@
     "art:atlases": "node tools/build-motion-atlases.mjs",
     "models:dwarf": "blender -b --python tools/blender/build_dwarf.py && npm run models:hero-sprites",
     "models:hero-sprites": "node tools/build-hero-sprites.mjs",
-    "models:slime": "blender -b --python tools/blender/build_slime.py"
+    "models:slime": "blender -b --python tools/blender/build_slime.py",
+    "android:sync": "npm run build && cap sync android",
+    "android:debug": "npm run android:sync && cd android && ./gradlew assembleDebug",
+    "android:open": "cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "8.6.0",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/haptics": "8.0.2",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "three": "0.186.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.6.0",
     "@types/node": "22.19.0",
     "@types/react": "19.2.5",
     "@types/react-dom": "19.2.3",

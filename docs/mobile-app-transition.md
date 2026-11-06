@@ -18,7 +18,9 @@
 
 다른 두 저장소는 계속 별도다. `math_speed/app`에는 Flutter 도메인·앱 골격이 있고 웹 허브는 `math_speed/functions/src/mathEngine.ts`를 공유한다. 그 Flutter 코드에 아르카나 디펜스가 옮겨진 것은 아니다. `Word_check`는 단어 숙제 관리용 Node/SQLite 프로젝트다.
 
-## 권장 경로: 기존 게임으로 Android 설치판부터
+## 선택한 경로: 기존 게임으로 Android 설치판부터
+
+2026-11-06 사용자가 Android 설치판 우선 경로를 선택했다. 같은 저장소에 Capacitor Android 셸·네이티브 뒤로가기/백그라운드 정지·진동 연결을 추가했다. 현재 제작·검증 범위와 명령은 [Android 시험 설치판](android-install.md)을 따른다. 아래 표는 전체 전환의 완료 기준이며 첫 APK가 모든 단계의 완료를 의미하지 않는다. Godot 전환은 이번에 진행하지 않는다.
 
 현재 2.5D 전투와 자산을 재사용하는 **Capacitor 기반 Android 시험판**을 첫 선택으로 추천한다. 새로운 GitHub 저장소를 만들 필요 없이 같은 저장소에 Android 프로젝트를 추가할 수 있다. 이 경로는 설치·실행 기반을 제공하며, 그래픽과 게임성의 완성도는 아래 별도 제작 기준을 통해 높인다.
 
