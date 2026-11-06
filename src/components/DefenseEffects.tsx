@@ -2,7 +2,9 @@ import { memo } from 'react';
 import { monsterSpriteAsset, spriteAsset } from '../games/defense/art';
 import type { CombatAttack, Effect, Element, Point, Projectile } from '../games/defense/types';
 
-export const FX_COLORS: Record<Element, string> = { physical:'#fff0be', fire:'#ff9d38', lightning:'#90eaff', impact:'#ecc58b', water:'#7edcff' };
+export const FX_COLORS: Record<Element, string> = { physical:'#fff0be', fire:'#ff9d38', lightning:'#fff27a', impact:'#ecc58b', water:'#4fd6c4' };
+/** Water reads teal and lightning yellow-white so a wet hit followed by a shock is not one blue blob. */
+const hitCore=(element:Element)=>element==='fire'?'def-fire-core':element==='water'?'def-water-core':element==='lightning'?'def-spark-core':'def-impact-core';
 const clamp = (v:number) => Math.max(0,Math.min(1,v));
 const noise = (n:number) => { const x=Math.sin(n*127.1)*43758.5453; return x-Math.floor(x); };
 const effectKind = (effect:Effect) => effect.kind??(effect.text?.startsWith('+')?'coin':'impact');
@@ -12,6 +14,8 @@ export const DefenseFxDefs = memo(function DefenseFxDefs(){return <defs>
   <radialGradient id="def-ground-shadow"><stop stopColor="#142b29" stopOpacity=".4"/><stop offset=".52" stopColor="#20372e" stopOpacity=".25"/><stop offset="1" stopColor="#20372e" stopOpacity="0"/></radialGradient>
   <radialGradient id="def-fire-core"><stop stopColor="#fffce8"/><stop offset=".3" stopColor="#ffe996"/><stop offset=".65" stopColor="#ff9b35"/><stop offset="1" stopColor="#f16a1a" stopOpacity="0"/></radialGradient>
   <radialGradient id="def-blue-core"><stop stopColor="#fff"/><stop offset=".4" stopColor="#b3f6ff"/><stop offset="1" stopColor="#61bbf4" stopOpacity="0"/></radialGradient>
+  <radialGradient id="def-water-core"><stop stopColor="#effffb"/><stop offset=".4" stopColor="#8ff0dc"/><stop offset="1" stopColor="#2fb8a8" stopOpacity="0"/></radialGradient>
+  <radialGradient id="def-spark-core"><stop stopColor="#fffff0"/><stop offset=".4" stopColor="#fff27a"/><stop offset="1" stopColor="#f2c230" stopOpacity="0"/></radialGradient>
   <radialGradient id="def-green-core"><stop stopColor="#f4ffc7"/><stop offset=".45" stopColor="#b3ee82"/><stop offset="1" stopColor="#4da57a" stopOpacity="0"/></radialGradient>
   <radialGradient id="def-impact-core"><stop stopColor="#fffbdf" stopOpacity=".95"/><stop offset=".55" stopColor="#f8c87d" stopOpacity=".5"/><stop offset="1" stopColor="#e5ad60" stopOpacity="0"/></radialGradient>
   <linearGradient id="def-flame-tail"><stop stopColor="#f46a16" stopOpacity="0"/><stop offset=".6" stopColor="#ffb336" stopOpacity=".8"/><stop offset="1" stopColor="#fff0b1"/></linearGradient>
@@ -57,8 +61,8 @@ export function ProjectileLayer({projectiles,reduced}:{projectiles:Projectile[];
           <circle r={water?9:8} fill={water?'#5ca8c4':'#33494c'} stroke={water?'#c6f8ff':'#1f2f30'} strokeWidth="1.8"/><path d="M-4-4Q1-8 5-3" fill="none" stroke={water?'#eaffff':'#b6cbbe'} strokeWidth="2" strokeLinecap="round"/>
           {water?<path d="M-5 2Q0-1 5 2" fill="none" stroke="#b1edff" strokeWidth="1.2"/>:<><path d="M-7-3-11-7" stroke="#c8a45e" strokeWidth="1.6"/><circle cx="-12" cy="-8" r="2.5" fill="#ffdb82"/></>}
         </>:lightning?<>
-          <circle r="18" fill="url(#def-blue-core)" opacity=".8"/>
-          {detail?<path d="M-40 1-29-5-23 4-15-5-8 1" fill="none" stroke="#82dcf6" strokeWidth="3" strokeLinecap="round" opacity=".65"/>:null}
+          <circle r="18" fill="url(#def-spark-core)" opacity=".8"/>
+          {detail?<path d="M-40 1-29-5-23 4-15-5-8 1" fill="none" stroke="#f2cf3a" strokeWidth="3" strokeLinecap="round" opacity=".65"/>:null}
           <path d="m-12-6 12 2-4-7 16 13-13-1 4 8Z" fill="#ecfcff" stroke="#8edff2" strokeWidth="1.3"/>
         </>:<>
           {detail?<path d="M-43 0Q-20-14 3-7L9 0 3 7Q-20 14-43 0Z" fill={`url(#${water?'def-water-tail':green?'def-magic-tail':'def-flame-tail'})`}/>:null}
@@ -159,7 +163,7 @@ const Lightning=memo(function Lightning({effect}:{effect:Effect}){
   const p=i/6,offset=i===0||i===6?0:(noise(effect.id+i*13)-.5)*24;
   return `${effect.from.x+dx*p-dy/distance*offset},${effect.from.y-29+dy*p+dx/distance*offset}`;
  }).join(' ');
- return <><polyline points={nodes} fill="none" stroke="#6ed5ef" strokeWidth="7" opacity=".4" strokeLinejoin="round"/><polyline points={nodes} fill="none" stroke="#d8fbff" strokeWidth="2.6" strokeLinejoin="round"/></>;
+ return <><polyline points={nodes} fill="none" stroke="#f2cf3a" strokeWidth="7" opacity=".45" strokeLinejoin="round"/><polyline points={nodes} fill="none" stroke="#fffbd0" strokeWidth="2.6" strokeLinejoin="round"/></>;
 },(before,after)=>before.effect.id===after.effect.id&&before.effect.from.x===after.effect.from.x&&before.effect.from.y===after.effect.from.y&&before.effect.to.x===after.effect.to.x&&before.effect.to.y===after.effect.to.y);
 export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];reduced:boolean;layer?:'ground'|'front'}){
  // Keep every damage number, hit core, coin and death; cap only decorative fragments.
@@ -197,7 +201,7 @@ export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];re
    <circle r={reduced?18:12+p*(28+Math.min(8,e.force??1)*4)} fill="#ff5f4e55"/>
    {e.text?<text x={Math.max(44,Math.min(856,e.to.x))-e.to.x} y={-34-(reduced?0:p*20)} textAnchor="middle" className="def-float-number def-float-breach">{e.text}</text>:null}
   </g>;
-  if(kind==='chain')return <g key={e.id} opacity={fade} data-effect="chain"><Lightning effect={e}/><circle cx={e.to.x} cy={e.to.y-25} r={12+p*12} fill="url(#def-blue-core)"/></g>;
+  if(kind==='chain')return <g key={e.id} opacity={fade} data-effect="chain"><Lightning effect={e}/><circle cx={e.to.x} cy={e.to.y-25} r={12+p*12} fill={`url(#${hitCore(e.element)})`}/></g>;
   if(kind==='death'){
    const kind=e.targetKind??(e.targetSprite===20?'frostboss':e.targetSprite===14?'boss':undefined);
    const deathArt=kind?monsterSpriteAsset(kind,'death'):null;
@@ -216,14 +220,14 @@ export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];re
     <text x="-6" y="5" className="def-float-number def-float-coin">{e.text}</text>
   </g>;
   if(kind==='skill'||kind==='interrupt')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y-27})`} opacity={fade} data-effect={kind}>
-   <circle r={reduced?22:15+p*65} fill={`url(#${e.element==='fire'?'def-fire-core':e.element==='water'||e.element==='lightning'?'def-blue-core':'def-impact-core'})`} opacity=".7"/>
+   <circle r={reduced?22:15+p*65} fill={`url(#${hitCore(e.element)})`} opacity=".7"/>
    {!reduced?Array.from({length:6},(_,i)=>{const angle=i*Math.PI/3,r=18+p*50;return <path key={i} d={`M${Math.cos(angle)*r} ${Math.sin(angle)*r}l${Math.cos(angle)*13} ${Math.sin(angle)*13}`} stroke={color} strokeWidth="2" strokeLinecap="round"/>;}):null}
    {e.text?<text y={-45-(reduced?0:p*15)} textAnchor="middle" className="def-float-number def-float-skill">{e.text}</text>:null}
   </g>;
   if(kind==='freeze')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y-35})`} opacity={fade} data-effect="freeze"><path d="M0-25v50M-22-13l44 26M-22 13l44-26M-6-18l6 5 6-5M-6 18l6-5 6 5" fill="none" stroke="#dafbff" strokeWidth="2" strokeLinecap="round"/>{e.text?<text y="-35" textAnchor="middle" className="def-float-number">{e.text}</text>:null}</g>;
   return <g key={e.id} transform={`translate(${e.to.x},${e.to.y-27})`} opacity={fade} data-effect={kind}>
    {e.element==='lightning'?<g transform={`translate(${-e.to.x},${-e.to.y+27})`}><Lightning effect={e}/></g>:null}
-   <circle r={reduced?8:9+p*(kind==='shockwave'?38:21)} fill={`url(#${e.element==='fire'?'def-fire-core':e.element==='water'||e.element==='lightning'?'def-blue-core':'def-impact-core'})`} opacity={kind==='shockwave'?.8:.65}/>
+   <circle r={reduced?8:9+p*(kind==='shockwave'?38:21)} fill={`url(#${hitCore(e.element)})`} opacity={kind==='shockwave'?.8:.65}/>
    {detail&&e.element==='physical'?<path d="m-12-12 24 24m0-24-24 24" stroke="#fff8df" strokeWidth="2" strokeLinecap="round" opacity={Math.max(0,1-p*2)}/>:null}
    <Sparks effect={{...e,age,maxLife:life}} reduced={reduced} count={sparks}/>
    {e.text?<text x={Math.max(44,Math.min(856,e.to.x))-e.to.x} y={-29-(reduced?0:p*27)} textAnchor="middle" className={`def-float-number ${e.text.includes('약점')?'def-float-weak':e.text.startsWith('내성')?'def-float-resist':''}`}>{e.text}</text>:null}
