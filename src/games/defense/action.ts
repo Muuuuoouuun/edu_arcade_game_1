@@ -1,4 +1,4 @@
-import type { Point, Projectile } from './types.ts';
+import type { CombatAttack, Point, Projectile } from './types.ts';
 
 export const DASH_DAMAGE = 36;
 export const DASH_IMPACT = 100;
@@ -9,6 +9,21 @@ export function attackOctant(from:Point,to:Point):number|null {
   const dx=to.x-from.x,dy=to.y-from.y;
   if(!Number.isFinite(dx)||!Number.isFinite(dy)||Math.hypot(dx,dy)<.5)return null;
   return (Math.round(Math.atan2(dy,dx)/(Math.PI/4))+8)%8;
+}
+
+/** Visual samples follow simulation phases; the contact pose cannot precede hitAt.
+ * Keep neutral bookends so movement/idle does not snap straight to an overhead hammer.
+ */
+export function dwarfHammerFrame(a:Pick<CombatAttack,'elapsed'|'hitAt'|'duration'>,reduced=false):number {
+  if(![a.elapsed,a.hitAt,a.duration].every(Number.isFinite)||a.hitAt<=0||a.duration<=a.hitAt||a.elapsed<0||a.elapsed>=a.duration)return 0;
+  if(a.elapsed<a.hitAt){
+    if(reduced)return 0;
+    const load=a.elapsed/a.hitAt;
+    return load<.1?0:load<.35?1:load<.65?2:3;
+  }
+  const recovery=(a.elapsed-a.hitAt)/(a.duration-a.hitAt);
+  if(recovery>=.94)return 0;
+  return reduced?4:recovery<.22?4:recovery<.5?5:recovery<.78?6:7;
 }
 
 export function projectileScreenPosition(p:Projectile,launchOffset:Point={x:0,y:0}) {

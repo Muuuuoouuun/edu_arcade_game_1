@@ -288,7 +288,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')).length,9);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')).length,9);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -480,4 +480,51 @@ test('missing ballista action images only disable their own level and retain exi
    assert.ok(art.waterCannonActionSpriteAsset('cannon','water',2,from,to));
   }
  }
+});
+
+
+test('hammer sequence shares walking projection and keeps a complete set in every orientation',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'hammer-sequence');
+ for(let direction=0;direction<8;direction++){
+  const angle=direction*Math.PI/4,heading={x:Math.cos(angle),y:Math.sin(angle)};
+  const attack={from:{x:0,y:0},to:{x:heading.x*80,y:heading.y*80},elapsed:0,hitAt:.24,duration:.52} as import('./types.ts').CombatAttack;
+  const idle=art.directionalLocomotionSpriteAsset('dwarf',heading,null)!;
+  for(const elapsed of [0,.05,.12,.19,.24,.32,.40,.47,.51]){
+   const asset=art.hammerSequenceSpriteAsset('dwarf',{...attack,elapsed})!;
+   assert.equal(asset.src,`/defense/models/dwarf-hammer-${direction}-atlas.webp`);
+   assert.equal(asset.displayScale,idle.displayScale);assert.equal(asset.groundY,idle.groundY);assert.equal(asset.oriented,true);
+   const [x,y,w,h]=asset.viewBox.split(' ').map(Number);assert.ok(x+w<=asset.width&&y+h<=asset.height);
+  }
+  assert.equal(art.hammerSequenceSpriteAsset('dwarf',attack,true)!.viewBox,'0 0 256 256');
+  assert.equal(art.hammerSequenceSpriteAsset('dwarf',{...attack,elapsed:.24},true)!.viewBox,'1024 0 256 256');
+  assert.equal(art.hammerSequenceSpriteAsset('mage',attack),null);
+ }
+ assert.equal(requests.filter(s=>s.includes('/dwarf-hammer-')).length,8);assert.ok(!requests.some(s=>s.endsWith('.glb')));
+});
+
+test('missing hammer image retains the previous directional attack and gait',async()=>{
+ for(const file of ['dwarf-hammer-4-atlas.webp','dwarf-idle-game.webp']){
+  const {art}=await loadWithImageResults(s=>s.endsWith(file),'hammer-failure-'+file);
+  const attack={from:{x:0,y:0},to:{x:100,y:0},elapsed:.12,hitAt:.24,duration:.52} as import('./types.ts').CombatAttack;
+  assert.equal(art.hammerSequenceSpriteAsset('dwarf',attack),null);
+  assert.equal(Boolean(art.directionalActionSpriteAsset('dwarf','windup',attack.from,attack.to)),file!=='dwarf-idle-game.webp');
+  assert.equal(Boolean(art.directionalLocomotionSpriteAsset('dwarf',{x:1,y:0},0)),file!=='dwarf-idle-game.webp');
+  assert.ok(art.actionSpriteAsset('dwarf','windup'));
+ }
+});
+
+
+test('hammer contact ribbon follows the baked head projection only while the contact pose is visible',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'hammer-trail');
+ const metadata=JSON.parse(readFileSync(new URL('../../../public/defense/models/dwarf-hammer-sequence.json',import.meta.url),'utf8'));
+ for(let direction=0;direction<8;direction++){
+  const angle=direction*Math.PI/4,attack={actor:'dwarf',from:{x:0,y:0},to:{x:100*Math.cos(angle),y:100*Math.sin(angle)},elapsed:.24,hitAt:.24,duration:.52} as import('./types.ts').CombatAttack;
+  for(const size of [84,94,84*1.25,94*1.25]){
+   const trail=art.hammerContactTrail(attack,size)!;assert.equal(trail.length,7);
+   trail.forEach((point,i)=>{const [x,y]=metadata.directions[direction].contact_trail[i];assert.ok(Math.abs(point.x-(x-192)/384*metadata.frame.display_scale*size)<.0001);assert.ok(Math.abs(point.y-(y-330)/384*metadata.frame.display_scale*size)<.0001)});
+  }
+  for(const elapsed of [0,.19,.23999,.32,.4,.51])assert.equal(art.hammerContactTrail({...attack,elapsed},84),null);
+ }
+ const {art:failed}=await loadWithImageResults(s=>s.endsWith('dwarf-hammer-4-atlas.webp'),'hammer-trail-failure');
+ assert.equal(failed.hammerContactTrail({actor:'dwarf',from:{x:0,y:0},to:{x:100,y:0},elapsed:.24,hitAt:.24,duration:.52} as import('./types.ts').CombatAttack,84),null);
 });

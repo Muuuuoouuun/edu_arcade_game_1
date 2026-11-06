@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDefense, actDefense, stepDefense, positionOnPath } from './engine.ts';
-import { projectileScreenPosition, attackOctant, DASH_DAMAGE, distanceToSegment, knockbackPresentation } from './action.ts';
+import { projectileScreenPosition, attackOctant, dwarfHammerFrame, DASH_DAMAGE, distanceToSegment, knockbackPresentation } from './action.ts';
 import type { Enemy, Projectile } from './types.ts';
 
 function battle(hp=1000) {
@@ -88,4 +88,35 @@ test('ballista launch origin fades to the unchanged collision path',()=>{
  assert.equal(projectileScreenPosition(landed,offset).y,projectileScreenPosition(landed).y);
  assert.equal(projectileScreenPosition(landed,offset).angle,projectileScreenPosition(landed).angle,'a piercing arrow must point along its actual velocity once the launch offset has faded');
  assert.equal(projectileScreenPosition({...landed,progress:1.2},offset).angle,projectileScreenPosition(landed).angle);
+});
+
+
+test('grounded hammer loads before contact and settles to neutral on simulation time',()=>{
+ const attack={elapsed:0,hitAt:.24,duration:.52};
+ const samples=[[0,0],[.02,0],[.05,1],[.12,2],[.19,3],[.23999,3],[.24,4],[.28,4],[.32,5],[.40,6],[.47,7],[.51,0],[.52,0]];
+ for(const [elapsed,frame] of samples){
+  assert.equal(dwarfHammerFrame({...attack,elapsed}),frame,`${elapsed}s`);
+  assert.equal(dwarfHammerFrame({...attack,elapsed:elapsed*2,hitAt:.48,duration:1.04}),frame,'phase mapping follows authored hitAt/duration');
+ }
+ for(let t=0;t<.24;t+=.002){assert.ok(dwarfHammerFrame({...attack,elapsed:t})<4);assert.equal(dwarfHammerFrame({...attack,elapsed:t},true),0);}
+ assert.equal(dwarfHammerFrame({...attack,elapsed:.24},true),4,'reduced motion retains the contact cue');
+ assert.equal(dwarfHammerFrame({...attack,elapsed:.51},true),0);
+ for(const bad of [NaN,Infinity,-1])assert.equal(dwarfHammerFrame({...attack,elapsed:bad}),0);
+ assert.equal(dwarfHammerFrame({...attack,hitAt:0}),0);
+ assert.equal(dwarfHammerFrame({...attack,duration:.2}),0);
+});
+
+test('hammer pose freezes with pause and advances with simulation speed without changing damage',()=>{
+ let state=battle();state.heroCooldown=0;
+ state=stepDefense(state,.02);const attack=state.attacks.find(a=>a.source==='hero')!;assert.ok(attack);
+ const paused=actDefense(state,{type:'pause'});assert.equal(stepDefense(paused,.2),paused);
+ assert.equal(dwarfHammerFrame(paused.attacks[0]),dwarfHammerFrame(attack));
+ const accelerated=actDefense(state,{type:'speed'});
+ // The browser accumulates elapsed * speed before stepping; the engine takes simulation time.
+ const fast=stepDefense(accelerated,.04*accelerated.speed),normal=stepDefense(state,.08);
+ assert.equal(fast.attacks[0].elapsed,normal.attacks[0].elapsed);
+ assert.equal(dwarfHammerFrame(fast.attacks[0]),dwarfHammerFrame(normal.attacks[0]));
+ let hit=state;for(let i=0;i<13;i++)hit=stepDefense(hit,.02);
+ assert.ok(hit.enemies.some(e=>e.hp<1000));assert.ok(hit.attacks[0].fired);
+ assert.ok(dwarfHammerFrame(hit.attacks[0])>=4);
 });

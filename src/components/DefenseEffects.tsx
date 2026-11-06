@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, ballistaProjectileOffset, waterCannonProjectileOffset } from '../games/defense/art';
+import { hammerSequenceSpriteAsset, monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, ballistaProjectileOffset, waterCannonProjectileOffset } from '../games/defense/art';
 import { projectileScreenPosition } from '../games/defense/action';
 import type { CombatAttack, Effect, Element, Point, Projectile } from '../games/defense/types';
 
@@ -86,11 +86,12 @@ function HammerSlam({attack:a,direction,progress,contact,reduced}:{attack:Combat
 
 /** The dwarf's compact stone hammer: a short steel-blue chop, then a flat double shock ring and dust where it lands. */
 function DwarfThud({attack:a,direction,progress,contact,reduced}:{attack:CombatAttack;direction:number;progress:number;contact:number;reduced:boolean}) {
+ const modeled=!!hammerSequenceSpriteAsset('dwarf',a);
  const swing=clamp((contact+.08)/.08),impact=clamp(contact/.2),fade=(1-progress)*.9;
  return <g data-attack-trail={a.actor} opacity={fade}>
-  <g transform={`translate(${a.from.x},${a.from.y-20}) rotate(${direction})`}>
+  {!modeled?<g transform={`translate(${a.from.x},${a.from.y-20}) rotate(${direction})`}>
    <path d={reduced?'M20-30Q58-28 70 18':'M16-36Q66-36 76 20Q58-4 38-10Q26-16 16-36Z'} fill={reduced?'none':'#bfe0f099'} stroke="#e4f4fb" strokeWidth={reduced?4:3} strokeLinecap="round" strokeLinejoin="round" opacity={reduced?1:.45+.55*swing}/>
-  </g>
+  </g>:null}
   {contact>=0?<g transform={`translate(${a.to.x},${a.to.y+4})`}>
    <ellipse rx={8+impact*(reduced?20:28)} ry={3+impact*(reduced?6:9)} fill="none" stroke="#e4f4fb" strokeWidth={3.5-impact*2.2}/>
    {!reduced?<><ellipse rx={4+impact*16} ry={2+impact*5} fill="none" stroke="#9fb6c2" strokeWidth={2.5-impact*1.6}/>

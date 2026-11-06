@@ -7,7 +7,7 @@ import type { Locomotion } from '../games/defense/locomotion';
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getSlots } from '../games/defense/data';
-import { actionSpriteAsset, directionalActionSpriteAsset, directionalLocomotionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset, ballistaActionSpriteAsset, waterCannonActionSpriteAsset } from '../games/defense/art';
+import { actionSpriteAsset, hammerSequenceSpriteAsset, hammerContactTrail, directionalActionSpriteAsset, directionalLocomotionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset, ballistaActionSpriteAsset, waterCannonActionSpriteAsset } from '../games/defense/art';
 import type { SpriteAsset, ActionPose } from '../games/defense/art';
 import type { DefenseThemeId } from '../games/defense/themes';
 import { DefenseThemeScenery, ModeledGate, useGateAsset, useGateImpactAsset } from './DefenseThemeScenery';
@@ -56,7 +56,9 @@ function Actor({unit=1,actor,position,facing,motion,velocity,dashTime=0,attack,s
  const phase=casting?(skillAge<.18?'strike':'recover'):dashing?null:attack?attackPhase(attack):null;
  const orientedRest=!phase&&!dashing?directionalLocomotionSpriteAsset(actor,motion.heading??{x:facing,y:0},moving&&!reduced?motion.distance:null):null;
  const walking=!phase&&!dashing&&moving&&!reduced?orientedRest??walkingSpriteAsset(actor,motion.distance):null;
- const directional=attack&&phase&&!casting&&!dashing?directionalActionSpriteAsset(actor,phase,attack.from,attack.to):null;
+ const hammer=attack&&phase&&!casting&&!dashing?hammerSequenceSpriteAsset(actor,attack,reduced):null;
+ const directional=hammer??(attack&&phase&&!casting&&!dashing?directionalActionSpriteAsset(actor,phase,attack.from,attack.to):null);
+ const hammerTrail=hammer&&!reduced&&attack?hammerContactTrail(attack,size):null;
  const art=directional??(phase?actionSpriteAsset(actor,phase):walking??orientedRest??idleSpriteAsset(actor));
  const aim=!dashing&&attack&&Math.abs(attack.to.x-attack.from.x)>.5?(attack.to.x>attack.from.x?1:-1):facing;
  let bob=0,lean=0,offset=0,sx=1,sy=1;
@@ -72,11 +74,12 @@ function Actor({unit=1,actor,position,facing,motion,velocity,dashTime=0,attack,s
   }else if(moving&&!walking&&!directional){const stride=Math.sin(motion.distance/WALK_STRIDE*Math.PI*2);bob=-Math.abs(stride)*(wolf?3.8:3)*pace;lean=(velocity?velocity.x/230:facing*.6)*6+stride*1.5*pace;sx=1+Math.abs(stride)*.025*pace;sy=1-Math.abs(stride)*.018*pace;}
   else if(!walking&&!directional&&!orientedRest)sy=1+Math.sin(time*2.3+index)*.008;
  }
- return <g className={`def-motion-actor ${wolf?'def-pet':leader?'def-hero':'def-merc'} ${casting?'def-skill-cast':''} ${dashing?'def-dashing':''}`} transform={`translate(${position.x},${position.y})`} data-actor={actor} data-walk-distance={motion.distance.toFixed(2)} data-walk-frame={walking?.viewBox} data-motion-asset={art?.src} data-heading={motion.heading?`${motion.heading.x.toFixed(3)},${motion.heading.y.toFixed(3)}`:undefined} data-attack-phase={phase??(dashing?'dash':moving?'walk':'idle')} data-skill-phase={casting?phase:undefined} data-facing={aim} data-dashing={leader?dashing:undefined} data-velocity={leader?`${Math.round(velocity?.x??0)},${Math.round(velocity?.y??0)}`:undefined}>
+ return <g className={`def-motion-actor ${wolf?'def-pet':leader?'def-hero':'def-merc'} ${casting?'def-skill-cast':''} ${dashing?'def-dashing':''}`} transform={`translate(${position.x},${position.y})`} data-actor={actor} data-walk-distance={motion.distance.toFixed(2)} data-walk-frame={walking?.viewBox} data-motion-asset={art?.src} data-heading={motion.heading?`${motion.heading.x.toFixed(3)},${motion.heading.y.toFixed(3)}`:undefined} data-hammer-frame={hammer?Number(hammer.viewBox.split(' ')[0])/256:undefined} data-attack-phase={phase??(dashing?'dash':moving?'walk':'idle')} data-skill-phase={casting?phase:undefined} data-facing={aim} data-dashing={leader?dashing:undefined} data-velocity={leader?`${Math.round(velocity?.x??0)},${Math.round(velocity?.y??0)}`:undefined}>
   {leader?<ellipse cy="1" rx="30" ry="12" fill="#d3f8a129" stroke="#e3f6a5" strokeWidth="1.8" opacity=".85"/>:wolf?<ellipse cy="1" rx="23" ry="8" fill="#c9f3ff25" stroke="#cfeddd" strokeWidth="1"/>:null}
   {moving&&!dashing&&!reduced?<g opacity={.2*pace}><ellipse cx={-facing*17} cy="3" rx="10" ry="3" fill="#f2dec4"/><ellipse cx={-facing*28} cy="5" rx="5" ry="2" fill="#f2dec4"/></g>:null}
   {casting?<ellipse cy="-4" rx={32+(reduced?0:skillAge*26)} ry="12" fill="none" stroke={actor==='druid'?'#c4ef96':actor==='mage'?'#ffc585':'#d5f5ff'} strokeWidth="2" opacity={1-skillAge*1.7}/>:null}
   <Sprite index={index} size={size} flip={!directional&&!art?.oriented&&((aim<0)!==(art?.nativeFacing===-1))} art={art} pose={`translate(${offset},${bob}) rotate(${lean}) scale(${sx},${sy})`} shadowScale={1+bob*.02}/>
+  {hammerTrail&&attack?<path data-hammer-trail="modeled" d={hammerTrail.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(3)} ${p.y.toFixed(3)}`).join(' ')} fill="none" stroke="#d6edf7" strokeWidth={2.5*unit} strokeLinecap="round" strokeLinejoin="round" opacity={.55*(1-clamp((attack.elapsed-attack.hitAt)/((attack.duration-attack.hitAt)*.22)))}/>:null}
   {attack&&phase==='windup'&&attack.kind==='spell'?<g transform="translate(0,-43)" opacity={.35+.35*clamp(attack.elapsed/Math.max(.05,attack.hitAt))}><circle cx={aim*24} cy="-5" r={7+clamp(attack.elapsed/Math.max(.05,attack.hitAt))*9} fill={`url(#${attack.element==='fire'?'def-fire-core':attack.actor==='druid'?'def-green-core':'def-blue-core'})`}/></g>:null}
   {promoted?<text y={-size*.92} fill="#ffe3a2" fontSize="18" textAnchor="middle" className="def-world-label">✦</text>:null}
   {wolf?<text y="20" textAnchor="middle" className="def-pet-label">달빛 늑대</text>:null}
