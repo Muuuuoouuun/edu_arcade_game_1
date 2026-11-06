@@ -1,6 +1,7 @@
 import { memo, useEffect, useId, useState } from 'react';
 import type { DefenseThemeId } from '../games/defense/themes';
 import { GATE_ART } from '../games/defense/gateArt';
+import { GATE_IMPACT_ATLAS } from '../games/defense/gateImpact';
 import { FOREST_GATE } from '../games/defense/forestGateModel';
 import { loadGateAsset, gatePlacement, type GateAssetMode } from '../games/defense/gateAssets';
 
@@ -122,11 +123,23 @@ export function useGateAsset(themeId:DefenseThemeId,snow:boolean):GateAssetMode 
   return ready?.key===key?ready.mode:'fallback';
 }
 
-export const ModeledGate=memo(function ModeledGate({outpost=false,fallen=false}:{outpost?:boolean;fallen?:boolean}){
+/** A missing reaction atlas keeps the static modeled gate. Never fetch GLB in battle. */
+export function useGateImpactAsset(enabled:boolean){
+  const [ready,setReady]=useState(false);
+  useEffect(()=>{
+    if(!enabled){setReady(false);return;}
+    let active=true;const image=new Image();
+    image.onload=()=>{if(active)setReady(true);};image.onerror=()=>{if(active)setReady(false);};image.src=GATE_IMPACT_ATLAS.src;
+    return()=>{active=false;image.onload=null;image.onerror=null;};
+  },[enabled]);
+  return enabled&&ready;
+}
+
+export const ModeledGate=memo(function ModeledGate({outpost=false,fallen=false,impactFrame,impactId}:{outpost?:boolean;fallen?:boolean;impactFrame?:number;impactId?:number}){
   const p=gatePlacement(outpost);
-  return <g transform={`translate(${p.x} ${p.y}) scale(${p.scale})`} opacity={fallen ? .4 : 1} data-gate-theme="verdant" data-gate={outpost?'outpost':'village'} data-gate-art="baked" data-sort-y={p.sortY} pointerEvents="none" aria-hidden="true">
+  return <g transform={`translate(${p.x} ${p.y}) scale(${p.scale})`} opacity={fallen ? .4 : 1} data-gate-theme="verdant" data-gate={outpost?'outpost':'village'} data-gate-art="baked" data-sort-y={p.sortY} data-impact-frame={impactFrame} data-impact-id={impactId} pointerEvents="none" aria-hidden="true">
     <ellipse cy="4" rx="61" ry="14" fill="#132e29" opacity=".25"/>
-    <image href={FOREST_GATE.src} x={FOREST_GATE.x} y={FOREST_GATE.y} width={FOREST_GATE.width} height={FOREST_GATE.height}/>
+    {impactFrame!==undefined?<svg x={FOREST_GATE.x} y={FOREST_GATE.y} width={FOREST_GATE.width} height={FOREST_GATE.height} viewBox={`${impactFrame*512} 0 512 512`} overflow="hidden"><image href={GATE_IMPACT_ATLAS.src} width={GATE_IMPACT_ATLAS.width} height={GATE_IMPACT_ATLAS.height}/></svg>:<image href={FOREST_GATE.src} x={FOREST_GATE.x} y={FOREST_GATE.y} width={FOREST_GATE.width} height={FOREST_GATE.height}/>}
   </g>;
 });
 

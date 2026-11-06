@@ -28,7 +28,7 @@ npm run models:forest-gate
 
 512×512 정사영 렌더에서 원점의 접지점은 약 `(256,399.923)`이다. 표시 크기 170×170에 맞춰 이미지 위치를 계산하며, 카메라를 바꾸면 생성된 배치 계약도 함께 갱신된다. 제작 환경의 Blender에는 OpenImageDenoise가 없어 Cycles 96샘플·디노이즈 끔으로 생성한다.
 
-작업실은 `/model-lab.html?model=forest-gate`에서 실제 GLB 회전·메시 보기·시점 초기화를 제공한다. 정적 구조물이므로 공격 재생 버튼은 표시하지 않는다. GLB 실패 시 PNG라는 표기와 함께 렌더 이미지로 대체한다.
+정적 원본 GLB는 그대로 보존한다. 후속 [침입 충격 작업](arcana-forest-gate-impact.md)에서 작업실 `/model-lab.html?model=forest-gate`는 관절 클립이 있는 GLB로 연결했으며, 회전·메시 보기·충격 재생을 제공한다. GLB 실패 시 PNG라는 표기와 함께 렌더 이미지로 대체한다.
 
 ## 전투에서의 순서와 실패 대체
 

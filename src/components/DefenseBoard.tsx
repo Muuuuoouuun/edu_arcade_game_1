@@ -1,3 +1,4 @@
+import { gateImpact } from '../games/defense/gateImpact';
 import { gatePlacement } from '../games/defense/gateAssets';
 import { knockbackPresentation } from '../games/defense/action';
 import { DefenseTerrain, BridgeFrontRail, useTerrainAsset } from './DefenseTerrain';
@@ -9,7 +10,7 @@ import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getSlots } from '../games
 import { actionSpriteAsset, directionalActionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset, waterCannonActionSpriteAsset } from '../games/defense/art';
 import type { SpriteAsset, ActionPose } from '../games/defense/art';
 import type { DefenseThemeId } from '../games/defense/themes';
-import { DefenseThemeScenery, ModeledGate, useGateAsset } from './DefenseThemeScenery';
+import { DefenseThemeScenery, ModeledGate, useGateAsset, useGateImpactAsset } from './DefenseThemeScenery';
 import { towerRange, positionOnPath } from '../games/defense/engine';
 import type { CombatAttack, DefenseState, Effect, Element, Enemy, HeroId, Point, Tower } from '../games/defense/types';
 import { AttackTrails, DashTrail, DefenseFxDefs, EffectLayer, FX_COLORS, ProjectileLayer } from './DefenseEffects';
@@ -152,7 +153,7 @@ function TowerUnit({tower:t,position:p,state:s,reduced}:{tower:Tower;position:Po
 }
 export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSelect,onMove,aimingDash=false,onSelectCandidates,onCancelAim,themeId='verdant'}:{state:DefenseState;selectedSlot:number|null;onSelect:(id:number)=>void;onMove:(p:Point)=>void;aimingDash?:boolean;onSelectCandidates?:(ids:number[])=>void;onCancelAim?:()=>void;themeId?:DefenseThemeId}){
  const stage=getStage(s.stage),snow=getRegion(s.stage)==='snow',slots=getSlots(s.stage),availableSlots=slots.filter(slot=>slot.unlock<=s.stage);
- const gateAsset=useGateAsset(themeId,snow);
+ const gateAsset=useGateAsset(themeId,snow),gateMotionReady=useGateImpactAsset(gateAsset==='modeled');
  const reduced=useReducedMotion(),terrainAsset=useTerrainAsset(s.stage),[unit,setUnit]=useState(1),[hpScale,setHpScale]=useState(1);
  const mapRef=useRef<SVGSVGElement>(null),boardRef=useRef<HTMLDivElement>(null),tapRef=useRef(new BoardTapTracker());
  const movingAllowed=!s.paused&&['prep','wave','intermission'].includes(s.phase),enemyKinds=[...new Set(s.enemies.map(e=>e.kind))];
@@ -229,8 +230,9 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
  const actorMotion=(actor:'hero'|'mercenary'|'pet')=>s.phase==='won'||s.phase==='lost'?{...s.locomotion[actor],speed:0}:s.locomotion[actor];
  const units:{id:string;y:number;render:ReactNode}[]=[];
  if(gateAsset==='modeled'){
-  units.push({id:'village-gate',y:gatePlacement().sortY,render:<ModeledGate/>});
-  if(stage.expanded)units.push({id:'outpost-gate',y:gatePlacement(true).sortY,render:<ModeledGate outpost fallen={s.outpostHp<=0}/>});
+  const village=gateMotionReady?gateImpact(activeEffects,false,reduced):null,outpost=gateMotionReady?gateImpact(activeEffects,true,reduced):null;
+  units.push({id:'village-gate',y:gatePlacement().sortY,render:<ModeledGate impactFrame={village?.frame} impactId={village?.id}/>});
+  if(stage.expanded)units.push({id:'outpost-gate',y:gatePlacement(true).sortY,render:<ModeledGate outpost fallen={s.outpostHp<=0} impactFrame={outpost?.frame} impactId={outpost?.id}/>});
  }
  if(terrainAsset&&!snow)for(const y of [430,...(stage.expanded?[235]:[])])units.push({id:`bridge-front-${y}`,y:y+25,render:<BridgeFrontRail y={y} asset={terrainAsset}/>});
  for(const t of s.towers){const p=slots.find(slot=>slot.id===t.slot);if(p)units.push({id:`tower-${t.slot}`,y:p.y,render:<TowerUnit tower={t} position={p} state={s} reduced={reduced}/>});}

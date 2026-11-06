@@ -448,7 +448,7 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
   for(const e of escaped){
     const loss=e.kind==='boss'||e.kind==='frostboss'?8:1;
     if(e.path===1)s.outpostHp=Math.max(0,s.outpostHp-loss);else s.hp=Math.max(0,s.hp-loss);
-    s.leaks++;effect(s,e,e,'physical','돌파!','breach',{force:loss});
+    s.leaks++;effect(s,e,e,'physical','돌파!','breach',{force:loss,targetGate:e.path===1?'outpost':'village'});
   }
   s.enemies=s.enemies.filter(e=>e.progress<lengths[e.path]);
   s.questProgress=stage.questType==='hunt'?s.kills:stage.questType==='outpost'?s.outpostHp:s.hp;

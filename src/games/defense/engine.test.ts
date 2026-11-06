@@ -141,6 +141,27 @@ test('a leak raises one breach effect sized to the lost HP without changing the 
   const big=battlefield();const boss=enemy('boss',1);boss.progress=10000;big.enemies=[boss];
   const crash=stepDefense(big,.1);assert.equal(crash.hp,12);assert.equal(crash.effects.find(e=>e.kind==='breach')?.force,8);
 });
+test('simultaneous breaches identify each gate, keep damage and never pay kills',()=>{
+ const state=battlefield(4),wood={...enemy('wood',1),progress:10000},boss={...enemy('boss',2),progress:10000,path:1};
+ state.enemies=[wood,boss,{...enemy('stone',3,100,100),speed:0}];
+ const hit=stepDefense(state,.02),effects=hit.effects.filter(e=>e.kind==='breach');
+ assert.equal(hit.hp,19);assert.equal(hit.outpostHp,4);assert.equal(hit.coins,state.coins);assert.equal(hit.kills,0);assert.equal(hit.leaks,2);
+ assert.deepEqual(effects.map(e=>[e.targetGate,e.force,e.age]),[['village',1,0],['outpost',8,0]]);
+ const paused=actDefense(hit,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+ const resumed=stepDefense(actDefense(paused,{type:'resume'}),.1);
+ assert.ok(resumed.effects.filter(e=>e.kind==='breach').every(e=>Math.abs(e.age!-.1)<1e-8));assert.equal(resumed.leaks,2);
+ assert.equal(resumed.hp,hit.hp);assert.equal(resumed.outpostHp,hit.outpostHp);assert.equal(resumed.coins,hit.coins);
+});
+test('the final gate breach finishes its visual response without changing terminal outcomes',()=>{
+ for(const outpost of [false,true]){
+  const state=battlefield(4);state.hp=outpost?20:1;state.outpostHp=1;state.wave=4;state.spawned=waveSize(4,4);
+  state.enemies=[{...enemy('wood',1),path:outpost?1:0,progress:10000}];
+  const ended=stepDefense(state,.02);assert.equal(ended.phase,outpost?'won':'lost');
+  assert.equal(ended.effects.find(e=>e.kind==='breach')?.targetGate,outpost?'outpost':'village');
+  const settled=advance(ended,1);assert.equal(settled.effects.length,0);assert.equal(settled.hp,ended.hp);assert.equal(settled.outpostHp,ended.outpostHp);assert.equal(settled.coins,ended.coins);assert.equal(settled.leaks,1);assert.equal(settled.phase,ended.phase);
+ }
+});
+
 test('kills pay once, main leaks cause loss, and losing the expanded village only fails its quest',()=>{
   const kill=battlefield();const dead=enemy('sprout',1);dead.hp=0;kill.enemies=[dead];
   const paid=stepDefense(kill,.1);
