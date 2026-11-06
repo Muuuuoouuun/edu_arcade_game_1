@@ -151,3 +151,6 @@
 .forest{background:#d9e9d6}.game-card.forest{grid-column:1/-1;min-height:260px}.game-card.forest .game-card-copy{max-width:66%;padding:30px}.game-card.forest h3{font-size:43px;line-height:1.2;color:#244a37}.game-card.forest .art{width:275px;height:275px;right:-12px;bottom:-20px;object-fit:contain}.game-card.forest p{color:#46634d}.filters{flex-wrap:wrap}
 @media(max-width:800px){.game-card.forest{grid-column:1/-1}.game-card.forest .art{right:20px}.game-card.forest .game-card-copy{max-width:65%}}
 @media(max-width:600px){.game-card.forest{min-height:225px}.game-card.forest h3{font-size:32px;max-width:180px}.game-card.forest .game-card-copy{padding:26px 23px;max-width:70%}.game-card.forest p{max-width:160px;font-size:15px}.game-card.forest .art{width:220px;height:220px;right:-32px;bottom:-24px}.filters{display:flex}.filters button{flex:1 0 21%;padding:8px 10px}}
+/* 터치 목표 44px 보장: 상단 바 컨트롤(모양은 유지, 누르는 영역만 확대) */
+.brand,.nav button,.header .icon-button{min-height:44px}
+.nav button,.header .icon-button{min-width:44px}
