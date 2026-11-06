@@ -603,6 +603,7 @@ test('a tower re-aims when its windup target falls; out-of-range or empty fields
   const winding=stepDefense(s,.02),lead=winding.attacks[0].targetId,other=lead===1?2:1;
   const survivor=winding.enemies.filter(e=>e.id===other);
   const fired=until({...winding,enemies:survivor},n=>n.projectiles.length>0);
+  assert.equal(fired.attacks[0]?.id,winding.attacks[0].id,'the shell comes from the original windup, not a later cooldown cycle');
   assert.equal(fired.projectiles[0].targetId,other);assert.equal(fired.towers[0].aim?.x,survivor[0].x);
   const empty=until({...winding,enemies:[]},n=>n.attacks.length===0);assert.equal(empty.projectiles.length,0);
   const far=until({...winding,enemies:[positionedEnemy('metal',3,900)]},n=>n.attacks.length===0);assert.equal(far.projectiles.length,0);
