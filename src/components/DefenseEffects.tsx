@@ -4,7 +4,7 @@ import type { CombatAttack, Effect, Element, Point, Projectile } from '../games/
 
 export const FX_COLORS: Record<Element, string> = { physical:'#fff0be', fire:'#ff9d38', lightning:'#fff27a', impact:'#ecc58b', water:'#4fd6c4' };
 /** Water reads teal and lightning yellow-white so a wet hit followed by a shock is not one blue blob. */
-const hitCore=(element:Element)=>element==='fire'?'def-fire-core':element==='water'?'def-water-core':element==='lightning'?'def-spark-core':'def-impact-core';
+export const hitCore=(element:Element)=>element==='fire'?'def-fire-core':element==='water'?'def-water-core':element==='lightning'?'def-spark-core':'def-impact-core';
 const clamp = (v:number) => Math.max(0,Math.min(1,v));
 const noise = (n:number) => { const x=Math.sin(n*127.1)*43758.5453; return x-Math.floor(x); };
 const effectKind = (effect:Effect) => effect.kind??(effect.text?.startsWith('+')?'coin':'impact');
@@ -19,7 +19,7 @@ export const DefenseFxDefs = memo(function DefenseFxDefs(){return <defs>
   <radialGradient id="def-green-core"><stop stopColor="#f4ffc7"/><stop offset=".45" stopColor="#b3ee82"/><stop offset="1" stopColor="#4da57a" stopOpacity="0"/></radialGradient>
   <radialGradient id="def-impact-core"><stop stopColor="#fffbdf" stopOpacity=".95"/><stop offset=".55" stopColor="#f8c87d" stopOpacity=".5"/><stop offset="1" stopColor="#e5ad60" stopOpacity="0"/></radialGradient>
   <linearGradient id="def-flame-tail"><stop stopColor="#f46a16" stopOpacity="0"/><stop offset=".6" stopColor="#ffb336" stopOpacity=".8"/><stop offset="1" stopColor="#fff0b1"/></linearGradient>
-  <linearGradient id="def-water-tail"><stop stopColor="#6db8e7" stopOpacity="0"/><stop offset="1" stopColor="#aaf3ff" stopOpacity=".85"/></linearGradient>
+  <linearGradient id="def-water-tail"><stop stopColor="#2fb8a8" stopOpacity="0"/><stop offset="1" stopColor="#9ff3e2" stopOpacity=".85"/></linearGradient>
   <linearGradient id="def-magic-tail"><stop stopColor="#a0df6d" stopOpacity="0"/><stop offset="1" stopColor="#e4ffb8"/></linearGradient>
 </defs>});
 
@@ -63,10 +63,10 @@ export function ProjectileLayer({projectiles,reduced}:{projectiles:Projectile[];
         </>:lightning?<>
           <circle r="18" fill="url(#def-spark-core)" opacity=".8"/>
           {detail?<path d="M-40 1-29-5-23 4-15-5-8 1" fill="none" stroke="#f2cf3a" strokeWidth="3" strokeLinecap="round" opacity=".65"/>:null}
-          <path d="m-12-6 12 2-4-7 16 13-13-1 4 8Z" fill="#ecfcff" stroke="#8edff2" strokeWidth="1.3"/>
+          <path d="m-12-6 12 2-4-7 16 13-13-1 4 8Z" fill="#fffde8" stroke="#f2cf3a" strokeWidth="1.3"/>
         </>:<>
           {detail?<path d="M-43 0Q-20-14 3-7L9 0 3 7Q-20 14-43 0Z" fill={`url(#${water?'def-water-tail':green?'def-magic-tail':'def-flame-tail'})`}/>:null}
-          <circle r="17" fill={`url(#${water?'def-blue-core':green?'def-green-core':'def-fire-core'})`}/><ellipse rx="7" ry="6" fill={water?'#dffaff':green?'#d7ffae':'#fff6bf'}/>
+          <circle r="17" fill={`url(#${water?'def-water-core':green?'def-green-core':'def-fire-core'})`}/><ellipse rx="7" ry="6" fill={water?'#e4fff8':green?'#d7ffae':'#fff6bf'}/>
           {detail?<><circle cx="-22" cy="-6" r="2.5" fill={water?'#acf0ff':green?'#b1e89d':'#ffce67'} opacity=".65"/><circle cx="-33" cy="5" r="1.8" fill={water?'#acf0ff':green?'#b1e89d':'#ffce67'} opacity=".35"/></>:null}
         </>}
       </g>

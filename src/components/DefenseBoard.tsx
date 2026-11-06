@@ -7,7 +7,7 @@ import type { DefenseThemeId } from '../games/defense/themes';
 import { DefenseThemeScenery } from './DefenseThemeScenery';
 import { towerRange, positionOnPath } from '../games/defense/engine';
 import type { CombatAttack, DefenseState, Effect, Element, Enemy, HeroId, Point, Tower } from '../games/defense/types';
-import { AttackTrails, DashTrail, DefenseFxDefs, EffectLayer, FX_COLORS, ProjectileLayer } from './DefenseEffects';
+import { AttackTrails, DashTrail, DefenseFxDefs, EffectLayer, FX_COLORS, hitCore, ProjectileLayer } from './DefenseEffects';
 import { BoardTapTracker, clientToBoard, resolveBoardTap } from './defenseInput';
 import type { ScreenMatrix } from './defenseInput';
 import { hpBarScale, unitScale } from './defenseFrame';
@@ -68,7 +68,7 @@ function Actor({unit=1,actor,position,facing,moving,velocity,dashTime=0,attack,s
   {moving&&!dashing&&!reduced?<g opacity={.2*pace}><ellipse cx={-facing*17} cy="3" rx="10" ry="3" fill="#f2dec4"/><ellipse cx={-facing*28} cy="5" rx="5" ry="2" fill="#f2dec4"/></g>:null}
   {casting?<ellipse cy="-4" rx={32+(reduced?0:skillAge*26)} ry="12" fill="none" stroke={actor==='druid'?'#c4ef96':actor==='mage'?'#ffc585':'#d5f5ff'} strokeWidth="2" opacity={1-skillAge*1.7}/>:null}
   <Sprite index={index} size={size} flip={(aim<0)!==(art?.nativeFacing===-1)} art={art} pose={`translate(${offset},${bob}) rotate(${lean}) scale(${sx},${sy})`} shadowScale={1+bob*.02}/>
-  {attack&&phase==='windup'&&attack.kind==='spell'?<g transform="translate(0,-43)" opacity={.35+.35*clamp(attack.elapsed/Math.max(.05,attack.hitAt))}><circle cx={aim*24} cy="-5" r={7+clamp(attack.elapsed/Math.max(.05,attack.hitAt))*9} fill={`url(#${attack.element==='fire'?'def-fire-core':attack.actor==='druid'?'def-green-core':'def-blue-core'})`}/></g>:null}
+  {attack&&phase==='windup'&&attack.kind==='spell'?<g transform="translate(0,-43)" opacity={.35+.35*clamp(attack.elapsed/Math.max(.05,attack.hitAt))}><circle cx={aim*24} cy="-5" r={7+clamp(attack.elapsed/Math.max(.05,attack.hitAt))*9} fill={`url(#${attack.element==='fire'?'def-fire-core':attack.actor==='druid'?'def-green-core':attack.element==='water'||attack.element==='lightning'?hitCore(attack.element):'def-blue-core'})`}/></g>:null}
   {promoted?<text y={-size*.92} fill="#ffe3a2" fontSize="18" textAnchor="middle" className="def-world-label">✦</text>:null}
   {wolf?<text y="20" textAnchor="middle" className="def-pet-label">달빛 늑대</text>:null}
  </g>;
@@ -108,7 +108,7 @@ function TowerUnit({tower:t,position:p,state:s,reduced}:{tower:Tower;position:Po
  const length=Math.max(1,distance(p,aim)),dx=(aim.x-p.x)/length,dy=(aim.y-p.y)/length,angle=Math.atan2(dy,dx)*180/Math.PI;
  const recoil=clamp((t.recoil??0)/.24),phase=attack?attackPhase(attack):null,windup=phase==='windup'&&attack?clamp(attack.elapsed/attack.hitAt):0;
  const element:Element=t.branch==='fire'?'fire':t.branch==='lightning'?'lightning':t.branch==='water'?'water':t.kind==='cannon'?'impact':t.kind==='magic'?'fire':'physical';
- const color=FX_COLORS[element],core=t.branch==='fire'?'def-fire-core':'def-blue-core';
+ const color=FX_COLORS[element],core=element==='water'||element==='lightning'||t.branch==='fire'?hitCore(element):'def-blue-core';
  const placement=s.effects.filter(e=>e.sourceSlot===t.slot&&(e.kind==='build'||e.kind==='upgrade')).at(-1);
  const progress=placement?clamp((placement.age??0)/(placement.maxLife??.8)):1,ease=1-Math.pow(1-progress,3),building=placement?.kind==='build';
  const lift=reduced?0:building?(1-ease)*12:0,scale=reduced?1:building?.86+.14*ease:1;
@@ -127,9 +127,9 @@ function TowerUnit({tower:t,position:p,state:s,reduced}:{tower:Tower;position:Po
    {windup>0&&t.branch==='lightning'?<path d={`M-13 6-6 ${-5-windup*8} 0 2 8 ${-10-windup*5} 14 4`} fill="none" stroke="#e1fbff" strokeWidth="1.5" opacity={windup}/>:null}
   </g>:null}
   {windup>0&&t.kind==='crossbow'?<g transform={`translate(${muzzle.x-dx*windup*5},${muzzle.y-dy*windup*5}) rotate(${angle})`} opacity={.45+windup*.5}><path d="M-12 0H10m-9-5 5 5-5 5" fill="none" stroke="#f0dab0" strokeWidth="1.5"/><path d={`M-4-13 ${-5-windup*5} 0-4 13`} fill="none" stroke="#c2b793" strokeWidth="1"/></g>:null}
-  {windup>0&&t.kind==='cannon'?<circle cx={muzzle.x} cy={muzzle.y} r={5+windup*4} fill={`url(#${t.branch==='water'?'def-blue-core':'def-fire-core'})`} opacity={windup*.6}/>:null}
+  {windup>0&&t.kind==='cannon'?<circle cx={muzzle.x} cy={muzzle.y} r={5+windup*4} fill={`url(#${t.branch==='water'?'def-water-core':'def-fire-core'})`} opacity={windup*.6}/>:null}
   {flash?<g transform={`translate(${muzzle.x},${muzzle.y}) rotate(${angle})`} opacity={recoil}>
-   <circle r={reduced?8:t.kind==='cannon'?23:15} fill={`url(#${element==='fire'||element==='impact'?'def-fire-core':'def-blue-core'})`}/>
+   <circle r={reduced?8:t.kind==='cannon'?23:15} fill={`url(#${element==='fire'||element==='impact'?'def-fire-core':element==='water'||element==='lightning'?hitCore(element):'def-blue-core'})`}/>
    {!reduced?<path d={t.kind==='crossbow'?'M-2-3 20 0-22 3Z':'m0-4 22-5-9 9 9 9-22-5-7-4Z'} fill={element==='water'?'#d9fcff':'#fff3c3'} opacity=".85"/>:null}
   </g>:null}
   {shot&&!reduced&&t.kind==='cannon'?<g transform={`translate(${muzzle.x+dx*(1-recoil)*14},${muzzle.y-10*(1-recoil)})`} opacity={recoil*.3}><ellipse rx={7+(1-recoil)*10} ry={5+(1-recoil)*7} fill={t.branch==='water'?'#caedee':'#dfd6bd'}/><ellipse cx={-dx*10} cy="-5" rx={5+(1-recoil)*5} ry="5" fill={t.branch==='water'?'#e5faff':'#f1e9d9'}/></g>:null}
