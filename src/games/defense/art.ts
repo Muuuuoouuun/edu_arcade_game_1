@@ -10,7 +10,7 @@ export function spriteAsset(index:number):SpriteAsset {
  // Portraits crop out the shared action-frame margin; battle keeps the full frame.
  if(index===2){const model=idleSpriteAsset('dwarf');if(model)return {...model,viewBox:'180 172 392 430'};}
  if(index>=4&&index<=6){const model=towerSpriteAsset((['crossbow','magic','cannon'] as const)[index-4]);if(model)return model;}
- const kind=({9:'wood',10:'ice',11:'stone',14:'boss',19:'frostwolf',20:'frostboss'} as Record<number,EnemyKind>)[index];
+ const kind=({9:'wood',10:'ice',11:'stone',13:'insulator',14:'boss',19:'frostwolf',20:'frostboss'} as Record<number,EnemyKind>)[index];
  if(kind){const model=monsterSpriteAsset(kind,'idle');if(model)return model;}
  if(index<16) return {src:'/defense/atlas.png',viewBox:ORIGINAL[index].join(' '),width:1254,height:1254};
  if(index<22)return {src:'/defense/snow-atlas.png',viewBox:SNOW[index-16].join(' '),width:1024,height:1536};
@@ -84,23 +84,39 @@ export function towerSpriteAsset(kind:TowerKind,branch:Branch|null=null,level=1)
 }
 export type MonsterPose='walk-a'|'walk-b'|'hit'|'idle'|'charge'|'death';
 type ModelFrame=[number,number,number,number];
-const MONSTER_MODELS:Partial<Record<EnemyKind,{span:number;frames:ModelFrame[]}>>={
- wood:{span:330,frames:[[38,59,324,323],[405,66,286,316],[761,62,325,320]]},
- ice:{span:345,frames:[[53,399,309,353],[416,403,295,349],[776,401,310,351]]},
- stone:{span:340,frames:[[26,759,372,326],[414,757,326,328],[779,761,307,324]]},
- frostwolf:{span:350,frames:[[15,1101,365,304],[394,1105,347,300],[756,1087,330,318]]},
+type MonsterModel={span:number;frames:ModelFrame[];atlas?:{src:string;width:number;height:number};fallback?:MonsterModel};
+/** Baked Blender monster renders (tools/blender/build_<name>.py): 384px frames, walk-a/walk-b/hit, one shared crop band. */
+const bakedAtlas=(file:string)=>({src:`/defense/models/${file}-atlas.webp`,width:1152,height:384});
+const SLIME_ATLAS=bakedAtlas('insulator-slime'),GOLEM_ATLAS=bakedAtlas('stone-golem'),WOOD_ATLAS=bakedAtlas('wood-soldier'),ICE_ATLAS=bakedAtlas('ice-knight'),WOLF_ATLAS=bakedAtlas('frost-wolf');
+const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
+ wood:{span:360,frames:[[0,8,384,364],[384,8,384,364],[768,8,384,364]],atlas:WOOD_ATLAS,
+  // Previous illustrated frames keep the creature on screen if the baked render fails to load.
+  fallback:{span:330,frames:[[38,59,324,323],[405,66,286,316],[761,62,325,320]]}},
+ ice:{span:360,frames:[[0,4,384,372],[384,4,384,372],[768,4,384,372]],atlas:ICE_ATLAS,
+  // Previous illustrated frames keep the creature on screen if the baked render fails to load.
+  fallback:{span:345,frames:[[53,399,309,353],[416,403,295,349],[776,401,310,351]]}},
+ stone:{span:260,frames:[[22,68,340,255],[406,68,340,255],[790,68,340,255]],atlas:GOLEM_ATLAS,
+  // Previous illustrated frames keep the creature on screen if the baked render fails to load.
+  fallback:{span:340,frames:[[26,759,372,326],[414,757,326,328],[779,761,307,324]]}},
+ frostwolf:{span:315,frames:[[6,68,360,242],[390,68,360,242],[774,68,360,242]],atlas:WOLF_ATLAS,
+  // Previous illustrated frames keep the creature on screen if the baked render fails to load.
+  fallback:{span:350,frames:[[15,1101,365,304],[394,1105,347,300],[756,1087,330,318]]}},
+ insulator:{span:330,frames:[[39,81,317,242],[423,81,317,242],[807,81,317,242]],atlas:SLIME_ATLAS},
 };
-const BOSS_MODELS:Partial<Record<EnemyKind,{span:number;frames:ModelFrame[]}>>={
+const BOSS_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
  boss:{span:345,frames:[[42,105,349,340],[490,50,382,395],[933,111,393,334],[1381,177,363,268]]},
  frostboss:{span:355,frames:[[36,500,385,363],[483,448,402,415],[932,512,402,351],[1365,584,392,279]]},
 };
+/** Every baked monster atlas is preloaded from the model table, so a new bake cannot be forgotten in the loader. */
+const MONSTER_ATLAS_SOURCES=[...new Set(Object.values(MONSTER_MODELS).flatMap(model=>model.atlas?[model.atlas.src]:[]))];
 /** A common pixels-to-world scale per creature prevents pose changes resizing the body. */
 export function monsterSpriteAsset(kind:EnemyKind,pose:MonsterPose):SpriteAsset|null {
- const boss=kind==='boss'||kind==='frostboss',model=(boss?BOSS_MODELS:MONSTER_MODELS)[kind];if(!model)return null;
- const src=boss?'/defense/boss-models.webp':'/defense/monster-models.webp';if(!motionLoaded.has(src))return null;
+ const boss=kind==='boss'||kind==='frostboss';let model=(boss?BOSS_MODELS:MONSTER_MODELS)[kind];if(!model)return null;
+ if(model.atlas&&model.fallback&&!motionLoaded.has(model.atlas.src))model=model.fallback;
+ const atlas=model.atlas,src=atlas?.src??(boss?'/defense/boss-models.webp':'/defense/monster-models.webp');if(!motionLoaded.has(src))return null;
  const frame=boss?(pose==='charge'?1:pose==='hit'?2:pose==='death'?3:0):(pose==='hit'||pose==='death'?2:pose==='walk-b'?1:0);
  const [x,y,w,h]=model.frames[frame];
- return {src,viewBox:`${x} ${y} ${w} ${h}`,width:boss?1774:1086,height:boss?887:1448,displayScale:Math.max(w,h)/model.span};
+ return {src,viewBox:`${x} ${y} ${w} ${h}`,width:atlas?.width??(boss?1774:1086),height:atlas?.height??(boss?887:1448),displayScale:Math.max(w,h)/model.span};
 }
 /** Long weapons need a larger viewport to keep the actor's body size consistent. */
 export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAsset|null {
@@ -115,7 +131,7 @@ export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAss
 /** Load while preparing in camp; slow or failed requests keep the existing idle art. */
 export function preloadDefenseMotion():Promise<void> {
  if(typeof Image==='undefined')return Promise.resolve();
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/monster-models.webp','/defense/boss-models.webp',...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/monster-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(src=>new Promise<void>(resolve=>{
   const asset=new Image();
   asset.onload=()=>{motionLoaded.add(src);asset.onload=null;asset.onerror=null;resolve();};
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};

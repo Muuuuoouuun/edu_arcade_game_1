@@ -17,7 +17,7 @@ export type DefenseState = {
  locomotion:Record<'hero'|'mercenary'|'pet',Locomotion>;
  enemies:Enemy[]; towers:Tower[]; effects:Effect[]; attacks:CombatAttack[]; projectiles:Projectile[]; hero:HeroId; heroPosition:Point; heroTarget:Point; heroFacing:-1|1; mercenaryPosition:Point; mercenaryFacing:-1|1; pet:PetState|null; heroCooldown:number;
  mercenary:HeroId|null; mercCooldown:number; petCooldown:number; skillCooldown:number; bossCharge:number; freeze:number; bossCycle:number; promotion:'power'|'control'|null;
- spawned:number; spawnTimer:number; nextId:number; training:number; notice:string; questProgress:number;
+ spawned:number; spawnTimer:number; waveStartLeaks:number; nextId:number; training:number; notice:string; questProgress:number;
 };
 export type DefenseAction =
  |{type:'start-wave'}|{type:'build';slot:number;kind:TowerKind}|{type:'upgrade';slot:number;branch?:Branch}

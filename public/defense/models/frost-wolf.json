@@ -1,0 +1,34 @@
+{
+ "id": "frost-wolf",
+ "source": "art-source/defense/frost-wolf.blend",
+ "generator": "tools/blender/build_wolf.py",
+ "blender": "4.3.2",
+ "kind": "baked 2.5D sprite atlas (not a GLB)",
+ "nativeFacing": 1,
+ "frame": {
+  "width": 384,
+  "height": 384,
+  "ground": [
+   192.0,
+   284.49
+  ],
+  "orthographic_scale": 6.400000095367432
+ },
+ "atlas": {
+  "file": "frost-wolf-atlas.webp",
+  "poses": [
+   "walk-a",
+   "walk-b",
+   "hit"
+  ],
+  "width": 1152,
+  "height": 384
+ },
+ "render": {
+  "engine": "Cycles CPU",
+  "samples": 96,
+  "transparent": true
+ },
+ "mesh_objects": 63,
+ "evaluated_polygons": 1981
+}

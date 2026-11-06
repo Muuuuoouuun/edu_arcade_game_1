@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createDefense } from '../games/defense/engine.ts';
+import { createDefense, SURGE_NOTICE } from '../games/defense/engine.ts';
 import type { DefenseState, Effect } from '../games/defense/types.ts';
 import { combatCueFor } from './defenseSound.ts';
 
@@ -31,4 +31,13 @@ test('without a breach the previous priority holds and silent frames give no cue
 test('a paused frame stays silent even if effects exist', () => {
   const { before, next } = withEffects(['breach'], { paused: true });
   assert.equal(combatCueFor(before, next), null);
+});
+
+test('the surge horn plays once when the notice appears, yields to a breach, and not on later frames', () => {
+  const before = createDefense(1, 'mage');
+  const opened = { ...before, notice: SURGE_NOTICE };
+  assert.deepEqual(combatCueFor(before, opened), { kind: 'surge', pan: 0 });
+  assert.equal(combatCueFor(opened, { ...opened, time: opened.time + 0.1 }), null);
+  const breach = withEffects(['breach'], { notice: SURGE_NOTICE });
+  assert.equal(combatCueFor(breach.before, breach.next)?.kind, 'breach');
 });

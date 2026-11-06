@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { actDefense, allowedBranches, createDefense, damageMultiplier, positionOnPath, petPosition, questSatisfied, questComplete, stepDefense, towerRange, waveSize } from './engine.ts';
+import { actDefense, allowedBranches, createDefense, FLAWLESS_BONUS, damageMultiplier, positionOnPath, petPosition, questSatisfied, questComplete, questStatus, stepDefense, towerRange, waveSize, surgeStart, inSurge, SURGE_INTERVAL, SURGE_MIN_GAP } from './engine.ts';
 import { ENEMIES, PATHS, SLOTS, STAGES, HERO_ORDER, STAGE_COUNT, getStage, getSlots, getPaths, getRegion, stageLabel } from './data.ts';
 import { DIFFICULTIES, getWavePlan } from './difficulty.ts';
 import type { Difficulty, DefenseAction, DefenseState, Enemy, EnemyKind } from './types.ts';
@@ -79,7 +79,7 @@ test('pause freezes combat, controls, timers and money; invalid time cannot adva
 test('waves require defeated or escaped enemies; promotion is a deliberate mid-battle choice',()=>{
   const base=battlefield();base.wave=2;base.spawned=waveSize(1,2);
   let s=stepDefense(base,.1);
-  assert.equal(s.phase,'promotion');assert.equal(s.coins,285);
+  assert.equal(s.phase,'promotion');assert.equal(s.coins,285+FLAWLESS_BONUS);
   assert.equal(actDefense(s,{type:'start-wave'}),s);
   s=actDefense(s,{type:'promote',choice:'control'});
   assert.equal(s.phase,'intermission');assert.equal(s.promotion,'control');
@@ -142,7 +142,7 @@ test('a leak raises one breach effect sized to the lost HP without changing the 
 test('kills pay once, main leaks cause loss, and losing the expanded village only fails its quest',()=>{
   const kill=battlefield();const dead=enemy('sprout',1);dead.hp=0;kill.enemies=[dead];
   const paid=stepDefense(kill,.1);
-  assert.equal(paid.kills,1);assert.equal(paid.coins,240+14+45);
+  assert.equal(paid.kills,1);assert.equal(paid.coins,240+14+45+FLAWLESS_BONUS);
   const settled=advance(paid,2);assert.equal(settled.coins,paid.coins);assert.equal(settled.kills,paid.kills);assert.equal(settled.effects.length,0);
   const leak=battlefield();leak.hp=1;const escaped=enemy('wood',1);escaped.progress=10000;leak.enemies=[escaped];
   assert.equal(stepDefense(leak,.1).phase,'lost');
@@ -391,7 +391,7 @@ test('airborne arrows can hit another real body after their target dies, or miss
 test('wave completion clears remaining projectiles and windups without duplicate rewards',()=>{
   const airborne=until(rangedBattle(),s=>s.projectiles.length>0);airborne.enemies[0].hp=0;
   const finished=stepDefense(airborne,.02);assert.equal(finished.phase,'intermission');assert.equal(finished.projectiles.length,0);assert.equal(finished.attacks.length,0);
-  assert.equal(finished.kills,1);assert.equal(finished.coins,240+14+45);
+  assert.equal(finished.kills,1);assert.equal(finished.coins,240+14+45+FLAWLESS_BONUS);
   const rest=advance(finished,3);assert.equal(rest.kills,1);assert.equal(rest.coins,finished.coins);
   for(const phase of ['won','lost'] as const){
     const ended={...airborne,phase,effects:finished.effects};
@@ -510,6 +510,90 @@ test('difficulty forecasts match actual spawn counts, order, timing, health and 
     }
     assert.deepEqual(actual,plan,`${stage}/${wave}/${mode}`);assert.equal(waveSize(stage,wave,mode),actual.length);
     const spacing=Math.max(.85,1.45-data.order*.09-wave*.05)*config.spawnInterval;
-    for(let i=1;i<times.length;i++)assert.ok(Math.abs(times[i]-times[i-1]-spacing)<.100001);
+    for(let i=1;i<times.length;i++)assert.ok(Math.abs(times[i]-times[i-1]-(inSurge(wave,i,plan.length)?Math.max(SURGE_MIN_GAP,spacing*SURGE_INTERVAL):spacing))<.100001);
   }
+});
+test('a wave cleared without any breach pays a one-time flawless bonus; a breach during that wave removes it',()=>{
+  const clean=battlefield();const started=actDefense({...createDefense(1,'mage'),phase:'prep'},{type:'start-wave'});
+  assert.equal(started.waveStartLeaks,0);
+  const done=stepDefense(clean,.1);
+  assert.equal(done.phase,'intermission');assert.equal(done.coins,240+45+FLAWLESS_BONUS);assert.match(done.notice,/완벽 방어/);
+  assert.equal(advance(done,2).coins,done.coins,'bonus is paid once');
+  assert.equal(done.effects.filter(e=>e.kind==='coin'&&e.text===`+${FLAWLESS_BONUS} 완벽!`).length,1,'a visible cue marks the bonus');
+  const promo=stepDefense({...battlefield(),wave:2,spawned:waveSize(1,2),promotion:null},.1);
+  assert.equal(promo.phase,'promotion');assert.match(promo.notice,/완벽 방어/);
+  const leaky=battlefield();const wood=enemy('wood',1);wood.progress=10000;leaky.enemies=[wood];
+  const after=advance(leaky,3);
+  assert.equal(after.phase,'intermission');assert.equal(after.leaks,1);assert.equal(after.coins,240+45);assert.doesNotMatch(after.notice,/완벽/);assert.equal(after.effects.some(e=>e.text?.includes('완벽')),false);
+  const plain=battlefield();assert.equal(stepDefense(plain,.1).effects.filter(e=>e.kind==='coin'&&e.text==='+45 방어!').length,0,'flawless shows the bonus cue instead');
+  const slip=battlefield();const w2=enemy('wood',1);w2.progress=10000;slip.enemies=[w2];const slipDone=stepDefense(slip,.1);assert.ok(slipDone.effects.some(e=>e.kind==='breach'));assert.equal(slipDone.effects.filter(e=>e.kind==='coin'&&e.text==='+45 방어!').length,1,'a normal clear still shows its payout');
+  const later={...after,phase:'intermission' as const};const next=actDefense(later,{type:'start-wave'});
+  assert.equal(next.waveStartLeaks,1,'previous-wave leaks do not spoil the next wave');
+});
+
+test('questStatus reads live village, outpost and hunt goals without changing state', () => {
+  const base = createDefense(1, 'mage');
+  assert.deepEqual(questStatus(base), { current: base.hp, goal: 15, met: base.hp >= 15, unit: '체력', lowerIsLoss: true });
+  assert.equal(questStatus({ ...base, hp: 14 }).met, false);
+  const hunt = createDefense(6, 'mage');
+  assert.equal(questStatus({ ...hunt, questProgress: 59 }).met, false);
+  assert.equal(questStatus({ ...hunt, questProgress: 60 }).met, true);
+  assert.equal(questStatus({ ...hunt, questProgress: 60 }).lowerIsLoss, false);
+  assert.equal(questStatus({ ...createDefense(4, 'mage'), outpostHp: 0 }).met, false);
+  assert.equal(questStatus(createDefense(4, 'mage')).unit, '외곽');
+});
+
+// Spawn times for a wave with no towers/hero interference: only the stream timing is measured.
+function spawnTimes(stage:number,wave:number):number[] {
+  let s:DefenseState={...createDefense(stage,'mage'),phase:'wave',wave,spawned:0,spawnTimer:.4,heroCooldown:99};
+  const times:number[]=[],size=waveSize(stage,wave);let seen=0;
+  for(let i=0;i<4000&&seen<size;i++){s=stepDefense(s,.05);if(s.spawned>seen){seen=s.spawned;times.push(s.time);}}
+  return times;
+}
+
+test('waves 2-3 end with a faster surge pack; waves 1 and 4 keep a steady stream',()=>{
+  for(const [stage,wave] of [[1,2],[1,3],[3,2],[6,3]]) {
+    const t=spawnTimes(stage,wave),gaps=t.slice(1).map((v,i)=>v-t[i]),from=surgeStart(t.length);
+    assert.equal(t.length,waveSize(stage,wave));
+    const calm=gaps.slice(0,from-1),surge=gaps.slice(from);
+    assert.ok(Math.min(...calm)>Math.max(...surge)+.05,`stage ${stage} wave ${wave}: calm ${calm} surge ${surge}`);
+  }
+  for(const [stage,wave] of [[1,1],[4,4]]) {
+    const times=spawnTimes(stage,wave),gaps=times.slice(1).map((v,i)=>v-times[i]);
+    assert.equal(times.length,waveSize(stage,wave));
+    assert.ok(Math.max(...gaps)-Math.min(...gaps)<.11,`stage ${stage} wave ${wave} should stay steady`);
+  }
+});
+
+test('the surge notice appears once in waves 2-3 and never in waves 1 or 4',()=>{
+  for(const wave of [1,2,3,4]) {
+    let s:DefenseState={...createDefense(4,'mage'),phase:'wave',wave,spawned:0,spawnTimer:.4,heroCooldown:99},hits=0;
+    for(let i=0;i<4000&&s.spawned<waveSize(4,wave);i++){const before=s.notice;s=stepDefense(s,.05);if(s.notice!==before&&s.notice.includes('몰려와요'))hits++;}
+    assert.equal(hits,wave===2||wave===3?1:0,`wave ${wave}`);
+  }
+});
+
+test('a boss kill adds one shockwave and a labelled coin without changing the bounty',()=>{
+  const kill=(kind:EnemyKind)=>{const s=battlefield(kind==='frostboss'?8:4),e=enemy(kind,1);e.hp=0;e.speed=0;const spare=enemy('stone',2,100,100);spare.speed=0;s.enemies=[e,spare];const before=s.coins;const next=stepDefense(s,.05);return {next,gain:next.coins-before};};
+  for(const kind of ['boss','frostboss'] as const){
+    const {next,gain}=kill(kind);
+    assert.equal(gain,100);assert.equal(next.kills,1);
+    assert.equal(next.effects.filter(e=>e.kind==='shockwave').length,1);
+    assert.equal(next.effects.filter(e=>e.kind==='death').length,1);
+    assert.ok(next.effects.some(e=>e.kind==='coin'&&e.text==='+100 처치!'));
+  }
+  const {next,gain}=kill('wood');
+  assert.equal(gain,17);assert.equal(next.effects.filter(e=>e.kind==='shockwave').length,0);
+  assert.ok(next.effects.some(e=>e.kind==='coin'&&e.text==='+17'));
+});
+
+test('several ordinary kills in one tick share a single summed coin popup while coins and deaths stay per-enemy',()=>{
+  const s=battlefield(4);const a=enemy('wood',1),b=enemy('stone',2,100,100),c=enemy('sprout',3,120,120);
+  for(const e of [a,b,c]){e.hp=0;e.speed=0;}
+  const spare=enemy('stone',4,300,300);spare.speed=0;s.enemies=[a,b,c,spare];const before=s.coins;
+  const next=stepDefense(s,.05);
+  assert.equal(next.coins-before,17+19+14);assert.equal(next.kills,3);
+  assert.equal(next.effects.filter(e=>e.kind==='death').length,3);
+  const coins=next.effects.filter(e=>e.kind==='coin');
+  assert.equal(coins.length,1);assert.equal(coins[0].text,'+50 ×3');
 });
