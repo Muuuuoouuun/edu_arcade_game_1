@@ -1,4 +1,4 @@
-import { walkFrame } from './locomotion.ts';
+import { enemyWalkFrame, walkFrame } from './locomotion.ts';
 import type { Branch, EnemyKind, HeroId, TowerKind } from './types';
 export type SpriteAsset = {src:string;viewBox:string;width:number;height:number;displayScale?:number;nativeFacing?:-1|1;groundY?:number};
 export type ActionPose = 'windup'|'strike'|'recover';
@@ -88,6 +88,7 @@ type MonsterModel={span:number;frames:ModelFrame[];atlas?:{src:string;width:numb
 /** Baked Blender monster renders (tools/blender/build_<name>.py): 384px frames, walk-a/walk-b/hit, one shared crop band. */
 const bakedAtlas=(file:string)=>({src:`/defense/models/${file}-atlas.webp`,width:1152,height:384});
 const SLIME_ATLAS=bakedAtlas('insulator-slime'),GOLEM_ATLAS=bakedAtlas('stone-golem'),WOOD_ATLAS=bakedAtlas('wood-soldier'),ICE_ATLAS=bakedAtlas('ice-knight'),WOLF_ATLAS=bakedAtlas('frost-wolf'),METAL_ATLAS=bakedAtlas('metal-soldier');
+const WOOD_WALK_ATLAS={src:'/defense/models/wood-soldier-walk-atlas.webp',width:3072,height:384};
 const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
  wood:{span:360,frames:[[0,8,384,364],[384,8,384,364],[768,8,384,364]],atlas:WOOD_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
@@ -118,7 +119,12 @@ export function monsterSpriteAsset(kind:EnemyKind,pose:MonsterPose):SpriteAsset|
  const atlas=model.atlas,src=atlas?.src??(boss?'/defense/boss-models.webp':'/defense/monster-models.webp');if(!motionLoaded.has(src))return null;
  const frame=boss?(pose==='charge'?1:pose==='hit'?2:pose==='death'?3:0):(pose==='hit'||pose==='death'?2:pose==='walk-b'?1:0);
  const [x,y,w,h]=model.frames[frame];
- return {src,viewBox:`${x} ${y} ${w} ${h}`,width:atlas?.width??(boss?1774:1086),height:atlas?.height??(boss?887:1448),displayScale:Math.max(w,h)/model.span};
+ return {src,viewBox:`${x} ${y} ${w} ${h}`,width:atlas?.width??(boss?1774:1086),height:atlas?.height??(boss?887:1448),displayScale:Math.max(w,h)/model.span,...(kind==='wood'&&atlas?{groundY:317.61}:{})};
+}
+/** Eight authored poses, complete atlas only; never swap a modeled gait onto illustrated hit art. */
+export function monsterWalkingSpriteAsset(kind:EnemyKind,distance:number):SpriteAsset|null {
+ if(kind!=='wood'||!motionLoaded.has(WOOD_ATLAS.src)||!motionLoaded.has(WOOD_WALK_ATLAS.src))return null;
+ return {...WOOD_WALK_ATLAS,viewBox:`${enemyWalkFrame(kind,distance)*384} 8 384 364`,displayScale:384/360,groundY:317.61};
 }
 /** Long weapons need a larger viewport to keep the actor's body size consistent. */
 export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAsset|null {
@@ -139,7 +145,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

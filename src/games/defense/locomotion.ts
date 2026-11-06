@@ -1,4 +1,5 @@
 import type { Point } from './types.ts';
+import type { EnemyKind } from './types.ts';
 
 export type Locomotion = { distance: number; speed: number };
 
@@ -20,4 +21,16 @@ export function movementFacing(previous: -1 | 1, from: Point, to: Point): -1 | 1
 export const WALK_STRIDE = 64;
 export function walkFrame(distance: number): number {
   return Math.floor((Math.max(0, distance) % WALK_STRIDE) / WALK_STRIDE * 8);
+}
+
+export const enemyStride = (kind: EnemyKind) => kind === 'stone' ? 64 : kind === 'frostwolf' ? 40 : kind === 'wood' ? 52 : 48;
+
+/** Impulses slide a body; they must not wind its gait backwards or flip its facing. */
+export function advanceEnemyGait(distance: number, before: number, after: number, dt: number, bracing: boolean): Locomotion {
+  const travel = bracing ? 0 : Math.max(0, after - before);
+  return { distance: distance + travel, speed: dt > 0 ? travel / dt : 0 };
+}
+
+export function enemyWalkFrame(kind: EnemyKind, distance: number): number {
+  return Math.floor(Math.max(0, distance) % enemyStride(kind) / enemyStride(kind) * 8);
 }

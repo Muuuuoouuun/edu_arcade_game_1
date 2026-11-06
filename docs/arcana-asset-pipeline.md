@@ -94,6 +94,8 @@ node tools/build-hero-sprites.mjs --walk
 
 ## 검증
 
+나무 병사의 통나무형 3D 원본·GLB 보행 클립·8단계 전투 아틀라스는 [모델·움직임 개선](arcana-model-motion-development.md)에 정리했다. `npm run models:wood`로 같은 카메라와 발 기준에서 다시 생성하며 모델 작업실에서 반복 보행을 확인할 수 있다.
+
 전투용 성문 4종과 지형 재질·메시 보정의 제작/재생성 절차는 [컨셉 아트와 전투 화면 연결](arcana-concept-art-integration.md)을 참고한다. 성문은 2D 일러스트이고 지형은 Blender 메시 베이크다.
 
 ```bash

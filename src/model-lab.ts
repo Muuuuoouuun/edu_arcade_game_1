@@ -1,4 +1,4 @@
-import { AmbientLight, AnimationMixer, Box3, DirectionalLight, GridHelper, Group, LoopOnce, Mesh, MeshStandardMaterial, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Scene, ShadowMaterial, SRGBColorSpace, Vector3, WebGLRenderer, ACESFilmicToneMapping, type AnimationAction, type Object3D, type Material } from 'three';
+import { AmbientLight, AnimationMixer, Box3, DirectionalLight, GridHelper, Group, LoopOnce, LoopRepeat, Mesh, MeshStandardMaterial, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Scene, ShadowMaterial, SRGBColorSpace, Vector3, WebGLRenderer, ACESFilmicToneMapping, type AnimationAction, type Object3D, type Material } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
@@ -9,7 +9,8 @@ const models = [
  {id:'fire-tower',name:'화염 수정탑',kind:'ELEMENTAL TOWER',detail:'돌 · 청동 · 발광 수정',description:'층층이 쌓은 석재 위에 청동 발톱이 수정을 지탱합니다. 마력 코어가 회전하며 불꽃을 모읍니다.',source:'towers.blend',command:'npm run models:build',action:'▶ 발사 동작'},
  {id:'piercing-ballista',name:'관통 발리스타',kind:'SIEGE WEAPON',detail:'오크 · 황동 · 강철',description:'보강한 목재 프레임과 거대한 활대, 긴 관통탄을 조합했습니다. 발사 후 장전 장치가 복귀합니다.',source:'towers.blend',command:'npm run models:build',action:'▶ 발사 동작'},
  {id:'water-cannon',name:'물폭탄포',kind:'HYDRAULIC TOWER',detail:'황동 · 유리 · 물',description:'유리 탱크와 배관이 압력 포신으로 연결됩니다. 포신 반동과 물 코어의 움직임을 확인하세요.',source:'towers.blend',command:'npm run models:build',action:'▶ 발사 동작'},
- {id:'dwarf-guardian',name:'브론 · 드워프 공병',kind:'DWARF GUARDIAN',detail:'강철 · 청동 · 가죽',description:'두꺼운 갑옷과 땋은 수염, 묵직한 망치로 드워프 공병의 실루엣을 만들었습니다. 망치를 들어 강타하고 원래 자세로 돌아옵니다.',source:'dwarf.blend',command:'npm run models:dwarf',action:'▶ 망치 강타'},
+ {id:'dwarf-guardian',name:'브론 · 드워프 공병',kind:'DWARF GUARDIAN',detail:'강철 · 청동 · 가죽',description:'두꺼운 갑옷과 땋은 수염, 묵직한 망치로 드워프 공병의 실루엣을 만들었습니다. 망치를 들어 강타하고 원래 자세로 돌아옵니다.',source:'dwarf.blend',command:'npm run models:dwarf',action:'▶ 망치 강타',clip:'dwarf-hammer-attack'},
+ {id:'wood-soldier',name:'나무 병사 · 통나무 파수꾼',kind:'LIVING LOG SOLDIER',detail:'통나무 · 나이테 · 뿌리 관절',description:'밝은 나이테 단면과 가지 뿔로 재료를 구분합니다. 발 접지와 팔의 엇갈림, 잎의 후속 움직임을 한 주기의 보행으로 확인하세요.',source:'wood-soldier.blend',command:'npm run models:wood',action:'▶ 보행 재생',clip:'wood-soldier-walk',loop:true},
 ];
 const $ = <T extends HTMLElement>(id:string) => document.getElementById(id) as T;
 const stage = $<HTMLDivElement>('model-stage'), status = $<HTMLParagraphElement>('model-loading'), fallback = $<HTMLImageElement>('model-fallback');
@@ -36,7 +37,7 @@ function release(object:Object3D) {
 // Match the dwarf render's front three-quarter view so its hammer clears the face.
 function resetView() {pivot.rotation.y = currentModelId==='dwarf-guardian'?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,2.0,0);controls?.update();}
 function stopAction() {
- attackAction?.stop(); shotAt = -Infinity; stage.dataset.action = 'idle'; redraw = true;
+ attackAction?.stop(); shotAt = -Infinity; stage.dataset.action = 'idle'; shoot.textContent=models.find(model=>model.id===currentModelId)?.action??'▶ 동작 재생'; redraw = true;
 }
 function clearModel() {
  mixer?.stopAllAction();
@@ -46,11 +47,11 @@ function clearModel() {
  parts.length = 0; currentMaterials = []; emissionLevels.clear(); pivot.rotation.y = 0; stopAction();
 }
 function setReady(ready:boolean) {
- const missingAttack = currentModelId==='dwarf-guardian'&&!attackAction;
+ const missingAttack = !!models.find(model=>model.id===currentModelId)?.clip&&!attackAction;
  shoot.disabled = !ready || reduced.matches || missingAttack;
  rotate.disabled = !ready || reduced.matches;
  wire.disabled = !ready; reset.disabled = !ready;
- shoot.title = reduced.matches?'동작 줄이기 설정으로 공격 모션을 멈췄어요.':ready&&missingAttack?'이 모델에 공격 모션이 없습니다.':'';
+ shoot.title = reduced.matches?'동작 줄이기 설정으로 공격 모션을 멈췄어요.':ready&&missingAttack?'이 모델에 재생할 모션이 없습니다.':'';
  rotate.title = reduced.matches?'동작 줄이기 설정으로 자동 회전을 멈췄어요.':'';
 }
 function showFallback(message:string) {
@@ -109,10 +110,10 @@ async function select(index:number) {
   currentMaterials = [...materials(current)].filter((material):material is MeshStandardMaterial => material instanceof MeshStandardMaterial);
   currentMaterials.forEach(material => {material.wireframe = wireEnabled;material.envMapIntensity = .55;emissionLevels.set(material,material.emissiveIntensity);});
   for(const type of ['core','barrel','bolt','turret'] as const){const object = current.getObjectByName(type==='core'?'fire-core':type);if(object)parts.push({object,position:object.position.clone(),rotation:new Vector3(object.rotation.x,object.rotation.y,object.rotation.z),type});}
-  const clip = gltf.animations.find(animation => animation.name==='dwarf-hammer-attack');
+  const clip = gltf.animations.find(animation => animation.name===model.clip);
   if(clip){
    mixer = new AnimationMixer(gltf.scene); attackAction = mixer.clipAction(clip);
-   attackAction.setLoop(LoopOnce,1); attackAction.clampWhenFinished = true;
+   attackAction.setLoop(model.loop?LoopRepeat:LoopOnce,model.loop?Infinity:1); attackAction.clampWhenFinished = true;
    mixer.addEventListener('finished',stopAction);
   }
   $('triangle-count').textContent = Math.round(triangles).toLocaleString(); $('mesh-count').textContent = String(meshes); $('material-count').textContent = String(materials(current).size);
@@ -131,7 +132,10 @@ models.forEach((model,index) => {
 });
 shoot.onclick = () => {
  if(!current||reduced.matches)return;
- shotAt = elapsed; redraw = true; stage.dataset.action = 'firing';
+ const looping=models.find(model=>model.id===currentModelId)?.loop;
+ if(looping&&attackAction?.isRunning()){stopAction();return;}
+ shotAt = elapsed; redraw = true; stage.dataset.action = looping?'walking':'firing';
+ if(looping)shoot.textContent='■ 보행 멈춤';
  attackAction?.reset().play();
 };
 rotate.onclick = () => {automatic = !automatic;rotate.setAttribute('aria-pressed',String(automatic));redraw = true;};

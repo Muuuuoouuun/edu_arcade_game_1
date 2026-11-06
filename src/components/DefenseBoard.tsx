@@ -1,11 +1,11 @@
 import { knockbackPresentation } from '../games/defense/action';
 import { DefenseTerrain, BridgeFrontRail, useTerrainAsset } from './DefenseTerrain';
-import { WALK_STRIDE } from '../games/defense/locomotion';
+import { WALK_STRIDE, enemyStride, enemyWalkFrame } from '../games/defense/locomotion';
 import type { Locomotion } from '../games/defense/locomotion';
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getSlots } from '../games/defense/data';
-import { actionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, spriteAsset, towerSpriteAsset } from '../games/defense/art';
+import { actionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset } from '../games/defense/art';
 import type { SpriteAsset, ActionPose } from '../games/defense/art';
 import type { DefenseThemeId } from '../games/defense/themes';
 import { DefenseThemeScenery } from './DefenseThemeScenery';
@@ -85,12 +85,15 @@ function EnemyUnit({unit=1,hpScale=1,enemy:e,state:s,reduced,onActivate,onKey}:{
  const charging=e.kind==='frostboss'&&s.bossCharge>0,enraged=e.kind==='boss'&&e.hp<e.maxHp*.5;
  const hit=clamp((e.recoil??e.hit)/.2),knock=(e.knockVelocity??0)>7;
  const reaction=knockbackPresentation(e.knockVelocity??0);
- const gait=(Math.floor(e.progress/(e.kind==='stone'?28:e.kind==='frostwolf'?18:22))+e.id)%2;
- const motionPose=charging?'charge':e.hit>.02||knock?'hit':enraged?'charge':boss?'idle':reduced||gait===0?'walk-a':'walk-b';
- const art=monsterSpriteAsset(e.kind,motionPose);
- const stride=Math.sin(e.progress/(e.kind==='stone'?19:14)+e.id*.77);
- const bob=reduced||charging||knock?0:-Math.abs(stride)*(boss?1.5:e.kind==='sprout'?3.1:2.3);
- const lean=reduced?0:knock?-12*facing*clamp((e.knockVelocity??0)/110):stride*1.8+facing*1.3;
+ const travel=e.walkDistance??e.progress,phaseDistance=travel+e.id*7,moving=(e.walkSpeed??e.speed)>.1;
+ const gait=enemyWalkFrame(e.kind,phaseDistance);
+ const motionPose=charging?'charge':e.hit>.02||knock?'hit':enraged?'charge':boss?'idle':reduced||gait<4?'walk-a':'walk-b';
+ const walking=!reduced&&!charging&&!knock&&e.hit<=.02?monsterWalkingSpriteAsset(e.kind,phaseDistance):null;
+ const art=walking??monsterSpriteAsset(e.kind,motionPose);
+ const stride=Math.sin(phaseDistance/enemyStride(e.kind)*Math.PI*2);
+ // Authored gait already contains weight transfer; don't bounce the entire model again.
+ const bob=reduced||charging||knock||walking||!moving?0:-Math.abs(stride)*(boss?1.5:e.kind==='sprout'?3.1:2.3);
+ const lean=reduced?0:knock?-12*facing*clamp((e.knockVelocity??0)/110):walking||!moving?0:stride*1.8+facing*1.3;
  const shake=reduced?0:Math.sin((1-hit)*Math.PI*3)*hit*3;
  const hpArt=boss?monsterSpriteAsset(e.kind,'charge')??art:art;
  const [,,hpWidth,hpHeight]=hpArt?.viewBox.split(' ').map(Number)??[0,0,1,1];
@@ -98,7 +101,7 @@ function EnemyUnit({unit=1,hpScale=1,enemy:e,state:s,reduced,onActivate,onKey}:{
  // Reserve room for a boss's raised arms so the health bar stays fixed through its cast.
  const hpY=-Math.max(size*.91,modelHeight-size*.1)-8;
  const hpW=(boss?68:44)*hpScale,hpH=(boss?7:5.5)*hpScale;
- return <g className={`def-monster ${e.hit>0?'def-hit':''} ${knock?'def-knocked':''} ${boss?'def-boss-model':''}`} transform={`translate(${e.x},${e.y})`} data-enemy={e.kind} data-monster-pose={motionPose} data-boss-state={charging?'casting':enraged?'enraged':undefined} data-progress={e.progress.toFixed(2)} data-knockback={(e.knockVelocity??0).toFixed(1)} role="button" tabIndex={0} aria-label={`${ENEMIES[e.kind].name} 위치로 이동, 체력 ${Math.ceil(e.hp)}, ${ENEMIES[e.kind].elementHint}`} onKeyDown={onKey} onClick={ev=>{ev.stopPropagation();onActivate();}}>
+ return <g className={`def-monster ${e.hit>0?'def-hit':''} ${knock?'def-knocked':''} ${boss?'def-boss-model':''}`} transform={`translate(${e.x},${e.y})`} data-enemy={e.kind} data-monster-pose={walking?`walk-${gait}`:motionPose} data-walk-distance={travel.toFixed(2)} data-facing={facing} data-boss-state={charging?'casting':enraged?'enraged':undefined} data-progress={e.progress.toFixed(2)} data-knockback={(e.knockVelocity??0).toFixed(1)} role="button" tabIndex={0} aria-label={`${ENEMIES[e.kind].name} 위치로 이동, 체력 ${Math.ceil(e.hp)}, ${ENEMIES[e.kind].elementHint}`} onKeyDown={onKey} onClick={ev=>{ev.stopPropagation();onActivate();}}>
   <title>{ENEMIES[e.kind].name} · {ENEMIES[e.kind].elementHint}</title>
   {charging?<g opacity=".75"><ellipse rx={35+(2.5-s.bossCharge)*10} ry={12+(2.5-s.bossCharge)*4} fill="#91d9ff16" stroke="#bcf2ff" strokeWidth="2"/><g transform={`scale(1,.38) rotate(${reduced?0:s.time*34})`}><path d="M-48 0 24-42 24 42ZM48 0-24-42-24 42Z" fill="none" stroke="#daf6ff" strokeWidth="1.2" opacity=".6"/></g><circle cy="-52" r={22+(2.5-s.bossCharge)*9} fill="url(#def-blue-core)" opacity=".38"/></g>:null}
   {e.slow>0?<ellipse cy="2" rx={size*.36} ry="8" fill="#91d6ff36" stroke="#d3f6ff66" strokeWidth="1"/>:null}

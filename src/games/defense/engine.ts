@@ -1,5 +1,5 @@
 import { DASH_DAMAGE, DASH_HIT_RADIUS, DASH_IMPACT, distanceToSegment } from './action.ts';
-import { advanceLocomotion, movementFacing } from './locomotion.ts';
+import { advanceEnemyGait, advanceLocomotion, movementFacing } from './locomotion.ts';
 import { BRANCHES, ENEMIES, HERO_ORDER, STAGE_COUNT, TOWERS, getPaths, getSlots, getStage, getRegion } from './data.ts';
 import { DIFFICULTIES, getDifficulty, getWavePlan } from './difficulty.ts';
 import type { Difficulty, Branch, DefenseAction, DefenseState, Element, Enemy, EnemyKind, HeroId, Point, Tower, TowerKind, CombatAttack, Projectile, AttackSource, AttackActor, DamageProfile, Effect } from './types.ts';
@@ -386,7 +386,7 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
     const kind=plan[s.spawned],base=ENEMIES[kind];
     const path=stage.expanded&&s.spawned%3===0&&kind!=='boss'&&kind!=='frostboss'?1:0;
     const hp=Math.round(base.hp*(stage.region==='snow'?1.1+stage.order*.12:.75+s.stage*.15)*(1+(s.wave-1)*.16)*settings.enemyHp);
-    s.enemies.push({id:s.nextId++,kind,hp,maxHp:hp,progress:0,path,speed:base.speed*settings.enemySpeed,...positionOnPath(path,0,s.stage),wet:0,burn:0,slow:0,hit:0,knockVelocity:0,knockCooldown:0,recoil:0,facing:1});
+    s.enemies.push({id:s.nextId++,kind,hp,maxHp:hp,progress:0,walkDistance:0,walkSpeed:0,path,speed:base.speed*settings.enemySpeed,...positionOnPath(path,0,s.stage),wet:0,burn:0,slow:0,hit:0,knockVelocity:0,knockCooldown:0,recoil:0,facing:1});
     s.spawned++;const gap=Math.max(.85,1.45-stage.order*.09-s.wave*.05)*settings.spawnInterval;s.spawnTimer+=inSurge(s.wave,s.spawned,plan.length)?Math.max(SURGE_MIN_GAP,gap*SURGE_INTERVAL):gap;
     if(inSurge(s.wave,s.spawned,plan.length)&&s.spawned===surgeStart(plan.length))s.notice=SURGE_NOTICE;
     if(kind==='boss')s.notice='고목왕: 체력이 절반이 되면 돌진해요!';
@@ -412,9 +412,13 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
     // An impulse moves distance backwards along the road. Friction and a one-second
     // immunity window prevent stacks of cannons from pinning a body indefinitely.
     const friction=Math.exp(-6*delta),retreat=(e.knockVelocity||0)*(1-friction)/6;
+    const beforeProgress=e.progress,bracing=(e.knockVelocity||0)>7;
     e.progress=Math.max(0,e.progress+forward-retreat);
+    const gait=advanceEnemyGait(e.walkDistance??beforeProgress,beforeProgress,e.progress,delta,bracing);
+    e.walkDistance=gait.distance;e.walkSpeed=gait.speed;
     e.knockVelocity=(e.knockVelocity||0)*friction;if(e.knockVelocity<.1)e.knockVelocity=0;
-    const point=positionOnPath(e.path,e.progress,s.stage);if(Math.abs(point.x-e.x)>.01)e.facing=point.x<e.x?-1:1;e.x=point.x;e.y=point.y;
+    const point=positionOnPath(e.path,e.progress,s.stage);
+    e.facing=movementFacing(e.facing??1,point,positionOnPath(e.path,e.progress+4,s.stage));e.x=point.x;e.y=point.y;
   }
   // Already airborne projectiles keep moving during a tower freeze. Newly released
   // shots start their flight next step, so damage cannot happen at shot creation.

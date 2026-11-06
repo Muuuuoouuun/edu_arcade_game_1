@@ -22,6 +22,7 @@
     "android:debug": "npm run android:sync && cd android && ./gradlew assembleDebug",
     "android:open": "cap open android",
     "models:dwarf-walk": "blender -b --python tools/blender/build_dwarf_walk.py && node tools/build-hero-sprites.mjs --walk",
+    "models:wood": "blender -b --python tools/blender/build_wood.py",
     "models:terrain": "node --experimental-strip-types tools/export-terrain-layout.ts && blender -b --python tools/blender/build_terrain.py"
   },
   "dependencies": {

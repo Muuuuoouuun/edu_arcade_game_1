@@ -2,8 +2,9 @@
  "id": "wood-soldier",
  "source": "art-source/defense/wood-soldier.blend",
  "generator": "tools/blender/build_wood.py",
+ "reference": "Claude direction loop cycle 34, log silhouette draft",
  "blender": "4.3.2",
- "kind": "baked 2.5D sprite atlas (not a GLB)",
+ "kind": "articulated GLB and baked 2.5D atlases",
  "nativeFacing": 1,
  "frame": {
   "width": 384,
@@ -24,11 +25,39 @@
   "width": 1152,
   "height": 384
  },
+ "walk": {
+  "file": "wood-soldier-walk-atlas.webp",
+  "frames": 8,
+  "width": 3072,
+  "height": 384,
+  "stride_world": 52,
+  "clip": "wood-soldier-walk",
+  "duration_seconds": 1,
+  "foot_lift": 0.24,
+  "rig": "articulated rigid parts; no skin"
+ },
  "render": {
   "engine": "Cycles CPU",
   "samples": 64,
   "transparent": true
  },
- "mesh_objects": 43,
- "evaluated_polygons": 1870
+ "mesh_objects": 82,
+ "polygons": 3708,
+ "files": [
+  {
+   "file": "wood-soldier-atlas.webp",
+   "bytes": 30514,
+   "sha256": "2db041491195a568721c31d943f39f9163a62bd3ce67d46195e3c33d55b7f883"
+  },
+  {
+   "file": "wood-soldier-walk-atlas.webp",
+   "bytes": 75850,
+   "sha256": "f417fc38405ac207c91bb228c11390540c9c605c7e80b6ffc68fbc64ad4729f9"
+  },
+  {
+   "file": "wood-soldier.glb",
+   "bytes": 539464,
+   "sha256": "ab8828bcbbc7ead121f9d5d3ebf2d019737fada40b15613dcfc85eb8db654581"
+  }
+ ]
 }
