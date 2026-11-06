@@ -154,3 +154,84 @@ test('a delayed final dwarf frame does not switch the actor prematurely or dupli
   if(previous)Object.defineProperty(globalThis,'Image',previous);else Reflect.deleteProperty(globalThis,'Image');
  }
 });
+
+test('the insulator slime uses its baked poses with one ground band and falls back to the atlas when the render fails',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'slime-ok');
+ const poses=(['walk-a','walk-b','hit'] as const).map(pose=>art.monsterSpriteAsset('insulator',pose));
+ assert.ok(poses.every(asset=>asset?.src==='/defense/models/insulator-slime-atlas.webp'));
+ const boxes=poses.map(asset=>asset!.viewBox.split(' ').map(Number));
+ assert.equal(new Set(boxes.map(([,y,w,h])=>`${y},${w},${h}`)).size,1,'every pose shares a crop height and ground band');
+ assert.equal(art.monsterSpriteAsset('insulator','death')?.viewBox,poses[2]?.viewBox);
+ assert.equal(art.spriteAsset(13).src,'/defense/models/insulator-slime-atlas.webp');
+ const {art:failed}=await loadWithImageResults(src=>src.includes('insulator-slime'),'slime-failed');
+ assert.equal(failed.monsterSpriteAsset('insulator','walk-a'),null);
+ assert.equal(failed.spriteAsset(13).src,'/defense/atlas.png','the original sprite remains');
+ assert.equal(failed.monsterSpriteAsset('frostwolf','walk-a')?.src,'/defense/models/frost-wolf-atlas.webp','other monsters are unaffected');
+});
+
+test('the stone golem uses its baked poses with one crop band and falls back to the atlas when the render fails',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'golem-ok');
+ const poses=(['walk-a','walk-b','hit'] as const).map(pose=>art.monsterSpriteAsset('stone',pose));
+ assert.ok(poses.every(asset=>asset?.src==='/defense/models/stone-golem-atlas.webp'));
+ const boxes=poses.map(asset=>asset!.viewBox.split(' ').map(Number));
+ assert.equal(new Set(boxes.map(([,y,w,h])=>`${y},${w},${h}`)).size,1,'every pose shares a crop band so the feet stay on the ground');
+ assert.ok(boxes.every(([x,,w],i)=>x>=i*384&&x+w<=(i+1)*384),'each crop stays inside its own 384px atlas cell');
+ assert.equal(art.monsterSpriteAsset('stone','death')?.viewBox,poses[2]?.viewBox);
+ assert.equal(art.spriteAsset(11).src,'/defense/models/stone-golem-atlas.webp');
+ const {art:failed}=await loadWithImageResults(src=>src.includes('stone-golem'),'golem-failed');
+ assert.equal(failed.monsterSpriteAsset('stone','walk-a')?.src,'/defense/monster-models.webp','the illustrated golem remains');
+});
+
+test('the wood soldier uses its baked poses with one crop band and falls back to the illustrated atlas when the render fails',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'wood-ok');
+ const poses=(['walk-a','walk-b','hit'] as const).map(pose=>art.monsterSpriteAsset('wood',pose));
+ assert.ok(poses.every(asset=>asset?.src==='/defense/models/wood-soldier-atlas.webp'));
+ const boxes=poses.map(asset=>asset!.viewBox.split(' ').map(Number));
+ assert.equal(new Set(boxes.map(([,y,w,h])=>`${y},${w},${h}`)).size,1,'every pose shares a crop band so the feet stay on the ground');
+ assert.ok(boxes.every(([x,,w],i)=>x>=i*384&&x+w<=(i+1)*384),'each crop stays inside its own 384px atlas cell');
+ assert.equal(art.spriteAsset(9).src,'/defense/models/wood-soldier-atlas.webp');
+ const {art:failed}=await loadWithImageResults(src=>src.includes('wood-soldier'),'wood-failed');
+ assert.equal(failed.monsterSpriteAsset('wood','walk-a')?.src,'/defense/monster-models.webp','the illustrated soldier remains');
+});
+
+test('the ice knight uses its baked poses with one crop band and falls back to the illustrated atlas when the render fails',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'ice-ok');
+ const poses=(['walk-a','walk-b','hit'] as const).map(pose=>art.monsterSpriteAsset('ice',pose));
+ assert.ok(poses.every(asset=>asset?.src==='/defense/models/ice-knight-atlas.webp'));
+ const boxes=poses.map(asset=>asset!.viewBox.split(' ').map(Number));
+ assert.equal(new Set(boxes.map(([,y,w,h])=>`${y},${w},${h}`)).size,1,'every pose shares a crop band so the feet stay on the ground');
+ assert.ok(boxes.every(([x,,w],i)=>x>=i*384&&x+w<=(i+1)*384),'each crop stays inside its own 384px atlas cell');
+ assert.equal(art.spriteAsset(10).src,'/defense/models/ice-knight-atlas.webp');
+ const {art:failed}=await loadWithImageResults(src=>src.includes('ice-knight'),'ice-failed');
+ assert.equal(failed.monsterSpriteAsset('ice','walk-a')?.src,'/defense/monster-models.webp','the illustrated knight remains');
+});
+
+test('the frost wolf uses its baked poses with one crop band and falls back to the illustrated atlas when the render fails',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'wolf-ok');
+ const poses=(['walk-a','walk-b','hit'] as const).map(pose=>art.monsterSpriteAsset('frostwolf',pose));
+ assert.ok(poses.every(asset=>asset?.src==='/defense/models/frost-wolf-atlas.webp'));
+ const boxes=poses.map(asset=>asset!.viewBox.split(' ').map(Number));
+ assert.equal(new Set(boxes.map(([,y,w,h])=>`${y},${w},${h}`)).size,1,'every pose shares a crop band so the paws stay on the ground');
+ assert.ok(boxes.every(([x,,w],i)=>x>=i*384&&x+w<=(i+1)*384),'each crop stays inside its own 384px atlas cell');
+ const {art:failed}=await loadWithImageResults(src=>src.includes('frost-wolf'),'wolf-failed');
+ assert.equal(failed.monsterSpriteAsset('frostwolf','walk-a')?.src,'/defense/monster-models.webp','the illustrated wolf remains');
+});
+
+test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
+ const {requests}=await loadWithImageResults(()=>false,'monster-preload');
+ for(const id of ['insulator-slime','stone-golem','wood-soldier','ice-knight','frost-wolf'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')).length,5);
+});
+
+test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
+ const kinds=['wood','ice','stone','frostwolf','insulator','boss','frostboss'] as const,poses=['idle','walk-a','walk-b','hit','charge','death'] as const;
+ for(const [scenario,failed] of [['bounds-ok',()=>false],['bounds-fallback',(src:string)=>src.includes('-atlas.webp')]] as const){
+  const {art}=await loadWithImageResults(failed,scenario);
+  for(const kind of kinds)for(const pose of poses){
+   const asset=art.monsterSpriteAsset(kind,pose);
+   if(!asset){assert.ok(scenario==='bounds-fallback'&&kind==='insulator',`${kind}/${pose} has art unless it is the unbacked slime`);continue;}
+   const [x,y,w,h]=asset.viewBox.split(' ').map(Number);
+   assert.ok(x>=0&&y>=0&&w>0&&h>0&&x+w<=asset.width&&y+h<=asset.height,`${scenario} ${kind}/${pose} ${asset.viewBox} fits ${asset.width}x${asset.height}`);
+  }
+ }
+});

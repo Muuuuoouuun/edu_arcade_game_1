@@ -1,11 +1,12 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { DefenseBoard, DefenseSprite } from './DefenseBoard';
 import { DefenseForecast } from './DefenseForecast';
+import { nextZoomState, offscreenThreats, resolveZoomPreference } from './defenseFrame';
 import { Dialog } from './Dialog';
 import { Icon } from './Icon';
 import { BRANCHES, HEROES, TOWERS, getSlots, getStage, stageLabel } from '../games/defense/data';
 import { DIFFICULTIES } from '../games/defense/difficulty';
-import { allowedBranches, upgradeCost } from '../games/defense/engine';
+import { allowedBranches, inSurge, questStatus, upgradeCost, waveSize } from '../games/defense/engine';
 import type { TacticalAction } from '../games/defense/engine';
 import { towerSpriteAsset } from '../games/defense/art';
 import type { Campaign, DefenseState, Point, TowerKind } from '../games/defense/types';
@@ -13,7 +14,7 @@ import type { DefenseThemeId } from '../games/defense/themes';
 import '../defense-mobile.css';
 
 const ZOOM_KEY = 'arcana.battle-zoom';
-const readZoomPreference = () => { try { return localStorage.getItem(ZOOM_KEY) === '1'; } catch { return false; } };
+const readZoomPreference = () => { try { return resolveZoomPreference(localStorage.getItem(ZOOM_KEY)); } catch { return resolveZoomPreference(null); } };
 const writeZoomPreference = (on: boolean) => { try { localStorage.setItem(ZOOM_KEY, on ? '1' : '0'); } catch { /* preference only */ } };
 
 export type BattlePanel = { kind: 'build'; slot: number } | { kind: 'candidates'; slots: number[] } | { kind: 'recruit' | 'scout' | 'party' };
@@ -30,14 +31,21 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
   const canAct = !state.paused && !terminal && state.phase !== 'promotion';
   const skillReady = canAct && state.phase === 'wave' && state.skillCooldown === 0 && state.enemies.length > 0;
   const dashReady = canAct && state.phase === 'wave' && state.dashCooldown === 0;
+  // A dimmed action button should say when it comes back, not look broken.
+  const idleHint = state.phase === 'wave' ? '' : '웨이브 중 사용';
+  const skillHint = state.skillCooldown > 0 ? `${Math.ceil(state.skillCooldown)}초` : state.phase === 'wave' && state.enemies.length === 0 ? '적이 나오면' : idleHint || hero.skill;
+  const dashHint = state.dashCooldown > 0 ? `${Math.ceil(state.dashCooldown)}초` : aimingDash ? '한 번 더 눌러 취소' : idleHint || '위치를 골라 질주';
   const mapSpace = useRef<HTMLDivElement>(null);
   const mapViewport = useRef<HTMLDivElement>(null);
   const lastMapScroll = useRef(-Infinity);
   const fontProbe = useRef<HTMLSpanElement>(null);
   const [mapWidth, setMapWidth] = useState(0);
   const [zoomed, setZoomed] = useState(readZoomPreference);
+  const wantZoom = useRef(zoomed);
   const [canZoom, setCanZoom] = useState(false);
   const [largeText, setLargeText] = useState(false);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [viewWidth, setViewWidth] = useState(0);
   const heroX = useRef(state.heroPosition.x);
   heroX.current = state.heroPosition.x;
   useLayoutEffect(() => {
@@ -45,20 +53,32 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
     const resize = () => {
       const { width, height } = element.getBoundingClientRect();
       const portrait = window.matchMedia('(orientation: portrait)').matches;
-      // Reserve the 48px edge controls before enabling zoom, so adding them
-      // cannot invalidate the measurement and strand a disabled zoom toggle.
-      const zoomHeight = height - (zoomed ? 0 : 48) - 12;
-      const room = portrait && zoomHeight * 1.5 > width * 1.1;
+      // The edge buttons live in the camera row, so zooming never changes this space's height.
+      const room = portrait && (height - 12) * 1.5 > width * 1.1;
       const enlarged = zoomed && room;
       const next = Math.max(0, Math.min(width * (enlarged ? 1.7 : 1), (height - (enlarged ? 12 : 0)) * 1.5));
       setCanZoom(room);
-      if (!room) setZoomed(false);
+      // Leaving portrait drops the zoom, but the player's choice is kept so rotating back restores it.
+      const target = nextZoomState(wantZoom.current, room);
+      if (target !== zoomed) setZoomed(target);
       setMapWidth(old => Math.abs(old - next) > .5 ? next : old);
+      setViewWidth(mapViewport.current?.clientWidth ?? 0);
       setLargeText((fontProbe.current?.getBoundingClientRect().width ?? 16) >= 24);
     };
     const observer = new ResizeObserver(resize); observer.observe(element); if (fontProbe.current) observer.observe(fontProbe.current); resize();
     return () => observer.disconnect();
   }, [zoomed]);
+  // Village damage must be felt even when the breach happens off-screen on the zoomed camera: pulse the HP chip and flash the map edge.
+  const prevHp = useRef({ hp: state.hp, outpost: state.outpostHp });
+  const [hitTown, setHitTown] = useState({ main: 0, outpost: 0 });
+  useEffect(() => {
+    const prev = prevHp.current; prevHp.current = { hp: state.hp, outpost: state.outpostHp };
+    const main = state.hp < prev.hp, outpost = state.outpostHp < prev.outpost;
+    // HP only rises when a new run starts (the component outlives stages), so forget old hits then.
+    if (state.hp > prev.hp || state.outpostHp > prev.outpost) setHitTown({ main: 0, outpost: 0 });
+    else if (main || outpost) setHitTown(old => ({ main: old.main + (main ? 1 : 0), outpost: old.outpost + (outpost ? 1 : 0) }));
+  }, [state.hp, state.outpostHp]);
+  const hitCount = hitTown.main + hitTown.outpost;
   const focusHero = () => {
     const viewport = mapViewport.current;
     if (viewport) viewport.scrollLeft = heroX.current / 900 * mapWidth - viewport.clientWidth / 2;
@@ -67,16 +87,24 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
     const viewport = mapViewport.current;
     if (viewport) viewport.scrollLeft = zoomed ? heroX.current / 900 * mapWidth - viewport.clientWidth / 2 : 0;
   }, [mapWidth, zoomed]);
-  const startLabel = state.phase === 'wave' ? `${state.wave}/4 진행` : state.phase === 'intermission' ? '다음 W' : '시작';
+  const threats = offscreenThreats(state.enemies.map(e => e.x), scrollLeft, viewWidth, mapWidth);
+  // Scroll events only update scrollLeft during waves, so resync when a wave begins or the view changes.
+  useLayoutEffect(() => { setScrollLeft(Math.round(mapViewport.current?.scrollLeft ?? 0)); }, [state.phase, state.paused, zoomed, mapWidth]);
+  const planSize = state.phase === 'wave' ? waveSize(state.stage, state.wave, state.difficulty) : 0;
+  const surging = state.phase === 'wave' && !state.paused && state.spawned < planSize && inSurge(state.wave, state.spawned, planSize);
+  // Prep-only nudges: ring the empty pads until a first tower stands, then glow the start button.
+  const nudge = state.phase === 'prep' && state.towers.length === 0 ? 'pads' : ['prep', 'intermission'].includes(state.phase) && !state.paused && state.towers.length > 0 ? 'start' : '';
+  const startAria = state.phase === 'wave' ? `웨이브 ${state.wave}/4 진행 중` : state.phase === 'intermission' ? '다음 웨이브 시작' : '웨이브 시작';
+  const startLabel = state.phase === 'wave' ? `${state.wave}/4 진행` : state.phase === 'intermission' ? '다음 웨이브' : '시작';
 
-  return <main className={`battle-page battle-${stage.region} ${aimingDash ? 'battle-aiming' : ''} ${largeText ? 'battle-large-text' : ''}`} id="main" aria-label="아르카나 수비대 전투" data-phase={state.phase} data-paused={state.paused} data-aiming={aimingDash} data-dash-cooldown={state.dashCooldown.toFixed(2)} data-hero-x={state.heroPosition.x.toFixed(1)} data-hero-y={state.heroPosition.y.toFixed(1)}>
+  return <main className={`battle-page battle-${stage.region} ${aimingDash ? 'battle-aiming' : ''} ${surging ? 'battle-surge' : ''} ${nudge ? `battle-nudge-${nudge}` : ''} ${largeText ? 'battle-large-text' : ''}`} id="main" aria-label="아르카나 수비대 전투" data-phase={state.phase} data-paused={state.paused} data-aiming={aimingDash} data-dash-cooldown={state.dashCooldown.toFixed(2)} data-hero-x={state.heroPosition.x.toFixed(1)} data-hero-y={state.heroPosition.y.toFixed(1)}>
     <span className="battle-font-probe" ref={fontProbe} aria-hidden="true"/>
     <header className="battle-hud">
       <button className="battle-stage" onClick={() => onPanel({ kind: 'party' })} disabled={terminal || state.paused || state.phase === 'promotion'} aria-label="원정 정보와 전술 메뉴">{stageLabel(state.stage)}</button>
-      <span className={`battle-health ${state.hp <= 5 ? 'danger' : ''}`} aria-label={`마을 체력 ${state.hp}`}><small>마을</small><Heart/><b>{state.hp}</b></span>
-      {stage.expanded ? <span className={`battle-health ${state.outpostHp <= 4 ? 'danger' : ''}`} aria-label={`외곽 마을 체력 ${state.outpostHp}`}><small>외곽</small><Heart/><b>{state.outpostHp}</b></span> : null}
+      <span key={`m${hitTown.main}`} className={`battle-health ${state.hp <= 5 ? 'danger' : ''} ${hitTown.main ? 'is-hit' : ''}`} aria-label={`마을 체력 ${state.hp}`}><small>마을</small><Heart/><b>{state.hp}</b></span>
+      {stage.expanded ? <span key={`o${hitTown.outpost}`} className={`battle-health ${state.outpostHp <= 4 ? 'danger' : ''} ${hitTown.outpost ? 'is-hit' : ''}`} aria-label={`외곽 마을 체력 ${state.outpostHp}`}><small>외곽</small><Heart/><b>{state.outpostHp}</b></span> : null}
       <span className="battle-coins" aria-label={`전투 코인 ${state.coins}`}><Coin/><b>{state.coins}</b></span>
-      <span className="battle-wave" aria-label={`웨이브 ${state.wave} / 4`}><small>웨이브</small><b>{state.wave}/4</b></span>
+      <span className="battle-wave" aria-label={`웨이브 ${state.wave} / 4`}><small>웨이브</small><b>{state.wave}/4</b><i className="battle-wave-pips" aria-hidden="true">{[1, 2, 3, 4].map(n => <em key={n} className={n < state.wave || (n === state.wave && ['intermission', 'promotion', 'won'].includes(state.phase)) ? 'done' : n === state.wave ? 'now' : ''}/>)}</i></span>
       <button className="battle-pause" onClick={onPause} disabled={terminal} aria-label="디펜스 일시정지"><Icon name="pause" size={20}/></button>
     </header>
     <div className="battle-body">
@@ -85,17 +113,20 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
         <button className="battle-recruit" onClick={() => onPanel({ kind: 'recruit' })} disabled={!canAct || campaign.visitors.length < 2}>용병</button>
         <button className="battle-scout" onClick={() => onPanel({ kind: 'scout' })} disabled={!canAct}>정찰</button>
         <button className="battle-speed" onClick={onSpeed} disabled={!canAct} aria-label={`전투 속도 ${state.speed}배`}>{state.speed}×</button>
-        <button className="battle-start" onClick={onStart} disabled={!canAct || !['prep', 'intermission'].includes(state.phase)} aria-label={state.phase === 'intermission' ? '다음 웨이브 시작' : '웨이브 시작'}><Icon name="play" size={18}/><span>{startLabel}</span></button>
+        <button className="battle-start" onClick={onStart} disabled={!canAct || !['prep', 'intermission'].includes(state.phase)} aria-label={startAria}><Icon name="play" size={18}/><span>{startLabel}</span></button>
       </nav>
       <section className="battle-map-column" aria-label="방어 전장">
-        <div className="battle-camera" role="group" aria-label="전장 시야">
+        <div className={`battle-camera ${zoomed && canZoom ? 'is-zoomed' : ''}`} role="group" aria-label="전장 시야">
+          {zoomed && canZoom ? <button onClick={() => { if (mapViewport.current) mapViewport.current.scrollLeft = 0; }} aria-label="적 진입로 보기">← 진입로</button> : null}
           <span>{zoomed && canZoom ? '확대 · 좌우로 밀어 보기' : '전체 전장'}</span>
-          {zoomed && canZoom ? <button onClick={focusHero} aria-label="영웅 위치 보기">영웅 위치</button> : null}
-          <button onClick={() => { onCancelAim(); const next = !(zoomed && canZoom); writeZoomPreference(next); setZoomed(next); }} disabled={!canZoom} aria-pressed={zoomed && canZoom} aria-label="전장 확대">{zoomed && canZoom ? '전체 보기' : '확대 보기'}</button>
+          {zoomed && canZoom ? <button onClick={focusHero} aria-label="영웅 위치 보기">영웅</button> : null}
+          {zoomed && canZoom ? <button onClick={() => { if (mapViewport.current) mapViewport.current.scrollLeft = mapViewport.current.scrollWidth; }} aria-label={stage.expanded ? '두 마을 보기' : '마을 보기'}>{stage.expanded ? '두 마을' : '마을'} →</button> : null}
+          <button onClick={() => { onCancelAim(); const next = !(zoomed && canZoom); writeZoomPreference(next); wantZoom.current = next; setZoomed(next); }} disabled={!canZoom} aria-pressed={zoomed && canZoom} aria-label="전장 확대">{zoomed && canZoom ? '전체 보기' : '확대 보기'}</button>
         </div>
         <div className="battle-map-space" ref={mapSpace}>
+          {hitCount ? <i key={hitCount} className="battle-breach-flash" aria-hidden="true"/> : null}
           <div className={`battle-map-viewport ${zoomed && canZoom ? 'is-zoomed' : ''}`} ref={mapViewport} tabIndex={zoomed && canZoom ? 0 : undefined} role="region" aria-label="전장 지도. 확대 시 좌우로 스크롤할 수 있어요"
-            onScroll={() => { lastMapScroll.current = performance.now(); onCancelAim(); }}
+            onScroll={event => { lastMapScroll.current = performance.now(); onCancelAim(); if (zoomed && state.phase === 'wave') setScrollLeft(Math.round(event.currentTarget.scrollLeft)); }}
             onPointerDownCapture={event => {
               // A touch that stops momentum must not also issue a movement/build command.
               if (performance.now() - lastMapScroll.current < 140) event.stopPropagation();
@@ -104,23 +135,29 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
               <DefenseBoard state={state} themeId={themeId} selectedSlot={selectedSlot} aimingDash={aimingDash} onSelect={slot => onPanel({ kind: 'build', slot })} onSelectCandidates={onCandidates} onCancelAim={onCancelAim} onMove={onMove}/>
             </div>
           </div>
+          {zoomed && canZoom && state.phase === 'wave' && !state.paused ? <>
+            {threats.left ? <button className="battle-edge-threat is-left" onClick={() => { if (mapViewport.current && performance.now() - lastMapScroll.current >= 140) mapViewport.current.scrollLeft = threats.leftTo; }} aria-label={`왼쪽 화면 밖 적 ${threats.left}마리 보기`}><span aria-hidden="true">◀</span><b>{threats.left}</b></button> : null}
+            {threats.right ? <button className="battle-edge-threat is-right" onClick={() => { if (mapViewport.current && performance.now() - lastMapScroll.current >= 140) mapViewport.current.scrollLeft = threats.rightTo; }} aria-label={`오른쪽 화면 밖 적 ${threats.right}마리 보기`}><b>{threats.right}</b><span aria-hidden="true">▶</span></button> : null}
+          </> : null}
         </div>
-        {zoomed ? <nav className="battle-camera-edges" aria-label="전장 양쪽 보기">
-          <button disabled={!canZoom} onClick={() => { if (mapViewport.current) mapViewport.current.scrollLeft = 0; }}>← 적 진입로</button>
-          <button disabled={!canZoom} onClick={() => { if (mapViewport.current) mapViewport.current.scrollLeft = mapViewport.current.scrollWidth; }}>{stage.expanded ? '두 마을' : '마을'} →</button>
-        </nav> : null}
-        <div className={`battle-input-note ${aimingDash ? 'aiming' : ''}`} role="status">{aimingDash ? '전장을 탭하면 돌진 · 전투는 계속돼요' : state.paused ? '전술 선택 중 · 전투가 멈췄어요' : state.phase === 'prep' ? '건설 지점에 타워를 세우고 시작하세요' : '땅을 탭해 영웅 이동'}</div>
+        <div className={`battle-input-note ${aimingDash ? 'aiming' : ''}`} role="status">{aimingDash ? '전장을 탭하면 돌진 · 전투는 계속돼요' : surging ? '무리가 몰려와요! 방어선을 단단히!' : state.paused ? '전술 선택 중 · 전투가 멈췄어요' : state.phase === 'prep' ? '건설 지점에 타워를 세우고 시작하세요' : '땅을 탭해 영웅 이동'}</div>
         <button className="battle-portrait-summary" onClick={() => onPanel({ kind: 'party' })} disabled={!canAct} aria-label="원정 정보와 전술 메뉴">
           <DefenseSprite index={hero.sprite}/><span><strong>{hero.name} <small>{DIFFICULTIES[state.difficulty].name}</small></strong><span>{stageLabel(state.stage)} · {stage.name}</span><small>{stage.expanded ? '두 마을을 함께 지켜 주세요' : '땅 탭 이동 · 공격은 자동'}</small></span><Icon name="back" size={18}/>
         </button>
         {storageFailed ? <p className="battle-save-warning" role="status">진행을 저장할 수 없어요. 창을 닫기 전 확인해 주세요.</p> : null}
       </section>
       <nav className="battle-commands" aria-label="영웅 액션">
-        <button className="battle-skill" disabled={!skillReady} onClick={onSkill} aria-label="필살기 사용"><Icon name="star" size={25}/><span>필살기<small>{state.skillCooldown > 0 ? `${Math.ceil(state.skillCooldown)}초` : hero.skill}</small></span></button>
-        <button className={`battle-dash ${aimingDash ? 'selected' : ''}`} disabled={!dashReady} onClick={onDash} aria-label={aimingDash ? '돌진 조준 취소' : '영웅 돌진 위치 선택'} aria-pressed={aimingDash}><DashIcon/><span>{aimingDash ? largeText ? '취소' : '돌진 취소' : '돌진'}<small>{state.dashCooldown > 0 ? `${Math.ceil(state.dashCooldown)}초` : aimingDash ? '한 번 더 눌러 취소' : '위치를 골라 질주'}</small></span></button>
+        <button className={`battle-skill ${skillReady ? 'is-ready' : ''}`} disabled={!skillReady} onClick={onSkill} aria-label="필살기 사용"><Icon name="star" size={25}/><span>필살기<small>{skillHint}</small></span></button>
+        <button className={`battle-dash ${aimingDash ? 'selected' : ''}`} disabled={!dashReady} onClick={onDash} aria-label={aimingDash ? '돌진 조준 취소' : '영웅 돌진 위치 선택'} aria-pressed={aimingDash}><DashIcon/><span>{aimingDash ? largeText ? '취소' : '돌진 취소' : '돌진'}<small>{dashHint}</small></span></button>
       </nav>
     </div>
   </main>;
+}
+
+function questLiveText(q: ReturnType<typeof questStatus>): string {
+  if (q.unit === '외곽') return q.met ? `외곽 마을 지키는 중 · 체력 ${q.current}` : '외곽 마을 함락 · 보너스 없음';
+  if (q.lowerIsLoss) return q.met ? `지금 달성 중 · ${q.unit} ${q.current}/${q.goal}` : `기준 미달 · ${q.unit} ${q.current}/${q.goal}`;
+  return q.met ? `목표 달성 · ${q.current}/${q.goal}${q.unit}` : `진행 ${q.current}/${q.goal}${q.unit}`;
 }
 
 export function DefenseTacticalPanel({ panel, state, campaign, active, onClose, onPanel, onBuy }: {
@@ -131,6 +168,7 @@ export function DefenseTacticalPanel({ panel, state, campaign, active, onClose, 
   const slot = panel.kind === 'build' ? getSlots(state.stage).find(item => item.id === panel.slot) : null;
   const tower = slot ? state.towers.find(item => item.slot === slot.id) : null;
   const stage = getStage(state.stage), hero = HEROES[state.hero];
+  const quest = questStatus(state);
   const title = panel.kind === 'build' ? `${panel.slot + 1}번 · ${tower ? TOWERS[tower.kind].name : '타워 건설'}` : panel.kind === 'candidates' ? '건설 지점 선택' : panel.kind === 'recruit' ? '용병 고용' : panel.kind === 'scout' ? '정찰' : '수비대 전술';
   const refund = tower ? Math.floor((TOWERS[tower.kind].cost + (tower.level >= 2 ? 80 : 0) + (tower.level >= 3 ? 120 : 0)) * .75) : 0;
   const costLabel = (cost: number) => state.coins < cost ? `${cost - state.coins} 부족` : `${cost} 코인`;
@@ -144,7 +182,7 @@ export function DefenseTacticalPanel({ panel, state, campaign, active, onClose, 
       </> : <div className="tactical-towers">{(['crossbow', 'magic', 'cannon'] as TowerKind[]).map(kind => <button key={kind} disabled={state.coins < TOWERS[kind].cost} onClick={() => onBuy({ type: 'build', slot: slot.id, kind })}><DefenseSprite index={TOWERS[kind].sprite}/><strong>{TOWERS[kind].name}</strong><span>{kind === 'crossbow' ? '빠른 단일 공격' : kind === 'magic' ? '속성 마법 공격' : '충격 범위 공격'}</span><b>{costLabel(TOWERS[kind].cost)}</b></button>)}</div> : null}
       {panel.kind === 'recruit' ? state.mercenary ? <div className="tactical-hired"><DefenseSprite index={HEROES[state.mercenary].sprite}/><strong>{HEROES[state.mercenary].name}</strong><p>이번 원정에 함께하고 있어요.</p></div> : <div className="tactical-recruits">{campaign.visitors.filter(id => id !== state.hero).map(id => <button key={id} disabled={state.coins < 120} onClick={() => onBuy({ type: 'hire', hero: id })}><DefenseSprite index={HEROES[id].sprite}/><span><strong>{HEROES[id].name}</strong><small>{HEROES[id].role}</small></span><b>{costLabel(120)}</b></button>)}{campaign.visitors.length < 2 ? <p>첫 마을을 지키면 새로운 동료가 찾아옵니다.</p> : null}</div> : null}
       {panel.kind === 'scout' ? <DefenseForecast stage={state.stage} wave={state.wave} phase={state.phase} difficulty={state.difficulty} spawned={state.spawned} alive={state.enemies.length} expanded/> : null}
-      {panel.kind === 'party' ? <div className="tactical-party"><div className="tactical-hero"><DefenseSprite index={hero.sprite}/><div><h3>{hero.name}</h3><p>{hero.role}</p><small>{hero.description}</small></div></div><p>{stageLabel(state.stage)} {stage.name} · {DIFFICULTIES[state.difficulty].name}</p><div className="tactical-menu"><button onClick={() => onPanel({ kind: 'recruit' })}>용병 고용</button><button onClick={() => onPanel({ kind: 'scout' })}>적 편성 정찰</button></div><div className="tactical-quest"><strong>추가 퀘스트</strong><p>{stage.quest}</p><small>{campaign.questClaimed.includes(state.stage) ? '추가 보상 수령 완료' : `클리어 시 추가 ${stage.questReward} G`}</small></div><p className="tactical-help">공격은 자동 · 땅을 눌러 이동<br/>돌진: 위치 선택 · 필살기: 즉시 발동</p></div> : null}
+      {panel.kind === 'party' ? <div className="tactical-party"><div className="tactical-hero"><DefenseSprite index={hero.sprite}/><div><h3>{hero.name}</h3><p>{hero.role}</p><small>{hero.description}</small></div></div><p>{stageLabel(state.stage)} {stage.name} · {DIFFICULTIES[state.difficulty].name}</p>{state.phase === 'won' || state.phase === 'lost' ? null : <p className={`tactical-quest-live ${quest.met ? 'met' : 'risk'}`} role="status">추가 퀘스트 · {questLiveText(quest)}</p>}<div className="tactical-menu"><button onClick={() => onPanel({ kind: 'recruit' })}>용병 고용</button><button onClick={() => onPanel({ kind: 'scout' })}>적 편성 정찰</button></div><div className="tactical-quest"><strong>추가 퀘스트</strong><p>{stage.quest}</p><small>{campaign.questClaimed.includes(state.stage) ? '추가 보상 수령 완료' : `클리어 시 추가 ${stage.questReward} G`}</small></div><p className="tactical-help">공격은 자동 · 땅을 눌러 이동<br/>돌진: 위치 선택 · 필살기: 즉시 발동</p></div> : null}
     </div>
   </Dialog>;
 }

@@ -21,6 +21,12 @@ function battlePlan(stage:number,wave:number,difficulty:Difficulty):readonly Ene
   if(plan.length)wavePlans.set(key,plan);
   return plan;
 }
+/** Design experiment (hypothesis, unplaytested): waves 2-3 end with a faster pack so the stream has a rhythm. */
+export const SURGE_INTERVAL=.7;
+export const SURGE_MIN_GAP=.55;
+export const SURGE_NOTICE='무리가 몰려와요! 방어선을 단단히!';
+export const surgeStart=(size:number)=>Math.ceil(size*2/3);
+export const inSurge=(wave:number,spawned:number,size:number)=>wave>1&&wave<4&&spawned>=surgeStart(size);
 export const waveSize = (stage:number,wave:number,difficulty:Difficulty='standard') => battlePlan(stage,wave,difficulty).length;
 
 /** Progress is distance in board units, not a normalized fraction. */
@@ -34,11 +40,13 @@ export function positionOnPath(path:number,progress:number,stage=1):Point {
   }
   return {...points[points.length-1]};
 }
+/** Extra battle coins for a wave cleared with no breach (design experiment: rewards clean defense). */
+export const FLAWLESS_BONUS=25;
 export function createDefense(stage:number,hero:HeroId,training=0,difficulty:Difficulty='standard'):DefenseState {
   const id=Math.max(1,Math.min(STAGE_COUNT,Math.trunc(stage)||1)),data=getStage(id);
   const mode=getDifficulty(difficulty),settings=DIFFICULTIES[mode];
   const chosen=HERO_ORDER.includes(hero)?hero:'mage',position=data.region==='snow'?{x:440,y:390}:{x:440,y:355};
-  return {stage:id,difficulty:mode,phase:'prep',paused:false,speed:1,time:0,wave:0,coins:(data.region==='snow'?280:240)+settings.startingCoins,hp:20,outpostHp:12,kills:0,leaks:0,enemies:[],towers:[],effects:[],attacks:[],projectiles:[],hero:chosen,heroPosition:position,heroTarget:{...position},heroVelocity:{x:0,y:0},dashCooldown:0,dashTime:0,heroFacing:-1,mercenaryPosition:{x:position.x+38,y:position.y+35},mercenaryFacing:-1,pet:chosen==='druid'?{position:{x:position.x+28,y:position.y-22},target:{x:position.x+28,y:position.y-22},facing:-1}:null,heroCooldown:0,mercenary:null,mercCooldown:0,petCooldown:0,skillCooldown:0,bossCharge:0,freeze:0,bossCycle:8,promotion:null,spawned:0,spawnTimer:0,nextId:1,training:Math.max(0,Math.min(5,Math.trunc(training)||0)),notice:data.region==='snow'?'빙판 위의 적은 빨라져요. 고지대와 화염 타워를 활용하세요.':'빛나는 건설 지점을 선택해 타워를 세우세요.',questProgress:data.questType==='hunt'?0:data.questType==='outpost'?12:20};
+  return {stage:id,difficulty:mode,phase:'prep',paused:false,speed:1,time:0,wave:0,coins:(data.region==='snow'?280:240)+settings.startingCoins,hp:20,outpostHp:12,kills:0,leaks:0,waveStartLeaks:0,enemies:[],towers:[],effects:[],attacks:[],projectiles:[],hero:chosen,heroPosition:position,heroTarget:{...position},heroVelocity:{x:0,y:0},dashCooldown:0,dashTime:0,heroFacing:-1,mercenaryPosition:{x:position.x+38,y:position.y+35},mercenaryFacing:-1,pet:chosen==='druid'?{position:{x:position.x+28,y:position.y-22},target:{x:position.x+28,y:position.y-22},facing:-1}:null,heroCooldown:0,mercenary:null,mercCooldown:0,petCooldown:0,skillCooldown:0,bossCharge:0,freeze:0,bossCycle:8,promotion:null,spawned:0,spawnTimer:0,nextId:1,training:Math.max(0,Math.min(5,Math.trunc(training)||0)),notice:data.region==='snow'?'빙판 위의 적은 빨라져요. 고지대와 화염 타워를 활용하세요.':'빛나는 건설 지점을 선택해 타워를 세우세요.',questProgress:data.questType==='hunt'?0:data.questType==='outpost'?12:20};
 }
 
 export function damageMultiplier(kind:EnemyKind,element:Element):number {
@@ -72,12 +80,18 @@ function hit(s:DefenseState,e:Enemy,amount:number,element:Element,from:Point,for
 }
 function reap(s:DefenseState) {
   const dead=s.enemies.filter(e=>e.hp<=0);
+  const crowd=dead.filter(e=>e.kind!=='boss'&&e.kind!=='frostboss');
+  const merged=crowd.length>1;let mergedSum=0;
   for(const enemy of dead){
     const bounty=enemy.kind==='boss'||enemy.kind==='frostboss'?100:enemy.kind==='frostwolf'?16:enemy.kind==='stone'?19:enemy.kind==='wood'?17:14;
     s.coins+=bounty;s.kills++;
-    effect(s,enemy,enemy,'physical',`+${bounty}`,'coin');
+    const boss=enemy.kind==='boss'||enemy.kind==='frostboss';
+    if(merged&&!boss)mergedSum+=bounty;
+    else effect(s,enemy,enemy,'physical',boss?`+${bounty} 처치!`:`+${bounty}`,'coin');
+    if(boss)effect(s,enemy,enemy,'impact','','shockwave',{force:6});
     effect(s,enemy,enemy,'physical',undefined,'death',{targetSprite:ENEMIES[enemy.kind].sprite,targetId:enemy.id,targetKind:enemy.kind,targetFacing:enemy.facing||1,force:enemy.knockVelocity||0});
   }
+  if(merged){const last=crowd[crowd.length-1];effect(s,last,last,'physical',`+${mergedSum} ×${crowd.length}`,'coin');}
   s.enemies=s.enemies.filter(e=>e.hp>0);
   if(!s.enemies.some(e=>e.kind==='frostboss')){s.bossCharge=0;s.freeze=0;}
   if(getStage(s.stage).questType==='hunt')s.questProgress=s.kills;
@@ -259,7 +273,7 @@ function applyDefenseAction(state:DefenseState,action:DefenseAction):DefenseStat
   const s=copy(state);
   if(action.type==='start-wave') {
     if(s.phase!=='prep'&&s.phase!=='intermission') return state;
-    s.phase='wave';s.wave++;s.spawned=0;s.spawnTimer=.4;s.effects=[];s.notice=getStage(s.stage).expanded&&s.wave===4?`${s.stage===8?'서리군주':'고목왕'}가 다가옵니다. 두 거점을 지켜주세요!`:`웨이브 ${s.wave} 시작!`;
+    s.phase='wave';s.wave++;s.waveStartLeaks=s.leaks;s.spawned=0;s.spawnTimer=.4;s.effects=[];s.notice=getStage(s.stage).expanded&&s.wave===4?`${s.stage===8?'서리군주':'고목왕'}가 다가옵니다. 두 거점을 지켜주세요!`:`웨이브 ${s.wave} 시작!`;
   } else if(action.type==='build') {
     const slot=getSlots(s.stage).find(p=>p.id===action.slot),kind=TOWERS[action.kind];
     if(!slot||slot.unlock>s.stage||!kind||s.towers.some(t=>t.slot===action.slot)||s.phase==='promotion') return state;
@@ -321,6 +335,12 @@ export function questSatisfied(s:DefenseState):boolean {
   const stage=getStage(s.stage);
   return stage.questType==='hunt'?s.questProgress>=stage.questGoal:stage.questType==='outpost'?s.outpostHp>=stage.questGoal:s.hp>=stage.questGoal;
 }
+/** Live read-out of the optional quest for the tactical panel. Display only: it never gates rewards. */
+export function questStatus(s:DefenseState):{current:number;goal:number;met:boolean;unit:string;lowerIsLoss:boolean} {
+  const stage=getStage(s.stage),hunt=stage.questType==='hunt';
+  const current=hunt?s.questProgress:stage.questType==='outpost'?s.outpostHp:s.hp;
+  return {current,goal:stage.questGoal,met:current>=stage.questGoal,unit:hunt?'마리':stage.questType==='outpost'?'외곽':'체력',lowerIsLoss:!hunt};
+}
 export function questComplete(s:DefenseState):boolean {return s.phase==='won'&&questSatisfied(s);}
 
 export function stepDefense(state:DefenseState,dt:number):DefenseState {
@@ -345,7 +365,8 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
     const path=stage.expanded&&s.spawned%3===0&&kind!=='boss'&&kind!=='frostboss'?1:0;
     const hp=Math.round(base.hp*(stage.region==='snow'?1.1+stage.order*.12:.75+s.stage*.15)*(1+(s.wave-1)*.16)*settings.enemyHp);
     s.enemies.push({id:s.nextId++,kind,hp,maxHp:hp,progress:0,path,speed:base.speed*settings.enemySpeed,...positionOnPath(path,0,s.stage),wet:0,burn:0,slow:0,hit:0,knockVelocity:0,knockCooldown:0,recoil:0,facing:1});
-    s.spawned++;s.spawnTimer+=Math.max(.85,1.45-stage.order*.09-s.wave*.05)*settings.spawnInterval;
+    s.spawned++;const gap=Math.max(.85,1.45-stage.order*.09-s.wave*.05)*settings.spawnInterval;s.spawnTimer+=inSurge(s.wave,s.spawned,plan.length)?Math.max(SURGE_MIN_GAP,gap*SURGE_INTERVAL):gap;
+    if(inSurge(s.wave,s.spawned,plan.length)&&s.spawned===surgeStart(plan.length))s.notice=SURGE_NOTICE;
     if(kind==='boss')s.notice='고목왕: 체력이 절반이 되면 돌진해요!';
     if(kind==='frostboss'){s.bossCycle=6;s.notice='서리군주 등장! 충전할 때 필살기로 눈보라를 끊으세요.';}
   }
@@ -407,10 +428,13 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
   if(s.hp<=0){stopDash(s);s.phase='lost';s.attacks=[];s.projectiles=[];s.notice='마을이 무너졌어요. 배치를 바꾸고 다시 도전해요.';return s;}
   if(s.spawned>=plan.length&&s.enemies.length===0){
     stopDash(s);
-    s.coins+=45;s.skillCooldown=0;s.attacks=[];s.projectiles=[];s.bossCharge=0;s.freeze=0;
-    if(s.wave>=4){s.phase='won';s.notice='방어 성공! 수비대의 소문이 퍼지고 있어요.';}
-    else if(s.wave===2&&!s.promotion){s.phase='promotion';s.notice='전직할 시간! 수비대의 힘을 선택하세요.';}
-    else{s.phase='intermission';s.notice='웨이브 방어 성공! 전투 코인 +45 · 필살기 충전';}
+    const flawless=s.leaks===s.waveStartLeaks;
+    s.coins+=45+(flawless?FLAWLESS_BONUS:0);s.skillCooldown=0;
+    const perfect=flawless?' (완벽 방어 +'+FLAWLESS_BONUS+')':'';s.attacks=[];s.projectiles=[];s.bossCharge=0;s.freeze=0;
+    effect(s,s.heroPosition,s.heroPosition,'physical',flawless?`+${FLAWLESS_BONUS} 완벽!`:'+45 방어!','coin');
+    if(s.wave>=4){s.phase='won';s.notice='방어 성공! 수비대의 소문이 퍼지고 있어요.'+perfect;}
+    else if(s.wave===2&&!s.promotion){s.phase='promotion';s.notice='전직할 시간! 수비대의 힘을 선택하세요.'+perfect;}
+    else{s.phase='intermission';s.notice=flawless?`완벽 방어! 전투 코인 +${45+FLAWLESS_BONUS} · 필살기 충전`:'웨이브 방어 성공! 전투 코인 +45 · 필살기 충전';}
   }
   return s;
 }

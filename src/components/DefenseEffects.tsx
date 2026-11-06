@@ -211,7 +211,7 @@ export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];re
     {sparks>0?<g transform="translate(0,-20)"><Sparks effect={e} reduced={reduced} count={sparks}/></g>:null}
    </g>;
   }
-  if(kind==='coin')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y-35-(reduced?0:p*37)})`} opacity={fade} data-effect="coin">
+  if(kind==='coin')return <g key={e.id} transform={`translate(${(e.text?.length??0)>4?Math.max(40,Math.min(760,e.to.x)):e.to.x},${e.to.y-35-(reduced?0:p*37)})`} opacity={fade} data-effect="coin">
     <g transform={`translate(-15,${reduced?0:-Math.sin(p*Math.PI)*8})`}><ellipse rx={reduced?5:Math.max(1,Math.abs(Math.cos(p*Math.PI*2))*5)} ry="6" fill="#ffdc76" stroke="#a4742d" strokeWidth="1.2"/><path d="M0-3v6" stroke="#fff5bc" strokeWidth="1.2"/></g>
     <text x="-6" y="5" className="def-float-number def-float-coin">{e.text}</text>
   </g>;
