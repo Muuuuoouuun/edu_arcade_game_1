@@ -1,6 +1,7 @@
 import { enemyWalkFrame, walkFrame } from './locomotion.ts';
 import { attackOctant, dwarfHammerFrame } from './action.ts';
 import { MAGE_SOCKETS } from './mageSockets.ts';
+import { ELF_SOCKETS } from './elfSockets.ts';
 import { DWARF_HAMMER_TRAIL } from './dwarfHammerTrail.ts';
 import { BALLISTA_MUZZLES } from './ballistaMuzzles.ts';
 import { BALLISTA_LV3_MUZZLES } from './ballistaLv3Muzzles.ts';
@@ -56,6 +57,25 @@ export function mageProjectileOffset(p:Projectile,unit=1):Point|undefined {
  const socket=mageCastSocket(p.from,p.launchAim,p.sourceSize*unit);
  return socket?{x:socket.x,y:socket.y+27}:undefined;
 }
+const ELF_CAST=Array.from({length:8},(_,i)=>`/defense/models/riel-cast-${i}-atlas.webp`);
+const ELF_WALK=Array.from({length:8},(_,i)=>`/defense/models/riel-walk-${i}-atlas.webp`);
+function elfModelReady(){return [...ELF_CAST,...ELF_WALK].every(src=>motionLoaded.has(src));}
+function elfAsset(direction:number,mode:'cast'|'walk',frame:number):SpriteAsset|null {
+ if(!elfModelReady())return null;
+ return {src:(mode==='cast'?ELF_CAST:ELF_WALK)[direction],viewBox:`${frame*256} 0 256 256`,width:mode==='cast'?1024:2048,height:256,groundY:220,displayScale:1.2*6.8/5.8,oriented:true};
+}
+export function elfArrowSocket(from:Point,to:Point,size:number,pose:ActionPose|'idle'='strike'):Point|null {
+ const direction=attackOctant(from,to);
+ if(direction===null||!elfModelReady()||!Number.isFinite(size)||size<=0)return null;
+ const frame=pose==='idle'?0:pose==='windup'?1:pose==='strike'?2:3;
+ const [x,y]=ELF_SOCKETS[direction][frame];return {x:x*size,y:y*size};
+}
+/** Use the launch-time pose and size; following, promotion and moving cannot move a released arrow's origin. */
+export function elfProjectileOffset(p:Projectile,unit=1):Point|undefined {
+ if(p.actor!=='elf'||!p.launchAim||(p.source!=='hero'&&p.source!=='mercenary')||(p.sourceSize!==84&&p.sourceSize!==94))return undefined;
+ const socket=elfArrowSocket(p.from,p.launchAim,p.sourceSize*unit);
+ return socket?{x:socket.x,y:socket.y+27}:undefined;
+}
 const DWARF_POSES = ['idle','windup','strike','recover'] as const;
 const DWARF_RENDERS = Object.fromEntries(DWARF_POSES.map(pose=>[pose,{
  src:`/defense/models/dwarf-${pose}-game.webp`,viewBox:'0 0 640 640',width:640,height:640,displayScale:1.2,nativeFacing:1,groundY:550,
@@ -67,6 +87,7 @@ const DWARF_DIRECTIONS=Array.from({length:8},(_,i)=>`/defense/models/dwarf-attac
 /** Rotate the authored model instead of mirroring its asymmetric hammer/shield. */
 export function directionalActionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose,from:Point,to:Point,reduced=false):SpriteAsset|null {
  const direction=attackOctant(from,to);
+ if(actor==='elf'&&direction!==null)return elfAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='mage'&&direction!==null)return mageAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
  if(actor!=='dwarf'||direction===null||!dwarfModelReady()||!DWARF_DIRECTIONS.every(src=>motionLoaded.has(src)))return null;
  const frame=pose==='windup'?0:pose==='strike'?1:2;
@@ -90,19 +111,21 @@ const DWARF_LOCOMOTION=Array.from({length:8},(_,i)=>`/defense/models/dwarf-locom
 /** One complete direction set shares the attack camera; frame 8 is a neutral stop. */
 export function directionalLocomotionSpriteAsset(actor:HeroId|'wolf',heading:Point,distance:number|null):SpriteAsset|null {
  const direction=attackOctant({x:0,y:0},heading);
+ if(actor==='elf'&&direction!==null)return elfAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
  if(actor==='mage'&&direction!==null)return mageAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
  if(actor!=='dwarf'||direction===null||!dwarfModelReady()||!DWARF_LOCOMOTION.every(src=>motionLoaded.has(src)))return null;
  const frame=distance===null?8:walkFrame(distance);
  return {src:DWARF_LOCOMOTION[direction],viewBox:`${frame*256} 0 256 256`,width:2304,height:256,displayScale:1.2*6.8/5.8,groundY:220,oriented:true};
 }
 export function idleSpriteAsset(actor:HeroId|'wolf'):SpriteAsset|null {
- return actor==='mage'?mageAsset(1,'cast',0):actor==='dwarf'&&dwarfModelReady()?DWARF_RENDERS.idle:null;
+ return actor==='elf'?elfAsset(1,'cast',0):actor==='mage'?mageAsset(1,'cast',0):actor==='dwarf'&&dwarfModelReady()?DWARF_RENDERS.idle:null;
 }
 const DWARF_WALK = Array.from({length:8},(_,i):SpriteAsset=>({
  ...DWARF_RENDERS.idle,src:`/defense/models/dwarf-walk-${i}-game.webp`,
 }));
 /** A partial walk set keeps the existing modeled idle pose, never mixes styles. */
 export function walkingSpriteAsset(actor:HeroId|'wolf',distance:number):SpriteAsset|null {
+ if(actor==='elf')return elfAsset(1,'walk',walkFrame(distance));
  if(actor==='mage')return mageAsset(1,'walk',walkFrame(distance));
  return actor==='dwarf'&&dwarfModelReady()&&DWARF_WALK.every(frame=>motionLoaded.has(frame.src))
   ?DWARF_WALK[walkFrame(distance)]:null;
@@ -234,6 +257,7 @@ export function monsterDeathSpriteAsset(kind:EnemyKind,progress:number,reduced=f
 }
 /** Long weapons need a larger viewport to keep the actor's body size consistent. */
 export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAsset|null {
+ if(actor==='elf'&&elfModelReady())return elfAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='mage'&&mageModelReady())return mageAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='dwarf'&&dwarfModelReady())return DWARF_RENDERS[pose];
  const melee = actor==='barbarian'||actor==='dwarf'||actor==='wolf';
@@ -252,7 +276,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...ELF_CAST,...ELF_WALK,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

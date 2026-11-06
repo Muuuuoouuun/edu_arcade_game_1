@@ -723,3 +723,14 @@ test('Ian bolts keep their launch pose and size through tracking, movement and p
  const merc=until({...state,hero:'dwarf',heroCooldown:99,mercenary:'mage',mercenaryPosition:{...state.heroPosition},mercCooldown:0,promotion:'power'},s=>s.projectiles.some(p=>p.actor==='mage'));
  assert.equal(merc.projectiles.find(p=>p.actor==='mage')!.sourceSize,84,'leader promotion cannot enlarge a mercenary bolt origin');
 });
+
+test('Riel arrows keep their launch pose and size through tracking, movement and promotion',()=>{
+ const state=battlefield();state.hero='elf';state.heroCooldown=0;state.enemies=[{...positionedEnemy('wood',501,410),hp:1000,maxHp:1000,speed:35}];
+ const fired=until(state,s=>s.projectiles.some(p=>p.actor==='elf'));const shot=fired.projectiles.find(p=>p.actor==='elf')!;
+ assert.equal(shot.sourceSize,84);assert.deepEqual(shot.launchAim,shot.to);const snapshot=structuredClone(shot.launchAim);
+ const next=stepDefense({...fired,promotion:'power',heroTarget:{x:700,y:500}},.02);const following=next.projectiles.find(p=>p.id===shot.id)!;
+ assert.equal(following.sourceSize,84);assert.deepEqual(following.launchAim,snapshot);assert.notDeepEqual(following.to,snapshot);assert.deepEqual(shot.launchAim,snapshot);
+ const promoted=until({...state,promotion:'power'},s=>s.projectiles.some(p=>p.actor==='elf'));assert.equal(promoted.projectiles.find(p=>p.actor==='elf')!.sourceSize,94);
+ const merc=until({...state,hero:'dwarf',heroCooldown:99,mercenary:'elf',mercenaryPosition:{...state.heroPosition},mercCooldown:0,promotion:'power'},s=>s.projectiles.some(p=>p.actor==='elf'));
+ assert.equal(merc.projectiles.find(p=>p.actor==='elf')!.sourceSize,84,'leader promotion cannot enlarge a mercenary arrow origin');
+});

@@ -54,11 +54,11 @@ function Actor({unit=1,actor,position,facing,motion,velocity,dashTime=0,attack,s
  const dashing=dashTime>0,moving=motion.speed>.5,speed=dashing&&velocity?Math.hypot(velocity.x,velocity.y):motion.speed,pace=clamp(speed/230);
  const skillAge=skill?.age??Infinity,casting=skillAge<.5;
  const phase=casting?(skillAge<.18?'strike':'recover'):dashing?null:attack?attackPhase(attack):null;
- const orientedRest=!phase&&(!dashing||actor==='mage')?directionalLocomotionSpriteAsset(actor,motion.heading??{x:facing,y:0},moving&&!dashing&&!reduced?motion.distance:null):null;
+ const orientedRest=!phase&&(!dashing||actor==='mage'||actor==='elf')?directionalLocomotionSpriteAsset(actor,motion.heading??{x:facing,y:0},moving&&!dashing&&!reduced?motion.distance:null):null;
  const walking=!phase&&!dashing&&moving&&!reduced?orientedRest??walkingSpriteAsset(actor,motion.distance):null;
  const hammer=attack&&phase&&!casting&&!dashing?hammerSequenceSpriteAsset(actor,attack,reduced):null;
- const skillDirection=actor==='mage'&&casting&&phase?directionalActionSpriteAsset(actor,phase,position,{x:position.x+(motion.heading?.x??facing),y:position.y+(motion.heading?.y??0)},reduced):null;
- const directional=hammer??skillDirection??(attack&&phase&&!casting&&!dashing?directionalActionSpriteAsset(actor,phase,actor==='mage'?position:attack.from,attack.to,reduced):null);
+ const skillDirection=(actor==='mage'||actor==='elf')&&casting&&phase?directionalActionSpriteAsset(actor,phase,position,{x:position.x+(motion.heading?.x??facing),y:position.y+(motion.heading?.y??0)},reduced):null;
+ const directional=hammer??skillDirection??(attack&&phase&&!casting&&!dashing?directionalActionSpriteAsset(actor,phase,actor==='mage'||actor==='elf'?position:attack.from,attack.to,reduced):null);
  const staffSocket=actor==='mage'&&attack&&directional?mageCastSocket(position,attack.to,size,reduced&&phase!=='strike'?'idle':phase??'idle'):null;
  const hammerTrail=hammer&&!reduced&&attack?hammerContactTrail(attack,size):null;
  const art=directional??(phase?actionSpriteAsset(actor,phase):walking??orientedRest??idleSpriteAsset(actor));
@@ -66,7 +66,7 @@ function Actor({unit=1,actor,position,facing,motion,velocity,dashTime=0,attack,s
  let bob=0,lean=0,offset=0,sx=1,sy=1;
  if(!reduced){
   if(dashing){lean=(velocity?.x??aim*speed)/Math.max(1,speed)*14;bob=-2;sx=1.045;sy=.955;}
-  else if(casting&&!(actor==='mage'&&directional)){
+  else if(casting&&!((actor==='mage'||actor==='elf')&&directional)){
    const power=1-clamp(skillAge/.5),melee=actor==='barbarian'||actor==='dwarf';
    offset=aim*power*(melee?14:5);lean=aim*power*(melee?12:-5);bob=-Math.sin(clamp(skillAge/.5)*Math.PI)*(melee?3:5);sx=1+power*.04;sy=1-power*.04;
   }else if(attack&&!directional){
@@ -76,7 +76,7 @@ function Actor({unit=1,actor,position,facing,motion,velocity,dashTime=0,attack,s
   }else if(moving&&!walking&&!directional){const stride=Math.sin(motion.distance/WALK_STRIDE*Math.PI*2);bob=-Math.abs(stride)*(wolf?3.8:3)*pace;lean=(velocity?velocity.x/230:facing*.6)*6+stride*1.5*pace;sx=1+Math.abs(stride)*.025*pace;sy=1-Math.abs(stride)*.018*pace;}
   else if(!walking&&!directional&&!orientedRest)sy=1+Math.sin(time*2.3+index)*.008;
  }
- return <g className={`def-motion-actor ${wolf?'def-pet':leader?'def-hero':'def-merc'} ${casting?'def-skill-cast':''} ${dashing?'def-dashing':''}`} transform={`translate(${position.x},${position.y})`} data-actor={actor} data-walk-distance={motion.distance.toFixed(2)} data-walk-frame={walking?.viewBox} data-motion-asset={art?.src} data-heading={motion.heading?`${motion.heading.x.toFixed(3)},${motion.heading.y.toFixed(3)}`:undefined} data-mage-frame={actor==='mage'&&art?.src.includes('/ian-')?Number(art.viewBox.split(' ')[0])/256:undefined} data-hammer-frame={hammer?Number(hammer.viewBox.split(' ')[0])/256:undefined} data-attack-phase={phase??(dashing?'dash':moving?'walk':'idle')} data-skill-phase={casting?phase:undefined} data-facing={aim} data-dashing={leader?dashing:undefined} data-velocity={leader?`${Math.round(velocity?.x??0)},${Math.round(velocity?.y??0)}`:undefined}>
+ return <g className={`def-motion-actor ${wolf?'def-pet':leader?'def-hero':'def-merc'} ${casting?'def-skill-cast':''} ${dashing?'def-dashing':''}`} transform={`translate(${position.x},${position.y})`} data-actor={actor} data-walk-distance={motion.distance.toFixed(2)} data-walk-frame={walking?.viewBox} data-motion-asset={art?.src} data-heading={motion.heading?`${motion.heading.x.toFixed(3)},${motion.heading.y.toFixed(3)}`:undefined} data-elf-frame={actor==='elf'&&art?.src.includes('/riel-')?Number(art.viewBox.split(' ')[0])/256:undefined} data-mage-frame={actor==='mage'&&art?.src.includes('/ian-')?Number(art.viewBox.split(' ')[0])/256:undefined} data-hammer-frame={hammer?Number(hammer.viewBox.split(' ')[0])/256:undefined} data-attack-phase={phase??(dashing?'dash':moving?'walk':'idle')} data-skill-phase={casting?phase:undefined} data-facing={aim} data-dashing={leader?dashing:undefined} data-velocity={leader?`${Math.round(velocity?.x??0)},${Math.round(velocity?.y??0)}`:undefined}>
   {leader?<ellipse cy="1" rx="30" ry="12" fill="#d3f8a129" stroke="#e3f6a5" strokeWidth="1.8" opacity=".85"/>:wolf?<ellipse cy="1" rx="23" ry="8" fill="#c9f3ff25" stroke="#cfeddd" strokeWidth="1"/>:null}
   {moving&&!dashing&&!reduced?<g opacity={.2*pace}><ellipse cx={-facing*17} cy="3" rx="10" ry="3" fill="#f2dec4"/><ellipse cx={-facing*28} cy="5" rx="5" ry="2" fill="#f2dec4"/></g>:null}
   {casting?<ellipse cy="-4" rx={32+(reduced?0:skillAge*26)} ry="12" fill="none" stroke={actor==='druid'?'#c4ef96':actor==='mage'?'#ffc585':'#d5f5ff'} strokeWidth="2" opacity={1-skillAge*1.7}/>:null}
