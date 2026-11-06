@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { hapticPattern, playHaptic } from './haptic.ts';
+import { hapticPattern, playHaptic, setNativeHaptic } from './haptic.ts';
 
 test('only costly or heavy moments vibrate; routine shots stay quiet', () => {
   assert.deepEqual(hapticPattern('breach'), [45, 35, 70]);
@@ -9,6 +9,7 @@ test('only costly or heavy moments vibrate; routine shots stay quiet', () => {
   assert.deepEqual(hapticPattern('surge'), [30, 50, 50]);
   for (const kind of ['arrow', 'cast', 'cannon', 'impact', 'slash'] as const) assert.equal(hapticPattern(kind), null);
 });
+
 
 test('playHaptic respects the toggle and tolerates missing or throwing vibrate', () => {
   const calls: unknown[] = [];
@@ -27,4 +28,19 @@ test('playHaptic respects the toggle and tolerates missing or throwing vibrate',
   } finally {
     if (saved) Object.defineProperty(globalThis, 'navigator', saved); else delete g.navigator;
   }
+});
+
+test('native feedback works without browser vibrate and retains opt-out and rate limit', () => {
+  const calls: unknown[] = [];
+  try {
+    setNativeHaptic(pattern => calls.push(pattern));
+    playHaptic('skill', false, 20000);
+    playHaptic('arrow', true, 20000);
+    assert.equal(calls.length, 0);
+    playHaptic('skill', true, 20000);
+    playHaptic('skill', true, 20050);
+    assert.deepEqual(calls, [22]);
+    playHaptic('breach', true, 20300);
+    assert.deepEqual(calls[1], [45, 35, 70]);
+  } finally { setNativeHaptic(null); }
 });

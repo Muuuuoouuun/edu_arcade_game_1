@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { NATIVE_BACKGROUND } from '../lib/nativeEvents';
 import { DefenseSprite } from './DefenseBoard';
 import DefenseCamp from './DefenseCamp';
 import { DefenseBattle, DefenseTacticalPanel } from './DefenseBattle';
@@ -196,10 +197,12 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
       toggleDash();
     };
     document.addEventListener('visibilitychange', visibility); window.addEventListener('blur', interrupt);
+    window.addEventListener(NATIVE_BACKGROUND, interrupt);
     orientation.addEventListener('change', interrupt); window.addEventListener('orientationchange', interrupt);
     window.addEventListener('keydown', keyboard); window.addEventListener('keyup', keyup); window.addEventListener('pointerdown', cancelShift);
     return () => {
       document.removeEventListener('visibilitychange', visibility); window.removeEventListener('blur', interrupt);
+      window.removeEventListener(NATIVE_BACKGROUND, interrupt);
       orientation.removeEventListener('change', interrupt); window.removeEventListener('orientationchange', interrupt);
       window.removeEventListener('keydown', keyboard); window.removeEventListener('keyup', keyup); window.removeEventListener('pointerdown', cancelShift);
     };

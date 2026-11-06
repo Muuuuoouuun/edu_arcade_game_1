@@ -14,16 +14,18 @@ export function hapticPattern(kind: CombatSoundKind): number | number[] | null {
 
 const MIN_GAP_MS = 200;
 let lastBuzz = -Infinity;
+let nativeHaptic: ((pattern: number | number[]) => void) | null = null;
+export function setNativeHaptic(handler: typeof nativeHaptic) { nativeHaptic = handler; }
 
 /** Best-effort touch feedback; unsupported browsers (iOS Safari, desktop) simply do nothing. */
 export function playHaptic(kind: CombatSoundKind, enabled: boolean, now = Date.now()) {
   const pattern = hapticPattern(kind);
-  if (!enabled || pattern === null || typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
+  if (!enabled || pattern === null || (!nativeHaptic && (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function'))) return;
   // A leaking group breaches on consecutive frames; restarting the pattern each time would buzz nonstop.
   if (now - lastBuzz < MIN_GAP_MS) return;
   try {
     if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    navigator.vibrate(pattern);
+    if (nativeHaptic) nativeHaptic(pattern); else navigator.vibrate(pattern);
     lastBuzz = now;
   } catch { /* Haptics are optional. */ }
 }
