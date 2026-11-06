@@ -11,6 +11,7 @@ import { playSound, setSound, unlockAudio } from './lib/sound';
 import type { GameId } from './games/engine';
 import type { QuizMode } from './games/quizData';
 import { QuizSetup } from './components/QuizSetup';
+import { NATIVE_BACK } from './lib/nativeEvents';
 
 const DefenseGame = lazy(() => import('./components/DefenseGame'));
 const RaceGame = lazy(() => import('./components/RaceGame'));
@@ -24,6 +25,14 @@ export default function App() {
   const [quizReady, setQuizReady] = useState(false);
   const [profile, setProfile] = useState(false);
   const [name, setName] = useState(saved.name);
+  useEffect(() => {
+    const back = (event: Event) => {
+      if (game) { event.preventDefault(); setGame(null); }
+      else if (page !== 'games') { event.preventDefault(); setPage('games'); }
+    };
+    window.addEventListener(NATIVE_BACK, back);
+    return () => window.removeEventListener(NATIVE_BACK, back);
+  }, [game, page]);
   useEffect(() => { saveState(saved); setSound(saved.sound); }, [saved]);
   const finish = useCallback((record: RoundRecord) => setSaved(previous => addRound(previous, record)), []);
   const play = (id: GameId) => { unlockAudio(); playSound('start'); setGame(id); setQuizReady(false); setPage('games'); setRound(n => n + 1); window.scrollTo({ top: 0, behavior: 'instant' }); };

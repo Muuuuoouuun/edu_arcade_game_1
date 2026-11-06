@@ -61,6 +61,10 @@ export function setSound(value: boolean) {
   enabled = value;
   if (!value) for (const stop of [...activeVoices]) stop();
 }
+export function suspendAudio() {
+  for (const stop of [...activeVoices]) stop();
+  if (context?.state === 'running') void context.suspend().catch(() => {});
+}
 export function unlockAudio() {
   if (!enabled) return;
   try {

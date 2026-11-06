@@ -1,3 +1,4 @@
+import { NATIVE_BACKGROUND } from '../../lib/nativeEvents';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { createRace, pauseRace, resumeRace, selectLane, startRace, stepRace, useRaceItem } from './engine';
@@ -82,7 +83,7 @@ export function useRace(canvas: RefObject<HTMLCanvasElement | null>, blocked: bo
     const map: Record<string, string> = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right', Shift: 'drift' };
     const keydown = (event: KeyboardEvent) => {
       if (event.target instanceof HTMLElement && /INPUT|TEXTAREA/.test(event.target.tagName)) return;
-      if (event.key === 'Escape' && !event.repeat) { if (stateRef.current.phase === 'paused') resume(); else pause(); return; }
+      if (event.key === 'Escape' && !event.repeat) { if (['paused', 'racing', 'countdown'].includes(stateRef.current.phase)) { event.preventDefault(); if (stateRef.current.phase === 'paused') resume(); else pause(); } return; }
       if (stateRef.current.phase !== 'racing') return;
       if (map[event.key]) { event.preventDefault(); hold(map[event.key], true); }
       if (event.repeat) return;
@@ -91,8 +92,8 @@ export function useRace(canvas: RefObject<HTMLCanvasElement | null>, blocked: bo
     };
     const keyup = (event: KeyboardEvent) => { if (map[event.key]) hold(map[event.key], false); };
     const hidden = () => { if (document.hidden) pause(); };
-    window.addEventListener('keydown', keydown); window.addEventListener('keyup', keyup); window.addEventListener('blur', pause); document.addEventListener('visibilitychange', hidden);
-    return () => { window.removeEventListener('keydown', keydown); window.removeEventListener('keyup', keyup); window.removeEventListener('blur', pause); document.removeEventListener('visibilitychange', hidden); release(); };
+    window.addEventListener('keydown', keydown); window.addEventListener('keyup', keyup); window.addEventListener('blur', pause); window.addEventListener(NATIVE_BACKGROUND, pause); document.addEventListener('visibilitychange', hidden);
+    return () => { window.removeEventListener('keydown', keydown); window.removeEventListener('keyup', keyup); window.removeEventListener('blur', pause); window.removeEventListener(NATIVE_BACKGROUND, pause); document.removeEventListener('visibilitychange', hidden); release(); };
   }, [choose, hold, item, pause, release, resume]);
   useEffect(() => { if (blocked) pause(); }, [blocked, pause]);
 

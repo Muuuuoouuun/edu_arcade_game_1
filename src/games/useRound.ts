@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 import { isMatchingPair, makeMemoryCards, makeQuestion, pointsForAnswer } from './engine';
 import type { GameId } from './engine';
+import { NATIVE_BACKGROUND } from '../lib/nativeEvents';
 import { playSound } from '../lib/sound';
 import { makeQuizDeck } from './quiz';
 import type { QuizMode, QuizQuestion } from './quizData';
 
 type Feedback = { correct: boolean; selected: string; answer: string; points: number };
 type State = {
-  phase: 'countdown' | 'playing' | 'paused' | 'result'; countdown: number;
+  phase: 'countdown' | 'playing' | 'paused' | 'result'; countdown: number; resumePhase?: 'countdown' | 'playing';
   remaining: number; score: number; combo: number; maxCombo: number;
   correct: number; total: number; index: number; feedback: Feedback | null;
   mistakes: string[]; flipped: number[]; matched: number[];
@@ -27,8 +28,8 @@ function reducer(s: State, a: Action): State {
   if (a.type === 'count' && s.phase === 'countdown') {
     return s.countdown > 1 ? { ...s, countdown: s.countdown - 1 } : { ...s, phase: 'playing' };
   }
-  if (a.type === 'pause' && s.phase === 'playing') return { ...s, phase: 'paused' };
-  if (a.type === 'resume' && s.phase === 'paused') return { ...s, phase: 'playing' };
+  if (a.type === 'pause' && (s.phase === 'playing' || s.phase === 'countdown')) return { ...s, resumePhase: s.phase, phase: 'paused' };
+  if (a.type === 'resume' && s.phase === 'paused') return { ...s, phase: s.resumePhase ?? 'playing' };
   if (s.phase !== 'playing') return s;
   if (a.type === 'tick') {
     const remaining = Math.max(0, s.remaining - a.delta);
@@ -70,6 +71,13 @@ export function useRound(game: GameId, seed: number, quizMode: QuizMode = 'mixed
 
   useEffect(() => { questionElapsed.current = 0; questionStart.current = performance.now(); }, [state.index]);
   useEffect(() => {
+    const pause = () => dispatch({ type: 'pause' });
+    const hidden = () => { if (document.hidden) pause(); };
+    window.addEventListener(NATIVE_BACKGROUND, pause);
+    document.addEventListener('visibilitychange', hidden);
+    return () => { window.removeEventListener(NATIVE_BACKGROUND, pause); document.removeEventListener('visibilitychange', hidden); };
+  }, []);
+  useEffect(() => {
     if (state.phase !== 'countdown') return;
     const timer = window.setInterval(() => dispatch({ type: 'count' }), 850);
     return () => clearInterval(timer);
@@ -83,12 +91,9 @@ export function useRound(game: GameId, seed: number, quizMode: QuizMode = 'mixed
       dispatch({ type: 'tick', delta: now - previous });
       previous = now;
     }, 100);
-    const hidden = () => { if (document.hidden) dispatch({ type: 'pause' }); };
-    document.addEventListener('visibilitychange', hidden);
     return () => {
       questionElapsed.current += performance.now() - questionStart.current;
       clearInterval(timer);
-      document.removeEventListener('visibilitychange', hidden);
     };
   }, [state.phase]);
   useEffect(() => {
@@ -128,8 +133,8 @@ export function useRound(game: GameId, seed: number, quizMode: QuizMode = 'mixed
     const keydown = (e: KeyboardEvent) => {
       if (e.repeat || (e.target instanceof HTMLElement && /INPUT|TEXTAREA/.test(e.target.tagName))) return;
       if (e.key === 'Escape') {
-        if (state.phase === 'playing') dispatch({ type: 'pause' });
-        else if (state.phase === 'paused') dispatch({ type: 'resume' });
+        if (state.phase === 'playing' || state.phase === 'countdown') { e.preventDefault(); dispatch({ type: 'pause' }); }
+        else if (state.phase === 'paused') { e.preventDefault(); dispatch({ type: 'resume' }); }
       }
       if (game !== 'memory' && /^[1-4]$/.test(e.key)) {
         e.preventDefault(); answer(question.choices[Number(e.key) - 1]);
