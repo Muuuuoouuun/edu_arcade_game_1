@@ -578,7 +578,7 @@ test('a boss kill adds one shockwave and a labelled coin without changing the bo
   for(const kind of ['boss','frostboss'] as const){
     const {next,gain}=kill(kind);
     assert.equal(gain,100);assert.equal(next.kills,1);
-    assert.equal(next.effects.filter(e=>e.kind==='shockwave').length,1);
+    assert.equal(next.effects.filter(e=>e.kind==='shockwave').length,1);assert.equal(next.effects.find(e=>e.kind==='shockwave')?.force,145);
     assert.equal(next.effects.filter(e=>e.kind==='death').length,1);
     assert.ok(next.effects.some(e=>e.kind==='coin'&&e.text==='+100 처치!'));
   }
