@@ -4,6 +4,13 @@ export const DASH_DAMAGE = 36;
 export const DASH_IMPACT = 100;
 export const DASH_HIT_RADIUS = 28;
 
+/** Screen-space clockwise octants: east=0, south=2, west=4, north=6. */
+export function attackOctant(from:Point,to:Point):number|null {
+  const dx=to.x-from.x,dy=to.y-from.y;
+  if(!Number.isFinite(dx)||!Number.isFinite(dy)||Math.hypot(dx,dy)<.5)return null;
+  return (Math.round(Math.atan2(dy,dx)/(Math.PI/4))+8)%8;
+}
+
 /** Swept collision prevents a fast dash skipping targets between simulation steps. */
 export function distanceToSegment(point: Point, from: Point, to: Point): number {
   const dx=to.x-from.x,dy=to.y-from.y,length=dx*dx+dy*dy;

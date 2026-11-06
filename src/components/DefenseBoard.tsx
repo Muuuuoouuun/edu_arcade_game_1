@@ -5,7 +5,7 @@ import type { Locomotion } from '../games/defense/locomotion';
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getSlots } from '../games/defense/data';
-import { actionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset } from '../games/defense/art';
+import { actionSpriteAsset, directionalActionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset } from '../games/defense/art';
 import type { SpriteAsset, ActionPose } from '../games/defense/art';
 import type { DefenseThemeId } from '../games/defense/themes';
 import { DefenseThemeScenery } from './DefenseThemeScenery';
@@ -53,7 +53,8 @@ function Actor({unit=1,actor,position,facing,motion,velocity,dashTime=0,attack,s
  const skillAge=skill?.age??Infinity,casting=skillAge<.5;
  const phase=casting?(skillAge<.18?'strike':'recover'):dashing?null:attack?attackPhase(attack):null;
  const walking=!phase&&!dashing&&moving&&!reduced?walkingSpriteAsset(actor,motion.distance):null;
- const art=phase?actionSpriteAsset(actor,phase):walking??idleSpriteAsset(actor);
+ const directional=attack&&phase&&!casting&&!dashing?directionalActionSpriteAsset(actor,phase,attack.from,attack.to):null;
+ const art=directional??(phase?actionSpriteAsset(actor,phase):walking??idleSpriteAsset(actor));
  const aim=!dashing&&attack&&Math.abs(attack.to.x-attack.from.x)>.5?(attack.to.x>attack.from.x?1:-1):facing;
  let bob=0,lean=0,offset=0,sx=1,sy=1;
  if(!reduced){
@@ -61,18 +62,18 @@ function Actor({unit=1,actor,position,facing,motion,velocity,dashTime=0,attack,s
   else if(casting){
    const power=1-clamp(skillAge/.5),melee=actor==='barbarian'||actor==='dwarf';
    offset=aim*power*(melee?14:5);lean=aim*power*(melee?12:-5);bob=-Math.sin(clamp(skillAge/.5)*Math.PI)*(melee?3:5);sx=1+power*.04;sy=1-power*.04;
-  }else if(attack){
+  }else if(attack&&!directional){
    if(phase==='windup'){const p=clamp(attack.elapsed/Math.max(.05,attack.hitAt));offset=-4*p*aim;lean=-7*p*aim;sx=1-.035*p;sy=1+.025*p;}
    else if(phase==='strike'){const p=clamp((attack.elapsed-attack.hitAt)/.12);offset=(attack.kind==='melee'||attack.kind==='slam'?10:4)*(1-p*.45)*aim;lean=9*(1-p*.4)*aim;bob=-Math.sin(p*Math.PI)*3;sx=1.04;sy=.97;}
    else{const p=clamp((attack.elapsed-attack.hitAt-.12)/Math.max(.05,attack.duration-attack.hitAt-.12));offset=4*(1-p)*aim;lean=4*(1-p)*aim;}
-  }else if(moving&&!walking){const stride=Math.sin(motion.distance/WALK_STRIDE*Math.PI*2);bob=-Math.abs(stride)*(wolf?3.8:3)*pace;lean=(velocity?velocity.x/230:facing*.6)*6+stride*1.5*pace;sx=1+Math.abs(stride)*.025*pace;sy=1-Math.abs(stride)*.018*pace;}
-  else if(!walking)sy=1+Math.sin(time*2.3+index)*.008;
+  }else if(moving&&!walking&&!directional){const stride=Math.sin(motion.distance/WALK_STRIDE*Math.PI*2);bob=-Math.abs(stride)*(wolf?3.8:3)*pace;lean=(velocity?velocity.x/230:facing*.6)*6+stride*1.5*pace;sx=1+Math.abs(stride)*.025*pace;sy=1-Math.abs(stride)*.018*pace;}
+  else if(!walking&&!directional)sy=1+Math.sin(time*2.3+index)*.008;
  }
  return <g className={`def-motion-actor ${wolf?'def-pet':leader?'def-hero':'def-merc'} ${casting?'def-skill-cast':''} ${dashing?'def-dashing':''}`} transform={`translate(${position.x},${position.y})`} data-actor={actor} data-walk-distance={motion.distance.toFixed(2)} data-walk-frame={walking?.src} data-attack-phase={phase??(dashing?'dash':moving?'walk':'idle')} data-skill-phase={casting?phase:undefined} data-facing={aim} data-dashing={leader?dashing:undefined} data-velocity={leader?`${Math.round(velocity?.x??0)},${Math.round(velocity?.y??0)}`:undefined}>
   {leader?<ellipse cy="1" rx="30" ry="12" fill="#d3f8a129" stroke="#e3f6a5" strokeWidth="1.8" opacity=".85"/>:wolf?<ellipse cy="1" rx="23" ry="8" fill="#c9f3ff25" stroke="#cfeddd" strokeWidth="1"/>:null}
   {moving&&!dashing&&!reduced?<g opacity={.2*pace}><ellipse cx={-facing*17} cy="3" rx="10" ry="3" fill="#f2dec4"/><ellipse cx={-facing*28} cy="5" rx="5" ry="2" fill="#f2dec4"/></g>:null}
   {casting?<ellipse cy="-4" rx={32+(reduced?0:skillAge*26)} ry="12" fill="none" stroke={actor==='druid'?'#c4ef96':actor==='mage'?'#ffc585':'#d5f5ff'} strokeWidth="2" opacity={1-skillAge*1.7}/>:null}
-  <Sprite index={index} size={size} flip={(aim<0)!==(art?.nativeFacing===-1)} art={art} pose={`translate(${offset},${bob}) rotate(${lean}) scale(${sx},${sy})`} shadowScale={1+bob*.02}/>
+  <Sprite index={index} size={size} flip={!directional&&((aim<0)!==(art?.nativeFacing===-1))} art={art} pose={`translate(${offset},${bob}) rotate(${lean}) scale(${sx},${sy})`} shadowScale={1+bob*.02}/>
   {attack&&phase==='windup'&&attack.kind==='spell'?<g transform="translate(0,-43)" opacity={.35+.35*clamp(attack.elapsed/Math.max(.05,attack.hitAt))}><circle cx={aim*24} cy="-5" r={7+clamp(attack.elapsed/Math.max(.05,attack.hitAt))*9} fill={`url(#${attack.element==='fire'?'def-fire-core':attack.actor==='druid'?'def-green-core':'def-blue-core'})`}/></g>:null}
   {promoted?<text y={-size*.92} fill="#ffe3a2" fontSize="18" textAnchor="middle" className="def-world-label">✦</text>:null}
   {wolf?<text y="20" textAnchor="middle" className="def-pet-label">달빛 늑대</text>:null}

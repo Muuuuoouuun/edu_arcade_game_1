@@ -1,5 +1,6 @@
 import { enemyWalkFrame, walkFrame } from './locomotion.ts';
-import type { Branch, EnemyKind, HeroId, TowerKind } from './types';
+import { attackOctant } from './action.ts';
+import type { Branch, EnemyKind, HeroId, Point, TowerKind } from './types';
 export type SpriteAsset = {src:string;viewBox:string;width:number;height:number;displayScale?:number;nativeFacing?:-1|1;groundY?:number};
 export type ActionPose = 'windup'|'strike'|'recover';
 // Source frames are shared by tactical units, portraits and the growing village.
@@ -37,6 +38,14 @@ const DWARF_RENDERS = Object.fromEntries(DWARF_POSES.map(pose=>[pose,{
 // Switch the whole actor together: a missing action frame must never alternate
 // a modeled body with the old illustrated body during an attack.
 function dwarfModelReady(){return DWARF_POSES.every(pose=>motionLoaded.has(DWARF_RENDERS[pose].src));}
+const DWARF_DIRECTIONS=Array.from({length:8},(_,i)=>`/defense/models/dwarf-attack-${i}-atlas.webp`);
+/** Rotate the authored model instead of mirroring its asymmetric hammer/shield. */
+export function directionalActionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose,from:Point,to:Point):SpriteAsset|null {
+ const direction=attackOctant(from,to);
+ if(actor!=='dwarf'||direction===null||!dwarfModelReady()||!DWARF_DIRECTIONS.every(src=>motionLoaded.has(src)))return null;
+ const frame=pose==='windup'?0:pose==='strike'?1:2;
+ return {src:DWARF_DIRECTIONS[direction],viewBox:`${frame*384} 0 384 384`,width:1152,height:384,displayScale:1.2*6.8/5.8,groundY:330};
+}
 export function idleSpriteAsset(actor:HeroId|'wolf'):SpriteAsset|null {
  return actor==='dwarf'&&dwarfModelReady()?DWARF_RENDERS.idle:null;
 }
@@ -147,7 +156,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...DWARF_DIRECTIONS,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

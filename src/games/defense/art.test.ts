@@ -268,7 +268,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')).length,8);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')).length,8);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -307,4 +307,28 @@ test('the illustrated monster sheet is requested only when a baked atlas fails t
  const {art,requests:failedRequests}=await loadWithImageResults(src=>src.includes('wood-soldier'),'sheet-fetched');
  assert.equal(failedRequests.filter(src=>src==='/defense/monster-models.webp').length,1);
  assert.equal(art.monsterSpriteAsset('wood','walk-a')?.src,'/defense/monster-models.webp');
+});
+
+
+test('dwarf directional attacks share the idle scale and ground and fall back as one complete set',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'dwarf-directions');
+ const from={x:200,y:200};
+ for(let i=0;i<8;i++){
+  const to={x:200+100*Math.cos(i*Math.PI/4),y:200+100*Math.sin(i*Math.PI/4)};
+  for(const [frame,pose] of (['windup','strike','recover'] as const).entries()){
+   const sprite=art.directionalActionSpriteAsset('dwarf',pose,from,to)!;
+   assert.equal(sprite.src,`/defense/models/dwarf-attack-${i}-atlas.webp`);
+   assert.equal(sprite.viewBox,`${frame*384} 0 384 384`);
+   assert.equal(sprite.groundY!/384,art.idleSpriteAsset('dwarf')!.groundY!/640);
+   assert.ok(Math.abs(sprite.displayScale!/6.8-art.idleSpriteAsset('dwarf')!.displayScale!/5.8)<1e-10,'camera zoom compensation preserves model world size');
+  }
+ }
+ assert.equal(requests.filter(src=>src.includes('/dwarf-attack-')).length,8);
+ assert.equal(art.directionalActionSpriteAsset('dwarf','strike',from,from),null);
+ assert.equal(art.directionalActionSpriteAsset('mage','strike',from,{x:250,y:200}),null);
+ for(const failedFile of ['dwarf-attack-6-atlas.webp','dwarf-windup-game.webp']){
+  const {art:failed}=await loadWithImageResults(src=>src.endsWith(failedFile),failedFile);
+  for(const pose of ['windup','strike','recover'] as const)assert.equal(failed.directionalActionSpriteAsset('dwarf',pose,from,{x:250,y:200}),null);
+  assert.ok(failed.actionSpriteAsset('dwarf','strike'),'legacy model or illustration remains available');
+ }
 });

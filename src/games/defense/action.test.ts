@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDefense, actDefense, stepDefense, positionOnPath } from './engine.ts';
-import { DASH_DAMAGE, distanceToSegment, knockbackPresentation } from './action.ts';
+import { attackOctant, DASH_DAMAGE, distanceToSegment, knockbackPresentation } from './action.ts';
 import type { Enemy } from './types.ts';
 
 function battle(hp=1000) {
@@ -48,4 +48,18 @@ test('swept collision uses the bounded segment rather than its infinite line',()
   assert.equal(knockbackPresentation(24).bracing,true);
   assert.equal(knockbackPresentation(150).streak,true);
   assert.equal(knockbackPresentation(0).bracing,false);
+});
+
+
+test('attack octants preserve vertical aim, wrap west and ignore invalid or coincident targets',()=>{
+ const from={x:300,y:200};
+ for(let i=0;i<8;i++){
+  const a=i*Math.PI/4;
+  assert.equal(attackOctant(from,{x:from.x+Math.cos(a)*50,y:from.y+Math.sin(a)*50}),i);
+ }
+ assert.equal(attackOctant(from,{x:300.1,y:100}),6);
+ assert.equal(attackOctant(from,{x:200,y:199.9}),4);
+ assert.equal(attackOctant(from,from),null);
+ assert.equal(attackOctant(from,{x:NaN,y:200}),null);
+ assert.equal(attackOctant(from,{x:Infinity,y:200}),null);
 });
