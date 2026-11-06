@@ -5,7 +5,7 @@ Every public/defense/models/*-atlas.webp (1152x384, three poses) contributes its
 cropped to the alpha box, fitted into 60px and bottom-aligned in a 64x64 cell. For each pair it prints
 the alpha-mask overlap (IoU), the mean gray and the gray spread inside the mask.
 Provisional rule (a target to tune, not a measured standard): distinct if IoU < 0.65,
-or mean gray differs by >= 30, or gray spread differs by >= 12. Exit code: 0 all distinct, 1 a pair is confusable, other nonzero (via message) for input errors.
+or mean gray differs by >= 30, or gray spread differs by >= 12. Exit code: 0 all distinct, 1 a pair is confusable, 2 for input errors.
 Requires Pillow and NumPy.
 """
 import argparse, itertools, sys
@@ -14,6 +14,10 @@ from PIL import Image, ImageOps
 import numpy as np
 
 CELL, FIT = 64, 60
+def die(message):
+    print(message, file=sys.stderr)
+    sys.exit(2)
+
 models = Path(__file__).resolve().parent.parent / 'public/defense/models'
 parser = argparse.ArgumentParser()
 parser.add_argument('--out')
@@ -34,13 +38,13 @@ cells = {}
 for file in sorted(models.glob('*-atlas.webp')):
     atlas = Image.open(file).convert('RGBA')
     if atlas.size != (1152, 384):
-        sys.exit(f'{file.name}: expected a 1152x384 atlas, got {atlas.size}')
+        die(f'{file.name}: expected a 1152x384 atlas, got {atlas.size}')
     try:
         cells[file.name.removesuffix('-atlas.webp')] = fit(atlas.crop((0, 0, 384, 384)))
     except ValueError:
-        sys.exit(f'{file.name}: first frame is fully transparent')
+        die(f'{file.name}: first frame is fully transparent')
 if len(cells) < 2:
-    sys.exit('need at least two *-atlas.webp files')
+    die('need at least two *-atlas.webp files')
 
 mask = {k: np.array(v.getchannel('A')) > 127 for k, v in cells.items()}
 gray = {k: np.array(ImageOps.grayscale(v.convert('RGB')), dtype=float) for k, v in cells.items()}
