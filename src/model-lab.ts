@@ -6,6 +6,8 @@ import { PMREMGenerator } from 'three';
 import './model-lab.css';
 
 const models = [
+ {id:'ian-mage',name:'이안 · 수정 마법사',kind:'ARCANE MAGE',detail:'꺾인 모자 · 남색 코트 · 수정 지팡이',description:'발을 짚고 수정 지팡이를 모았다가 앞으로 뻗어 시전합니다. 코트와 망토, 손목의 복귀를 실제 관절로 확인하세요.',source:'ian-mage.blend',command:'npm run models:mage',action:'▶ 지팡이 시전',clip:'ian-cast'},
+ {id:'ian-mage-walk',name:'이안 · 방향 보행',kind:'ARCANE MAGE',detail:'가죽 장화 · 코트 자락 · 발 접지',description:'발의 지지와 회수를 번갈아 연결하고 망토와 팔이 작게 따라 움직입니다. 전투의 여덟 방향도 같은 원본에서 렌더합니다.',source:'ian-mage-walk.blend',command:'npm run models:mage',action:'▶ 보행 재생',clip:'ian-walk',loop:true},
  {id:'fire-tower',name:'화염 수정탑',kind:'ELEMENTAL TOWER',detail:'돌 · 청동 · 발광 수정',description:'층층이 쌓은 석재 위에 청동 발톱이 수정을 지탱합니다. 마력 코어가 회전하며 불꽃을 모읍니다.',source:'towers.blend',command:'npm run models:build',action:'▶ 발사 동작'},
  {id:'piercing-ballista',asset:'piercing-ballista-action',clip:'ballista-release',name:'관통 발리스타',kind:'SIEGE WEAPON',detail:'오크 · 황동 · 강철',description:'석재 기초를 고정한 채 상부가 조준합니다. 활대와 시위가 풀리며 관통탄을 발사하고, 시위를 다시 당겨 다음 탄을 장전합니다.',source:'piercing-ballista-action.blend',command:'npm run models:ballista-action',action:'▶ 시위 발사'},
  {id:'piercing-ballista-lv3',asset:'piercing-ballista-lv3-action',clip:'ballista-release',name:'관통 발리스타 · 최종 강화',kind:'SIEGE WEAPON',detail:'금장 활대 · 부채꼴 관통탄 · 고정 기초',description:'금장 활대와 세 갈래 장전탄이 상부와 함께 조준합니다. 시위 이완과 재장전 사이에도 깃발·기초는 고정됩니다.',source:'piercing-ballista-lv3-action.blend',command:'npm run models:ballista-action-lv3',action:'▶ 시위 발사'},
@@ -42,7 +44,7 @@ function release(object:Object3D) {
  materials(object).forEach(material => material.dispose());
 }
 // Match the dwarf render's front three-quarter view so its hammer clears the face.
-function resetView() {pivot.rotation.y = currentModelId.startsWith('dwarf-')?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,currentModelId==='forest-bridge'?1:2.0,0);controls?.update();}
+function resetView() {pivot.rotation.y = (currentModelId.startsWith('dwarf-')||currentModelId.startsWith('ian-'))?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,currentModelId==='forest-bridge'?1:2.0,0);controls?.update();}
 function stopAction() {
  attackAction?.stop(); shotAt = -Infinity; stage.dataset.action = 'idle'; shoot.textContent=models.find(model=>model.id===currentModelId)?.action??'▶ 동작 재생'; redraw = true;
 }
