@@ -1,5 +1,6 @@
 import type { Campaign, DefenseState, Difficulty, HeroId } from './types.ts';
-import { getStage, HERO_ORDER, STAGE_COUNT, STAGES } from './data.ts';
+import { getStage, HERO_ORDER, STAGE_COUNT, STAGES, TOWERS, getSlots } from './data.ts';
+import { upgradeCost } from './engine.ts';
 import { DIFFICULTIES, getDifficulty } from './difficulty.ts';
 
 const KEY = 'playground:defense:v1';
@@ -188,6 +189,22 @@ export function campaignRequest(campaign: Campaign): CampaignRequest | null {
   } : null;
 }
 
+export type StageReason =
+  | { kind: 'visitor'; hero: HeroId }
+  | { kind: 'region' }
+  | { kind: 'quest'; reward: number };
+
+/** Why to enter a stage: the companion it brings, the region it opens, or its unclaimed optional quest. Reads state only. */
+export function stageReason(campaign: Campaign, stageId: number): StageReason | null {
+  const stage = getStage(stageId);
+  if (!campaign.cleared.includes(stage.id)) {
+    if (stage.visitor && !campaign.visitors.includes(stage.visitor)) return { kind: 'visitor', hero: stage.visitor };
+    const next = STAGES.find(candidate => candidate.id === stage.id + 1);
+    if (next && next.region !== stage.region && !stageUnlocked(campaign, next.id)) return { kind: 'region' };
+  }
+  return campaign.questClaimed.includes(stage.id) ? null : { kind: 'quest', reward: stage.questReward };
+}
+
 export type TerritoryProgress = { rescued: number; total: number; questsLeft: number };
 
 /** Derived camp hook: villages rescued so far and optional quests still open on cleared stages. Reads state only. */
@@ -218,4 +235,20 @@ export function resultFollowUp(campaign: Campaign, playedStage: number): ResultF
     upcomingVisitor: nextStage?.visitor && !campaign.visitors.includes(nextStage.visitor) ? nextStage.visitor : null,
     pendingQuest: campaign.questClaimed.includes(played.id) ? null : { text: played.quest, reward: played.questReward },
   };
+}
+
+/**
+ * Result-screen hook for a lost run: one concrete thing to change next time, read from the final state.
+ * Advice only; it never gates rewards or progression. Null unless the run was lost.
+ */
+export function lossAdvice(state: DefenseState): string | null {
+  if (state.phase !== 'lost') return null;
+  if (state.towers.length === 0) return '타워를 세우지 못했어요. 첫 웨이브 전에 길목 옆에 타워부터 세워 보세요.';
+  const cheapest = Math.min(...Object.values(TOWERS).map(tower => tower.cost));
+  const openSlot = getSlots(state.stage).some(slot => slot.unlock <= state.stage && !state.towers.some(tower => tower.slot === slot.id));
+  const canSpend = (openSlot && state.coins >= cheapest) ||
+    state.towers.some(tower => tower.level < 3 && state.coins >= upgradeCost(tower));
+  if (canSpend) return `전투 코인 ${state.coins}개를 쓰지 못했어요. 웨이브 사이에 타워를 짓거나 강화해 보세요.`;
+  if (state.towers.every(tower => tower.level === 1) && state.wave >= 2) return '강화하지 않은 타워뿐이었어요. 2단계에서 갈래를 고르면 더 단단해져요.';
+  return state.leaks > 0 ? `적 ${state.leaks}마리가 길을 뚫었어요. 돌파한 길목 근처에 타워를 더해 보세요.` : null;
 }
