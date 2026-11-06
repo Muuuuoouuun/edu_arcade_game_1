@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import type { Projectile } from './types.ts';
 
 type Art = typeof import('./art.ts');
 
@@ -268,7 +270,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/water-action-')).length,8);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')).length,8);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -349,10 +351,50 @@ test('water cannon rotates its complete Lv.2 set and uses only actual recoil to 
  }
  assert.equal(requests.filter(src=>src.includes('/water-action-')).length,8);
  const to={x:400,y:200};
- assert.equal(art.waterCannonActionSpriteAsset('cannon','water',3,from,to),null);
+ assert.equal(art.waterCannonActionSpriteAsset('cannon','water',1,from,to),null);
  assert.equal(art.waterCannonActionSpriteAsset('cannon','crush',2,from,to),null);
  assert.equal(art.waterCannonActionSpriteAsset('cannon','water',2,from,from),null);
  const {art:failed}=await loadWithImageResults(src=>src.endsWith('water-action-3-atlas.webp'),'water-action-failure');
  assert.equal(failed.waterCannonActionSpriteAsset('cannon','water',2,from,to),null);
  assert.equal(failed.towerSpriteAsset('cannon','water',2)?.src,'/defense/models/water-cannon-game.webp');
+});
+
+
+test('final water cannon preserves eight aim directions, mastery size and the rendered muzzle',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'water-lv3-action');const from={x:300,y:200};
+ const metadata=JSON.parse(readFileSync(new URL('../../../public/defense/models/water-cannon-lv3-action.json',import.meta.url),'utf8'));
+ for(let direction=0;direction<8;direction++){
+  const to={x:from.x+Math.cos(direction*Math.PI/4)*100,y:from.y+Math.sin(direction*Math.PI/4)*100};
+  for(const [recoil,pose] of [[0,0],[.24,1],[.1,2]]){
+   const render=art.waterCannonActionSpriteAsset('cannon','water',3,from,to,recoil)!;
+   assert.equal(render.direction,direction);assert.equal(render.pose,pose);
+   assert.equal(render.asset.src,`/defense/models/water-lv3-action-${direction}-atlas.webp`);
+   assert.equal(render.asset.displayScale,art.towerSpriteAsset('cannon','water',3)!.displayScale);
+   const [mx,my]=metadata.directions[direction].poses[pose].muzzle;
+   assert.ok(Math.abs(render.muzzle.x-(mx-320)/576*1.16*1.025*104)<.001);
+   assert.ok(Math.abs(render.muzzle.y-(.1+(my-600)/576*1.16*1.025)*104)<.001);
+  }
+  for(const recoil of [.24,.1,NaN,Infinity,-1])assert.equal(art.waterCannonActionSpriteAsset('cannon','water',3,from,to,recoil,true)?.pose,0);
+  const shell={source:'tower',actor:'cannon',element:'water',from,to} as Projectile;
+  for(const sourceLevel of [2,3]){
+   const muzzle=art.waterCannonActionSpriteAsset('cannon','water',sourceLevel,from,to)!.muzzle;
+   assert.deepEqual(art.waterCannonProjectileOffset({...shell,sourceLevel}),{x:muzzle.x,y:39+muzzle.y});
+  }
+  assert.equal(art.waterCannonProjectileOffset(shell),undefined,'older saves retain their existing trajectory');
+ }
+ assert.equal(requests.filter(src=>src.includes('/water-lv3-action-')).length,8);
+ assert.equal(requests.some(src=>src.endsWith('.glb')),false,'battle must not load workshop geometry');
+});
+
+test('a missing water action asset falls back only for its own upgrade level',async()=>{
+ const from={x:300,y:200},to={x:400,y:200};
+ for(const [level,files] of [[2,['water-action-3-atlas.webp','water-cannon-game.webp']],[3,['water-lv3-action-3-atlas.webp','water-cannon-lv3-game.webp']]] as const){
+  for(const file of files){
+   const {art}=await loadWithImageResults(src=>src.endsWith(file),`independent-${file}`);
+   assert.equal(art.waterCannonActionSpriteAsset('cannon','water',level,from,to),null);
+   assert.ok(art.waterCannonActionSpriteAsset('cannon','water',level===2?3:2,from,to),'other upgrade stays articulated');
+   assert.ok(art.towerSpriteAsset('cannon','water',level),'authored fallback remains available');
+   if(level===3&&file.includes('atlas'))assert.equal(art.towerSpriteAsset('cannon','water',3)?.src,'/defense/models/water-cannon-lv3-game.webp');
+  }
+ }
 });

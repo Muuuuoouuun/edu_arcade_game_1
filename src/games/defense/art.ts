@@ -1,6 +1,7 @@
 import { enemyWalkFrame, walkFrame } from './locomotion.ts';
 import { attackOctant } from './action.ts';
 import { WATER_CANNON_MUZZLES } from './waterCannonMuzzles.ts';
+import { WATER_CANNON_LV3_MUZZLES } from './waterCannonLv3Muzzles.ts';
 import type { Branch, EnemyKind, HeroId, Point, Projectile, TowerKind } from './types';
 export type SpriteAsset = {src:string;viewBox:string;width:number;height:number;displayScale?:number;nativeFacing?:-1|1;groundY?:number};
 export type ActionPose = 'windup'|'strike'|'recover';
@@ -82,18 +83,22 @@ const BAKED_BRANCHES:BakedTower[] = [
 ];
 const bakedFor=(kind:TowerKind,branch:Branch|null)=>BAKED_BRANCHES.find(model=>model.kind===kind&&model.branch===branch)??BAKED_TOWERS[kind];
 const WATER_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/water-action-${i}-atlas.webp`);
-/** Complete articulated Lv.2 set only; mastery and other branches keep their authored assets. */
+const WATER_LV3_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/water-lv3-action-${i}-atlas.webp`);
+/** Each upgrade uses its own complete set and matching authored fallback. */
 export function waterCannonActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,from:Point,to:Point,recoil=0,reduced=false) {
  const direction=attackOctant(from,to);
- if(kind!=='cannon'||branch!=='water'||level!==2||direction===null||!motionLoaded.has(BAKED_TOWERS.cannon.asset.src)||!WATER_ACTION_ATLASES.every(src=>motionLoaded.has(src)))return null;
+ if(kind!=='cannon'||branch!=='water'||(level!==2&&level!==3)||direction===null)return null;
+ const mastered=level===3,atlases=mastered?WATER_LV3_ACTION_ATLASES:WATER_ACTION_ATLASES;
+ const base=mastered?BAKED_TOWERS.cannon.mastered!:BAKED_TOWERS.cannon.asset;
+ if(!motionLoaded.has(base.src)||!atlases.every(src=>motionLoaded.has(src)))return null;
  const pose=reduced||!Number.isFinite(recoil)||recoil<=0?0:recoil>.12?1:2;
- const [x,y]=WATER_CANNON_MUZZLES[direction][pose];
- return {direction,pose,muzzle:{x:x*100,y:y*100},asset:{src:WATER_ACTION_ATLASES[direction],viewBox:`${pose*384+19.2} 14.4 345.6 345.6`,width:1152,height:384,displayScale:1.16} as SpriteAsset};
+ const [x,y]=(mastered?WATER_CANNON_LV3_MUZZLES:WATER_CANNON_MUZZLES)[direction][pose],size=92+level*4;
+ return {direction,pose,muzzle:{x:x*size,y:y*size},asset:{src:atlases[direction],viewBox:`${pose*384+19.2} 14.4 345.6 345.6`,width:1152,height:384,displayScale:1.16*(mastered?1.025:1)} as SpriteAsset};
 }
 /** Presentation offset fades to zero on landing; collision coordinates stay untouched. */
 export function waterCannonProjectileOffset(p:Projectile):Point|undefined {
- if(p.source!=='tower'||p.actor!=='cannon'||p.element!=='water'||p.sourceLevel!==2)return undefined;
- const render=waterCannonActionSpriteAsset('cannon','water',2,p.from,p.to);
+ if(p.source!=='tower'||p.actor!=='cannon'||p.element!=='water'||(p.sourceLevel!==2&&p.sourceLevel!==3))return undefined;
+ const render=waterCannonActionSpriteAsset('cannon','water',p.sourceLevel,p.from,p.to);
  return render?{x:render.muzzle.x,y:12+render.muzzle.y+27}:undefined;
 }
 /** Available model renders take precedence; each failed render keeps its atlas fallback. */
@@ -172,7 +177,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...DWARF_DIRECTIONS,...WATER_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...DWARF_DIRECTIONS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

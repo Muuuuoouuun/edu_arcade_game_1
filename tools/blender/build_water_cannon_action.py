@@ -1,14 +1,15 @@
 """Articulate the existing water cannon: fixed keep, rotating hydraulic deck, axial recoil.
-Run: npm run models:water-action
+Run: npm run models:water-action (Lv.2) / npm run models:water-action-lv3 (Lv.3)
 """
 import argparse, hashlib, json, math, shutil, subprocess, sys
 from pathlib import Path
 import bpy
 from mathutils import Matrix, Vector
 from bpy_extras.object_utils import world_to_camera_view
-ROOT=Path(__file__).resolve().parents[2];SOURCE=ROOT/'art-source/defense/towers.blend';OUT=ROOT/'public/defense/models';FRAMES=ROOT/'art-source/defense/water-cannon-action'
-p=argparse.ArgumentParser();p.add_argument('--samples',type=int,default=48);p.add_argument('--check',action='store_true');args=p.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
-bpy.ops.wm.open_mainfile(filepath=str(SOURCE));scene=bpy.context.scene;col=bpy.data.collections['water-cannon'];root=bpy.data.objects['water-cannon'];root.location=(0,0,0)
+ROOT=Path(__file__).resolve().parents[2];SOURCE=ROOT/'art-source/defense/towers.blend';OUT=ROOT/'public/defense/models'
+p=argparse.ArgumentParser();p.add_argument('--level',type=int,choices=(2,3),default=2);p.add_argument('--samples',type=int,default=48);p.add_argument('--check',action='store_true');args=p.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+model_id='water-cannon' if args.level==2 else 'water-cannon-lv3';asset_id=model_id+'-action';prefix='water-action' if args.level==2 else 'water-lv3-action';command='npm run models:water-action'+('-lv3' if args.level==3 else '');display_scale=1.16*(1.025 if args.level==3 else 1);FRAMES=ROOT/'art-source/defense'/asset_id
+bpy.ops.wm.open_mainfile(filepath=str(SOURCE));scene=bpy.context.scene;col=bpy.data.collections[model_id];root=bpy.data.objects[model_id];root.location=(0,0,0)
 for other in list(bpy.data.collections):
  if other not in (col,bpy.data.collections['Studio / camera and soft lights']):
   for obj in list(other.objects):bpy.data.objects.remove(obj,do_unlink=True)
@@ -19,16 +20,18 @@ scene.render.resolution_x=scene.render.resolution_y=640;scene.render.resolution_
 bpy.context.view_layer.update()
 platform=bpy.data.objects.new('aim-platform',None);col.objects.link(platform);platform.parent=root;platform.location=(0,0,1.75);bpy.context.view_layer.update()
 for obj in list(col.objects):
- if obj.parent==root and (obj.get('animation_role')=='turret' or obj.name.startswith(('Reservoir /','Plumbing /','Valve /','Gauge /'))):
+ if obj.parent==root and (obj.get('animation_role')=='turret' or obj.name.startswith(('Reservoir /','Plumbing /','Valve /','Gauge /','Ascended / tidal crown','Ascended / crown side','Ascended / orbiting water'))):
   matrix=obj.matrix_world.copy();obj.parent=platform;obj.matrix_world=matrix
 barrel=next(o for o in col.objects if o.get('animation_role')=='barrel');barrel.name='barrel';rest=barrel.location.copy()
-bpy.context.view_layer.update();muzzle_local=barrel.matrix_world.inverted()@(root.matrix_world@Vector((0,-1.48,2.42)))
+bpy.context.view_layer.update();tip=Vector((0,-1.48,2.42))
+if args.level==3:tip+=Vector((0,-1.26,.4)).normalized()*.06
+muzzle_local=barrel.matrix_world.inverted()@(root.matrix_world@tip)
 def project(v):
  p=world_to_camera_view(scene,camera,Vector(v));return Vector((p.x*640,(1-p.y)*640))
 ground=project((0,0,0));px=project((1,0,0))-ground;py=project((0,1,0))-ground;inverse=Matrix(((px.x,py.x),(px.y,py.y))).inverted()
 def recoil(value):barrel.location=rest+Vector((0,value,-value*.4/1.26))
 poses={'ready':0,'recoil':.28,'recover':.12}
-manifest={'source':'art-source/defense/water-cannon-action.blend','base_source_sha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'generator':'tools/blender/build_water_cannon_action.py','reference':'art-source/defense/concepts/2026-10-29/props/six-tower-modules.png','frame':{'width':640,'height':640,'ground':list(ground),'crop':[32,24,576,576],'orthographic_scale':7.5},'delivery_frame':{'width':384,'height':384,'crop':[19.2,14.4,345.6,345.6]},'clip':'water-cannon-fire','directions':[],'files':[]}
+manifest={'source':f'art-source/defense/{asset_id}.blend','level':args.level,'regeneration_command':command,'display_scale':display_scale,'base_source_sha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'generator':'tools/blender/build_water_cannon_action.py','reference':'art-source/defense/concepts/2026-10-29/props/six-tower-modules.png','frame':{'width':640,'height':640,'ground':list(ground),'crop':[32,24,576,576],'orthographic_scale':7.5},'delivery_frame':{'width':384,'height':384,'crop':[19.2,14.4,345.6,345.6]},'clip':'water-cannon-fire','directions':[],'files':[]}
 FRAMES.mkdir(parents=True,exist_ok=True)
 for index in range(8):
  angle=index*math.tau/8;screen=Vector((math.cos(angle),math.sin(angle)));world=inverse@screen;world.normalize();yaw=math.atan2(world.x,-world.y);platform.rotation_euler.z=yaw
@@ -43,10 +46,10 @@ for index in range(8):
   muzzle=project(barrel.matrix_world@muzzle_local)
   entry['poses'].append({'name':pose,'muzzle':list(muzzle),'bounds':bounds})
   if not args.check:
-   scene.render.filepath=str(FRAMES/f'water-action-{index}-{pose}.png');bpy.ops.render.render(write_still=True)
+   scene.render.filepath=str(FRAMES/f'{prefix}-{index}-{pose}.png');bpy.ops.render.render(write_still=True)
  manifest['directions'].append(entry)
  if not args.check:
-  dst=OUT/f'water-action-{index}-atlas.webp';inputs=sum((['-i',str(FRAMES/f'water-action-{index}-{pose}.png')] for pose in poses),[])
+  dst=OUT/f'{prefix}-{index}-atlas.webp';inputs=sum((['-i',str(FRAMES/f'{prefix}-{index}-{pose}.png')] for pose in poses),[])
   subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',*inputs,'-filter_complex','hstack=inputs=3,scale=1152:384:flags=lanczos','-frames:v','1','-c:v','libwebp','-quality','88','-compression_level','6',str(dst)],check=True)
   manifest['files'].append({'file':dst.name,'bytes':dst.stat().st_size,'sha256':hashlib.sha256(dst.read_bytes()).hexdigest()})
  print('DIRECTION_DONE',index,flush=True)
@@ -77,16 +80,17 @@ for i,objects in enumerate(batches.values()):
 bpy.ops.object.select_all(action='DESELECT')
 for obj in export.objects:obj.select_set(True)
 bpy.context.view_layer.objects.active=clones[root]
-bpy.ops.export_scene.gltf(filepath=str(OUT/'water-cannon-action.glb'),export_format='GLB',use_selection=True,export_yup=True,export_apply=False,export_animations=True,export_animation_mode='ACTIVE_ACTIONS',export_nla_strips_merged_animation_name='water-cannon-fire',export_frame_range=True,export_force_sampling=True,export_anim_slide_to_zero=True)
+bpy.ops.export_scene.gltf(filepath=str(OUT/f'{asset_id}.glb'),export_format='GLB',use_selection=True,export_yup=True,export_apply=False,export_animations=True,export_animation_mode='ACTIVE_ACTIONS',export_nla_strips_merged_animation_name='water-cannon-fire',export_frame_range=True,export_force_sampling=True,export_anim_slide_to_zero=True)
 for obj in list(export.objects):bpy.data.objects.remove(obj,do_unlink=True)
 bpy.data.collections.remove(export)
 for obj,name in names.items():obj.name=name
-scene.frame_set(1);recoil(0);scene['regeneration_command']='npm run models:water-action';bpy.context.preferences.filepaths.save_version=0;bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/manifest['source']))
-shutil.copyfile(FRAMES/'water-action-4-ready.png',OUT/'water-cannon-action.png')
-for name in ['water-cannon-action.glb','water-cannon-action.png']:
+scene.frame_set(1);recoil(0);scene['regeneration_command']=command;bpy.context.preferences.filepaths.save_version=0;bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/manifest['source']))
+shutil.copyfile(FRAMES/f'{prefix}-4-ready.png',OUT/f'{asset_id}.png')
+for name in [f'{asset_id}.glb',f'{asset_id}.png']:
  file=OUT/name;manifest['files'].append({'file':name,'bytes':file.stat().st_size,'sha256':hashlib.sha256(file.read_bytes()).hexdigest()})
-(OUT/'water-cannon-action.json').write_text(json.dumps(manifest,indent=2)+'\n')
+(OUT/f'{asset_id}.json').write_text(json.dumps(manifest,indent=2)+'\n')
 # Runtime muzzle offsets are generated from the very same camera and joints.
-coords=[[[round((p['muzzle'][0]-320)/576*1.16,6),round(.1+(p['muzzle'][1]-600)/576*1.16,6)] for p in d['poses']] for d in manifest['directions']]
-(ROOT/'src/games/defense/waterCannonMuzzles.ts').write_text('// Generated by tools/blender/build_water_cannon_action.py; offsets per tower display size.\nexport const WATER_CANNON_MUZZLES = '+json.dumps(coords)+' as const;\n')
+coords=[[[round((p['muzzle'][0]-320)/576*display_scale,6),round(.1+(p['muzzle'][1]-600)/576*display_scale,6)] for p in d['poses']] for d in manifest['directions']]
+muzzle_file='waterCannonMuzzles.ts' if args.level==2 else 'waterCannonLv3Muzzles.ts';constant='WATER_CANNON_MUZZLES' if args.level==2 else 'WATER_CANNON_LV3_MUZZLES'
+(ROOT/'src/games/defense'/muzzle_file).write_text('// Generated by tools/blender/build_water_cannon_action.py; offsets per tower display size.\nexport const '+constant+' = '+json.dumps(coords)+' as const;\n')
 print('WATER_ACTION_COMPLETE',flush=True)

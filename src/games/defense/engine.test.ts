@@ -625,6 +625,8 @@ test('water cannon recoil starts only on launch and a flying shell keeps its sou
  assert.equal(fired.projectiles[0].sourceLevel,2);
  const upgraded=actDefense(fired,{type:'upgrade',slot:2});assert.equal(upgraded.towers[0].level,3);
  assert.equal(upgraded.projectiles[0].sourceLevel,2,'an upgrade must not move a flying shell origin');
+ const next=until({...upgraded,projectiles:[]},n=>n.projectiles.some(p=>p.sourceLevel===3));
+ assert.ok(next.projectiles.some(p=>p.sourceLevel===3),'the next shot uses the upgraded muzzle');
  const sold=actDefense(fired,{type:'sell',slot:2});assert.equal(sold.towers.length,0);assert.equal(sold.projectiles[0].sourceLevel,2);
  const empty=until({...windup,enemies:[]},n=>n.attacks.length===0);assert.equal(empty.projectiles.length,0);assert.equal(empty.towers[0].recoil??0,0);
 });
