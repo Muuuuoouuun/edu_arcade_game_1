@@ -212,3 +212,21 @@ test('Riel captures moving hero and mercenary gait once without delaying or dupl
  const idle=createDefense(1,'elf');idle.phase='wave';idle.spawned=999;idle.wave=1;idle.heroPosition={x:100,y:170};idle.heroTarget={...idle.heroPosition};idle.enemies=[{id:900,kind:'wood',...positionOnPath(0,220,1),progress:220,path:0,speed:0,hp:1000,maxHp:1000,wet:0,burn:0,slow:0,hit:0}];
  assert.equal(stepDefense(idle,.01).attacks[0].walkEntry,undefined,'stationary shots retain the original pose');
 });
+
+test('Bron captures moving stance once and preserves the hammer damage time',()=>{
+ for(const source of ['hero','mercenary'] as const)for(let entry=0;entry<8;entry++){
+  const s=createDefense(1,source==='hero'?'dwarf':'elf');s.phase='wave';s.wave=1;s.spawned=999;s.heroPosition={x:100,y:170};s.heroTarget={x:200,y:170};
+  if(source==='mercenary'){s.mercenary='dwarf';s.mercenaryPosition={x:100,y:170};s.heroCooldown=99;}
+  s.locomotion[source]={distance:entry*8,speed:100};s.enemies=[{id:900,kind:'wood',...positionOnPath(0,120,1),progress:120,path:0,speed:0,hp:1000,maxHp:1000,wet:0,burn:0,slow:0,hit:0}];
+  const queued=stepDefense(s,1/60),attack=queued.attacks.find(a=>a.source===source)!;
+  assert.ok(attack);assert.equal(attack.walkEntry,walkFrame(queued.locomotion[source].distance));assert.equal(attack.hitAt,.24);assert.equal(attack.duration,.52);assert.equal(s.attacks.length,0);
+  const paused=actDefense(queued,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+  if(source==='hero')assert.equal(actDefense(queued,{type:'move',point:{x:150,y:170}}).attacks.filter(a=>a.source==='hero').length,0,'new input still cancels an unfired attack');
+  let preparing=stepDefense(queued,.1);preparing=stepDefense(preparing,.1);preparing=stepDefense(preparing,.039);
+  assert.equal(preparing.enemies[0].hp,1000);assert.equal(preparing.attacks.find(a=>a.id===attack.id)!.walkEntry,attack.walkEntry);
+  const contact=stepDefense(preparing,.002);assert.ok(contact.enemies[0].hp<1000);assert.equal(contact.attacks.find(a=>a.id===attack.id)!.fired,true);
+  assert.equal(stepDefense(contact,.01).enemies[0].hp,contact.enemies[0].hp,'same swing hits once');
+ }
+ const s=createDefense(1,'dwarf');s.phase='wave';s.wave=1;s.spawned=999;s.heroPosition={x:100,y:170};s.heroTarget={...s.heroPosition};s.enemies=[{id:900,kind:'wood',...positionOnPath(0,120,1),progress:120,path:0,speed:0,hp:1000,maxHp:1000,wet:0,burn:0,slow:0,hit:0}];
+ assert.equal(stepDefense(s,.01).attacks[0].walkEntry,undefined);
+});

@@ -289,7 +289,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,17);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,17);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -1213,5 +1213,37 @@ test('Riel transition image failure retains the complete existing shot and walk 
   assert.equal(!!art.directionalActionSpriteAsset('elf','windup',position,attack.to),missing.startsWith('riel-entry'));
   assert.equal(!!art.directionalLocomotionSpriteAsset('elf',{x:1,y:0},24),missing.startsWith('riel-entry'));
   assert.ok(art.directionalActionSpriteAsset('mage','windup',position,attack.to));
+ }
+});
+
+test('Bron plants each captured walk before the unchanged hammer apex and contact',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'dwarf-entry');
+ for(const source of ['hero','mercenary'] as const)for(let direction=0;direction<8;direction++)for(let entry=0;entry<8;entry++){
+  const angle=direction*Math.PI/4,from={x:200,y:200},to={x:200+100*Math.cos(angle),y:200+100*Math.sin(angle)};
+  const attack={actor:'dwarf',source,walkEntry:entry,from,to,elapsed:0,hitAt:.24,duration:.52} as CombatAttack;
+  for(const [elapsed,frame] of [[0,'walk'],[.039,'walk'],[.04,'first-foot'],[.099,'first-foot'],[.1,'second-foot'],[.159,'second-foot']] as const){
+   const result=art.dwarfHammerEntrySpriteAsset({...attack,elapsed})!;assert.equal(result.entry,entry);assert.equal(result.frame,frame);assert.equal(result.direction,direction);
+   assert.equal(result.asset.groundY!/result.asset.height,220/256);assert.equal(result.asset.displayScale,1.2*6.8/5.8);
+   if(frame==='walk')assert.deepEqual(result.asset,art.directionalLocomotionSpriteAsset('dwarf',{x:Math.cos(angle),y:Math.sin(angle)},entry*8));
+   else {assert.equal(result.asset.src,`/defense/models/dwarf-entry-${direction}-atlas.webp`);assert.equal(result.asset.viewBox,`${(entry*2+(frame==='first-foot'?0:1))*192} 0 192 192`);}
+   assert.equal(art.hammerContactTrail({...attack,elapsed},100),null,'no contact ribbon during planting');
+  }
+  for(const elapsed of [-1,.16,.24,.52,NaN,Infinity])assert.equal(art.dwarfHammerEntrySpriteAsset({...attack,elapsed}),null);
+  assert.equal(art.dwarfHammerEntrySpriteAsset(attack,true),null);
+  for(const walkEntry of [undefined,-1,8,.5,NaN])assert.equal(art.dwarfHammerEntrySpriteAsset({...attack,walkEntry}),null);
+  assert.equal(art.dwarfHammerEntrySpriteAsset({...attack,actor:'elf'}),null);
+  const contact={...attack,elapsed:.24};assert.deepEqual(art.hammerSequenceSpriteAsset('dwarf',contact),art.hammerSequenceSpriteAsset('dwarf',{...contact,walkEntry:undefined}));assert.deepEqual(art.hammerContactTrail(contact,100),art.hammerContactTrail({...contact,walkEntry:undefined},100));
+  assert.equal(art.dwarfHammerEntrySpriteAsset({...attack,hitAt:.48,duration:.76,elapsed:.2})!.frame,'second-foot','preparation follows simulation hitAt');
+ }
+ assert.equal(requests.filter(src=>src.includes('/dwarf-entry-')).length,8);assert.ok(!requests.some(src=>src.endsWith('.glb')));
+});
+
+test('Bron optional entry loading failure retains the existing hammer and locomotion',async()=>{
+ const attack={actor:'dwarf',source:'hero',walkEntry:3,from:{x:0,y:0},to:{x:100,y:0},elapsed:.06,hitAt:.24,duration:.52} as CombatAttack;
+ for(const missing of ['dwarf-entry-3-atlas.webp','dwarf-locomotion-3-atlas.webp','dwarf-hammer-3-atlas.webp','dwarf-idle-game.webp']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(missing),'bron-fail-'+missing);
+  assert.equal(art.dwarfHammerEntrySpriteAsset(attack),null);
+  if(missing.startsWith('dwarf-entry')){assert.ok(art.hammerSequenceSpriteAsset('dwarf',attack));assert.ok(art.directionalLocomotionSpriteAsset('dwarf',{x:1,y:0},24));}
+  assert.ok(art.rielShotEntrySpriteAsset('elf',{...attack,actor:'elf',elapsed:.04,hitAt:.1,duration:.28},{x:0,y:0}),'Riel remains independent');
  }
 });

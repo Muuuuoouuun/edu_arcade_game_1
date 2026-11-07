@@ -215,6 +215,15 @@ export function hammerContactTrail(attack:CombatAttack,size:number):Point[]|null
  return (attack.actor==='barbarian'?KAR_HAMMER_TRAIL:DWARF_HAMMER_TRAIL)[direction].map(([x,y])=>({x:x*size,y:y*size}));
 }
 const DWARF_LOCOMOTION=Array.from({length:8},(_,i)=>`/defense/models/dwarf-locomotion-${i}-atlas.webp`);
+const DWARF_ENTRY=Array.from({length:8},(_,i)=>`/defense/models/dwarf-entry-${i}-atlas.webp`);
+/** Captured stance plants before the original hammer apex; contact/trail stay unchanged. */
+export function dwarfHammerEntrySpriteAsset(attack:CombatAttack,reduced=false):{asset:SpriteAsset;entry:number;frame:'walk'|'first-foot'|'second-foot';direction:number}|null {
+ const entry=attack.walkEntry,direction=attackOctant(attack.from,attack.to),t=attack.elapsed*.24/attack.hitAt;
+ if(attack.actor!=='dwarf'||reduced||entry===undefined||!Number.isInteger(entry)||entry<0||entry>7||!Number.isFinite(t)||attack.hitAt<=0||t<0||t>=.16||direction===null||!dwarfModelReady()||![...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY].every(src=>motionLoaded.has(src)))return null;
+ if(t<.04)return {asset:directionalLocomotionSpriteAsset('dwarf',{x:attack.to.x-attack.from.x,y:attack.to.y-attack.from.y},entry*8)!,entry,frame:'walk',direction};
+ const sample=t<.10?0:1;
+ return {entry,frame:sample===0?'first-foot':'second-foot',direction,asset:{src:DWARF_ENTRY[direction],viewBox:`${(entry*2+sample)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
 /** One complete direction set shares the attack camera; frame 8 is a neutral stop. */
 export function directionalLocomotionSpriteAsset(actor:HeroId|'wolf',heading:Point,distance:number|null,size=73,gaitCycles?:number):SpriteAsset|null {
  const direction=attackOctant({x:0,y:0},heading);
@@ -476,7 +485,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...KAR_SLAM,...KAR_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...RIEL_ENTRY,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...KAR_SLAM,...KAR_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...RIEL_ENTRY,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

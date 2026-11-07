@@ -121,7 +121,7 @@ function queueAttack(s:DefenseState,source:AttackSource,actor:AttackActor,from:P
   const duration=hitAt+(melee?.28:.18);
   const facing=target.x<from.x?-1:1;
   if(source==='hero')s.heroFacing=facing;else if(source==='mercenary')s.mercenaryFacing=facing;else if(source==='pet'&&s.pet)s.pet.facing=facing;
-  const walkEntry=actor==='elf'&&(source==='hero'||source==='mercenary')&&s.locomotion[source].speed>.5?walkFrame(s.locomotion[source].distance):undefined;
+  const walkEntry=(actor==='elf'||actor==='dwarf')&&(source==='hero'||source==='mercenary')&&s.locomotion[source].speed>.5?walkFrame(s.locomotion[source].distance):undefined;
   aimLocomotion(s,source,from,target);
   if(source==='tower'){const tower=s.towers.find(t=>t.slot===options.slot);if(tower)tower.aim={...target};}
   s.attacks.push({id:s.nextId++,source,...(walkEntry===undefined?{}:{walkEntry}),...(options.slot!==undefined?{sourceSlot:options.slot}:{}),actor,kind,from:{...from},to:{x:target.x,y:target.y},targetId:target.id,range,damage,element,area:options.area||0,force:options.force||0,chain:options.chain||false,pierce:options.pierce||false,splashLimit:source==='tower'?2:99,splashDamage:source==='tower'?.4:.7,elapsed:0,duration,hitAt,fired:false});

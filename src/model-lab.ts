@@ -32,6 +32,7 @@ const models = [
  {id:'crush-cannon',asset:'crush-cannon-action',clip:'crush-cannon-fire',name:'파쇄포',kind:'SIEGE CANNON',detail:'현무암 포신 · 쌍 완충 피스톤 · 돌 포탄 적재대',description:'목재 기초를 고정한 채 포대가 조준합니다. 포탄을 내보내면 무거운 포신과 양옆 피스톤이 뒤로 밀리고, 고정된 완충통 안에서 천천히 제자리로 돌아옵니다.',source:'crush-cannon-action.blend',command:'npm run models:crush-action',action:'▶ 파쇄 포격'},
  {id:'water-cannon',asset:'water-cannon-action',clip:'water-cannon-fire',name:'물폭탄포',kind:'HYDRAULIC TOWER',detail:'황동 · 유리 · 물',description:'원형 기초 위에서 물탱크·배관·포신이 함께 조준합니다. 발사할 때 포신만 뒤로 밀리고 천천히 복귀합니다.',source:'water-cannon-action.blend',command:'npm run models:water-action',action:'▶ 발사 동작'},
  {id:'water-cannon-lv3',asset:'water-cannon-lv3-action',clip:'water-cannon-fire',name:'물폭탄포 · 최종 강화',kind:'HYDRAULIC TOWER',detail:'황동 · 유리 · 물',description:'수정 왕관·금빛 궤도 링이 수조와 함께 조준합니다. 깃발과 받침대는 고정되고, 금장 포신만 뒤로 밀렸다가 복귀합니다.',source:'water-cannon-lv3-action.blend',command:'npm run models:water-action-lv3',action:'▶ 발사 동작'},
+ {id:'dwarf-entry',name:'브론 · 걸음에서 강타로',kind:'DWARF GUARDIAN',detail:'발 디디기 · 체중 받기 · 망치 끌어올리기',description:'마지막 걸음에서 두 발을 차례로 짚고 망치를 들어 올립니다. 출발 걸음을 바꿔 준비 자세를 확인하세요. 내려치는 순간과 반동은 기존 강타와 같습니다.',source:'dwarf-entry.blend',command:'npm run models:dwarf-entry',action:'▶ 강타 진입',clip:'dwarf-entry-0',hold:true,stopVariants:true,fitBounds:true},
  {id:'dwarf-guardian',asset:'dwarf-hammer-sequence',name:'브론 · 드워프 공병',kind:'DWARF GUARDIAN',detail:'강철 · 청동 · 가죽',description:'두 발을 짚고 망치를 끌어올린 뒤 내려칩니다. 몸통과 팔꿈치가 무게를 받아 짧게 반동하고, 망치를 회수해 중립 자세로 돌아옵니다.',source:'dwarf-hammer-sequence.blend',command:'npm run models:dwarf-hammer',action:'▶ 망치 강타',clip:'dwarf-hammer-sequence'},
  {id:'dwarf-locomotion',name:'브론 · 방향 보행',kind:'DWARF LOCOMOTION',detail:'발 접지 · 무거운 망치 · 방향 보행',description:'두 발의 지지와 회수를 엇갈리며 걷습니다. 전투에서는 같은 원본을 여덟 방향으로 렌더해 망치와 방패의 손을 유지합니다.',source:'dwarf-locomotion.blend',command:'npm run models:dwarf-locomotion',action:'▶ 보행 재생',clip:'dwarf-walk',loop:true},
  {id:'wood-soldier',name:'나무 병사 · 통나무 파수꾼',kind:'LIVING LOG SOLDIER',detail:'주황 목재 · 초록 눈 · 통나무 몽둥이',description:'곧게 선 몸과 밝은 나이테, 손에 쥔 통나무 몽둥이로 돌 병사와 구분합니다. 무기를 든 팔은 작게 움직이고 손목과 잎이 뒤따릅니다.',source:'wood-soldier.blend',command:'npm run models:wood',action:'▶ 보행 재생',clip:'wood-soldier-walk',loop:true},
@@ -132,7 +133,7 @@ try {
 async function select(index:number) {
  const ticket = ++generation, model = models[index]; currentModelId = model.id;
  stopLabel.hidden=!model.stopVariants;
- stopSelect.setAttribute('aria-label',model.id==='riel-entry'?'사격 진입 출발 걸음':'정지 동작 출발 걸음');
+ stopSelect.setAttribute('aria-label',model.id==='dwarf-entry'?'강타 진입 출발 걸음':model.id==='riel-entry'?'사격 진입 출발 걸음':'정지 동작 출발 걸음');
  setReady(false); status.hidden = false; status.textContent = '모델을 불러오는 중…';
  $('model-name').textContent = model.name; $('model-kind').textContent = model.kind; $('model-description').textContent = model.description;
  $('model-source').textContent = model.source; $('model-command').textContent = model.command; shoot.textContent = model.action;

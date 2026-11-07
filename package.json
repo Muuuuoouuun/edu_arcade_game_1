@@ -57,7 +57,9 @@
     "models:wolf-stride": "blender --python-exit-code 1 -b --python tools/blender/build_frostwolf_stride.py",
     "models:wolf-stride:check": "node tools/check-frost-wolf-stride.mjs",
     "models:riel-entry": "blender --python-exit-code 1 -b --python tools/blender/build_riel_entry.py",
-    "models:riel-entry:check": "node tools/check-riel-entry.mjs"
+    "models:riel-entry:check": "node tools/check-riel-entry.mjs",
+    "models:dwarf-entry": "blender --python-exit-code 1 -b --python tools/blender/build_dwarf_entry.py",
+    "models:dwarf-entry:check": "node tools/check-dwarf-entry.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
