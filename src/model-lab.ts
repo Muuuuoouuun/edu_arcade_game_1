@@ -14,6 +14,7 @@ const models = [
  {id:'luna-druid-walk',name:'루나 · 방향 보행',kind:'WOODLAND DRUID',detail:'양발 지지 · 옷자락 · 머리카락',description:'지팡이를 들고 양발의 지지와 회수를 번갈아 이어갑니다. 여덟 방향 전투 이미지도 같은 원본으로 렌더합니다.',source:'luna-druid-walk.blend',command:'npm run models:druid',action:'▶ 보행 재생',clip:'luna-walk',loop:true},
  {id:'cheongun-tao',name:'청운 · 부적술사',kind:'TALISMAN CASTER',detail:'청록 도포 · 넓은 소매 · 붉은 매듭',description:'부적을 들어 올린 뒤 팔을 뻗어 시전합니다. 두 발은 지면을 짚고 소매·종이 끝·머리카락이 뒤따라 움직입니다.',source:'cheongun-tao.blend',command:'npm run models:tao',action:'▶ 부적 시전',clip:'cheongun-cast'},
  {id:'cheongun-tao-walk',name:'청운 · 방향 보행',kind:'TALISMAN CASTER',detail:'도포 자락 · 장화 · 발 접지',description:'장화의 지지와 회수를 번갈아 연결하고 도포 자락과 머리카락이 따라 움직입니다. 전투도 같은 원본에서 여덟 방향으로 렌더합니다.',source:'cheongun-tao-walk.blend',command:'npm run models:tao',action:'▶ 보행 재생',clip:'cheongun-walk',loop:true},
+ {id:'riel-return',name:'리엘 · 사격에서 걸음으로',kind:'FOREST ARCHER',detail:'활 회수 · 망토 정리 · 보행 복귀',description:'화살을 놓은 뒤 팔과 망토를 정리하며 다음 걸음으로 이어집니다. 복귀 걸음을 바꿔 끝 자세를 확인하세요.',source:'riel-return.blend',command:'npm run models:riel-return',action:'▶ 보행 복귀',clip:'riel-return-0',hold:true,stopVariants:true,fitBounds:true},
  {id:'riel-entry',name:'리엘 · 걸음에서 사격으로',kind:'FOREST ARCHER',detail:'차례로 발 디디기 · 체중 정리 · 활 당기기',description:'마지막 걸음에서 한 발씩 짚고 활을 당깁니다. 여덟 출발 자세를 바꿔 확인하세요. 화살을 놓는 순간과 회수는 기존 사격과 같습니다.',source:'riel-entry.blend',command:'npm run models:riel-entry',action:'▶ 사격 진입',clip:'riel-entry-0',hold:true,stopVariants:true,fitBounds:true},
  {id:'riel-archer',name:'리엘 · 숲 명사수',kind:'FOREST ARCHER',detail:'초록 후드 · 금발 · 곡선 활',description:'두 발로 버티고 활대와 시위를 당겼다가 화살을 놓습니다. 팔·시위·화살의 실제 움직임과 복귀를 확인하세요.',source:'riel-archer.blend',command:'npm run models:elf',action:'▶ 활 발사',clip:'riel-cast'},
  {id:'riel-archer-walk',name:'리엘 · 방향 보행',kind:'FOREST ARCHER',detail:'가죽 장화 · 망토 · 발 접지',description:'활을 든 채 양발의 지지와 회수를 번갈아 연결합니다. 같은 원본에서 전투의 여덟 방향을 렌더합니다.',source:'riel-archer-walk.blend',command:'npm run models:elf',action:'▶ 보행 재생',clip:'riel-walk',loop:true},
@@ -133,7 +134,8 @@ try {
 async function select(index:number) {
  const ticket = ++generation, model = models[index]; currentModelId = model.id;
  stopLabel.hidden=!model.stopVariants;
- stopSelect.setAttribute('aria-label',model.id==='dwarf-entry'?'강타 진입 출발 걸음':model.id==='riel-entry'?'사격 진입 출발 걸음':'정지 동작 출발 걸음');
+ stopLabel.firstChild!.textContent=model.id==='riel-return'?'복귀 걸음 ':'출발 걸음 ';
+ stopSelect.setAttribute('aria-label',model.id==='riel-return'?'사격 후 복귀 걸음':model.id==='dwarf-entry'?'강타 진입 출발 걸음':model.id==='riel-entry'?'사격 진입 출발 걸음':'정지 동작 출발 걸음');
  setReady(false); status.hidden = false; status.textContent = '모델을 불러오는 중…';
  $('model-name').textContent = model.name; $('model-kind').textContent = model.kind; $('model-description').textContent = model.description;
  $('model-source').textContent = model.source; $('model-command').textContent = model.command; shoot.textContent = model.action;

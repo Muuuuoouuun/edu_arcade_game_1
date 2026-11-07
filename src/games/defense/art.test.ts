@@ -576,7 +576,7 @@ test('Riel uses one complete modeled body and projection for idle, walking and e
   const socket=art.elfArrowSocket(from,to,105)!;assert.deepEqual(offset,{x:socket.x,y:socket.y+27});assert.deepEqual(shot,original);
   assert.deepEqual(art.elfProjectileOffset({...shot,to:{x:999,y:999}},1.25),offset);assert.equal(art.elfProjectileOffset({...shot,launchAim:undefined}),undefined);
  }
- assert.equal(requests.filter(u=>u.includes('/riel-')&&!u.includes('/riel-entry-')).length,16);assert.ok(!requests.some(u=>u.endsWith('.glb')));assert.equal(art.spriteAsset(0).src,'/defense/atlas.png','portraits retain the concept illustration');
+ assert.equal(requests.filter(u=>u.includes('/riel-')&&!u.includes('/riel-entry-')&&!u.includes('/riel-return-')).length,16);assert.ok(!requests.some(u=>u.endsWith('.glb')));assert.equal(art.spriteAsset(0).src,'/defense/atlas.png','portraits retain the concept illustration');
 });
 
 test('a missing Riel cast or walk image falls back as a whole without disabling other models',async()=>{
@@ -1245,5 +1245,51 @@ test('Bron optional entry loading failure retains the existing hammer and locomo
   assert.equal(art.dwarfHammerEntrySpriteAsset(attack),null);
   if(missing.startsWith('dwarf-entry')){assert.ok(art.hammerSequenceSpriteAsset('dwarf',attack));assert.ok(art.directionalLocomotionSpriteAsset('dwarf',{x:1,y:0},24));}
   assert.ok(art.rielShotEntrySpriteAsset('elf',{...attack,actor:'elf',elapsed:.04,hitAt:.1,duration:.28},{x:0,y:0}),'Riel remains independent');
+ }
+});
+
+test('Riel shot recovery follows current aligned gait and joins the next walking sprite',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'riel-return');
+ for(const source of ['hero','mercenary'] as const)for(let direction=0;direction<8;direction++)for(let walk=0;walk<8;walk++){
+  const angle=direction*Math.PI/4,from={x:100,y:100},heading={x:Math.cos(angle),y:Math.sin(angle)},to={x:100+100*heading.x,y:100+100*heading.y};
+  const attack={actor:'elf',source,walkEntry:(walk+3)%8,from,to,elapsed:.16,hitAt:.1,duration:.28} as CombatAttack,motion={distance:walk*8,speed:100,heading};
+  for(const [elapsed,frame] of [[.16,'hold'],[.174,'hold'],[.175,'release-weight'],[.219,'release-weight'],[.22,'stride-pickup'],[.269,'stride-pickup'],[.27,'walk'],[.279,'walk']] as const){
+   const result=art.rielShotReturnSpriteAsset({...attack,elapsed},from,motion)!;assert.equal(result.walk,walk);assert.equal(result.frame,frame);assert.equal(result.direction,direction);
+   assert.equal(result.asset.groundY!/result.asset.height,220/256);assert.equal(result.asset.displayScale,1.2*6.8/5.8);
+   if(frame==='walk')assert.deepEqual(result.asset,art.directionalLocomotionSpriteAsset('elf',heading,motion.distance));
+   else if(frame==='hold')assert.deepEqual(result.asset,art.directionalActionSpriteAsset('elf','strike',from,to));
+   else assert.equal(result.asset.viewBox,`${(walk*2+(frame==='release-weight'?0:1))*192} 0 192 192`);
+  }
+  for(const elapsed of [-1,0,.1,.159,.28,.4,NaN,Infinity])assert.equal(art.rielShotReturnSpriteAsset({...attack,elapsed},from,motion),null);
+  assert.equal(art.rielShotReturnSpriteAsset(attack,from,motion,true),null);
+  for(const speed of [0,.5,NaN,Infinity])assert.equal(art.rielShotReturnSpriteAsset(attack,from,{...motion,speed}),null);
+  assert.equal(art.rielShotReturnSpriteAsset(attack,from,{...motion,heading:{x:-heading.x,y:-heading.y}}),null,'turning shots keep the established pose');
+  assert.equal(art.rielShotReturnSpriteAsset(attack,from,{...motion,heading:undefined}),null);
+  assert.equal(art.rielShotReturnSpriteAsset({...attack,actor:'dwarf'},from,motion),null);
+  const changed=art.rielShotReturnSpriteAsset({...attack,elapsed:.24},from,{...motion,distance:(walk+1)%8*8})!;assert.equal(changed.walk,(walk+1)%8,'gait cannot freeze at attack entry');
+ }
+ assert.equal(requests.filter(src=>src.includes('/riel-return-')).length,8);assert.ok(!requests.some(src=>src.endsWith('.glb')));
+});
+
+test('Riel return and entry sets fail independently without changing existing release sockets',async()=>{
+ const attack={actor:'elf',source:'hero',walkEntry:3,from:{x:0,y:0},to:{x:100,y:0},elapsed:.2,hitAt:.1,duration:.28} as CombatAttack,motion={distance:24,speed:100,heading:{x:1,y:0}};
+ for(const missing of ['riel-return-3-atlas.webp','riel-entry-3-atlas.webp','riel-cast-3-atlas.webp','riel-walk-3-atlas.webp']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(missing),'riel-return-fail-'+missing),coreFail=missing.includes('cast')||missing.includes('walk');
+  assert.equal(!!art.rielShotReturnSpriteAsset(attack,attack.from,motion),missing.includes('entry'));
+  assert.equal(!!art.rielShotEntrySpriteAsset('elf',{...attack,elapsed:.04},attack.from),missing.includes('return'));
+  assert.equal(!!art.directionalActionSpriteAsset('elf','strike',attack.from,attack.to),!coreFail);
+  assert.equal(!!art.elfArrowSocket(attack.from,attack.to,84),!coreFail);
+  assert.ok(art.hammerSequenceSpriteAsset('dwarf',{...attack,actor:'dwarf'}));
+ }
+});
+
+test('aligned Riel return exposes an intermediate pose across fixed-step 1x and 2x publications',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'riel-return-cadence');
+ const attack={actor:'elf',source:'hero',from:{x:0,y:0},to:{x:100,y:0},hitAt:.1,duration:.28} as CombatAttack;
+ // 60Hz simulation: 2/4 ticks are nominal 30Hz at 1x/2x; 6 ticks covers 20Hz at 2x.
+ for(const ticksPerPublication of [2,4,6])for(let offset=0;offset<ticksPerPublication;offset++){
+  const frames=[];
+  for(let tick=offset;tick/60<attack.duration;tick+=ticksPerPublication){const elapsed=tick/60;frames.push(art.rielShotReturnSpriteAsset({...attack,elapsed},attack.from,{speed:230,distance:elapsed*230,heading:{x:1,y:0}})?.frame)}
+  assert.ok(frames.some(frame=>frame==='release-weight'||frame==='stride-pickup'),`${ticksPerPublication}/${offset}: ${frames}`);
  }
 });
