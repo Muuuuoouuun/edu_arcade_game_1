@@ -149,6 +149,7 @@ export function taoProjectileOffset(p:Projectile,unit=1):Point|undefined {
  const socket=taoSealSocket(p.from,p.launchAim,p.sourceSize*unit);
  return socket?{x:socket.x,y:socket.y+27}:undefined;
 }
+const RIEL_ENTRY=Array.from({length:8},(_,i)=>`/defense/models/riel-entry-${i}-atlas.webp`);
 const ELF_CAST=Array.from({length:8},(_,i)=>`/defense/models/riel-cast-${i}-atlas.webp`);
 const ELF_WALK=Array.from({length:8},(_,i)=>`/defense/models/riel-walk-${i}-atlas.webp`);
 function elfModelReady(){return [...ELF_CAST,...ELF_WALK].every(src=>motionLoaded.has(src));}
@@ -176,6 +177,15 @@ const DWARF_RENDERS = Object.fromEntries(DWARF_POSES.map(pose=>[pose,{
 // a modeled body with the old illustrated body during an attack.
 function dwarfModelReady(){return DWARF_POSES.every(pose=>motionLoaded.has(DWARF_RENDERS[pose].src));}
 const DWARF_DIRECTIONS=Array.from({length:8},(_,i)=>`/defense/models/dwarf-attack-${i}-atlas.webp`);
+/** Preserve the captured walking pose, then plant each boot before the unchanged release. */
+export function rielShotEntrySpriteAsset(actor:HeroId|'wolf',attack:CombatAttack,position:Point,reduced=false):{asset:SpriteAsset;entry:number;frame:'walk'|'first-foot'|'second-foot';direction:number}|null {
+ const entry=attack.walkEntry,direction=attackOctant(position,attack.to),t=attack.elapsed;
+ if(actor!=='elf'||attack.actor!=='elf'||reduced||entry===undefined||!Number.isInteger(entry)||entry<0||entry>7||!Number.isFinite(t)||t<0||t>=.08||direction===null||!elfModelReady()||!RIEL_ENTRY.every(src=>motionLoaded.has(src)))return null;
+ if(t<.025)return {asset:elfAsset(direction,'walk',entry)!,entry,frame:'walk',direction};
+ const sample=t<.055?0:1;
+ return {entry,frame:sample===0?'first-foot':'second-foot',direction,asset:{src:RIEL_ENTRY[direction],viewBox:`${(entry*2+sample)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
 /** Rotate the authored model instead of mirroring its asymmetric hammer/shield. */
 export function directionalActionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose,from:Point,to:Point,reduced=false):SpriteAsset|null {
  const direction=attackOctant(from,to);
@@ -466,7 +476,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...KAR_SLAM,...KAR_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...KAR_SLAM,...KAR_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...RIEL_ENTRY,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

@@ -576,7 +576,7 @@ test('Riel uses one complete modeled body and projection for idle, walking and e
   const socket=art.elfArrowSocket(from,to,105)!;assert.deepEqual(offset,{x:socket.x,y:socket.y+27});assert.deepEqual(shot,original);
   assert.deepEqual(art.elfProjectileOffset({...shot,to:{x:999,y:999}},1.25),offset);assert.equal(art.elfProjectileOffset({...shot,launchAim:undefined}),undefined);
  }
- assert.equal(requests.filter(u=>u.includes('/riel-')).length,16);assert.ok(!requests.some(u=>u.endsWith('.glb')));assert.equal(art.spriteAsset(0).src,'/defense/atlas.png','portraits retain the concept illustration');
+ assert.equal(requests.filter(u=>u.includes('/riel-')&&!u.includes('/riel-entry-')).length,16);assert.ok(!requests.some(u=>u.endsWith('.glb')));assert.equal(art.spriteAsset(0).src,'/defense/atlas.png','portraits retain the concept illustration');
 });
 
 test('a missing Riel cast or walk image falls back as a whole without disabling other models',async()=>{
@@ -1181,5 +1181,37 @@ test('partial frost wolf direction loading preserves the original trot and hit f
   const {art}=await loadWithImageResults(src=>src.endsWith(file),'frost-fail-'+file);
   assert.equal(art.frostWolfDirectionalWalkAsset({x:1,y:0},12),null);
   assert.equal(!!art.monsterWalkingSpriteAsset('frostwolf',12),file==='frost-stride-3-atlas.webp');assert.ok(art.monsterSpriteAsset('frostwolf','hit'));
+ }
+});
+
+test('Riel shot entry preserves each captured walk and joins the original shot before release',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'riel-entry');
+ const position={x:200,y:200};
+ for(const source of ['hero','mercenary'] as const)for(let direction=0;direction<8;direction++)for(let entry=0;entry<8;entry++){
+  const angle=direction*Math.PI/4,to={x:200+100*Math.cos(angle),y:200+100*Math.sin(angle)};
+  const attack={actor:'elf',source,walkEntry:entry,from:position,to,elapsed:0,hitAt:.1,duration:.28} as CombatAttack;
+  for(const [t,expected] of [[0,'walk'],[.024,'walk'],[.025,'first-foot'],[.054,'first-foot'],[.055,'second-foot'],[.079,'second-foot']] as const){
+   const pose=art.rielShotEntrySpriteAsset('elf',{...attack,elapsed:t},position)!;
+   assert.equal(pose.entry,entry);assert.equal(pose.frame,expected);assert.equal(pose.direction,direction);
+   assert.equal(pose.asset.displayScale,1.2*6.8/5.8);assert.equal(pose.asset.groundY!/pose.asset.height,220/256);
+   if(expected==='walk')assert.deepEqual(pose.asset,art.directionalLocomotionSpriteAsset('elf',{x:Math.cos(angle),y:Math.sin(angle)},entry*8));
+   else {assert.equal(pose.asset.src,`/defense/models/riel-entry-${direction}-atlas.webp`);const [x,y,w,h]=pose.asset.viewBox.split(' ').map(Number);assert.ok(x+w<=pose.asset.width&&y+h<=pose.asset.height);}
+  }
+  for(const elapsed of [-1,.08,.099,.1,.28,NaN,Infinity])assert.equal(art.rielShotEntrySpriteAsset('elf',{...attack,elapsed},position),null);
+  assert.equal(art.rielShotEntrySpriteAsset('elf',attack,position,true),null);
+  for(const walkEntry of [undefined,-1,8,.5,NaN])assert.equal(art.rielShotEntrySpriteAsset('elf',{...attack,walkEntry},position),null);
+  assert.ok(art.directionalActionSpriteAsset('elf','strike',position,to));
+ }
+ assert.equal(requests.filter(src=>src.includes('/riel-entry-')).length,8);assert.ok(!requests.some(src=>src.endsWith('.glb')));
+});
+
+test('Riel transition image failure retains the complete existing shot and walk set',async()=>{
+ const position={x:0,y:0},attack={actor:'elf',source:'hero',walkEntry:3,to:{x:100,y:0},elapsed:.04} as CombatAttack;
+ for(const missing of ['riel-entry-3-atlas.webp','riel-walk-3-atlas.webp','riel-cast-3-atlas.webp']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(missing),'riel-entry-fail-'+missing);
+  assert.equal(art.rielShotEntrySpriteAsset('elf',attack,position),null);
+  assert.equal(!!art.directionalActionSpriteAsset('elf','windup',position,attack.to),missing.startsWith('riel-entry'));
+  assert.equal(!!art.directionalLocomotionSpriteAsset('elf',{x:1,y:0},24),missing.startsWith('riel-entry'));
+  assert.ok(art.directionalActionSpriteAsset('mage','windup',position,attack.to));
  }
 });

@@ -55,7 +55,9 @@
     "models:crush-action-lv3": "blender --python-exit-code 1 -b --python tools/blender/build_crush_cannon_lv3_action.py --",
     "models:crush-action-lv3:check": "node tools/check-crush-cannon-lv3.mjs",
     "models:wolf-stride": "blender --python-exit-code 1 -b --python tools/blender/build_frostwolf_stride.py",
-    "models:wolf-stride:check": "node tools/check-frost-wolf-stride.mjs"
+    "models:wolf-stride:check": "node tools/check-frost-wolf-stride.mjs",
+    "models:riel-entry": "blender --python-exit-code 1 -b --python tools/blender/build_riel_entry.py",
+    "models:riel-entry:check": "node tools/check-riel-entry.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

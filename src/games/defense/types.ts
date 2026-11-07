@@ -31,6 +31,6 @@ export type StageDef = {id:number;region:'forest'|'snow';label:string;chapter:1|
 export type AttackSource = 'hero' | 'mercenary' | 'pet' | 'tower';
 export type AttackActor = HeroId | 'wolf' | TowerKind;
 export type DamageProfile = { damage:number; element:Element; area:number; force:number; chain:boolean; pierce:boolean; splashLimit:number; splashDamage:number };
-export type CombatAttack = DamageProfile & { id:number; source:AttackSource; sourceSlot?:number; actor:AttackActor; kind:'melee'|'shot'|'spell'|'slam'; from:Point; to:Point; targetId:number; range:number; elapsed:number; duration:number; hitAt:number; fired:boolean };
+export type CombatAttack = DamageProfile & { id:number; source:AttackSource; sourceSlot?:number; actor:AttackActor; walkEntry?:number; kind:'melee'|'shot'|'spell'|'slam'; from:Point; to:Point; targetId:number; range:number; elapsed:number; duration:number; hitAt:number; fired:boolean };
 export type Projectile = DamageProfile & { id:number; source:AttackSource; sourceSlot?:number; sourceLevel?:number; sourceSize?:number; launchAim?:Point; actor:AttackActor; kind:'arrow'|'bolt'|'shell'; from:Point; to:Point; position:Point; previous:Point; velocity:Point; targetId:number|null; elapsed:number; duration:number; progress:number; arcHeight:number; height:number; radius:number; speed:number; hitIds:number[]; remainingHits:number };
 export type PetState = { position:Point; target:Point; facing:-1|1 };
