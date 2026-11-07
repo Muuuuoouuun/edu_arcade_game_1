@@ -289,7 +289,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,17);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,17);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -1291,5 +1291,53 @@ test('aligned Riel return exposes an intermediate pose across fixed-step 1x and 
   const frames=[];
   for(let tick=offset;tick/60<attack.duration;tick+=ticksPerPublication){const elapsed=tick/60;frames.push(art.rielShotReturnSpriteAsset({...attack,elapsed},attack.from,{speed:230,distance:elapsed*230,heading:{x:1,y:0}})?.frame)}
   assert.ok(frames.some(frame=>frame==='release-weight'||frame==='stride-pickup'),`${ticksPerPublication}/${offset}: ${frames}`);
+ }
+});
+
+test('Bron recovery joins the current aligned gait while retaining contact and rebound',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'dwarf-return');
+ for(const source of ['hero','mercenary'] as const)for(let direction=0;direction<8;direction++)for(let walk=0;walk<8;walk++){
+  const angle=direction*Math.PI/4,from={x:100,y:100},heading={x:Math.cos(angle),y:Math.sin(angle)},to={x:100+100*heading.x,y:100+100*heading.y};
+  const attack={actor:'dwarf',source,walkEntry:(walk+3)%8,from,to,elapsed:.38,hitAt:.24,duration:.52} as CombatAttack,motion={distance:walk*8,speed:100,heading};
+  for(const [elapsed,frame] of [[.38,'hold'],[.399,'hold'],[.4,'weight-release'],[.449,'weight-release'],[.45,'stride-pickup'],[.499,'stride-pickup'],[.5,'walk'],[.519,'walk']] as const){
+   const result=art.dwarfHammerReturnSpriteAsset({...attack,elapsed},motion)!;assert.equal(result.walk,walk);assert.equal(result.frame,frame);assert.equal(result.direction,direction);
+   assert.equal(result.asset.groundY!/result.asset.height,220/256);assert.equal(result.asset.displayScale,1.2*6.8/5.8);
+   if(frame==='walk')assert.deepEqual(result.asset,art.directionalLocomotionSpriteAsset('dwarf',heading,motion.distance));
+   else if(frame==='hold')assert.deepEqual(result.asset,art.hammerSequenceSpriteAsset('dwarf',{...attack,elapsed:.39}));
+   else assert.equal(result.asset.viewBox,`${(walk*2+(frame==='weight-release'?0:1))*192} 0 192 192`);
+   for(const multiplier of [.5,2])assert.deepEqual(art.dwarfHammerReturnSpriteAsset({...attack,elapsed:elapsed*multiplier,hitAt:.24*multiplier,duration:.52*multiplier},motion),result,'uses simulation attack timing');
+  }
+  for(const elapsed of [-1,0,.24,.30,.379,.52,.6,NaN,Infinity])assert.equal(art.dwarfHammerReturnSpriteAsset({...attack,elapsed},motion),null);
+  assert.equal(art.dwarfHammerReturnSpriteAsset(attack,motion,true),null);
+  for(const speed of [0,.5,NaN,Infinity])assert.equal(art.dwarfHammerReturnSpriteAsset(attack,{...motion,speed}),null);
+  for(const bad of [{distance:NaN},{heading:undefined},{heading:{x:-heading.x,y:-heading.y}}])assert.equal(art.dwarfHammerReturnSpriteAsset(attack,{...motion,...bad}),null);
+  assert.equal(art.dwarfHammerReturnSpriteAsset({...attack,actor:'elf'},motion),null);
+  const changed=art.dwarfHammerReturnSpriteAsset({...attack,elapsed:.48},{...motion,distance:(walk+1)%8*8})!;assert.equal(changed.walk,(walk+1)%8,'follow gait after attack entry');
+ }
+ assert.equal(requests.filter(src=>src.includes('/dwarf-return-')).length,8);assert.ok(!requests.some(src=>src.endsWith('.glb')));
+});
+
+test('Bron optional return and entry failures are independent and preserve impact trails',async()=>{
+ const attack={actor:'dwarf',source:'hero',walkEntry:3,from:{x:0,y:0},to:{x:100,y:0},elapsed:.43,hitAt:.24,duration:.52} as CombatAttack,motion={distance:24,speed:100,heading:{x:1,y:0}};
+ const {art:complete}=await loadWithImageResults(()=>false,'dwarf-return-complete');
+ for(const missing of ['dwarf-return-3-atlas.webp','dwarf-entry-3-atlas.webp','dwarf-hammer-3-atlas.webp','dwarf-locomotion-3-atlas.webp','dwarf-idle-game.webp']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(missing),'dwarf-return-fail-'+missing);
+  assert.equal(!!art.dwarfHammerReturnSpriteAsset(attack,motion),missing.includes('entry'));
+  assert.equal(!!art.dwarfHammerEntrySpriteAsset({...attack,elapsed:.06}),missing.includes('return'));
+  if(missing.includes('return')||missing.includes('entry'))for(const elapsed of [.18,.24,.28,.31,.37]){
+   assert.deepEqual(art.hammerSequenceSpriteAsset('dwarf',{...attack,elapsed}),complete.hammerSequenceSpriteAsset('dwarf',{...attack,elapsed}));
+   assert.deepEqual(art.hammerContactTrail({...attack,elapsed},84),complete.hammerContactTrail({...attack,elapsed},84));
+  }
+  assert.ok(art.rielShotReturnSpriteAsset({...attack,actor:'elf',elapsed:.2,hitAt:.1,duration:.28},attack.from,motion),'Riel recovery remains independent');
+ }
+});
+
+test('aligned Bron return remains visible at nominal 1x/2x and 20Hz 2x publications',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'dwarf-return-cadence');
+ const attack={actor:'dwarf',source:'hero',from:{x:0,y:0},to:{x:100,y:0},hitAt:.24,duration:.52} as CombatAttack;
+ for(const ticksPerPublication of [2,4,6])for(let offset=0;offset<ticksPerPublication;offset++){
+  const frames=[];
+  for(let tick=offset;tick/60<attack.duration;tick+=ticksPerPublication){const elapsed=tick/60;frames.push(art.dwarfHammerReturnSpriteAsset({...attack,elapsed},{speed:230,distance:elapsed*230,heading:{x:1,y:0}})?.frame)}
+  assert.ok(frames.some(frame=>frame==='weight-release'||frame==='stride-pickup'),`${ticksPerPublication}/${offset}: ${frames}`);
  }
 });
