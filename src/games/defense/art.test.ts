@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import type { CombatAttack, Projectile } from './types.ts';
 
 type Art = typeof import('./art.ts');
@@ -43,6 +44,8 @@ test('wolf trot keeps eight frames on the base pose ground and never mixes a par
 test('wood gait uses all eight frames at a fixed ground anchor and falls back as a complete set',async()=>{
  const {art}=await loadWithImageResults(()=>false,'wood-gait');
  const base=art.monsterSpriteAsset('wood','hit')!;
+ assert.equal(base.groundY,317.61);
+ assert.ok(Math.abs(base.displayScale!/6.3-(384/360)/5.6)<1e-12,'wider camera preserves model-to-world scale');
  const frames=Array.from({length:8},(_,i)=>art.monsterWalkingSpriteAsset('wood',i*6.5)!);
  assert.equal(new Set(frames.map(f=>f.viewBox)).size,8);
  for(const frame of frames){
@@ -682,4 +685,19 @@ test('a missing companion bite or walk atlas uses one illustrated set without ch
   assert.equal(art.actionSpriteAsset('wolf','strike')!.src,'/defense/melee-motion.webp');assert.ok(art.idleSpriteAsset('druid'));assert.ok(art.monsterWalkingSpriteAsset('frostwolf',10));
   assert.equal(art.petBiteContact({actor:'wolf',elapsed:.13,hitAt:.13,duration:.41,from:{x:0,y:0},to:{x:60,y:0}} as CombatAttack,73),null);
  }
+});
+
+
+test('wood club source, animated GLB and both battle atlases form one verified delivery',()=>{
+ const read=(p:string)=>readFileSync(new URL('../../../'+p,import.meta.url));
+ const m=JSON.parse(read('public/defense/models/wood-soldier.json').toString());
+ assert.equal(createHash('sha256').update(read(m.source)).digest('hex'),m.source_sha256);
+ for(const f of m.files){const data=read('public/defense/models/'+f.file);assert.equal(data.length,f.bytes);assert.equal(createHash('sha256').update(data).digest('hex'),f.sha256);}
+ assert.equal(m.walk.frames,8);assert.equal(m.frame.ground[1],317.61);assert.equal(m.display_scale,1.2);
+ const buffer=read('public/defense/models/wood-soldier.glb'),g=JSON.parse(buffer.subarray(20,20+buffer.readUInt32LE(12)).toString());
+ assert.ok(!g.images?.length,'the workshop uses actual geometry');assert.equal(g.animations.length,1);assert.equal(g.animations[0].name,m.walk.clip);
+ const grip=g.nodes.findIndex((n:{name:string})=>n.name==='club-grip'),arm=g.nodes.find((n:{name:string})=>n.name==='arm-near');
+ assert.ok(grip>=0&&arm.children.includes(grip),'club stays attached at the carrying hand');
+ assert.ok(g.animations[0].channels.some((c:{target:{node:number}})=>c.target.node===grip),'wrist follow-through is present in the GLB');
+ assert.ok(m.bounds.every((p:{bbox:number[]})=>p.bbox[0]>0&&p.bbox[1]>8&&p.bbox[2]<384&&p.bbox[3]<372),'all authored poses stay within the runtime crop');
 });

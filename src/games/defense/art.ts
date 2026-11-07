@@ -280,7 +280,7 @@ const WOOD_WALK_ATLAS={src:'/defense/models/wood-soldier-walk-atlas.webp',width:
 const WOLF_COLLAPSE_ATLAS={src:'/defense/models/frost-wolf-collapse-atlas.webp',width:1536,height:384};
 const WOLF_TROT_ATLAS={src:'/defense/models/frost-wolf-trot-atlas.webp',width:3072,height:384};
 const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
- wood:{span:360,frames:[[0,8,384,364],[384,8,384,364],[768,8,384,364]],atlas:WOOD_ATLAS,
+ wood:{span:320,frames:[[0,8,384,364],[384,8,384,364],[768,8,384,364]],atlas:WOOD_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
   fallback:{span:330,frames:[[38,59,324,323],[405,66,286,316],[761,62,325,320]]}},
  ice:{span:360,frames:[[0,4,384,372],[384,4,384,372],[768,4,384,372]],atlas:ICE_ATLAS,
@@ -315,7 +315,7 @@ export function monsterSpriteAsset(kind:EnemyKind,pose:MonsterPose):SpriteAsset|
 export function monsterWalkingSpriteAsset(kind:EnemyKind,distance:number):SpriteAsset|null {
  if(kind==='frostwolf'&&motionLoaded.has(WOLF_ATLAS.src)&&motionLoaded.has(WOLF_TROT_ATLAS.src))return {...WOLF_TROT_ATLAS,viewBox:`${enemyWalkFrame(kind,distance)*384+8} 100 368 228`,displayScale:368/315,groundY:284.49};
  if(kind!=='wood'||!motionLoaded.has(WOOD_ATLAS.src)||!motionLoaded.has(WOOD_WALK_ATLAS.src))return null;
- return {...WOOD_WALK_ATLAS,viewBox:`${enemyWalkFrame(kind,distance)*384} 8 384 364`,displayScale:384/360,groundY:317.61};
+ return {...WOOD_WALK_ATLAS,viewBox:`${enemyWalkFrame(kind,distance)*384} 8 384 364`,displayScale:384/320,groundY:317.61};
 }
 /** Collapse follows simulation age, with the same camera, crop and ground as the living wolf. */
 export function monsterDeathSpriteAsset(kind:EnemyKind,progress:number,reduced=false):{asset:SpriteAsset;frame:number}|null {
