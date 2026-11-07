@@ -1,0 +1,832 @@
+{
+  "source": "art-source/defense/crush-cannon-lv3-action.blend",
+  "level": 3,
+  "regeneration_command": "npm run models:crush-action-lv3",
+  "display_scale": 1.2682666666666664,
+  "base_source_sha256": "24fe4195df3defadf72b45aa952cdb3f8ab7a4b8ac207b259a6654a151ea684a",
+  "generator": "tools/blender/build_crush_cannon_lv3_action.py",
+  "reference": "art-source/defense/concepts/2026-10-29/props/six-tower-modules.png",
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 48,
+    "denoising": false
+  },
+  "frame": {
+    "width": 640,
+    "height": 640,
+    "ground": [
+      320.0001525878906,
+      478.10772705078125
+    ],
+    "previous_ground": [
+      320.0001525878906,
+      488.6482238769531
+    ],
+    "display_ground_y": 537.0837009340098,
+    "crop": [
+      32,
+      24,
+      576,
+      576
+    ],
+    "orthographic_scale": 8.0
+  },
+  "delivery_frame": {
+    "width": 256,
+    "height": 256,
+    "ground_y": 214.83348037360395,
+    "crop": [
+      12.8,
+      9.6,
+      230.4,
+      230.4
+    ]
+  },
+  "animation": {
+    "clip": "crush-cannon-fire",
+    "fps": 100,
+    "first_frame": 1,
+    "last_frame": 53,
+    "duration_seconds": 0.52,
+    "hit_at": 0.28,
+    "peak_recoil_at": 0.29
+  },
+  "directions": [
+    {
+      "index": 0,
+      "yaw": 2.2142970183556674,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            516.7601318359375,
+            215.6463623046875
+          ],
+          "bounds": [
+            92.16014862060547,
+            86.474609375,
+            540.7921752929688,
+            561.1743774414062
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            488.60015869140625,
+            223.1645965576172
+          ],
+          "bounds": [
+            92.16014862060547,
+            86.474609375,
+            512.6322021484375,
+            561.1743774414062
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            503.9601135253906,
+            219.063720703125
+          ],
+          "bounds": [
+            92.16014862060547,
+            86.474609375,
+            527.9921875,
+            561.1743774414062
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            513.5601196289062,
+            216.50070190429688
+          ],
+          "bounds": [
+            92.16014862060547,
+            86.474609375,
+            537.5921630859375,
+            561.1743774414062
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "yaw": 1.1394399800357777,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            413.62982177734375,
+            309.2760009765625
+          ],
+          "bounds": [
+            143.04893493652344,
+            45.09544372558594,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            400.22967529296875,
+            303.3941345214844
+          ],
+          "bounds": [
+            143.04893493652344,
+            45.09544372558594,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            407.53887939453125,
+            306.6024169921875
+          ],
+          "bounds": [
+            143.04893493652344,
+            45.09544372558594,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            412.10711669921875,
+            308.60760498046875
+          ],
+          "bounds": [
+            143.04893493652344,
+            45.09544372558594,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "yaw": 0.6435013352909265,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            320.0001525878906,
+            322.1014709472656
+          ],
+          "bounds": [
+            160.32516479492188,
+            48.242645263671875,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            320.0001525878906,
+            314.384033203125
+          ],
+          "bounds": [
+            160.32516479492188,
+            48.242645263671875,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            320.00018310546875,
+            318.593505859375
+          ],
+          "bounds": [
+            160.32516479492188,
+            48.242645263671875,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            320.00018310546875,
+            321.2244873046875
+          ],
+          "bounds": [
+            160.32516479492188,
+            48.242645263671875,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "yaw": 0.14756235688273342,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            226.37039184570312,
+            309.2760009765625
+          ],
+          "bounds": [
+            145.83734130859375,
+            35.53058624267578,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            239.77053833007812,
+            303.3941345214844
+          ],
+          "bounds": [
+            145.83734130859375,
+            35.53058624267578,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            232.4613800048828,
+            306.6024475097656
+          ],
+          "bounds": [
+            145.83734130859375,
+            35.53058624267578,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            227.8931427001953,
+            308.6076354980469
+          ],
+          "bounds": [
+            145.83734130859375,
+            35.53058624267578,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "yaw": -0.9272956352341256,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            123.24014282226562,
+            215.6462860107422
+          ],
+          "bounds": [
+            99.2081069946289,
+            59.152679443359375,
+            547.840087890625,
+            561.1743774414062
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            151.400146484375,
+            223.16452026367188
+          ],
+          "bounds": [
+            127.36810302734375,
+            59.152679443359375,
+            547.840087890625,
+            561.1743774414062
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            136.0401611328125,
+            219.0636444091797
+          ],
+          "bounds": [
+            112.00811767578125,
+            59.152679443359375,
+            547.840087890625,
+            561.1743774414062
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            126.44013977050781,
+            216.50062561035156
+          ],
+          "bounds": [
+            102.4081039428711,
+            59.152679443359375,
+            547.840087890625,
+            561.1743774414062
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "yaw": -2.0021526735540154,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            226.37042236328125,
+            122.01663970947266
+          ],
+          "bounds": [
+            145.83738708496094,
+            76.90731048583984,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            239.7705841064453,
+            142.93502807617188
+          ],
+          "bounds": [
+            145.83738708496094,
+            97.82569885253906,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            232.46139526367188,
+            131.52499389648438
+          ],
+          "bounds": [
+            145.83738708496094,
+            86.41571044921875,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            227.89315795898438,
+            124.39373016357422
+          ],
+          "bounds": [
+            145.83738708496094,
+            79.2844009399414,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "yaw": -2.498091318298867,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            320.0001220703125,
+            109.19116973876953
+          ],
+          "bounds": [
+            160.32516479492188,
+            67.6116943359375,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            320.0001220703125,
+            131.9451141357422
+          ],
+          "bounds": [
+            160.32516479492188,
+            90.36563873291016,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            320.0001220703125,
+            119.53384399414062
+          ],
+          "bounds": [
+            160.32516479492188,
+            77.95440673828125,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            320.0001220703125,
+            111.77680969238281
+          ],
+          "bounds": [
+            160.32516479492188,
+            70.19737243652344,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "yaw": -2.99403029670706,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            413.6298828125,
+            122.0166015625
+          ],
+          "bounds": [
+            142.09725952148438,
+            76.90727233886719,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            400.229736328125,
+            142.93502807617188
+          ],
+          "bounds": [
+            142.09725952148438,
+            97.82569885253906,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            407.5389099121094,
+            131.52496337890625
+          ],
+          "bounds": [
+            142.09725952148438,
+            86.41563415527344,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            412.10711669921875,
+            124.39369201660156
+          ],
+          "bounds": [
+            142.09725952148438,
+            79.28436279296875,
+            507.9989013671875,
+            561.1743774414062
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 111
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "file": "crush-lv3-action-0-atlas.webp",
+      "bytes": 41930,
+      "sha256": "e91821c3381d64778096629f25b663b52be9703f3b10aa881b54b5e1441c8b68"
+    },
+    {
+      "file": "crush-lv3-action-1-atlas.webp",
+      "bytes": 39276,
+      "sha256": "3c671054cb97ab21c3e1ee6cc51b0d35cb730282cd4ae9365cc4ccdbd862a862"
+    },
+    {
+      "file": "crush-lv3-action-2-atlas.webp",
+      "bytes": 38266,
+      "sha256": "e4668469aeffbd6ec7d241b765b4f09462484cab4eb4b3dbfcfbd741763b6c73"
+    },
+    {
+      "file": "crush-lv3-action-3-atlas.webp",
+      "bytes": 39794,
+      "sha256": "cba7d90fdfd79bdc7a5529150c5cc0d283db7b0e6f6bee1c9609428ebf827022"
+    },
+    {
+      "file": "crush-lv3-action-4-atlas.webp",
+      "bytes": 43080,
+      "sha256": "a64729e94deeaa1851f488bcd057bef87bfd77b9505dd92934f9d513a098b23e"
+    },
+    {
+      "file": "crush-lv3-action-5-atlas.webp",
+      "bytes": 40460,
+      "sha256": "6325c9899c4a143fa02db582d74571123f5f6178d8aafb555a71c0838b10ca9b"
+    },
+    {
+      "file": "crush-lv3-action-6-atlas.webp",
+      "bytes": 37922,
+      "sha256": "dc83daa8951d3c93408eab0b7c7da44380470016ee96fd48005f02f85d7380e2"
+    },
+    {
+      "file": "crush-lv3-action-7-atlas.webp",
+      "bytes": 39408,
+      "sha256": "86eeea0748d4312cf52a070cb9ab9ca2e16e83751d9fa3c0ba8f16ef4d88040b"
+    },
+    {
+      "file": "crush-cannon-lv3-action.glb",
+      "bytes": 1382332,
+      "sha256": "0453e361cc06a353a88b68caaa0e61298aadd49e6c290291faa3385340af0115"
+    },
+    {
+      "file": "crush-cannon-lv3-action.png",
+      "bytes": 494896,
+      "sha256": "b8183bd06effb922fb12eff59dc10d2a9ec92f95c986666ca0280b5bd242bde7"
+    }
+  ],
+  "pennant_clearance": {
+    "directions": 8,
+    "frames_per_direction": 53,
+    "upper_meshes": 71,
+    "fixed_pennants": 8,
+    "surface_intersections": 0
+  },
+  "structure": {
+    "pennant_offset": [
+      0.16,
+      0.12,
+      -1.4
+    ],
+    "rack_offset_y": 0.38,
+    "orbit_raise": 0.32,
+    "crown_lower": 0.12,
+    "guide_rail_x": [
+      -0.84,
+      0.84
+    ]
+  },
+  "clearance": {
+    "sampled_frames": 53,
+    "barrel_rack_pairs": 90,
+    "surface_crossings": 0
+  },
+  "runtime": {
+    "mesh_objects": 28,
+    "triangles": 32194,
+    "materials": 15
+  },
+  "frame_files": [
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-0-ready.png",
+      "sha256": "a480c0a3f22e59b52967b949e7835a80241e096434e8adabccdab0a20e09fd9e"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-0-recoil.png",
+      "sha256": "c58e4c6d403aa05666749f815a69136c87d9c80a20ae944f08492183b9a728e7"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-0-return.png",
+      "sha256": "6b02a43a5687a42977870bfac6ad7a46ada0902ab884d9f8d8c1220adf832f35"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-0-settle.png",
+      "sha256": "c02267ab82e8f3d6c16910322a69c9c337dc1be41beccd29dcceb497ad34fca8"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-1-ready.png",
+      "sha256": "48192ab7407df6a25e89240ff4f8b1b6314f143a6e9ac0b9858c24f6cce72985"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-1-recoil.png",
+      "sha256": "b5f68db0e6b13a1b6272d0eb6c567d201f3468809b47acc1ad9ae9cee1e50fbb"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-1-return.png",
+      "sha256": "4d5d288932206c5ca8fbeea12a57794828858359fd6940b67215730772641645"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-1-settle.png",
+      "sha256": "12fc27226d4143180b46ada2f1e7ce25e1a2ff16108fc981f93850285b8d2123"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-2-ready.png",
+      "sha256": "3d10d1ba138ddbb5b06b153410d129d323b364d774298d2ed16c7739316557db"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-2-recoil.png",
+      "sha256": "43ac4a4a5b80e9104a1d00aae79b683be67def39bd6cc7a0b348b58dc71aeff6"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-2-return.png",
+      "sha256": "3a4a272e84425c903a738a600f487f61b13b7554681e13df46771f045b8aa107"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-2-settle.png",
+      "sha256": "ec318f1391c35aa66bd494a29f15159209c2d68ec0aaef009dfd82f85c8a4013"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-3-ready.png",
+      "sha256": "51354d9ce0b44c3f546d52b42ec18f93ca213d6b53de8235a32f8b3971af5397"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-3-recoil.png",
+      "sha256": "386765e2b3f86376bc5d8ff3199409febb215d3106df04264a6c623315724930"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-3-return.png",
+      "sha256": "982bf85a3cd0e931a2775bd0dde262ca434a03e0fee549dac47543b6e85acbd5"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-3-settle.png",
+      "sha256": "70bf7d271eee1376d0e765cf1727198d1ef32382df051528ae0b68e52e09e505"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-4-ready.png",
+      "sha256": "b8183bd06effb922fb12eff59dc10d2a9ec92f95c986666ca0280b5bd242bde7"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-4-recoil.png",
+      "sha256": "ce33c0a1ba390607e98bfa3a3dde4948e153b882da29d62937839901f999b956"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-4-return.png",
+      "sha256": "f6b03b62738a8d6b1a2d8b57a0fdfcfc22726e5362645aaae0f04f1f6c72673d"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-4-settle.png",
+      "sha256": "a794164067e053c64e04d370648ba708baacf8ae35c263c014e7e295559a3c0c"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-5-ready.png",
+      "sha256": "a2b6e664eb0bc6de471a679d4b6a7b9e754f798dad986e571505639ebbb79aa0"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-5-recoil.png",
+      "sha256": "f23ebd17aaf82ee6d18ae1daf7551fc6c6828fe9c99fd7af17f7f6182d292490"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-5-return.png",
+      "sha256": "200725a5f1d184380883f21ac6590a407ca546a1ad43a8ebd091ee49389c06cb"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-5-settle.png",
+      "sha256": "bb39b852ea49ecc0c555e36e958ce0ab573bf75b65ce20491f6c30e5b7a061bf"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-6-ready.png",
+      "sha256": "70fb1cf5d02cf459522e96f4ae408c208ef56b8f3c7e7e99960ce90cf0acb32f"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-6-recoil.png",
+      "sha256": "4ab955eb726a996e70102b494d0170d4ba0b0241fe620dde78286fc7679f3db2"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-6-return.png",
+      "sha256": "ebd8ac3a9807e408becf780aabd85e79293655be518a7b7b83628f1621e1945c"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-6-settle.png",
+      "sha256": "1b93a9e05b46849f4a782618ceb012b35cc064b7b2a05499cd6858e321e12b25"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-7-ready.png",
+      "sha256": "35219b636c0583ff2508a6282edfffe7f35680a1f4da3c30bdb14fbcf56d167b"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-7-recoil.png",
+      "sha256": "07da008aef76137345adda8151548b74058c487564848ac3ee8689ba4b3be539"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-7-return.png",
+      "sha256": "80179992a835fc85d252009444c3895fd9c99396095d90fdaea1af8b5431f89b"
+    },
+    {
+      "file": "art-source/defense/crush-cannon-lv3-action/crush-lv3-action-7-settle.png",
+      "sha256": "bc35f091c09d8e5156b2c1faa40bccbd89d63ebd7d0b476a84d475f0b4997529"
+    }
+  ],
+  "reference_sha256": "4a4123d8bf291270f0912d0708b7f6170ff52de80e65c2e6a8bda1eaba1789ec",
+  "source_sha256": "dcc7be90c6b09cee39ccec3010c3847f1a84708e42e51414edd8153418f380dd",
+  "generator_sha256": "16cfad9e5a2fb1f38088f7ad48b70ad8fa67b26d50e9df10fbe2ec85a059f19e"
+}

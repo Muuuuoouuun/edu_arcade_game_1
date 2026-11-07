@@ -51,7 +51,9 @@
     "models:ian-stop": "blender --python-exit-code 1 -b --python tools/blender/build_ian_stop.py --",
     "models:ian-stop:check": "node tools/check-ian-stop.mjs",
     "models:rapid-action-lv3": "blender --python-exit-code 1 -b --python tools/blender/build_rapid_crossbow_lv3_action.py --",
-    "models:rapid-action-lv3:check": "node tools/check-rapid-crossbow-lv3.mjs"
+    "models:rapid-action-lv3:check": "node tools/check-rapid-crossbow-lv3.mjs",
+    "models:crush-action-lv3": "blender --python-exit-code 1 -b --python tools/blender/build_crush_cannon_lv3_action.py --",
+    "models:crush-action-lv3:check": "node tools/check-crush-cannon-lv3.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

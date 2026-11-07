@@ -289,7 +289,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')).length,9);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,9);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -1028,14 +1028,14 @@ test('crush cannon aims eight ways, keeps its foundation grounded, and recoils b
   const shot={source:'tower',actor:'cannon',pierce:false,element:'impact',sourceLevel:2,from,to,launchAim:{...to}} as Projectile;
   const before=structuredClone(shot),offset=art.crushCannonProjectileOffset(shot);assert.ok(offset);assert.deepEqual(shot,before);
   assert.deepEqual(art.crushCannonProjectileOffset({...shot,to:{x:999,y:999}}),offset);
-  for(const partial of [{launchAim:undefined},{sourceLevel:3},{element:'water' as const},{source:'hero' as const}])assert.equal(art.crushCannonProjectileOffset({...shot,...partial}),undefined);
+  for(const partial of [{launchAim:undefined},{sourceLevel:1},{element:'water' as const},{source:'hero' as const}])assert.equal(art.crushCannonProjectileOffset({...shot,...partial}),undefined);
  }
  assert.equal(meta.frame.orthographic_scale,7.5);assert.equal(meta.clearance.surface_crossings,0);assert.equal(meta.clearance.sampled_frames,53);
  for(const key of ['source','generator'])assert.equal(createHash('sha256').update(readFileSync(new URL('../../../'+meta[key],import.meta.url))).digest('hex'),meta[key+'_sha256']);
  assert.equal(meta.animation.hit_at,.28);assert.equal(meta.animation.duration_seconds,.52);
  for(const f of meta.files)assert.equal(createHash('sha256').update(readFileSync(new URL('../../../public/defense/models/'+f.file,import.meta.url))).digest('hex'),f.sha256);
  assert.equal(requests.filter(src=>src.includes('/crush-action-')).length,8);assert.ok(!requests.some(src=>src.endsWith('.glb')));
- assert.equal(art.crushCannonActionSpriteAsset('cannon','crush',3,from,{x:300,y:200}),null);
+ assert.ok(art.crushCannonActionSpriteAsset('cannon','crush',3,from,{x:300,y:200}));
  assert.equal(art.crushCannonActionSpriteAsset('cannon','water',2,from,{x:300,y:200}),null);
 });
 
@@ -1051,11 +1051,11 @@ test('crush recoil uses a complete directional set and leaves other branches/upg
 
 test('crush recoil/return/settle remain visible at 30Hz and either speed without early release',async()=>{
  const {art}=await loadWithImageResults(()=>false,'crush-publication'),from={x:0,y:0},to={x:100,y:0};
- for(const speed of [1,2])for(let phase=0;phase<100;phase++){
+ for(const level of [2,3])for(const speed of [1,2])for(let phase=0;phase<100;phase++){
   const step=speed/30,seen=new Set<number>();
   for(let t=phase/100*step;t<.52;t+=step){
-   const recoil=t<.28?0:.52-t,r=art.crushCannonActionSpriteAsset('cannon','crush',2,from,to,recoil)!;seen.add(r.pose);
-   if(t<.28)assert.equal(r.pose,0);assert.deepEqual(r,art.crushCannonActionSpriteAsset('cannon','crush',2,from,to,recoil));
+   const recoil=t<.28?0:.52-t,r=art.crushCannonActionSpriteAsset('cannon','crush',level,from,to,recoil)!;seen.add(r.pose);
+   if(t<.28)assert.equal(r.pose,0);assert.deepEqual(r,art.crushCannonActionSpriteAsset('cannon','crush',level,from,to,recoil));
   }
   for(const pose of [0,1,2,3])assert.ok(seen.has(pose),`speed${speed},phase${phase},pose${pose}`);
  }
@@ -1119,5 +1119,46 @@ test('rapid crossbow animation failures stay isolated between upgrade tiers',asy
   assert.equal(art.rapidCrossbowActionSpriteAsset('crossbow','rapid',level,from,to,.24),null);
   assert.ok(art.rapidCrossbowActionSpriteAsset('crossbow','rapid',level===2?3:2,from,to,.24));
   assert.ok(art.towerSpriteAsset('crossbow','rapid',level));assert.ok(art.ballistaActionSpriteAsset('crossbow','pierce',3,from,to,.24));
+ }
+});
+
+test('final crush cannon preserves launch sockets and grounded siege carriage through recoil',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'crush-cannon-lv3');
+ const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/crush-cannon-lv3-action.json',import.meta.url),'utf8'));
+ const from={x:200,y:200},size=104,scale=meta.display_scale;
+ for(let direction=0;direction<8;direction++){
+  const a=direction*Math.PI/4,to={x:from.x+100*Math.cos(a),y:from.y+100*Math.sin(a)};
+  for(const [recoil,pose] of [[0,0],[.24,1],[.16001,1],[.16,2],[.08001,2],[.08,3],[.001,3],[-1,0],[NaN,0],[Infinity,0]]){
+   const r=art.crushCannonActionSpriteAsset('cannon','crush',3,from,to,recoil)!;
+   assert.equal(r.pose,pose);assert.equal(r.direction,direction);assert.equal(r.asset.src,`/defense/models/crush-lv3-action-${direction}-atlas.webp`);
+   const [x,y,w,h]=r.asset.viewBox.split(' ').map(Number);assert.ok(x+w<=r.asset.width&&y+h<=r.asset.height);
+   const p=meta.directions[direction].poses[pose],[mx,my]=meta.directions[direction].poses[0].muzzle;
+   assert.ok(Math.abs(r.muzzle.x-(mx-320)/576*scale*size)<.001);assert.ok(Math.abs(r.muzzle.y-(my-meta.frame.display_ground_y)/576*scale*size)<.001);
+   assert.equal(p.foundation_drift,0);assert.ok(p.fixed_meshes>20);
+   assert.equal(art.crushCannonActionSpriteAsset('cannon','crush',3,from,to,recoil,true)?.pose,0);
+  }
+  const shot={source:'tower',actor:'cannon',pierce:false,element:'impact',sourceLevel:3,from,to,launchAim:{...to}} as Projectile;
+  const before=structuredClone(shot),offset=art.crushCannonProjectileOffset(shot);assert.ok(offset);assert.deepEqual(shot,before);
+  assert.deepEqual(art.crushCannonProjectileOffset({...shot,to:{x:999,y:999}}),offset);
+  for(const partial of [{launchAim:undefined},{sourceLevel:1},{element:'water' as const},{source:'hero' as const}])assert.equal(art.crushCannonProjectileOffset({...shot,...partial}),undefined);
+ }
+ assert.equal(meta.frame.orthographic_scale,8.0);assert.equal(meta.clearance.surface_crossings,0);assert.equal(meta.clearance.sampled_frames,53);
+ for(const key of ['source','generator'])assert.equal(createHash('sha256').update(readFileSync(new URL('../../../'+meta[key],import.meta.url))).digest('hex'),meta[key+'_sha256']);
+ assert.equal(meta.pennant_clearance.surface_intersections,0);assert.equal(meta.pennant_clearance.frames_per_direction,53);
+ assert.ok(Math.abs((meta.frame.ground[1]-meta.frame.display_ground_y)/576*scale-(.1+(meta.frame.previous_ground[1]-600)/576*1.16*1.025))<1e-9);
+ assert.equal(meta.animation.hit_at,.28);assert.equal(meta.animation.duration_seconds,.52);
+ for(const f of meta.files)assert.equal(createHash('sha256').update(readFileSync(new URL('../../../public/defense/models/'+f.file,import.meta.url))).digest('hex'),f.sha256);
+ assert.equal(requests.filter(src=>src.includes('/crush-lv3-action-')).length,8);assert.ok(!requests.some(src=>src.endsWith('.glb')));
+ assert.ok(art.crushCannonActionSpriteAsset('cannon','crush',3,from,{x:300,y:200}));
+ assert.equal(art.crushCannonActionSpriteAsset('cannon','water',2,from,{x:300,y:200}),null);
+});
+
+test('crush cannon image failures are isolated between final and base tiers',async()=>{
+ const from={x:0,y:0},to={x:100,y:0};
+ for(const [file,level]of [['crush-action-3-atlas.webp',2],['crush-cannon-game.webp',2],['crush-lv3-action-3-atlas.webp',3],['crush-cannon-lv3-game.webp',3]] as const){
+  const {art}=await loadWithImageResults(src=>src.endsWith(file),'crush-tiers-'+file);
+  assert.equal(art.crushCannonActionSpriteAsset('cannon','crush',level,from,to,.24),null);
+  assert.ok(art.crushCannonActionSpriteAsset('cannon','crush',level===2?3:2,from,to,.24));
+  assert.ok(art.towerSpriteAsset('cannon','crush',level));assert.ok(art.waterCannonActionSpriteAsset('cannon','water',3,from,to,.24));
  }
 });
