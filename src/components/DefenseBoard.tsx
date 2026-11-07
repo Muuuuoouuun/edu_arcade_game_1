@@ -7,7 +7,7 @@ import type { Locomotion } from '../games/defense/locomotion';
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getSlots } from '../games/defense/data';
-import { actionSpriteAsset, hammerSequenceSpriteAsset, hammerContactTrail, petBiteContact, petBiteSequenceSpriteAsset, mageCastSocket, taoSealSocket, druidCastSocket, directionalActionSpriteAsset, directionalLocomotionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset, fireTowerActionSpriteAsset, ballistaActionSpriteAsset, waterCannonActionSpriteAsset } from '../games/defense/art';
+import { actionSpriteAsset, hammerSequenceSpriteAsset, hammerContactTrail, petBiteContact, petBiteSequenceSpriteAsset, mageCastSocket, taoSealSocket, druidCastSocket, directionalActionSpriteAsset, directionalLocomotionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset, lightningTowerActionSpriteAsset, fireTowerActionSpriteAsset, ballistaActionSpriteAsset, waterCannonActionSpriteAsset } from '../games/defense/art';
 import type { SpriteAsset, ActionPose } from '../games/defense/art';
 import type { DefenseThemeId } from '../games/defense/themes';
 import { DefenseThemeScenery, ModeledGate, useGateAsset, useGateImpactAsset } from './DefenseThemeScenery';
@@ -136,7 +136,8 @@ function TowerUnit({tower:t,position:p,state:s,reduced}:{tower:Tower;position:Po
  const lift=reduced?0:building?(1-ease)*12:0,scale=reduced?1:building?.86+.14*ease:1;
  const rock=reduced?0:dx*(windup*1.7-recoil*(t.kind==='cannon'?3.5:1.8));
  const fireAction=fireTowerActionSpriteAsset(t.kind,t.branch,t.level,windup,t.recoil??0,reduced);
- const articulated=fireAction??ballistaActionSpriteAsset(t.kind,t.branch,t.level,p,aim,t.recoil??0,reduced)??waterCannonActionSpriteAsset(t.kind,t.branch,t.level,p,aim,t.recoil??0,reduced);
+ const lightningAction=lightningTowerActionSpriteAsset(t.kind,t.branch,t.level,windup,t.recoil??0,reduced),energyAction=lightningAction??fireAction;
+ const articulated=energyAction??ballistaActionSpriteAsset(t.kind,t.branch,t.level,p,aim,t.recoil??0,reduced)??waterCannonActionSpriteAsset(t.kind,t.branch,t.level,p,aim,t.recoil??0,reduced);
  const shot=recoil>.02,flash=recoil>.48,muzzle=articulated?.muzzle??{x:dx*23,y:-55+dy*13};
  const art=articulated?.asset??towerSpriteAsset(t.kind,t.branch,t.level);
  return <g className={`def-tower def-tower-${t.kind} ${s.freeze>0?'def-tower-frozen':''}`} transform={`translate(${p.x},${p.y+12})`} data-action-frame={articulated?.pose} data-aim-octant={articulated?.direction} data-tower={t.kind} data-branch={t.branch??'base'} data-level={t.level} data-recoil={recoil.toFixed(2)} data-tower-phase={phase??'idle'}>
@@ -145,9 +146,9 @@ function TowerUnit({tower:t,position:p,state:s,reduced}:{tower:Tower;position:Po
   {t.level===3?<g className="def-tower-mastery"><ellipse cy="3" rx="33" ry="11" fill="none" stroke="#e5cc86" strokeWidth="1.6"/>{[-1,0,1].map(i=><path key={i} d="m0-3 3 3-3 3-3-3Z" transform={`translate(${i*19},${10-Math.abs(i)*2})`} fill={color} stroke="#765b36" strokeWidth=".7"/>)}</g>:null}
   {t.kind==='magic'?<ellipse cy="-1" rx="28" ry="10" fill={t.branch==='fire'?'#f5ac4720':'#7fcfea20'} stroke={color} strokeOpacity=".25" strokeWidth="1"/>:null}
   <Sprite index={TOWERS[t.kind].sprite} size={92+t.level*4} art={art} flip={!articulated&&((dx<0)!==(art?.nativeFacing===-1))} pose={articulated?`translate(0,${-lift}) scale(${scale},${scale})`:`translate(${reduced?0:-dx*recoil*(t.kind==='cannon'?6:3)},${-lift+(reduced?0:recoil*1.8)}) rotate(${rock}) scale(${scale},${scale*(reduced?1:1-recoil*.025)})`} shadow={false}/>
-  {t.kind==='magic'?<g className="def-magic-core" transform={`translate(${fireAction?.muzzle.x??0},${(fireAction?.muzzle.y??-67)-lift})`}>
+  {t.kind==='magic'?<g className="def-magic-core" transform={`translate(${energyAction?.muzzle.x??0},${(energyAction?.muzzle.y??-67)-lift})`}>
    <circle r={12+windup*12} fill={`url(#${core})`} opacity={.18+windup*.48+(flash?.3:0)}/>
-   <g transform={`scale(1,.45) rotate(${reduced?0:s.time*(t.branch==='lightning'?42:23)+t.slot*31})`} opacity={.38+windup*.35}><path d="M-16 0A16 16 0 0 1 9-13M16 0A16 16 0 0 1-9 13" fill="none" stroke={t.branch==='fire'?'#ffcf88':t.branch==='lightning'?'#ffe872':'#b8efff'} strokeWidth="2"/><circle cx="16" r="2.2" fill={color}/><circle cx="-16" r="2.2" fill={color}/></g>
+   {!lightningAction?<g transform={`scale(1,.45) rotate(${reduced?0:s.time*(t.branch==='lightning'?42:23)+t.slot*31})`} opacity={.38+windup*.35}><path d="M-16 0A16 16 0 0 1 9-13M16 0A16 16 0 0 1-9 13" fill="none" stroke={t.branch==='fire'?'#ffcf88':t.branch==='lightning'?'#ffe872':'#b8efff'} strokeWidth="2"/><circle cx="16" r="2.2" fill={color}/><circle cx="-16" r="2.2" fill={color}/></g>:null}
    {windup>0&&t.branch==='lightning'?<path d={`M-13 6-6 ${-5-windup*8} 0 2 8 ${-10-windup*5} 14 4`} fill="none" stroke="#fff6b0" strokeWidth="1.5" opacity={windup}/>:null}
   </g>:null}
   {windup>0&&t.kind==='crossbow'&&!articulated?<g transform={`translate(${muzzle.x-dx*windup*5},${muzzle.y-dy*windup*5}) rotate(${angle})`} opacity={.45+windup*.5}><path d="M-12 0H10m-9-5 5 5-5 5" fill="none" stroke="#f0dab0" strokeWidth="1.5"/><path d={`M-4-13 ${-5-windup*5} 0-4 13`} fill="none" stroke="#c2b793" strokeWidth="1"/></g>:null}

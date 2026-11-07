@@ -289,7 +289,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')).length,9);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')).length,9);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -872,5 +872,52 @@ test('Kar contact survives nominal 30Hz publication at 2x without appearing befo
   const seen=new Set<number>();
   for(let elapsed=phase/60*speed/30;elapsed<.56;elapsed+=speed/30){const frame=Number(art.hammerSequenceSpriteAsset('barbarian',{...base,elapsed})!.viewBox.split(' ')[0])/256;seen.add(frame);if(elapsed<.28)assert.ok(frame<4);}
   assert.ok(seen.has(3)&&seen.has(4),`speed${speed}/phase${phase}: ${[...seen]}`);
+ }
+});
+
+test('lightning conductors keep the authored tip socket and complete six-pose asset set',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'lightning-conductors');
+ const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/lightning-tower-action.json',import.meta.url),'utf8'));
+ for(const [windup,recoil,pose] of [[0,0,0],[.01,0,1],[.499,0,1],[.5,0,2],[.999,0,2],[0,.24,3],[0,.161,3],[0,.16,4],[0,.081,4],[0,.08,5],[0,.001,5],[NaN,NaN,0]]){
+  const render=art.lightningTowerActionSpriteAsset('magic','lightning',2,windup,recoil)!;
+  assert.equal(render.pose,pose);assert.equal(render.asset.src,'/defense/models/lightning-action-atlas.webp');
+  const [x,y]=meta.poses[pose].socket;assert.ok(Math.abs(render.muzzle.x-(x-320)/576*1.16*100)<.0001);assert.ok(Math.abs(render.muzzle.y-(.1+(y-600)/576*1.16)*100)<.0001);
+  const [left,top,w,h]=render.asset.viewBox.split(' ').map(Number);assert.ok(left>=pose*384&&left+w<=(pose+1)*384);assert.equal(top,14.4);assert.equal(h,345.6);
+  assert.equal(art.lightningTowerActionSpriteAsset('magic','lightning',2,windup,recoil,true)?.pose,0);
+ }
+ for(const pose of meta.poses){assert.equal(pose.foundation_drift,0);assert.ok(pose.fixed_meshes>70);assert.deepEqual(pose.socket,meta.poses[0].socket);}
+ for(let side=0;side<2;side++)assert.ok(Math.hypot(...meta.poses[2].conductor_centers[side].map((v:number,i:number)=>v-meta.poses[3].conductor_centers[side][i]))>.4);
+ assert.equal(meta.hit_at,.15);assert.equal(meta.duration,.39);
+ for(const file of meta.files){const bytes=readFileSync(new URL('../../../public/defense/models/'+file.file,import.meta.url));assert.equal(createHash('sha256').update(bytes).digest('hex'),file.sha256);}
+ assert.equal(requests.filter(s=>s.includes('/lightning-action-')).length,1);assert.ok(!requests.some(s=>s.endsWith('.glb')));
+ assert.equal(art.lightningTowerActionSpriteAsset('magic','lightning',3),null);
+ assert.equal(art.lightningTowerActionSpriteAsset('magic','fire',2),null);
+});
+
+test('lightning launch socket survives tower upgrade/sale and falls back independently of fire and Lv.3',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'lightning-launch');
+ const p={source:'tower',actor:'magic',element:'lightning',sourceLevel:2,from:{x:50,y:50},to:{x:100,y:100}} as Projectile;
+ const socket=art.lightningTowerActionSpriteAsset('magic','lightning',2)!.muzzle,expected={x:socket.x,y:socket.y+39};
+ for(const reduced of [false,true]){assert.deepEqual(art.lightningTowerProjectileOffset(p,reduced),expected);assert.deepEqual(art.lightningTowerProjectileOffset({...p,to:{x:-200,y:0}},reduced),expected);}
+ for(const partial of [{sourceLevel:3},{sourceLevel:1},{source:'hero' as const},{element:'fire' as const}])assert.equal(art.lightningTowerProjectileOffset({...p,...partial}),undefined);
+ for(const file of ['lightning-action-atlas.webp','lightning-tower-game.webp']){
+  const {art:failed}=await loadWithImageResults(s=>s.endsWith(file),'lightning-failed-'+file);
+  assert.equal(failed.lightningTowerActionSpriteAsset('magic','lightning',2,.8,.24),null);assert.equal(failed.lightningTowerProjectileOffset(p),undefined);
+  assert.ok(failed.towerSpriteAsset('magic','lightning',2));assert.equal(failed.towerSpriteAsset('magic','lightning',3)?.src,'/defense/models/lightning-tower-lv3-game.webp');
+  assert.ok(failed.fireTowerActionSpriteAsset('magic','fire',2,.8,.24));assert.ok(failed.fireTowerActionSpriteAsset('magic','fire',3,.8,.24));
+ }
+});
+
+test('lightning charge precedes launch and every pose survives 30Hz publication at 1x and 2x',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'lightning-publication');
+ for(const speed of [1,2])for(let phase=0;phase<100;phase++){
+  const step=speed/30,seen=new Set<number>();
+  for(let t=phase/100*step;t<.39;t+=step){
+   const windup=t<.15?t/.15:0,recoil=t>=.15?Math.max(0,.39-t):0;
+   const render=art.lightningTowerActionSpriteAsset('magic','lightning',2,windup,recoil)!;seen.add(render.pose);
+   if(t<.15)assert.ok(render.pose<3,'release cannot precede engine launch');
+   assert.deepEqual(render,art.lightningTowerActionSpriteAsset('magic','lightning',2,windup,recoil),'pause uses frozen simulation state');
+  }
+  for(const pose of [1,2,3,4,5])assert.ok(seen.has(pose),`speed ${speed}, phase ${phase}, missing ${pose}`);
  }
 });
