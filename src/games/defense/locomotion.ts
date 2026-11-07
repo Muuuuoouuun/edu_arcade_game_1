@@ -3,7 +3,7 @@ import { PET_WOLF_STRIDE } from './petWolfGait.ts';
 import type { Point } from './types.ts';
 import type { EnemyKind } from './types.ts';
 
-export type Locomotion = { distance: number; speed: number; heading?: Point; gaitCycles?: number };
+export type Locomotion = { distance: number; speed: number; heading?: Point; gaitCycles?: number; settle?: { frame: number; elapsed: number; heading: Point } };
 
 /** Visual travel belongs to simulation state, never render cadence or wall time. */
 export function advanceLocomotion(previous: Locomotion, from: Point, to: Point, dt: number, moving: boolean, dashing = false): Locomotion {
@@ -55,4 +55,14 @@ export function advanceEnemyGait(distance: number, before: number, after: number
 
 export function enemyWalkFrame(kind: EnemyKind, distance: number): number {
   return Math.floor(Math.max(0, distance) % enemyStride(kind) / enemyStride(kind) * 8);
+}
+
+export const MAGE_STOP_DURATION = .24;
+/** A visual transition only: movement, hit timing and the accumulated stride stay unchanged. */
+export function advanceMageLocomotion(previous:Locomotion,from:Point,to:Point,dt:number,moving:boolean,dashing=false):Locomotion {
+ const next=advanceLocomotion(previous,from,to,dt,moving,dashing);
+ if(moving||dashing)return next;
+ const settle=previous.speed>.5?{frame:walkFrame(previous.distance),elapsed:0,heading:previous.heading??{x:1,y:0}}:
+  previous.settle?{...previous.settle,elapsed:previous.settle.elapsed+Math.max(0,dt)}:undefined;
+ return settle&&settle.elapsed<MAGE_STOP_DURATION?{...next,settle}:next;
 }

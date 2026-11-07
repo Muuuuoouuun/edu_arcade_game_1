@@ -47,7 +47,9 @@
     "models:lightning-action": "blender -b --python tools/blender/build_lightning_tower_action.py",
     "models:lightning-action-lv3": "blender -b --python tools/blender/build_lightning_tower_lv3_action.py",
     "models:crush-action": "blender --python-exit-code 1 -b --python tools/blender/build_crush_cannon_action.py",
-    "models:rapid-action": "blender --python-exit-code 1 -b --python tools/blender/build_rapid_crossbow_action.py"
+    "models:rapid-action": "blender --python-exit-code 1 -b --python tools/blender/build_rapid_crossbow_action.py",
+    "models:ian-stop": "blender --python-exit-code 1 -b --python tools/blender/build_ian_stop.py --",
+    "models:ian-stop:check": "node tools/check-ian-stop.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

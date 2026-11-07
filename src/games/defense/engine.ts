@@ -1,5 +1,5 @@
 import { DASH_DAMAGE, DASH_HIT_RADIUS, DASH_IMPACT, distanceToSegment } from './action.ts';
-import { advanceEnemyGait, advanceLocomotion, advancePetLocomotion, movementFacing } from './locomotion.ts';
+import { advanceEnemyGait, advanceLocomotion, advanceMageLocomotion, advancePetLocomotion, movementFacing } from './locomotion.ts';
 import { BRANCHES, ENEMIES, HERO_ORDER, STAGE_COUNT, TOWERS, getPaths, getSlots, getStage, getRegion } from './data.ts';
 import { DIFFICULTIES, getDifficulty, getWavePlan } from './difficulty.ts';
 import type { Difficulty, Branch, DefenseAction, DefenseState, Element, Enemy, EnemyKind, HeroId, Point, Tower, TowerKind, CombatAttack, Projectile, AttackSource, AttackActor, DamageProfile, Effect } from './types.ts';
@@ -258,8 +258,8 @@ function advanceActors(s:DefenseState,dt:number,combat:boolean) {
     const petBefore=s.pet.position;s.pet.position=moveTowards(s.pet.position,s.pet.target,280,dt);s.pet.facing=movementFacing(s.pet.facing,petBefore,s.pet.position);
   }else s.pet=null;
   s.locomotion={
-    hero:advanceLocomotion(s.locomotion.hero,before.hero,s.heroPosition,dt,distance(s.heroPosition,s.heroTarget)>.01,dashing),
-    mercenary:s.mercenary?advanceLocomotion(s.locomotion.mercenary,before.mercenary,s.mercenaryPosition,dt,distance(s.mercenaryPosition,mercTarget)>.01):{distance:0,speed:0},
+    hero:(s.hero==='mage'?advanceMageLocomotion:advanceLocomotion)(s.locomotion.hero,before.hero,s.heroPosition,dt,distance(s.heroPosition,s.heroTarget)>.01,dashing),
+    mercenary:s.mercenary?(s.mercenary==='mage'?advanceMageLocomotion:advanceLocomotion)(s.locomotion.mercenary,before.mercenary,s.mercenaryPosition,dt,distance(s.mercenaryPosition,mercTarget)>.01):{distance:0,speed:0},
     // A faster companion can reach its moving target every frame and still be walking.
     pet:s.pet&&before.pet?advancePetLocomotion(s.locomotion.pet,before.pet,s.pet.position,dt):{distance:0,speed:0},
   };
@@ -389,7 +389,13 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
   const mercTarget={x:Math.min(875,state.heroPosition.x+38),y:Math.min(565,state.heroPosition.y+35)};
   if(!combat&&distance(state.heroPosition,state.heroTarget)<.01&&Math.hypot(state.heroVelocity.x,state.heroVelocity.y)<.01&&(!state.mercenary||distance(state.mercenaryPosition,mercTarget)<.01)&&(!state.pet||distance(state.pet.position,state.pet.target)<.01)&&state.effects.length===0){
     // Settle the last measured step without advancing an otherwise idle simulation.
-    return state.locomotion.pet.speed>0?{...state,locomotion:{...state.locomotion,pet:{...state.locomotion.pet,speed:0}}}:state;
+    const motion=state.locomotion,delta=Math.min(.1,dt);
+    if(!motion.hero.settle&&!motion.mercenary.settle&&motion.pet.speed<=0)return state;
+    return {...state,locomotion:{
+      hero:motion.hero.settle?advanceMageLocomotion(motion.hero,state.heroPosition,state.heroPosition,delta,false):motion.hero,
+      mercenary:motion.mercenary.settle?advanceMageLocomotion(motion.mercenary,state.mercenaryPosition,state.mercenaryPosition,delta,false):motion.mercenary,
+      pet:motion.pet.speed>0?{...motion.pet,speed:0}:motion.pet,
+    }};
   }
   const s=copy(state),delta=Math.min(.1,dt),stage=getStage(s.stage),lengths=pathLengths(s.stage),settings=DIFFICULTIES[getDifficulty(s.difficulty)];
   const plan=battlePlan(s.stage,s.wave,s.difficulty);

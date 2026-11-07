@@ -17,6 +17,7 @@ const models = [
  {id:'riel-archer',name:'리엘 · 숲 명사수',kind:'FOREST ARCHER',detail:'초록 후드 · 금발 · 곡선 활',description:'두 발로 버티고 활대와 시위를 당겼다가 화살을 놓습니다. 팔·시위·화살의 실제 움직임과 복귀를 확인하세요.',source:'riel-archer.blend',command:'npm run models:elf',action:'▶ 활 발사',clip:'riel-cast'},
  {id:'riel-archer-walk',name:'리엘 · 방향 보행',kind:'FOREST ARCHER',detail:'가죽 장화 · 망토 · 발 접지',description:'활을 든 채 양발의 지지와 회수를 번갈아 연결합니다. 같은 원본에서 전투의 여덟 방향을 렌더합니다.',source:'riel-archer-walk.blend',command:'npm run models:elf',action:'▶ 보행 재생',clip:'riel-walk',loop:true},
  {id:'ian-mage',name:'이안 · 수정 마법사',kind:'ARCANE MAGE',detail:'꺾인 모자 · 남색 코트 · 수정 지팡이',description:'발을 짚고 수정 지팡이를 모았다가 앞으로 뻗어 시전합니다. 코트와 망토, 손목의 복귀를 실제 관절로 확인하세요.',source:'ian-mage.blend',command:'npm run models:mage',action:'▶ 지팡이 시전',clip:'ian-cast'},
+ {id:'ian-stop',name:'이안 · 발 디디며 멈추기',kind:'ARCANE MAGE',detail:'한 발씩 접지 · 체중 정리 · 지팡이 복귀',description:'선택한 걸음 자세에서 한 발을 내려놓고, 그 발로 버티며 반대 발을 정리합니다. 여덟 가지 출발 자세를 바꾸어 확인하세요.',source:'ian-stop.blend',command:'npm run models:ian-stop',action:'▶ 정지 동작',clip:'ian-stop-0',hold:true,stopVariants:true},
  {id:'ian-mage-walk',name:'이안 · 방향 보행',kind:'ARCANE MAGE',detail:'가죽 장화 · 코트 자락 · 발 접지',description:'발의 지지와 회수를 번갈아 연결하고 망토와 팔이 작게 따라 움직입니다. 전투의 여덟 방향도 같은 원본에서 렌더합니다.',source:'ian-mage-walk.blend',command:'npm run models:mage',action:'▶ 보행 재생',clip:'ian-walk',loop:true},
  {id:'lightning-tower',asset:'lightning-tower-action',clip:'lightning-conductor-release',name:'뇌전 수정탑',kind:'LIGHTNING CONDUCTOR TOWER',detail:'푸른 수정 · 청동 전극 · 강철 고리',description:'중앙 수정과 피뢰침은 고정된 채 양옆 전극이 안으로 모여 충전합니다. 방출할 때 전극과 고리가 펼쳐졌다 복귀하고, 석조 기초는 움직이지 않습니다.',source:'lightning-tower-action.blend',command:'npm run models:lightning-action',action:'▶ 전극 방출'},
  {id:'lightning-tower-lv3',asset:'lightning-tower-lv3-action',clip:'lightning-crown-release',name:'뇌전 수정탑 · 최종 강화',kind:'ASCENDED LIGHTNING TOWER',detail:'금빛 이중 고리 · 여섯 전하 구슬 · 고정 첨탑',description:'큰 금빛 고리가 올라가며 안쪽 고리와 전극을 향해 힘을 모읍니다. 두 고리가 반대 방향으로 펼쳐져 방출한 뒤 돌아오고, 네 첨탑과 중앙 수정·기초는 고정됩니다.',source:'lightning-tower-lv3-action.blend',command:'npm run models:lightning-action-lv3',action:'▶ 이중 고리 방출'},
@@ -40,6 +41,11 @@ const $ = <T extends HTMLElement>(id:string) => document.getElementById(id) as T
 const stage = $<HTMLDivElement>('model-stage'), status = $<HTMLParagraphElement>('model-loading'), fallback = $<HTMLImageElement>('model-fallback');
 const shoot = $<HTMLButtonElement>('attack-preview'), rotate = $<HTMLButtonElement>('auto-rotate'), wire = $<HTMLButtonElement>('wireframe'), reset = $<HTMLButtonElement>('reset-view');
 let renderer:WebGLRenderer|null = null, controls:OrbitControls|null = null, current:Group|null = null, mixer:AnimationMixer|null = null, attackAction:AnimationAction|null = null;
+const stopLabel=document.createElement('label');stopLabel.className='lab-stop-phase';stopLabel.textContent='출발 걸음 ';stopLabel.hidden=true;
+const stopSelect=document.createElement('select');stopSelect.setAttribute('aria-label','정지 동작 출발 걸음');
+for(let i=0;i<8;i++){const option=document.createElement('option');option.value=String(i);option.textContent=`걸음 ${i+1}`;stopSelect.append(option);}
+stopLabel.append(stopSelect);shoot.parentElement?.append(stopLabel);
+stopSelect.onchange=()=>{void select(models.findIndex(model=>model.id===currentModelId));};
 let currentModelId = models[0].id;
 let generation = 0, automatic = false, wireEnabled = false, shotAt = -Infinity, last = performance.now(), elapsed = 0, redraw = true, lastRender = 0;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -112,6 +118,7 @@ try {
 
 async function select(index:number) {
  const ticket = ++generation, model = models[index]; currentModelId = model.id;
+ stopLabel.hidden=!model.stopVariants;
  setReady(false); status.hidden = false; status.textContent = '모델을 불러오는 중…';
  $('model-name').textContent = model.name; $('model-kind').textContent = model.kind; $('model-description').textContent = model.description;
  $('model-source').textContent = model.source; $('model-command').textContent = model.command; shoot.textContent = model.action;
@@ -135,10 +142,11 @@ async function select(index:number) {
   currentMaterials = [...materials(current)].filter((material):material is MeshStandardMaterial => material instanceof MeshStandardMaterial);
   currentMaterials.forEach(material => {material.wireframe = wireEnabled;material.envMapIntensity = .55;emissionLevels.set(material,material.emissiveIntensity);});
   for(const type of ['core','barrel','bolt','turret'] as const){const object = current.getObjectByName(type==='core'?'fire-core':type);if(object&&(type!=='core'||!model.clip))parts.push({object,position:object.position.clone(),rotation:new Vector3(object.rotation.x,object.rotation.y,object.rotation.z),type});}
-  const clip = gltf.animations.find(animation => animation.name===model.clip);
+  const clip = gltf.animations.find(animation => animation.name===(model.stopVariants?`ian-stop-${stopSelect.value}`:model.clip));
   if(clip){
    mixer = new AnimationMixer(gltf.scene); attackAction = mixer.clipAction(clip);
    attackAction.setLoop(model.loop?LoopRepeat:LoopOnce,model.loop?Infinity:1); attackAction.clampWhenFinished = true;
+   if(model.stopVariants){attackAction.play();mixer.setTime(0);attackAction.paused=true;}
    mixer.addEventListener('finished',()=>{if(model.hold){stage.dataset.action='settled';redraw=true;}else stopAction();});
   }
   $('triangle-count').textContent = Math.round(triangles).toLocaleString(); $('mesh-count').textContent = String(meshes); $('material-count').textContent = String(materials(current).size);

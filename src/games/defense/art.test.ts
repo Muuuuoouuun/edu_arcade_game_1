@@ -547,7 +547,7 @@ test('Ian uses one complete modeled body and projection for idle, walking and ei
   const socket=art.mageCastSocket(from,to,105)!;assert.deepEqual(offset,{x:socket.x,y:socket.y+27});assert.deepEqual(shot,original);
   assert.deepEqual(art.mageProjectileOffset({...shot,to:{x:999,y:999}},1.25),offset);assert.equal(art.mageProjectileOffset({...shot,launchAim:undefined}),undefined);
  }
- assert.equal(requests.filter(u=>u.includes('/ian-')).length,16);assert.ok(!requests.some(u=>u.endsWith('.glb')));assert.equal(art.spriteAsset(0).src,'/defense/atlas.png','portraits retain the concept illustration');
+ assert.equal(requests.filter(u=>/\/ian-(cast|walk)-/.test(u)).length,16);assert.ok(!requests.some(u=>u.endsWith('.glb')));assert.equal(art.spriteAsset(0).src,'/defense/atlas.png','portraits retain the concept illustration');
 });
 
 test('a missing Ian cast or walk image falls back as a whole without disabling other models',async()=>{
@@ -1058,5 +1058,29 @@ test('crush recoil/return/settle remain visible at 30Hz and either speed without
    if(t<.28)assert.equal(r.pose,0);assert.deepEqual(r,art.crushCannonActionSpriteAsset('cannon','crush',2,from,to,recoil));
   }
   for(const pose of [0,1,2,3])assert.ok(seen.has(pose),`speed${speed},phase${phase},pose${pose}`);
+ }
+});
+
+
+test('Ian stop retains the captured walk then plants each boot with shared ground in all entry phases and directions',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'ian-stop');
+ for(let d=0;d<8;d++)for(let entry=0;entry<8;entry++)for(const [elapsed,frame] of [[0,0],[.079,0],[.08,1],[.159,1],[.16,2],[.239,2]]){
+  const heading={x:Math.cos(d*Math.PI/4),y:Math.sin(d*Math.PI/4)},motion={distance:entry*8,speed:0,settle:{frame:entry,elapsed,heading}};
+  const stop=art.mageStopSpriteAsset('mage',motion)!;assert.equal(stop.frame,frame);assert.equal(stop.entry,entry);
+  assert.ok(stop.asset.src.endsWith(`/ian-${frame===0?'walk':'stop'}-${d}-atlas.webp`));
+  assert.equal(stop.asset.groundY!/stop.asset.height,220/256);assert.equal(stop.asset.oriented,true);
+  const [x,,width]=stop.asset.viewBox.split(' ').map(Number);assert.ok(x+width<=stop.asset.width);
+  assert.equal(art.mageStopSpriteAsset('mage',motion,true),null);
+  assert.equal(art.mageStopSpriteAsset('elf',motion),null);
+  assert.equal(art.mageStopSpriteAsset('mage',{...motion,speed:30}),null);
+  assert.equal(art.mageStopSpriteAsset('mage',{...motion,settle:{...motion.settle,elapsed:.24}}),null);
+ }
+ assert.equal(requests.filter(s=>/ian-stop-\d-atlas/.test(s)).length,8);assert.ok(!requests.some(s=>s.endsWith('.glb')));
+});
+test('Ian stop uses the existing idle if any directional stop atlas is unavailable',async()=>{
+ for(let i=0;i<8;i++){
+  const {art}=await loadWithImageResults(s=>s.endsWith(`/ian-stop-${i}-atlas.webp`),'ian-stop-failed-'+i);
+  assert.equal(art.mageStopSpriteAsset('mage',{distance:10,speed:0,settle:{frame:1,elapsed:.08,heading:{x:1,y:0}}}),null);
+  assert.ok(art.idleSpriteAsset('mage')?.src.includes('/ian-cast-'));
  }
 });

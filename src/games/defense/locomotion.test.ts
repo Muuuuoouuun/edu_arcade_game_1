@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { actDefense, createDefense, positionOnPath, stepDefense, waveSize } from './engine.ts';
-import { advanceEnemyGait, advanceLocomotion, advancePetLocomotion, petStride, petWalkFrame, enemyWalkFrame, movementFacing, walkFrame } from './locomotion.ts';
+import { advanceEnemyGait, advanceLocomotion, advanceMageLocomotion, advancePetLocomotion, petStride, petWalkFrame, enemyWalkFrame, movementFacing, walkFrame } from './locomotion.ts';
 
 test('walking distance measures actual displacement and stops at the destination without mutating prior frames', () => {
   const initial = createDefense(1, 'dwarf');
@@ -138,4 +138,33 @@ test('companion gait freezes with the battle and follows equal travel at either 
  assert.ok(Math.abs(once.locomotion.pet.distance-twice.locomotion.pet.distance)<1e-7);
  assert.ok(Math.abs(once.locomotion.pet.gaitCycles!-twice.locomotion.pet.gaitCycles!)<1e-7);
  const paused=actDefense(once,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);assert.equal(initial.locomotion.pet.gaitCycles,undefined);
+});
+
+
+test('Ian settles from every last simulated walk phase, preserves support heading, and yields to movement or dash',()=>{
+ const point={x:80,y:90};
+ for(let frame=0;frame<8;frame++){
+  const prior={distance:frame*8+1,speed:120,heading:{x:0,y:-1}};
+  const stopped=advanceMageLocomotion(prior,point,point,.02,false);
+  assert.deepEqual(stopped.settle,{frame,elapsed:0,heading:prior.heading});assert.equal(stopped.distance,prior.distance);
+  const midway=advanceMageLocomotion(stopped,point,point,.08,false);assert.equal(midway.settle?.elapsed,.08);
+  assert.equal(advanceMageLocomotion(midway,point,point,.16,false).settle,undefined);
+  assert.equal(advanceMageLocomotion(midway,point,{x:81,y:90},.02,true).settle,undefined);
+  assert.equal(advanceMageLocomotion(midway,point,point,.02,false,true).settle,undefined);
+  assert.equal(stopped.settle?.elapsed,0,'immutable prior state');
+ }
+});
+
+test('Ian stop finishes in preparation and combat, freezes on pause, and resets with a fresh run',()=>{
+ for(const combat of [false,true]){
+  let state=createDefense(1,'mage');if(combat)state=actDefense(state,{type:'start-wave'});
+  state=actDefense(state,{type:'move',point:{x:480,y:355}});
+  for(let i=0;i<300&&!state.locomotion.hero.settle;i++)state=stepDefense(state,1/60);
+  assert.ok(state.locomotion.hero.settle,`stop triggered ${combat}`);
+  const position={...state.heroPosition},paused=actDefense(state,{type:'pause'});
+  assert.equal(stepDefense(paused,.1),paused);
+  for(let i=0;i<20;i++)state=stepDefense(state,1/60);
+  assert.equal(state.locomotion.hero.settle,undefined);assert.deepEqual(state.heroPosition,position);
+  assert.equal(createDefense(1,'mage').locomotion.hero.settle,undefined);
+ }
 });
