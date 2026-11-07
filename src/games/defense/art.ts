@@ -1,3 +1,4 @@
+import { LIGHTNING_TOWER_LV3_SOCKETS } from './lightningTowerLv3Sockets.ts';
 import { LIGHTNING_TOWER_SOCKETS } from './lightningTowerSockets.ts';
 import { KAR_HAMMER_TRAIL } from './karHammerTrail.ts';
 import { FIRE_TOWER_LV3_SOCKETS } from './fireTowerLv3Sockets.ts';
@@ -260,20 +261,21 @@ export function fireTowerProjectileOffset(p:Projectile,reduced=false):Point|unde
  const render=fireTowerActionSpriteAsset('magic','fire',p.sourceLevel,0,.24,reduced);
  return render?{x:render.muzzle.x,y:12+render.muzzle.y+27}:undefined;
 }
-const LIGHTNING_ACTION_ATLAS='/defense/models/lightning-action-atlas.webp';
+const LIGHTNING_ACTION_ATLAS='/defense/models/lightning-action-atlas.webp',LIGHTNING_LV3_ACTION_ATLAS='/defense/models/lightning-lv3-action-atlas.webp';
 /** The side conductors and focusing ring move; the keep and discharge tip stay fixed. */
 export function lightningTowerActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,windup=0,recoil=0,reduced=false) {
- if(kind!=='magic'||branch!=='lightning'||level!==2)return null;
- if(!motionLoaded.has(LIGHTNING_ACTION_ATLAS)||!motionLoaded.has(bakedFor(kind,branch).asset.src))return null;
+ if(kind!=='magic'||branch!=='lightning'||(level!==2&&level!==3))return null;
+ const mastered=level===3,atlas=mastered?LIGHTNING_LV3_ACTION_ATLAS:LIGHTNING_ACTION_ATLAS,baked=bakedFor(kind,branch),base=mastered?baked.mastered!:baked.asset;
+ if(!motionLoaded.has(atlas)||!motionLoaded.has(base.src))return null;
  const charge=Number.isFinite(windup)&&windup>0,release=Number.isFinite(recoil)&&recoil>0;
  // Each pose occupies >=75ms simulation time, including 30Hz publication at 2x.
  const pose=reduced?0:charge?(windup<.5?1:2):release?(recoil>.16?3:recoil>.08?4:5):0;
- const [x,y]=LIGHTNING_TOWER_SOCKETS[pose],size=92+level*4;
- return {direction:0,pose,muzzle:{x:x*size,y:y*size},asset:{src:LIGHTNING_ACTION_ATLAS,viewBox:`${pose*384+19.2} 14.4 345.6 345.6`,width:2304,height:384,displayScale:1.16} as SpriteAsset};
+ const [x,y]=(mastered?LIGHTNING_TOWER_LV3_SOCKETS:LIGHTNING_TOWER_SOCKETS)[pose],size=92+level*4;
+ return {direction:0,pose,muzzle:{x:x*size,y:y*size},asset:{src:atlas,viewBox:`${pose*384+19.2} 14.4 345.6 345.6`,width:2304,height:384,displayScale:1.16*(mastered?1.025:1)} as SpriteAsset};
 }
 /** Snapshot launch level survives upgrade/sale; collision and chain targets are unchanged. */
 export function lightningTowerProjectileOffset(p:Projectile,reduced=false):Point|undefined {
- if(p.source!=='tower'||p.actor!=='magic'||p.element!=='lightning'||p.sourceLevel!==2)return undefined;
+ if(p.source!=='tower'||p.actor!=='magic'||p.element!=='lightning'||(p.sourceLevel!==2&&p.sourceLevel!==3))return undefined;
  const render=lightningTowerActionSpriteAsset('magic','lightning',p.sourceLevel,0,.24,reduced);
  return render?{x:render.muzzle.x,y:12+render.muzzle.y+27}:undefined;
 }
@@ -404,7 +406,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...KAR_SLAM,...KAR_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...KAR_SLAM,...KAR_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;
