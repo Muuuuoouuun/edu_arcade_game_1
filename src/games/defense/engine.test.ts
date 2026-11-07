@@ -643,3 +643,19 @@ test('a tower strikes the enemy furthest along the road, not the nearest or olde
   const next=stepDefense(s,.02);
   assert.equal(next.attacks[0]?.targetId,2);
 });
+
+test('a lightning tower aims at the front-most enemy whose arc would land, and falls back to the front-most',()=>{
+  const lightning=(a:Enemy,b:Enemy,c:Enemy)=>{
+    const s=rangedBattle('magic');s.towers[0].branch='lightning';s.enemies=[a,b,c];return stepDefense(s,.02);
+  };
+  const front=positionedEnemy('wood',1,430),wetBody=positionedEnemy('wood',2,395),neighbor=positionedEnemy('wood',3,375);
+  wetBody.wet=5;
+  const smart=lightning(front,wetBody,neighbor);
+  assert.equal(smart.attacks[0]?.targetId,2,'the dry front body would end the arc, so the wet body with a neighbor is chosen');
+  const allDry=lightning(positionedEnemy('wood',1,430),positionedEnemy('wood',2,395),positionedEnemy('wood',3,375));
+  assert.equal(allDry.attacks[0]?.targetId,1,'with no arc available the front-most enemy is still hit');
+  const alone=lightning(positionedEnemy('metal',1,430),positionedEnemy('wood',2,395),positionedEnemy('wood',3,375));
+  assert.equal(alone.attacks[0]?.targetId,1,'a metal front body with a neighbor already chains, so it stays the target');
+  const plain=rangedBattle('magic');plain.enemies=[positionedEnemy('wood',1,430),wetBody,neighbor];
+  assert.equal(stepDefense(plain,.02).attacks[0]?.targetId,1,'non-lightning magic towers keep the front-most rule');
+});
