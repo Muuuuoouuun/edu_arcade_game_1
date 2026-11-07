@@ -1,6 +1,6 @@
 import { FIRE_TOWER_LV3_SOCKETS } from './fireTowerLv3Sockets.ts';
 import { FIRE_TOWER_SOCKETS } from './fireTowerSockets.ts';
-import { enemyWalkFrame, walkFrame } from './locomotion.ts';
+import { enemyWalkFrame, walkFrame, petWalkFrame } from './locomotion.ts';
 import { attackOctant, dwarfHammerFrame, petBiteFrame } from './action.ts';
 import { MAGE_SOCKETS } from './mageSockets.ts';
 import { ELF_SOCKETS } from './elfSockets.ts';
@@ -179,9 +179,9 @@ export function hammerContactTrail(attack:CombatAttack,size:number):Point[]|null
 }
 const DWARF_LOCOMOTION=Array.from({length:8},(_,i)=>`/defense/models/dwarf-locomotion-${i}-atlas.webp`);
 /** One complete direction set shares the attack camera; frame 8 is a neutral stop. */
-export function directionalLocomotionSpriteAsset(actor:HeroId|'wolf',heading:Point,distance:number|null):SpriteAsset|null {
+export function directionalLocomotionSpriteAsset(actor:HeroId|'wolf',heading:Point,distance:number|null,size=73,gaitCycles?:number):SpriteAsset|null {
  const direction=attackOctant({x:0,y:0},heading);
- if(actor==='wolf'&&direction!==null)return petWolfAsset(direction,distance===null?'bite':'walk',distance===null?0:walkFrame(distance));
+ if(actor==='wolf'&&direction!==null)return petWolfAsset(direction,distance===null?'bite':'walk',distance===null?0:petWalkFrame(heading,distance,size,gaitCycles));
  if(actor==='druid'&&direction!==null)return druidAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
  if(actor==='tao'&&direction!==null)return taoAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
  if(actor==='elf'&&direction!==null)return elfAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
@@ -198,7 +198,7 @@ const DWARF_WALK = Array.from({length:8},(_,i):SpriteAsset=>({
 }));
 /** A partial walk set keeps the existing modeled idle pose, never mixes styles. */
 export function walkingSpriteAsset(actor:HeroId|'wolf',distance:number):SpriteAsset|null {
- if(actor==='wolf')return petWolfAsset(1,'walk',walkFrame(distance));
+ if(actor==='wolf')return petWolfAsset(1,'walk',petWalkFrame({x:1,y:1},distance));
  if(actor==='druid')return druidAsset(1,'walk',walkFrame(distance));
  if(actor==='tao')return taoAsset(1,'walk',walkFrame(distance));
  if(actor==='elf')return elfAsset(1,'walk',walkFrame(distance));

@@ -1,7 +1,9 @@
+import { attackOctant } from './action.ts';
+import { PET_WOLF_STRIDE } from './petWolfGait.ts';
 import type { Point } from './types.ts';
 import type { EnemyKind } from './types.ts';
 
-export type Locomotion = { distance: number; speed: number; heading?: Point };
+export type Locomotion = { distance: number; speed: number; heading?: Point; gaitCycles?: number };
 
 /** Visual travel belongs to simulation state, never render cadence or wall time. */
 export function advanceLocomotion(previous: Locomotion, from: Point, to: Point, dt: number, moving: boolean, dashing = false): Locomotion {
@@ -11,6 +13,25 @@ export function advanceLocomotion(previous: Locomotion, from: Point, to: Point, 
     ...(travel > .001 ? { heading: { x: (to.x-from.x)/travel, y: (to.y-from.y)/travel } } : previous.heading ? { heading: previous.heading } : {}),
     speed: moving && !dashing && dt > 0 ? travel / dt : 0,
   };
+}
+
+/** Projected authored cycle length in board units, including the displayed actor size. */
+export function petStride(heading:Point,size=73):number {
+ const direction=attackOctant({x:0,y:0},heading);
+ return direction===null||!Number.isFinite(size)||size<=0?0:PET_WOLF_STRIDE[direction]*size;
+}
+
+/** Accumulate visual cycles per actual segment so turns do not rephase all prior travel. */
+export function advancePetLocomotion(previous:Locomotion,from:Point,to:Point,dt:number):Locomotion {
+ const motion=advanceLocomotion(previous,from,to,dt,true),stride=petStride(motion.heading??{x:1,y:0});
+ return {...motion,gaitCycles:(previous.gaitCycles??0)+(stride>0?(motion.distance-previous.distance)/stride:0)};
+}
+
+/** Gait cycles are authored at size 73; mobile enlargement lengthens the visible stride. */
+export function petWalkFrame(heading:Point,distance:number,size=73,gaitCycles?:number):number {
+ const stride=petStride(heading,size);if(stride<=0)return 0;
+ const cycles=gaitCycles===undefined?distance/stride:gaitCycles*73/size;
+ return Number.isFinite(cycles)?Math.floor((Math.max(0,cycles)+1e-9)*8)%8:0;
 }
 
 /** Keep facing on almost vertical paths; tiny horizontal drift is not a turn. */

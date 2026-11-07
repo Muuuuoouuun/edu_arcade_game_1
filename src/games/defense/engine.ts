@@ -1,5 +1,5 @@
 import { DASH_DAMAGE, DASH_HIT_RADIUS, DASH_IMPACT, distanceToSegment } from './action.ts';
-import { advanceEnemyGait, advanceLocomotion, movementFacing } from './locomotion.ts';
+import { advanceEnemyGait, advanceLocomotion, advancePetLocomotion, movementFacing } from './locomotion.ts';
 import { BRANCHES, ENEMIES, HERO_ORDER, STAGE_COUNT, TOWERS, getPaths, getSlots, getStage, getRegion } from './data.ts';
 import { DIFFICULTIES, getDifficulty, getWavePlan } from './difficulty.ts';
 import type { Difficulty, Branch, DefenseAction, DefenseState, Element, Enemy, EnemyKind, HeroId, Point, Tower, TowerKind, CombatAttack, Projectile, AttackSource, AttackActor, DamageProfile, Effect } from './types.ts';
@@ -261,7 +261,7 @@ function advanceActors(s:DefenseState,dt:number,combat:boolean) {
     hero:advanceLocomotion(s.locomotion.hero,before.hero,s.heroPosition,dt,distance(s.heroPosition,s.heroTarget)>.01,dashing),
     mercenary:s.mercenary?advanceLocomotion(s.locomotion.mercenary,before.mercenary,s.mercenaryPosition,dt,distance(s.mercenaryPosition,mercTarget)>.01):{distance:0,speed:0},
     // A faster companion can reach its moving target every frame and still be walking.
-    pet:s.pet&&before.pet?advanceLocomotion(s.locomotion.pet,before.pet,s.pet.position,dt,true):{distance:0,speed:0},
+    pet:s.pet&&before.pet?advancePetLocomotion(s.locomotion.pet,before.pet,s.pet.position,dt):{distance:0,speed:0},
   };
 }
 function advanceEffects(s:DefenseState,dt:number) {

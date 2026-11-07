@@ -654,7 +654,7 @@ test('the companion wolf keeps one body across eight bite directions and grounde
  for(let d=0;d<8;d++){
   const angle=d*Math.PI/4,heading={x:Math.cos(angle),y:Math.sin(angle)},from={x:300,y:200},to={x:from.x+heading.x*65,y:from.y+heading.y*65};
   const idle=art.directionalLocomotionSpriteAsset('wolf',heading,null)!;assert.equal(idle.src,`/defense/models/moonlight-bite-${d}-atlas.webp`);assert.equal(idle.viewBox,'0 0 256 256');
-  for(let f=0;f<8;f++){const walk=art.directionalLocomotionSpriteAsset('wolf',heading,f*8)!;assert.equal(walk.src,`/defense/models/moonlight-walk-${d}-atlas.webp`);assert.equal(walk.viewBox,`${f*256} 0 256 256`);assert.equal(walk.groundY,idle.groundY);assert.equal(walk.displayScale,idle.displayScale);assert.equal(walk.oriented,true);}
+  for(let f=0;f<8;f++){const walk=art.directionalLocomotionSpriteAsset('wolf',heading,f/8*meta.gait.stride_per_size[d]*73)!;assert.equal(walk.src,`/defense/models/moonlight-walk-${d}-atlas.webp`);assert.equal(walk.viewBox,`${f*256} 0 256 256`);assert.equal(walk.groundY,idle.groundY);assert.equal(walk.displayScale,idle.displayScale);assert.equal(walk.oriented,true);}
   for(const [pose,index] of [['windup',2],['strike',4],['recover',6]] as const){
    const asset=art.directionalActionSpriteAsset('wolf',pose,from,to)!;assert.equal(asset.viewBox,`${index*256} 0 256 256`);assert.equal(asset.displayScale,idle.displayScale);
    assert.equal(art.directionalActionSpriteAsset('wolf',pose,from,to,true)!.viewBox,`${pose==='strike'?1024:0} 0 256 256`);
@@ -806,5 +806,26 @@ test('each ascended charge and recoil pose survives nominal 30Hz publication at 
    assert.deepEqual(render,art.fireTowerActionSpriteAsset('magic','fire',3,windup,recoil),'paused inputs are stable');
   }
   for(const pose of [1,2,3,4,5])assert.ok(seen.has(pose),`speed ${speed}, phase ${phase}, missing ${pose}`);
+ }
+});
+
+test('authored companion contact paws cancel projected travel in every direction and display size',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'pet-grounded-stride');
+ const m=JSON.parse(readFileSync(new URL('../../../public/defense/models/moonlight-wolf.json',import.meta.url),'utf8'));
+ for(let d=0;d<8;d++)for(const size of [73,91.25]){
+  const a=d*Math.PI/4,heading={x:Math.cos(a),y:Math.sin(a)},stride=m.gait.stride_per_size[d]*size,poses=m.directions.walk[d].poses;
+  for(const [start,paws] of [[0,[0,3]],[4,[1,2]]] as const)for(const paw of paws){
+   const origin=poses[start].paws[paw];
+   for(let f=start;f<=start+2;f++){
+    const [x,y]=poses[f].paws[paw],travel=(f-start)/8*stride,scale=m.frame.display_scale*size/384;
+    assert.ok(Math.hypot((x-origin[0])*scale+heading.x*travel,(y-origin[1])*scale+heading.y*travel)<.0001,`direction${d}/size${size}/frame${f}/paw${paw}`);
+    assert.ok(Math.abs(poses[f].paw_heights[paw])<1e-6);
+   }
+  }
+  for(let f=0;f<8;f++){
+   const walk=art.directionalLocomotionSpriteAsset('wolf',heading,stride*f/8,size)!;
+   assert.equal(walk.viewBox,`${f*256} 0 256 256`);assert.equal(walk.groundY,220);
+   const accumulated=art.directionalLocomotionSpriteAsset('wolf',heading,99999,size,f/8*size/73)!;assert.equal(accumulated.viewBox,walk.viewBox);
+  }
  }
 });

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { actDefense, createDefense, positionOnPath, stepDefense, waveSize } from './engine.ts';
-import { advanceEnemyGait, advanceLocomotion, enemyWalkFrame, movementFacing, walkFrame } from './locomotion.ts';
+import { advanceEnemyGait, advanceLocomotion, advancePetLocomotion, petStride, petWalkFrame, enemyWalkFrame, movementFacing, walkFrame } from './locomotion.ts';
 
 test('walking distance measures actual displacement and stops at the destination without mutating prior frames', () => {
   const initial = createDefense(1, 'dwarf');
@@ -109,4 +109,33 @@ test('Bron keeps the last attack direction after recovery while stationary and c
  assert.equal(JSON.stringify(attacked.locomotion),prior);
  const moved=stepDefense(actDefense(recovered,{type:'move',point:{x:200,y:210}}),.1);
  assert.ok(moved.locomotion.hero.heading!.x>.9);
+});
+
+test('companion stride integrates actual travel across turns without rephasing old travel',()=>{
+ const east={x:1,y:0},south={x:0,y:1},start={distance:0,speed:0};
+ const a=advancePetLocomotion(start,{x:0,y:0},{x:petStride(east)/4,y:0},.1);
+ assert.ok(Math.abs(a.gaitCycles!-.25)<1e-9);assert.equal(petWalkFrame(east,a.distance,73,a.gaitCycles),2);
+ const b=advancePetLocomotion(a,{x:10,y:10},{x:10,y:10+petStride(south)/4},.1);
+ assert.ok(Math.abs(b.gaitCycles!-.5)<1e-9);assert.equal(petWalkFrame(south,b.distance,73,b.gaitCycles),4);
+ let split:ReturnType<typeof advancePetLocomotion>=start;
+ for(let i=0;i<8;i++)split=advancePetLocomotion(split,{x:i*petStride(east)/8,y:0},{x:(i+1)*petStride(east)/8,y:0},.0125);
+ const once=advancePetLocomotion(start,{x:0,y:0},{x:petStride(east),y:0},.1);
+ assert.ok(Math.abs(split.gaitCycles!-once.gaitCycles!)<1e-9);assert.equal(petWalkFrame(east,split.distance,73,split.gaitCycles),0);
+ const stop=advancePetLocomotion(b,{x:10,y:10},{x:10,y:10},.1);assert.equal(stop.gaitCycles,b.gaitCycles);assert.equal(stop.speed,0);assert.deepEqual(start,{distance:0,speed:0});
+ for(const size of [73,91.25])for(let d=0;d<8;d++){
+  const heading={x:Math.cos(d*Math.PI/4),y:Math.sin(d*Math.PI/4)},stride=petStride(heading,size);
+  for(let frame=0;frame<8;frame++){assert.equal(petWalkFrame(heading,stride*frame/8,size),frame);assert.equal(petWalkFrame(heading,0,size,frame/8*size/73),frame);}
+ }
+ assert.equal(petWalkFrame(east,NaN),0);assert.equal(petWalkFrame(east,1,0),0);assert.equal(petWalkFrame({x:0,y:0},10),0);
+});
+
+test('companion gait freezes with the battle and follows equal travel at either simulation speed',()=>{
+ const initial=actDefense(createDefense(1,'druid'),{type:'move',point:{x:800,y:355}});
+ let once=initial,twice=actDefense(initial,{type:'speed'});
+ for(let i=0;i<10;i++)once=stepDefense(once,1/60);
+ // The UI applies 2x by issuing two fixed steps per publication.
+ for(let i=0;i<5;i++)for(let step=0;step<2;step++)twice=stepDefense(twice,1/60);
+ assert.ok(Math.abs(once.locomotion.pet.distance-twice.locomotion.pet.distance)<1e-7);
+ assert.ok(Math.abs(once.locomotion.pet.gaitCycles!-twice.locomotion.pet.gaitCycles!)<1e-7);
+ const paused=actDefense(once,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);assert.equal(initial.locomotion.pet.gaitCycles,undefined);
 });

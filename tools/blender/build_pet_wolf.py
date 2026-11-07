@@ -7,7 +7,7 @@ import bpy
 from mathutils import Matrix,Vector
 from bpy_extras.object_utils import world_to_camera_view
 ROOT=Path(__file__).resolve().parents[2];OUT=ROOT/'public/defense/models';FRAMES=ROOT/'art-source/defense/moonlight-wolf'
-p=argparse.ArgumentParser();p.add_argument('--samples',type=int,default=64);p.add_argument('--check',action='store_true');p.add_argument('--preview',action='store_true');args=p.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+p=argparse.ArgumentParser();p.add_argument('--samples',type=int,default=64);p.add_argument('--check',action='store_true');p.add_argument('--walk-only',action='store_true');p.add_argument('--preview',action='store_true');args=p.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 bpy.ops.wm.read_factory_settings(use_empty=True)
 COL=bpy.data.collections.new('Moonlight companion / editable parts');bpy.context.scene.collection.children.link(COL);STUDIO=bpy.data.collections.new('Studio / common hero camera');bpy.context.scene.collection.children.link(STUDIO);ROOT_OBJ=None
 def material(name,color,metal=0,rough=.55,emission=0):
@@ -193,10 +193,14 @@ def animate(mode):
  else:
   for frame in range(81):
    phase=frame/80;s=math.sin(phase*math.tau)
-   body.location=rests[body][0]+Vector((.014*s,0,.024*(1-math.cos(phase*math.tau*2))));head.rotation_euler.x=.025*s;tail.rotation_euler.z=.12*s;tailtip.rotation_euler.z=-.08*s;pendant.rotation_euler.x=.08*s
+   half=phase%0.5;bounce=-.025*math.sin(half/.25*math.pi) if half<.25 else .09*math.sin((half-.25)/.25*math.pi)
+   body.location=rests[body][0]+Vector((.014*s,0,bounce));head.rotation_euler.x=.025*s;tail.rotation_euler.z=.12*s;tailtip.rotation_euler.z=-.08*s;pendant.rotation_euler.x=.08*s
    for i,e in enumerate(ears):e.rotation_euler.x=.025*s
    for i,paw in enumerate(paws):
-    p=(phase+(0 if i in [0,3] else .5))%1;forward=.17-.68*p if p<.5 else -.17+.34*(p-.5)*2;lift=0 if p<.5 else .11*math.sin((p-.5)*2*math.pi)
+    p=(phase+(0 if i in [0,3] else .5))%1
+    # Quarter-cycle stance cancels 4.24 model units/cycle of forward root travel.
+    # Diagonal pairs then recover through a short airborne phase, suited to the existing fast follow speed.
+    t=max(0,(p-.25)/.75);forward=.53-4.24*p if p<.25 else -.53+1.06*(t*t*(3-2*t));lift=0 if p<.25 else .24*math.sin(t*math.pi)
     paw.location=paw_rest[i]+Vector((0,forward,lift))
    solve_legs();key(frame+1)
  for o in joints:
@@ -239,18 +243,23 @@ def export_runtime():
 
 OUT.mkdir(parents=True,exist_ok=True);FRAMES.mkdir(parents=True,exist_ok=True)
 manifest={'generator':'tools/blender/build_pet_wolf.py','command':'npm run models:pet-wolf','reference':'public/defense/snow-atlas.png','reference_actor':'Moonlight companion / second row left','additional_concept':'art-source/defense/concepts/2026-10-29/variants/silverfrost-wolf-variants.png','reference_sha256':hashlib.sha256((ROOT/'public/defense/snow-atlas.png').read_bytes()).hexdigest(),'frame':{'width':384,'height':384,'ground':list(ground),'orthographic_scale':6.8,'display_scale':1.2*6.8/5.8},'delivery_frame':{'width':256,'height':256,'ground':[128,220]},'render':{'engine':'Cycles CPU','samples':args.samples},'clips':[],'directions':{'bite':[],'walk':[]},'files':[]}
-for mode in ['bite','walk']:
+if args.walk_only:
+ previous=json.loads((OUT/'moonlight-wolf.json').read_text());manifest['directions']['bite']=previous['directions']['bite'];manifest['clips']=[c for c in previous['clips'] if c['clip']=='moonlight-bite'];manifest['files']=[f for f in previous['files'] if '/moonlight-bite-' in f['file'] or Path(f['file']).name in ['moonlight-wolf.blend','moonlight-wolf.glb','moonlight-wolf.png']]
+manifest['gait']={'model_stride':4.24,'stance_fraction':.25,'base_display_size':73,'diagonal_pairs':[[0,3],[1,2]],'stride_per_size':[]}
+for mode in (['walk'] if args.walk_only else ['bite','walk']):
  animate(mode);asset_id='moonlight-wolf'+('-walk' if mode=='walk' else '');clip_name='moonlight-'+mode
  poses=[('ready',1),('gather',5),('windup',9),('launch',12),('strike',14),('rebound',20),('recover',29),('settle',37)] if mode=='bite' else [(str(i),1+i*10) for i in range(8)]
  for direction in range(8):
   angle=direction*math.tau/8;world=inverse@Vector((math.cos(angle),math.sin(angle)));world.normalize();ROOT_OBJ.rotation_euler.z=math.atan2(-world.x,world.y);entry={'index':direction,'yaw':ROOT_OBJ.rotation_euler.z,'poses':[]}
+  if mode=='walk':
+   bpy.context.view_layer.update();v=project(ROOT_OBJ.matrix_world@Vector((0,4.24,0)))-project(ROOT_OBJ.matrix_world@Vector((0,0,0)));entry['cycle_translation']=list(v);manifest['gait']['stride_per_size'].append(v.length/384*manifest['frame']['display_scale'])
   for name,frame in poses:
    scene.frame_set(frame);bpy.context.view_layer.update();graph=bpy.context.evaluated_depsgraph_get();points=[]
    for obj in COL.objects:
     if obj.type=='MESH':
      ev=obj.evaluated_get(graph);points.extend(project(ev.matrix_world@Vector(c)) for c in ev.bound_box)
    bounds=[min(v.x for v in points),min(v.y for v in points),max(v.x for v in points),max(v.y for v in points)];assert min(bounds[:2])>4 and max(bounds[2:])<380,(mode,direction,name,bounds)
-   entry['poses'].append({'name':name,'frame':frame,'bounds':bounds,'socket':list(project(socket.matrix_world.translation))})
+   entry['poses'].append({'name':name,'frame':frame,'bounds':bounds,'socket':list(project(socket.matrix_world.translation)),**({'paws':[list(project(paw.matrix_world.translation)) for paw in paws],'paw_heights':[paw.location.z-.12 for paw in paws]} if mode=='walk' else {})})
    if args.preview:
     if mode=='bite' and direction in [0,1]:scene.render.filepath=f'/tmp/arcana-pet-wolf-preview-{direction}-{name}.png';bpy.ops.render.render(write_still=True)
    elif not args.check:scene.render.filepath=str(FRAMES/f'moonlight-{mode}-{direction}-{name}.png');bpy.ops.render.render(write_still=True)
@@ -262,11 +271,12 @@ for mode in ['bite','walk']:
   print('DIRECTION_COMPLETE',mode,direction,flush=True)
  ROOT_OBJ.rotation_euler.z=0;scene.frame_set(1);bpy.context.view_layer.update()
  if not args.check and not args.preview:
-  stats=export_runtime();scene['regeneration_command']='npm run models:pet-wolf';bpy.context.preferences.filepaths.save_version=0;source=ROOT/f'art-source/defense/{asset_id}.blend';bpy.ops.wm.save_as_mainfile(filepath=str(source));shutil.copyfile(FRAMES/f'moonlight-{mode}-1-{poses[0][0]}.png',OUT/f'{asset_id}.png')
+  stats=export_runtime();scene['regeneration_command']='npm run models:pet-wolf'+(' -- --walk-only' if args.walk_only else '');bpy.context.preferences.filepaths.save_version=0;source=ROOT/f'art-source/defense/{asset_id}.blend';bpy.ops.wm.save_as_mainfile(filepath=str(source));shutil.copyfile(FRAMES/f'moonlight-{mode}-1-{poses[0][0]}.png',OUT/f'{asset_id}.png')
   manifest['clips'].append({'asset':asset_id,'clip':clip_name,'fps':100,'first_frame':1,'last_frame':scene.frame_end,'duration_seconds':(scene.frame_end-1)/100,'baked_frames':[frame for _,frame in poses],'hit_seconds':.13 if mode=='bite' else None,'runtime':stats,'source':str(source.relative_to(ROOT))})
   for path in [source,OUT/f'{asset_id}.glb',OUT/f'{asset_id}.png']:manifest['files'].append({'file':str(path.relative_to(ROOT)),'bytes':path.stat().st_size,'sha256':hashlib.sha256(path.read_bytes()).hexdigest()})
 if not args.check and not args.preview:
  (OUT/'moonlight-wolf.json').write_text(json.dumps(manifest,indent=2)+'\n')
+ (ROOT/'src/games/defense/petWolfGait.ts').write_text('// Generated by tools/blender/build_pet_wolf.py; projected cycle travel per display size.\nexport const PET_WOLF_STRIDE = '+json.dumps([round(v,9) for v in manifest['gait']['stride_per_size']])+' as const;\n')
  coords=[[[round((p['socket'][0]-192)/384*manifest['frame']['display_scale'],7),round((p['socket'][1]-330)/384*manifest['frame']['display_scale'],7)] for p in d['poses']] for d in manifest['directions']['bite']]
  (ROOT/'src/games/defense/petWolfSockets.ts').write_text('// Generated by tools/blender/build_pet_wolf.py from the actual bite socket.\nexport const PET_WOLF_SOCKETS = '+json.dumps(coords)+' as const;\n')
 print('PET_WOLF_CHECK_PASS' if args.check or args.preview else 'PET_WOLF_BAKE_PASS',flush=True)
