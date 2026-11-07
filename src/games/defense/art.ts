@@ -1,7 +1,8 @@
+import { KAR_HAMMER_TRAIL } from './karHammerTrail.ts';
 import { FIRE_TOWER_LV3_SOCKETS } from './fireTowerLv3Sockets.ts';
 import { FIRE_TOWER_SOCKETS } from './fireTowerSockets.ts';
 import { enemyWalkFrame, walkFrame, petWalkFrame } from './locomotion.ts';
-import { attackOctant, dwarfHammerFrame, petBiteFrame } from './action.ts';
+import { attackOctant, dwarfHammerFrame, karHammerFrame, petBiteFrame } from './action.ts';
 import { MAGE_SOCKETS } from './mageSockets.ts';
 import { ELF_SOCKETS } from './elfSockets.ts';
 import { PET_WOLF_SOCKETS } from './petWolfSockets.ts';
@@ -43,6 +44,13 @@ const RANGED:Record<'mage'|'elf'|'tao'|'druid',MotionFrame[]> = {
 };
 const motionLoaded = new Set<string>();
 let motionPreload:Promise<void>|null = null;
+const KAR_SLAM=Array.from({length:8},(_,i)=>`/defense/models/kar-slam-${i}-atlas.webp`);
+const KAR_WALK=Array.from({length:8},(_,i)=>`/defense/models/kar-walk-${i}-atlas.webp`);
+function karModelReady(){return [...KAR_SLAM,...KAR_WALK].every(src=>motionLoaded.has(src));}
+function karAsset(direction:number,mode:'slam'|'walk',frame:number):SpriteAsset|null {
+ if(!karModelReady())return null;
+ return {src:(mode==='slam'?KAR_SLAM:KAR_WALK)[direction],viewBox:`${frame*256} 0 256 256`,width:2048,height:256,groundY:220,displayScale:1.2*6.8/5.8,oriented:true};
+}
 const MAGE_CAST=Array.from({length:8},(_,i)=>`/defense/models/ian-cast-${i}-atlas.webp`);
 const MAGE_WALK=Array.from({length:8},(_,i)=>`/defense/models/ian-walk-${i}-atlas.webp`);
 function mageModelReady(){return [...MAGE_CAST,...MAGE_WALK].every(src=>motionLoaded.has(src));}
@@ -154,6 +162,7 @@ const DWARF_DIRECTIONS=Array.from({length:8},(_,i)=>`/defense/models/dwarf-attac
 /** Rotate the authored model instead of mirroring its asymmetric hammer/shield. */
 export function directionalActionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose,from:Point,to:Point,reduced=false):SpriteAsset|null {
  const direction=attackOctant(from,to);
+ if(actor==='barbarian'&&direction!==null)return karAsset(direction,'slam',reduced?(pose==='strike'?4:0):pose==='windup'?2:pose==='strike'?4:6);
  if(actor==='wolf'&&direction!==null)return petWolfAsset(direction,'bite',reduced?(pose==='strike'?4:0):pose==='windup'?2:pose==='strike'?4:6);
  if(actor==='druid'&&direction!==null)return druidAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='tao'&&direction!==null)return taoAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
@@ -167,20 +176,22 @@ const DWARF_HAMMER=Array.from({length:8},(_,i)=>`/defense/models/dwarf-hammer-${
 /** Eight authored load/contact/recovery poses, with the same ground and scale as walking. */
 export function hammerSequenceSpriteAsset(actor:HeroId|'wolf',attack:CombatAttack,reduced=false):SpriteAsset|null {
  const direction=attackOctant(attack.from,attack.to);
+ if(actor==='barbarian'&&direction!==null)return karAsset(direction,'slam',karHammerFrame(attack,reduced));
  if(actor!=='dwarf'||direction===null||!dwarfModelReady()||!DWARF_HAMMER.every(src=>motionLoaded.has(src)))return null;
  const frame=dwarfHammerFrame(attack,reduced);
  return {src:DWARF_HAMMER[direction],viewBox:`${frame*256} 0 256 256`,width:2048,height:256,displayScale:1.2*6.8/5.8,groundY:220,oriented:true};
 }
 /** Contact-only ribbon sampled from the same camera as the visible hammer head. */
 export function hammerContactTrail(attack:CombatAttack,size:number):Point[]|null {
- if(attack.actor!=='dwarf'||dwarfHammerFrame(attack)!==4||!Number.isFinite(size)||size<=0||!hammerSequenceSpriteAsset('dwarf',attack))return null;
+ if((attack.actor!=='dwarf'&&attack.actor!=='barbarian')||(attack.actor==='barbarian'?karHammerFrame(attack):dwarfHammerFrame(attack))!==4||!Number.isFinite(size)||size<=0||!hammerSequenceSpriteAsset(attack.actor,attack))return null;
  const direction=attackOctant(attack.from,attack.to)!;
- return DWARF_HAMMER_TRAIL[direction].map(([x,y])=>({x:x*size,y:y*size}));
+ return (attack.actor==='barbarian'?KAR_HAMMER_TRAIL:DWARF_HAMMER_TRAIL)[direction].map(([x,y])=>({x:x*size,y:y*size}));
 }
 const DWARF_LOCOMOTION=Array.from({length:8},(_,i)=>`/defense/models/dwarf-locomotion-${i}-atlas.webp`);
 /** One complete direction set shares the attack camera; frame 8 is a neutral stop. */
 export function directionalLocomotionSpriteAsset(actor:HeroId|'wolf',heading:Point,distance:number|null,size=73,gaitCycles?:number):SpriteAsset|null {
  const direction=attackOctant({x:0,y:0},heading);
+ if(actor==='barbarian'&&direction!==null)return karAsset(direction,distance===null?'slam':'walk',distance===null?0:walkFrame(distance));
  if(actor==='wolf'&&direction!==null)return petWolfAsset(direction,distance===null?'bite':'walk',distance===null?0:petWalkFrame(heading,distance,size,gaitCycles));
  if(actor==='druid'&&direction!==null)return druidAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
  if(actor==='tao'&&direction!==null)return taoAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
@@ -191,13 +202,14 @@ export function directionalLocomotionSpriteAsset(actor:HeroId|'wolf',heading:Poi
  return {src:DWARF_LOCOMOTION[direction],viewBox:`${frame*256} 0 256 256`,width:2304,height:256,displayScale:1.2*6.8/5.8,groundY:220,oriented:true};
 }
 export function idleSpriteAsset(actor:HeroId|'wolf'):SpriteAsset|null {
- return actor==='wolf'?petWolfAsset(1,'bite',0):actor==='druid'?druidAsset(1,'cast',0):actor==='tao'?taoAsset(1,'cast',0):actor==='elf'?elfAsset(1,'cast',0):actor==='mage'?mageAsset(1,'cast',0):actor==='dwarf'&&dwarfModelReady()?DWARF_RENDERS.idle:null;
+ return actor==='barbarian'?karAsset(1,'slam',0):actor==='wolf'?petWolfAsset(1,'bite',0):actor==='druid'?druidAsset(1,'cast',0):actor==='tao'?taoAsset(1,'cast',0):actor==='elf'?elfAsset(1,'cast',0):actor==='mage'?mageAsset(1,'cast',0):actor==='dwarf'&&dwarfModelReady()?DWARF_RENDERS.idle:null;
 }
 const DWARF_WALK = Array.from({length:8},(_,i):SpriteAsset=>({
  ...DWARF_RENDERS.idle,src:`/defense/models/dwarf-walk-${i}-game.webp`,
 }));
 /** A partial walk set keeps the existing modeled idle pose, never mixes styles. */
 export function walkingSpriteAsset(actor:HeroId|'wolf',distance:number):SpriteAsset|null {
+ if(actor==='barbarian')return karAsset(1,'walk',walkFrame(distance));
  if(actor==='wolf')return petWolfAsset(1,'walk',petWalkFrame({x:1,y:1},distance));
  if(actor==='druid')return druidAsset(1,'walk',walkFrame(distance));
  if(actor==='tao')return taoAsset(1,'walk',walkFrame(distance));
@@ -351,6 +363,7 @@ export function monsterDeathSpriteAsset(kind:EnemyKind,progress:number,reduced=f
 }
 /** Long weapons need a larger viewport to keep the actor's body size consistent. */
 export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAsset|null {
+ if(actor==='barbarian'&&karModelReady())return karAsset(1,'slam',pose==='windup'?2:pose==='strike'?4:6);
  if(actor==='wolf'&&petWolfModelReady())return petWolfAsset(1,'bite',pose==='windup'?2:pose==='strike'?4:6);
  if(actor==='druid'&&druidModelReady())return druidAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='tao'&&taoModelReady())return taoAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);
@@ -373,7 +386,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...KAR_SLAM,...KAR_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

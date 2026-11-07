@@ -26,6 +26,15 @@ export function dwarfHammerFrame(a:Pick<CombatAttack,'elapsed'|'hitAt'|'duration
   return reduced?4:recovery<.22?4:recovery<.5?5:recovery<.78?6:7;
 }
 
+/** Kar's contact lasts a quarter of recovery: .07s survives a nominal 2x/30Hz publication. */
+export function karHammerFrame(a:Pick<CombatAttack,'elapsed'|'hitAt'|'duration'>,reduced=false):number {
+  if(![a.elapsed,a.hitAt,a.duration].every(Number.isFinite)||a.hitAt<=0||a.duration<=a.hitAt||a.elapsed<0||a.elapsed>=a.duration)return 0;
+  if(a.elapsed<a.hitAt)return dwarfHammerFrame(a,reduced);
+  const recovery=(a.elapsed-a.hitAt)/(a.duration-a.hitAt)+1e-10;
+  if(recovery>=.94)return 0;
+  return reduced?4:recovery<.25?4:recovery<.5?5:recovery<.78?6:7;
+}
+
 /** Eight authored bite samples: never show contact before the simulated hit, settle before locomotion. */
 export function petBiteFrame(a:Pick<CombatAttack,'elapsed'|'hitAt'|'duration'>,reduced=false):number {
  if(![a.elapsed,a.hitAt,a.duration].every(Number.isFinite)||a.hitAt<=0||a.duration<=a.hitAt||a.elapsed<0||a.elapsed>=a.duration)return 0;

@@ -161,8 +161,8 @@ test('a complete dwarf render set shares its body scale and ground anchor across
   for(const key of ['viewBox','width','height','displayScale','nativeFacing','groundY'] as const)
    assert.equal(frame?.[key],idle?.[key],`${pose} must keep the same ${key}`);
  }
- assert.equal(art.idleSpriteAsset('barbarian'),null);
- assert.equal(art.actionSpriteAsset('barbarian','strike')?.src,'/defense/melee-motion.webp');
+ assert.equal(art.idleSpriteAsset('barbarian')?.src,'/defense/models/kar-slam-1-atlas.webp');
+ assert.equal(art.actionSpriteAsset('barbarian','strike')?.src,'/defense/models/kar-slam-1-atlas.webp');
  assert.equal(art.spriteAsset(0).src,'/defense/atlas.png');
  assert.equal(requests.filter(src=>/\/dwarf-.*-game\.webp$/.test(src)).length,12);
  assert.equal(requests.some(src=>src.endsWith('.glb')),false,'battle must not request articulated realtime models');
@@ -289,7 +289,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')).length,9);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')).length,9);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -314,7 +314,7 @@ test('walk frames require a complete walk and base set and preserve the shared g
   for(const key of ['viewBox','width','height','displayScale','groundY','nativeFacing'] as const)assert.equal(frame[key],idle[key]);
  }
  assert.equal(art.walkingSpriteAsset('dwarf',64)?.src,art.walkingSpriteAsset('dwarf',0)?.src);
- assert.equal(art.walkingSpriteAsset('barbarian',8),null);
+ assert.equal(art.walkingSpriteAsset('barbarian',8)?.src,'/defense/models/kar-walk-1-atlas.webp');
  for(const missing of ['walk-3','strike']){
   const {art:partial}=await loadWithImageResults(src=>src.endsWith(`/dwarf-${missing}-game.webp`),`walk-missing-${missing}`);
   assert.equal(partial.walkingSpriteAsset('dwarf',8),null);
@@ -346,7 +346,7 @@ test('dwarf directional attacks share the idle scale and ground and fall back as
  }
  assert.equal(requests.filter(src=>src.includes('/dwarf-attack-')).length,8);
  assert.equal(art.directionalActionSpriteAsset('dwarf','strike',from,from),null);
- assert.equal(art.directionalActionSpriteAsset('barbarian','strike',from,{x:250,y:200}),null);
+ assert.equal(art.directionalActionSpriteAsset('barbarian','strike',from,{x:250,y:200})?.src,'/defense/models/kar-slam-0-atlas.webp');
  for(const failedFile of ['dwarf-attack-6-atlas.webp','dwarf-windup-game.webp']){
   const {art:failed}=await loadWithImageResults(src=>src.endsWith(failedFile),failedFile);
   for(const pose of ['windup','strike','recover'] as const)assert.equal(failed.directionalActionSpriteAsset('dwarf',pose,from,{x:250,y:200}),null);
@@ -433,7 +433,7 @@ test('Bron locomotion shares attack projection, never mirrors hands, and falls b
    const [x,y,w,h]=f.viewBox.split(' ').map(Number);assert.ok(x+w<=f.width&&y+h<=f.height);
   }
  }
- assert.equal(art.directionalLocomotionSpriteAsset('barbarian',{x:1,y:0},0),null);
+ assert.equal(art.directionalLocomotionSpriteAsset('barbarian',{x:1,y:0},0)?.src,'/defense/models/kar-walk-0-atlas.webp');
  assert.equal(art.directionalLocomotionSpriteAsset('dwarf',{x:0,y:0},0),null);
  assert.ok(!requests.some(s=>s.endsWith('.glb')));
  for(const file of ['dwarf-locomotion-3-atlas.webp','dwarf-idle-game.webp']){
@@ -827,5 +827,50 @@ test('authored companion contact paws cancel projected travel in every direction
    assert.equal(walk.viewBox,`${f*256} 0 256 256`);assert.equal(walk.groundY,220);
    const accumulated=art.directionalLocomotionSpriteAsset('wolf',heading,99999,size,f/8*size/73)!;assert.equal(accumulated.viewBox,walk.viewBox);
   }
+ }
+});
+
+
+test('Kar keeps one grounded model through eight attack directions, walks and contact-only hammer trails',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'kar-ready');
+ const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/kar-barbarian.json',import.meta.url),'utf8'));
+ const times=[0,.05,.12,.22,.28,.36,.45,.52];
+ for(let d=0;d<8;d++){
+  const heading={x:Math.cos(d*Math.PI/4),y:Math.sin(d*Math.PI/4)},from={x:300,y:200},to={x:from.x+heading.x*90,y:from.y+heading.y*90};
+  const idle=art.directionalLocomotionSpriteAsset('barbarian',heading,null)!;
+  assert.equal(idle.src,`/defense/models/kar-slam-${d}-atlas.webp`);assert.equal(idle.viewBox,'0 0 256 256');
+  for(let f=0;f<8;f++){
+   const a={actor:'barbarian',from,to,elapsed:times[f],hitAt:.28,duration:.56} as CombatAttack,original=structuredClone(a);
+   const slam=art.hammerSequenceSpriteAsset('barbarian',a)!;assert.equal(slam.viewBox,`${f*256} 0 256 256`);assert.equal(slam.src,idle.src);assert.deepEqual(a,original);
+   const walk=art.directionalLocomotionSpriteAsset('barbarian',heading,f*8)!;assert.equal(walk.viewBox,slam.viewBox);assert.equal(walk.src,`/defense/models/kar-walk-${d}-atlas.webp`);
+   for(const asset of [walk,slam]){assert.equal(asset.groundY,220);assert.equal(asset.displayScale,idle.displayScale);assert.equal(asset.oriented,true);}
+   assert.equal(art.hammerSequenceSpriteAsset('barbarian',a,true)!.viewBox,`${f<4?0:4*256} 0 256 256`);
+   for(const size of [84,94,105,117.5]){
+    const trail=art.hammerContactTrail(a,size);assert.equal(trail!==null,f===4);
+    if(trail)for(let i=0;i<7;i++){const raw=meta.directions.slam[d].contact_trail[i];assert.ok(Math.abs(trail[i].x-(raw[0]-192)/384*idle.displayScale!*size)<.0001);assert.ok(Math.abs(trail[i].y-(raw[1]-330)/384*idle.displayScale!*size)<.0001);}
+   }
+  }
+  for(const elapsed of [.279999,.56,NaN])assert.equal(art.hammerContactTrail({actor:'barbarian',from,to,elapsed,hitAt:.28,duration:.56} as CombatAttack,84),null);
+ }
+ assert.equal(requests.filter(s=>s.includes('/kar-')).length,16);assert.ok(!requests.some(s=>s.endsWith('.glb')));assert.equal(art.spriteAsset(16).src,'/defense/snow-atlas.png');
+ for(const file of meta.files){const bytes=readFileSync(new URL('../../../'+file.file,import.meta.url));assert.equal(bytes.length,file.bytes);assert.equal(createHash('sha256').update(bytes).digest('hex'),file.sha256);}
+});
+
+test('Kar fails as one complete illustrated set without disabling Bron or the companion',async()=>{
+ for(const file of ['kar-slam-5-atlas.webp','kar-walk-2-atlas.webp']){
+  const {art}=await loadWithImageResults(s=>s.endsWith(file),'kar-missing-'+file),a={actor:'barbarian',from:{x:0,y:0},to:{x:100,y:0},elapsed:.28,hitAt:.28,duration:.56} as CombatAttack;
+  assert.equal(art.idleSpriteAsset('barbarian'),null);assert.equal(art.walkingSpriteAsset('barbarian',8),null);assert.equal(art.hammerSequenceSpriteAsset('barbarian',a),null);assert.equal(art.hammerContactTrail(a,84),null);
+  assert.equal(art.directionalActionSpriteAsset('barbarian','strike',a.from,a.to),null);assert.equal(art.directionalLocomotionSpriteAsset('barbarian',{x:1,y:0},8),null);
+  assert.equal(art.actionSpriteAsset('barbarian','strike')?.src,'/defense/melee-motion.webp');assert.ok(art.idleSpriteAsset('dwarf'));assert.ok(art.idleSpriteAsset('wolf'));
+ }
+});
+
+test('Kar contact survives nominal 30Hz publication at 2x without appearing before damage',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'kar-contact-cadence');
+ const base={actor:'barbarian',from:{x:0,y:0},to:{x:100,y:0},hitAt:.28,duration:.56} as CombatAttack;
+ for(const speed of [1,2])for(let phase=0;phase<60;phase++){
+  const seen=new Set<number>();
+  for(let elapsed=phase/60*speed/30;elapsed<.56;elapsed+=speed/30){const frame=Number(art.hammerSequenceSpriteAsset('barbarian',{...base,elapsed})!.viewBox.split(' ')[0])/256;seen.add(frame);if(elapsed<.28)assert.ok(frame<4);}
+  assert.ok(seen.has(3)&&seen.has(4),`speed${speed}/phase${phase}: ${[...seen]}`);
  }
 });

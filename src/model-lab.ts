@@ -6,6 +6,8 @@ import { PMREMGenerator } from 'three';
 import './model-lab.css';
 
 const models = [
+ {id:'kar-barbarian',name:'카르 · 설산 전사',kind:'WINTER HAMMER WARRIOR',detail:'붉은 머리 · 흰 털망토 · 양손 망치',description:'두 손으로 무거운 망치를 들어 올리고, 발을 디딘 채 내려칩니다. 몸통이 무게를 받고 털망토와 수염이 뒤따라 흔들립니다.',source:'kar-barbarian.blend',command:'npm run models:barbarian',action:'▶ 망치 강타',clip:'kar-slam'},
+ {id:'kar-barbarian-walk',name:'카르 · 방향 보행',kind:'WINTER HAMMER WARRIOR',detail:'넓은 발 지지 · 망치 유지 · 털망토',description:'망치 손잡이를 두 손으로 잡고 발을 번갈아 내딛습니다. 전투에서는 같은 몸을 여덟 방향으로 렌더해 사용합니다.',source:'kar-barbarian-walk.blend',command:'npm run models:barbarian',action:'▶ 보행 재생',clip:'kar-walk',loop:true},
  {id:'moonlight-wolf',name:'달빛 늑대 · 동료',kind:'MOONLIGHT COMPANION',detail:'작은 몸 · 은빛 털 · 초록 목걸이',description:'네 발을 디디고 몸을 낮춘 뒤 입을 벌려 내밉니다. 턱 닫힘·반동·회수를 여덟 자세로 연결하고 귀·꼬리·목걸이는 늦게 따라옵니다.',source:'moonlight-wolf.blend',command:'npm run models:pet-wolf',action:'▶ 물기 재생',clip:'moonlight-bite'},
  {id:'moonlight-wolf-walk',name:'달빛 늑대 · 사족 보행',kind:'MOONLIGHT COMPANION',detail:'대각선 발 지지 · 둥근 다리 · 꼬리',description:'대각선 발을 짝지어 땅을 밀고, 짧게 떠오르며 다음 발을 내딛습니다. 실제 발 이동량에서 방향별 보폭을 계산해 전투 이동과 맞췄습니다.',source:'moonlight-wolf-walk.blend',command:'npm run models:pet-wolf',action:'▶ 보행 재생',clip:'moonlight-walk',loop:true},
  {id:'luna-druid',name:'루나 · 숲의 드루이드',kind:'WOODLAND DRUID',detail:'여우 귀 · 구리빛 머리 · 잎 지팡이',description:'지팡이를 모아 준비한 뒤 수정 끝을 앞으로 내밀어 시전합니다. 두 발은 지면을 짚고 귀·머리카락·망토가 뒤따라 움직입니다.',source:'luna-druid.blend',command:'npm run models:druid',action:'▶ 숲의 시전',clip:'luna-cast'},
@@ -53,7 +55,7 @@ function release(object:Object3D) {
  materials(object).forEach(material => material.dispose());
 }
 // Match the dwarf render's front three-quarter view so its hammer clears the face.
-function resetView() {pivot.rotation.y = (currentModelId.startsWith('dwarf-')||currentModelId.startsWith('ian-')||currentModelId.startsWith('riel-')||currentModelId.startsWith('cheongun-')||currentModelId.startsWith('luna-')||currentModelId.startsWith('moonlight-'))?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,currentModelId==='forest-bridge'?1:2.0,0);controls?.update();}
+function resetView() {pivot.rotation.y = (currentModelId.startsWith('kar-')||currentModelId.startsWith('dwarf-')||currentModelId.startsWith('ian-')||currentModelId.startsWith('riel-')||currentModelId.startsWith('cheongun-')||currentModelId.startsWith('luna-')||currentModelId.startsWith('moonlight-'))?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,currentModelId==='forest-bridge'?1:2.0,0);controls?.update();}
 function stopAction() {
  attackAction?.stop(); shotAt = -Infinity; stage.dataset.action = 'idle'; shoot.textContent=models.find(model=>model.id===currentModelId)?.action??'▶ 동작 재생'; redraw = true;
 }
