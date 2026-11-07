@@ -39,6 +39,7 @@ const models = [
  {id:'dwarf-guardian',asset:'dwarf-hammer-sequence',name:'브론 · 드워프 공병',kind:'DWARF GUARDIAN',detail:'강철 · 청동 · 가죽',description:'두 발을 짚고 망치를 끌어올린 뒤 내려칩니다. 몸통과 팔꿈치가 무게를 받아 짧게 반동하고, 망치를 회수해 중립 자세로 돌아옵니다.',source:'dwarf-hammer-sequence.blend',command:'npm run models:dwarf-hammer',action:'▶ 망치 강타',clip:'dwarf-hammer-sequence'},
  {id:'dwarf-locomotion',name:'브론 · 방향 보행',kind:'DWARF LOCOMOTION',detail:'발 접지 · 무거운 망치 · 방향 보행',description:'두 발의 지지와 회수를 엇갈리며 걷습니다. 전투에서는 같은 원본을 여덟 방향으로 렌더해 망치와 방패의 손을 유지합니다.',source:'dwarf-locomotion.blend',command:'npm run models:dwarf-locomotion',action:'▶ 보행 재생',clip:'dwarf-walk',loop:true},
  {id:'wood-soldier',name:'나무 병사 · 통나무 파수꾼',kind:'LIVING LOG SOLDIER',detail:'주황 목재 · 초록 눈 · 통나무 몽둥이',description:'곧게 선 몸과 밝은 나이테, 손에 쥔 통나무 몽둥이로 돌 병사와 구분합니다. 무기를 든 팔은 작게 움직이고 손목과 잎이 뒤따릅니다.',source:'wood-soldier.blend',command:'npm run models:wood',action:'▶ 보행 재생',clip:'wood-soldier-walk',loop:true},
+ {id:'frost-wolf-brace-fall',name:'서리늑대 · 버티다 쓰러짐',kind:'SILVERFROST WOLF',detail:'버티던 발 · 낮아지는 몸 · 마지막 자세',description:'버티던 몸을 다시 세우지 않고 그 자세에서 힘을 잃고 쓰러집니다. 밀림 세기와 출발 걸음을 바꾸어 확인하세요.',source:'frost-wolf-brace-fall.blend',command:'npm run models:wolf-brace-fall',action:'▶ 쓰러짐 재생',clip:'frost-wolf-brace-fall-0',hold:true,stopVariants:true,fitBounds:true},
  {id:'frost-wolf-brace',name:'서리늑대 · 밀림 버티기',kind:'SILVERFROST WOLF',detail:'넓힌 발 · 낮은 몸 · 걸음으로 복귀',description:'앞을 향한 채 발을 벌리고 몸을 낮춰 밀림을 버팁니다. 힘이 줄어들면 처음 걸음으로 돌아옵니다.',source:'frost-wolf-brace.blend',command:'npm run models:wolf-brace',action:'▶ 버티기 재생',clip:'frost-wolf-brace-0',hold:true,stopVariants:true,fitBounds:true},
  {id:'frost-wolf-fall',name:'서리늑대 · 걸음에서 쓰러짐',kind:'SILVERFROST WOLF',detail:'들린 발 내려놓기 · 무릎과 몸의 무게',description:'걷던 방향을 유지하며 들린 발을 내려놓고 몸을 낮춥니다. 출발 걸음을 바꿔 발 디딤과 쓰러진 자세를 확인하세요.',source:'frost-wolf-fall.blend',command:'npm run models:wolf-fall',action:'▶ 쓰러짐 재생',clip:'frost-wolf-fall-0',hold:true,stopVariants:true,fitBounds:true},
  {id:'frost-wolf-flinch',name:'서리늑대 · 걸음 위 피격',kind:'SILVERFROST WOLF',detail:'발 위치 유지 · 목과 몸의 충격 흡수',description:'앞을 향한 채 몸과 목으로 충격을 받고 같은 걸음으로 돌아옵니다. 피격 걸음을 바꿔 발 디딤을 확인하세요.',source:'frost-wolf-flinch.blend',command:'npm run models:wolf-flinch',action:'▶ 피격 재생',clip:'frost-wolf-flinch-0',hold:true,stopVariants:true,fitBounds:true},
@@ -138,9 +139,11 @@ try {
 
 async function select(index:number) {
  const ticket = ++generation, model = models[index]; currentModelId = model.id;
+ const braceFall=model.id==='frost-wolf-brace-fall',count=braceFall?24:8;
+ if(stopSelect.options.length!==count){stopSelect.replaceChildren(...Array.from({length:count},(_,i)=>{const option=document.createElement('option');option.value=String(i);option.textContent=braceFall?`${['강한 버티기','중간 버티기','복귀 중'][Math.floor(i/8)]} · 걸음 ${i%8+1}`:`걸음 ${i+1}`;return option;}));}
  stopLabel.hidden=!model.stopVariants;
- stopLabel.firstChild!.textContent=model.id==='frost-wolf-flinch'?'피격 걸음 ':(model.id==='riel-return'||model.id==='dwarf-return')?'복귀 걸음 ':'출발 걸음 ';
- stopSelect.setAttribute('aria-label',model.id==='frost-wolf-brace'?'버티기 출발 걸음':model.id==='frost-wolf-fall'?'쓰러짐 출발 걸음':model.id==='frost-wolf-flinch'?'피격 당시 걸음':model.id==='dwarf-return'?'강타 후 복귀 걸음':model.id==='riel-return'?'사격 후 복귀 걸음':model.id==='dwarf-entry'?'강타 진입 출발 걸음':model.id==='riel-entry'?'사격 진입 출발 걸음':'정지 동작 출발 걸음');
+ stopLabel.firstChild!.textContent=braceFall?'출발 자세 ':model.id==='frost-wolf-flinch'?'피격 걸음 ':(model.id==='riel-return'||model.id==='dwarf-return')?'복귀 걸음 ':'출발 걸음 ';
+ stopSelect.setAttribute('aria-label',braceFall?'버티다 쓰러짐 출발 자세':model.id==='frost-wolf-brace'?'버티기 출발 걸음':model.id==='frost-wolf-fall'?'쓰러짐 출발 걸음':model.id==='frost-wolf-flinch'?'피격 당시 걸음':model.id==='dwarf-return'?'강타 후 복귀 걸음':model.id==='riel-return'?'사격 후 복귀 걸음':model.id==='dwarf-entry'?'강타 진입 출발 걸음':model.id==='riel-entry'?'사격 진입 출발 걸음':'정지 동작 출발 걸음');
  setReady(false); status.hidden = false; status.textContent = '모델을 불러오는 중…';
  $('model-name').textContent = model.name; $('model-kind').textContent = model.kind; $('model-description').textContent = model.description;
  $('model-source').textContent = model.source; $('model-command').textContent = model.command; shoot.textContent = model.action;

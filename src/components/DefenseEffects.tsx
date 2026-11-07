@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { frostWolfFallAsset, crushCannonProjectileOffset, rapidCrossbowProjectileOffset, lightningTowerProjectileOffset, fireTowerProjectileOffset, idleSpriteAsset, druidCastSocket, druidProjectileOffset, taoSealSocket, taoProjectileOffset, elfArrowSocket, elfProjectileOffset, mageProjectileOffset, mageCastSocket, hammerSequenceSpriteAsset, monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, ballistaProjectileOffset, waterCannonProjectileOffset } from '../games/defense/art';
+import { frostWolfBracedFallAsset, frostWolfFallAsset, crushCannonProjectileOffset, rapidCrossbowProjectileOffset, lightningTowerProjectileOffset, fireTowerProjectileOffset, idleSpriteAsset, druidCastSocket, druidProjectileOffset, taoSealSocket, taoProjectileOffset, elfArrowSocket, elfProjectileOffset, mageProjectileOffset, mageCastSocket, hammerSequenceSpriteAsset, monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, ballistaProjectileOffset, waterCannonProjectileOffset } from '../games/defense/art';
 import { projectileScreenPosition } from '../games/defense/action';
 import type { CombatAttack, Effect, Element, Point, Projectile } from '../games/defense/types';
 
@@ -209,7 +209,8 @@ export function EffectLayer({effects,reduced,unit=1,layer='front'}:{effects:Effe
   if(kind==='chain')return <g key={e.id} opacity={fade} data-effect="chain"><Lightning effect={e}/><circle cx={e.to.x} cy={e.to.y-25} r={12+p*12} fill={`url(#${hitCore(e.element)})`}/></g>;
   if(kind==='death'){
    const kind=e.targetKind??(e.targetSprite===20?'frostboss':e.targetSprite===14?'boss':undefined);
-   const directional=kind==='frostwolf'&&e.targetWalk?frostWolfFallAsset(e.targetWalk.heading,e.targetWalk.distance,e.targetWalk.cycles,e.age??p*(e.maxLife??.7),73*unit,reduced):null;
+   const braced=kind==='frostwolf'&&e.targetWalk?frostWolfBracedFallAsset(e.targetWalk.heading,e.targetWalk.distance,e.targetWalk.cycles,e.targetWalk.braceVelocity??0,e.age??p*(e.maxLife??.7),73*unit,reduced):null;
+   const directional=braced??(kind==='frostwolf'&&e.targetWalk?frostWolfFallAsset(e.targetWalk.heading,e.targetWalk.distance,e.targetWalk.cycles,e.age??p*(e.maxLife??.7),73*unit,reduced):null);
    const collapse=directional??(kind?monsterDeathSpriteAsset(kind,p,reduced):null);
    const deathArt=collapse?.asset??(kind?monsterSpriteAsset(kind,'death'):null);
    const art=deathArt??(typeof e.targetSprite==='number'?spriteAsset(e.targetSprite):null);
@@ -218,7 +219,7 @@ export function EffectLayer({effects,reduced,unit=1,layer='front'}:{effects:Effe
    const [,frameY,frameWidth,frameHeight]=art?.viewBox.split(' ').map(Number)??[0,0,1,1];
    const width=size*Math.min(1,frameWidth/frameHeight),height=size*Math.min(1,frameHeight/frameWidth);
    const bottom=collapse&&art?.groundY!==undefined?height*(1-(art.groundY-frameY)/frameHeight):bodySize*.1;
-   return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} data-effect="death" data-death-model={collapse?'collapse':undefined} data-death-frame={collapse?.frame} data-death-direction={directional?.direction} data-death-gait={directional?.gait}>
+   return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} data-effect="death" data-death-brace={braced?.brace} data-death-model={collapse?'collapse':undefined} data-death-frame={collapse?.frame} data-death-direction={directional?.direction} data-death-gait={directional?.gait}>
     {art?<g opacity={collapse?Math.min(1,(1-p)/.3):Math.min(1,(1-p)*(boss?1.6:.85))} transform={`translate(0,${fall}) rotate(${reduced||deathArt?0:(noise(e.id)>.5?1:-1)*p*13}) scale(${scale*(!art?.oriented&&e.targetFacing===-1?-1:1)},${scale})`}><svg x={-width/2} y={bottom-height} width={width} height={height} viewBox={art.viewBox} preserveAspectRatio="xMidYMax meet" overflow="hidden"><image href={art.src} width={art.width} height={art.height}/></svg></g>:null}
     {sparks>0&&!collapse?<g transform="translate(0,-20)"><Sparks effect={e} reduced={reduced} count={sparks}/></g>:null}
    </g>;

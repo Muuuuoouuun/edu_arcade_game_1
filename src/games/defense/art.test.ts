@@ -1440,7 +1440,7 @@ test('wolf knockback holds direction and gait through strong, soft and recovery 
  for(const velocity of [-1,0,7,NaN,Infinity])assert.equal(art.frostWolfBraceAsset({x:1,y:0},0,0,velocity),null);
  for(const size of [0,-1,NaN])assert.equal(art.frostWolfBraceAsset({x:1,y:0},0,0,80,size),null);
  assert.equal(art.frostWolfBraceAsset({x:0,y:0},0,0,80),null);assert.equal(art.frostWolfBraceAsset({x:1,y:0},0,NaN,80),null);
- assert.equal(requests.filter(p=>p.includes('/frost-brace-')).length,8);
+ assert.equal(requests.filter(p=>/\/frost-brace-\d+-atlas/.test(p)).length,8);
 });
 
 test('optional brace failure retains ordinary flinch, walking and directional collapse',async()=>{
@@ -1495,5 +1495,49 @@ test('stationary recovery has an intermediate pose at nominal 1x/2x and 20Hz pub
  for(const ticks of [2,4,6])for(let offset=0;offset<ticks;offset++){
   const frames=[];for(let step=offset;step/60<.28;step+=ticks)frames.push(art.rielShotResetSpriteAsset({...a,elapsed:step/60},p,motion)?.frame);
   assert.ok(frames.some(f=>f==='settle'||f==='reload'),`${ticks}/${offset}: ${frames}`);
+ }
+});
+
+
+test('braced collapse starts in the visible brace, keeps common ground and ends in the existing fall',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'brace-fall');
+ for(let d=0;d<8;d++)for(let gait=0;gait<8;gait++)for(const size of [73,91.25])for(const [velocity,brace] of [[140,0],[65,1],[22,2]]){
+  const heading={x:Math.cos(d*Math.PI/4),y:Math.sin(d*Math.PI/4)},cycles=gait/8*size/73;
+  const start=art.frostWolfBraceAsset(heading,0,cycles,velocity,size)!;
+  for(const [age,frame] of [[0,0],[.059,0],[.06,1],[.239,1],[.24,2],[.419,2],[.42,3],[.69,3]]){
+   const result=art.frostWolfBracedFallAsset(heading,0,cycles,velocity,age,size)!;
+   assert.equal(result.direction,d);assert.equal(result.gait,gait);assert.equal(result.brace,brace);assert.equal(result.frame,frame);
+   assert.equal(result.asset.displayScale,start.asset.displayScale);assert.equal(result.asset.oriented,true);
+   if(frame===0)assert.deepEqual(result.asset,start.asset);
+   else if(frame===3)assert.deepEqual(result.asset,art.frostWolfFallAsset(heading,0,cycles,age,size)!.asset);
+   else{
+    assert.equal(result.asset.src,`/defense/models/frost-brace-fall-${d}-atlas.webp`);
+    const crop=result.asset.viewBox.split(' ').map(Number);assert.ok(Math.abs(crop[0]-((gait*2+frame-1)*128+8/3))<1e-9);assert.ok(Math.abs(crop[1]-(brace*128+40/3))<1e-9);
+    assert.ok(Math.abs((result.asset.groundY!-brace*128)/128-(start.asset.groundY!-brace*192)/192)<1e-9);
+   }
+   assert.deepEqual(art.frostWolfBracedFallAsset(heading,0,cycles,velocity,age,size,true)!.asset,art.frostWolfFallAsset(heading,0,cycles,age,size,true)!.asset);
+  }
+ }
+ assert.equal(requests.filter(p=>p.includes('/frost-brace-fall-')).length,8);assert.ok(!requests.some(p=>p.endsWith('.glb')));
+ for(const velocity of [-1,0,7,NaN,Infinity])assert.equal(art.frostWolfBracedFallAsset({x:1,y:0},0,0,velocity,.2),null);
+});
+
+test('optional braced-collapse failure preserves existing fall and live brace independently',async()=>{
+ const h={x:0,y:-1},{art:complete}=await loadWithImageResults(()=>false,'brace-fall-complete');
+ for(const file of ['frost-brace-fall-2-atlas.webp','frost-brace-2-atlas.webp','frost-fall-2-atlas.webp','frost-stride-2-atlas.webp','frost-wolf-atlas.webp']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(file),'brace-fall-fail-'+file);
+  assert.equal(art.frostWolfBracedFallAsset(h,0,.5,140,.3),null);
+  if(file.startsWith('frost-brace-fall')){
+   assert.deepEqual(art.frostWolfFallAsset(h,0,.5,.3),complete.frostWolfFallAsset(h,0,.5,.3));
+   assert.deepEqual(art.frostWolfBraceAsset(h,0,.5,140),complete.frostWolfBraceAsset(h,0,.5,140));
+  }
+ }
+});
+
+test('braced collapse publishes both bridge poses at 1x/2x offsets without wall-time drift',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'brace-fall-cadence');
+ for(const velocity of [140,40,12])for(const ticks of [2,4,6])for(let offset=0;offset<ticks;offset++){
+  const frames=new Set();for(let step=offset;step/60<.7;step+=ticks)frames.add(art.frostWolfBracedFallAsset({x:1,y:0},0,.5,velocity,step/60)!.frame);
+  for(const frame of [1,2,3])assert.ok(frames.has(frame),`${velocity}/${ticks}/${offset}/${frame}`);
  }
 });

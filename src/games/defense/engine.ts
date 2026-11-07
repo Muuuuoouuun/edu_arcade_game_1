@@ -72,7 +72,10 @@ function hit(s:DefenseState,e:Enemy,amount:number,element:Element,from:Point,for
   if(e.hp<=0)return;
   const multiplier=damageMultiplier(e.kind,element);
   if(multiplier>1)s.weakHits=(s.weakHits||0)+1;
+  // Preserve the pose before a lethal impulse replaces the live knockback speed.
+  const priorBrace=e.knockVelocity??0;
   e.hp-=amount*multiplier;e.hit=.16;e.recoil=.22;
+  if(e.kind==='frostwolf'&&e.hp<=0)e.deathBraceVelocity=priorBrace;
   if(element==='fire')e.burn=Math.max(e.burn,2.5);
   if(element==='water'){e.wet=5;e.slow=2.7;}
   if(force>0&&(e.knockCooldown||0)<=0){
@@ -94,7 +97,8 @@ function reap(s:DefenseState) {
     if(boss)effect(s,enemy,enemy,'impact','','shockwave',{force:145});
     // Snapshot presentation-only locomotion before removing the enemy; never alias its heading.
     const ahead=enemy.kind==='frostwolf'?positionOnPath(enemy.path,enemy.progress+4,s.stage):null;
-    const targetWalk=ahead?{heading:{...(enemy.walkHeading??{x:ahead.x-enemy.x,y:ahead.y-enemy.y})},distance:(enemy.walkDistance??enemy.progress)+enemy.id*7,...(enemy.walkCycles===undefined?{}:{cycles:enemy.walkCycles+enemy.id*7/40})}:undefined;
+    const braceVelocity=enemy.deathBraceVelocity??enemy.knockVelocity??0;
+    const targetWalk=ahead?{...(braceVelocity>7?{braceVelocity}:{}),heading:{...(enemy.walkHeading??{x:ahead.x-enemy.x,y:ahead.y-enemy.y})},distance:(enemy.walkDistance??enemy.progress)+enemy.id*7,...(enemy.walkCycles===undefined?{}:{cycles:enemy.walkCycles+enemy.id*7/40})}:undefined;
     effect(s,enemy,enemy,'physical',undefined,'death',{targetSprite:ENEMIES[enemy.kind].sprite,targetId:enemy.id,targetKind:enemy.kind,targetFacing:enemy.facing||1,...(targetWalk?{targetWalk}:{}),force:enemy.knockVelocity||0});
   }
   if(merged){const last=crowd[crowd.length-1];effect(s,last,last,'physical',`+${mergedSum} ×${crowd.length}`,'coin');}

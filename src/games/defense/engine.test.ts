@@ -822,3 +822,23 @@ test('wolf death owns the final visual gait snapshot without sharing a mutable h
  const other=battlefield();other.enemies=[{...enemy('wood',1),hp:0,speed:0},{...enemy('stone',2),speed:0}];
  assert.equal(stepDefense(other,.02).effects.find(e=>e.kind==='death')!.targetWalk,undefined);
 });
+
+
+test('lethal knockback saves the prior visible brace instead of the new killing impulse',()=>{
+ for(const prior of [0,7,12,40,140]){
+  const s=battlefield(5);s.hero='dwarf';s.enemies=[{...enemy('frostwolf',11),hp:1,knockVelocity:prior,walkHeading:{x:0,y:-1},walkCycles:.375,walkDistance:123}];
+  const killed=actDefense(s,{type:'skill'}),death=killed.effects.find(e=>e.kind==='death')!;
+  assert.equal(death.force,170);assert.equal(death.targetWalk!.braceVelocity,prior>7?prior:undefined);
+  assert.equal(s.enemies[0].knockVelocity,prior);assert.equal(s.enemies[0].deathBraceVelocity,undefined);
+  assert.equal(killed.kills,1);assert.equal(killed.coins-s.coins,16);assert.equal(killed.enemies.length,0);
+  const paused=actDefense(killed,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+  const next=stepDefense(killed,.1);assert.deepEqual(next.effects.find(e=>e.id===death.id)!.targetWalk,death.targetWalk);
+ }
+});
+
+test('burn deaths during knockback use the existing brace without requiring another impact',()=>{
+ const s=battlefield(5);s.enemies=[{...enemy('frostwolf',11),hp:.01,burn:1,knockVelocity:80,knockCooldown:.8,speed:0,progress:200,walkHeading:{x:1,y:0},walkCycles:.375},{...enemy('stone',12),speed:0}];
+ const killed=stepDefense(s,.02),death=killed.effects.find(e=>e.kind==='death')!;
+ assert.ok(death.targetWalk!.braceVelocity!>65&&death.targetWalk!.braceVelocity!<=80);
+ assert.equal(killed.kills,1);assert.equal(killed.coins-s.coins,16);assert.equal(s.enemies[0].hp,.01);
+});
