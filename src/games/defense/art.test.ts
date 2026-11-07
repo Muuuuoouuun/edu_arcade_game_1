@@ -289,7 +289,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,17);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,17);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -1339,5 +1339,45 @@ test('aligned Bron return remains visible at nominal 1x/2x and 20Hz 2x publicati
   const frames=[];
   for(let tick=offset;tick/60<attack.duration;tick+=ticksPerPublication){const elapsed=tick/60;frames.push(art.dwarfHammerReturnSpriteAsset({...attack,elapsed},{speed:230,distance:elapsed*230,heading:{x:1,y:0}})?.frame)}
   assert.ok(frames.some(frame=>frame==='weight-release'||frame==='stride-pickup'),`${ticksPerPublication}/${offset}: ${frames}`);
+ }
+});
+
+test('frost wolf ordinary hit keeps the current heading, gait, crop and mobile scale',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'frost-flinch');
+ for(let d=0;d<8;d++)for(let frame=0;frame<8;frame++)for(const size of [73,91.25]){
+  const heading={x:Math.cos(d*Math.PI/4),y:Math.sin(d*Math.PI/4)},cycles=frame/8*size/73;
+  const walk=art.frostWolfDirectionalWalkAsset(heading,0,size,cycles)!;
+  for(const [hit,phase,sample] of [[.16,'compress',0],[.091,'compress',0],[.09,'release',1],[.021,'release',1]] as const){
+   const flinch=art.frostWolfHitAsset(heading,0,hit,size,cycles)!;assert.equal(flinch.direction,d);assert.equal(flinch.frame,frame);assert.equal(flinch.phase,phase);
+   assert.equal(flinch.asset.src,`/defense/models/frost-flinch-${d}-atlas.webp`);assert.equal(flinch.asset.viewBox,`${(frame*2+sample)*192+4} 20 184 152`);assert.equal(flinch.asset.oriented,true);
+   assert.equal(flinch.asset.displayScale,walk.asset.displayScale);assert.equal(flinch.asset.groundY!/192,walk.asset.groundY!/256);
+  }
+  for(const hit of [0,.02,-1,.17,NaN,Infinity])assert.equal(art.frostWolfHitAsset(heading,0,hit,size,cycles),null);
+  assert.equal(art.frostWolfHitAsset(heading,0,.1,size,cycles,true),null);
+  const next=art.frostWolfHitAsset(heading,0,.06,size,(frame+1)%8/8*size/73)!;assert.equal(next.frame,(frame+1)%8,'damage does not freeze the advancing gait');
+ }
+ for(const heading of [{x:0,y:0},{x:NaN,y:1}])assert.equal(art.frostWolfHitAsset(heading,0,.1),null);
+ for(const size of [0,-1,NaN,Infinity])assert.equal(art.frostWolfHitAsset({x:1,y:0},0,.1,size),null);
+ assert.equal(requests.filter(p=>p.includes('/frost-flinch-')).length,8);assert.ok(!requests.some(p=>p.endsWith('.glb')));
+});
+
+test('frost wolf optional hit failure preserves stride and collapse; base and stride failure keep their fallback',async()=>{
+ const heading={x:0,y:1};
+ const {art:complete}=await loadWithImageResults(()=>false,'flinch-all');
+ for(const missing of ['frost-flinch-3-atlas.webp','frost-stride-3-atlas.webp','frost-wolf-atlas.webp']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(missing),'flinch-fail-'+missing);
+  assert.equal(art.frostWolfHitAsset(heading,0,.1,73,.375),null);
+  if(missing.includes('flinch'))assert.deepEqual(art.frostWolfDirectionalWalkAsset(heading,0,73,.375),complete.frostWolfDirectionalWalkAsset(heading,0,73,.375));
+  if(!missing.startsWith('frost-wolf'))assert.deepEqual(art.monsterDeathSpriteAsset('frostwolf',.4),complete.monsterDeathSpriteAsset('frostwolf',.4));
+  assert.equal(art.monsterSpriteAsset('frostwolf','hit')?.src,missing==='frost-wolf-atlas.webp'?'/defense/monster-models.webp':'/defense/models/frost-wolf-atlas.webp');
+  assert.ok(art.dwarfHammerReturnSpriteAsset({actor:'dwarf',from:{x:0,y:0},to:{x:100,y:0},elapsed:.43,hitAt:.24,duration:.52} as CombatAttack,{distance:24,speed:100,heading:{x:1,y:0}}));
+ }
+});
+
+test('ordinary wolf hit has a visible modeled response at 1x/2x publication offsets',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'flinch-cadence');
+ for(const ticks of [2,4,6])for(let offset=0;offset<ticks;offset++){
+  const phases=[];for(let step=offset;step/60<.16;step+=ticks)phases.push(art.frostWolfHitAsset({x:1,y:0},step,.16-step/60)?.phase);
+  assert.ok(phases.some(Boolean),`${ticks}/${offset}`);
  }
 });

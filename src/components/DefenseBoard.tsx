@@ -7,7 +7,7 @@ import type { Locomotion } from '../games/defense/locomotion';
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getSlots } from '../games/defense/data';
-import { dwarfHammerReturnSpriteAsset, rielShotReturnSpriteAsset, dwarfHammerEntrySpriteAsset, rielShotEntrySpriteAsset, frostWolfDirectionalWalkAsset, mageStopSpriteAsset, actionSpriteAsset, hammerSequenceSpriteAsset, hammerContactTrail, petBiteContact, petBiteSequenceSpriteAsset, mageCastSocket, taoSealSocket, druidCastSocket, directionalActionSpriteAsset, directionalLocomotionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset, crushCannonActionSpriteAsset, rapidCrossbowActionSpriteAsset, lightningTowerActionSpriteAsset, fireTowerActionSpriteAsset, ballistaActionSpriteAsset, waterCannonActionSpriteAsset } from '../games/defense/art';
+import { frostWolfHitAsset, dwarfHammerReturnSpriteAsset, rielShotReturnSpriteAsset, dwarfHammerEntrySpriteAsset, rielShotEntrySpriteAsset, frostWolfDirectionalWalkAsset, mageStopSpriteAsset, actionSpriteAsset, hammerSequenceSpriteAsset, hammerContactTrail, petBiteContact, petBiteSequenceSpriteAsset, mageCastSocket, taoSealSocket, druidCastSocket, directionalActionSpriteAsset, directionalLocomotionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset, crushCannonActionSpriteAsset, rapidCrossbowActionSpriteAsset, lightningTowerActionSpriteAsset, fireTowerActionSpriteAsset, ballistaActionSpriteAsset, waterCannonActionSpriteAsset } from '../games/defense/art';
 import type { SpriteAsset, ActionPose } from '../games/defense/art';
 import type { DefenseThemeId } from '../games/defense/themes';
 import { DefenseThemeScenery, ModeledGate, useGateAsset, useGateImpactAsset } from './DefenseThemeScenery';
@@ -106,28 +106,30 @@ function EnemyUnit({unit=1,hpScale=1,enemy:e,state:s,reduced,onActivate,onKey}:{
  const ahead=positionOnPath(e.path,e.progress+4,s.stage),heading=e.walkHeading??{x:ahead.x-e.x,y:ahead.y-e.y};
  const canWalk=!reduced&&!charging&&!knock&&e.hit<=.02;
  const directional=e.kind==='frostwolf'&&canWalk?frostWolfDirectionalWalkAsset(heading,phaseDistance,size,e.walkCycles===undefined?undefined:e.walkCycles+e.id*7/40):null;
+ const flinch=e.kind==='frostwolf'&&!knock&&!charging?frostWolfHitAsset(heading,phaseDistance,e.hit,size,e.walkCycles===undefined?undefined:e.walkCycles+e.id*7/40,reduced):null;
+ const authoredWolf=!!directional||!!flinch;
  const gait=directional?.frame??enemyWalkFrame(e.kind,phaseDistance);
  const motionPose=charging?'charge':e.hit>.02||knock?'hit':enraged?'charge':boss?'idle':reduced||gait<4?'walk-a':'walk-b';
  const walking=directional?.asset??(canWalk?monsterWalkingSpriteAsset(e.kind,phaseDistance):null);
- const art=walking??monsterSpriteAsset(e.kind,motionPose);
+ const art=flinch?.asset??walking??monsterSpriteAsset(e.kind,motionPose);
  const stride=Math.sin(phaseDistance/enemyStride(e.kind)*Math.PI*2);
  // Authored gait already contains weight transfer; don't bounce the entire model again.
- const bob=reduced||charging||knock||walking||!moving?0:-Math.abs(stride)*(boss?1.5:e.kind==='sprout'?3.1:2.3);
- const lean=reduced?0:knock?-12*facing*clamp((e.knockVelocity??0)/110):walking||!moving?0:stride*1.8+facing*1.3;
- const shake=reduced?0:Math.sin((1-hit)*Math.PI*3)*hit*3;
- const hpArt=boss?monsterSpriteAsset(e.kind,'charge')??art:directional?monsterSpriteAsset(e.kind,'walk-a')??art:art;
+ const bob=reduced||charging||knock||flinch||walking||!moving?0:-Math.abs(stride)*(boss?1.5:e.kind==='sprout'?3.1:2.3);
+ const lean=reduced||flinch?0:knock?-12*facing*clamp((e.knockVelocity??0)/110):walking||!moving?0:stride*1.8+facing*1.3;
+ const shake=reduced||authoredWolf?0:Math.sin((1-hit)*Math.PI*3)*hit*3;
+ const hpArt=boss?monsterSpriteAsset(e.kind,'charge')??art:authoredWolf?monsterSpriteAsset(e.kind,'walk-a')??art:art;
  const [,,hpWidth,hpHeight]=hpArt?.viewBox.split(' ').map(Number)??[0,0,1,1];
  const modelHeight=hpArt?size*(hpArt.displayScale??1)*Math.min(1,hpHeight/hpWidth):size;
  // Reserve room for a boss's raised arms so the health bar stays fixed through its cast.
  const hpY=-Math.max(size*.91,modelHeight-size*.1)-8;
  const hpW=(boss?68:44)*hpScale,hpH=(boss?7:5.5)*hpScale;
- return <g className={`def-monster ${e.hit>0?'def-hit':''} ${knock?'def-knocked':''} ${boss?'def-boss-model':''}`} transform={`translate(${e.x},${e.y})`} data-enemy={e.kind} data-monster-pose={walking?`walk-${gait}`:motionPose} data-walk-direction={directional?.direction} data-walk-cycles={e.walkCycles?.toFixed(4)} data-walk-distance={travel.toFixed(2)} data-facing={facing} data-boss-state={charging?'casting':enraged?'enraged':undefined} data-progress={e.progress.toFixed(2)} data-knockback={(e.knockVelocity??0).toFixed(1)} role="button" tabIndex={0} aria-label={`${ENEMIES[e.kind].name} 위치로 이동, 체력 ${Math.ceil(e.hp)}, ${ENEMIES[e.kind].elementHint}`} onKeyDown={onKey} onClick={ev=>{ev.stopPropagation();onActivate();}}>
+ return <g className={`def-monster ${e.hit>0?'def-hit':''} ${knock?'def-knocked':''} ${boss?'def-boss-model':''}`} transform={`translate(${e.x},${e.y})`} data-enemy={e.kind} data-monster-pose={walking?`walk-${gait}`:motionPose} data-hit-direction={flinch?.direction} data-hit-gait={flinch?.frame} data-hit-phase={flinch?.phase} data-walk-direction={directional?.direction} data-walk-cycles={e.walkCycles?.toFixed(4)} data-walk-distance={travel.toFixed(2)} data-facing={facing} data-boss-state={charging?'casting':enraged?'enraged':undefined} data-progress={e.progress.toFixed(2)} data-knockback={(e.knockVelocity??0).toFixed(1)} role="button" tabIndex={0} aria-label={`${ENEMIES[e.kind].name} 위치로 이동, 체력 ${Math.ceil(e.hp)}, ${ENEMIES[e.kind].elementHint}`} onKeyDown={onKey} onClick={ev=>{ev.stopPropagation();onActivate();}}>
   <title>{ENEMIES[e.kind].name} · {ENEMIES[e.kind].elementHint}</title>
   {charging?<g opacity=".75"><ellipse rx={35+(2.5-s.bossCharge)*10} ry={12+(2.5-s.bossCharge)*4} fill="#91d9ff16" stroke="#bcf2ff" strokeWidth="2"/><g transform={`scale(1,.38) rotate(${reduced?0:s.time*34})`}><path d="M-48 0 24-42 24 42ZM48 0-24-42-24 42Z" fill="none" stroke="#daf6ff" strokeWidth="1.2" opacity=".6"/></g><circle cy="-52" r={22+(2.5-s.bossCharge)*9} fill="url(#def-blue-core)" opacity=".38"/></g>:null}
   {e.slow>0?<ellipse cy="2" rx={size*.36} ry="8" fill="#91d6ff36" stroke="#d3f6ff66" strokeWidth="1"/>:null}
   {!reduced&&reaction.streak?<path d={`M${-facing*21} 3h${-facing*20*reaction.strength}m${facing*5} 4h${-facing*12*reaction.strength}`} stroke="#eadbc6" strokeWidth="3" strokeLinecap="round" opacity={.65*reaction.strength}/>:null}
   {!reduced&&reaction.bracing?<g opacity={Math.min(1,hit+.15)} data-impact-reaction="brace"><ellipse cy="3" rx={size*.3} ry="5" fill="#bbaa8b" opacity=".4"/><path d={`M${-size*.3} 2l-5-4M${size*.3} 2l5-4`} stroke="#d9c7a2" strokeWidth="2" strokeLinecap="round"/></g>:null}
-  <Sprite index={ENEMIES[e.kind].sprite} size={size} flip={!directional&&facing<0} art={art} pose={`translate(${shake},${bob}) rotate(${lean}) scale(${reduced?1:1+hit*.07},${reduced?1:1-hit*.06-(reaction.bracing?.04:0)})`} shadowScale={1+bob*.025}/>
+  <Sprite index={ENEMIES[e.kind].sprite} size={size} flip={!authoredWolf&&facing<0} art={art} pose={`translate(${shake},${bob}) rotate(${lean}) scale(${reduced||authoredWolf?1:1+hit*.07},${reduced||authoredWolf?1:1-hit*.06-(reaction.bracing?.04:0)})`} shadowScale={1+bob*.025}/>
   {e.burn>0?<g opacity=".75"><circle cy="-24" r={reduced?14:18+Math.sin(s.time*11+e.id)*2} fill="url(#def-fire-core)"/>{!reduced?<path d="M-10-22q-7-11-3-18q1 10 8 13M6-27q-1-12 5-16q-4 12 0 17" fill="none" stroke="#ffc05d" strokeWidth="2" strokeLinecap="round"/>:null}</g>:null}
   {e.wet>0?<path d="M22-46q-10 13 0 13q10 0 0-13" fill="#84e4ff" stroke="#d8fbff" strokeWidth=".9"/>:null}
   <rect x={-hpW/2} y={hpY} width={hpW} height={hpH} rx={hpH/2} fill="#102418" stroke="#0a1610cc" strokeWidth={1.2*hpScale}/><rect x={-hpW/2} y={hpY} width={hpW*clamp(e.hp/e.maxHp)} height={hpH} rx={hpH/2} fill={e.kind==='frostboss'?'#91d8f5':e.kind==='boss'?'#d176ed':'#e7ab69'}/>

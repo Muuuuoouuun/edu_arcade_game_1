@@ -63,7 +63,9 @@
     "models:riel-return": "blender --python-exit-code 1 -b --python tools/blender/build_riel_return.py",
     "models:riel-return:check": "node tools/check-riel-return.mjs",
     "models:dwarf-return": "blender --python-exit-code 1 -b --python tools/blender/build_dwarf_return.py",
-    "models:dwarf-return:check": "node tools/check-dwarf-return.mjs"
+    "models:dwarf-return:check": "node tools/check-dwarf-return.mjs",
+    "models:wolf-flinch": "blender --python-exit-code 1 -b --python tools/blender/build_frostwolf_flinch.py",
+    "models:wolf-flinch:check": "node tools/check-frost-wolf-flinch.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
