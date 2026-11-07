@@ -576,7 +576,7 @@ test('Riel uses one complete modeled body and projection for idle, walking and e
   const socket=art.elfArrowSocket(from,to,105)!;assert.deepEqual(offset,{x:socket.x,y:socket.y+27});assert.deepEqual(shot,original);
   assert.deepEqual(art.elfProjectileOffset({...shot,to:{x:999,y:999}},1.25),offset);assert.equal(art.elfProjectileOffset({...shot,launchAim:undefined}),undefined);
  }
- assert.equal(requests.filter(u=>u.includes('/riel-')&&!u.includes('/riel-entry-')&&!u.includes('/riel-return-')).length,16);assert.ok(!requests.some(u=>u.endsWith('.glb')));assert.equal(art.spriteAsset(0).src,'/defense/atlas.png','portraits retain the concept illustration');
+ assert.equal(requests.filter(u=>/\/riel-(cast|walk)-/.test(u)).length,16);assert.ok(!requests.some(u=>u.endsWith('.glb')));assert.equal(art.spriteAsset(0).src,'/defense/atlas.png','portraits retain the concept illustration');
 });
 
 test('a missing Riel cast or walk image falls back as a whole without disabling other models',async()=>{
@@ -1460,5 +1460,40 @@ test('decaying strong knockback shows all three brace phases at 1x/2x publicatio
  for(const ticks of [2,4,6])for(let offset=0;offset<ticks;offset++){
   const frames=new Set();for(let step=offset;step/60<.7;step+=ticks)frames.add(art.frostWolfBraceAsset({x:1,y:0},0,.5,180*Math.exp(-6*step/60))?.frame);
   for(const frame of [0,1,2])assert.ok(frames.has(frame),`${ticks}/${offset}/${frame}`);assert.ok(frames.has(undefined));
+ }
+});
+
+test('stationary Riel settles after release, reloads on the existing boundary and joins ready',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'riel-reset');const p={x:200,y:200},motion={speed:0,distance:24,heading:{x:1,y:0}};
+ for(const source of ['hero','mercenary'] as const)for(let d=0;d<8;d++){
+  const to={x:p.x+100*Math.cos(d*Math.PI/4),y:p.y+100*Math.sin(d*Math.PI/4)},a={actor:'elf',source,from:p,to,elapsed:.2,hitAt:.1,duration:.28} as CombatAttack;
+  for(const [elapsed,frame] of [[.16,'hold'],[.174,'hold'],[.175,'settle'],[.219,'settle'],[.22,'reload'],[.269,'reload'],[.27,'ready'],[.279,'ready']] as const){
+   const r=art.rielShotResetSpriteAsset({...a,elapsed},p,motion)!;assert.equal(r.direction,d);assert.equal(r.frame,frame);assert.equal(r.asset.displayScale,1.2*6.8/5.8);assert.equal(r.asset.groundY!/r.asset.height,220/256);
+   if(frame==='hold')assert.deepEqual(r.asset,art.directionalActionSpriteAsset('elf','strike',p,to));
+   else if(frame==='ready')assert.deepEqual(r.asset,art.directionalLocomotionSpriteAsset('elf',{x:to.x-p.x,y:to.y-p.y},null));
+   else{assert.equal(r.asset.src,`/defense/models/riel-reset-${d}-atlas.webp`);assert.equal(r.asset.viewBox,`${frame==='settle'?0:192} 0 192 192`)}
+  }
+  for(const elapsed of [-1,.1,.159,.28,NaN,Infinity])assert.equal(art.rielShotResetSpriteAsset({...a,elapsed},p,motion),null);
+  for(const speed of [-1,.501,100,NaN,Infinity])assert.equal(art.rielShotResetSpriteAsset(a,p,{...motion,speed}),null);
+  assert.ok(art.rielShotResetSpriteAsset(a,p,{...motion,speed:.5}));assert.equal(art.rielShotResetSpriteAsset(a,p,motion,true),null);
+  assert.equal(art.rielShotResetSpriteAsset({...a,actor:'dwarf'},p,motion),null);assert.equal(art.rielShotResetSpriteAsset({...a,to:p},p,motion),null);
+ }
+ assert.equal(requests.filter(s=>s.includes('/riel-reset-')).length,8);
+});
+
+test('optional stationary recovery fails independently of Riel moving return and shots',async()=>{
+ const p={x:0,y:0},motion={speed:0,distance:24,heading:{x:1,y:0}},a={actor:'elf',from:p,to:{x:100,y:0},elapsed:.2,hitAt:.1,duration:.28} as CombatAttack;
+ for(const missing of ['riel-reset-3-atlas.webp','riel-cast-3-atlas.webp','riel-walk-3-atlas.webp']){
+  const {art}=await loadWithImageResults(s=>s.endsWith(missing),'riel-reset-fail-'+missing);assert.equal(art.rielShotResetSpriteAsset(a,p,motion),null);
+  if(missing.startsWith('riel-reset')){assert.ok(art.directionalActionSpriteAsset('elf','strike',p,a.to));assert.ok(art.rielShotReturnSpriteAsset(a,p,{...motion,speed:100}));}
+ }
+ const {art}=await loadWithImageResults(s=>s.includes('/riel-return-'),'riel-return-independent');assert.ok(art.rielShotResetSpriteAsset(a,p,motion));
+});
+
+test('stationary recovery has an intermediate pose at nominal 1x/2x and 20Hz publications',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'riel-reset-cadence'),p={x:0,y:0},motion={speed:0,distance:0},a={actor:'elf',from:p,to:{x:100,y:0},hitAt:.1,duration:.28} as CombatAttack;
+ for(const ticks of [2,4,6])for(let offset=0;offset<ticks;offset++){
+  const frames=[];for(let step=offset;step/60<.28;step+=ticks)frames.push(art.rielShotResetSpriteAsset({...a,elapsed:step/60},p,motion)?.frame);
+  assert.ok(frames.some(f=>f==='settle'||f==='reload'),`${ticks}/${offset}: ${frames}`);
  }
 });

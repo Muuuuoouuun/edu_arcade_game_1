@@ -149,6 +149,7 @@ export function taoProjectileOffset(p:Projectile,unit=1):Point|undefined {
  const socket=taoSealSocket(p.from,p.launchAim,p.sourceSize*unit);
  return socket?{x:socket.x,y:socket.y+27}:undefined;
 }
+const RIEL_RESET=Array.from({length:8},(_,i)=>`/defense/models/riel-reset-${i}-atlas.webp`);
 const RIEL_RETURN=Array.from({length:8},(_,i)=>`/defense/models/riel-return-${i}-atlas.webp`);
 const RIEL_ENTRY=Array.from({length:8},(_,i)=>`/defense/models/riel-entry-${i}-atlas.webp`);
 const ELF_CAST=Array.from({length:8},(_,i)=>`/defense/models/riel-cast-${i}-atlas.webp`);
@@ -196,6 +197,17 @@ export function rielShotReturnSpriteAsset(attack:CombatAttack,position:Point,mot
  if(progress>=11/12)return {asset:elfAsset(direction,'walk',walk)!,walk,frame:'walk',direction};
  const sample=progress<.5?0:1;
  return {walk,frame:sample===0?'release-weight':'stride-pickup',direction,asset:{src:RIEL_RETURN[direction],viewBox:`${(walk*2+sample)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+/** Settle a stationary released shot without changing release or attack duration. */
+export function rielShotResetSpriteAsset(attack:CombatAttack,position:Point,motion:Locomotion,reduced=false):{asset:SpriteAsset;frame:'hold'|'settle'|'reload'|'ready';direction:number}|null {
+ const direction=attackOctant(position,attack.to),start=attack.hitAt+.06;
+ if(attack.actor!=='elf'||reduced||!Number.isFinite(motion.speed)||motion.speed<0||motion.speed>.5||attack.hitAt<=0||direction===null||![attack.elapsed,start,attack.duration].every(Number.isFinite)||start>=attack.duration||attack.elapsed<start||attack.elapsed>=attack.duration||!elfModelReady()||!RIEL_RESET.every(src=>motionLoaded.has(src)))return null;
+ const progress=(attack.elapsed-start)/(attack.duration-start)+1e-9;
+ if(progress<.125)return {direction,frame:'hold',asset:elfAsset(direction,'cast',2)!};
+ if(progress>=11/12)return {direction,frame:'ready',asset:elfAsset(direction,'cast',0)!};
+ const sample=progress<.5?0:1;
+ return {direction,frame:sample===0?'settle':'reload',asset:{src:RIEL_RESET[direction],viewBox:`${sample*192} 0 192 192`,width:384,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
 }
 
 /** Rotate the authored model instead of mirroring its asymmetric hammer/shield. */
@@ -537,7 +549,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...KAR_SLAM,...KAR_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...RIEL_ENTRY,...RIEL_RETURN,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...KAR_SLAM,...KAR_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...RIEL_ENTRY,...RIEL_RETURN,...RIEL_RESET,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

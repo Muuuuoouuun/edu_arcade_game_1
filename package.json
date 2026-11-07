@@ -71,7 +71,10 @@
     "models:wolf-fall:pose-check": "blender --python-exit-code 1 -b --python tools/blender/build_frostwolf_fall.py -- --check",
     "models:wolf-brace": "blender --python-exit-code 1 -b --python tools/blender/build_frostwolf_brace.py",
     "models:wolf-brace:pose-check": "blender --python-exit-code 1 -b --python tools/blender/build_frostwolf_brace.py -- --check",
-    "models:wolf-brace:check": "node tools/check-frost-wolf-brace.mjs"
+    "models:wolf-brace:check": "node tools/check-frost-wolf-brace.mjs",
+    "models:riel-reset": "blender --python-exit-code 1 -b --python tools/blender/build_riel_reset.py",
+    "models:riel-reset:pose-check": "blender --python-exit-code 1 -b --python tools/blender/build_riel_reset.py -- --check",
+    "models:riel-reset:check": "node tools/check-riel-reset.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
