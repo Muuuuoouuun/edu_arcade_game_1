@@ -45,7 +45,8 @@
     "models:fire-action-lv3": "blender --python-exit-code 1 -b --python tools/blender/build_fire_tower_action.py -- --level 3",
     "models:barbarian": "blender --python-exit-code 1 -b --python tools/blender/build_barbarian.py --",
     "models:lightning-action": "blender -b --python tools/blender/build_lightning_tower_action.py",
-    "models:lightning-action-lv3": "blender -b --python tools/blender/build_lightning_tower_lv3_action.py"
+    "models:lightning-action-lv3": "blender -b --python tools/blender/build_lightning_tower_lv3_action.py",
+    "models:rapid-action": "blender --python-exit-code 1 -b --python tools/blender/build_rapid_crossbow_action.py"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

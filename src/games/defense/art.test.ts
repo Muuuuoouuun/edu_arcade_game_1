@@ -289,7 +289,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')).length,9);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')).length,9);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -956,5 +956,56 @@ test('each lightning tier fails as a whole without disabling the other tier or f
    assert.equal(art.lightningTowerProjectileOffset({source:'tower',actor:'magic',element:'lightning',sourceLevel:level} as Projectile),undefined);
    for(const fireLevel of [2,3])assert.ok(art.fireTowerActionSpriteAsset('magic','fire',fireLevel,.8,.24));
   }
+ }
+});
+
+
+test('rapid crossbow aims eight ways, keeps the keep grounded, and feeds after launch',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'rapid-crossbow');
+ const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/rapid-crossbow-action.json',import.meta.url),'utf8'));
+ const from={x:200,y:200},size=100,scale=meta.display_scale;
+ for(let direction=0;direction<8;direction++){
+  const a=direction*Math.PI/4,to={x:from.x+100*Math.cos(a),y:from.y+100*Math.sin(a)};
+  for(const [recoil,pose] of [[0,0],[.24,1],[.16001,1],[.16,2],[.08001,2],[.08,3],[.001,3],[-1,0],[NaN,0],[Infinity,0]]){
+   const r=art.rapidCrossbowActionSpriteAsset('crossbow','rapid',2,from,to,recoil)!;
+   assert.equal(r.pose,pose);assert.equal(r.direction,direction);assert.equal(r.asset.src,`/defense/models/rapid-action-${direction}-atlas.webp`);
+   const [x,y,w,h]=r.asset.viewBox.split(' ').map(Number);assert.ok(x+w<=r.asset.width&&y+h<=r.asset.height);
+   const p=meta.directions[direction].poses[pose],[mx,my]=p.muzzle;
+   assert.ok(Math.abs(r.muzzle.x-(mx-320)/576*scale*size)<.001);assert.ok(Math.abs(r.muzzle.y-(my-meta.frame.display_ground_y)/576*scale*size)<.001);
+   assert.equal(p.foundation_drift,0);assert.ok(p.fixed_meshes>20);
+   assert.equal(art.rapidCrossbowActionSpriteAsset('crossbow','rapid',2,from,to,recoil,true)?.pose,0);
+  }
+  const shot={source:'tower',actor:'crossbow',pierce:false,sourceLevel:2,from,to,launchAim:{...to}} as Projectile;
+  const before=structuredClone(shot),offset=art.rapidCrossbowProjectileOffset(shot);assert.ok(offset);assert.deepEqual(shot,before);
+  assert.deepEqual(art.rapidCrossbowProjectileOffset({...shot,to:{x:999,y:999}}),offset);
+  for(const partial of [{launchAim:undefined},{sourceLevel:3},{pierce:true},{source:'hero' as const}])assert.equal(art.rapidCrossbowProjectileOffset({...shot,...partial}),undefined);
+ }
+ assert.ok(Math.abs((meta.frame.ground[1]-meta.frame.display_ground_y)/576*scale-(.1+(meta.frame.previous_ground[1]-600)/576*1.16))<1e-10,'same base scale and ground as the previous sprite');
+ assert.equal(meta.animation.hit_at,.1);assert.equal(meta.animation.duration_seconds,.34);
+ for(const f of meta.files)assert.equal(createHash('sha256').update(readFileSync(new URL('../../../public/defense/models/'+f.file,import.meta.url))).digest('hex'),f.sha256);
+ assert.equal(requests.filter(src=>src.includes('/rapid-action-')).length,8);assert.ok(!requests.some(src=>src.endsWith('.glb')));
+ assert.equal(art.rapidCrossbowActionSpriteAsset('crossbow','rapid',3,from,{x:300,y:200}),null);
+ assert.equal(art.rapidCrossbowActionSpriteAsset('crossbow','pierce',2,from,{x:300,y:200}),null);
+});
+
+test('rapid feed uses a complete directional set and leaves other branches/upgrades available on failure',async()=>{
+ const from={x:0,y:0},to={x:100,y:0};
+ for(const file of ['rapid-action-3-atlas.webp','rapid-crossbow-game.webp']){
+  const {art}=await loadWithImageResults(s=>s.endsWith(file),'rapid-failure-'+file);
+  for(let d=0;d<8;d++)assert.equal(art.rapidCrossbowActionSpriteAsset('crossbow','rapid',2,from,{x:100*Math.cos(d*Math.PI/4),y:100*Math.sin(d*Math.PI/4)},.24),null);
+  assert.ok(art.towerSpriteAsset('crossbow','rapid',2));assert.equal(art.towerSpriteAsset('crossbow','rapid',3)?.src,'/defense/models/rapid-crossbow-lv3-game.webp');
+  for(const level of [2,3])assert.ok(art.ballistaActionSpriteAsset('crossbow','pierce',level,from,to,.24));
+ }
+});
+
+test('rapid release/draw/feed remain visible at 30Hz and either speed without early release',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'rapid-publication'),from={x:0,y:0},to={x:100,y:0};
+ for(const speed of [1,2])for(let phase=0;phase<100;phase++){
+  const step=speed/30,seen=new Set<number>();
+  for(let t=phase/100*step;t<.34;t+=step){
+   const recoil=t<.1?0:.34-t,r=art.rapidCrossbowActionSpriteAsset('crossbow','rapid',2,from,to,recoil)!;seen.add(r.pose);
+   if(t<.1)assert.equal(r.pose,0);assert.deepEqual(r,art.rapidCrossbowActionSpriteAsset('crossbow','rapid',2,from,to,recoil));
+  }
+  for(const pose of [0,1,2,3])assert.ok(seen.has(pose),`speed${speed},phase${phase},pose${pose}`);
  }
 });

@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { lightningTowerProjectileOffset, fireTowerProjectileOffset, idleSpriteAsset, druidCastSocket, druidProjectileOffset, taoSealSocket, taoProjectileOffset, elfArrowSocket, elfProjectileOffset, mageProjectileOffset, mageCastSocket, hammerSequenceSpriteAsset, monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, ballistaProjectileOffset, waterCannonProjectileOffset } from '../games/defense/art';
+import { rapidCrossbowProjectileOffset, lightningTowerProjectileOffset, fireTowerProjectileOffset, idleSpriteAsset, druidCastSocket, druidProjectileOffset, taoSealSocket, taoProjectileOffset, elfArrowSocket, elfProjectileOffset, mageProjectileOffset, mageCastSocket, hammerSequenceSpriteAsset, monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, ballistaProjectileOffset, waterCannonProjectileOffset } from '../games/defense/art';
 import { projectileScreenPosition } from '../games/defense/action';
 import type { CombatAttack, Effect, Element, Point, Projectile } from '../games/defense/types';
 
@@ -46,13 +46,13 @@ export function DashTrail({effect,position,remaining,reduced}:{effect?:Effect;po
 export function ProjectileLayer({projectiles,reduced,unit=1}:{projectiles:Projectile[];reduced:boolean;unit?:number}) {
   return <g className="def-projectiles" aria-hidden="true" pointerEvents="none">{projectiles.map((p,index)=>{
     const detail=!reduced&&index>=projectiles.length-24;
-    const elfOffset=elfProjectileOffset(p,unit);
-    const {x,y,angle}=projectileScreenPosition(p,elfOffset??druidProjectileOffset(p,unit)??taoProjectileOffset(p,unit)??mageProjectileOffset(p,unit)??ballistaProjectileOffset(p)??waterCannonProjectileOffset(p)??fireTowerProjectileOffset(p,reduced)??lightningTowerProjectileOffset(p,reduced));
+    const elfOffset=elfProjectileOffset(p,unit),rapidOffset=rapidCrossbowProjectileOffset(p),tipAnchored=!!(elfOffset??rapidOffset);
+    const {x,y,angle}=projectileScreenPosition(p,elfOffset??rapidOffset??druidProjectileOffset(p,unit)??taoProjectileOffset(p,unit)??mageProjectileOffset(p,unit)??ballistaProjectileOffset(p)??waterCannonProjectileOffset(p)??fireTowerProjectileOffset(p,reduced)??lightningTowerProjectileOffset(p,reduced));
     const water=p.element==='water',lightning=p.element==='lightning',green=p.actor==='druid';
     return <g key={p.id} data-projectile={p.kind} data-element={p.element} data-progress={p.progress.toFixed(3)}>
       {p.kind==='shell'?<ellipse cx={p.position.x} cy={p.position.y-1} rx={Math.max(3,9-p.height*.025)} ry="3.3" fill="#142e39" opacity={Math.max(.12,.35-p.height*.002)}/>:null}
       <g transform={`translate(${x},${y}) rotate(${angle})`}>
-        {p.kind==='arrow'?<g data-arrow-anchor={elfOffset?'tip':'center'} transform={elfOffset?'translate(-16,0)':undefined}>
+        {p.kind==='arrow'?<g data-arrow-anchor={tipAnchored?'tip':'center'} transform={tipAnchored?'translate(-16,0)':undefined}>
           {detail?<path d="M-34 0H-10" stroke="#fff2c2" strokeWidth="3" strokeLinecap="round" opacity=".32"/>:null}
           <path d="M-16 0H9" stroke="#473f31" strokeWidth="3.5" strokeLinecap="round"/><path d="M-16 -.5H9" stroke="#ebd39a" strokeWidth="1.6"/>
           <path d="m7-4 9 4-9 4 2-4Z" fill="#faf7db" stroke="#91875d" strokeWidth=".8"/><path d="m-14 0-7-5 1 5-1 5Z" fill="#c5e3b0" stroke="#648773" strokeWidth=".8"/>
