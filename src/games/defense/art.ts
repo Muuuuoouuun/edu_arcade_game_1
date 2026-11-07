@@ -1,5 +1,5 @@
 import { enemyWalkFrame, walkFrame } from './locomotion.ts';
-import { attackOctant, dwarfHammerFrame } from './action.ts';
+import { attackOctant, dwarfHammerFrame, petBiteFrame } from './action.ts';
 import { MAGE_SOCKETS } from './mageSockets.ts';
 import { ELF_SOCKETS } from './elfSockets.ts';
 import { PET_WOLF_SOCKETS } from './petWolfSockets.ts';
@@ -65,18 +65,24 @@ const PET_WOLF_WALK=Array.from({length:8},(_,i)=>`/defense/models/moonlight-walk
 function petWolfModelReady(){return [...PET_WOLF_BITE,...PET_WOLF_WALK].every(src=>motionLoaded.has(src));}
 function petWolfAsset(direction:number,mode:'bite'|'walk',frame:number):SpriteAsset|null {
  if(!petWolfModelReady())return null;
- return {src:(mode==='bite'?PET_WOLF_BITE:PET_WOLF_WALK)[direction],viewBox:`${frame*256} 0 256 256`,width:mode==='bite'?1024:2048,height:256,groundY:220,displayScale:1.2*6.8/5.8,oriented:true};
+ return {src:(mode==='bite'?PET_WOLF_BITE:PET_WOLF_WALK)[direction],viewBox:`${frame*256} 0 256 256`,width:2048,height:256,groundY:220,displayScale:1.2*6.8/5.8,oriented:true};
 }
 export function petBiteSocket(from:Point,to:Point,size:number,pose:ActionPose|'idle'='strike'):Point|null {
  const direction=attackOctant(from,to);
  if(direction===null||!petWolfModelReady()||!Number.isFinite(size)||size<=0)return null;
- const frame=pose==='idle'?0:pose==='windup'?1:pose==='strike'?2:3;
+ const frame=pose==='idle'?0:pose==='windup'?2:pose==='strike'?4:6;
  const [x,y]=PET_WOLF_SOCKETS[direction][frame];return {x:x*size,y:y*size};
 }
 /** Contact cue follows the simulated hit window and the actual modeled mouth, never the old claw arc. */
-export function petBiteContact(attack:CombatAttack,size:number,from:Point=attack.from):Point|null {
+export function petBiteContact(attack:CombatAttack,size:number,from:Point=attack.from,reduced=false):Point|null {
  if(attack.actor!=='wolf'||![attack.elapsed,attack.hitAt,attack.duration].every(Number.isFinite)||attack.hitAt<=0||attack.duration<=attack.hitAt||attack.elapsed<attack.hitAt||attack.elapsed>=Math.min(attack.duration,attack.hitAt+.12))return null;
- return petBiteSocket(from,attack.to,size);
+ const direction=attackOctant(from,attack.to);
+ if(direction===null||!petWolfModelReady()||!Number.isFinite(size)||size<=0)return null;
+ const [x,y]=PET_WOLF_SOCKETS[direction][petBiteFrame(attack,reduced)];return {x:x*size,y:y*size};
+}
+export function petBiteSequenceSpriteAsset(attack:CombatAttack,from:Point=attack.from,reduced=false):SpriteAsset|null {
+ const direction=attackOctant(from,attack.to);
+ return attack.actor==='wolf'&&direction!==null?petWolfAsset(direction,'bite',petBiteFrame(attack,reduced)):null;
 }
 const DRUID_CAST=Array.from({length:8},(_,i)=>`/defense/models/luna-cast-${i}-atlas.webp`);
 const DRUID_WALK=Array.from({length:8},(_,i)=>`/defense/models/luna-walk-${i}-atlas.webp`);
@@ -146,7 +152,7 @@ const DWARF_DIRECTIONS=Array.from({length:8},(_,i)=>`/defense/models/dwarf-attac
 /** Rotate the authored model instead of mirroring its asymmetric hammer/shield. */
 export function directionalActionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose,from:Point,to:Point,reduced=false):SpriteAsset|null {
  const direction=attackOctant(from,to);
- if(actor==='wolf'&&direction!==null)return petWolfAsset(direction,'bite',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
+ if(actor==='wolf'&&direction!==null)return petWolfAsset(direction,'bite',reduced?(pose==='strike'?4:0):pose==='windup'?2:pose==='strike'?4:6);
  if(actor==='druid'&&direction!==null)return druidAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='tao'&&direction!==null)return taoAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='elf'&&direction!==null)return elfAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
@@ -325,7 +331,7 @@ export function monsterDeathSpriteAsset(kind:EnemyKind,progress:number,reduced=f
 }
 /** Long weapons need a larger viewport to keep the actor's body size consistent. */
 export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAsset|null {
- if(actor==='wolf'&&petWolfModelReady())return petWolfAsset(1,'bite',pose==='windup'?1:pose==='strike'?2:3);
+ if(actor==='wolf'&&petWolfModelReady())return petWolfAsset(1,'bite',pose==='windup'?2:pose==='strike'?4:6);
  if(actor==='druid'&&druidModelReady())return druidAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='tao'&&taoModelReady())return taoAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='elf'&&elfModelReady())return elfAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);

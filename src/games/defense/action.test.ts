@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDefense, actDefense, stepDefense, positionOnPath } from './engine.ts';
-import { projectileScreenPosition, attackOctant, dwarfHammerFrame, DASH_DAMAGE, distanceToSegment, knockbackPresentation } from './action.ts';
+import { projectileScreenPosition, attackOctant, dwarfHammerFrame, petBiteFrame, DASH_DAMAGE, distanceToSegment, knockbackPresentation } from './action.ts';
 import type { Enemy, Projectile } from './types.ts';
 
 function battle(hp=1000) {
@@ -119,4 +119,16 @@ test('hammer pose freezes with pause and advances with simulation speed without 
  let hit=state;for(let i=0;i<13;i++)hit=stepDefense(hit,.02);
  assert.ok(hit.enemies.some(e=>e.hp<1000));assert.ok(hit.attacks[0].fired);
  assert.ok(dwarfHammerFrame(hit.attacks[0])>=4);
+});
+
+
+test('companion bite loads, contacts and settles using simulation time with neutral bookends',()=>{
+ const a={hitAt:.13,duration:.41,elapsed:0};
+ const samples=[[0,0],[.019,0],[.02,1],[.059,1],[.06,2],[.099,2],[.10,3],[.129,3],[.13,4],[.189,4],[.19,5],[.269,5],[.27,6],[.349,6],[.35,7],[.389,7],[.39,0],[.41,0]];
+ for(const [elapsed,frame] of samples){assert.equal(petBiteFrame({...a,elapsed}),frame,`time ${elapsed}`);assert.equal(petBiteFrame({hitAt:.26,duration:.82,elapsed:elapsed*2}),frame,'timing scales with the attack contract');}
+ for(let i=0;i<130;i++)assert.ok(petBiteFrame({...a,elapsed:i/1000})<4,'contact is never shown early');
+ for(const elapsed of [0,.10,.129,.25,.40,.41])assert.equal(petBiteFrame({...a,elapsed},true),0);
+ for(const elapsed of [.13,.19,.249])assert.equal(petBiteFrame({...a,elapsed},true),4);
+ for(const bad of [{elapsed:NaN},{elapsed:Infinity},{elapsed:-1},{hitAt:0},{duration:.12},{duration:NaN}])assert.equal(petBiteFrame({...a,...bad}),0);
+ const paused={...a,elapsed:.11},copy={...paused};for(let i=0;i<100;i++)assert.equal(petBiteFrame(paused),3);assert.deepEqual(paused,copy);
 });

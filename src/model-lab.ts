@@ -6,7 +6,7 @@ import { PMREMGenerator } from 'three';
 import './model-lab.css';
 
 const models = [
- {id:'moonlight-wolf',name:'달빛 늑대 · 동료',kind:'MOONLIGHT COMPANION',detail:'작은 몸 · 은빛 털 · 초록 목걸이',description:'네 발을 디딘 채 몸을 모았다가 턱을 닫으며 앞으로 내밉니다. 귀·꼬리·목걸이가 뒤따라 움직입니다.',source:'moonlight-wolf.blend',command:'npm run models:pet-wolf',action:'▶ 물기 재생',clip:'moonlight-bite'},
+ {id:'moonlight-wolf',name:'달빛 늑대 · 동료',kind:'MOONLIGHT COMPANION',detail:'작은 몸 · 은빛 털 · 초록 목걸이',description:'네 발을 디디고 몸을 낮춘 뒤 입을 벌려 내밉니다. 턱 닫힘·반동·회수를 여덟 자세로 연결하고 귀·꼬리·목걸이는 늦게 따라옵니다.',source:'moonlight-wolf.blend',command:'npm run models:pet-wolf',action:'▶ 물기 재생',clip:'moonlight-bite'},
  {id:'moonlight-wolf-walk',name:'달빛 늑대 · 사족 보행',kind:'MOONLIGHT COMPANION',detail:'대각선 발 지지 · 둥근 다리 · 꼬리',description:'대각선 발을 짝지어 지지와 회수를 반복합니다. 주인 옆에서 작은 동료로 읽히도록 같은 카메라로 렌더했습니다.',source:'moonlight-wolf-walk.blend',command:'npm run models:pet-wolf',action:'▶ 보행 재생',clip:'moonlight-walk',loop:true},
  {id:'luna-druid',name:'루나 · 숲의 드루이드',kind:'WOODLAND DRUID',detail:'여우 귀 · 구리빛 머리 · 잎 지팡이',description:'지팡이를 모아 준비한 뒤 수정 끝을 앞으로 내밀어 시전합니다. 두 발은 지면을 짚고 귀·머리카락·망토가 뒤따라 움직입니다.',source:'luna-druid.blend',command:'npm run models:druid',action:'▶ 숲의 시전',clip:'luna-cast'},
  {id:'luna-druid-walk',name:'루나 · 방향 보행',kind:'WOODLAND DRUID',detail:'양발 지지 · 옷자락 · 머리카락',description:'지팡이를 들고 양발의 지지와 회수를 번갈아 이어갑니다. 여덟 방향 전투 이미지도 같은 원본으로 렌더합니다.',source:'luna-druid-walk.blend',command:'npm run models:druid',action:'▶ 보행 재생',clip:'luna-walk',loop:true},

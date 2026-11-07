@@ -26,6 +26,20 @@ export function dwarfHammerFrame(a:Pick<CombatAttack,'elapsed'|'hitAt'|'duration
   return reduced?4:recovery<.22?4:recovery<.5?5:recovery<.78?6:7;
 }
 
+/** Eight authored bite samples: never show contact before the simulated hit, settle before locomotion. */
+export function petBiteFrame(a:Pick<CombatAttack,'elapsed'|'hitAt'|'duration'>,reduced=false):number {
+ if(![a.elapsed,a.hitAt,a.duration].every(Number.isFinite)||a.hitAt<=0||a.duration<=a.hitAt||a.elapsed<0||a.elapsed>=a.duration)return 0;
+ // Tolerate rounding only at internal sample boundaries; the hit gate remains exact.
+ if(a.elapsed<a.hitAt){
+  if(reduced)return 0;
+  const progress=a.elapsed/a.hitAt+1e-10;
+  return progress<2/13?0:progress<6/13?1:progress<10/13?2:3;
+ }
+ if(reduced)return a.elapsed<a.hitAt+.12?4:0;
+ const progress=(a.elapsed-a.hitAt)/(a.duration-a.hitAt)+1e-10;
+ return progress<6/28?4:progress<14/28?5:progress<22/28?6:progress<26/28?7:0;
+}
+
 export function projectileScreenPosition(p:Projectile,launchOffset:Point={x:0,y:0}) {
   const blend=1-Math.max(0,Math.min(1,p.progress)),duration=Math.max(.1,p.duration);
   const offsetSpeed=p.progress>=0&&p.progress<1?1/duration:0;

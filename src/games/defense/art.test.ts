@@ -655,9 +655,9 @@ test('the companion wolf keeps one body across eight bite directions and grounde
   const angle=d*Math.PI/4,heading={x:Math.cos(angle),y:Math.sin(angle)},from={x:300,y:200},to={x:from.x+heading.x*65,y:from.y+heading.y*65};
   const idle=art.directionalLocomotionSpriteAsset('wolf',heading,null)!;assert.equal(idle.src,`/defense/models/moonlight-bite-${d}-atlas.webp`);assert.equal(idle.viewBox,'0 0 256 256');
   for(let f=0;f<8;f++){const walk=art.directionalLocomotionSpriteAsset('wolf',heading,f*8)!;assert.equal(walk.src,`/defense/models/moonlight-walk-${d}-atlas.webp`);assert.equal(walk.viewBox,`${f*256} 0 256 256`);assert.equal(walk.groundY,idle.groundY);assert.equal(walk.displayScale,idle.displayScale);assert.equal(walk.oriented,true);}
-  for(const [pose,index] of [['windup',1],['strike',2],['recover',3]] as const){
+  for(const [pose,index] of [['windup',2],['strike',4],['recover',6]] as const){
    const asset=art.directionalActionSpriteAsset('wolf',pose,from,to)!;assert.equal(asset.viewBox,`${index*256} 0 256 256`);assert.equal(asset.displayScale,idle.displayScale);
-   assert.equal(art.directionalActionSpriteAsset('wolf',pose,from,to,true)!.viewBox,`${pose==='strike'?512:0} 0 256 256`);
+   assert.equal(art.directionalActionSpriteAsset('wolf',pose,from,to,true)!.viewBox,`${pose==='strike'?1024:0} 0 256 256`);
    for(const size of [73,91.25]){const p=art.petBiteSocket(from,to,size,pose)!;const [x,y]=meta.directions.bite[d].poses[index].socket;assert.ok(Math.abs(p.x-(x-192)/384*meta.frame.display_scale*size)<.0001);assert.ok(Math.abs(p.y-(y-330)/384*meta.frame.display_scale*size)<.0001);}
   }
   const bounds=meta.directions.bite[d].poses[0].bounds,lunaBounds=luna.directions.cast[d].poses[0].bounds;
@@ -672,7 +672,10 @@ test('the modeled bite cue exists only at contact and follows the current mouth 
  const {art}=await loadWithImageResults(()=>false,'pet-contact');
  const a={actor:'wolf',source:'pet',from:{x:200,y:200},to:{x:280,y:200},elapsed:.13,hitAt:.13,duration:.41} as CombatAttack;
  for(const elapsed of [-1,0,.129,.25,.41,NaN])assert.equal(art.petBiteContact({...a,elapsed},73),null);
- for(const elapsed of [.13,.18,.249])assert.deepEqual(art.petBiteContact({...a,elapsed},73),art.petBiteSocket(a.from,a.to,73));
+ for(const elapsed of [.13,.18])assert.deepEqual(art.petBiteContact({...a,elapsed},73),art.petBiteSocket(a.from,a.to,73));
+ const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/moonlight-wolf.json',import.meta.url),'utf8'));
+ const rebound=art.petBiteContact({...a,elapsed:.21},73)!;const [x,y]=meta.directions.bite[0].poses[5].socket;assert.ok(Math.abs(rebound.x-(x-192)/384*meta.frame.display_scale*73)<.0001);assert.ok(Math.abs(rebound.y-(y-330)/384*meta.frame.display_scale*73)<.0001);assert.notDeepEqual(rebound,art.petBiteContact(a,73));
+ assert.deepEqual(art.petBiteContact({...a,elapsed:.21},73,a.from,true),art.petBiteSocket(a.from,a.to,73));
  const moved={x:275,y:150};assert.deepEqual(art.petBiteContact(a,91.25,moved),art.petBiteSocket(moved,a.to,91.25));assert.notDeepEqual(art.petBiteContact(a,73,moved),art.petBiteContact(a,73));
  assert.equal(art.petBiteContact({...a,actor:'dwarf'},73),null);assert.equal(art.petBiteContact({...a,duration:.1},73),null);
  for(const size of [0,-1,NaN])assert.equal(art.petBiteContact(a,size),null);
@@ -700,4 +703,18 @@ test('wood club source, animated GLB and both battle atlases form one verified d
  assert.ok(grip>=0&&arm.children.includes(grip),'club stays attached at the carrying hand');
  assert.ok(g.animations[0].channels.some((c:{target:{node:number}})=>c.target.node===grip),'wrist follow-through is present in the GLB');
  assert.ok(m.bounds.every((p:{bbox:number[]})=>p.bbox[0]>0&&p.bbox[1]>8&&p.bbox[2]<384&&p.bbox[3]<372),'all authored poses stay within the runtime crop');
+});
+
+
+test('the eight-stage bite sequence and sockets use the same direction, pose and ground contract',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'pet-bite-sequence');
+ const m=JSON.parse(readFileSync(new URL('../../../public/defense/models/moonlight-wolf.json',import.meta.url),'utf8'));
+ for(let d=0;d<8;d++)for(const [elapsed,f] of [[0,0],[.04,1],[.08,2],[.11,3],[.13,4],[.21,5],[.30,6],[.37,7],[.40,0]]){
+  const from={x:30,y:50},to={x:from.x+Math.cos(d*Math.PI/4)*60,y:from.y+Math.sin(d*Math.PI/4)*60},a={actor:'wolf',from,to,elapsed,hitAt:.13,duration:.41} as CombatAttack,original=structuredClone(a);
+  const asset=art.petBiteSequenceSpriteAsset(a)!;assert.equal(asset.viewBox,`${f*256} 0 256 256`);assert.equal(asset.width,2048);assert.equal(asset.groundY,220);assert.equal(asset.src,`/defense/models/moonlight-bite-${d}-atlas.webp`);assert.deepEqual(a,original);
+  assert.equal(art.petBiteSequenceSpriteAsset(a,from,true)!.viewBox,`${elapsed>=.13&&elapsed<.25?1024:0} 0 256 256`);
+  if(elapsed>=.13&&elapsed<.25){const point=art.petBiteContact(a,73)!,[x,y]=m.directions.bite[d].poses[f].socket;assert.ok(Math.abs(point.x-(x-192)/384*asset.displayScale!*73)<.0001);assert.ok(Math.abs(point.y-(y-330)/384*asset.displayScale!*73)<.0001);}
+ }
+ assert.equal(art.petBiteSequenceSpriteAsset({actor:'mage',from:{x:0,y:0},to:{x:60,y:0}} as CombatAttack),null);
+ assert.equal(art.petBiteSequenceSpriteAsset({actor:'wolf',from:{x:0,y:0},to:{x:0,y:0}} as CombatAttack),null);
 });

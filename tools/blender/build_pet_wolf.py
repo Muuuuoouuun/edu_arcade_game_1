@@ -184,10 +184,10 @@ def animate(mode):
  clear_motion();scene.render.fps=100;scene.frame_start=1;scene.frame_end=42 if mode=='bite' else 81
  if mode=='bite':
   # Plant every paw, gather the chest, open the jaw, snap at the existing .13 second contact, settle.
-  poses=[(1,0,0,0,0,0),(6,-.06,-.07,.06,-.10,.08),(10,-.10,-.10,.10,-.26,.13),(14,.17,-.015,-.16,0,-.10),(20,.10,-.025,-.10,-.04,-.07),(30,.025,-.01,-.025,0,.03),(42,0,0,0,0,0)]
+  poses=[(1,0,0,0,0,0),(5,-.055,-.075,.055,-.08,.04),(9,-.14,-.15,.12,-.44,.12),(12,-.035,-.10,.015,-.32,.15),(14,.25,-.025,-.19,0,.07),(20,.16,-.06,-.12,-.025,-.13),(29,.045,-.035,-.025,0,-.06),(37,-.01,-.008,.015,0,.025),(42,0,0,0,0,0)]
   for frame in range(1,43):
-   a=next(p for p in reversed(poses) if p[0]<=frame);b=next((p for p in poses if p[0]>frame),a);t=(frame-a[0])/max(1,b[0]-a[0]);v=[a[i]+(b[i]-a[i])*t for i in range(1,6)]
-   body.location=rests[body][0]+Vector((0,v[0],v[1]));head.rotation_euler.x=v[2];jaw.rotation_euler.x=v[3];tail.rotation_euler.x=v[4];tailtip.rotation_euler.x=-v[4]*.7;pendant.rotation_euler.x=-v[4]*.6
+   a=next(p for p in reversed(poses) if p[0]<=frame);b=next((p for p in poses if p[0]>frame),a);t=(frame-a[0])/max(1,b[0]-a[0]);t=t*t*(3-2*t);v=[a[i]+(b[i]-a[i])*t for i in range(1,6)]
+   body.location=rests[body][0]+Vector((0,v[0],v[1]));body.rotation_euler.x=v[2]*.22;body.rotation_euler.z=-v[2]*.15;head.rotation_euler.z=v[2]*.25;head.rotation_euler.x=v[2];jaw.rotation_euler.x=v[3];tail.rotation_euler.x=v[4];tailtip.rotation_euler.x=-v[4]*.7;pendant.rotation_euler.x=-v[4]*.6
    for i,e in enumerate(ears):e.rotation_euler.x=v[4]*.4;e.rotation_euler.y=v[4]*(.3 if i else -.3)
    solve_legs();key(frame)
  else:
@@ -241,7 +241,7 @@ OUT.mkdir(parents=True,exist_ok=True);FRAMES.mkdir(parents=True,exist_ok=True)
 manifest={'generator':'tools/blender/build_pet_wolf.py','command':'npm run models:pet-wolf','reference':'public/defense/snow-atlas.png','reference_actor':'Moonlight companion / second row left','additional_concept':'art-source/defense/concepts/2026-10-29/variants/silverfrost-wolf-variants.png','reference_sha256':hashlib.sha256((ROOT/'public/defense/snow-atlas.png').read_bytes()).hexdigest(),'frame':{'width':384,'height':384,'ground':list(ground),'orthographic_scale':6.8,'display_scale':1.2*6.8/5.8},'delivery_frame':{'width':256,'height':256,'ground':[128,220]},'render':{'engine':'Cycles CPU','samples':args.samples},'clips':[],'directions':{'bite':[],'walk':[]},'files':[]}
 for mode in ['bite','walk']:
  animate(mode);asset_id='moonlight-wolf'+('-walk' if mode=='walk' else '');clip_name='moonlight-'+mode
- poses=[('ready',1),('windup',10),('strike',14),('recover',30)] if mode=='bite' else [(str(i),1+i*10) for i in range(8)]
+ poses=[('ready',1),('gather',5),('windup',9),('launch',12),('strike',14),('rebound',20),('recover',29),('settle',37)] if mode=='bite' else [(str(i),1+i*10) for i in range(8)]
  for direction in range(8):
   angle=direction*math.tau/8;world=inverse@Vector((math.cos(angle),math.sin(angle)));world.normalize();ROOT_OBJ.rotation_euler.z=math.atan2(-world.x,world.y);entry={'index':direction,'yaw':ROOT_OBJ.rotation_euler.z,'poses':[]}
   for name,frame in poses:
@@ -263,7 +263,7 @@ for mode in ['bite','walk']:
  ROOT_OBJ.rotation_euler.z=0;scene.frame_set(1);bpy.context.view_layer.update()
  if not args.check and not args.preview:
   stats=export_runtime();scene['regeneration_command']='npm run models:pet-wolf';bpy.context.preferences.filepaths.save_version=0;source=ROOT/f'art-source/defense/{asset_id}.blend';bpy.ops.wm.save_as_mainfile(filepath=str(source));shutil.copyfile(FRAMES/f'moonlight-{mode}-1-{poses[0][0]}.png',OUT/f'{asset_id}.png')
-  manifest['clips'].append({'asset':asset_id,'clip':clip_name,'fps':100,'first_frame':1,'last_frame':scene.frame_end,'duration_seconds':(scene.frame_end-1)/100,'runtime':stats,'source':str(source.relative_to(ROOT))})
+  manifest['clips'].append({'asset':asset_id,'clip':clip_name,'fps':100,'first_frame':1,'last_frame':scene.frame_end,'duration_seconds':(scene.frame_end-1)/100,'baked_frames':[frame for _,frame in poses],'hit_seconds':.13 if mode=='bite' else None,'runtime':stats,'source':str(source.relative_to(ROOT))})
   for path in [source,OUT/f'{asset_id}.glb',OUT/f'{asset_id}.png']:manifest['files'].append({'file':str(path.relative_to(ROOT)),'bytes':path.stat().st_size,'sha256':hashlib.sha256(path.read_bytes()).hexdigest()})
 if not args.check and not args.preview:
  (OUT/'moonlight-wolf.json').write_text(json.dumps(manifest,indent=2)+'\n')
