@@ -92,7 +92,10 @@ function reap(s:DefenseState) {
     if(merged&&!boss)mergedSum+=bounty;
     else effect(s,enemy,enemy,'physical',boss?`+${bounty} 처치!`:`+${bounty}`,'coin');
     if(boss)effect(s,enemy,enemy,'impact','','shockwave',{force:145});
-    effect(s,enemy,enemy,'physical',undefined,'death',{targetSprite:ENEMIES[enemy.kind].sprite,targetId:enemy.id,targetKind:enemy.kind,targetFacing:enemy.facing||1,force:enemy.knockVelocity||0});
+    // Snapshot presentation-only locomotion before removing the enemy; never alias its heading.
+    const ahead=enemy.kind==='frostwolf'?positionOnPath(enemy.path,enemy.progress+4,s.stage):null;
+    const targetWalk=ahead?{heading:{...(enemy.walkHeading??{x:ahead.x-enemy.x,y:ahead.y-enemy.y})},distance:(enemy.walkDistance??enemy.progress)+enemy.id*7,...(enemy.walkCycles===undefined?{}:{cycles:enemy.walkCycles+enemy.id*7/40})}:undefined;
+    effect(s,enemy,enemy,'physical',undefined,'death',{targetSprite:ENEMIES[enemy.kind].sprite,targetId:enemy.id,targetKind:enemy.kind,targetFacing:enemy.facing||1,...(targetWalk?{targetWalk}:{}),force:enemy.knockVelocity||0});
   }
   if(merged){const last=crowd[crowd.length-1];effect(s,last,last,'physical',`+${mergedSum} ×${crowd.length}`,'coin');}
   s.enemies=s.enemies.filter(e=>e.hp>0);

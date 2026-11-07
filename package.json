@@ -65,7 +65,10 @@
     "models:dwarf-return": "blender --python-exit-code 1 -b --python tools/blender/build_dwarf_return.py",
     "models:dwarf-return:check": "node tools/check-dwarf-return.mjs",
     "models:wolf-flinch": "blender --python-exit-code 1 -b --python tools/blender/build_frostwolf_flinch.py",
-    "models:wolf-flinch:check": "node tools/check-frost-wolf-flinch.mjs"
+    "models:wolf-flinch:check": "node tools/check-frost-wolf-flinch.mjs",
+    "models:wolf-fall": "blender --python-exit-code 1 -b --python tools/blender/build_frostwolf_fall.py",
+    "models:wolf-fall:check": "node tools/check-frost-wolf-fall.mjs",
+    "models:wolf-fall:pose-check": "blender --python-exit-code 1 -b --python tools/blender/build_frostwolf_fall.py -- --check"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

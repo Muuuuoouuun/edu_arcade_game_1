@@ -289,7 +289,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,17);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-fall-')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,17);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -1379,5 +1379,46 @@ test('ordinary wolf hit has a visible modeled response at 1x/2x publication offs
  for(const ticks of [2,4,6])for(let offset=0;offset<ticks;offset++){
   const phases=[];for(let step=offset;step/60<.16;step+=ticks)phases.push(art.frostWolfHitAsset({x:1,y:0},step,.16-step/60)?.phase);
   assert.ok(phases.some(Boolean),`${ticks}/${offset}`);
+ }
+});
+
+
+test('wolf collapse freezes its saved heading and gait, preserves ground/scale and follows age',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'frost-fall');
+ for(let d=0;d<8;d++)for(let gait=0;gait<8;gait++)for(const size of [73,91.25]){
+  const heading={x:Math.cos(d*Math.PI/4),y:Math.sin(d*Math.PI/4)},cycles=gait/8*size/73;
+  const walk=art.frostWolfDirectionalWalkAsset(heading,0,size,cycles)!;
+  for(const [age,frame] of [[0,0],[.059,0],[.06,1],[.239,1],[.24,2],[.419,2],[.42,3],[.69,3]] as const){
+   const fall=art.frostWolfFallAsset(heading,0,cycles,age,size)!;assert.equal(fall.direction,d);assert.equal(fall.gait,gait);assert.equal(fall.frame,frame);assert.equal(fall.asset.oriented,true);
+   assert.equal(fall.asset.displayScale,walk.asset.displayScale);
+   if(frame===0)assert.deepEqual(fall.asset,{...walk.asset,oriented:true});
+   else{assert.equal(fall.asset.src,`/defense/models/frost-fall-${d}-atlas.webp`);assert.equal(fall.asset.viewBox,`${gait*192+4} ${(frame-1)*192+20} 184 152`);assert.equal((fall.asset.groundY!-(frame-1)*192)/192,walk.asset.groundY!/256);}
+   assert.equal(art.frostWolfFallAsset(heading,0,cycles,age,size,true)!.frame,3);
+  }
+ }
+ assert.equal(requests.filter(p=>p.includes('/frost-fall-')).length,8);
+ for(const age of [NaN,Infinity])assert.equal(art.frostWolfFallAsset({x:1,y:0},0,0,age),null);
+ assert.equal(art.frostWolfFallAsset({x:0,y:0},0,0,0),null);
+ for(const size of [0,-1,NaN])assert.equal(art.frostWolfFallAsset({x:1,y:0},0,0,0,size),null);
+});
+
+test('directional collapse is optional and failure retains prior collapse, walking and ordinary hits',async()=>{
+ const h={x:0,y:-1};const {art:complete}=await loadWithImageResults(()=>false,'fall-complete');
+ for(const file of ['frost-fall-2-atlas.webp','frost-stride-2-atlas.webp','frost-wolf-atlas.webp']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(file),'fall-fail-'+file);
+  assert.equal(art.frostWolfFallAsset(h,0,.5,.3),null);
+  if(file.startsWith('frost-fall')){
+   assert.deepEqual(art.monsterDeathSpriteAsset('frostwolf',.5),complete.monsterDeathSpriteAsset('frostwolf',.5));
+   assert.deepEqual(art.frostWolfHitAsset(h,0,.1),complete.frostWolfHitAsset(h,0,.1));
+   assert.deepEqual(art.frostWolfDirectionalWalkAsset(h,0),complete.frostWolfDirectionalWalkAsset(h,0));
+  }
+ }
+});
+
+test('collapse reaches all three baked phases even at 20Hz publication and 2x speed',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'fall-cadence');
+ for(const ticks of [2,4,6])for(let offset=0;offset<ticks;offset++){
+  const frames=new Set();for(let step=offset;step/60<.7;step+=ticks)frames.add(art.frostWolfFallAsset({x:1,y:0},0,.5,step/60)!.frame);
+  for(const frame of [1,2,3])assert.ok(frames.has(frame),`${ticks}/${offset}/${frame}`);
  }
 });

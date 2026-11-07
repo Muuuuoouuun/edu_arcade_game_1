@@ -807,3 +807,18 @@ test('crush cannon release keeps the actual launch aim and level through trackin
  const next=until({...upgraded,projectiles:[]},n=>n.projectiles.some(p=>p.sourceLevel===3));assert.ok(next.projectiles.some(p=>p.sourceLevel===3&&p.launchAim));
  const empty=until({...windup,enemies:[]},n=>n.attacks.length===0);assert.equal(empty.projectiles.length,0);assert.equal(empty.towers[0].recoil??0,0);
 });
+
+
+test('wolf death owns the final visual gait snapshot without sharing a mutable heading',()=>{
+ const s=battlefield(5),heading={x:0,y:-1};
+ const wolf={...enemy('frostwolf',11),hp:0,speed:0,walkDistance:123,walkCycles:2.375,walkHeading:heading};
+ s.enemies=[wolf,{...enemy('stone',12),speed:0}];
+ const killed=stepDefense(s,.02),death=killed.effects.find(e=>e.kind==='death')!;
+ assert.deepEqual(death.targetWalk,{heading,distance:200,cycles:2.375+11*7/40});
+ assert.notEqual(death.targetWalk!.heading,heading);
+ heading.y=1;wolf.walkCycles=99;assert.equal(death.targetWalk!.heading.y,-1);
+ const later=stepDefense(killed,.1);assert.deepEqual(later.effects.find(e=>e.id===death.id)!.targetWalk,death.targetWalk);
+ assert.equal(later.kills,1);assert.equal(later.coins-s.coins,16);
+ const other=battlefield();other.enemies=[{...enemy('wood',1),hp:0,speed:0},{...enemy('stone',2),speed:0}];
+ assert.equal(stepDefense(other,.02).effects.find(e=>e.kind==='death')!.targetWalk,undefined);
+});
