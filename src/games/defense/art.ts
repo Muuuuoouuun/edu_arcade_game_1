@@ -7,7 +7,8 @@ import { LIGHTNING_TOWER_SOCKETS } from './lightningTowerSockets.ts';
 import { KAR_HAMMER_TRAIL } from './karHammerTrail.ts';
 import { FIRE_TOWER_LV3_SOCKETS } from './fireTowerLv3Sockets.ts';
 import { FIRE_TOWER_SOCKETS } from './fireTowerSockets.ts';
-import { enemyWalkFrame, walkFrame, petWalkFrame, MAGE_STOP_DURATION, type Locomotion } from './locomotion.ts';
+import { FROST_WOLF_FRAME } from './frostWolfGait.ts';
+import { frostWolfWalkFrame, enemyWalkFrame, walkFrame, petWalkFrame, MAGE_STOP_DURATION, type Locomotion } from './locomotion.ts';
 import { attackOctant, dwarfHammerFrame, karHammerFrame, petBiteFrame } from './action.ts';
 import { MAGE_SOCKETS } from './mageSockets.ts';
 import { ELF_SOCKETS } from './elfSockets.ts';
@@ -387,6 +388,7 @@ const bakedAtlas=(file:string)=>({src:`/defense/models/${file}-atlas.webp`,width
 const SLIME_ATLAS=bakedAtlas('insulator-slime'),GOLEM_ATLAS=bakedAtlas('stone-golem'),WOOD_ATLAS=bakedAtlas('wood-soldier'),ICE_ATLAS=bakedAtlas('ice-knight'),WOLF_ATLAS=bakedAtlas('frost-wolf'),METAL_ATLAS=bakedAtlas('metal-soldier');
 const WOOD_WALK_ATLAS={src:'/defense/models/wood-soldier-walk-atlas.webp',width:3072,height:384};
 const WOLF_COLLAPSE_ATLAS={src:'/defense/models/frost-wolf-collapse-atlas.webp',width:1536,height:384};
+const FROST_STRIDE_ATLASES=Array.from({length:8},(_,d)=>`/defense/models/frost-stride-${d}-atlas.webp`);
 const WOLF_TROT_ATLAS={src:'/defense/models/frost-wolf-trot-atlas.webp',width:3072,height:384};
 const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
  wood:{span:320,frames:[[0,8,384,364],[384,8,384,364],[768,8,384,364]],atlas:WOOD_ATLAS,
@@ -426,6 +428,13 @@ export function monsterWalkingSpriteAsset(kind:EnemyKind,distance:number):Sprite
  if(kind!=='wood'||!motionLoaded.has(WOOD_ATLAS.src)||!motionLoaded.has(WOOD_WALK_ATLAS.src))return null;
  return {...WOOD_WALK_ATLAS,viewBox:`${enemyWalkFrame(kind,distance)*384} 8 384 364`,displayScale:384/320,groundY:317.61};
 }
+/** Use a complete direction set; missing images keep the original trot available. */
+export function frostWolfDirectionalWalkAsset(heading:Point,distance:number,size=73,cycles?:number):{asset:SpriteAsset;frame:number;direction:number}|null {
+ const direction=attackOctant({x:0,y:0},heading);
+ if(direction===null||!motionLoaded.has(WOLF_ATLAS.src)||!FROST_STRIDE_ATLASES.every(src=>motionLoaded.has(src)))return null;
+ const frame=frostWolfWalkFrame(heading,distance,size,cycles),[x,y,w,h]=FROST_WOLF_FRAME.crop;
+ return {direction,frame,asset:{src:FROST_STRIDE_ATLASES[direction],width:2048,height:256,viewBox:`${frame*256+x} ${y} ${w} ${h}`,displayScale:FROST_WOLF_FRAME.display_scale,groundY:FROST_WOLF_FRAME.ground_y}};
+}
 /** Collapse follows simulation age, with the same camera, crop and ground as the living wolf. */
 export function monsterDeathSpriteAsset(kind:EnemyKind,progress:number,reduced=false):{asset:SpriteAsset;frame:number}|null {
  if(kind!=='frostwolf'||!motionLoaded.has(WOLF_ATLAS.src)||!motionLoaded.has(WOLF_COLLAPSE_ATLAS.src))return null;
@@ -457,7 +466,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...KAR_SLAM,...KAR_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...KAR_SLAM,...KAR_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

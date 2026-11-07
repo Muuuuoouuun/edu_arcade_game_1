@@ -289,7 +289,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,9);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,17);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -1160,5 +1160,26 @@ test('crush cannon image failures are isolated between final and base tiers',asy
   assert.equal(art.crushCannonActionSpriteAsset('cannon','crush',level,from,to,.24),null);
   assert.ok(art.crushCannonActionSpriteAsset('cannon','crush',level===2?3:2,from,to,.24));
   assert.ok(art.towerSpriteAsset('cannon','crush',level));assert.ok(art.waterCannonActionSpriteAsset('cannon','water',3,from,to,.24));
+ }
+});
+
+test('frost wolf directional gait uses all 64 poses at the generated camera scale',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'frost-stride');
+ const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/frost-wolf-stride.json',import.meta.url),'utf8'));
+ for(const size of [73,91.25])for(let d=0;d<8;d++)for(let f=0;f<8;f++){
+  const heading={x:Math.cos(d*Math.PI/4),y:Math.sin(d*Math.PI/4)},r=art.frostWolfDirectionalWalkAsset(heading,0,size,f/8*size/73)!;
+  const {frostWolfStride}=await import('./locomotion.ts');assert.ok(Math.abs(frostWolfStride(heading,size)-meta.directions[d].stride_per_display_size*size)<1e-6);
+  assert.equal(r.direction,d);assert.equal(r.frame,f);assert.equal(r.asset.src,`/defense/models/frost-stride-${d}-atlas.webp`);
+  assert.equal(r.asset.displayScale,meta.frame.display_scale);assert.equal(r.asset.groundY,meta.delivery_frame.ground[1]);
+  const [x,y,w,h]=r.asset.viewBox.split(' ').map(Number);assert.ok(x+w<=r.asset.width&&y+h<=r.asset.height);
+ }
+ assert.equal(requests.filter(src=>src.includes('/frost-stride-')).length,8);assert.ok(!requests.some(src=>src.endsWith('.glb')));
+});
+
+test('partial frost wolf direction loading preserves the original trot and hit fallback',async()=>{
+ for(const file of ['frost-stride-3-atlas.webp','frost-wolf-atlas.webp']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(file),'frost-fail-'+file);
+  assert.equal(art.frostWolfDirectionalWalkAsset({x:1,y:0},12),null);
+  assert.equal(!!art.monsterWalkingSpriteAsset('frostwolf',12),file==='frost-stride-3-atlas.webp');assert.ok(art.monsterSpriteAsset('frostwolf','hit'));
  }
 });

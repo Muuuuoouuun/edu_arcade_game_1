@@ -1,4 +1,5 @@
 import { attackOctant } from './action.ts';
+import { FROST_WOLF_STRIDE } from './frostWolfGait.ts';
 import { PET_WOLF_STRIDE } from './petWolfGait.ts';
 import type { Point } from './types.ts';
 import type { EnemyKind } from './types.ts';
@@ -32,6 +33,26 @@ export function petWalkFrame(heading:Point,distance:number,size=73,gaitCycles?:n
  const stride=petStride(heading,size);if(stride<=0)return 0;
  const cycles=gaitCycles===undefined?distance/stride:gaitCycles*73/size;
  return Number.isFinite(cycles)?Math.floor((Math.max(0,cycles)+1e-9)*8)%8:0;
+}
+
+/** Frost wolf cycles use the same camera projection as its baked directional poses. */
+export function frostWolfStride(heading:Point,size=73):number {
+ const direction=attackOctant({x:0,y:0},heading);
+ return direction===null||!Number.isFinite(size)||size<=0?0:FROST_WOLF_STRIDE[direction]*size;
+}
+
+/** Only forward locomotion advances the paws; knockback preserves the last heading. */
+export function advanceFrostWolfGait(cycles:number,heading:Point|undefined,from:Point,to:Point,travel:number):{walkCycles:number;walkHeading?:Point} {
+ const length=Math.hypot(to.x-from.x,to.y-from.y);
+ if(!Number.isFinite(travel)||travel<=0||length<=.001)return {walkCycles:cycles,walkHeading:heading};
+ const next={x:(to.x-from.x)/length,y:(to.y-from.y)/length};
+ return {walkCycles:cycles+travel/frostWolfStride(next),walkHeading:next};
+}
+
+export function frostWolfWalkFrame(heading:Point,distance:number,size=73,cycles?:number):number {
+ const stride=frostWolfStride(heading,size);if(stride<=0)return 0;
+ const phase=cycles===undefined?distance/stride:cycles*73/size;
+ return Number.isFinite(phase)?Math.floor((Math.max(0,phase)+1e-9)*8)%8:0;
 }
 
 /** Keep facing on almost vertical paths; tiny horizontal drift is not a turn. */

@@ -34,6 +34,7 @@ const models = [
  {id:'dwarf-guardian',asset:'dwarf-hammer-sequence',name:'브론 · 드워프 공병',kind:'DWARF GUARDIAN',detail:'강철 · 청동 · 가죽',description:'두 발을 짚고 망치를 끌어올린 뒤 내려칩니다. 몸통과 팔꿈치가 무게를 받아 짧게 반동하고, 망치를 회수해 중립 자세로 돌아옵니다.',source:'dwarf-hammer-sequence.blend',command:'npm run models:dwarf-hammer',action:'▶ 망치 강타',clip:'dwarf-hammer-sequence'},
  {id:'dwarf-locomotion',name:'브론 · 방향 보행',kind:'DWARF LOCOMOTION',detail:'발 접지 · 무거운 망치 · 방향 보행',description:'두 발의 지지와 회수를 엇갈리며 걷습니다. 전투에서는 같은 원본을 여덟 방향으로 렌더해 망치와 방패의 손을 유지합니다.',source:'dwarf-locomotion.blend',command:'npm run models:dwarf-locomotion',action:'▶ 보행 재생',clip:'dwarf-walk',loop:true},
  {id:'wood-soldier',name:'나무 병사 · 통나무 파수꾼',kind:'LIVING LOG SOLDIER',detail:'주황 목재 · 초록 눈 · 통나무 몽둥이',description:'곧게 선 몸과 밝은 나이테, 손에 쥔 통나무 몽둥이로 돌 병사와 구분합니다. 무기를 든 팔은 작게 움직이고 손목과 잎이 뒤따릅니다.',source:'wood-soldier.blend',command:'npm run models:wood',action:'▶ 보행 재생',clip:'wood-soldier-walk',loop:true},
+ {id:'frost-wolf-stride',fitBounds:true,name:'서리늑대 · 접지 보행',kind:'SILVERFROST WOLF',detail:'평평한 발 · 무릎과 발목 · 방향 보행',description:'대각선 발을 짝지어 땅을 밀고, 무릎과 발목을 굽혀 다음 발을 내딛습니다. 전투에서도 방향별 보폭과 이동 거리를 맞춰 같은 보행을 사용합니다.',source:'frost-wolf-stride.blend',command:'npm run models:wolf-stride',action:'▶ 보행 재생',clip:'frost-wolf-stride',loop:true},
  {id:'frost-wolf',name:'서리늑대 · 은서리 야수',kind:'SILVERFROST WOLF',detail:'회백색 털 · 짙은 발 · 청백색 눈',description:'은서리 늑대 컨셉의 낮은 몸과 긴 다리를 전투 크기에 맞췄습니다. 대각선으로 짝을 이루는 발의 접지와 목·꼬리의 후속 움직임을 확인하세요.',source:'frost-wolf.blend',command:'npm run models:wolf',action:'▶ 보행 재생',clip:'frost-wolf-trot',loop:true},
  {id:'frost-wolf-collapse',name:'서리늑대 · 쓰러짐',kind:'SILVERFROST WOLF',detail:'접지 · 무릎 관절 · 몸의 무게',description:'네 발의 접지를 유지하며 무릎과 몸이 낮아집니다. 쓰러진 자세를 유지해 보행·피격 자세와 구분합니다.',source:'frost-wolf-collapse.blend',command:'npm run models:wolf-collapse',action:'▶ 쓰러짐 재생',clip:'frost-wolf-collapse',hold:true},
  {id:'forest-gate',asset:'forest-gate-impact',clip:'forest-gate-impact',name:'녹음 성문 · 뿌리 아치',kind:'VERDANT GATEHOUSE',detail:'석조 아치 · 고목 뿌리 · 초록 지붕',description:'석조 아치와 기초는 고정되고 목재 상부와 등불이 침입 충격에 반응합니다. 가벼운 등불은 더 크게 흔들린 뒤 제자리로 돌아옵니다.',source:'forest-gate-impact.blend',command:'npm run models:forest-gate-impact',action:'▶ 침입 충격'},
@@ -67,7 +68,16 @@ function release(object:Object3D) {
  materials(object).forEach(material => material.dispose());
 }
 // Match the dwarf render's front three-quarter view so its hammer clears the face.
-function resetView() {pivot.rotation.y = (currentModelId.startsWith('kar-')||currentModelId.startsWith('dwarf-')||currentModelId.startsWith('ian-')||currentModelId.startsWith('riel-')||currentModelId.startsWith('cheongun-')||currentModelId.startsWith('luna-')||currentModelId.startsWith('moonlight-'))?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,currentModelId==='forest-bridge'?1:2.0,0);controls?.update();}
+function resetView() {pivot.rotation.y = (currentModelId.startsWith('kar-')||currentModelId.startsWith('dwarf-')||currentModelId.startsWith('ian-')||currentModelId.startsWith('riel-')||currentModelId.startsWith('cheongun-')||currentModelId.startsWith('luna-')||currentModelId.startsWith('moonlight-'))?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,currentModelId==='forest-bridge'?1:2.0,0);if(controls)controls.maxDistance=22;controls?.update();fitModelView();}
+/** A long quadruped needs its horizontal silhouette fitted on portrait displays too. */
+function fitModelView() {
+ if(!current||!controls||!models.find(model=>model.id===currentModelId)?.fitBounds)return;
+ pivot.updateMatrixWorld(true);
+ const bounds=new Box3().setFromObject(current),center=bounds.getCenter(new Vector3()),radius=bounds.getSize(new Vector3()).length()/2;
+ const vertical=camera.fov*Math.PI/360,halfFov=Math.min(vertical,Math.atan(Math.tan(vertical)*camera.aspect));
+ const distance=radius/Math.sin(halfFov)*1.08,direction=camera.position.clone().sub(controls.target).normalize();
+ controls.maxDistance=Math.max(22,distance*1.5);controls.target.copy(center);camera.position.copy(center).addScaledVector(direction,distance);controls.update();
+}
 function stopAction() {
  attackAction?.stop(); shotAt = -Infinity; stage.dataset.action = 'idle'; shoot.textContent=models.find(model=>model.id===currentModelId)?.action??'▶ 동작 재생'; redraw = true;
 }
@@ -112,7 +122,7 @@ try {
  const grid = new GridHelper(18,36,0x74948a,0x496e66); grid.position.y = -.025; grid.material.transparent = true; grid.material.opacity = .16; scene.add(grid);
  controls = new OrbitControls(camera,renderer.domElement); controls.enableDamping = true; controls.enablePan = false;
  controls.minDistance = 5; controls.maxDistance = 22; controls.minPolarAngle = .18; controls.maxPolarAngle = Math.PI*.49; resetView();
- const resize = () => {if(!renderer)return;renderer.setSize(stage.clientWidth,stage.clientHeight);camera.aspect = stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();redraw = true;};
+ const resize = () => {if(!renderer)return;renderer.setSize(stage.clientWidth,stage.clientHeight);camera.aspect = stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();fitModelView();redraw = true;};
  new ResizeObserver(resize).observe(stage); resize();
 } catch {
  renderer?.domElement.remove(); renderer?.dispose(); renderer = null;

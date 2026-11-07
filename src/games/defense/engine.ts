@@ -1,5 +1,5 @@
 import { DASH_DAMAGE, DASH_HIT_RADIUS, DASH_IMPACT, distanceToSegment } from './action.ts';
-import { advanceEnemyGait, advanceLocomotion, advanceMageLocomotion, advancePetLocomotion, movementFacing } from './locomotion.ts';
+import { advanceFrostWolfGait, advanceEnemyGait, advanceLocomotion, advanceMageLocomotion, advancePetLocomotion, movementFacing } from './locomotion.ts';
 import { BRANCHES, ENEMIES, HERO_ORDER, STAGE_COUNT, TOWERS, getPaths, getSlots, getStage, getRegion } from './data.ts';
 import { DIFFICULTIES, getDifficulty, getWavePlan } from './difficulty.ts';
 import type { Difficulty, Branch, DefenseAction, DefenseState, Element, Enemy, EnemyKind, HeroId, Point, Tower, TowerKind, CombatAttack, Projectile, AttackSource, AttackActor, DamageProfile, Effect } from './types.ts';
@@ -434,10 +434,12 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
     const friction=Math.exp(-6*delta),retreat=(e.knockVelocity||0)*(1-friction)/6;
     const beforeProgress=e.progress,bracing=(e.knockVelocity||0)>7;
     e.progress=Math.max(0,e.progress+forward-retreat);
-    const gait=advanceEnemyGait(e.walkDistance??beforeProgress,beforeProgress,e.progress,delta,bracing);
+    const previousWalk=e.walkDistance??beforeProgress;
+    const gait=advanceEnemyGait(previousWalk,beforeProgress,e.progress,delta,bracing);
     e.walkDistance=gait.distance;e.walkSpeed=gait.speed;
     e.knockVelocity=(e.knockVelocity||0)*friction;if(e.knockVelocity<.1)e.knockVelocity=0;
     const point=positionOnPath(e.path,e.progress,s.stage);
+    if(e.kind==='frostwolf')Object.assign(e,advanceFrostWolfGait(e.walkCycles??0,e.walkHeading,e,point,gait.distance-previousWalk));
     e.facing=movementFacing(e.facing??1,point,positionOnPath(e.path,e.progress+4,s.stage));e.x=point.x;e.y=point.y;
   }
   // Already airborne projectiles keep moving during a tower freeze. Newly released

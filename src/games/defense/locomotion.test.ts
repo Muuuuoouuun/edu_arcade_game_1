@@ -168,3 +168,31 @@ test('Ian stop finishes in preparation and combat, freezes on pause, and resets 
   assert.equal(createDefense(1,'mage').locomotion.hero.settle,undefined);
  }
 });
+
+test('frost wolf stride keeps contact cadence through turns, mobile scaling and knockback',async()=>{
+ const {frostWolfStride,frostWolfWalkFrame,advanceFrostWolfGait}=await import('./locomotion.ts');
+ const east={x:1,y:0},south={x:0,y:1},origin={x:0,y:0};
+ const a=advanceFrostWolfGait(0,undefined,origin,east,frostWolfStride(east)/4);
+ const b=advanceFrostWolfGait(a.walkCycles,a.walkHeading,origin,south,frostWolfStride(south)/4);
+ assert.ok(Math.abs(b.walkCycles-.5)<1e-9);assert.deepEqual(b.walkHeading,south);
+ assert.equal(frostWolfWalkFrame(south,0,73,b.walkCycles),4);
+ assert.deepEqual(advanceFrostWolfGait(b.walkCycles,b.walkHeading,origin,{x:-5,y:0},0),b,'impulses preserve gait and heading');
+ let cycles=0;for(let i=0;i<8;i++)cycles=advanceFrostWolfGait(cycles,east,origin,east,frostWolfStride(east)/8).walkCycles;
+ assert.ok(Math.abs(cycles-1)<1e-9);
+ for(const size of [73,91.25])for(let d=0;d<8;d++){
+  const heading={x:Math.cos(d*Math.PI/4),y:Math.sin(d*Math.PI/4)},stride=frostWolfStride(heading,size);
+  for(let frame=0;frame<8;frame++){assert.equal(frostWolfWalkFrame(heading,stride*frame/8,size),frame);assert.equal(frostWolfWalkFrame(heading,0,size,frame/8*size/73),frame);}
+ }
+ assert.equal(frostWolfWalkFrame(east,NaN),0);assert.equal(frostWolfWalkFrame(east,1,0),0);assert.equal(frostWolfWalkFrame(origin,1),0);
+});
+
+test('frost wolf engine gait is immutable, slows with travel and pauses with simulation',()=>{
+ const initial=createDefense(5,'mage'),progress=60,enemy={id:1,kind:'frostwolf' as const,...positionOnPath(0,progress,5),hp:1000,maxHp:1000,progress,path:0,speed:62,wet:0,burn:0,slow:0,hit:0,walkDistance:12,walkCycles:.4,walkHeading:{x:1,y:0},facing:1 as const};
+ const state={...initial,phase:'wave' as const,wave:1,spawned:waveSize(5,1),spawnTimer:99,heroCooldown:99,enemies:[enemy]};
+ const normal=stepDefense(state,.1),slow=stepDefense({...state,enemies:[{...enemy,slow:2}]},.1);
+ assert.ok(Math.abs((slow.enemies[0].walkCycles!-.4)/(normal.enemies[0].walkCycles!-.4)-.55)<1e-6);
+ assert.equal(enemy.walkCycles,.4);assert.deepEqual(enemy.walkHeading,{x:1,y:0});
+ const knocked=stepDefense({...state,enemies:[{...enemy,knockVelocity:150}]},.1).enemies[0];assert.equal(knocked.walkCycles,.4);assert.deepEqual(knocked.walkHeading,enemy.walkHeading);
+ const paused=actDefense(normal,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+ const split=stepDefense(stepDefense(state,.05),.05);assert.ok(Math.abs(split.enemies[0].walkCycles!-normal.enemies[0].walkCycles!)<1e-8);
+});
