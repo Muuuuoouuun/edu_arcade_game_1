@@ -7,7 +7,7 @@ import type { Locomotion } from '../games/defense/locomotion';
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
 import { ENEMIES, HEROES, TOWERS, getStage, getRegion, getSlots } from '../games/defense/data';
-import { actionSpriteAsset, hammerSequenceSpriteAsset, hammerContactTrail, petBiteContact, petBiteSequenceSpriteAsset, mageCastSocket, taoSealSocket, druidCastSocket, directionalActionSpriteAsset, directionalLocomotionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset, rapidCrossbowActionSpriteAsset, lightningTowerActionSpriteAsset, fireTowerActionSpriteAsset, ballistaActionSpriteAsset, waterCannonActionSpriteAsset } from '../games/defense/art';
+import { actionSpriteAsset, hammerSequenceSpriteAsset, hammerContactTrail, petBiteContact, petBiteSequenceSpriteAsset, mageCastSocket, taoSealSocket, druidCastSocket, directionalActionSpriteAsset, directionalLocomotionSpriteAsset, walkingSpriteAsset, idleSpriteAsset, monsterSpriteAsset, monsterWalkingSpriteAsset, spriteAsset, towerSpriteAsset, crushCannonActionSpriteAsset, rapidCrossbowActionSpriteAsset, lightningTowerActionSpriteAsset, fireTowerActionSpriteAsset, ballistaActionSpriteAsset, waterCannonActionSpriteAsset } from '../games/defense/art';
 import type { SpriteAsset, ActionPose } from '../games/defense/art';
 import type { DefenseThemeId } from '../games/defense/themes';
 import { DefenseThemeScenery, ModeledGate, useGateAsset, useGateImpactAsset } from './DefenseThemeScenery';
@@ -137,7 +137,7 @@ function TowerUnit({tower:t,position:p,state:s,reduced}:{tower:Tower;position:Po
  const rock=reduced?0:dx*(windup*1.7-recoil*(t.kind==='cannon'?3.5:1.8));
  const fireAction=fireTowerActionSpriteAsset(t.kind,t.branch,t.level,windup,t.recoil??0,reduced);
  const lightningAction=lightningTowerActionSpriteAsset(t.kind,t.branch,t.level,windup,t.recoil??0,reduced),energyAction=lightningAction??fireAction;
- const articulated=energyAction??rapidCrossbowActionSpriteAsset(t.kind,t.branch,t.level,p,aim,t.recoil??0,reduced)??ballistaActionSpriteAsset(t.kind,t.branch,t.level,p,aim,t.recoil??0,reduced)??waterCannonActionSpriteAsset(t.kind,t.branch,t.level,p,aim,t.recoil??0,reduced);
+ const articulated=energyAction??crushCannonActionSpriteAsset(t.kind,t.branch,t.level,p,aim,t.recoil??0,reduced)??rapidCrossbowActionSpriteAsset(t.kind,t.branch,t.level,p,aim,t.recoil??0,reduced)??ballistaActionSpriteAsset(t.kind,t.branch,t.level,p,aim,t.recoil??0,reduced)??waterCannonActionSpriteAsset(t.kind,t.branch,t.level,p,aim,t.recoil??0,reduced);
  const shot=recoil>.02,flash=recoil>.48,muzzle=articulated?.muzzle??{x:dx*23,y:-55+dy*13};
  const art=articulated?.asset??towerSpriteAsset(t.kind,t.branch,t.level);
  return <g className={`def-tower def-tower-${t.kind} ${s.freeze>0?'def-tower-frozen':''}`} transform={`translate(${p.x},${p.y+12})`} data-action-frame={articulated?.pose} data-aim-octant={articulated?.direction} data-tower={t.kind} data-branch={t.branch??'base'} data-level={t.level} data-recoil={recoil.toFixed(2)} data-tower-phase={phase??'idle'}>

@@ -289,7 +289,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')).length,9);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/crush-action-')).length,9);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -1005,6 +1005,57 @@ test('rapid release/draw/feed remain visible at 30Hz and either speed without ea
   for(let t=phase/100*step;t<.34;t+=step){
    const recoil=t<.1?0:.34-t,r=art.rapidCrossbowActionSpriteAsset('crossbow','rapid',2,from,to,recoil)!;seen.add(r.pose);
    if(t<.1)assert.equal(r.pose,0);assert.deepEqual(r,art.rapidCrossbowActionSpriteAsset('crossbow','rapid',2,from,to,recoil));
+  }
+  for(const pose of [0,1,2,3])assert.ok(seen.has(pose),`speed${speed},phase${phase},pose${pose}`);
+ }
+});
+
+test('crush cannon aims eight ways, keeps its foundation grounded, and recoils behind its discharge point',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'crush-cannon');
+ const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/crush-cannon-action.json',import.meta.url),'utf8'));
+ const from={x:200,y:200},size=100,scale=meta.display_scale;
+ for(let direction=0;direction<8;direction++){
+  const a=direction*Math.PI/4,to={x:from.x+100*Math.cos(a),y:from.y+100*Math.sin(a)};
+  for(const [recoil,pose] of [[0,0],[.24,1],[.16001,1],[.16,2],[.08001,2],[.08,3],[.001,3],[-1,0],[NaN,0],[Infinity,0]]){
+   const r=art.crushCannonActionSpriteAsset('cannon','crush',2,from,to,recoil)!;
+   assert.equal(r.pose,pose);assert.equal(r.direction,direction);assert.equal(r.asset.src,`/defense/models/crush-action-${direction}-atlas.webp`);
+   const [x,y,w,h]=r.asset.viewBox.split(' ').map(Number);assert.ok(x+w<=r.asset.width&&y+h<=r.asset.height);
+   const p=meta.directions[direction].poses[pose],[mx,my]=meta.directions[direction].poses[0].muzzle;
+   assert.ok(Math.abs(r.muzzle.x-(mx-320)/576*scale*size)<.001);assert.ok(Math.abs(r.muzzle.y-(.1+(my-600)/576*scale)*size)<.001);
+   assert.equal(p.foundation_drift,0);assert.ok(p.fixed_meshes>20);
+   assert.equal(art.crushCannonActionSpriteAsset('cannon','crush',2,from,to,recoil,true)?.pose,0);
+  }
+  const shot={source:'tower',actor:'cannon',pierce:false,element:'impact',sourceLevel:2,from,to,launchAim:{...to}} as Projectile;
+  const before=structuredClone(shot),offset=art.crushCannonProjectileOffset(shot);assert.ok(offset);assert.deepEqual(shot,before);
+  assert.deepEqual(art.crushCannonProjectileOffset({...shot,to:{x:999,y:999}}),offset);
+  for(const partial of [{launchAim:undefined},{sourceLevel:3},{element:'water' as const},{source:'hero' as const}])assert.equal(art.crushCannonProjectileOffset({...shot,...partial}),undefined);
+ }
+ assert.equal(meta.frame.orthographic_scale,7.5);assert.equal(meta.clearance.surface_crossings,0);assert.equal(meta.clearance.sampled_frames,53);
+ for(const key of ['source','generator'])assert.equal(createHash('sha256').update(readFileSync(new URL('../../../'+meta[key],import.meta.url))).digest('hex'),meta[key+'_sha256']);
+ assert.equal(meta.animation.hit_at,.28);assert.equal(meta.animation.duration_seconds,.52);
+ for(const f of meta.files)assert.equal(createHash('sha256').update(readFileSync(new URL('../../../public/defense/models/'+f.file,import.meta.url))).digest('hex'),f.sha256);
+ assert.equal(requests.filter(src=>src.includes('/crush-action-')).length,8);assert.ok(!requests.some(src=>src.endsWith('.glb')));
+ assert.equal(art.crushCannonActionSpriteAsset('cannon','crush',3,from,{x:300,y:200}),null);
+ assert.equal(art.crushCannonActionSpriteAsset('cannon','water',2,from,{x:300,y:200}),null);
+});
+
+test('crush recoil uses a complete directional set and leaves other branches/upgrades available on failure',async()=>{
+ const from={x:0,y:0},to={x:100,y:0};
+ for(const file of ['crush-action-3-atlas.webp','crush-cannon-game.webp']){
+  const {art}=await loadWithImageResults(s=>s.endsWith(file),'crush-failure-'+file);
+  for(let d=0;d<8;d++)assert.equal(art.crushCannonActionSpriteAsset('cannon','crush',2,from,{x:100*Math.cos(d*Math.PI/4),y:100*Math.sin(d*Math.PI/4)},.24),null);
+  assert.ok(art.towerSpriteAsset('cannon','crush',2));assert.equal(art.towerSpriteAsset('cannon','crush',3)?.src,'/defense/models/crush-cannon-lv3-game.webp');
+  for(const level of [2,3])assert.ok(art.waterCannonActionSpriteAsset('cannon','water',level,from,to,.24));
+ }
+});
+
+test('crush recoil/return/settle remain visible at 30Hz and either speed without early release',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'crush-publication'),from={x:0,y:0},to={x:100,y:0};
+ for(const speed of [1,2])for(let phase=0;phase<100;phase++){
+  const step=speed/30,seen=new Set<number>();
+  for(let t=phase/100*step;t<.52;t+=step){
+   const recoil=t<.28?0:.52-t,r=art.crushCannonActionSpriteAsset('cannon','crush',2,from,to,recoil)!;seen.add(r.pose);
+   if(t<.28)assert.equal(r.pose,0);assert.deepEqual(r,art.crushCannonActionSpriteAsset('cannon','crush',2,from,to,recoil));
   }
   for(const pose of [0,1,2,3])assert.ok(seen.has(pose),`speed${speed},phase${phase},pose${pose}`);
  }
