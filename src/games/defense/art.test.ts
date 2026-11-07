@@ -289,7 +289,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/fire-action-')).length,9);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')).length,9);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -733,7 +733,7 @@ test('fire core charges before release, keeps a fixed crop, and projects its act
   assert.equal(art.fireTowerActionSpriteAsset('magic','fire',2,windup,recoil,true)?.pose,0);
  }
  for(const pose of meta.poses){assert.equal(pose.foundation_drift,0);assert.ok(pose.fixed_meshes>40);}
- assert.equal(art.fireTowerActionSpriteAsset('magic','fire',3,0,.24),null);
+ assert.equal(art.fireTowerActionSpriteAsset('magic','fire',1,0,.24),null);
  assert.equal(art.fireTowerActionSpriteAsset('magic','lightning',2,0,.24),null);
  assert.equal(requests.filter(s=>s.includes('/fire-action-')).length,1);
  assert.ok(!requests.some(s=>s.endsWith('.glb')));
@@ -749,7 +749,7 @@ test('fire projectile keeps its launch socket through tower upgrade or removal, 
   const expected={x:socket.x,y:socket.y+39};assert.deepEqual(art.fireTowerProjectileOffset(p,reduced),expected);
   assert.deepEqual(art.fireTowerProjectileOffset({...p,to:{x:-200,y:0}},reduced),expected);
  }
- assert.equal(art.fireTowerProjectileOffset({...p,sourceLevel:3}),undefined);
+ assert.equal(art.fireTowerProjectileOffset({...p,sourceLevel:1}),undefined);
  assert.equal(art.fireTowerProjectileOffset({...p,element:'lightning'}),undefined);
  assert.equal(art.fireTowerProjectileOffset({...p,source:'hero'}),undefined);
  for(const file of ['fire-action-atlas.webp','fire-tower-game.webp']){
@@ -758,5 +758,53 @@ test('fire projectile keeps its launch socket through tower upgrade or removal, 
   assert.equal(failed.fireTowerProjectileOffset(p),undefined);
   assert.ok(failed.towerSpriteAsset('magic','fire',2));
   assert.ok(failed.towerSpriteAsset('magic','fire',3)?.src.includes('lv3'));
+ }
+});
+
+test('ascended fire tower uses its own camera sockets and preserves both upgrade sets',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'fire-lv3-action');
+ const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/fire-tower-lv3-action.json',import.meta.url),'utf8'));
+ const size=104,scale=1.16*1.025;
+ for(const [windup,recoil,pose] of [[0,0,0],[.01,0,1],[.499,0,1],[.5,0,2],[.999,0,2],[0,.24,3],[0,.161,3],[0,.16,4],[0,.081,4],[0,.08,5],[0,.001,5],[NaN,NaN,0]]){
+  const render=art.fireTowerActionSpriteAsset('magic','fire',3,windup,recoil)!;
+  assert.equal(render.pose,pose);assert.equal(render.asset.src,'/defense/models/fire-lv3-action-atlas.webp');assert.equal(render.asset.displayScale,scale);
+  const [x,y]=meta.poses[pose].socket;assert.ok(Math.abs(render.muzzle.x-(x-320)/576*scale*size)<.0001);assert.ok(Math.abs(render.muzzle.y-(.1+(y-600)/576*scale)*size)<.0001);
+  const [left,top,w,h]=render.asset.viewBox.split(' ').map(Number);assert.ok(left>=pose*384&&left+w<=(pose+1)*384);assert.equal(top,14.4);assert.equal(h,345.6);
+  assert.equal(art.fireTowerActionSpriteAsset('magic','fire',3,windup,recoil,true)?.pose,0);
+ }
+ for(const pose of meta.poses){assert.equal(pose.foundation_drift,0);assert.ok(pose.fixed_meshes>76);assert.ok(pose.bounds[1]>32);}
+ assert.equal(meta.level,3);assert.equal(meta.hit_at,.15);
+ for(const file of meta.files){const bytes=readFileSync(new URL('../../../public/defense/models/'+file.file,import.meta.url));assert.equal(createHash('sha256').update(bytes).digest('hex'),file.sha256);}
+ assert.equal(requests.filter(s=>s.includes('/fire-lv3-action-')).length,1);assert.ok(!requests.some(s=>s.endsWith('.glb')));
+ const p={source:'tower',actor:'magic',element:'fire',sourceLevel:3,from:{x:50,y:50},to:{x:100,y:100}} as Projectile;
+ for(const reduced of [false,true]){const socket=art.fireTowerActionSpriteAsset('magic','fire',3,0,.24,reduced)!.muzzle;assert.deepEqual(art.fireTowerProjectileOffset(p,reduced),{x:socket.x,y:socket.y+39});}
+ assert.notDeepEqual(art.fireTowerProjectileOffset(p),art.fireTowerProjectileOffset({...p,sourceLevel:2}));
+});
+
+test('a fire upgrade asset failure never replaces another upgrade with a partial action set',async()=>{
+ for(const [level,files] of [[2,['fire-action-atlas.webp','fire-tower-game.webp']],[3,['fire-lv3-action-atlas.webp','fire-tower-lv3-game.webp']]] as const){
+  for(const file of files){
+   const {art}=await loadWithImageResults(s=>s.endsWith(file),'fire-upgrade-failure-'+file);
+   assert.equal(art.fireTowerActionSpriteAsset('magic','fire',level,.8,.24),null);
+   assert.ok(art.fireTowerActionSpriteAsset('magic','fire',level===2?3:2,.8,.24));
+   assert.ok(art.towerSpriteAsset('magic','fire',level));
+   assert.equal(art.fireTowerProjectileOffset({source:'tower',actor:'magic',element:'fire',sourceLevel:level} as Projectile),undefined);
+  }
+ }
+});
+
+test('each ascended charge and recoil pose survives nominal 30Hz publication at either speed',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'fire-lv3-publication');
+ // Sweep publication phase relative to launch. A pose shorter than 1/30*speed
+ // can disappear entirely; no extra engine time or wall-clock hold is introduced.
+ for(const speed of [1,2])for(let phase=0;phase<100;phase++){
+  const step=speed/30,seen=new Set<number>();
+  for(let t=phase/100*step;t<.39;t+=step){
+   const windup=t<.15?t/.15:0,recoil=t>=.15?Math.max(0,.39-t):0;
+   const render=art.fireTowerActionSpriteAsset('magic','fire',3,windup,recoil)!;seen.add(render.pose);
+   if(t<.15)assert.ok(render.pose<3,'never display release before the engine launches');
+   assert.deepEqual(render,art.fireTowerActionSpriteAsset('magic','fire',3,windup,recoil),'paused inputs are stable');
+  }
+  for(const pose of [1,2,3,4,5])assert.ok(seen.has(pose),`speed ${speed}, phase ${phase}, missing ${pose}`);
  }
 });

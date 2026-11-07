@@ -1,4 +1,4 @@
-"""Fire tower Lv.2: fixed masonry, crystal charge and hinged bronze retainers.
+"""Fire tower Lv.2/Lv.3: fixed masonry, crystal charge and hinged bronze retainers.
 Regenerate with npm run models:fire-action (Blender 4.3+, ffmpeg).
 """
 import argparse, hashlib, json, math, shutil, subprocess, sys
@@ -6,10 +6,10 @@ from pathlib import Path
 import bpy
 from mathutils import Vector
 from bpy_extras.object_utils import world_to_camera_view
-ROOT=Path(__file__).resolve().parents[2];SOURCE=ROOT/'art-source/defense/towers.blend';OUT=ROOT/'public/defense/models';FRAMES=ROOT/'art-source/defense/fire-tower-action'
-p=argparse.ArgumentParser();p.add_argument('--samples',type=int,default=48);p.add_argument('--check',action='store_true');args=p.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
-asset_id='fire-tower-action';command='npm run models:fire-action';display_scale=1.16
-bpy.ops.wm.open_mainfile(filepath=str(SOURCE));scene=bpy.context.scene;col=bpy.data.collections['fire-tower'];root=bpy.data.objects['fire-tower'];root.location=(0,0,0)
+ROOT=Path(__file__).resolve().parents[2];SOURCE=ROOT/'art-source/defense/towers.blend';OUT=ROOT/'public/defense/models'
+p=argparse.ArgumentParser();p.add_argument('--level',type=int,choices=(2,3),default=2);p.add_argument('--samples',type=int,default=48);p.add_argument('--check',action='store_true');args=p.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+model_id='fire-tower' if args.level==2 else 'fire-tower-lv3';asset_id=model_id+'-action';atlas_name='fire-action-atlas.webp' if args.level==2 else 'fire-lv3-action-atlas.webp';command='npm run models:fire-action'+('-lv3' if args.level==3 else '');display_scale=1.16*(1.025 if args.level==3 else 1);FRAMES=ROOT/'art-source/defense'/asset_id
+bpy.ops.wm.open_mainfile(filepath=str(SOURCE));scene=bpy.context.scene;col=bpy.data.collections[model_id];root=bpy.data.objects[model_id];root.location=(0,0,0)
 for other in list(bpy.data.collections):
  if other not in (col,bpy.data.collections['Studio / camera and soft lights']):
   for obj in list(other.objects):bpy.data.objects.remove(obj,do_unlink=True)
@@ -21,17 +21,27 @@ for i,angle in enumerate([math.pi/4,3*math.pi/4,5*math.pi/4,7*math.pi/4]):
  claw=next(o for o in col.objects if o.name.startswith(f'Crown / bronze crystal claw {i+1}'))
  pivot=bpy.data.objects.new(f'bronze-claw-hinge-{i+1}',None);col.objects.link(pivot);pivot.parent=root;pivot.location=(.96*math.cos(angle),.96*math.sin(angle),1.86);pivot.rotation_mode='AXIS_ANGLE';pivot['animation_role']='crystal-retainer';bpy.context.view_layer.update()
  world=claw.matrix_world.copy();claw.parent=pivot;claw.matrix_world=world;hinges.append((pivot,angle))
+# The ascended halo has its own pivot; its gold ring, ember ring and six beads
+# move together, while the four buttress spires stay rooted in the stone tower.
+halo=None
+if args.level==3:
+ halo=bpy.data.objects.new('ascended-halo',None);col.objects.link(halo);halo.parent=root;halo.location=(0,0,2.68);halo['animation_role']='focus-halo';bpy.context.view_layer.update()
+ for obj in list(col.objects):
+  if obj.name.startswith(('Ascended / gold halo','Ascended / ember halo','Ascended / halo ember bead')):
+   world=obj.matrix_world.copy();obj.parent=halo;obj.matrix_world=world
 bpy.context.view_layer.update();socket=core.matrix_world.inverted()@Vector((0,-.08,3.56))
 # The same seven samples author the GLB; six unique poses are delivered to battle.
 poses=[('rest',0,1,0),('gather',-.08,.97,-.025),('charged',-.21,.9,-.06),('release',.14,1.06,.43),('rebound',.08,1.02,.24),('settle',-.035,.99,.07)]
 def pose(index):
  _,lift,scale,opening=poses[index];core.location=rest+Vector((0,0,lift));core.scale=(scale,scale,scale)
  for pivot,angle in hinges:pivot.rotation_axis_angle=(opening,-math.sin(angle),math.cos(angle),0)
+ if halo:
+  tilt,yaw=[(0,0),(.04,-.08),(.10,-.18),(-.27,.28),(-.15,.16),(-.04,.04)][index];halo.rotation_euler=(tilt,0,yaw)
  bpy.context.view_layer.update()
 def project(v):
  q=world_to_camera_view(scene,camera,Vector(v));return [q.x*640,(1-q.y)*640]
 fixed=[o for o in col.objects if o.type=='MESH' and o.parent==root];fixed_matrices={o:o.matrix_world.copy() for o in fixed}
-manifest={'source':f'art-source/defense/{asset_id}.blend','level':2,'regeneration_command':command,'display_scale':display_scale,'base_source_sha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'generator':'tools/blender/build_fire_tower_action.py','reference':'art-source/defense/concepts/2026-10-29/props/six-tower-modules.png','frame':{'width':640,'height':640,'ground':project((0,0,0)),'crop':[32,24,576,576],'orthographic_scale':7.5},'delivery_frame':{'width':384,'height':384,'crop':[19.2,14.4,345.6,345.6]},'clip':'fire-core-release','hit_at':.15,'duration':.39,'poses':[],'files':[]}
+manifest={'source':f'art-source/defense/{asset_id}.blend','level':args.level,'regeneration_command':command,'display_scale':display_scale,'base_source_sha256':hashlib.sha256(SOURCE.read_bytes()).hexdigest(),'generator':'tools/blender/build_fire_tower_action.py','reference':'art-source/defense/concepts/2026-10-29/props/six-tower-modules.png','frame':{'width':640,'height':640,'ground':project((0,0,0)),'crop':[32,24,576,576],'orthographic_scale':7.5},'delivery_frame':{'width':384,'height':384,'crop':[19.2,14.4,345.6,345.6]},'clip':'fire-core-release','hit_at':.15,'duration':.39,'poses':[],'files':[]}
 FRAMES.mkdir(parents=True,exist_ok=True)
 for index,(name,*_) in enumerate(poses):
  pose(index);graph=bpy.context.evaluated_depsgraph_get();points=[]
@@ -46,14 +56,14 @@ for index,(name,*_) in enumerate(poses):
   scene.render.filepath=str(FRAMES/f'{name}.png');bpy.ops.render.render(write_still=True)
  print('POSE_DONE',index,name,flush=True)
 if args.check:print('CHECK_PASS');sys.exit(0)
-inputs=sum((['-i',str(FRAMES/f'{p[0]}.png')] for p in poses),[]);atlas=OUT/'fire-action-atlas.webp'
+inputs=sum((['-i',str(FRAMES/f'{p[0]}.png')] for p in poses),[]);atlas=OUT/atlas_name
 subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',*inputs,'-filter_complex','hstack=inputs=6,scale=2304:384:flags=lanczos','-frames:v','1','-c:v','libwebp','-quality','90','-compression_level','6',str(atlas)],check=True)
 scene.render.fps=100;scene.frame_start=1;scene.frame_end=40
-for frame,index in [(1,0),(6,1),(14,2),(16,3),(22,4),(31,5),(40,0)]:
+for frame,index in ([(1,0),(6,1),(14,2),(16,3),(22,4),(31,5),(40,0)] if args.level==2 else [(1,0),(6,1),(14,2),(16,3),(24,4),(32,5),(40,0)]):
  pose(index)
- for obj in [core]+[h[0] for h in hinges]:
-  for prop in (['location','scale'] if obj==core else ['rotation_axis_angle']):obj.keyframe_insert(data_path=prop,frame=frame)
-for obj in [core]+[h[0] for h in hinges]:
+ for obj in [core]+[h[0] for h in hinges]+([halo] if halo else []):
+  for prop in (['location','scale'] if obj==core else ['rotation_euler'] if obj==halo else ['rotation_axis_angle']):obj.keyframe_insert(data_path=prop,frame=frame)
+for obj in [core]+[h[0] for h in hinges]+([halo] if halo else []):
  obj.animation_data.action.name=obj.name+' charge and release'
  for curve in obj.animation_data.action.fcurves:
   for key in curve.keyframe_points:key.interpolation='LINEAR'
@@ -82,9 +92,10 @@ bpy.data.collections.remove(export)
 for obj,name in names.items():obj.name=name
 scene.frame_set(1);pose(0);scene['regeneration_command']=command;bpy.context.preferences.filepaths.save_version=0;bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/manifest['source']))
 shutil.copyfile(FRAMES/'rest.png',OUT/f'{asset_id}.png')
-for name in [f'{asset_id}.glb',f'{asset_id}.png','fire-action-atlas.webp']:
+for name in [f'{asset_id}.glb',f'{asset_id}.png',atlas_name]:
  file=OUT/name;manifest['files'].append({'file':name,'bytes':file.stat().st_size,'sha256':hashlib.sha256(file.read_bytes()).hexdigest()})
 (OUT/f'{asset_id}.json').write_text(json.dumps(manifest,indent=2)+'\n')
 coords=[[round((p['socket'][0]-320)/576*display_scale,6),round(.1+(p['socket'][1]-600)/576*display_scale,6)] for p in manifest['poses']]
-(ROOT/'src/games/defense/fireTowerSockets.ts').write_text('// Generated by tools/blender/build_fire_tower_action.py; offsets per tower display size.\nexport const FIRE_TOWER_SOCKETS = '+json.dumps(coords)+' as const;\n')
+socket_file='fireTowerSockets.ts' if args.level==2 else 'fireTowerLv3Sockets.ts';constant='FIRE_TOWER_SOCKETS' if args.level==2 else 'FIRE_TOWER_LV3_SOCKETS'
+(ROOT/'src/games/defense'/socket_file).write_text('// Generated by tools/blender/build_fire_tower_action.py; offsets per tower display size.\nexport const '+constant+' = '+json.dumps(coords)+' as const;\n')
 print('FIRE_ACTION_COMPLETE',flush=True)

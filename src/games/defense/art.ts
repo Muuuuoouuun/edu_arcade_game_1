@@ -1,3 +1,4 @@
+import { FIRE_TOWER_LV3_SOCKETS } from './fireTowerLv3Sockets.ts';
 import { FIRE_TOWER_SOCKETS } from './fireTowerSockets.ts';
 import { enemyWalkFrame, walkFrame } from './locomotion.ts';
 import { attackOctant, dwarfHammerFrame, petBiteFrame } from './action.ts';
@@ -228,18 +229,21 @@ const BAKED_BRANCHES:BakedTower[] = [
  {kind:'cannon',branch:'crush',asset:{src:'/defense/models/crush-cannon-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/crush-cannon-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
 ];
 const bakedFor=(kind:TowerKind,branch:Branch|null)=>BAKED_BRANCHES.find(model=>model.kind===kind&&model.branch===branch)??BAKED_TOWERS[kind];
-const FIRE_ACTION_ATLAS='/defense/models/fire-action-atlas.webp';
-/** Fixed masonry; only the crystal and its bronze retainers charge and release. */
+const FIRE_ACTION_ATLAS='/defense/models/fire-action-atlas.webp',FIRE_LV3_ACTION_ATLAS='/defense/models/fire-lv3-action-atlas.webp';
+/** Fixed masonry; the crystal, bronze retainers and ascended halo charge and release. */
 export function fireTowerActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,windup=0,recoil=0,reduced=false) {
- if(kind!=='magic'||branch!=='fire'||level!==2||!motionLoaded.has(FIRE_ACTION_ATLAS)||!motionLoaded.has(BAKED_TOWERS.magic.asset.src))return null;
+ if(kind!=='magic'||branch!=='fire'||(level!==2&&level!==3))return null;
+ const mastered=level===3,atlas=mastered?FIRE_LV3_ACTION_ATLAS:FIRE_ACTION_ATLAS,base=mastered?BAKED_TOWERS.magic.mastered!:BAKED_TOWERS.magic.asset;
+ if(!motionLoaded.has(atlas)||!motionLoaded.has(base.src))return null;
  const charge=Number.isFinite(windup)&&windup>0,release=Number.isFinite(recoil)&&recoil>0;
- const pose=reduced?0:charge?(windup<.6?1:2):release?(recoil>.18?3:recoil>.10?4:5):0;
- const [x,y]=FIRE_TOWER_SOCKETS[pose],size=92+level*4;
- return {direction:0,pose,muzzle:{x:x*size,y:y*size},asset:{src:FIRE_ACTION_ATLAS,viewBox:`${pose*384+19.2} 14.4 345.6 345.6`,width:2304,height:384,displayScale:1.16} as SpriteAsset};
+ // Lv.3 gives each action pose >=75ms of simulation time: more than a 30Hz tick at 2x.
+ const pose=reduced?0:charge?(windup<(mastered?.5:.6)?1:2):release?(recoil>(mastered?.16:.18)?3:recoil>(mastered?.08:.10)?4:5):0;
+ const [x,y]=(mastered?FIRE_TOWER_LV3_SOCKETS:FIRE_TOWER_SOCKETS)[pose],size=92+level*4;
+ return {direction:0,pose,muzzle:{x:x*size,y:y*size},asset:{src:atlas,viewBox:`${pose*384+19.2} 14.4 345.6 345.6`,width:2304,height:384,displayScale:1.16*(mastered?1.025:1)} as SpriteAsset};
 }
 /** Use the launch-level socket even after upgrade/sale; reduced motion uses the resting core. */
 export function fireTowerProjectileOffset(p:Projectile,reduced=false):Point|undefined {
- if(p.source!=='tower'||p.actor!=='magic'||p.element!=='fire'||p.sourceLevel!==2)return undefined;
+ if(p.source!=='tower'||p.actor!=='magic'||p.element!=='fire'||(p.sourceLevel!==2&&p.sourceLevel!==3))return undefined;
  const render=fireTowerActionSpriteAsset('magic','fire',p.sourceLevel,0,.24,reduced);
  return render?{x:render.muzzle.x,y:12+render.muzzle.y+27}:undefined;
 }
@@ -369,7 +373,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,FIRE_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;
