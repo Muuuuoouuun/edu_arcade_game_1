@@ -33,8 +33,9 @@ def material(name,color,rough=.8,emission=0):
  n.inputs['Base Color'].default_value=(*color,1);n.inputs['Roughness'].default_value=rough
  n.inputs['Emission Color'].default_value=(*color,1);n.inputs['Emission Strength'].default_value=emission
  return m
-BARK=material('bark',(.36,.19,.08),.9);BARK_DARK=material('bark shadow',(.2,.1,.05),.95);BARK_LIGHT=material('bark light',(.5,.3,.14),.9)
-LEAF=material('leaf',(.18,.5,.06),.8);LEAF_LIGHT=material('leaf light',(.42,.62,.1),.8);EYE=material('ember eye',(1,.35,.02),.3,5);MOUTH=material('mouth glow',(.9,.2,.02),.4,3)
+# Warm orange timber (vs the grey-brown stone golem) so the two read apart at battle size.
+BARK=material('bark',(.58,.31,.11),.9);BARK_DARK=material('bark shadow',(.34,.17,.06),.95);BARK_LIGHT=material('bark light',(.78,.5,.22),.9)
+LEAF=material('leaf',(.18,.5,.06),.8);LEAF_LIGHT=material('leaf light',(.42,.62,.1),.8);EYE=material('sap eye',(.45,.9,.05),.3,2.2);MOUTH=material('mouth glow',(.9,.2,.02),.4,3)
 
 def parent_to(o,parent):
  o.parent=parent
@@ -61,16 +62,16 @@ def leaves(name,loc,r,parent,mat=None):
  return blob(name,loc,(r,r*.95,r*.55),mat or LEAF,parent)
 
 root=pivot('wood-root',(0,0,0))
-hips=blob('hips',(0,0,1.4),(.85,.8,.6),BARK_DARK,root)
-torso=log('torso',(.2,0,2.4),1.05,1.8,BARK,root,(0,math.radians(8),0))
-blob('chest-bulge',(.55,0,2.5),(.55,.7,.65),BARK_LIGHT,root)
-head=pivot('head',(.65,0,3.35),root)
+hips=blob('hips',(0,0,1.4),(.7,.66,.55),BARK_DARK,root)
+torso=log('torso',(.1,0,2.55),.82,2.1,BARK,root,(0,math.radians(4),0))
+blob('chest-bulge',(.45,0,2.6),(.4,.55,.6),BARK_LIGHT,root)
+head=pivot('head',(.4,0,3.75),root)
 blob('head-log',(0,0,0),(.6,.55,.55),BARK,head);blob('jaw',(.38,0,-.22),(.3,.42,.16),BARK_DARK,head);blob('mouth',(.62,0,-.2),(.1,.3,.08),MOUTH,head)
 for i,ty in enumerate((-.2,-.07,.07,.2)):branch(f'tooth-{i}',(.66,ty,-.12),.045,.14,head,(0,math.radians(180),0))
 for n,y in (('eye-near',-.22),('eye-far',.22)):
  blob(n,(.55,y,.08),(.2,.16,.14),EYE,head)
-for i,(x,y,tilt) in enumerate(((-.1,-.25,-25),(-.2,.25,-35),(.1,0,-10))):
- branch(f'antler-{i}',(x,y,.8),.14,1.1,head,(math.radians(y*60),math.radians(tilt),0))
+for i,(x,y,tilt) in enumerate(((-.1,-.3,-25),(-.2,.3,-35),(.1,0,-10),(-.3,0,-55))):
+ branch(f'antler-{i}',(x,y,.8),.14,1.5,head,(math.radians(y*60),math.radians(tilt),0))
 leaves('leaf-back',(-.9,0,3.0),.95,root);leaves('leaf-shoulder',(-.2,.5,3.55),.65,root,LEAF_LIGHT);leaves('leaf-shoulder-near',(.1,-.85,3.5),.5,root)
 leaves('leaf-chest',(.7,-.45,2.95),.4,root,LEAF_LIGHT);leaves('leaf-hips',(.0,.2,1.95),.5,root,LEAF_LIGHT);leaves('leaf-knee',(.55,-.8,.9),.3,root)
 branch('back-branch-a',(-1.0,.15,3.9),.17,1.3,root,(0,math.radians(-20),0));branch('back-branch-b',(-.7,-.2,4.0),.14,1.1,root,(0,math.radians(10),0))
@@ -83,6 +84,9 @@ for side,y in (('near',-.7),('far',.7)):
  blob(f'shoulder-{side}',(0,0,0),(.65,.6,.6),BARK,arm);log(f'forearm-{side}',(.1,0,-.85),.46,1.1,BARK_DARK,arm)
  blob(f'fist-{side}',(.2,0,-1.55),(.85,.75,.78) if side=='near' else (.72,.65,.68),BARK_LIGHT,arm)
  for i,dy in enumerate((-.3,0,.3)):branch(f'finger-{side}-{i}',(.55,dy*.8,-1.7),.1,.5,arm,(0,math.radians(90),0))
+ if side=='near':
+  # Heavy log club, fat end up: gives the walker a tall weapon silhouette the golem lacks.
+  log('club',(.85,0,-.6),.5,2.6,BARK_DARK,arm,(math.pi,math.radians(-42),0));blob('club-knot',(1.1,-.4,.3),(.22,.18,.2),BARK_LIGHT,arm)
 
 # Pose rotations about Y (screen-pitch): negative swings forward, positive back.
 POSES={'walk-a':{'leg':{'near':-24,'far':24},'arm':{'near':26,'far':-26},'lean':5,'head':-4,'loc':(0,0,0)},
@@ -93,8 +97,8 @@ scene.view_settings.view_transform='Standard';scene.render.engine='CYCLES';scene
 scene.render.resolution_x=opts.size;scene.render.resolution_y=opts.size;scene.render.resolution_percentage=100
 scene.render.image_settings.file_format='PNG';scene.render.image_settings.color_mode='RGBA';scene.render.film_transparent=True
 scene.world=bpy.data.worlds.new('studio');scene.world.use_nodes=True;scene.world.node_tree.nodes['Background'].inputs['Color'].default_value=(.6,.62,.7,1);scene.world.node_tree.nodes['Background'].inputs['Strength'].default_value=.15
-cam_data=bpy.data.cameras.new('Wood soldier shared orthographic camera');camera=bpy.data.objects.new(cam_data.name,cam_data);STUDIO.objects.link(camera);cam_data.type='ORTHO';cam_data.ortho_scale=5.6
-camera.location=(5,-10,6.9);target=Vector((0,0,2.0));camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler();scene.camera=camera
+cam_data=bpy.data.cameras.new('Wood soldier shared orthographic camera');camera=bpy.data.objects.new(cam_data.name,cam_data);STUDIO.objects.link(camera);cam_data.type='ORTHO';cam_data.ortho_scale=6.3
+camera.location=(5,-10,6.9);target=Vector((0,0,2.35));camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler();scene.camera=camera
 for nm,loc,en,sz in (('key',(5,-5,8),300,3),('fill',(-6,-3,3),110,4),('rim',(-2,6,5),200,2)):
  d=bpy.data.lights.new(nm,'AREA');d.energy=en;d.size=sz;o=bpy.data.objects.new(nm,d);o.location=loc;STUDIO.objects.link(o)
  o.rotation_euler=(Vector((0,0,1.2))-o.location).to_track_quat('-Z','Y').to_euler()

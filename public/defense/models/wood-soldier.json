@@ -10,9 +10,9 @@
   "height": 384,
   "ground": [
    192.0,
-   317.61
+   324.67
   ],
-  "orthographic_scale": 5.599999904632568
+  "orthographic_scale": 6.300000190734863
  },
  "atlas": {
   "file": "wood-soldier-atlas.webp",
@@ -29,6 +29,6 @@
   "samples": 64,
   "transparent": true
  },
- "mesh_objects": 43,
- "evaluated_polygons": 1870
+ "mesh_objects": 46,
+ "evaluated_polygons": 1968
 }
