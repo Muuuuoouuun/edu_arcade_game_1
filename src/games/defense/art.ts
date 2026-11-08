@@ -10,6 +10,7 @@ import { FIRE_TOWER_SOCKETS } from './fireTowerSockets.ts';
 import { FROST_WOLF_FRAME } from './frostWolfGait.ts';
 import { frostWolfWalkFrame, enemyWalkFrame, walkFrame, petWalkFrame, MAGE_STOP_DURATION, type Locomotion } from './locomotion.ts';
 import { attackOctant, dwarfHammerFrame, karHammerFrame, petBiteFrame } from './action.ts';
+import { MAGE_ENTRY_SOCKETS } from './mageEntrySockets.ts';
 import { MAGE_SOCKETS } from './mageSockets.ts';
 import { ELF_SOCKETS } from './elfSockets.ts';
 import { PET_WOLF_SOCKETS } from './petWolfSockets.ts';
@@ -60,6 +61,7 @@ function karAsset(direction:number,mode:'slam'|'walk',frame:number):SpriteAsset|
 }
 const MAGE_CAST=Array.from({length:8},(_,i)=>`/defense/models/ian-cast-${i}-atlas.webp`);
 const MAGE_WALK=Array.from({length:8},(_,i)=>`/defense/models/ian-walk-${i}-atlas.webp`);
+const MAGE_ENTRY=Array.from({length:8},(_,i)=>`/defense/models/ian-entry-${i}-atlas.webp`);
 const MAGE_STOP=Array.from({length:8},(_,i)=>`/defense/models/ian-stop-${i}-atlas.webp`);
 function mageModelReady(){return [...MAGE_CAST,...MAGE_WALK].every(src=>motionLoaded.has(src));}
 /** Preserve the last simulated walk frame, then settle the boots in sequence. */
@@ -70,6 +72,15 @@ export function mageStopSpriteAsset(actor:HeroId|'wolf',motion:Locomotion,reduce
  const frame=Math.min(2,Math.floor((stop.elapsed+1e-9)/.08));
  const asset=frame===0?mageAsset(direction,'walk',stop.frame):{src:MAGE_STOP[direction],viewBox:`${(stop.frame*2+frame-1)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true};
  return asset?{asset,frame,entry:stop.frame}:null;
+}
+/** Plant the captured step before the existing .15-second spell release. */
+export function mageCastEntrySpriteAsset(attack:CombatAttack,position:Point,reduced=false):{asset:SpriteAsset;entry:number;frame:'walk'|'first-foot'|'second-foot';direction:number;socket:Point}|null {
+ const entry=attack.walkEntry,direction=attackOctant(position,attack.to),t=attack.elapsed;
+ if(attack.actor!=='mage'||(attack.source!=='hero'&&attack.source!=='mercenary')||reduced||entry===undefined||!Number.isInteger(entry)||entry<0||entry>7||!Number.isFinite(t)||t<0||t>=.10||direction===null||!mageModelReady()||!MAGE_ENTRY.every(src=>motionLoaded.has(src)))return null;
+ const sample=t<.025?0:t<.065?1:2;
+ const [x,y]=MAGE_ENTRY_SOCKETS[direction][entry][sample];
+ const asset=sample===0?mageAsset(direction,'walk',entry)!:{src:MAGE_ENTRY[direction],viewBox:`${(entry*2+sample-1)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true};
+ return {asset,entry,direction,frame:sample===0?'walk':sample===1?'first-foot':'second-foot',socket:{x,y}};
 }
 function mageAsset(direction:number,mode:'cast'|'walk',frame:number):SpriteAsset|null {
  if(!mageModelReady())return null;
@@ -571,7 +582,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_BRACE_FALL_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...KAR_SLAM,...KAR_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...RIEL_ENTRY,...RIEL_RETURN,...RIEL_RESET,...RIEL_STOP,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_BRACE_FALL_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...MAGE_ENTRY,...KAR_SLAM,...KAR_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...TAO_CAST,...TAO_WALK,...ELF_CAST,...ELF_WALK,...RIEL_ENTRY,...RIEL_RETURN,...RIEL_RESET,...RIEL_STOP,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

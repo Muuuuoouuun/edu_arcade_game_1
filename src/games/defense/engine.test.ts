@@ -863,3 +863,24 @@ test('Riel hero and mercenary remember their last step, pause, settle and cancel
   assert.ok(observed,role+' naturally reaches a stop');
  }
 });
+
+test('Ian hero and mercenary remember their last step, pause, settle and cancel when moving again',()=>{
+ for(const role of ['hero','mercenary'] as const){
+  let s=createDefense(1,role==='hero'?'mage':'dwarf');if(role==='mercenary')s=actDefense(s,{type:'hire',hero:'mage'});
+  s=actDefense(s,{type:'move',point:{x:250,y:220}});let observed=false;
+  for(let i=0;i<600;i++){
+   const previous=s;s=stepDefense(s,1/60);const m=s.locomotion[role];
+   if(role==='mercenary'){const travel=Math.hypot(s.mercenaryPosition.x-previous.mercenaryPosition.x,s.mercenaryPosition.y-previous.mercenaryPosition.y);if(travel>.001){assert.ok(m.speed>0);assert.equal(m.settle,undefined);}}
+   if(m.settle){
+    observed=true;assert.equal(m.settle.frame,Math.floor((previous.locomotion[role].distance%64)/8));assert.equal(m.settle.elapsed,0);assert.deepEqual(m.settle.heading,previous.locomotion[role].heading);
+    const frozen=actDefense(s,{type:'pause'});assert.equal(stepDefense(frozen,.1),frozen);
+    const snapshot=structuredClone(s),finished=advance(s,.4);assert.equal(finished.locomotion[role].settle,undefined);assert.deepEqual(s,snapshot);
+    const point=role==='hero'?s.heroPosition:s.mercenaryPosition;assert.deepEqual(role==='hero'?finished.heroPosition:finished.mercenaryPosition,point);
+    const restarted=stepDefense(actDefense(s,{type:'move',point:{x:650,y:450}}),.05);assert.equal(restarted.locomotion[role].settle,undefined);assert.ok(restarted.locomotion[role].speed>0);
+    if(role==='hero'){const dashed=stepDefense(actDefense(actDefense(s,{type:'start-wave'}),{type:'dash',point:{x:650,y:450}}),.02);assert.equal(dashed.locomotion.hero.settle,undefined);}
+    break;
+   }
+  }
+  assert.ok(observed,role+' naturally reaches a stop');
+ }
+});

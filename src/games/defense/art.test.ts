@@ -1582,3 +1582,42 @@ test('both Riel stop steps are published at 1x/2x with every publication offset'
   for(const frame of [1,2])assert.ok(frames.has(frame),`${ticks}/${offset}/${frame}`);
  }
 });
+
+test('Ian cast entry preserves each captured walk and joins the original shot before release',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'ian-entry');
+ const position={x:200,y:200};
+ for(const source of ['hero','mercenary'] as const)for(let direction=0;direction<8;direction++)for(let entry=0;entry<8;entry++){
+  const angle=direction*Math.PI/4,to={x:200+100*Math.cos(angle),y:200+100*Math.sin(angle)};
+  const attack={actor:'mage',source,walkEntry:entry,from:position,to,elapsed:0,hitAt:.15,duration:.33} as CombatAttack;
+  for(const [t,expected] of [[0,'walk'],[.024,'walk'],[.025,'first-foot'],[.064,'first-foot'],[.065,'second-foot'],[.099,'second-foot']] as const){
+   const pose=art.mageCastEntrySpriteAsset({...attack,elapsed:t},position)!;
+   const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/ian-entry.json',import.meta.url),'utf8'));const sample=expected==='walk'?0:expected==='first-foot'?1:2;assert.deepEqual([pose.socket.x,pose.socket.y],meta.directions[direction].sockets[entry][sample]);
+   assert.equal(pose.entry,entry);assert.equal(pose.frame,expected);assert.equal(pose.direction,direction);
+   assert.equal(pose.asset.displayScale,1.2*6.8/5.8);assert.equal(pose.asset.groundY!/pose.asset.height,220/256);
+   if(expected==='walk')assert.deepEqual(pose.asset,art.directionalLocomotionSpriteAsset('mage',{x:Math.cos(angle),y:Math.sin(angle)},entry*8));
+   else {assert.equal(pose.asset.src,`/defense/models/ian-entry-${direction}-atlas.webp`);const [x,y,w,h]=pose.asset.viewBox.split(' ').map(Number);assert.ok(x+w<=pose.asset.width&&y+h<=pose.asset.height);}
+  }
+  for(const elapsed of [-1,.1,.149,.15,.33,NaN,Infinity])assert.equal(art.mageCastEntrySpriteAsset({...attack,elapsed},position),null);
+  assert.equal(art.mageCastEntrySpriteAsset(attack,position,true),null);
+  for(const walkEntry of [undefined,-1,8,.5,NaN])assert.equal(art.mageCastEntrySpriteAsset({...attack,walkEntry},position),null);
+  assert.ok(art.directionalActionSpriteAsset('mage','strike',position,to));
+ }
+ assert.equal(requests.filter(src=>src.includes('/ian-entry-')).length,8);assert.ok(!requests.some(src=>src.endsWith('.glb')));
+});
+
+test('Ian transition image failure retains the complete existing shot and walk set',async()=>{
+ const position={x:0,y:0},attack={actor:'mage',source:'hero',walkEntry:3,to:{x:100,y:0},elapsed:.04} as CombatAttack;
+ for(const missing of ['ian-entry-3-atlas.webp','ian-walk-3-atlas.webp','ian-cast-3-atlas.webp']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(missing),'ian-entry-fail-'+missing);
+  assert.equal(art.mageCastEntrySpriteAsset(attack,position),null);
+  assert.equal(!!art.directionalActionSpriteAsset('mage','windup',position,attack.to),missing.startsWith('ian-entry'));
+  assert.equal(!!art.directionalLocomotionSpriteAsset('mage',{x:1,y:0},24),missing.startsWith('ian-entry'));
+  assert.ok(art.directionalActionSpriteAsset('elf','windup',position,attack.to));
+ }
+});
+
+
+test('Ian preparation remains visible at both published simulation cadences and stops before release',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'ian-entry-cadence');
+ for(const dt of [1/30,2/30]){const seen=new Set();for(let t=0;t<.15;t+=dt){const pose=art.mageCastEntrySpriteAsset({actor:'mage',source:'hero',walkEntry:3,elapsed:t,to:{x:100,y:0}} as CombatAttack,{x:0,y:0});if(pose)seen.add(pose.frame)}assert.ok(seen.has('walk'));assert.ok(seen.has('second-foot'));}
+});
