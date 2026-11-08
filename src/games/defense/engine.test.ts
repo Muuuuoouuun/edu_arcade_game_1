@@ -661,3 +661,13 @@ test('a lightning tower aims at the front-most enemy whose arc would land, and f
   const plain=rangedBattle('magic');plain.enemies=[positionedEnemy('wood',1,430),wetBody,neighbor];
   assert.equal(stepDefense(plain,.02).attacks[0]?.targetId,1,'non-lightning magic towers keep the front-most rule');
 });
+
+test('a lightning tower whose windup target falls re-aims at an enemy whose arc lands, not just the front-most',()=>{
+  const s=rangedBattle('magic');s.towers[0].branch='lightning';
+  const wet=(id:number,x:number)=>{const e=positionedEnemy('wood',id,x);e.wet=5;return e;};
+  s.enemies=[positionedEnemy('wood',1,430),wet(2,395),positionedEnemy('wood',3,375)];
+  const winding=stepDefense(s,.02);assert.equal(winding.attacks[0].targetId,2);
+  const survivors=[positionedEnemy('wood',1,430),wet(4,392),positionedEnemy('wood',3,375)];
+  const fired=until({...winding,enemies:survivors},n=>n.projectiles.length>0);
+  assert.equal(fired.projectiles[0].targetId,4,'re-aim keeps the chain preference instead of the dry front body');
+});
