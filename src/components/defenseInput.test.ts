@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { getSlots } from '../games/defense/data.ts';
+import { getPaths, getSlots } from '../games/defense/data.ts';
 import { BoardTapTracker, clientToBoard, resolveBoardTap } from './defenseInput.ts';
 import type { ScreenMatrix } from './defenseInput.ts';
 
@@ -84,4 +84,24 @@ test('a second finger cancels the first command and neither release becomes a ta
  assert.deepEqual(tracker.end(2,{x:120,y:100},identity),{kind:'none'});
  assert.equal(tracker.begin(3,{x:100,y:100},identity),'start');
  assert.equal(tracker.end(3,{x:100,y:100},identity).kind,'tap');
+});
+
+test('a tap in the pad square but nearer the road than the pad moves the hero',()=>{
+ const slots=[{id:1,x:300,y:300}],paths=[[{x:0,y:340},{x:900,y:340}]],c=project(300,300,identity);
+ // 40px road distance for the pad; a tap 30px south is 10px from the road and 30px (outside 21) from the pad art.
+ assert.deepEqual(resolveBoardTap({x:c.x,y:c.y+22},identity,slots,false,paths),{kind:'move',point:{x:300,y:322}});
+ assert.deepEqual(resolveBoardTap({x:c.x,y:c.y+22},identity,slots),{kind:'select',id:1},'without paths behaviour is unchanged');
+ assert.deepEqual(resolveBoardTap({x:c.x,y:c.y-22},identity,slots,false,paths),{kind:'select',id:1},'road-far side still selects the pad');
+ assert.deepEqual(resolveBoardTap({x:c.x,y:c.y+20},identity,slots,false,paths),{kind:'select',id:1},'pad art circle always selects');
+ assert.deepEqual(resolveBoardTap(project(300,300,identity),identity,slots,false,paths),{kind:'select',id:1});
+});
+
+test('a pad sitting on the road is never stolen by the road rule',()=>{
+ const slots=[{id:1,x:300,y:340}],paths=[[{x:0,y:340},{x:900,y:340}]];
+ assert.deepEqual(resolveBoardTap({x:300,y:362},identity,slots,false,paths),{kind:'select',id:1});
+});
+
+test('real stage pads keep a usable touch square on the first map',()=>{
+ const slots=getSlots(1);
+ for(const slot of slots)assert.deepEqual(resolveBoardTap({x:slot.x,y:slot.y},identity,slots,false,getPaths(1)),{kind:'select',id:slot.id});
 });
