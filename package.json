@@ -104,7 +104,10 @@
     "models:cheongun-reset:check": "node tools/check-cheongun-reset.mjs",
     "models:cheongun-stop": "blender --python-exit-code 1 -b --python tools/blender/build_cheongun_stop.py --",
     "models:cheongun-stop:pose-check": "npm run models:cheongun-stop -- --check",
-    "models:cheongun-stop:check": "node tools/check-cheongun-stop.mjs"
+    "models:cheongun-stop:check": "node tools/check-cheongun-stop.mjs",
+    "models:luna-entry": "blender --python-exit-code 1 -b --python tools/blender/build_luna_entry.py --",
+    "models:luna-entry:pose-check": "npm run models:luna-entry -- --check",
+    "models:luna-entry:check": "node tools/check-luna-entry.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

@@ -634,7 +634,7 @@ test('Luna uses one complete modeled body and projection for idle, walking and e
   const socket=art.druidCastSocket(from,to,105)!;assert.deepEqual(offset,{x:socket.x,y:socket.y+27});assert.deepEqual(shot,original);
   assert.deepEqual(art.druidProjectileOffset({...shot,to:{x:999,y:999}},1.25),offset);assert.equal(art.druidProjectileOffset({...shot,launchAim:undefined}),undefined);
  }
- assert.equal(requests.filter(u=>u.includes('/luna-')).length,16);assert.ok(!requests.some(u=>u.endsWith('.glb')));assert.equal(art.spriteAsset(17).src,'/defense/snow-atlas.png','portraits retain the concept illustration');
+ assert.equal(requests.filter(u=>/\/luna-(cast|walk)-[0-7]-atlas\.webp$/.test(u)).length,16);assert.ok(!requests.some(u=>u.endsWith('.glb')));assert.equal(art.spriteAsset(17).src,'/defense/snow-atlas.png','portraits retain the concept illustration');
 });
 
 test('a missing Luna cast or walk image falls back as a whole without disabling other models',async()=>{
@@ -1903,4 +1903,43 @@ test('both Cheongun stop steps are published at 1x/2x with every publication off
   const frames=new Set();for(let i=offset;i/60<.24;i+=ticks)frames.add(art.taoStopSpriteAsset('tao',{distance:24,speed:0,settle:{frame:3,heading,elapsed:i/60}})?.frame);
   for(const frame of [1,2])assert.ok(frames.has(frame),`${ticks}/${offset}/${frame}`);
  }
+});
+
+test('Luna cast entry preserves each captured walk and joins the original shot before release',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'luna-entry');
+ const position={x:200,y:200};
+ for(const source of ['hero','mercenary'] as const)for(let direction=0;direction<8;direction++)for(let entry=0;entry<8;entry++){
+  const angle=direction*Math.PI/4,to={x:200+100*Math.cos(angle),y:200+100*Math.sin(angle)};
+  const attack={actor:'druid',source,walkEntry:entry,from:position,to,elapsed:0,hitAt:.15,duration:.33} as CombatAttack;
+  for(const [t,expected] of [[0,'walk'],[.024,'walk'],[.025,'first-foot'],[.064,'first-foot'],[.065,'second-foot'],[.099,'second-foot']] as const){
+   const pose=art.druidCastEntrySpriteAsset({...attack,elapsed:t},position)!;
+   const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/luna-entry.json',import.meta.url),'utf8'));const sample=expected==='walk'?0:expected==='first-foot'?1:2;assert.deepEqual([pose.socket.x,pose.socket.y],meta.directions[direction].sockets[entry][sample]);
+   assert.equal(pose.entry,entry);assert.equal(pose.frame,expected);assert.equal(pose.direction,direction);
+   assert.equal(pose.asset.displayScale,1.2*6.8/5.8);assert.equal(pose.asset.groundY!/pose.asset.height,220/256);
+   if(expected==='walk')assert.deepEqual(pose.asset,art.directionalLocomotionSpriteAsset('druid',{x:Math.cos(angle),y:Math.sin(angle)},entry*8));
+   else {assert.equal(pose.asset.src,`/defense/models/luna-entry-${direction}-atlas.webp`);const [x,y,w,h]=pose.asset.viewBox.split(' ').map(Number);assert.ok(x+w<=pose.asset.width&&y+h<=pose.asset.height);}
+  }
+  for(const elapsed of [-1,.1,.149,.15,.33,NaN,Infinity])assert.equal(art.druidCastEntrySpriteAsset({...attack,elapsed},position),null);
+  assert.equal(art.druidCastEntrySpriteAsset(attack,position,true),null);
+  for(const walkEntry of [undefined,-1,8,.5,NaN])assert.equal(art.druidCastEntrySpriteAsset({...attack,walkEntry},position),null);
+  assert.ok(art.directionalActionSpriteAsset('druid','strike',position,to));
+ }
+ assert.equal(requests.filter(src=>src.includes('/luna-entry-')).length,8);assert.ok(!requests.some(src=>src.endsWith('.glb')));
+});
+
+test('Luna transition image failure retains the complete existing shot and walk set',async()=>{
+ const position={x:0,y:0},attack={actor:'druid',source:'hero',walkEntry:3,to:{x:100,y:0},elapsed:.04} as CombatAttack;
+ for(const missing of ['luna-entry-3-atlas.webp','luna-walk-3-atlas.webp','luna-cast-3-atlas.webp']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(missing),'luna-entry-fail-'+missing);
+  assert.equal(art.druidCastEntrySpriteAsset(attack,position),null);
+  assert.equal(!!art.directionalActionSpriteAsset('druid','windup',position,attack.to),missing.startsWith('luna-entry'));
+  assert.equal(!!art.directionalLocomotionSpriteAsset('druid',{x:1,y:0},24),missing.startsWith('luna-entry'));
+  assert.ok(art.directionalActionSpriteAsset('elf','windup',position,attack.to));
+ }
+});
+
+
+test('Luna preparation remains visible at both published simulation cadences and stops before release',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'luna-entry-cadence');
+ for(const dt of [1/30,2/30]){const seen=new Set();for(let t=0;t<.15;t+=dt){const pose=art.druidCastEntrySpriteAsset({actor:'druid',source:'hero',walkEntry:3,elapsed:t,to:{x:100,y:0}} as CombatAttack,{x:0,y:0});if(pose)seen.add(pose.frame)}assert.ok(seen.has('walk'));assert.ok(seen.has('second-foot'));}
 });

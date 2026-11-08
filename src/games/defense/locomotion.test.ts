@@ -246,3 +246,19 @@ test('Cheongun captures moving hero and mercenary gait once without delaying or 
  const idle=createDefense(1,'tao');idle.phase='wave';idle.spawned=999;idle.wave=1;idle.heroPosition={x:100,y:170};idle.heroTarget={...idle.heroPosition};idle.enemies=[{id:900,kind:'wood',...positionOnPath(0,220,1),progress:220,path:0,speed:0,hp:1000,maxHp:1000,wet:0,burn:0,slow:0,hit:0}];
  assert.equal(stepDefense(idle,.01).attacks[0].walkEntry,undefined,'stationary shots retain the original pose');
 });
+
+test('Luna captures moving hero and mercenary gait once without delaying or duplicating the shot',()=>{
+ for(const source of ['hero','mercenary'] as const)for(let entry=0;entry<8;entry++){
+  let s=createDefense(1,source==='hero'?'druid':'dwarf');s.phase='wave';s.wave=1;s.spawned=999;s.heroPosition={x:100,y:170};s.heroTarget={x:400,y:170};
+  if(source==='mercenary'){s.mercenary='druid';s.mercenaryPosition={x:70,y:205};s.heroCooldown=99;}
+  s.locomotion[source]={distance:entry*8,speed:100};s.enemies=[{id:900,kind:'wood',...positionOnPath(0,220,1),progress:220,path:0,speed:0,hp:1000,maxHp:1000,wet:0,burn:0,slow:0,hit:0}];
+  const queued=stepDefense(s,1/60),attack=queued.attacks.find(a=>a.source===source)!;
+  assert.equal(attack.walkEntry,walkFrame(queued.locomotion[source].distance));assert.equal(attack.elapsed,0);assert.equal(attack.hitAt,.15);assert.ok(Math.abs(attack.duration-.33)<1e-12);
+  assert.equal(s.attacks.length,0);if(source==='hero')assert.equal(actDefense(queued,{type:'move',point:{x:450,y:170}}).attacks.filter(a=>a.source==='hero').length,0,'a new move command still cancels an unreleased shot');const paused=actDefense(queued,{type:'pause'});assert.equal(stepDefense(paused,.05),paused);
+  const preparing=stepDefense(queued,.05);assert.equal(preparing.attacks.find(a=>a.id===attack.id)!.walkEntry,attack.walkEntry);assert.equal(preparing.projectiles.filter(p=>p.actor==='druid').length,0);
+  const release=stepDefense(preparing,.1);assert.equal(release.projectiles.filter(p=>p.actor==='druid').length,1);assert.equal(release.enemies[0].hp,1000,'release precedes projectile collision');
+  assert.ok(release.heroPosition.x>queued.heroPosition.x,'visual planting cannot lock commanded movement');
+ }
+ const idle=createDefense(1,'druid');idle.phase='wave';idle.spawned=999;idle.wave=1;idle.heroPosition={x:100,y:170};idle.heroTarget={...idle.heroPosition};idle.enemies=[{id:900,kind:'wood',...positionOnPath(0,220,1),progress:220,path:0,speed:0,hp:1000,maxHp:1000,wet:0,burn:0,slow:0,hit:0}];
+ assert.equal(stepDefense(idle,.01).attacks[0].walkEntry,undefined,'stationary shots retain the original pose');
+});

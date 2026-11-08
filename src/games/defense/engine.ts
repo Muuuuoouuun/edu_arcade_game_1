@@ -128,7 +128,7 @@ function queueAttack(s:DefenseState,source:AttackSource,actor:AttackActor,from:P
   const duration=hitAt+(melee?.28:.18);
   const facing=target.x<from.x?-1:1;
   if(source==='hero')s.heroFacing=facing;else if(source==='mercenary')s.mercenaryFacing=facing;else if(source==='pet'&&s.pet)s.pet.facing=facing;
-  const walkEntry=(actor==='elf'||actor==='dwarf'||actor==='mage'||actor==='tao')&&(source==='hero'||source==='mercenary')&&s.locomotion[source].speed>.5?walkFrame(s.locomotion[source].distance):undefined;
+  const walkEntry=(actor==='elf'||actor==='dwarf'||actor==='mage'||actor==='tao'||actor==='druid')&&(source==='hero'||source==='mercenary')&&s.locomotion[source].speed>.5?walkFrame(s.locomotion[source].distance):undefined;
   aimLocomotion(s,source,from,target);
   if(source==='tower'){const tower=s.towers.find(t=>t.slot===options.slot);if(tower)tower.aim={...target};}
   s.attacks.push({id:s.nextId++,source,...(walkEntry===undefined?{}:{walkEntry}),...(options.slot!==undefined?{sourceSlot:options.slot}:{}),actor,kind,from:{...from},to:{x:target.x,y:target.y},targetId:target.id,range,damage,element,area:options.area||0,force:options.force||0,chain:options.chain||false,pierce:options.pierce||false,splashLimit:source==='tower'?2:99,splashDamage:source==='tower'?.4:.7,elapsed:0,duration,hitAt,fired:false});
@@ -268,7 +268,7 @@ function advanceActors(s:DefenseState,dt:number,combat:boolean) {
   // A following companion can reach its target each tick while walking; settle after travel stops.
   s.locomotion={
     hero:((s.hero==='mage'||s.hero==='elf'||s.hero==='dwarf'||s.hero==='tao')?advanceMageLocomotion:advanceLocomotion)(s.locomotion.hero,before.hero,s.heroPosition,dt,distance(s.heroPosition,s.heroTarget)>.01,dashing),
-    mercenary:s.mercenary?((s.mercenary==='mage'||s.mercenary==='elf'||s.mercenary==='dwarf'||s.mercenary==='tao')?advanceMageLocomotion:advanceLocomotion)(s.locomotion.mercenary,before.mercenary,s.mercenaryPosition,dt,(s.mercenary==='elf'||s.mercenary==='mage'||s.mercenary==='dwarf'||s.mercenary==='tao')?distance(before.mercenary,s.mercenaryPosition)>.001:distance(s.mercenaryPosition,mercTarget)>.01):{distance:0,speed:0},
+    mercenary:s.mercenary?((s.mercenary==='mage'||s.mercenary==='elf'||s.mercenary==='dwarf'||s.mercenary==='tao')?advanceMageLocomotion:advanceLocomotion)(s.locomotion.mercenary,before.mercenary,s.mercenaryPosition,dt,(s.mercenary==='elf'||s.mercenary==='mage'||s.mercenary==='dwarf'||s.mercenary==='tao'||s.mercenary==='druid')?distance(before.mercenary,s.mercenaryPosition)>.001:distance(s.mercenaryPosition,mercTarget)>.01):{distance:0,speed:0},
     // A faster companion can reach its moving target every frame and still be walking.
     pet:s.pet&&before.pet?advancePetLocomotion(s.locomotion.pet,before.pet,s.pet.position,dt):{distance:0,speed:0},
   };
@@ -399,10 +399,11 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
   if(!combat&&distance(state.heroPosition,state.heroTarget)<.01&&Math.hypot(state.heroVelocity.x,state.heroVelocity.y)<.01&&(!state.mercenary||distance(state.mercenaryPosition,mercTarget)<.01)&&(!state.pet||distance(state.pet.position,state.pet.target)<.01)&&state.effects.length===0){
     // Settle the last measured step without advancing an otherwise idle simulation.
     const motion=state.locomotion,delta=Math.min(.1,dt),settlingMerc=!!motion.mercenary.settle||((state.mercenary==='elf'||state.mercenary==='mage'||state.mercenary==='dwarf'||state.mercenary==='tao')&&motion.mercenary.speed>.5);
-    if(!motion.hero.settle&&!settlingMerc&&motion.pet.speed<=0)return state;
+    const stoppingDruid=state.mercenary==='druid'&&motion.mercenary.speed>.5;
+    if(!motion.hero.settle&&!settlingMerc&&!stoppingDruid&&motion.pet.speed<=0)return state;
     return {...state,locomotion:{
       hero:motion.hero.settle?advanceMageLocomotion(motion.hero,state.heroPosition,state.heroPosition,delta,false):motion.hero,
-      mercenary:settlingMerc?advanceMageLocomotion(motion.mercenary,state.mercenaryPosition,state.mercenaryPosition,delta,false):motion.mercenary,
+      mercenary:settlingMerc?advanceMageLocomotion(motion.mercenary,state.mercenaryPosition,state.mercenaryPosition,delta,false):stoppingDruid?{...motion.mercenary,speed:0}:motion.mercenary,
       pet:motion.pet.speed>0?{...motion.pet,speed:0}:motion.pet,
     }};
   }

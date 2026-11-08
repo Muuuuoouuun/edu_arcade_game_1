@@ -935,3 +935,12 @@ test('Cheongun hero and mercenary remember their last step, pause, settle and ca
   assert.ok(observed,role+' naturally reaches a stop');
  }
 });
+
+test('Luna companion keeps walking while catching its owner, then rests without idle simulation',()=>{
+ let s=actDefense(createDefense(1,'dwarf'),{type:'hire',hero:'druid'});s=actDefense(s,{type:'move',point:{x:400,y:300}});let caughtMoving=false;
+ for(let i=0;i<600;i++){
+  const before=s;s=stepDefense(s,1/60);const travel=Math.hypot(s.mercenaryPosition.x-before.mercenaryPosition.x,s.mercenaryPosition.y-before.mercenaryPosition.y);
+  if(travel>.001){assert.ok(s.locomotion.mercenary.speed>0);if(Math.hypot(s.mercenaryPosition.x-(s.heroPosition.x+38),s.mercenaryPosition.y-(s.heroPosition.y+35))<.01)caughtMoving=true;}
+ }
+ assert.ok(caughtMoving);assert.equal(s.locomotion.mercenary.speed,0);assert.equal(s.locomotion.mercenary.settle,undefined);assert.equal(stepDefense(s,.1),s);
+});
