@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && vite build && node tools/build-prototypes.mjs",
     "test:prototype": "node prototype/tests/sim_test.js",
     "preview": "vite preview --host 0.0.0.0 --port 3100 --strictPort",
-    "test": "node --experimental-strip-types --test src/games/engine.test.ts src/games/quiz.test.ts src/games/race/engine.test.ts src/games/defense/engine.test.ts src/games/defense/campaign.test.ts src/games/defense/difficulty.test.ts src/lib/storage.test.ts src/lib/haptic.test.ts src/games/defense/tactics.test.ts src/components/defenseInput.test.ts src/components/defenseSpeed.test.ts src/components/defenseFrame.test.ts src/components/defenseSound.test.ts src/games/defense/themes.test.ts src/games/defense/fieldGuide.test.ts src/games/defense/art.test.ts src/games/defense/locomotion.test.ts src/games/defense/action.test.ts src/games/defense/terrain.test.ts src/games/defense/gateAssets.test.ts src/games/defense/gateImpact.test.ts src/games/frontier/engine.test.ts src/games/frontier/ballistaView.test.ts src/games/frontier/woodView.test.ts src/games/frontier/woodAttack.test.ts",
+    "test": "node --experimental-strip-types --test src/games/engine.test.ts src/games/quiz.test.ts src/games/race/engine.test.ts src/games/defense/engine.test.ts src/games/defense/campaign.test.ts src/games/defense/difficulty.test.ts src/lib/storage.test.ts src/lib/haptic.test.ts src/games/defense/tactics.test.ts src/components/defenseInput.test.ts src/components/defenseSpeed.test.ts src/components/defenseFrame.test.ts src/components/defenseSound.test.ts src/games/defense/themes.test.ts src/games/defense/fieldGuide.test.ts src/games/defense/art.test.ts src/games/defense/locomotion.test.ts src/games/defense/action.test.ts src/games/defense/terrain.test.ts src/games/defense/gateAssets.test.ts src/games/defense/gateImpact.test.ts src/games/frontier/engine.test.ts src/games/frontier/ballistaView.test.ts src/games/frontier/woodView.test.ts src/games/frontier/heroAttack.test.ts src/games/frontier/heroView.test.ts src/games/frontier/woodAttack.test.ts",
     "art:gates": "node tools/build-defense-gates.mjs",
     "art:themes": "node tools/build-defense-themes.mjs",
     "models:build": "blender -b --python tools/blender/build_towers.py && npm run models:sprites",
@@ -138,6 +138,8 @@
     "models:frontier-ballista:check": "node tools/check-frontier-ballista.mjs",
     "models:frontier-wood": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_wood.py",
     "models:frontier-wood:check": "node tools/check-frontier-wood.mjs",
+    "models:frontier-hero": "node tools/build-frontier-hero-contract.mjs",
+    "models:frontier-hero:check": "node tools/build-frontier-hero-contract.mjs --check",
     "models:frontier-wood-strike": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_wood_strike.py",
     "models:frontier-wood-strike:check": "node tools/check-frontier-wood-strike.mjs"
   },

@@ -23,8 +23,8 @@ test('speed doubles simulation progression and cooldowns without wall-clock effe
  const a=actFrontier(createFrontier('solo'),{type:'start'});a.enemies=[];a.hero.skill=5;const b=actFrontier(a,{type:'speed'});const slow=run(a,1),fast=run(b,1);assert.ok(Math.abs(fast.time-slow.time*2)<1e-8);assert.ok(Math.abs(fast.hero.skill-3)<1e-8);assert.equal(a.hero.skill,5);
 });
 test('solo attacks, cooldowns, XP, health and crystals produce one reward and explicit extraction',()=>{
- let s=actFrontier(createFrontier('solo'),{type:'start'});s.enemies=[{id:99,x:s.hero.x,z:s.hero.z-2,hp:20,cooldown:0,path:0}];s=actFrontier(s,{type:'attack'});assert.equal(s.kills,1);assert.equal(s.xp,30);const gold=s.gold;s=actFrontier(s,{type:'attack'});assert.equal(s.gold,gold);
- s.hero.cooldown=0;s.enemies=[{id:100,x:s.hero.x,z:s.hero.z-2,hp:20,cooldown:0,path:0}];s=actFrontier(s,{type:'attack'});assert.equal(s.level,2);assert.equal(s.hero.maxHp,115);assert.equal(s.xp,0);
+ let s=actFrontier(createFrontier('solo'),{type:'start'});s.enemies=[{id:99,x:s.hero.x,z:s.hero.z-2,hp:20,cooldown:0,path:0}];s=actFrontier(s,{type:'attack'});s=run(s,.3);assert.equal(s.kills,1);assert.equal(s.xp,30);const gold=s.gold;s=actFrontier(s,{type:'attack'});assert.equal(s.gold,gold);
+ s=run(s,.4);s.hero.cooldown=0;s.enemies=[{id:100,x:s.hero.x,z:s.hero.z-2,hp:20,cooldown:0,path:0}];s=actFrontier(s,{type:'attack'});s=run(s,.3);assert.equal(s.level,2);assert.equal(s.hero.maxHp,115);assert.equal(s.xp,0);
  for(const p of CRYSTALS){s.hero.x=p.x;s.hero.z=p.z;s=actFrontier(s,{type:'interact'});}assert.equal(s.crystals.length,3);assert.equal(actFrontier(s,{type:'interact'}).crystals.length,3);s.hero.x=EXIT.x;s.hero.z=EXIT.z;s=actFrontier(s,{type:'interact'});assert.equal(s.phase,'playing');s.kills=6;s=actFrontier(s,{type:'interact'});assert.equal(s.phase,'won');
 });
 test('tower defense wins only after three waves, loses on the core, and command also needs capture',()=>{
