@@ -113,7 +113,10 @@
     "models:luna-return:check": "node tools/check-luna-return.mjs",
     "models:luna-reset": "blender --python-exit-code 1 -b --python tools/blender/build_luna_reset.py --",
     "models:luna-reset:pose-check": "npm run models:luna-reset -- --check",
-    "models:luna-reset:check": "node tools/check-luna-reset.mjs"
+    "models:luna-reset:check": "node tools/check-luna-reset.mjs",
+    "models:luna-stop": "blender --python-exit-code 1 -b --python tools/blender/build_luna_stop.py --",
+    "models:luna-stop:pose-check": "npm run models:luna-stop -- --check",
+    "models:luna-stop:check": "node tools/check-luna-stop.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
