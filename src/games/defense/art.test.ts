@@ -1862,3 +1862,45 @@ test('stationary Cheongun recovery has an intermediate pose at nominal 1x/2x and
   assert.ok(frames.some(f=>f==='recover'||f==='settle'),`${ticks}/${offset}: ${frames}`);
  }
 });
+
+test('Cheongun stops from the saved gait and heading with common scale, ground and simulation age',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'cheongun-stop');
+ for(let direction=0;direction<8;direction++)for(let entry=0;entry<8;entry++){
+  const heading={x:Math.cos(direction*Math.PI/4),y:Math.sin(direction*Math.PI/4)},motion={distance:entry*8,speed:0,heading:{x:-heading.x,y:-heading.y},settle:{frame:entry,elapsed:0,heading}};
+  for(const [elapsed,frame] of [[0,0],[.079,0],[.08,1],[.159,1],[.16,2],[.239,2]]){
+   const result=art.taoStopSpriteAsset('tao',{...motion,settle:{...motion.settle,elapsed}})!;
+   assert.equal(result.frame,frame);assert.equal(result.entry,entry);assert.equal(result.asset.oriented,true);
+   const walk=art.directionalLocomotionSpriteAsset('tao',heading,entry*8)!;assert.equal(result.asset.displayScale,walk.displayScale);
+   if(frame===0)assert.deepEqual(result.asset,walk);else{assert.equal(result.asset.src,`/defense/models/cheongun-stop-${direction}-atlas.webp`);assert.equal(result.asset.viewBox,`${(entry*2+frame-1)*192} 0 192 192`);assert.equal(result.asset.groundY!/192,walk.groundY!/256);}
+  }
+  for(const elapsed of [-1,.24,NaN,Infinity])assert.equal(art.taoStopSpriteAsset('tao',{...motion,settle:{...motion.settle,elapsed}}),null);
+  for(const speed of [-1,1,NaN,Infinity])assert.equal(art.taoStopSpriteAsset('tao',{...motion,speed}),null);
+  for(const frame of [-1,8,.5,NaN])assert.equal(art.taoStopSpriteAsset('tao',{...motion,settle:{...motion.settle,frame}}),null);
+  assert.equal(art.taoStopSpriteAsset('tao',motion,true),null);assert.equal(art.taoStopSpriteAsset('mage',motion),null);
+ }
+ assert.equal(requests.filter(s=>s.includes('/cheongun-stop-')).length,8);assert.ok(!requests.some(s=>s.endsWith('.glb')));
+});
+
+test('Cheongun stop is optional and preserves spell attacks, moving return and walking on failure',async()=>{
+ const h={x:1,y:0},motion={distance:24,speed:0,heading:h,settle:{frame:3,elapsed:.1,heading:h}},p={x:0,y:0};
+ const a={actor:'tao',source:'hero',from:p,to:h,elapsed:.25,hitAt:.15,duration:.33} as CombatAttack;
+ const {art:complete}=await loadWithImageResults(()=>false,'cheongun-stop-complete');
+ for(const file of ['cheongun-stop-3-atlas.webp','cheongun-walk-3-atlas.webp','cheongun-cast-3-atlas.webp']){
+  const {art}=await loadWithImageResults(s=>s.endsWith(file),'cheongun-stop-fail-'+file);assert.equal(art.taoStopSpriteAsset('tao',motion),null);
+  if(file.includes('stop')){
+   assert.deepEqual(art.directionalActionSpriteAsset('tao','strike',p,h),complete.directionalActionSpriteAsset('tao','strike',p,h));
+   assert.deepEqual(art.taoCastReturnSpriteAsset(a,p,{...motion,speed:100}),complete.taoCastReturnSpriteAsset(a,p,{...motion,speed:100}));
+   assert.deepEqual(art.directionalLocomotionSpriteAsset('tao',h,24),complete.directionalLocomotionSpriteAsset('tao',h,24));
+  }
+ }
+ const {art:withoutReturn}=await loadWithImageResults(s=>s.includes('/cheongun-return-'),'cheongun-stop-independent');
+ assert.deepEqual(withoutReturn.taoStopSpriteAsset('tao',motion),complete.taoStopSpriteAsset('tao',motion));
+});
+
+test('both Cheongun stop steps are published at 1x/2x with every publication offset',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'cheongun-stop-cadence'),heading={x:1,y:0};
+ for(const ticks of [2,4])for(let offset=0;offset<ticks;offset++){
+  const frames=new Set();for(let i=offset;i/60<.24;i+=ticks)frames.add(art.taoStopSpriteAsset('tao',{distance:24,speed:0,settle:{frame:3,heading,elapsed:i/60}})?.frame);
+  for(const frame of [1,2])assert.ok(frames.has(frame),`${ticks}/${offset}/${frame}`);
+ }
+});
