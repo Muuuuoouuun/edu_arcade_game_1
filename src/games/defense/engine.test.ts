@@ -61,6 +61,16 @@ test('construction, valid branch upgrades and selling conserve money and never m
   assert.ok(towerRange({slot:0,kind:'crossbow',branch:null,level:1,cooldown:0})>towerRange({slot:1,kind:'crossbow',branch:null,level:1,cooldown:0}));
 });
 
+test('speed toggles 1x/2x while running, and is ignored while paused',()=>{
+  const s=createDefense(2,'elf');
+  assert.equal(s.speed,1);
+  const fast=actDefense(s,{type:'speed'});
+  assert.equal(fast.speed,2);
+  assert.equal(actDefense(fast,{type:'speed'}).speed,1);
+  const paused=actDefense(fast,{type:'pause'});
+  assert.equal(actDefense(paused,{type:'speed'}),paused,'a paused engine rejects the toggle, so no preference may be saved');
+});
+
 test('pause freezes combat, controls, timers and money; invalid time cannot advance the simulation',()=>{
   let s=actDefense(createDefense(2,'elf'),{type:'start-wave'});
   s=advance(s,2);
