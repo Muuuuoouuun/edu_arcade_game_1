@@ -852,7 +852,7 @@ test('Kar keeps one grounded model through eight attack directions, walks and co
   }
   for(const elapsed of [.279999,.56,NaN])assert.equal(art.hammerContactTrail({actor:'barbarian',from,to,elapsed,hitAt:.28,duration:.56} as CombatAttack,84),null);
  }
- assert.equal(requests.filter(s=>s.includes('/kar-')&&!s.includes('/kar-entry-')).length,16);assert.ok(!requests.some(s=>s.endsWith('.glb')));assert.equal(art.spriteAsset(16).src,'/defense/snow-atlas.png');
+ assert.equal(requests.filter(s=>s.includes('/kar-')&&!s.includes('/kar-entry-')&&!s.includes('/kar-return-')).length,16);assert.ok(!requests.some(s=>s.endsWith('.glb')));assert.equal(art.spriteAsset(16).src,'/defense/snow-atlas.png');
  for(const file of meta.files){const bytes=readFileSync(new URL('../../../'+file.file,import.meta.url));assert.equal(bytes.length,file.bytes);assert.equal(createHash('sha256').update(bytes).digest('hex'),file.sha256);}
 });
 
@@ -2111,4 +2111,52 @@ test('Kar preparation stays visible across fixed-step publications and rejects i
  for(const duration of [.28,.1,NaN,Infinity])assert.equal(art.karHammerEntrySpriteAsset({...a,duration}),null);
  assert.equal(art.karHammerEntrySpriteAsset({...a,source:'tower'}),null);
  assert.equal(art.karHammerEntrySpriteAsset({...a,to:a.from}),null);
+});
+
+test('Kar recovery joins the current aligned gait while retaining contact and rebound',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'kar-return');
+ for(const source of ['hero','mercenary'] as const)for(let direction=0;direction<8;direction++)for(let walk=0;walk<8;walk++){
+  const angle=direction*Math.PI/4,from={x:100,y:100},heading={x:Math.cos(angle),y:Math.sin(angle)},to={x:100+100*heading.x,y:100+100*heading.y};
+  const attack={actor:'barbarian',source,walkEntry:(walk+3)%8,from,to,elapsed:.42,hitAt:.28,duration:.56} as CombatAttack,motion={distance:walk*8,speed:100,heading};
+  for(const [elapsed,frame] of [[.42,'hold'],[.439,'hold'],[.44,'weight-release'],[.489,'weight-release'],[.49,'stride-pickup'],[.539,'stride-pickup'],[.54,'walk'],[.559,'walk']] as const){
+   const result=art.karHammerReturnSpriteAsset({...attack,elapsed},motion)!;assert.equal(result.walk,walk);assert.equal(result.frame,frame);assert.equal(result.direction,direction);
+   assert.equal(result.asset.groundY!/result.asset.height,220/256);assert.equal(result.asset.displayScale,1.2*6.8/5.8);
+   if(frame==='walk')assert.deepEqual(result.asset,art.directionalLocomotionSpriteAsset('barbarian',heading,motion.distance));
+   else if(frame==='hold')assert.deepEqual(result.asset,art.hammerSequenceSpriteAsset('barbarian',{...attack,elapsed:.43}));
+   else assert.equal(result.asset.viewBox,`${(walk*2+(frame==='weight-release'?0:1))*192} 0 192 192`);
+   for(const multiplier of [.5,2])assert.deepEqual(art.karHammerReturnSpriteAsset({...attack,elapsed:elapsed*multiplier,hitAt:.28*multiplier,duration:.56*multiplier},motion),result,'uses simulation attack timing');
+  }
+  for(const elapsed of [-1,0,.28,.34,.419,.56,.6,NaN,Infinity])assert.equal(art.karHammerReturnSpriteAsset({...attack,elapsed},motion),null);
+  assert.equal(art.karHammerReturnSpriteAsset(attack,motion,true),null);
+  for(const speed of [0,.5,NaN,Infinity])assert.equal(art.karHammerReturnSpriteAsset(attack,{...motion,speed}),null);
+  for(const bad of [{distance:NaN},{heading:undefined},{heading:{x:-heading.x,y:-heading.y}}])assert.equal(art.karHammerReturnSpriteAsset(attack,{...motion,...bad}),null);
+  assert.equal(art.karHammerReturnSpriteAsset({...attack,actor:'elf'},motion),null);
+  const changed=art.karHammerReturnSpriteAsset({...attack,elapsed:.52},{...motion,distance:(walk+1)%8*8})!;assert.equal(changed.walk,(walk+1)%8,'follow gait after attack entry');
+ }
+ assert.equal(requests.filter(src=>src.includes('/kar-return-')).length,8);assert.ok(!requests.some(src=>src.endsWith('.glb')));
+});
+
+test('Kar optional return and entry failures are independent and preserve impact trails',async()=>{
+ const attack={actor:'barbarian',source:'hero',walkEntry:3,from:{x:0,y:0},to:{x:100,y:0},elapsed:.47,hitAt:.28,duration:.56} as CombatAttack,motion={distance:24,speed:100,heading:{x:1,y:0}};
+ const {art:complete}=await loadWithImageResults(()=>false,'kar-return-complete');
+ for(const missing of ['kar-return-3-atlas.webp','kar-entry-3-atlas.webp','kar-slam-3-atlas.webp','kar-walk-3-atlas.webp']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(missing),'kar-return-fail-'+missing);
+  assert.equal(!!art.karHammerReturnSpriteAsset(attack,motion),missing.includes('entry'));
+  assert.equal(!!art.karHammerEntrySpriteAsset({...attack,elapsed:.06}),missing.includes('return'));
+  if(missing.includes('return')||missing.includes('entry'))for(const elapsed of [.22,.28,.28,.35,.41]){
+   assert.deepEqual(art.hammerSequenceSpriteAsset('barbarian',{...attack,elapsed}),complete.hammerSequenceSpriteAsset('barbarian',{...attack,elapsed}));
+   assert.deepEqual(art.hammerContactTrail({...attack,elapsed},84),complete.hammerContactTrail({...attack,elapsed},84));
+  }
+  assert.ok(art.rielShotReturnSpriteAsset({...attack,actor:'elf',elapsed:.2,hitAt:.1,duration:.28},attack.from,motion),'Riel recovery remains independent');
+ }
+});
+
+test('aligned Kar return remains visible at nominal 1x/2x and 20Hz 2x publications',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'kar-return-cadence');
+ const attack={actor:'barbarian',source:'hero',from:{x:0,y:0},to:{x:100,y:0},hitAt:.28,duration:.56} as CombatAttack;
+ for(const ticksPerPublication of [2,4,6])for(let offset=0;offset<ticksPerPublication;offset++){
+  const frames=[];
+  for(let tick=offset;tick/60<attack.duration;tick+=ticksPerPublication){const elapsed=tick/60;frames.push(art.karHammerReturnSpriteAsset({...attack,elapsed},{speed:230,distance:elapsed*230,heading:{x:1,y:0}})?.frame)}
+  assert.ok(frames.some(frame=>frame==='weight-release'||frame==='stride-pickup'),`${ticksPerPublication}/${offset}: ${frames}`);
+ }
 });
