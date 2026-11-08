@@ -30,3 +30,28 @@ test('solo attacks, cooldowns, XP, health and crystals produce one reward and ex
 test('tower defense wins only after three waves, loses on the core, and command also needs capture',()=>{
  let s=actFrontier(createFrontier('defense'),{type:'start'});s.wave=3;s.remaining=0;s.enemies=[];assert.equal(stepFrontier(s,.02).phase,'won');const c={...s,mode:'command' as const,beacon:0};assert.equal(stepFrontier(c,.02).phase,'playing');s.enemies=[{id:99,...CORE,hp:10,cooldown:0,path:3}];s.coreHp=5;assert.equal(stepFrontier(s,.02).phase,'lost');
 });
+
+test('ballista aims only its heading, waits for release and applies damage on physical impact',()=>{
+ let s=actFrontier(actFrontier(createFrontier('defense'),{type:'build',pad:0}),{type:'start'});s.remaining=1;s.spawnIn=999;
+ const p={x:-21,z:5};s.enemies=[{id:999,...p,hp:200,cooldown:999,path:1}];s.towers[0].heading=Math.PI;
+ s=stepFrontier(s,.01);assert.equal(s.towers[0].actionTime,0);assert.equal(s.enemies[0].hp,200);assert.equal(s.bolts.length,0);
+ for(let i=0;i<9;i++)s=stepFrontier(s,.01);assert.equal(s.bolts.length,0);assert.equal(s.enemies[0].hp,200);
+ s=stepFrontier(s,.01);assert.equal(s.bolts.length,1);assert.equal(s.enemies[0].hp,200);const bolt=s.bolts[0];assert.ok(Math.abs(bolt.position.y-2.6208)<1e-6);assert.ok(Math.abs(bolt.position.z-(12-2.0072))<1e-6);
+ const releasedHeading=s.towers[0].heading;s=stepFrontier(s,.02);assert.equal(s.towers[0].heading,releasedHeading);assert.notDeepEqual(s.bolts[0].position,bolt.position);
+ for(let i=0;i<40&&s.enemies[0].hp===200;i++)s=stepFrontier(s,.01);assert.equal(s.enemies[0].hp,177);assert.ok(s.effects.some(e=>e.kind==='impact'));assert.equal(s.bolts.length,0);
+});
+test('ballista locks target and damage; target death, pause, upgrade and speed do not duplicate shots',()=>{
+ let s=actFrontier(actFrontier(createFrontier('defense'),{type:'build',pad:0}),{type:'start'});s.remaining=1;s.spawnIn=999;s.gold=200;
+ s.enemies=[{id:999,x:-21,z:5,hp:200,cooldown:999,path:1},{id:1000,x:-22,z:4,hp:200,cooldown:999,path:1}];s.towers[0].heading=Math.PI;
+ for(let i=0;i<11;i++)s=stepFrontier(s,.01);assert.equal(s.bolts.length,1);const snapshot=JSON.stringify(s.bolts);
+ const paused=actFrontier(s,{type:'pause'});assert.equal(stepFrontier(paused,.05),paused);assert.equal(JSON.stringify(paused.bolts),snapshot);
+ s=actFrontier(s,{type:'build',pad:0});assert.equal(s.towers[0].level,2);assert.equal(s.bolts[0].damage,23);
+ s.enemies=s.enemies.filter(e=>e.id!==999);s=stepFrontier(s,.01);assert.equal(s.bolts.length,0);assert.equal(s.enemies[0].hp,200);
+ for(let i=0;i<30;i++)s=stepFrontier(s,.01);assert.equal(s.towers[0].actionTime,null);
+ const double=actFrontier(s,{type:'speed'});const once=stepFrontier(double,.02);const twice=stepFrontier(stepFrontier(s,.02),.02);assert.ok(Math.abs(once.towers[0].cooldown-twice.towers[0].cooldown)<1e-8);
+});
+test('ballista cancels a dead target during preparation and turns by a bounded shortest arc',()=>{
+ let s=actFrontier(actFrontier(createFrontier('defense'),{type:'build',pad:0}),{type:'start'});s.remaining=1;s.spawnIn=999;s.towers[0].heading=Math.PI;
+ s.enemies=[{id:999,x:-21,z:5,hp:100,cooldown:999,path:1}];s=stepFrontier(s,.01);s.enemies=[];s=run(s,.5);assert.equal(s.bolts.length,0);
+ s.towers[0].heading=-Math.PI+.01;s.enemies=[{id:1001,x:-21.5,z:5,hp:100,cooldown:999,path:1}];const old=s.towers[0].heading;s=stepFrontier(s,.01);assert.ok(Math.abs(s.towers[0].heading-old)<=.050001);
+});

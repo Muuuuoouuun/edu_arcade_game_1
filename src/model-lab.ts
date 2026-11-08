@@ -6,6 +6,9 @@ import { PMREMGenerator } from 'three';
 import './model-lab.css';
 
 const models = [
+ {id:'frontier-ballista',name:'변경 발리스타 · 실시간 전장',kind:'FRONTIER SIEGE WEAPON',detail:'고정 석조 기초 · 목재 활대 · 황동 반동 장치',description:'목재 활대와 시위가 풀리고 상부 받침이 짧게 물러난 뒤 다시 장전합니다. 실시간 변경 전장에서는 기초를 고정하고 상부만 조준하며 실제 탄이 도착할 때 피해를 줍니다.',source:'frontier-ballista.blend',command:'npm run models:frontier-ballista',action:'▶ 발사·재장전',clip:'frontier-ballista-release',fitBounds:true},
+ {id:'polar-bear',name:'북극곰 · 빙해 수호자',kind:'PROTOTYPE / POLAR',detail:'제작 시안 · 닻 망치',description:'큰 방패와 닻 망치로 만든 극지 수호자입니다. 무기를 크게 들었다가 내려치는 동작과 손잡이 결합을 살펴보세요. 제작 시안이며 캠페인 전투에는 아직 연결되지 않았습니다.',source:'prototypes/polar-bear/polar-bear.blend',command:'npm run models:bear',action:'▶ 닻 망치 강타',clip:'polar-bear-attack',asset:'prototypes/polar-bear',fitBounds:true},
+ {id:'gecko-ranger',name:'도마뱀 · 씨앗 궁수',kind:'PROTOTYPE / TROPICAL',detail:'제작 시안 · 씨앗 쇠뇌',description:'잎 두건과 긴 꼬리, 큼직한 씨앗 쇠뇌가 특징인 열대 궁수입니다. 조준·발사 반동·복귀를 확인하세요. 제작 시안이며 캠페인 전투에는 아직 연결되지 않았습니다.',source:'prototypes/gecko-ranger/gecko-ranger.blend',command:'npm run models:gecko',action:'▶ 씨앗 발사',clip:'gecko-seed-shot',asset:'prototypes/gecko-ranger',fitBounds:true},
  {id:'kar-barbarian',name:'카르 · 설산 전사',kind:'WINTER HAMMER WARRIOR',detail:'붉은 머리 · 흰 털망토 · 양손 망치',description:'두 손으로 무거운 망치를 들어 올리고, 발을 디딘 채 내려칩니다. 몸통이 무게를 받고 털망토와 수염이 뒤따라 흔들립니다.',source:'kar-barbarian.blend',command:'npm run models:barbarian',action:'▶ 망치 강타',clip:'kar-slam'},
  {id:'kar-barbarian-walk',name:'카르 · 방향 보행',kind:'WINTER HAMMER WARRIOR',detail:'넓은 발 지지 · 망치 유지 · 털망토',description:'망치 손잡이를 두 손으로 잡고 발을 번갈아 내딛습니다. 전투에서는 같은 몸을 여덟 방향으로 렌더해 사용합니다.',source:'kar-barbarian-walk.blend',command:'npm run models:barbarian',action:'▶ 보행 재생',clip:'kar-walk',loop:true},
  {id:'moonlight-wolf',name:'달빛 늑대 · 동료',kind:'MOONLIGHT COMPANION',detail:'작은 몸 · 은빛 털 · 초록 목걸이',description:'네 발을 디디고 몸을 낮춘 뒤 입을 벌려 내밉니다. 턱 닫힘·반동·회수를 여덟 자세로 연결하고 귀·꼬리·목걸이는 늦게 따라옵니다.',source:'moonlight-wolf.blend',command:'npm run models:pet-wolf',action:'▶ 물기 재생',clip:'moonlight-bite'},
@@ -94,7 +97,7 @@ function release(object:Object3D) {
  materials(object).forEach(material => material.dispose());
 }
 // Match the dwarf render's front three-quarter view so its hammer clears the face.
-function resetView() {pivot.rotation.y = (currentModelId.startsWith('kar-')||currentModelId.startsWith('dwarf-')||currentModelId.startsWith('ian-')||currentModelId.startsWith('riel-')||currentModelId.startsWith('cheongun-')||currentModelId.startsWith('luna-')||currentModelId.startsWith('moonlight-'))?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,currentModelId==='forest-bridge'?1:2.0,0);if(controls)controls.maxDistance=22;controls?.update();fitModelView();}
+function resetView() {pivot.rotation.y = (currentModelId==='polar-bear'||currentModelId==='gecko-ranger'||currentModelId.startsWith('kar-')||currentModelId.startsWith('dwarf-')||currentModelId.startsWith('ian-')||currentModelId.startsWith('riel-')||currentModelId.startsWith('cheongun-')||currentModelId.startsWith('luna-')||currentModelId.startsWith('moonlight-'))?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,currentModelId==='forest-bridge'?1:2.0,0);if(controls)controls.maxDistance=22;controls?.update();fitModelView();}
 /** A long quadruped needs its horizontal silhouette fitted on portrait displays too. */
 function fitModelView() {
  if(!current||!controls||!models.find(model=>model.id===currentModelId)?.fitBounds)return;
@@ -123,12 +126,19 @@ function setReady(ready:boolean) {
  shoot.title = reduced.matches?'동작 줄이기 설정으로 공격 모션을 멈췄어요.':ready&&missingAttack?'이 모델에 재생할 모션이 없습니다.':'';
  rotate.title = reduced.matches?'동작 줄이기 설정으로 자동 회전을 멈췄어요.':'';
 }
+function showMissingPreview() {
+ if(stage.dataset.loaded!=='fallback')return;
+ fallback.hidden=true;$('model-format').textContent='미리보기 없음';$('model-hint').textContent='모델을 다시 선택해 재시도하세요.';
+ status.textContent='3D 모델과 미리보기 이미지를 불러오지 못했습니다. 모델을 다시 선택해 재시도하세요.';status.hidden=false;
+}
+fallback.addEventListener('error',showMissingPreview);
 function showFallback(message:string) {
  fallback.hidden = false; stage.dataset.loaded = 'fallback';
  $('model-format').textContent = 'PNG · 렌더 이미지';
  $('model-hint').textContent = '선택한 모델의 정사영 렌더 이미지';
  status.textContent = message; status.hidden = false;
  setReady(false); redraw = true;
+ if(fallback.complete&&fallback.naturalWidth===0)showMissingPreview();
 }
 try {
  renderer = new WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});

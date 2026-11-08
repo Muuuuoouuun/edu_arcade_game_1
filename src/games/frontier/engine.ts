@@ -1,8 +1,11 @@
 /** Small, isolated 3D training ground. No campaign saves or rewards are written. */
+import {BALLISTA,angleDelta,turnToward,ballistaMuzzle,type Position3} from './ballista.ts';
+export type Tower={pad:number;level:number;cooldown:number;heading:number;actionTime:number|null;targetId:number|null;released:boolean};
+export type Bolt={id:number;targetId:number;pad:number;position:Position3;previous:Position3;damage:number;life:number};
 export type Mode='defense'|'command'|'solo';
 export type Point={x:number;z:number};
 export type Enemy=Point&{id:number;hp:number;cooldown:number;path:number};
-export type Frontier={mode:Mode;phase:'ready'|'playing'|'won'|'lost';paused:boolean;speed:1|2;time:number;wave:number;remaining:number;spawnIn:number;gold:number;coreHp:number;hero:Point&{hp:number;maxHp:number;target:Point;heading:number;moving:boolean;strike:number;cooldown:number;skill:number;dash:number};squad:(Point&{cooldown:number})[];enemies:Enemy[];towers:{pad:number;level:number;cooldown:number}[];beacon:number;crystals:number[];kills:number;xp:number;level:number;serial:number;effects:{id:number;from:Point;to:Point;kind:'shot'|'skill'|'hit';life:number}[];message:string};
+export type Frontier={mode:Mode;phase:'ready'|'playing'|'won'|'lost';paused:boolean;speed:1|2;time:number;wave:number;remaining:number;spawnIn:number;gold:number;coreHp:number;hero:Point&{hp:number;maxHp:number;target:Point;heading:number;moving:boolean;strike:number;cooldown:number;skill:number;dash:number};squad:(Point&{cooldown:number})[];enemies:Enemy[];towers:Tower[];bolts:Bolt[];beacon:number;crystals:number[];kills:number;xp:number;level:number;serial:number;effects:{id:number;from:Point;to:Point;kind:'shot'|'skill'|'hit'|'impact';life:number}[];message:string};
 export const MODES={defense:{name:'성문 방어',tag:'타워 디펜스',goal:'3개 웨이브를 막고 성문을 지키세요.',control:'빛나는 건설 지점을 눌러 포탑을 배치·강화하세요.',size:40},command:{name:'변경 지휘',tag:'디펜스 + 분대 지휘',goal:'분대로 동쪽 봉화를 점령하고 3개 웨이브를 막으세요.',control:'땅을 눌러 분대 이동 · 가까운 건설 지점에 전초 포탑 배치',size:64},solo:{name:'수정 원정',tag:'영웅 직접 조작',goal:'적 6마리·수정 3개를 확보한 뒤 동쪽 출구로 이동하세요.',control:'WASD / 방향 패드 이동 · 공격 Q · 기술 E · 돌진 Space',size:64}} as const;
 export const PADS:Point[]=[{x:-21,z:12},{x:-9,z:8},{x:-24,z:-7},{x:-7,z:-16},{x:15,z:5},{x:19,z:-12}];
 export const CORE={x:-14,z:21},BEACON={x:19,z:-17},EXIT={x:23,z:-23};
@@ -19,9 +22,9 @@ function travel(p:Point,target:Point,amount:number):Point{
  const d=distance(p,t);if(d<.001)return {...p};const q={x:p.x+(t.x-p.x)*Math.min(1,amount/d),z:p.z+(t.z-p.z)*Math.min(1,amount/d)};
  return walkable(q)?q:{...p};
 }
-export function createFrontier(mode:Mode):Frontier{return {mode,phase:'ready',paused:false,speed:1,time:0,wave:0,remaining:0,spawnIn:0,gold:180,coreHp:180,hero:{x:-14,z:14,hp:mode==='command'?180:100,maxHp:mode==='command'?180:100,target:{x:-14,z:14},heading:0,moving:false,strike:0,cooldown:0,skill:0,dash:0},squad:mode==='command'?[{x:-16,z:16,cooldown:0},{x:-12,z:16,cooldown:0},{x:-14,z:18,cooldown:0}]:[],enemies:[],towers:[],beacon:0,crystals:[],kills:0,xp:0,level:1,serial:1,effects:[],message:MODES[mode].goal};}
-function clone(s:Frontier):Frontier{return {...s,hero:{...s.hero,target:{...s.hero.target}},squad:s.squad.map(p=>({...p})),enemies:s.enemies.map(e=>({...e})),towers:s.towers.map(t=>({...t})),effects:s.effects.map(e=>({...e})),crystals:[...s.crystals]};}
-function effect(s:Frontier,from:Point,to:Point,kind:'shot'|'skill'|'hit'){s.effects.push({id:s.serial++,from:{x:from.x,z:from.z},to:{x:to.x,z:to.z},kind,life:kind==='skill'?.45:.18});}
+export function createFrontier(mode:Mode):Frontier{return {mode,phase:'ready',paused:false,speed:1,time:0,wave:0,remaining:0,spawnIn:0,gold:180,coreHp:180,hero:{x:-14,z:14,hp:mode==='command'?180:100,maxHp:mode==='command'?180:100,target:{x:-14,z:14},heading:0,moving:false,strike:0,cooldown:0,skill:0,dash:0},squad:mode==='command'?[{x:-16,z:16,cooldown:0},{x:-12,z:16,cooldown:0},{x:-14,z:18,cooldown:0}]:[],enemies:[],towers:[],bolts:[],beacon:0,crystals:[],kills:0,xp:0,level:1,serial:1,effects:[],message:MODES[mode].goal};}
+function clone(s:Frontier):Frontier{return {...s,hero:{...s.hero,target:{...s.hero.target}},squad:s.squad.map(p=>({...p})),enemies:s.enemies.map(e=>({...e})),towers:s.towers.map(t=>({...t})),bolts:s.bolts.map(b=>({...b,position:{...b.position},previous:{...b.previous}})),effects:s.effects.map(e=>({...e})),crystals:[...s.crystals]};}
+function effect(s:Frontier,from:Point,to:Point,kind:'shot'|'skill'|'hit'|'impact'){s.effects.push({id:s.serial++,from:{x:from.x,z:from.z},to:{x:to.x,z:to.z},kind,life:kind==='skill'?.45:.18});}
 function reward(s:Frontier){s.kills++;s.gold+=14;s.xp+=30;while(s.xp>=s.level*60){s.xp-=s.level*60;s.level++;s.hero.maxHp+=15;s.hero.hp=Math.min(s.hero.maxHp,s.hero.hp+25);s.message=`레벨 ${s.level} · 공격 +3 · 최대 체력 +15`;}}
 function damage(s:Frontier,e:Enemy,n:number){if(e.hp<=0)return;e.hp=Math.max(0,e.hp-n);if(e.hp===0)reward(s);}
 function strike(s:Frontier){const e=s.enemies.filter(e=>e.hp>0&&distance(e,s.hero)<9).sort((a,b)=>distance(a,s.hero)-distance(b,s.hero))[0];if(!e||s.hero.cooldown>0)return;s.hero.heading=Math.atan2(e.x-s.hero.x,e.z-s.hero.z);s.hero.cooldown=.55;s.hero.strike=.56;damage(s,e,22+s.level*3);effect(s,s.hero,e,'shot');}
@@ -42,7 +45,7 @@ export function actFrontier(previous:Frontier,a:Command):Frontier{
   if(s.mode==='command'&&distance(s.hero,p)>8){s.message='분대를 건설 지점 가까이 이동하세요.';return s;}
   const tower=s.towers.find(t=>t.pad===a.pad),cost=tower?90:60;
   if(s.gold<cost){s.message=`금화 ${cost} 필요`;return s;}if(tower&&tower.level>=3)return previous;
-  s.gold-=cost;if(tower)tower.level++;else s.towers.push({pad:a.pad,level:1,cooldown:0});s.message=tower?`포탑 ${tower.level}단계 강화`:'포탑 건설 완료';return s;
+  s.gold-=cost;if(tower)tower.level++;else s.towers.push({pad:a.pad,level:1,cooldown:0,heading:Math.PI,actionTime:null,targetId:null,released:false});s.message=tower?`포탑 ${tower.level}단계 강화`:'포탑 건설 완료';return s;
  }
  if(s.phase!=='playing')return previous;
  if(a.type==='move'&&s.mode!=='defense'&&walkable(a.point)){s.hero.target={...a.point};return s;}
@@ -74,7 +77,32 @@ export function stepFrontier(previous:Frontier,elapsed:number,axis:Point={x:0,z:
   s.spawnIn-=dt;if(s.remaining>0&&s.spawnIn<=0){const east=s.mode==='command'&&s.wave>1&&s.remaining%2===0;s.enemies.push({...(east?{x:24,z:-25}:PATH[0]),id:s.serial++,hp:50+s.wave*12,cooldown:0,path:east?2:1});s.remaining--;s.spawnIn=1.5;}
   if(s.remaining===0&&s.enemies.length===0){if(s.wave<3){s.wave++;s.remaining=6+s.wave*2;s.spawnIn=4;s.gold+=50;s.message=`웨이브 ${s.wave} · 정비 보급 +50`;}else if(s.mode==='defense'||s.beacon===1){s.phase='won';s.message='성문 방어 완료';}}
  }
- for(const tower of s.towers){tower.cooldown-=dt;const p=PADS[tower.pad],target=s.enemies.find(e=>e.hp>0&&distance(e,p)<11);if(target&&tower.cooldown<=0){tower.cooldown=.8;damage(s,target,23*tower.level);effect(s,p,target,'shot');}}
+ // Bolts own their launch position, damage and target identity; upgrades cannot rewrite a shot.
+ for(const bolt of s.bolts){
+  bolt.life-=dt;const enemy=s.enemies.find(e=>e.id===bolt.targetId&&e.hp>0);
+  if(!enemy){bolt.life=0;continue;}
+  const to={x:enemy.x,y:heightAt(enemy.x,enemy.z)+1.1,z:enemy.z};const d=Math.hypot(to.x-bolt.position.x,to.y-bolt.position.y,to.z-bolt.position.z);
+  bolt.previous={...bolt.position};
+  if(d<=BALLISTA.boltSpeed*dt){bolt.position=to;damage(s,enemy,bolt.damage);effect(s,enemy,enemy,'impact');bolt.life=0;}
+  else{const k=BALLISTA.boltSpeed*dt/d;bolt.position={x:bolt.position.x+(to.x-bolt.position.x)*k,y:bolt.position.y+(to.y-bolt.position.y)*k,z:bolt.position.z+(to.z-bolt.position.z)*k};}
+ }
+ s.bolts=s.bolts.filter(b=>b.life>0);
+ for(const tower of s.towers){
+  tower.cooldown=Math.max(0,tower.cooldown-dt);const p=PADS[tower.pad];
+  if(tower.actionTime!==null){
+   tower.actionTime+=dt;
+   if(!tower.released&&tower.actionTime+1e-9>=BALLISTA.release){
+    tower.released=true;const target=s.enemies.find(e=>e.id===tower.targetId&&e.hp>0);
+    if(target&&distance(target,p)<12){const muzzle=ballistaMuzzle(p.x,p.z,heightAt(p.x,p.z),tower.heading);s.bolts.push({id:s.serial++,pad:tower.pad,targetId:target.id,position:muzzle,previous:{...muzzle},damage:23*tower.level,life:2});tower.cooldown=BALLISTA.interval-BALLISTA.release;}
+   }
+   if(tower.actionTime>=BALLISTA.duration){tower.actionTime=null;tower.targetId=null;}
+   continue;
+  }
+  const target=s.enemies.find(e=>e.hp>0&&distance(e,p)<11);
+  if(target){const angle=Math.atan2(target.x-p.x,target.z-p.z);tower.heading=turnToward(tower.heading,angle,BALLISTA.turnRate*dt);
+   if(tower.cooldown<=0&&Math.abs(angleDelta(tower.heading,angle))<.08){tower.actionTime=0;tower.targetId=target.id;tower.released=false;}
+  }
+ }
  for(const e of s.enemies){if(e.hp<=0)continue;e.cooldown=Math.max(0,e.cooldown-dt);const hunting=s.mode==='solo'||s.mode==='command'&&distance(e,s.hero)<9;
   if(hunting){const d=distance(e,s.hero);if(d<1.8&&e.cooldown<=0){s.hero.hp=Math.max(0,s.hero.hp-8);e.cooldown=1;effect(s,e,s.hero,'hit');}else if(d>=1.8&&d<18){const p=travel(e,s.hero,2.7*dt);e.x=p.x;e.z=p.z;}}
   else {const p=travel(e,PATH[e.path]??CORE,2.6*dt);e.x=p.x;e.z=p.z;if(distance(e,PATH[e.path]??CORE)<.2){if(e.path<3)e.path++;else if(e.cooldown<=0){s.coreHp=Math.max(0,s.coreHp-10);e.cooldown=1;effect(s,e,CORE,'hit');}}}
