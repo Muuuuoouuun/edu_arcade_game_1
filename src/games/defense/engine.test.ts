@@ -1009,3 +1009,33 @@ test('skill report counts actual capped damage and boss interruption without cha
  const paused=actDefense(cast,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);assert.equal(actDefense(paused,{type:'skill'}),paused);
  for(const rate of [30,60,120]){let current=cast;for(let i=0;i<rate/2;i++)current=stepDefense(current,1/rate);assert.deepEqual(current.lastSkill,cast.lastSkill);assert.equal(current.skillSupplyWave,undefined);}
 });
+
+test('Kar companion keeps walking while catching its owner, then rests without idle simulation',()=>{
+ let s=actDefense(createDefense(1,'dwarf'),{type:'hire',hero:'barbarian'});s=actDefense(s,{type:'move',point:{x:400,y:300}});let caughtMoving=false;
+ for(let i=0;i<600;i++){
+  const before=s;s=stepDefense(s,1/60);const travel=Math.hypot(s.mercenaryPosition.x-before.mercenaryPosition.x,s.mercenaryPosition.y-before.mercenaryPosition.y);
+  if(travel>.001){assert.ok(s.locomotion.mercenary.speed>0);if(Math.hypot(s.mercenaryPosition.x-(s.heroPosition.x+38),s.mercenaryPosition.y-(s.heroPosition.y+35))<.01)caughtMoving=true;}
+ }
+ assert.ok(caughtMoving);assert.equal(s.locomotion.mercenary.speed,0);assert.equal(s.locomotion.mercenary.settle,undefined);assert.equal(stepDefense(s,.1),s);
+});
+
+test('Kar hero and mercenary remember their last step, pause, settle and cancel when moving again',()=>{
+ for(const role of ['hero','mercenary'] as const){
+  let s=createDefense(1,role==='hero'?'barbarian':'mage');if(role==='mercenary')s=actDefense(s,{type:'hire',hero:'barbarian'});
+  s=actDefense(s,{type:'move',point:{x:250,y:220}});let observed=false;
+  for(let i=0;i<600;i++){
+   const previous=s;s=stepDefense(s,1/60);const m=s.locomotion[role];
+   if(role==='mercenary'){const travel=Math.hypot(s.mercenaryPosition.x-previous.mercenaryPosition.x,s.mercenaryPosition.y-previous.mercenaryPosition.y);if(travel>.001){assert.ok(m.speed>0);assert.equal(m.settle,undefined);}}
+   if(m.settle){
+    observed=true;assert.equal(m.settle.frame,Math.floor((previous.locomotion[role].distance%64)/8));assert.equal(m.settle.elapsed,0);assert.deepEqual(m.settle.heading,previous.locomotion[role].heading);
+    const frozen=actDefense(s,{type:'pause'});assert.equal(stepDefense(frozen,.1),frozen);
+    const snapshot=structuredClone(s),finished=advance(s,.4);assert.equal(finished.locomotion[role].settle,undefined);assert.deepEqual(s,snapshot);
+    const point=role==='hero'?s.heroPosition:s.mercenaryPosition;assert.deepEqual(role==='hero'?finished.heroPosition:finished.mercenaryPosition,point);
+    const restarted=stepDefense(actDefense(s,{type:'move',point:{x:650,y:450}}),.05);assert.equal(restarted.locomotion[role].settle,undefined);assert.ok(restarted.locomotion[role].speed>0);
+    if(role==='hero'){const dashed=stepDefense(actDefense(actDefense(s,{type:'start-wave'}),{type:'dash',point:{x:650,y:450}}),.02);assert.equal(dashed.locomotion.hero.settle,undefined);}
+    break;
+   }
+  }
+  assert.ok(observed,role+' naturally reaches a stop');
+ }
+});

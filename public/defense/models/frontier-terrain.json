@@ -1,0 +1,53 @@
+{
+  "generator": "tools/blender/build_frontier_terrain.py",
+  "generator_sha256": "b6a1f4075a0affc0eba1b7055a22c9b2c4c62e5aed0b1b8626349e806aa3a39c",
+  "command": "npm run models:frontier-terrain",
+  "editable_objects": 266,
+  "footprint": [
+    64,
+    64
+  ],
+  "highland_height": 4.6,
+  "river_x": [
+    3,
+    9
+  ],
+  "bridge_walkable_z": [
+    -2,
+    2
+  ],
+  "camera": {
+    "size": [
+      900,
+      600
+    ],
+    "orthographic_scale": 98,
+    "location": [
+      0,
+      -68,
+      72
+    ]
+  },
+  "files": [
+    {
+      "file": "art-source/defense/frontier-terrain.blend",
+      "bytes": 2476432,
+      "sha256": "e0ee3f1633fe7b2f6be0cc91b4b64aa0b99f38f435a9dbe5a039812429bcab40"
+    },
+    {
+      "file": "public/defense/models/frontier-terrain.glb",
+      "bytes": 500584,
+      "sha256": "8c9fae6872245156e35982c761d32e6725368e21315b698bbf40def681de5844"
+    },
+    {
+      "file": "public/defense/models/frontier-terrain.png",
+      "bytes": 588404,
+      "sha256": "cc8669fcd47bdc3e9b0981a8be44a61d8d43ad3aeb57b09c00305014d736ea21"
+    },
+    {
+      "file": "public/defense/models/frontier-terrain.webp",
+      "bytes": 20578,
+      "sha256": "1e7593eec198ab5390402750a8f12a1fde7bafdafd837e9128f6c6b4001f46d3"
+    }
+  ]
+}

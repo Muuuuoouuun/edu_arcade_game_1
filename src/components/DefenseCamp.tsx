@@ -66,6 +66,7 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
       <span className="camp-gold" aria-label={`성장 골드 ${campaign.gold}`}><Gold/>{campaign.gold.toLocaleString()}<small>G</small></span>
     </div>
     {storageFailed ? <p className="camp-save-warning" role="status">진행을 저장할 수 없어요. 현재 원정은 계속할 수 있지만, 창을 닫으면 기록이 사라질 수 있어요.</p> : null}
+    <a className="camp-frontier-entry" href="/frontier.html"><span><b>변경 전장 · 입체 공간에서 다른 방식으로 싸워요</b><small>성문 방어 / 분대 지휘 / 영웅 직접 조작 · 독립 훈련</small></span><strong>입장 ↗</strong></a>
     <section className="camp-panorama" aria-labelledby="camp-panorama-title">
       <picture key={themeId}>
         <img src={theme.image} width="1200" height="800" alt={`${theme.name}, 원정을 준비하는 수비대의 거점`} fetchPriority="high" decoding="async"/>

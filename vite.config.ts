@@ -8,6 +8,7 @@ export default defineConfig({
       input: {
         arcade: new URL('./index.html', import.meta.url).pathname,
         models: new URL('./model-lab.html', import.meta.url).pathname,
+        frontier: new URL('./frontier.html', import.meta.url).pathname,
       },
       output: {
         manualChunks(id) {
