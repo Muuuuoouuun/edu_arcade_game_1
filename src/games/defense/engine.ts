@@ -127,6 +127,11 @@ function aimLocomotion(s:DefenseState,source:AttackSource,from:Point,to:Point) {
   if(length>.001)s.locomotion={...s.locomotion,[source]:{...s.locomotion[source],heading:{x:(to.x-from.x)/length,y:(to.y-from.y)/length}}};
 }
 // The body a lightning arc would jump to from `target`: only conductive (metal or wet) non-insulators carry it on.
+/** Moving or dashing cancels a hero swing that has not landed; the cooldown is refunded so repositioning never costs attacks. */
+function cancelHeroWindup(s:DefenseState){
+  const kept=s.attacks.filter(a=>a.source!=='hero'||a.fired);
+  if(kept.length!==s.attacks.length){s.attacks=kept;s.heroCooldown=0;}
+}
 function chainNext(s:DefenseState,target:Enemy):Enemy|undefined {
   if(target.kind==='insulator'||!(target.kind==='metal'||target.wet>0))return undefined;
   const next=s.enemies.filter(e=>e.id!==target.id&&e.hp>0&&distance(target,e)<155).sort((a,b)=>distance(target,a)-distance(target,b))[0];
@@ -360,7 +365,7 @@ function applyDefenseAction(state:DefenseState,action:DefenseAction):DefenseStat
     s.coins-=120;s.mercenary=action.hero;s.mercCooldown=0;s.mercenaryPosition={x:s.heroPosition.x+38,y:s.heroPosition.y+35};if(action.hero==='druid'&&!s.pet)s.pet={position:{x:s.mercenaryPosition.x+28,y:s.mercenaryPosition.y-22},target:{...s.mercenaryPosition},facing:-1};s.notice='용병 합류! 영웅 옆에서 함께 싸워요.';
   } else if(action.type==='move') {
     if(!Number.isFinite(action.point.x)||!Number.isFinite(action.point.y)||s.phase==='promotion'||s.dashTime>0) return state;
-    s.heroTarget=clampHero(action.point);s.attacks=s.attacks.filter(a=>a.source!=='hero'||a.fired);
+    s.heroTarget=clampHero(action.point);cancelHeroWindup(s);
   } else if(action.type==='dash') {
     if(s.phase!=='wave'||s.dashCooldown>0||!Number.isFinite(action.point.x)||!Number.isFinite(action.point.y))return state;
     const aim=clampHero(action.point),dx=aim.x-s.heroPosition.x,dy=aim.y-s.heroPosition.y,len=Math.hypot(dx,dy);
@@ -369,7 +374,7 @@ function applyDefenseAction(state:DefenseState,action:DefenseAction):DefenseStat
     s.heroTarget={x:s.heroPosition.x+dx/len*travel,y:s.heroPosition.y+dy/len*travel};
     s.heroVelocity={x:dx/len*DASH_SPEED,y:dy/len*DASH_SPEED};s.dashTime=travel/DASH_SPEED;s.dashCooldown=DASH_COOLDOWN;s.dashHitIds=[];
     if(Math.abs(dx)>.01)s.heroFacing=dx<0?-1:1;
-    s.attacks=s.attacks.filter(a=>a.source!=='hero'||a.fired);
+    cancelHeroWindup(s);
     effect(s,s.heroPosition,s.heroTarget,'physical',undefined,'dash',{force:travel});
     s.notice='돌파! 경로의 적을 한 번 타격하고 밀쳐내요.';
   } else if(action.type==='promote') {

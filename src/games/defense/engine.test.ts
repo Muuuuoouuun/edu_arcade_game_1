@@ -1075,3 +1075,16 @@ test('a lightning tower aims at the front-most enemy whose arc would land, and f
   const plain=rangedBattle('magic');plain.enemies=[positionedEnemy('wood',1,430),wetBody,neighbor];
   assert.equal(stepDefense(plain,.02).attacks[0]?.targetId,1,'non-lightning magic towers keep the front-most rule');
 });
+
+test('moving or dashing mid-windup refunds the hero cooldown but keeps attacks already launched',()=>{
+  for(const action of [{type:'move',point:{x:300,y:300}},{type:'dash',point:{x:300,y:300}}] as DefenseAction[]){
+    const s=battlefield();s.hero='mage';s.heroCooldown=0;s.nextId=100;s.enemies=[positionedEnemy('stone',1,410)];
+    const windup=stepDefense(s,.02);assert.equal(windup.attacks.filter(a=>a.source==='hero'&&!a.fired).length,1);assert.ok(windup.heroCooldown>0);
+    const moved=actDefense(windup,action);
+    assert.equal(moved.attacks.filter(a=>a.source==='hero').length,0);assert.equal(moved.heroCooldown,0);
+  }
+  const s=battlefield();s.hero='mage';s.heroCooldown=0;s.nextId=100;s.enemies=[positionedEnemy('stone',1,410)];
+  const fired=until(stepDefense(s,.02),next=>next.attacks.some(a=>a.source==='hero'&&a.fired));
+  const moved=actDefense(fired,{type:'move',point:{x:300,y:300}});
+  assert.equal(moved.heroCooldown,fired.heroCooldown);assert.equal(moved.attacks.filter(a=>a.fired).length,fired.attacks.filter(a=>a.fired).length);
+});
