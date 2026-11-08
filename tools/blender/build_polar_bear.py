@@ -347,7 +347,7 @@ metadata = {
     'reference':'art-source/defense/concepts/2026-11-09/polar-bear-guardian.png',
     'generator':'tools/blender/build_polar_bear.py',
     'reproduction':f'blender -b --python tools/blender/build_polar_bear.py -- --samples {args.samples}',
-    'scope':'Isolated original geometry prototype; no production integration',
+    'scope':'Original geometry prototype; workshop preview only, no campaign integration',
     'runtime':runtime, 'glb_bytes':(OUT/'polar-bear.glb').stat().st_size,
     'editable_mesh_objects':sum(o.type=='MESH' for o in parts.objects),
     'rig':'Rigid object hierarchy, not a skinned armature',
@@ -357,7 +357,7 @@ metadata = {
     'render':{'engine':'Cycles CPU','samples':args.samples,'transparent':True,'denoising':False,'render_skipped':args.skip_render},
     'animation':{'clip':'polar-bear-attack','fps':30,'first_frame':1,'last_frame':25,'duration_seconds':.8,'interpolation':'LINEAR','animated_nodes':[o.name for o in (arm,body,guard,head,hammer)],'impact_hold_frames':[11,13],'wrist_rotation_order':'YXZ','pose_parameters':{name:dict(zip(['frame','arm_x','body_x','guard_x','wrist_x','wrist_y'],values)) for name,values in POSES.items()}},
     'poses':[],
-    'limitations':['Prototype rigid joints; no skin weights or deforming fur.','Four pose previews, not a final animation timing pass.','No measured game FPS or device draw-call benchmark.','No production loader/facing integration has been performed.']}
+    'limitations':['Prototype rigid joints; no skin weights or deforming fur.','Four pose previews, not a final animation timing pass.','No measured game FPS or device draw-call benchmark.','Workshop preview connected; campaign/combat integration remains unvalidated.']}
 for name, values in POSES.items():
     scene.frame_set(values[0])
     bpy.context.view_layer.update()
@@ -373,6 +373,8 @@ for name, values in POSES.items():
             projected = world_to_camera_view(scene,camera,world)
             pixels.append((projected.x*640,(1-projected.y)*640))
     bounds = [min(p[0] for p in pixels),min(p[1] for p in pixels),max(p[0] for p in pixels),max(p[1] for p in pixels)]
+    assert all(math.isfinite(v) and 0 < v < 640 for v in bounds), (name, bounds)
+    assert abs(min(heights)) < 1e-5, (name, min(heights))
     metadata['poses'].append({'name':name,'frame':values[0],'file':'polar-bear-'+name+'.png','projected_vertex_bbox':[round(v,3) for v in bounds],'min_world_z':round(min(heights),6),'inside_frame':all(0<=v<=640 for v in bounds)})
     if not args.skip_render:
         scene.render.filepath = str(OUT/('polar-bear-'+name+'.png'))

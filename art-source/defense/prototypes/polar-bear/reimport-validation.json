@@ -4,6 +4,13 @@
   "imported_mesh_objects": 31,
   "imported_triangles": 9176,
   "imported_materials": 9,
+  "animation": {
+    "clip": "polar-bear-attack",
+    "channels": 5,
+    "duration_seconds": 0.8,
+    "glb_clips": 1,
+    "duration_checked_from_binary_samples": true
+  },
   "actions": [
     {
       "name": "polar-bear-attack_body",
@@ -139,12 +146,13 @@
     }
   ],
   "loop_max_matrix_error": 0.0,
+  "minimum_camera_margin_px_all_25_frames": 41.11,
   "checks": [
+    "Exactly one polar-bear-attack GLB clip with five channels and binary time samples spanning 0\u20130.8 seconds",
     "Fresh Blender process imports GLB",
     "Rigid hammer hierarchy preserved",
     "Hammer wrist has imported animation",
-    "Finite vertex positions in five animation samples",
-    "Feet remain at Z=0",
+    "Finite vertices, grounded feet and complete camera framing at every frame 0\u201324",
     "Windup moves weapon more than 0.1 unit",
     "Frame 24 returns every object position, rotation and scale to initial transform",
     "Imported triangle, material and mesh counts match export metadata"

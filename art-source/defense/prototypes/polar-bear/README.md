@@ -37,14 +37,14 @@ The deterministic generator rebuilds only this prototype directory. `--skip-rend
 | Animation sanity | Hammer moves during windup; frame 24 returns to initial position |
 | Ground | All 25 source frames have minimum world Z = 0 |
 | Camera | Orthographic scale 5.45; location (7,10,7); common ground origin pixel (320.0003,550) |
-| Facing | Authoring +Y; exported GLB -Z with Y-up. +Y projects +67.3423 horizontal pixels in the chosen camera, consistent with screen-right. Game-loader facing remains untested. |
+| Facing | Authoring +Y; exported GLB -Z with Y-up. +Y projects +67.3423 horizontal pixels in the chosen camera, consistent with screen-right. Workshop preview is connected; campaign/combat facing remains unvalidated. |
 | Render | Cycles CPU, 64 samples, RGBA, no denoiser (installed Blender lacks OpenImageDenoise) |
 
 All four preview images were inspected. The shield and hammer stay visually separate, the hand wraps the shaft with finger bars and an opposing thumb, the round ears and projecting muzzle read as a bear, and no pose is clipped. Evaluated geometry stays inside the frame: minimum margin at the four named poses is about 52 pixels at the bottom. Across all 25 animation frames the minimum margin is 41.11 pixels, with no clipping or geometry below ground. The ground origin is an anchor, not the bottommost foot pixel; depth projects the near toes below it.
 
 ## Limits and next review
 
-This is a bounded modeling prototype. Rigid object joints approximate articulation; there is no deforming armature, skin weighting, walking animation, collision setup or LOD. The revised strike exposes the broad anchor face and grip; attack timing still needs a real-time game pass. Raw 64-sample renders retain some noise. Fine facial and finger details disappear at mobile scale; static 48/64/96-pixel previews were inspected, while actual in-game readability and device performance have not been measured. Nine materials and 31 batches are reported counts, not an FPS claim. No production integration has been performed.
+This is a bounded modeling prototype. Rigid object joints approximate articulation; there is no deforming armature, skin weighting, walking animation, collision setup or LOD. The revised strike exposes the broad anchor face and grip; attack timing still needs a real-time game pass. Raw 64-sample renders retain some noise. Fine facial and finger details disappear at mobile scale; static 48/64/96-pixel previews were inspected, while actual in-game readability and device performance have not been measured. Nine materials and 31 batches are reported counts, not an FPS claim. The model is connected to the workshop preview; campaign/combat integration and device performance remain unvalidated.
 
 ## Review history and action revision
 
@@ -57,3 +57,7 @@ All four 64-sample renders were inspected against the original same-camera idle/
 A Chromium comparison uses the complete, uncropped canvas at 48/64/96 CSS pixels and 256px for detail. At 96px the broad face, flukes and grip connection are clearer; at 64px the weapon reads as a separate dark mass with a light tip and brass center. At 48px the weapon/body separation improves, but individual fingers and the exact anchor shape remain too small for a reliable detail claim. These are static browser observations, not mobile-device or game-performance measurements.
 
 Before images, comparison HTML/PNG, all-frame bounds and command logs are stored outside the repository in `/workspace/.cloud-setup/evidence/arcana-model-actions-20261109/bear/`. Current preview PNGs, `.blend`, `.glb`, metadata and reimport validation remain here. The coordinator owns any model-lab integration or public asset copy.
+
+## Strict export validation follow-up
+
+The reimport validator asserts exactly one GLB clip named `polar-bear-attack`, five channels, and a 0–0.8-second time span read from the actual binary sampler floats. It checks all 25 imported animation frames for finite vertices, ground contact and complete camera framing, in addition to full transform loop closure and geometry/material counts. The generator now fails if any named preview pose crosses the 640×640 frame or loses ground contact. This follow-up does not regenerate or modify `.blend`, `.glb` or preview PNGs.

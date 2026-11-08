@@ -4,7 +4,7 @@
   "reference": "art-source/defense/concepts/2026-11-09/polar-bear-guardian.png",
   "generator": "tools/blender/build_polar_bear.py",
   "reproduction": "blender -b --python tools/blender/build_polar_bear.py -- --samples 64",
-  "scope": "Isolated original geometry prototype; no production integration",
+  "scope": "Original geometry prototype; workshop preview only, no campaign integration",
   "runtime": {
     "mesh_objects": 31,
     "triangles": 9176,
@@ -169,6 +169,6 @@
     "Prototype rigid joints; no skin weights or deforming fur.",
     "Four pose previews, not a final animation timing pass.",
     "No measured game FPS or device draw-call benchmark.",
-    "No production loader/facing integration has been performed."
+    "Workshop preview connected; campaign/combat integration remains unvalidated."
   ]
 }
