@@ -95,7 +95,10 @@
     "models:dwarf-stop:check": "node tools/check-dwarf-stop.mjs",
     "models:cheongun-entry": "blender --python-exit-code 1 -b --python tools/blender/build_cheongun_entry.py --",
     "models:cheongun-entry:pose-check": "npm run models:cheongun-entry -- --check",
-    "models:cheongun-entry:check": "node tools/check-cheongun-entry.mjs"
+    "models:cheongun-entry:check": "node tools/check-cheongun-entry.mjs",
+    "models:cheongun-return": "blender --python-exit-code 1 -b --python tools/blender/build_cheongun_return.py --",
+    "models:cheongun-return:pose-check": "npm run models:cheongun-return -- --check",
+    "models:cheongun-return:check": "node tools/check-cheongun-return.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
