@@ -141,7 +141,9 @@
     "models:frontier-hero": "node tools/build-frontier-hero-contract.mjs",
     "models:frontier-hero:check": "node tools/build-frontier-hero-contract.mjs --check",
     "models:frontier-wood-strike": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_wood_strike.py",
-    "models:frontier-wood-strike:check": "node tools/check-frontier-wood-strike.mjs"
+    "models:frontier-wood-strike:check": "node tools/check-frontier-wood-strike.mjs",
+    "models:frontier-kar": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_kar.py",
+    "models:frontier-kar:check": "node tools/check-frontier-kar.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_kar.py"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
