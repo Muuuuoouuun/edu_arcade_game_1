@@ -4,7 +4,7 @@ export type Tower={pad:number;level:number;cooldown:number;heading:number;action
 export type Bolt={id:number;targetId:number;pad:number;position:Position3;previous:Position3;damage:number;life:number};
 export type Mode='defense'|'command'|'solo';
 export type Point={x:number;z:number};
-export type Enemy=Point&{id:number;hp:number;cooldown:number;path:number};
+export type Enemy=Point&{id:number;hp:number;cooldown:number;path:number;maxHp?:number;heading?:number;walkDistance?:number;moving?:boolean;restTime?:number};
 export type Frontier={mode:Mode;phase:'ready'|'playing'|'won'|'lost';paused:boolean;speed:1|2;time:number;wave:number;remaining:number;spawnIn:number;gold:number;coreHp:number;hero:Point&{hp:number;maxHp:number;target:Point;heading:number;moving:boolean;strike:number;cooldown:number;skill:number;dash:number};squad:(Point&{cooldown:number})[];enemies:Enemy[];towers:Tower[];bolts:Bolt[];beacon:number;crystals:number[];kills:number;xp:number;level:number;serial:number;effects:{id:number;from:Point;to:Point;kind:'shot'|'skill'|'hit'|'impact';life:number}[];message:string};
 export const MODES={defense:{name:'성문 방어',tag:'타워 디펜스',goal:'3개 웨이브를 막고 성문을 지키세요.',control:'빛나는 건설 지점을 눌러 포탑을 배치·강화하세요.',size:40},command:{name:'변경 지휘',tag:'디펜스 + 분대 지휘',goal:'분대로 동쪽 봉화를 점령하고 3개 웨이브를 막으세요.',control:'땅을 눌러 분대 이동 · 가까운 건설 지점에 전초 포탑 배치',size:64},solo:{name:'수정 원정',tag:'영웅 직접 조작',goal:'적 6마리·수정 3개를 확보한 뒤 동쪽 출구로 이동하세요.',control:'WASD / 방향 패드 이동 · 공격 Q · 기술 E · 돌진 Space',size:64}} as const;
 export const PADS:Point[]=[{x:-21,z:12},{x:-9,z:8},{x:-24,z:-7},{x:-7,z:-16},{x:15,z:5},{x:19,z:-12}];
@@ -37,7 +37,7 @@ export function actFrontier(previous:Frontier,a:Command):Frontier{
  const s=clone(previous);
  if(a.type==='start'&&s.phase==='ready'){
   s.phase='playing';s.wave=1;s.remaining=s.mode==='solo'?0:8;s.spawnIn=.5;
-  if(s.mode==='solo')s.enemies=Array.from({length:10},(_,i)=>({id:s.serial++,x:i<5?-22+i*3:13+(i-5)*2,z:i<5?-20+(i%2)*7:-17+(i%3)*10,hp:60,cooldown:0,path:0}));
+  if(s.mode==='solo')s.enemies=Array.from({length:10},(_,i)=>({id:s.serial++,x:i<5?-22+i*3:13+(i-5)*2,z:i<5?-20+(i%2)*7:-17+(i%3)*10,hp:60,maxHp:60,cooldown:0,path:0}));
   s.message=MODES[s.mode].control;return s;
  }
  if(a.type==='build'&&s.mode!=='solo'){
@@ -74,7 +74,7 @@ export function stepFrontier(previous:Frontier,elapsed:number,axis:Point={x:0,z:
  }
  for(const [i,unit] of s.squad.entries()){const target={x:s.hero.x+(i-1)*2,z:s.hero.z+2.5},p=travel(unit,target,6.5*dt);unit.x=p.x;unit.z=p.z;unit.cooldown-=dt;const enemy=s.enemies.find(e=>e.hp>0&&distance(e,unit)<7);if(enemy&&unit.cooldown<=0){damage(s,enemy,8+s.level);unit.cooldown=.9;effect(s,unit,enemy,'shot');}}
  if(s.mode!=='solo'){
-  s.spawnIn-=dt;if(s.remaining>0&&s.spawnIn<=0){const east=s.mode==='command'&&s.wave>1&&s.remaining%2===0;s.enemies.push({...(east?{x:24,z:-25}:PATH[0]),id:s.serial++,hp:50+s.wave*12,cooldown:0,path:east?2:1});s.remaining--;s.spawnIn=1.5;}
+  s.spawnIn-=dt;if(s.remaining>0&&s.spawnIn<=0){const east=s.mode==='command'&&s.wave>1&&s.remaining%2===0;s.enemies.push({...(east?{x:24,z:-25}:PATH[0]),id:s.serial++,hp:50+s.wave*12,maxHp:50+s.wave*12,cooldown:0,path:east?2:1});s.remaining--;s.spawnIn=1.5;}
   if(s.remaining===0&&s.enemies.length===0){if(s.wave<3){s.wave++;s.remaining=6+s.wave*2;s.spawnIn=4;s.gold+=50;s.message=`웨이브 ${s.wave} · 정비 보급 +50`;}else if(s.mode==='defense'||s.beacon===1){s.phase='won';s.message='성문 방어 완료';}}
  }
  // Bolts own their launch position, damage and target identity; upgrades cannot rewrite a shot.
@@ -103,9 +103,10 @@ export function stepFrontier(previous:Frontier,elapsed:number,axis:Point={x:0,z:
    if(tower.cooldown<=0&&Math.abs(angleDelta(tower.heading,angle))<.08){tower.actionTime=0;tower.targetId=target.id;tower.released=false;}
   }
  }
- for(const e of s.enemies){if(e.hp<=0)continue;e.cooldown=Math.max(0,e.cooldown-dt);const hunting=s.mode==='solo'||s.mode==='command'&&distance(e,s.hero)<9;
+ for(const e of s.enemies){if(e.hp<=0)continue;const oldX=e.x,oldZ=e.z;e.cooldown=Math.max(0,e.cooldown-dt);const hunting=s.mode==='solo'||s.mode==='command'&&distance(e,s.hero)<9;
   if(hunting){const d=distance(e,s.hero);if(d<1.8&&e.cooldown<=0){s.hero.hp=Math.max(0,s.hero.hp-8);e.cooldown=1;effect(s,e,s.hero,'hit');}else if(d>=1.8&&d<18){const p=travel(e,s.hero,2.7*dt);e.x=p.x;e.z=p.z;}}
   else {const p=travel(e,PATH[e.path]??CORE,2.6*dt);e.x=p.x;e.z=p.z;if(distance(e,PATH[e.path]??CORE)<.2){if(e.path<3)e.path++;else if(e.cooldown<=0){s.coreHp=Math.max(0,s.coreHp-10);e.cooldown=1;effect(s,e,CORE,'hit');}}}
+  const moved=Math.hypot(e.x-oldX,e.z-oldZ);e.moving=moved>1e-7;e.walkDistance=(e.walkDistance??0)+moved;e.restTime=e.moving?0:(e.restTime??0)+dt;if(e.moving)e.heading=Math.atan2(e.x-oldX,e.z-oldZ);
  }
  s.enemies=s.enemies.filter(e=>e.hp>0);
  if(s.coreHp<=0||s.mode!=='defense'&&s.hero.hp<=0){s.phase='lost';s.message=s.hero.hp<=0?'영웅이 쓰러졌습니다':'성문이 무너졌습니다';}

@@ -6,6 +6,7 @@ import { PMREMGenerator } from 'three';
 import './model-lab.css';
 
 const models = [
+ {id:'frontier-wood',name:'통나무 병사 · 변경 전장',kind:'FRONTIER WOODEN SOLDIER',detail:'목재 단면 · 가지 · 손에 쥔 몽둥이',description:'기존 통나무 병사의 관절 보행을 전장 크기에 맞춘 모델입니다. 실제 변경 전장에서는 이동 거리에 따라 걸음을 재생하고 진행 방향으로 몸을 돌립니다. 멈추면 두 발을 디디며 준비 자세로 돌아옵니다.',source:'frontier-wood.blend',command:'npm run models:frontier-wood',action:'▶ 보행 재생',clip:'frontier-wood-walk',loop:true,fitBounds:true},
  {id:'frontier-ballista',name:'변경 발리스타 · 실시간 전장',kind:'FRONTIER SIEGE WEAPON',detail:'고정 석조 기초 · 목재 활대 · 황동 반동 장치',description:'목재 활대와 시위가 풀리고 상부 받침이 짧게 물러난 뒤 다시 장전합니다. 실시간 변경 전장에서는 기초를 고정하고 상부만 조준하며 실제 탄이 도착할 때 피해를 줍니다.',source:'frontier-ballista.blend',command:'npm run models:frontier-ballista',action:'▶ 발사·재장전',clip:'frontier-ballista-release',fitBounds:true},
  {id:'polar-bear',name:'북극곰 · 빙해 수호자',kind:'PROTOTYPE / POLAR',detail:'제작 시안 · 닻 망치',description:'큰 방패와 닻 망치로 만든 극지 수호자입니다. 무기를 크게 들었다가 내려치는 동작과 손잡이 결합을 살펴보세요. 제작 시안이며 캠페인 전투에는 아직 연결되지 않았습니다.',source:'prototypes/polar-bear/polar-bear.blend',command:'npm run models:bear',action:'▶ 닻 망치 강타',clip:'polar-bear-attack',asset:'prototypes/polar-bear',fitBounds:true},
  {id:'gecko-ranger',name:'도마뱀 · 씨앗 궁수',kind:'PROTOTYPE / TROPICAL',detail:'제작 시안 · 씨앗 쇠뇌',description:'잎 두건과 긴 꼬리, 큼직한 씨앗 쇠뇌가 특징인 열대 궁수입니다. 조준·발사 반동·복귀를 확인하세요. 제작 시안이며 캠페인 전투에는 아직 연결되지 않았습니다.',source:'prototypes/gecko-ranger/gecko-ranger.blend',command:'npm run models:gecko',action:'▶ 씨앗 발사',clip:'gecko-seed-shot',asset:'prototypes/gecko-ranger',fitBounds:true},
