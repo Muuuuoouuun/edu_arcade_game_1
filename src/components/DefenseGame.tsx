@@ -264,9 +264,9 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
     ? '영웅의 기본 공격·필살기와 늑대 공격 피해 +40%'
     : '영웅의 기본 공격과 필살기 피해 +40%';
   const controlDescription = state.hero === 'druid'
-    ? '영웅 기본 공격 사거리 +65 · 필살기의 기존 둔화 5초 유지'
+    ? '영웅 기본 공격 사거리 +65 · 필살기 둔화 5초 → 7초'
     : state.hero === 'tao'
-      ? '영웅 기본 공격 사거리 +65 · 필살기의 기존 둔화 4초 유지'
+      ? '영웅 기본 공격 사거리 +65 · 필살기 둔화 4초 → 6초'
       : '영웅 기본 공격 사거리 +65 · 필살기에 4초 둔화 추가';
   return <div className="defense-root" data-theme={themeId}>{mode === 'camp' ? <DefenseCamp themeId={themeId} onSelectTheme={chooseTheme} themeStorageFailed={themeStorageFailed} campaign={campaign} onDepart={begin} onChooseHero={chooseHero} onSelectDifficulty={difficulty => { if (!blockedRef.current) persist(selectDifficulty(campaignRef.current, difficulty)); }} onTrain={train} onExit={() => { if (!blockedRef.current) onExit(); }} storageFailed={storageFailed}/> : <>
     <div inert={state.paused || blocked || !!arriving || terminal || state.phase === 'promotion' || undefined}>

@@ -6,7 +6,7 @@ import { Dialog } from './Dialog';
 import { Icon } from './Icon';
 import { BRANCHES, HEROES, TOWERS, getSlots, getStage, stageLabel } from '../games/defense/data';
 import { DIFFICULTIES } from '../games/defense/difficulty';
-import { allowedBranches, inSurge, questStatus, upgradeCost, waveSize } from '../games/defense/engine';
+import { SKILL_SUPPLY, SKILL_SUPPLY_KILLS, skillSlowSeconds, allowedBranches, inSurge, questStatus, upgradeCost, waveSize } from '../games/defense/engine';
 import type { TacticalAction } from '../games/defense/engine';
 import { towerSpriteAsset } from '../games/defense/art';
 import type { Campaign, DefenseState, Point, TowerKind } from '../games/defense/types';
@@ -30,6 +30,9 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
   const terminal = state.phase === 'won' || state.phase === 'lost';
   const canAct = !state.paused && !terminal && state.phase !== 'promotion';
   const skillReady = canAct && state.phase === 'wave' && state.skillCooldown === 0 && state.enemies.length > 0;
+  const skillResult = state.lastSkill && ((state.phase==='wave' && state.time-state.lastSkill.at<3)||state.phase==='intermission') ? state.lastSkill : null;
+  const supplyReady=state.skillSupplyWave!==state.wave;
+  const skillBenefit=state.promotion==='power'?'전직 · 피해 +40%':skillSlowSeconds(state.hero,state.promotion)?`생존 적 둔화 ${skillSlowSeconds(state.hero,state.promotion)}초`:hero.trait;
   const dashReady = canAct && state.phase === 'wave' && state.dashCooldown === 0;
   // A dimmed action button should say when it comes back, not look broken.
   const idleHint = state.phase === 'wave' ? '' : '웨이브 중 사용';
@@ -124,6 +127,9 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
           <button onClick={() => { onCancelAim(); const next = !(zoomed && canZoom); writeZoomPreference(next); wantZoom.current = next; setZoomed(next); }} disabled={!canZoom} aria-pressed={zoomed && canZoom} aria-label="전장 확대">{zoomed && canZoom ? '전체 보기' : '확대 보기'}</button>
         </div>
         <div className="battle-map-space" ref={mapSpace}>
+          <div className="battle-skill-result" role="status" aria-live="polite" aria-atomic="true" data-visible={!!skillResult}>
+            {skillResult?<><strong>{hero.skill}{skillResult.interrupted?' · 충전 차단!':''}</strong><span>적중 {skillResult.hits} · 처치 {skillResult.kills} · 약점 {skillResult.weakHits}</span><span>실제 피해 {skillResult.damage}{skillResult.slowSeconds?` · 둔화 ${skillResult.slowSeconds}초`:''}</span>{skillResult.supply?<b>전투 보급 +{skillResult.supply} <small>이번 웨이브 지급 완료</small></b>:null}</>:null}
+          </div>
           {hitCount ? <i key={hitCount} className="battle-breach-flash" aria-hidden="true"/> : null}
           <div className={`battle-map-viewport ${zoomed && canZoom ? 'is-zoomed' : ''}`} ref={mapViewport} tabIndex={zoomed && canZoom ? 0 : undefined} role="region" aria-label="전장 지도. 확대 시 좌우로 스크롤할 수 있어요"
             onScroll={event => { lastMapScroll.current = performance.now(); onCancelAim(); if (zoomed && state.phase === 'wave') setScrollLeft(Math.round(event.currentTarget.scrollLeft)); }}
@@ -147,7 +153,8 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
         {storageFailed ? <p className="battle-save-warning" role="status">진행을 저장할 수 없어요. 창을 닫기 전 확인해 주세요.</p> : null}
       </section>
       <nav className="battle-commands" aria-label="영웅 액션">
-        <button className={`battle-skill ${skillReady ? 'is-ready' : ''}`} disabled={!skillReady} onClick={onSkill} aria-label="필살기 사용"><Icon name="star" size={25}/><span>필살기<small>{skillHint}</small></span></button>
+        <p id="battle-skill-benefit" className="battle-skill-benefit"><strong>{skillBenefit}</strong><span>{supplyReady?`필살기 ${SKILL_SUPPLY_KILLS}처치 → 보급 +${SKILL_SUPPLY}`:'이번 웨이브 보급 획득'}</span><small>웨이브당 1회 · 전투 코인</small></p>
+        <button className={`battle-skill ${skillReady ? 'is-ready' : ''}`} disabled={!skillReady} onClick={onSkill} aria-label="필살기 사용" aria-describedby="battle-skill-benefit"><Icon name="star" size={25}/><span>필살기<small>{skillHint}</small></span></button>
         <button className={`battle-dash ${aimingDash ? 'selected' : ''}`} disabled={!dashReady} onClick={onDash} aria-label={aimingDash ? '돌진 조준 취소' : '영웅 돌진 위치 선택'} aria-pressed={aimingDash}><DashIcon/><span>{aimingDash ? largeText ? '취소' : '돌진 취소' : '돌진'}<small>{dashHint}</small></span></button>
       </nav>
     </div>

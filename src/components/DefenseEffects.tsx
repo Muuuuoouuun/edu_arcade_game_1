@@ -228,7 +228,9 @@ export function EffectLayer({effects,reduced,unit=1,layer='front'}:{effects:Effe
     <g transform={`translate(-15,${reduced?0:-Math.sin(p*Math.PI)*8})`}><ellipse rx={reduced?5:Math.max(1,Math.abs(Math.cos(p*Math.PI*2))*5)} ry="6" fill="#ffdc76" stroke="#a4742d" strokeWidth="1.2"/><path d="M0-3v6" stroke="#fff5bc" strokeWidth="1.2"/></g>
     <text x="-6" y="5" className="def-float-number def-float-coin">{e.text}</text>
   </g>;
-  if(kind==='skill'||kind==='interrupt')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y-27})`} opacity={fade} data-effect={kind}>
+  if(kind==='skill'||kind==='interrupt')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y-27})`} opacity={fade} data-effect={kind} data-skill-mode={e.skillMode}>
+   {e.skillMode==='control'?<g fill="none" stroke="#8fe8d3" strokeWidth="2"><ellipse cy="22" rx={reduced?40:30+p*45} ry={reduced?14:10+p*16}/><ellipse cy="22" rx={reduced?30:22+p*32} ry={reduced?10:7+p*12}/></g>:null}
+   {e.skillMode==='power'?<path d="M-32 0 -12 -8 0 -34 12 -8 32 0 12 8 0 34 -12 8Z" fill="none" stroke="#ffe49a" strokeWidth={reduced?2:4*(1-p)} opacity={1-p}/>:null}
    <circle r={reduced?22:15+p*65} fill={`url(#${hitCore(e.element)})`} opacity=".7"/>
    {!reduced?Array.from({length:6},(_,i)=>{const angle=i*Math.PI/3,r=18+p*50;return <path key={i} d={`M${Math.cos(angle)*r} ${Math.sin(angle)*r}l${Math.cos(angle)*13} ${Math.sin(angle)*13}`} stroke={color} strokeWidth="2" strokeLinecap="round"/>;}):null}
    {e.text?<text y={-45-(reduced?0:p*15)} textAnchor="middle" className="def-float-number def-float-skill">{e.text}</text>:null}

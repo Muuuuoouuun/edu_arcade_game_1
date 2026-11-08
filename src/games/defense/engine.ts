@@ -44,6 +44,13 @@ export function positionOnPath(path:number,progress:number,stage=1):Point {
 }
 /** Extra battle coins for a wave cleared with no breach (design experiment: rewards clean defense). */
 export const FLAWLESS_BONUS=25;
+/** One tactical supply per wave, battle coins only; no kill streak farming. */
+export const SKILL_SUPPLY=15;
+export const SKILL_SUPPLY_KILLS=3;
+export function skillSlowSeconds(hero:HeroId,promotion:DefenseState['promotion']):number {
+  const innate=hero==='druid'?5:hero==='tao'?4:0;
+  return promotion==='control'?(innate?innate+2:4):innate;
+}
 export function createDefense(stage:number,hero:HeroId,training=0,difficulty:Difficulty='standard'):DefenseState {
   const id=Math.max(1,Math.min(STAGE_COUNT,Math.trunc(stage)||1)),data=getStage(id);
   const mode=getDifficulty(difficulty),settings=DIFFICULTIES[mode];
@@ -315,7 +322,7 @@ function applyDefenseAction(state:DefenseState,action:DefenseAction):DefenseStat
   const s=copy(state);
   if(action.type==='start-wave') {
     if(s.phase!=='prep'&&s.phase!=='intermission') return state;
-    s.phase='wave';s.wave++;s.waveStartLeaks=s.leaks;s.spawned=0;s.spawnTimer=.4;s.effects=[];s.notice=getStage(s.stage).expanded&&s.wave===4?`${s.stage===8?'서리군주':'고목왕'}가 다가옵니다. 두 거점을 지켜주세요!`:`웨이브 ${s.wave} 시작!`;
+    s.phase='wave';s.wave++;s.lastSkill=undefined;s.waveStartLeaks=s.leaks;s.spawned=0;s.spawnTimer=.4;s.effects=[];s.notice=getStage(s.stage).expanded&&s.wave===4?`${s.stage===8?'서리군주':'고목왕'}가 다가옵니다. 두 거점을 지켜주세요!`:`웨이브 ${s.wave} 시작!`;
   } else if(action.type==='build') {
     const slot=getSlots(s.stage).find(p=>p.id===action.slot),kind=TOWERS[action.kind];
     if(!slot||slot.unlock>s.stage||!kind||s.towers.some(t=>t.slot===action.slot)||s.phase==='promotion') return state;
@@ -358,18 +365,27 @@ function applyDefenseAction(state:DefenseState,action:DefenseAction):DefenseStat
     if(s.phase!=='promotion'||s.promotion||!['power','control'].includes(action.choice)) return state;
     s.promotion=action.choice;s.phase='intermission';s.notice=action.choice==='power'?'전직 완료! 공격력과 필살기가 강해졌어요.':'전직 완료! 사거리 증가 · 필살기에 둔화 효과!';
   } else if(action.type==='skill') {
-    if(s.phase!=='wave'||s.skillCooldown>0||s.enemies.length===0) return state;
+    if(s.phase!=='wave'||s.skillCooldown>0||!s.enemies.some(e=>e.hp>0)) return state;
     const stats=heroStats(s.hero);const boost=(1+s.training*.08)*(s.promotion==='power'?1.4:1);
     const interrupt=s.bossCharge>0&&s.enemies.some(e=>e.kind==='frostboss');
     if(interrupt){s.bossCharge=0;s.bossCycle=9;effect(s,s.heroPosition,s.enemies.find(e=>e.kind==='frostboss')!,'lightning','차단!','interrupt');}
     // Manual skills remain usable during a tower freeze and can interrupt its telegraph.
     const skillPower=s.hero==='barbarian'?165:s.hero==='druid'?90:115;
-    effect(s,s.heroPosition,s.heroPosition,stats.element,undefined,'skill',{force:260});
-    for(const e of s.enemies) {
+    effect(s,s.heroPosition,s.heroPosition,stats.element,undefined,'skill',{force:260,...(s.promotion?{skillMode:s.promotion}:{})});
+    const targets=s.enemies.filter(e=>e.hp>0),slowSeconds=skillSlowSeconds(s.hero,s.promotion);
+    let kills=0,damage=0,weakHits=0;
+    for(const e of targets) {
+      const before=e.hp;
+      if(damageMultiplier(e.kind,stats.element)>1)weakHits++;
       hit(s,e,skillPower*boost,stats.element,s.heroPosition,s.hero==='barbarian'?220:s.hero==='dwarf'?170:0);
-      if(s.promotion==='control'||s.hero==='tao'||s.hero==='druid') e.slow=s.hero==='druid'?5:4;
+      damage+=Math.min(before,Math.max(0,before-e.hp));
+      if(e.hp<=0)kills++;
+      else e.slow=Math.max(e.slow,slowSeconds);
     }
-    s.skillCooldown=20;s.notice=interrupt?'충전 차단! 서리군주의 눈보라를 막았어요.':'필살기 발동!';reap(s);
+    const supply=kills>=SKILL_SUPPLY_KILLS&&s.skillSupplyWave!==s.wave?SKILL_SUPPLY:0;
+    if(supply){s.coins+=supply;s.skillSupplyWave=s.wave;}
+    s.lastSkill={at:s.time,hits:targets.length,kills,damage:Math.round(damage),weakHits,supply,interrupted:interrupt,slowSeconds};
+    s.skillCooldown=20;s.notice=interrupt?'충전 차단! 서리군주의 눈보라를 막았어요.':`필살기 적중 ${targets.length} · 처치 ${kills}${supply?` · 전투 보급 +${supply}`:''}`;reap(s);
   }
   return s;
 }

@@ -234,3 +234,10 @@ body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-in
 @keyframes battle-breach-flash{0%{opacity:1}100%{opacity:0}}
 @keyframes battle-breach-flash-still{0%{opacity:.8}100%{opacity:0}}
 @keyframes battle-health-hit{0%{transform:scale(1.18);background:#a33a30}100%{transform:scale(1)}}
+
+/* Skill outcomes follow simulation time and never intercept map input. */
+.battle-skill-result{position:absolute;top:10px;left:10px;z-index:5;pointer-events:none;display:grid;gap:3px;max-width:calc(100% - 20px);padding:9px 12px;background:#12392cf2;border:1px solid #d5b970;border-radius:9px;color:#fff1c6;font-size:12px;box-shadow:0 3px 12px #0004}
+.battle-skill-result[data-visible=false]{display:none}.battle-skill-result strong{font-size:14px}.battle-skill-result b{color:#ffe08b}.battle-skill-result small{font-weight:400;color:#d1dfcb;font-size:10px}
+.battle-skill-benefit{margin:0 0 8px;padding:8px 5px;display:grid;gap:4px;font-size:11px;line-height:1.4;color:#ebdfb3;text-align:center}.battle-skill-benefit strong{color:#bce4ce;font-weight:500}.battle-skill-benefit small{font-size:10px;color:#b5c9bc}
+@media(orientation:portrait){.battle-skill-benefit{grid-column:1/-1;margin:0;padding:2px 4px;display:flex;flex-wrap:wrap;justify-content:center;gap:2px 8px}.battle-skill-benefit small{display:none}.battle-skill-result{font-size:11px;padding:7px 9px}.battle-skill-result strong{font-size:12px}}
+.battle-large-text .battle-skill-benefit{display:none}

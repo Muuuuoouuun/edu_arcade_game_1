@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { actDefense, allowedBranches, createDefense, FLAWLESS_BONUS, damageMultiplier, positionOnPath, petPosition, questSatisfied, questComplete, questStatus, stepDefense, towerRange, waveSize, surgeStart, inSurge, SURGE_INTERVAL, SURGE_MIN_GAP } from './engine.ts';
+import { actDefense, allowedBranches, createDefense, SKILL_SUPPLY, skillSlowSeconds, FLAWLESS_BONUS, damageMultiplier, positionOnPath, petPosition, questSatisfied, questComplete, questStatus, stepDefense, towerRange, waveSize, surgeStart, inSurge, SURGE_INTERVAL, SURGE_MIN_GAP } from './engine.ts';
 import { ENEMIES, PATHS, SLOTS, STAGES, HERO_ORDER, STAGE_COUNT, getStage, getSlots, getPaths, getRegion, stageLabel } from './data.ts';
 import { DIFFICULTIES, getWavePlan } from './difficulty.ts';
 import type { Difficulty, DefenseAction, DefenseState, Enemy, EnemyKind } from './types.ts';
@@ -964,4 +964,48 @@ test('Luna hero and mercenary remember their last step, pause, settle and cancel
   }
   assert.ok(observed,role+' naturally reaches a stop');
  }
+});
+
+
+test('skill supply pays only for three direct kills once per wave and survives JSON restore',()=>{
+ const s=battlefield();s.enemies=[1,2,3].map(id=>({...enemy('sprout',id),hp:10}));
+ const original=JSON.stringify(s),cast=actDefense(s,{type:'skill'});
+ assert.equal(JSON.stringify(s),original,'command does not mutate its input');
+ assert.equal(cast.coins-s.coins,42+SKILL_SUPPLY);assert.equal(cast.skillSupplyWave,1);
+ assert.deepEqual(cast.lastSkill,{at:0,hits:3,kills:3,damage:30,weakHits:3,supply:15,interrupted:false,slowSeconds:0});
+ assert.equal(actDefense(cast,{type:'skill'}),cast);
+ const restored=JSON.parse(JSON.stringify(cast)) as DefenseState;
+ const again=actDefense({...restored,skillCooldown:0,enemies:[4,5,6].map(id=>({...enemy('sprout',id),hp:10}))},{type:'skill'});
+ assert.equal(again.coins-cast.coins,42);assert.equal(again.lastSkill?.supply,0);
+ const next=actDefense({...again,phase:'intermission'},{type:'start-wave'});
+ assert.equal(next.lastSkill,undefined);assert.equal(next.wave,2);
+ const second=actDefense({...next,skillCooldown:0,enemies:[7,8,9].map(id=>({...enemy('sprout',id),hp:10}))},{type:'skill'});
+ assert.equal(second.lastSkill?.supply,SKILL_SUPPLY);assert.equal(second.skillSupplyWave,2);
+});
+
+test('small casts retain eligibility; already dead enemies and ongoing burn do not earn skill supply',()=>{
+ const s=battlefield();s.enemies=[{...enemy('sprout',1),hp:10},{...enemy('sprout',2),hp:10},{...enemy('boss',3),hp:1000}];
+ const cast=actDefense(s,{type:'skill'});assert.equal(cast.lastSkill?.kills,2);assert.equal(cast.lastSkill?.supply,0);assert.equal(cast.skillSupplyWave,undefined);
+ const more=actDefense({...cast,skillCooldown:0,enemies:[4,5,6].map(id=>({...enemy('sprout',id),hp:10}))},{type:'skill'});assert.equal(more.lastSkill?.supply,15);
+ const dead={...s,enemies:[1,2,3].map(id=>({...enemy('sprout',id),hp:0}))};assert.equal(actDefense(dead,{type:'skill'}),dead);
+ const burning=actDefense({...s,enemies:[1,2,3].map(id=>({...enemy('wood',id),hp:174}))},{type:'skill'});
+ const delayed=advance(burning,.5);assert.equal(delayed.kills,3);assert.equal(delayed.lastSkill?.kills,0);assert.equal(delayed.lastSkill?.supply,0);assert.equal(delayed.skillSupplyWave,undefined);
+});
+
+test('control promotion improves innate slowing and never shortens a stronger control effect',()=>{
+ for(const hero of HERO_ORDER)for(const promotion of [null,'power','control'] as const){
+  const s={...battlefield(),hero,promotion,enemies:[{...enemy('boss',1),hp:10000}]};
+  const cast=actDefense(s,{type:'skill'}),innate=hero==='druid'?5:hero==='tao'?4:0,expected=promotion==='control'?(innate?innate+2:4):innate;
+  assert.equal(skillSlowSeconds(hero,promotion),expected);assert.equal(cast.enemies[0].slow,expected);assert.equal(cast.lastSkill?.slowSeconds,expected);
+  assert.equal(cast.effects.find(e=>e.kind==='skill')?.skillMode,promotion??undefined);
+  const stronger=actDefense({...s,enemies:[{...s.enemies[0],slow:9}]},{type:'skill'});assert.equal(stronger.enemies[0].slow,9);
+ }
+});
+
+test('skill report counts actual capped damage and boss interruption without changing village health',()=>{
+ const s={...battlefield(8),hero:'dwarf' as const,bossCharge:2,hp:11,outpostHp:6,enemies:[{...enemy('frostboss',1),hp:10000},{...enemy('stone',2),hp:20}]};
+ const cast=actDefense(s,{type:'skill'});assert.equal(cast.lastSkill?.damage,193);assert.equal(cast.lastSkill?.weakHits,2);assert.equal(cast.lastSkill?.interrupted,true);assert.equal(cast.lastSkill?.kills,1);assert.equal(cast.lastSkill?.supply,0);
+ assert.equal(cast.hp,11);assert.equal(cast.outpostHp,6);assert.equal(cast.bossCharge,0);
+ const paused=actDefense(cast,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);assert.equal(actDefense(paused,{type:'skill'}),paused);
+ for(const rate of [30,60,120]){let current=cast;for(let i=0;i<rate/2;i++)current=stepDefense(current,1/rate);assert.deepEqual(current.lastSkill,cast.lastSkill);assert.equal(current.skillSupplyWave,undefined);}
 });
