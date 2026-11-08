@@ -393,6 +393,17 @@ export function dwarfHammerEntrySpriteAsset(attack:CombatAttack,reduced=false):{
  const sample=t<.10?0:1;
  return {entry,frame:sample===0?'first-foot':'second-foot',direction,asset:{src:DWARF_ENTRY[direction],viewBox:`${(entry*2+sample)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
 }
+const KAR_ENTRY=Array.from({length:8},(_,i)=>`/defense/models/kar-entry-${i}-atlas.webp`);
+/** Plant the captured gait while both hands lift the hammer; preserve the original apex/contact. */
+export function karHammerEntrySpriteAsset(attack:CombatAttack,reduced=false):{asset:SpriteAsset;entry:number;frame:'walk'|'first-foot'|'second-foot';direction:number}|null {
+ const entry=attack.walkEntry,direction=attackOctant(attack.from,attack.to);
+ if(attack.actor!=='barbarian'||(attack.source!=='hero'&&attack.source!=='mercenary')||reduced||entry===undefined||!Number.isInteger(entry)||entry<0||entry>7||![attack.elapsed,attack.hitAt,attack.duration].every(Number.isFinite)||attack.hitAt<=0||attack.duration<=attack.hitAt||direction===null||!karModelReady()||!KAR_ENTRY.every(src=>motionLoaded.has(src)))return null;
+ const t=attack.elapsed*.28/attack.hitAt;
+ if(t<0||t+1e-9>=.182)return null;
+ if(t<.04)return {asset:directionalLocomotionSpriteAsset('barbarian',{x:attack.to.x-attack.from.x,y:attack.to.y-attack.from.y},entry*8)!,entry,frame:'walk',direction};
+ const sample=t<.11?0:1;
+ return {entry,frame:sample===0?'first-foot':'second-foot',direction,asset:{src:KAR_ENTRY[direction],viewBox:`${(entry*2+sample)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
 const DWARF_RETURN=Array.from({length:8},(_,i)=>`/defense/models/dwarf-return-${i}-atlas.webp`);
 /** Keep impact/rebound intact, then recover into the current aligned walking stance. */
 export function dwarfHammerReturnSpriteAsset(attack:CombatAttack,motion:Locomotion,reduced=false):{asset:SpriteAsset;walk:number;frame:'hold'|'weight-release'|'stride-pickup'|'walk';direction:number}|null {
@@ -706,7 +717,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_BRACE_FALL_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...MAGE_ENTRY,...MAGE_RETURN,...MAGE_RESET,...KAR_SLAM,...KAR_WALK,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...DRUID_ENTRY,...DRUID_RETURN,...DRUID_RESET,...DRUID_STOP,...TAO_CAST,...TAO_WALK,...TAO_ENTRY,...TAO_RETURN,...TAO_RESET,...TAO_STOP,...ELF_CAST,...ELF_WALK,...RIEL_ENTRY,...RIEL_RETURN,...RIEL_RESET,...RIEL_STOP,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,...DWARF_STOP,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_BRACE_FALL_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...MAGE_ENTRY,...MAGE_RETURN,...MAGE_RESET,...KAR_SLAM,...KAR_WALK,...KAR_ENTRY,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...DRUID_ENTRY,...DRUID_RETURN,...DRUID_RESET,...DRUID_STOP,...TAO_CAST,...TAO_WALK,...TAO_ENTRY,...TAO_RETURN,...TAO_RESET,...TAO_STOP,...ELF_CAST,...ELF_WALK,...RIEL_ENTRY,...RIEL_RETURN,...RIEL_RESET,...RIEL_STOP,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,...DWARF_STOP,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

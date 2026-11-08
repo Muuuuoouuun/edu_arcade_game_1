@@ -852,7 +852,7 @@ test('Kar keeps one grounded model through eight attack directions, walks and co
   }
   for(const elapsed of [.279999,.56,NaN])assert.equal(art.hammerContactTrail({actor:'barbarian',from,to,elapsed,hitAt:.28,duration:.56} as CombatAttack,84),null);
  }
- assert.equal(requests.filter(s=>s.includes('/kar-')).length,16);assert.ok(!requests.some(s=>s.endsWith('.glb')));assert.equal(art.spriteAsset(16).src,'/defense/snow-atlas.png');
+ assert.equal(requests.filter(s=>s.includes('/kar-')&&!s.includes('/kar-entry-')).length,16);assert.ok(!requests.some(s=>s.endsWith('.glb')));assert.equal(art.spriteAsset(16).src,'/defense/snow-atlas.png');
  for(const file of meta.files){const bytes=readFileSync(new URL('../../../'+file.file,import.meta.url));assert.equal(bytes.length,file.bytes);assert.equal(createHash('sha256').update(bytes).digest('hex'),file.sha256);}
 });
 
@@ -2065,4 +2065,50 @@ test('both Luna stop steps are published at 1x/2x with every publication offset'
   const frames=new Set();for(let i=offset;i/60<.24;i+=ticks)frames.add(art.druidStopSpriteAsset('druid',{distance:24,speed:0,settle:{frame:3,heading,elapsed:i/60}})?.frame);
   for(const frame of [1,2])assert.ok(frames.has(frame),`${ticks}/${offset}/${frame}`);
  }
+});
+
+test('Kar plants each captured walk before the unchanged hammer apex and contact',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'kar-entry');
+ for(const source of ['hero','mercenary'] as const)for(let direction=0;direction<8;direction++)for(let entry=0;entry<8;entry++){
+  const angle=direction*Math.PI/4,from={x:200,y:200},to={x:200+100*Math.cos(angle),y:200+100*Math.sin(angle)};
+  const attack={actor:'barbarian',source,walkEntry:entry,from,to,elapsed:0,hitAt:.28,duration:.56} as CombatAttack;
+  for(const [elapsed,frame] of [[0,'walk'],[.039,'walk'],[.04,'first-foot'],[.109,'first-foot'],[.11,'second-foot'],[.181,'second-foot']] as const){
+   const result=art.karHammerEntrySpriteAsset({...attack,elapsed})!;assert.equal(result.entry,entry);assert.equal(result.frame,frame);assert.equal(result.direction,direction);
+   assert.equal(result.asset.groundY!/result.asset.height,220/256);assert.equal(result.asset.displayScale,1.2*6.8/5.8);
+   if(frame==='walk')assert.deepEqual(result.asset,art.directionalLocomotionSpriteAsset('barbarian',{x:Math.cos(angle),y:Math.sin(angle)},entry*8));
+   else {assert.equal(result.asset.src,`/defense/models/kar-entry-${direction}-atlas.webp`);assert.equal(result.asset.viewBox,`${(entry*2+(frame==='first-foot'?0:1))*192} 0 192 192`);}
+   assert.equal(art.hammerContactTrail({...attack,elapsed},100),null,'no contact ribbon during planting');
+  }
+  for(const elapsed of [-1,.182,.28,.56,NaN,Infinity])assert.equal(art.karHammerEntrySpriteAsset({...attack,elapsed}),null);
+  assert.equal(art.karHammerEntrySpriteAsset(attack,true),null);
+  for(const walkEntry of [undefined,-1,8,.5,NaN])assert.equal(art.karHammerEntrySpriteAsset({...attack,walkEntry}),null);
+  assert.equal(art.karHammerEntrySpriteAsset({...attack,actor:'elf'}),null);
+  const contact={...attack,elapsed:.28};assert.deepEqual(art.hammerSequenceSpriteAsset('barbarian',contact),art.hammerSequenceSpriteAsset('barbarian',{...contact,walkEntry:undefined}));assert.deepEqual(art.hammerContactTrail(contact,100),art.hammerContactTrail({...contact,walkEntry:undefined},100));
+  assert.equal(art.karHammerEntrySpriteAsset({...attack,hitAt:.56,duration:.84,elapsed:.24})!.frame,'second-foot','preparation follows simulation hitAt');
+ }
+ assert.equal(requests.filter(src=>src.includes('/kar-entry-')).length,8);assert.ok(!requests.some(src=>src.endsWith('.glb')));
+});
+
+test('Kar optional entry loading failure retains the existing hammer and locomotion',async()=>{
+ const attack={actor:'barbarian',source:'hero',walkEntry:3,from:{x:0,y:0},to:{x:100,y:0},elapsed:.06,hitAt:.28,duration:.56} as CombatAttack;
+ for(const missing of ['kar-entry-3-atlas.webp','kar-walk-3-atlas.webp','kar-slam-3-atlas.webp']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(missing),'kar-fail-'+missing);
+  assert.equal(art.karHammerEntrySpriteAsset(attack),null);
+  if(missing.startsWith('kar-entry')){assert.ok(art.hammerSequenceSpriteAsset('barbarian',attack));assert.ok(art.directionalLocomotionSpriteAsset('barbarian',{x:1,y:0},24));}
+  assert.ok(art.rielShotEntrySpriteAsset('elf',{...attack,actor:'elf',elapsed:.04,hitAt:.1,duration:.28},{x:0,y:0}),'Riel remains independent');
+ }
+});
+
+test('Kar preparation stays visible across fixed-step publications and rejects invalid attacks',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'kar-entry-cadence');
+ const a={actor:'barbarian',source:'hero',walkEntry:3,from:{x:0,y:0},to:{x:100,y:0},elapsed:.06,hitAt:.28,duration:.56} as CombatAttack;
+ for(const ticks of [2,4,6])for(let offset=0;offset<ticks;offset++){
+  const frames=[];for(let step=offset;step/60<.28;step+=ticks)frames.push(art.karHammerEntrySpriteAsset({...a,elapsed:step/60})?.frame);
+  assert.ok(frames.some(f=>f==='first-foot'||f==='second-foot'),`${ticks}/${offset}: ${frames}`);
+  if(ticks<=4)assert.ok(frames.includes('second-foot'));
+ }
+ for(const hitAt of [0,-1,NaN,Infinity])assert.equal(art.karHammerEntrySpriteAsset({...a,hitAt}),null);
+ for(const duration of [.28,.1,NaN,Infinity])assert.equal(art.karHammerEntrySpriteAsset({...a,duration}),null);
+ assert.equal(art.karHammerEntrySpriteAsset({...a,source:'tower'}),null);
+ assert.equal(art.karHammerEntrySpriteAsset({...a,to:a.from}),null);
 });

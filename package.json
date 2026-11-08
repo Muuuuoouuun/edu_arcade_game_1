@@ -116,7 +116,10 @@
     "models:luna-reset:check": "node tools/check-luna-reset.mjs",
     "models:luna-stop": "blender --python-exit-code 1 -b --python tools/blender/build_luna_stop.py --",
     "models:luna-stop:pose-check": "npm run models:luna-stop -- --check",
-    "models:luna-stop:check": "node tools/check-luna-stop.mjs"
+    "models:luna-stop:check": "node tools/check-luna-stop.mjs",
+    "models:kar-entry": "blender --python-exit-code 1 -b --python tools/blender/build_kar_entry.py --",
+    "models:kar-entry:pose-check": "npm run models:kar-entry -- --check",
+    "models:kar-entry:check": "node tools/check-kar-entry.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
