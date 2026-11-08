@@ -83,7 +83,10 @@
     "models:riel-stop:check": "node tools/check-riel-stop.mjs",
     "models:ian-entry": "blender --python-exit-code 1 -b --python tools/blender/build_ian_entry.py",
     "models:ian-entry:pose-check": "blender --python-exit-code 1 -b --python tools/blender/build_ian_entry.py -- --check",
-    "models:ian-entry:check": "node tools/check-ian-entry.mjs"
+    "models:ian-entry:check": "node tools/check-ian-entry.mjs",
+    "models:ian-return": "blender --python-exit-code 1 -b --python tools/blender/build_ian_return.py",
+    "models:ian-return:pose-check": "blender --python-exit-code 1 -b --python tools/blender/build_ian_return.py -- --check",
+    "models:ian-return:check": "node tools/check-ian-return.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

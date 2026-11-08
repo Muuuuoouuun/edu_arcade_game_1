@@ -1621,3 +1621,49 @@ test('Ian preparation remains visible at both published simulation cadences and 
  const {art}=await loadWithImageResults(()=>false,'ian-entry-cadence');
  for(const dt of [1/30,2/30]){const seen=new Set();for(let t=0;t<.15;t+=dt){const pose=art.mageCastEntrySpriteAsset({actor:'mage',source:'hero',walkEntry:3,elapsed:t,to:{x:100,y:0}} as CombatAttack,{x:0,y:0});if(pose)seen.add(pose.frame)}assert.ok(seen.has('walk'));assert.ok(seen.has('second-foot'));}
 });
+
+test('Ian cast recovery follows current aligned gait and joins the next walking sprite',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'ian-return');
+ for(const source of ['hero','mercenary'] as const)for(let direction=0;direction<8;direction++)for(let walk=0;walk<8;walk++){
+  const angle=direction*Math.PI/4,from={x:100,y:100},heading={x:Math.cos(angle),y:Math.sin(angle)},to={x:100+100*heading.x,y:100+100*heading.y};
+  const attack={actor:'mage',source,walkEntry:(walk+3)%8,from,to,elapsed:.21,hitAt:.15,duration:.33} as CombatAttack,motion={distance:walk*8,speed:100,heading};
+  for(const [elapsed,frame] of [[.21,'hold'],[.224,'hold'],[.225,'release-weight'],[.269,'release-weight'],[.27,'stride-pickup'],[.319,'stride-pickup'],[.32,'walk'],[.329,'walk']] as const){
+   const result=art.mageCastReturnSpriteAsset({...attack,elapsed},from,motion)!;assert.equal(result.walk,walk);assert.equal(result.frame,frame);assert.equal(result.direction,direction);
+   assert.equal(result.asset.groundY!/result.asset.height,220/256);assert.equal(result.asset.displayScale,1.2*6.8/5.8);
+   if(frame==='walk')assert.deepEqual(result.asset,art.directionalLocomotionSpriteAsset('mage',heading,motion.distance));
+   else if(frame==='hold')assert.deepEqual(result.asset,art.directionalActionSpriteAsset('mage','strike',from,to));
+   else assert.equal(result.asset.viewBox,`${(walk*2+(frame==='release-weight'?0:1))*192} 0 192 192`);
+  }
+  for(const elapsed of [-1,0,.15,.209,.33,.4,NaN,Infinity])assert.equal(art.mageCastReturnSpriteAsset({...attack,elapsed},from,motion),null);
+  assert.equal(art.mageCastReturnSpriteAsset(attack,from,motion,true),null);
+  for(const speed of [0,.5,NaN,Infinity])assert.equal(art.mageCastReturnSpriteAsset(attack,from,{...motion,speed}),null);
+  assert.equal(art.mageCastReturnSpriteAsset(attack,from,{...motion,heading:{x:-heading.x,y:-heading.y}}),null,'turning shots keep the established pose');
+  assert.equal(art.mageCastReturnSpriteAsset(attack,from,{...motion,heading:undefined}),null);
+  assert.equal(art.mageCastReturnSpriteAsset({...attack,actor:'dwarf'},from,motion),null);
+  const changed=art.mageCastReturnSpriteAsset({...attack,elapsed:.29},from,{...motion,distance:(walk+1)%8*8})!;assert.equal(changed.walk,(walk+1)%8,'gait cannot freeze at attack entry');
+ }
+ assert.equal(requests.filter(src=>src.includes('/ian-return-')).length,8);assert.ok(!requests.some(src=>src.endsWith('.glb')));
+});
+
+test('Ian return and entry sets fail independently without changing existing release sockets',async()=>{
+ const attack={actor:'mage',source:'hero',walkEntry:3,from:{x:0,y:0},to:{x:100,y:0},elapsed:.25,hitAt:.15,duration:.33} as CombatAttack,motion={distance:24,speed:100,heading:{x:1,y:0}};
+ for(const missing of ['ian-return-3-atlas.webp','ian-entry-3-atlas.webp','ian-cast-3-atlas.webp','ian-walk-3-atlas.webp']){
+  const {art}=await loadWithImageResults(src=>src.endsWith(missing),'ian-return-fail-'+missing),coreFail=missing.includes('cast')||missing.includes('walk');
+  assert.equal(!!art.mageCastReturnSpriteAsset(attack,attack.from,motion),missing.includes('entry'));
+  assert.equal(!!art.mageCastEntrySpriteAsset({...attack,elapsed:.04},attack.from),missing.includes('return'));
+  assert.equal(!!art.directionalActionSpriteAsset('mage','strike',attack.from,attack.to),!coreFail);
+  assert.equal(!!art.mageCastSocket(attack.from,attack.to,84),!coreFail);
+  assert.ok(art.hammerSequenceSpriteAsset('dwarf',{...attack,actor:'dwarf'}));
+ }
+});
+
+test('aligned Ian return exposes an intermediate pose across fixed-step 1x and 2x publications',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'ian-return-cadence');
+ const attack={actor:'mage',source:'hero',from:{x:0,y:0},to:{x:100,y:0},hitAt:.15,duration:.33} as CombatAttack;
+ // 60Hz simulation: 2/4 ticks are nominal 30Hz at 1x/2x; 6 ticks covers 20Hz at 2x.
+ for(const ticksPerPublication of [2,4,6])for(let offset=0;offset<ticksPerPublication;offset++){
+  const frames=[];
+  for(let tick=offset;tick/60<attack.duration;tick+=ticksPerPublication){const elapsed=tick/60;frames.push(art.mageCastReturnSpriteAsset({...attack,elapsed},attack.from,{speed:230,distance:elapsed*230,heading:{x:1,y:0}})?.frame)}
+  assert.ok(frames.some(frame=>frame==='release-weight'||frame==='stride-pickup'),`${ticksPerPublication}/${offset}: ${frames}`);
+ }
+});
