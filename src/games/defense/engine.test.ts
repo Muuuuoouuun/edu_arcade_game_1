@@ -498,6 +498,19 @@ test('dash rejects invalid, paused and noncombat commands and clamps short edge 
   const cancelled=actDefense(windup,{type:'dash',point:{x:600,y:355}});assert.ok(!cancelled.attacks.some(a=>a.source==='hero'&&!a.fired));
 });
 
+test('moving cancels only an unfired hero swing: landed hero hits, mercenary and tower windups survive',()=>{
+  const s=battlefield();s.enemies=[positionedEnemy('stone',1,410)];
+  const swing=stepDefense({...s,hero:'barbarian' as const,heroCooldown:0},.02);
+  const hero=swing.attacks.find(a=>a.source==='hero');assert.ok(hero&&!hero.fired);
+  const mixed={...swing,attacks:[...swing.attacks,{...hero,source:'mercenary' as const,actor:hero.actor,fired:false},{...hero,source:'tower' as const,sourceSlot:0,fired:false}]};
+  const moved=actDefense(mixed,{type:'move',point:{x:500,y:355}});
+  assert.ok(!moved.attacks.some(a=>a.source==='hero'));assert.equal(moved.heroCooldown,0);
+  assert.ok(moved.attacks.some(a=>a.source==='mercenary'));assert.ok(moved.attacks.some(a=>a.source==='tower'));
+  const firedHero={...mixed,heroCooldown:.7,attacks:mixed.attacks.map(a=>a.source==='hero'?{...a,fired:true}:a)};
+  const kept=actDefense(firedHero,{type:'move',point:{x:500,y:355}});
+  assert.ok(kept.attacks.some(a=>a.source==='hero'&&a.fired));assert.equal(kept.heroCooldown,.7);
+});
+
 test('ending a wave stops an unfinished dash without resetting its cooldown or moving in a modal',()=>{
   for(const wave of [1,2,4]){
     const s=battlefield();s.wave=wave;s.spawned=waveSize(1,wave);s.enemies=[{...positionedEnemy('metal',1,900),hp:0}];
