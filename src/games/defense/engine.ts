@@ -104,12 +104,12 @@ function orderedTargets(s:DefenseState,from:Point,range:number) {
 function ownerPosition(s:DefenseState,source:AttackSource,slot?:number):Point {
   return source==='hero'?s.heroPosition:source==='mercenary'?s.mercenaryPosition:source==='pet'?s.pet?.position||s.heroPosition:getSlots(s.stage)[slot||0];
 }
-// The body a lightning arc would jump to from `target`: only conductive (metal or wet) non-insulators carry it on.
 /** Moving or dashing cancels a hero swing that has not landed; the cooldown is refunded so repositioning never costs attacks. */
 function cancelHeroWindup(s:DefenseState){
   const kept=s.attacks.filter(a=>a.source!=='hero'||a.fired);
   if(kept.length!==s.attacks.length){s.attacks=kept;s.heroCooldown=0;}
 }
+// The body a lightning arc would jump to from `target`: only conductive (metal or wet) non-insulators carry it on.
 function chainNext(s:DefenseState,target:Enemy):Enemy|undefined {
   if(target.kind==='insulator'||!(target.kind==='metal'||target.wet>0))return undefined;
   const next=s.enemies.filter(e=>e.id!==target.id&&e.hp>0&&distance(target,e)<155).sort((a,b)=>distance(target,a)-distance(target,b))[0];
