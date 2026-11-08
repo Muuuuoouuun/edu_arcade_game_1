@@ -3,14 +3,14 @@
   "blender": "4.3.2",
   "reference": "art-source/defense/concepts/2026-11-09/polar-bear-guardian.png",
   "generator": "tools/blender/build_polar_bear.py",
-  "reproduction": "blender -b --python tools/blender/build_polar_bear.py -- --samples 24",
+  "reproduction": "blender -b --python tools/blender/build_polar_bear.py -- --samples 64",
   "scope": "Isolated original geometry prototype; no production integration",
   "runtime": {
     "mesh_objects": 31,
     "triangles": 9176,
     "materials": 9
   },
-  "glb_bytes": 425648,
+  "glb_bytes": 426268,
   "editable_mesh_objects": 87,
   "rig": "Rigid object hierarchy, not a skinned armature",
   "joints": [
@@ -52,7 +52,7 @@
   },
   "render": {
     "engine": "Cycles CPU",
-    "samples": 24,
+    "samples": 64,
     "transparent": true,
     "denoising": false,
     "render_skipped": false
@@ -63,7 +63,53 @@
     "first_frame": 1,
     "last_frame": 25,
     "duration_seconds": 0.8,
-    "interpolation": "LINEAR"
+    "interpolation": "LINEAR",
+    "animated_nodes": [
+      "hammer-arm",
+      "body",
+      "guard-arm",
+      "head",
+      "hammer"
+    ],
+    "impact_hold_frames": [
+      11,
+      13
+    ],
+    "wrist_rotation_order": "YXZ",
+    "pose_parameters": {
+      "idle": {
+        "frame": 1,
+        "arm_x": 0,
+        "body_x": 0,
+        "guard_x": 0,
+        "wrist_x": 0,
+        "wrist_y": 0
+      },
+      "windup": {
+        "frame": 7,
+        "arm_x": 1.2,
+        "body_x": -0.06,
+        "guard_x": 0.1,
+        "wrist_x": -0.35,
+        "wrist_y": -0.15
+      },
+      "strike": {
+        "frame": 11,
+        "arm_x": -1.05,
+        "body_x": 0.1,
+        "guard_x": -0.06,
+        "wrist_x": 0.95,
+        "wrist_y": -1.9
+      },
+      "recover": {
+        "frame": 17,
+        "arm_x": -0.4,
+        "body_x": 0.025,
+        "guard_x": -0.02,
+        "wrist_x": 0.375,
+        "wrist_y": -0.85
+      }
+    }
   },
   "poses": [
     {
@@ -84,9 +130,9 @@
       "frame": 7,
       "file": "polar-bear-windup.png",
       "projected_vertex_bbox": [
-        191.653,
-        157.627,
-        518.243,
+        192.417,
+        142.127,
+        537.511,
         587.97
       ],
       "min_world_z": 0.0,
@@ -97,9 +143,9 @@
       "frame": 11,
       "file": "polar-bear-strike.png",
       "projected_vertex_bbox": [
-        183.211,
-        163.598,
-        540.394,
+        182.189,
+        161.481,
+        549.957,
         587.97
       ],
       "min_world_z": 0.0,
@@ -112,7 +158,7 @@
       "projected_vertex_bbox": [
         185.77,
         166.268,
-        552.608,
+        580.962,
         587.97
       ],
       "min_world_z": 0.0,

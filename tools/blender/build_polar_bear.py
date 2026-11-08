@@ -1,6 +1,6 @@
 """Isolated Arcana polar bear prototype; no production files are read or written.
 
-blender -b --python tools/blender/build_polar_bear.py -- --samples 24
+blender -b --python tools/blender/build_polar_bear.py -- --samples 64
 All meshes are original geometry. The concept image is a visual reference only.
 """
 import argparse
@@ -16,7 +16,7 @@ from mathutils import Vector
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'art-source/defense/prototypes/polar-bear'
 parser = argparse.ArgumentParser()
-parser.add_argument('--samples', type=int, default=24)
+parser.add_argument('--samples', type=int, default=64)
 parser.add_argument('--skip-render', action='store_true')
 args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 if args.samples < 1:
@@ -216,17 +216,28 @@ for i in range(4):
     obj.rotation_euler.y = a
 ball('Shield brass boss', (sx, sy+.21, sz), (.19, .09, .19), 'gold', guard, False)
 
-POSES = {'idle': (1, 0, 0, 0), 'windup': (7, 1.05, -.035, .10), 'strike': (11, -1.05, .065, -.06), 'recover': (17, -.40, .025, -.02)}
+# Wrist X counter-rotates the shoulder at impact so the broad anchor face stays
+# visible. Y then sweeps the hammer outward/down, with the grip kept in the palm.
+# YXZ applies local Y before X, allowing the parent's X rotation to cancel.
+hammer.rotation_mode = 'YXZ'
+POSES = {
+    'idle': (1, 0, 0, 0, 0, 0),
+    'windup': (7, 1.20, -.06, .10, -.35, -.15),
+    'strike': (11, -1.05, .10, -.06, .95, -1.90),
+    'recover': (17, -.40, .025, -.02, .375, -.85),
+}
 scene.render.fps = 30
 scene.frame_start, scene.frame_end = 1, 25
-for frame, angle, lean, cover in [*POSES.values(), (25, 0, 0, 0)]:
+keys = [*POSES.values(), (13, *POSES['strike'][1:]), (25, 0, 0, 0, 0, 0)]
+for frame, angle, lean, cover, wrist_x, wrist_y in keys:
     arm.rotation_euler.x = angle
     body.rotation_euler.x = lean
     guard.rotation_euler.x = cover
     head.rotation_euler.x = -lean*.5
-    for obj in (arm, body, guard, head):
+    hammer.rotation_euler = (wrist_x, wrist_y, 0)
+    for obj in (arm, body, guard, head, hammer):
         obj.keyframe_insert(data_path='rotation_euler', frame=frame)
-for obj in (arm, body, guard, head):
+for obj in (arm, body, guard, head, hammer):
     obj.animation_data.action.name = 'Polar bear attack / '+obj.name
     for curve in obj.animation_data.action.fcurves:
         for point in curve.keyframe_points:
@@ -335,7 +346,7 @@ metadata = {
     'id':'polar-bear-guardian-prototype', 'blender':bpy.app.version_string,
     'reference':'art-source/defense/concepts/2026-11-09/polar-bear-guardian.png',
     'generator':'tools/blender/build_polar_bear.py',
-    'reproduction':'blender -b --python tools/blender/build_polar_bear.py -- --samples 24',
+    'reproduction':f'blender -b --python tools/blender/build_polar_bear.py -- --samples {args.samples}',
     'scope':'Isolated original geometry prototype; no production integration',
     'runtime':runtime, 'glb_bytes':(OUT/'polar-bear.glb').stat().st_size,
     'editable_mesh_objects':sum(o.type=='MESH' for o in parts.objects),
@@ -344,7 +355,7 @@ metadata = {
     'coordinates':{'authoring_forward':'+Y','authoring_up':'+Z','glb_forward':'-Z','glb_up':'+Y','ground_z':0},
     'frame':{'width':640,'height':640,'ground':[round(ground.x*640,4),round((1-ground.y)*640,4)],'camera_location':list(camera.location),'camera_rotation_radians':list(camera.rotation_euler),'orthographic_scale':cam_data.ortho_scale,'shift_y':cam_data.shift_y,'forward_screen_dx':round((front.x-ground.x)*640,4)},
     'render':{'engine':'Cycles CPU','samples':args.samples,'transparent':True,'denoising':False,'render_skipped':args.skip_render},
-    'animation':{'clip':'polar-bear-attack','fps':30,'first_frame':1,'last_frame':25,'duration_seconds':.8,'interpolation':'LINEAR'},
+    'animation':{'clip':'polar-bear-attack','fps':30,'first_frame':1,'last_frame':25,'duration_seconds':.8,'interpolation':'LINEAR','animated_nodes':[o.name for o in (arm,body,guard,head,hammer)],'impact_hold_frames':[11,13],'wrist_rotation_order':'YXZ','pose_parameters':{name:dict(zip(['frame','arm_x','body_x','guard_x','wrist_x','wrist_y'],values)) for name,values in POSES.items()}},
     'poses':[],
     'limitations':['Prototype rigid joints; no skin weights or deforming fur.','Four pose previews, not a final animation timing pass.','No measured game FPS or device draw-call benchmark.','No production loader/facing integration has been performed.']}
 for name, values in POSES.items():
