@@ -92,7 +92,10 @@
     "models:ian-reset:check": "node tools/check-ian-reset.mjs",
     "models:dwarf-stop": "blender --python-exit-code 1 -b --python tools/blender/build_dwarf_stop.py --",
     "models:dwarf-stop:pose-check": "npm run models:dwarf-stop -- --check",
-    "models:dwarf-stop:check": "node tools/check-dwarf-stop.mjs"
+    "models:dwarf-stop:check": "node tools/check-dwarf-stop.mjs",
+    "models:cheongun-entry": "blender --python-exit-code 1 -b --python tools/blender/build_cheongun_entry.py --",
+    "models:cheongun-entry:pose-check": "npm run models:cheongun-entry -- --check",
+    "models:cheongun-entry:check": "node tools/check-cheongun-entry.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
