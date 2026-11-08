@@ -28,7 +28,7 @@ test('solo attacks, cooldowns, XP, health and crystals produce one reward and ex
  for(const p of CRYSTALS){s.hero.x=p.x;s.hero.z=p.z;s=actFrontier(s,{type:'interact'});}assert.equal(s.crystals.length,3);assert.equal(actFrontier(s,{type:'interact'}).crystals.length,3);s.hero.x=EXIT.x;s.hero.z=EXIT.z;s=actFrontier(s,{type:'interact'});assert.equal(s.phase,'playing');s.kills=6;s=actFrontier(s,{type:'interact'});assert.equal(s.phase,'won');
 });
 test('tower defense wins only after three waves, loses on the core, and command also needs capture',()=>{
- let s=actFrontier(createFrontier('defense'),{type:'start'});s.wave=3;s.remaining=0;s.enemies=[];assert.equal(stepFrontier(s,.02).phase,'won');const c={...s,mode:'command' as const,beacon:0};assert.equal(stepFrontier(c,.02).phase,'playing');s.enemies=[{id:99,...CORE,hp:10,cooldown:0,path:3}];s.coreHp=5;assert.equal(stepFrontier(s,.02).phase,'lost');
+ let s=actFrontier(createFrontier('defense'),{type:'start'});s.wave=3;s.remaining=0;s.enemies=[];assert.equal(stepFrontier(s,.02).phase,'won');const c={...s,mode:'command' as const,beacon:0};assert.equal(stepFrontier(c,.02).phase,'playing');s.enemies=[{id:99,...CORE,hp:10,cooldown:0,path:3}];s.coreHp=5;assert.equal(stepFrontier(s,.02).phase,'playing');assert.equal(run(s,.4).phase,'lost');
 });
 
 test('ballista aims only its heading, waits for release and applies damage on physical impact',()=>{

@@ -6,6 +6,7 @@ import { PMREMGenerator } from 'three';
 import './model-lab.css';
 
 const models = [
+ {id:'frontier-wood-strike',name:'통나무 병사 · 몽둥이 내려치기',kind:'FRONTIER CLUB STRIKE',detail:'발 고정 · 무기 들기 · 타격과 회수',description:'두 발을 짚고 몽둥이를 들어 올린 뒤 내려칩니다. 변경 전장에서는 0.28초의 타격 시점에 사거리와 방향을 확인하며 준비 중에는 피할 수 있습니다.',source:'frontier-wood-strike.blend',command:'npm run models:frontier-wood-strike',action:'▶ 몽둥이 내려치기',clip:'frontier-wood-strike',fitBounds:true},
  {id:'frontier-wood',name:'통나무 병사 · 변경 전장',kind:'FRONTIER WOODEN SOLDIER',detail:'목재 단면 · 가지 · 손에 쥔 몽둥이',description:'기존 통나무 병사의 관절 보행을 전장 크기에 맞춘 모델입니다. 실제 변경 전장에서는 이동 거리에 따라 걸음을 재생하고 진행 방향으로 몸을 돌립니다. 멈추면 두 발을 디디며 준비 자세로 돌아옵니다.',source:'frontier-wood.blend',command:'npm run models:frontier-wood',action:'▶ 보행 재생',clip:'frontier-wood-walk',loop:true,fitBounds:true},
  {id:'frontier-ballista',name:'변경 발리스타 · 실시간 전장',kind:'FRONTIER SIEGE WEAPON',detail:'고정 석조 기초 · 목재 활대 · 황동 반동 장치',description:'목재 활대와 시위가 풀리고 상부 받침이 짧게 물러난 뒤 다시 장전합니다. 실시간 변경 전장에서는 기초를 고정하고 상부만 조준하며 실제 탄이 도착할 때 피해를 줍니다.',source:'frontier-ballista.blend',command:'npm run models:frontier-ballista',action:'▶ 발사·재장전',clip:'frontier-ballista-release',fitBounds:true},
  {id:'polar-bear',name:'북극곰 · 빙해 수호자',kind:'PROTOTYPE / POLAR',detail:'제작 시안 · 닻 망치',description:'큰 방패와 닻 망치로 만든 극지 수호자입니다. 무기를 크게 들었다가 내려치는 동작과 손잡이 결합을 살펴보세요. 제작 시안이며 캠페인 전투에는 아직 연결되지 않았습니다.',source:'prototypes/polar-bear/polar-bear.blend',command:'npm run models:bear',action:'▶ 닻 망치 강타',clip:'polar-bear-attack',asset:'prototypes/polar-bear',fitBounds:true},
