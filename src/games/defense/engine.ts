@@ -110,11 +110,14 @@ function chainNext(s:DefenseState,target:Enemy):Enemy|undefined {
   const next=s.enemies.filter(e=>e.id!==target.id&&e.hp>0&&distance(target,e)<155).sort((a,b)=>distance(target,a)-distance(target,b))[0];
   return next&&next.kind!=='insulator'?next:undefined;
 }
+// A lightning tower prefers the front-most enemy whose arc would actually land; with none, it keeps the front-most.
+function pickTarget(s:DefenseState,inRange:Enemy[],chain:boolean):Enemy|undefined {
+  return (chain&&inRange.find(e=>chainNext(s,e)))||inRange[0];
+}
 function queueAttack(s:DefenseState,source:AttackSource,actor:AttackActor,from:Point,range:number,damage:number,element:Element,options:{slot?:number;area?:number;chain?:boolean;pierce?:boolean;force?:number}={}) {
   if(s.attacks.some(a=>a.source===source&&a.sourceSlot===options.slot&&!a.fired))return false;
   const inRange=orderedTargets(s,from,range);
-  // A lightning tower prefers the front-most enemy whose arc would actually land; with none, it keeps the front-most.
-  const target=(source==='tower'&&options.chain&&inRange.find(e=>chainNext(s,e)))||inRange[0];if(!target)return false;
+  const target=pickTarget(s,inRange,source==='tower'&&!!options.chain);if(!target)return false;
   const melee=actor==='dwarf'||actor==='barbarian'||actor==='wolf';
   const kind:CombatAttack['kind']=melee?(actor==='wolf'?'melee':'slam'):actor==='cannon'?'slam':actor==='crossbow'||actor==='elf'?'shot':'spell';
   const hitAt=actor==='wolf'?.13:actor==='barbarian'?.28:actor==='dwarf'?.24:actor==='cannon'?.28:kind==='shot'?.1:.15;
@@ -142,7 +145,7 @@ function launch(s:DefenseState,a:CombatAttack) {
   let target=s.enemies.find(e=>e.id===a.targetId&&e.hp>0);
   // A tower whose windup target fell re-aims at the front-most enemy still in range; melee stays committed.
   if(!target&&a.source==='tower'){
-    target=orderedTargets(s,from,a.range)[0];
+    target=pickTarget(s,orderedTargets(s,from,a.range),a.chain);
     if(target){a.targetId=target.id;const tower=s.towers.find(t=>t.slot===a.sourceSlot);if(tower)tower.aim={x:target.x,y:target.y};}
   }
   a.from={...from};
