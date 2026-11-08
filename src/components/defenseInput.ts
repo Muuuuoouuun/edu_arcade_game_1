@@ -6,6 +6,18 @@ export type BoardTap = { kind:'move'; point:Point } | { kind:'select'; id:number
 const MAP_WIDTH=900, MAP_HEIGHT=600;
 export const TAP_SLOP=8;
 export const SLOT_TOUCH_SIZE=48;
+export const SLOT_ART_RADIUS=21;
+
+function segmentDistance(p:Point,a:Point,b:Point):number {
+ const dx=b.x-a.x,dy=b.y-a.y,len=dx*dx+dy*dy;
+ const t=len?Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/len)):0;
+ return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);
+}
+function pathDistance(p:Point,paths:readonly (readonly Point[])[]):number {
+ let best=Infinity;
+ for(const path of paths)for(let i=1;i<path.length;i++)best=Math.min(best,segmentDistance(p,path[i-1],path[i]));
+ return best;
+}
 
 /** SVG CTM includes contain/letterbox offsets; reject its empty margins. */
 export function clientToBoard(client:Point,matrix:ScreenMatrix|null):Point|null {
@@ -17,7 +29,7 @@ export function clientToBoard(client:Point,matrix:ScreenMatrix|null):Point|null 
 }
 
 /** Touch geometry is measured in CSS pixels, independent of sprite/DOM order. */
-export function resolveBoardTap(client:Point,matrix:ScreenMatrix|null,slots:readonly InputSlot[],aimingDash=false):BoardTap|null {
+export function resolveBoardTap(client:Point,matrix:ScreenMatrix|null,slots:readonly InputSlot[],aimingDash=false,paths:readonly (readonly Point[])[]=[]):BoardTap|null {
  const point=clientToBoard(client,matrix);
  if(!point||!matrix)return null;
  if(aimingDash)return {kind:'move',point};
@@ -26,7 +38,13 @@ export function resolveBoardTap(client:Point,matrix:ScreenMatrix|null,slots:read
   const x=matrix.a*slot.x+matrix.c*slot.y+matrix.e,y=matrix.b*slot.x+matrix.d*slot.y+matrix.f;
   return Math.abs(client.x-x)<=half&&Math.abs(client.y-y)<=half;
  }).map(slot=>slot.id).sort((a,b)=>a-b);
- return ids.length>1?{kind:'candidates',ids}:ids.length===1?{kind:'select',id:ids[0]}:{kind:'move',point};
+ if(ids.length>1)return {kind:'candidates',ids};
+ if(ids.length===0)return {kind:'move',point};
+ // Single pad: inside its square but off the pad art, a tap nearer the road than the pad is a move.
+ const slot=slots.find(item=>item.id===ids[0])!;
+ const x=matrix.a*slot.x+matrix.c*slot.y+matrix.e,y=matrix.b*slot.x+matrix.d*slot.y+matrix.f;
+ if(Math.hypot(client.x-x,client.y-y)>SLOT_ART_RADIUS&&pathDistance(point,paths)<pathDistance(slot,paths))return {kind:'move',point};
+ return {kind:'select',id:slot.id};
 }
 
 const matrixSame=(a:ScreenMatrix,b:ScreenMatrix)=>

@@ -4,6 +4,13 @@
   "imported_mesh_objects": 31,
   "imported_triangles": 9176,
   "imported_materials": 9,
+  "animation": {
+    "clip": "polar-bear-attack",
+    "channels": 5,
+    "duration_seconds": 0.8,
+    "glb_clips": 1,
+    "duration_checked_from_binary_samples": true
+  },
   "actions": [
     {
       "name": "polar-bear-attack_body",
@@ -14,6 +21,13 @@
     },
     {
       "name": "polar-bear-attack_guard-arm",
+      "frame_range": [
+        0.0,
+        24.0
+      ]
+    },
+    {
+      "name": "polar-bear-attack_hammer",
       "frame_range": [
         0.0,
         24.0
@@ -42,6 +56,11 @@
         0.65,
         1.73
       ],
+      "hammer_world_rotation_radians": [
+        0.0,
+        -0.0,
+        0.0
+      ],
       "hammer_arm_rotation_radians": [
         0.0,
         -0.0,
@@ -53,11 +72,16 @@
       "frame": 6,
       "hammer_world_position": [
         -1.15,
-        0.802577,
-        2.495345
+        0.786444,
+        2.584873
+      ],
+      "hammer_world_rotation_radians": [
+        0.795646,
+        -0.105376,
+        -0.10695
       ],
       "hammer_arm_rotation_radians": [
-        1.015,
+        1.14,
         -0.0,
         0.0
       ],
@@ -67,11 +91,16 @@
       "frame": 10,
       "hammer_world_position": [
         -1.15,
-        -0.103048,
-        1.423387
+        -0.109052,
+        1.419675
+      ],
+      "hammer_world_rotation_radians": [
+        1e-06,
+        -1.9,
+        -0.0
       ],
       "hammer_arm_rotation_radians": [
-        -0.985,
+        -0.95,
         -0.0,
         0.0
       ],
@@ -83,6 +112,11 @@
         -1.15,
         0.402492,
         1.533497
+      ],
+      "hammer_world_rotation_radians": [
+        0.0,
+        -0.85,
+        -0.0
       ],
       "hammer_arm_rotation_radians": [
         -0.375,
@@ -98,6 +132,11 @@
         0.65,
         1.73
       ],
+      "hammer_world_rotation_radians": [
+        0.0,
+        -0.0,
+        0.0
+      ],
       "hammer_arm_rotation_radians": [
         0.0,
         -0.0,
@@ -106,13 +145,16 @@
       "min_world_z": 0.0
     }
   ],
+  "loop_max_matrix_error": 0.0,
+  "minimum_camera_margin_px_all_25_frames": 41.11,
   "checks": [
+    "Exactly one polar-bear-attack GLB clip with five channels and binary time samples spanning 0\u20130.8 seconds",
     "Fresh Blender process imports GLB",
     "Rigid hammer hierarchy preserved",
-    "Finite vertex positions in five animation samples",
-    "Feet remain at Z=0",
+    "Hammer wrist has imported animation",
+    "Finite vertices, grounded feet and complete camera framing at every frame 0\u201324",
     "Windup moves weapon more than 0.1 unit",
-    "Frame 24 returns weapon to initial position",
+    "Frame 24 returns every object position, rotation and scale to initial transform",
     "Imported triangle, material and mesh counts match export metadata"
   ]
 }
