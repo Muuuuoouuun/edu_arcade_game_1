@@ -13,6 +13,7 @@ import { createDefense, actDefense, stepDefense, questSatisfied as isQuestSatisf
 import { STAGES, HEROES, TOWERS, BRANCHES, ENEMIES, getStage, getSlots, stageLabel, getRegion, STAGE_COUNT } from '../games/defense/data';
 import { readCampaign, writeCampaign, stageUnlocked, completeRun, acknowledgeVisitor, trainCampaign, selectHero, selectDifficulty, trainingCost, resultFollowUp, lossAdvice } from '../games/defense/campaign';
 import { shouldPublishDefenseFrame } from './defenseFrame';
+import { readSpeedPreference, startingSpeed, writeSpeedPreference } from './defenseSpeed';
 import { combatCueFor } from './defenseSound';
 import { DIFFICULTIES } from '../games/defense/difficulty';
 import type { Campaign, DefenseAction, DefenseState, HeroId, TowerKind } from '../games/defense/types';
@@ -101,6 +102,7 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
     const next = actDefense(before, action);
     if (next === before) return;
     combatFeedback(before, next, hapticsRef.current); publish(next);
+    if (action.type === 'speed') writeSpeedPreference(next.speed);
     if (['build', 'upgrade', 'hire', 'promote'].includes(action.type)) playSound('flip');
     if (action.type === 'start-wave') { unlockAudio(); playSound('start'); }
   }, [pause, resume, publish]);
@@ -231,7 +233,8 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
   const begin = (stage: number, hero = campaignRef.current.selectedHero) => {
     if (blockedRef.current || !stageUnlocked(campaignRef.current, stage)) return;
     modeRef.current = 'battle'; setMode('battle'); resetInterface(); runId.current = freshRunId(); setReward(null);
-    publish(createDefense(stage, hero, campaignRef.current.training, campaignRef.current.difficulty));
+    const fresh = createDefense(stage, hero, campaignRef.current.training, campaignRef.current.difficulty);
+    publish({ ...fresh, speed: startingSpeed(stage, campaignRef.current.cleared, readSpeedPreference()) });
   };
   const chooseHero = (hero: HeroId) => {
     if (blockedRef.current || modeRef.current !== 'camp' || !campaignRef.current.visitors.includes(hero)) return;
