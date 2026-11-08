@@ -36,12 +36,15 @@ export function resolveBoardTap(client:Point,matrix:ScreenMatrix|null,slots:read
  const half=SLOT_TOUCH_SIZE/2;
  const ids=slots.filter(slot=>{
   const x=matrix.a*slot.x+matrix.c*slot.y+matrix.e,y=matrix.b*slot.x+matrix.d*slot.y+matrix.f;
-  if(Math.abs(client.x-x)>half||Math.abs(client.y-y)>half)return false;
-  // Inside the square but off the pad art: a tap nearer the road than the pad is a move.
-  if(Math.hypot(client.x-x,client.y-y)<=SLOT_ART_RADIUS)return true;
-  return !(pathDistance(point,paths)<pathDistance(slot,paths));
+  return Math.abs(client.x-x)<=half&&Math.abs(client.y-y)<=half;
  }).map(slot=>slot.id).sort((a,b)=>a-b);
- return ids.length>1?{kind:'candidates',ids}:ids.length===1?{kind:'select',id:ids[0]}:{kind:'move',point};
+ if(ids.length>1)return {kind:'candidates',ids};
+ if(ids.length===0)return {kind:'move',point};
+ // Single pad: inside its square but off the pad art, a tap nearer the road than the pad is a move.
+ const slot=slots.find(item=>item.id===ids[0])!;
+ const x=matrix.a*slot.x+matrix.c*slot.y+matrix.e,y=matrix.b*slot.x+matrix.d*slot.y+matrix.f;
+ if(Math.hypot(client.x-x,client.y-y)>SLOT_ART_RADIUS&&pathDistance(point,paths)<pathDistance(slot,paths))return {kind:'move',point};
+ return {kind:'select',id:slot.id};
 }
 
 const matrixSame=(a:ScreenMatrix,b:ScreenMatrix)=>

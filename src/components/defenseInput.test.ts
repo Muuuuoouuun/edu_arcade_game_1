@@ -105,3 +105,10 @@ test('real stage pads keep a usable touch square on the first map',()=>{
  const slots=getSlots(1);
  for(const slot of slots)assert.deepEqual(resolveBoardTap({x:slot.x,y:slot.y},identity,slots,false,getPaths(1)),{kind:'select',id:slot.id});
 });
+
+test('overlapping pads keep the chooser even when the tap is nearer the road',()=>{
+ const slots=[{id:2,x:380,y:205},{id:3,x:400,y:215}],paths=[[{x:0,y:240},{x:900,y:240}]];
+ const tap=project(390,222,identity);
+ assert.deepEqual(resolveBoardTap(tap,identity,slots,false,paths),{kind:'candidates',ids:[2,3]});
+ assert.deepEqual(resolveBoardTap(project(390,222),mobile,[{id:2,x:390,y:215},{id:3,x:400,y:222}],false,paths),{kind:'candidates',ids:[2,3]});
+});
