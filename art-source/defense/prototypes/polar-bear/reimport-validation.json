@@ -1,0 +1,118 @@
+{
+  "passed": true,
+  "blender": "4.3.2",
+  "imported_mesh_objects": 31,
+  "imported_triangles": 9176,
+  "imported_materials": 9,
+  "actions": [
+    {
+      "name": "polar-bear-attack_body",
+      "frame_range": [
+        0.0,
+        24.0
+      ]
+    },
+    {
+      "name": "polar-bear-attack_guard-arm",
+      "frame_range": [
+        0.0,
+        24.0
+      ]
+    },
+    {
+      "name": "polar-bear-attack_hammer-arm",
+      "frame_range": [
+        0.0,
+        24.0
+      ]
+    },
+    {
+      "name": "polar-bear-attack_head",
+      "frame_range": [
+        0.0,
+        24.0
+      ]
+    }
+  ],
+  "samples": [
+    {
+      "frame": 0,
+      "hammer_world_position": [
+        -1.15,
+        0.65,
+        1.73
+      ],
+      "hammer_arm_rotation_radians": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "min_world_z": 0.0
+    },
+    {
+      "frame": 6,
+      "hammer_world_position": [
+        -1.15,
+        0.802577,
+        2.495345
+      ],
+      "hammer_arm_rotation_radians": [
+        1.015,
+        -0.0,
+        0.0
+      ],
+      "min_world_z": 0.0
+    },
+    {
+      "frame": 10,
+      "hammer_world_position": [
+        -1.15,
+        -0.103048,
+        1.423387
+      ],
+      "hammer_arm_rotation_radians": [
+        -0.985,
+        -0.0,
+        0.0
+      ],
+      "min_world_z": 0.0
+    },
+    {
+      "frame": 16,
+      "hammer_world_position": [
+        -1.15,
+        0.402492,
+        1.533497
+      ],
+      "hammer_arm_rotation_radians": [
+        -0.375,
+        -0.0,
+        0.0
+      ],
+      "min_world_z": 0.0
+    },
+    {
+      "frame": 24,
+      "hammer_world_position": [
+        -1.15,
+        0.65,
+        1.73
+      ],
+      "hammer_arm_rotation_radians": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "min_world_z": 0.0
+    }
+  ],
+  "checks": [
+    "Fresh Blender process imports GLB",
+    "Rigid hammer hierarchy preserved",
+    "Finite vertex positions in five animation samples",
+    "Feet remain at Z=0",
+    "Windup moves weapon more than 0.1 unit",
+    "Frame 24 returns weapon to initial position",
+    "Imported triangle, material and mesh counts match export metadata"
+  ]
+}
