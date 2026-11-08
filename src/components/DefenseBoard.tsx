@@ -154,12 +154,12 @@ const Terrain=memo(function Terrain({stageId}:{stageId:number}){
 });
 
 export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSelect,onMove,aimingDash=false,onSelectCandidates,onCancelAim,themeId='verdant'}:{state:DefenseState;selectedSlot:number|null;onSelect:(id:number)=>void;onMove:(p:Point)=>void;aimingDash?:boolean;onSelectCandidates?:(ids:number[])=>void;onCancelAim?:()=>void;themeId?:DefenseThemeId}){
- const stage=getStage(s.stage),snow=getRegion(s.stage)==='snow',slots=getSlots(s.stage),availableSlots=slots.filter(slot=>slot.unlock<=s.stage);
+ const stage=getStage(s.stage),snow=getRegion(s.stage)==='snow',slots=getSlots(s.stage),availableSlots=slots.filter(slot=>slot.unlock<=s.stage),boardPaths=getPaths(s.stage).slice(0,stage.expanded?2:1);
  const reduced=useReducedMotion(),[unit,setUnit]=useState(1),[hpScale,setHpScale]=useState(1);
  const mapRef=useRef<SVGSVGElement>(null),boardRef=useRef<HTMLDivElement>(null),tapRef=useRef(new BoardTapTracker());
  const movingAllowed=!s.paused&&['prep','wave','intermission'].includes(s.phase),enemyKinds=[...new Set(s.enemies.map(e=>e.kind))];
- const controls=useRef({allowed:movingAllowed,aimingDash,onMove,onSelect,onSelectCandidates,onCancelAim,slots:availableSlots});
- controls.current={allowed:movingAllowed,aimingDash,onMove,onSelect,onSelectCandidates,onCancelAim,slots:availableSlots};
+ const controls=useRef({allowed:movingAllowed,aimingDash,onMove,onSelect,onSelectCandidates,onCancelAim,slots:availableSlots,paths:boardPaths});
+ controls.current={allowed:movingAllowed,aimingDash,onMove,onSelect,onSelectCandidates,onCancelAim,slots:availableSlots,paths:boardPaths};
  const slot=slots.find(p=>p.id===selectedSlot),selectedTower=s.towers.find(t=>t.slot===selectedSlot);
  const readMatrix=useCallback(():ScreenMatrix|null=>{
   const matrix=mapRef.current?.getScreenCTM();
@@ -201,7 +201,7 @@ export const DefenseBoard=memo(function DefenseBoard({state:s,selectedSlot,onSel
   const matrix=readMatrix(),end=tapRef.current.end(event.pointerId,{x:event.clientX,y:event.clientY},matrix);
   if(end.kind==='cancel'){controls.current.onCancelAim?.();return;}
   if(end.kind!=='tap'||!controls.current.allowed)return;
-  const command=resolveBoardTap(end.point,matrix,controls.current.slots,controls.current.aimingDash);
+  const command=resolveBoardTap(end.point,matrix,controls.current.slots,controls.current.aimingDash,controls.current.paths);
   if(!command)return;
   event.preventDefault();event.stopPropagation();
   if(command.kind==='move')controls.current.onMove(command.point);
