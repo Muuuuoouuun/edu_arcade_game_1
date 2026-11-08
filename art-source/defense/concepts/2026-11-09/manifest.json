@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "archive_date": "2026-11-09",
+  "timezone": "Asia/Seoul",
+  "count": 6,
+  "assets": [
+    {
+      "id": "polar-bear-guardian",
+      "title": "북극곰 수호자",
+      "category": "heroes",
+      "path": "art-source/defense/concepts/2026-11-09/polar-bear-guardian.png",
+      "source_filename": "exec-5afed283-be5b-42ae-94eb-efc5f511ff84.png",
+      "bytes": 2398558,
+      "width": 1145,
+      "height": 1374,
+      "sha256": "5897414d8fcd6172841d23d3102ce2f64eb2484b6b1eaa3e1b871f328732cbb5",
+      "generator": "image_gen",
+      "status": "concept-only",
+      "reference_paths": [
+        "art-source/defense/concepts/2026-11-06/polar-night-coast.png"
+      ]
+    },
+    {
+      "id": "gecko-ranger",
+      "title": "열대 도마뱀 궁수",
+      "category": "heroes",
+      "path": "art-source/defense/concepts/2026-11-09/gecko-ranger.png",
+      "source_filename": "exec-0d3f1623-18d3-4b4d-ab61-df6d672b51de.png",
+      "bytes": 1790368,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "73650ad025b6f2e79109c84fbd461dfa7d2abcdf6f1dc8561397a706c6034ec8",
+      "generator": "image_gen",
+      "status": "concept-only",
+      "reference_paths": [
+        "art-source/defense/concepts/2026-11-06/sunrain-islands.png"
+      ]
+    },
+    {
+      "id": "volcanic-tortoise",
+      "title": "화산등 거북왕",
+      "category": "bosses",
+      "path": "art-source/defense/concepts/2026-11-09/volcanic-tortoise.png",
+      "source_filename": "exec-e61d1755-8b16-4229-9dec-c11167e30809.png",
+      "bytes": 2241957,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "7cd4ce643baac6ab6e47ba33d5db8e92c6abe6b2f4a5d1747a2c17c83449678d",
+      "generator": "image_gen",
+      "status": "concept-only",
+      "reference_paths": [
+        "art-source/defense/concepts/2026-11-06/sunrain-islands.png"
+      ],
+      "correction": "Extra fifth leg removed with one imagegen edit; only corrected output archived.",
+      "intermediate_generated_source": "exec-61b67c47-4563-40b4-a0a3-82631c29245c.png"
+    },
+    {
+      "id": "polar-monsters",
+      "title": "극지 일반 몬스터 3종",
+      "category": "monsters",
+      "path": "art-source/defense/concepts/2026-11-09/polar-monsters.png",
+      "source_filename": "exec-703768b0-3c2a-4973-a0fa-ae591ee87f77.png",
+      "bytes": 1863457,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "25cb6b60a3ed0d3ef7e97d43be85008dddc716fffb46dc60ccbf4ec97d7f7ca6",
+      "generator": "image_gen",
+      "status": "concept-only",
+      "reference_paths": [
+        "art-source/defense/concepts/2026-11-06/polar-night-coast.png"
+      ]
+    },
+    {
+      "id": "polar-battlefield",
+      "title": "극지 해안 전장",
+      "category": "environments",
+      "path": "art-source/defense/concepts/2026-11-09/polar-battlefield.png",
+      "source_filename": "exec-ec722fd4-1c7f-493b-9ba9-b0ea04a6210d.png",
+      "bytes": 3051736,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "9db11cad6c46da5396421f114bc87827faf562cdaae731a14f0074eaee52b9d4",
+      "generator": "image_gen",
+      "status": "concept-only",
+      "reference_paths": [
+        "art-source/defense/concepts/2026-11-06/polar-night-coast.png"
+      ]
+    },
+    {
+      "id": "tropical-battlefield",
+      "title": "열대 군도 전장",
+      "category": "environments",
+      "path": "art-source/defense/concepts/2026-11-09/tropical-battlefield.png",
+      "source_filename": "exec-b7bfb19f-d1ee-45f8-b87d-0fb8acc7c53d.png",
+      "bytes": 3723734,
+      "width": 1536,
+      "height": 1024,
+      "sha256": "cf6f9459cc20d63c793046441ebca3742632488872270796cd528eac3c90d425",
+      "generator": "image_gen",
+      "status": "concept-only",
+      "reference_paths": [
+        "art-source/defense/concepts/2026-11-06/sunrain-islands.png"
+      ]
+    }
+  ]
+}
