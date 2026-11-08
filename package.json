@@ -89,7 +89,10 @@
     "models:ian-return:check": "node tools/check-ian-return.mjs",
     "models:ian-reset": "blender --python-exit-code 1 -b --python tools/blender/build_ian_reset.py",
     "models:ian-reset:pose-check": "blender --python-exit-code 1 -b --python tools/blender/build_ian_reset.py -- --check",
-    "models:ian-reset:check": "node tools/check-ian-reset.mjs"
+    "models:ian-reset:check": "node tools/check-ian-reset.mjs",
+    "models:dwarf-stop": "blender --python-exit-code 1 -b --python tools/blender/build_dwarf_stop.py --",
+    "models:dwarf-stop:pose-check": "npm run models:dwarf-stop -- --check",
+    "models:dwarf-stop:check": "node tools/check-dwarf-stop.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

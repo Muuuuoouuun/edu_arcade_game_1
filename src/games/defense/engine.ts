@@ -265,10 +265,10 @@ function advanceActors(s:DefenseState,dt:number,combat:boolean) {
     s.pet.target=enemy?{x:Math.max(20,enemy.x-28),y:Math.min(560,enemy.y+18)}:{x:Math.min(875,owner.x+28),y:Math.max(35,owner.y-22)};
     const petBefore=s.pet.position;s.pet.position=moveTowards(s.pet.position,s.pet.target,280,dt);s.pet.facing=movementFacing(s.pet.facing,petBefore,s.pet.position);
   }else s.pet=null;
-  // Riel can catch her following target each tick and still be walking; settle only after travel stops.
+  // A following companion can reach its target each tick while walking; settle after travel stops.
   s.locomotion={
-    hero:((s.hero==='mage'||s.hero==='elf')?advanceMageLocomotion:advanceLocomotion)(s.locomotion.hero,before.hero,s.heroPosition,dt,distance(s.heroPosition,s.heroTarget)>.01,dashing),
-    mercenary:s.mercenary?((s.mercenary==='mage'||s.mercenary==='elf')?advanceMageLocomotion:advanceLocomotion)(s.locomotion.mercenary,before.mercenary,s.mercenaryPosition,dt,(s.mercenary==='elf'||s.mercenary==='mage')?distance(before.mercenary,s.mercenaryPosition)>.001:distance(s.mercenaryPosition,mercTarget)>.01):{distance:0,speed:0},
+    hero:((s.hero==='mage'||s.hero==='elf'||s.hero==='dwarf')?advanceMageLocomotion:advanceLocomotion)(s.locomotion.hero,before.hero,s.heroPosition,dt,distance(s.heroPosition,s.heroTarget)>.01,dashing),
+    mercenary:s.mercenary?((s.mercenary==='mage'||s.mercenary==='elf'||s.mercenary==='dwarf')?advanceMageLocomotion:advanceLocomotion)(s.locomotion.mercenary,before.mercenary,s.mercenaryPosition,dt,(s.mercenary==='elf'||s.mercenary==='mage'||s.mercenary==='dwarf')?distance(before.mercenary,s.mercenaryPosition)>.001:distance(s.mercenaryPosition,mercTarget)>.01):{distance:0,speed:0},
     // A faster companion can reach its moving target every frame and still be walking.
     pet:s.pet&&before.pet?advancePetLocomotion(s.locomotion.pet,before.pet,s.pet.position,dt):{distance:0,speed:0},
   };
@@ -398,7 +398,7 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
   const mercTarget={x:Math.min(875,state.heroPosition.x+38),y:Math.min(565,state.heroPosition.y+35)};
   if(!combat&&distance(state.heroPosition,state.heroTarget)<.01&&Math.hypot(state.heroVelocity.x,state.heroVelocity.y)<.01&&(!state.mercenary||distance(state.mercenaryPosition,mercTarget)<.01)&&(!state.pet||distance(state.pet.position,state.pet.target)<.01)&&state.effects.length===0){
     // Settle the last measured step without advancing an otherwise idle simulation.
-    const motion=state.locomotion,delta=Math.min(.1,dt),settlingMerc=!!motion.mercenary.settle||((state.mercenary==='elf'||state.mercenary==='mage')&&motion.mercenary.speed>.5);
+    const motion=state.locomotion,delta=Math.min(.1,dt),settlingMerc=!!motion.mercenary.settle||((state.mercenary==='elf'||state.mercenary==='mage'||state.mercenary==='dwarf')&&motion.mercenary.speed>.5);
     if(!motion.hero.settle&&!settlingMerc&&motion.pet.speed<=0)return state;
     return {...state,locomotion:{
       hero:motion.hero.settle?advanceMageLocomotion(motion.hero,state.heroPosition,state.heroPosition,delta,false):motion.hero,
