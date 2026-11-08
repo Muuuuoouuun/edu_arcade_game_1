@@ -1,0 +1,176 @@
+{
+  "id": "gecko-ranger-prototype",
+  "blender": "4.3.2",
+  "reference": "art-source/defense/concepts/2026-11-09/gecko-ranger.png",
+  "generator": "tools/blender/build_gecko.py",
+  "runtime": {
+    "mesh_objects": 24,
+    "triangles": 7804,
+    "materials": 9
+  },
+  "glb_bytes": 261840,
+  "editable_mesh_objects": 87,
+  "rig": "Rigid object hierarchy; no skinning",
+  "coordinates": {
+    "authoring_forward": "+Y",
+    "authoring_up": "+Z",
+    "glb_forward": "-Z",
+    "glb_up": "+Y",
+    "ground_z": 0
+  },
+  "frame": {
+    "width": 640,
+    "height": 640,
+    "ground": [
+      320.0003,
+      550.0
+    ],
+    "camera_location": [
+      7.0,
+      10.0,
+      7.0
+    ],
+    "camera_rotation_radians": [
+      1.1611651182174683,
+      9.351857954698062e-08,
+      2.530866861343384
+    ],
+    "orthographic_scale": 5.449999809265137,
+    "shift_y": 0.07325460016727448,
+    "forward_screen_dx": 67.3423
+  },
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 32,
+    "denoising": false,
+    "transparent": true,
+    "render_skipped": false
+  },
+  "animation": {
+    "clip": "gecko-seed-shot",
+    "fps": 30,
+    "first_frame": 1,
+    "last_frame": 31,
+    "duration_seconds": 1,
+    "animated_nodes": [
+      "body",
+      "head",
+      "crossbow-and-gripping-arms",
+      "curled-tail"
+    ],
+    "interpolation": "LINEAR",
+    "events": {
+      "anticipation": 8,
+      "release_recoil": 12,
+      "recovery": 21,
+      "loop_return": 31
+    }
+  },
+  "poses": [
+    {
+      "name": "idle",
+      "frame": 1,
+      "file": "gecko-ranger-idle.png",
+      "projected_vertex_bbox": [
+        108.934,
+        178.56,
+        470.419,
+        592.353
+      ],
+      "world_bbox": [
+        [
+          -0.78035,
+          -0.889456,
+          0.0
+        ],
+        [
+          1.943291,
+          1.514369,
+          3.39
+        ]
+      ],
+      "min_world_z": 0.0,
+      "inside_frame": true
+    },
+    {
+      "name": "windup",
+      "frame": 8,
+      "file": "gecko-ranger-windup.png",
+      "projected_vertex_bbox": [
+        101.422,
+        173.777,
+        469.931,
+        592.353
+      ],
+      "world_bbox": [
+        [
+          -0.78035,
+          -0.969662,
+          0.0
+        ],
+        [
+          1.935645,
+          1.509117,
+          3.373687
+        ]
+      ],
+      "min_world_z": 0.0,
+      "inside_frame": true
+    },
+    {
+      "name": "strike",
+      "frame": 12,
+      "file": "gecko-ranger-strike.png",
+      "projected_vertex_bbox": [
+        116.891,
+        185.874,
+        458.78,
+        592.353
+      ],
+      "world_bbox": [
+        [
+          -0.78035,
+          -0.844867,
+          0.0
+        ],
+        [
+          1.93756,
+          1.332409,
+          3.39132
+        ]
+      ],
+      "min_world_z": 0.0,
+      "inside_frame": true
+    },
+    {
+      "name": "recover",
+      "frame": 21,
+      "file": "gecko-ranger-recover.png",
+      "projected_vertex_bbox": [
+        106.692,
+        177.155,
+        470.647,
+        592.353
+      ],
+      "world_bbox": [
+        [
+          -0.78035,
+          -0.90469,
+          0.0
+        ],
+        [
+          1.942663,
+          1.517727,
+          3.387241
+        ]
+      ],
+      "min_world_z": 0.0,
+      "inside_frame": true
+    }
+  ],
+  "limitations": [
+    "Rigid object animation; no skin weights, walk cycle, LOD or collision.",
+    "Seed is a loaded visual prop; no projectile/combat integration.",
+    "No FPS or device performance claim."
+  ]
+}

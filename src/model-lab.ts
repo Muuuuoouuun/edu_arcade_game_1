@@ -5,15 +5,20 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { PMREMGenerator } from 'three';
 import './model-lab.css';
 
-const models = [
+type Model = {id:string;name:string;kind:string;detail:string;description:string;source:string;command:string;action:string;clip?:string;prototype?:boolean;viewRotation?:number};
+const models:Model[] = [
  {id:'fire-tower',name:'화염 수정탑',kind:'ELEMENTAL TOWER',detail:'돌 · 청동 · 발광 수정',description:'층층이 쌓은 석재 위에 청동 발톱이 수정을 지탱합니다. 마력 코어가 회전하며 불꽃을 모읍니다.',source:'towers.blend',command:'npm run models:build',action:'▶ 발사 동작'},
  {id:'piercing-ballista',name:'관통 발리스타',kind:'SIEGE WEAPON',detail:'오크 · 황동 · 강철',description:'보강한 목재 프레임과 거대한 활대, 긴 관통탄을 조합했습니다. 발사 후 장전 장치가 복귀합니다.',source:'towers.blend',command:'npm run models:build',action:'▶ 발사 동작'},
  {id:'water-cannon',name:'물폭탄포',kind:'HYDRAULIC TOWER',detail:'황동 · 유리 · 물',description:'유리 탱크와 배관이 압력 포신으로 연결됩니다. 포신 반동과 물 코어의 움직임을 확인하세요.',source:'towers.blend',command:'npm run models:build',action:'▶ 발사 동작'},
- {id:'dwarf-guardian',name:'브론 · 드워프 공병',kind:'DWARF GUARDIAN',detail:'강철 · 청동 · 가죽',description:'두꺼운 갑옷과 땋은 수염, 묵직한 망치로 드워프 공병의 실루엣을 만들었습니다. 망치를 들어 강타하고 원래 자세로 돌아옵니다.',source:'dwarf.blend',command:'npm run models:dwarf',action:'▶ 망치 강타'},
+ {clip:'dwarf-hammer-attack',viewRotation:-1.85,id:'dwarf-guardian',name:'브론 · 드워프 공병',kind:'DWARF GUARDIAN',detail:'강철 · 청동 · 가죽',description:'두꺼운 갑옷과 땋은 수염, 묵직한 망치로 드워프 공병의 실루엣을 만들었습니다. 망치를 들어 강타하고 원래 자세로 돌아옵니다.',source:'dwarf.blend',command:'npm run models:dwarf',action:'▶ 망치 강타'},
+ {id:'polar-bear',name:'북극곰 · 빙해 수호자',kind:'PROTOTYPE / POLAR',detail:'제작 시안 · 닻 망치',description:'큰 방패와 닻 망치로 만든 극지 수호자입니다. 무기를 크게 들었다가 내려치는 동작과 손잡이 결합을 살펴보세요. 제작 시안이며 캠페인 전투에는 아직 연결되지 않았습니다.',source:'prototypes/polar-bear/polar-bear.blend',command:'npm run models:bear',action:'▶ 닻 망치 강타',clip:'polar-bear-attack',prototype:true,viewRotation:-1.85},
+ {id:'gecko-ranger',name:'도마뱀 · 씨앗 궁수',kind:'PROTOTYPE / TROPICAL',detail:'제작 시안 · 씨앗 쇠뇌',description:'잎 두건과 긴 꼬리, 큼직한 씨앗 쇠뇌가 특징인 열대 궁수입니다. 조준·발사 반동·복귀를 확인하세요. 제작 시안이며 캠페인 전투에는 아직 연결되지 않았습니다.',source:'prototypes/gecko-ranger/gecko-ranger.blend',command:'npm run models:gecko',action:'▶ 씨앗 발사',clip:'gecko-seed-shot',prototype:true,viewRotation:-1.85},
 ];
+const asset = (model:Model,extension:'png'|'glb') => `/defense/models/${model.prototype?'prototypes/':''}${model.id}.${extension}`;
 const $ = <T extends HTMLElement>(id:string) => document.getElementById(id) as T;
 const stage = $<HTMLDivElement>('model-stage'), status = $<HTMLParagraphElement>('model-loading'), fallback = $<HTMLImageElement>('model-fallback');
 const shoot = $<HTMLButtonElement>('attack-preview'), rotate = $<HTMLButtonElement>('auto-rotate'), wire = $<HTMLButtonElement>('wireframe'), reset = $<HTMLButtonElement>('reset-view');
+const pose = $<HTMLInputElement>('pose-progress');
 let renderer:WebGLRenderer|null = null, controls:OrbitControls|null = null, current:Group|null = null, mixer:AnimationMixer|null = null, attackAction:AnimationAction|null = null;
 let currentModelId = models[0].id;
 let generation = 0, automatic = false, wireEnabled = false, shotAt = -Infinity, last = performance.now(), elapsed = 0, redraw = true, lastRender = 0;
@@ -33,10 +38,10 @@ function release(object:Object3D) {
  object.traverse(node => {if(node instanceof Mesh)node.geometry.dispose();});
  materials(object).forEach(material => material.dispose());
 }
-// Match the dwarf render's front three-quarter view so its hammer clears the face.
-function resetView() {pivot.rotation.y = currentModelId==='dwarf-guardian'?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,2.0,0);controls?.update();}
+// Authoring +Y becomes GLB -Z; character defaults show the face and weapon.
+function resetView() {pivot.rotation.y = models.find(model => model.id===currentModelId)?.viewRotation??0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,2.0,0);controls?.update();}
 function stopAction() {
- attackAction?.stop(); shotAt = -Infinity; stage.dataset.action = 'idle'; redraw = true;
+ attackAction?.stop(); pose.value = '0'; $('pose-value').textContent = '0%'; shotAt = -Infinity; stage.dataset.action = 'idle'; redraw = true;
 }
 function clearModel() {
  mixer?.stopAllAction();
@@ -46,7 +51,8 @@ function clearModel() {
  parts.length = 0; currentMaterials = []; emissionLevels.clear(); pivot.rotation.y = 0; stopAction();
 }
 function setReady(ready:boolean) {
- const missingAttack = currentModelId==='dwarf-guardian'&&!attackAction;
+ $('pose-control').hidden = !ready || !attackAction;
+ const missingAttack = !!models.find(model => model.id===currentModelId)?.clip&&!attackAction;
  shoot.disabled = !ready || reduced.matches || missingAttack;
  rotate.disabled = !ready || reduced.matches;
  wire.disabled = !ready; reset.disabled = !ready;
@@ -90,15 +96,18 @@ async function select(index:number) {
  $('model-name').textContent = model.name; $('model-kind').textContent = model.kind; $('model-description').textContent = model.description;
  $('model-source').textContent = model.source; $('model-command').textContent = model.command; shoot.textContent = model.action;
  $('model-format').textContent = 'GLB · 실시간 3D'; $('model-hint').textContent = '드래그하여 회전 · 휠 또는 두 손가락으로 확대';
- fallback.src = `/defense/models/${model.id}.png`; fallback.alt = `${model.name}의 정사영 렌더 이미지`; fallback.hidden = true;
- $<HTMLAnchorElement>('download-model').href = `/defense/models/${model.id}.glb`;
- document.querySelectorAll<HTMLButtonElement>('#model-list button').forEach((button,i) => button.setAttribute('aria-pressed',String(i===index)));
+ fallback.src = asset(model,'png'); fallback.alt = `${model.name}의 정사영 렌더 이미지`; fallback.hidden = true;
+ $<HTMLAnchorElement>('download-model').href = asset(model,'glb');
+ document.querySelectorAll<HTMLButtonElement>('#model-list button').forEach((button,i) => {
+  button.setAttribute('aria-pressed',String(i===index));
+  if(i===index){const list = $('model-list');list.scrollLeft += button.getBoundingClientRect().left-list.getBoundingClientRect().left;}
+ });
  clearModel(); stage.dataset.loaded = 'loading';
  delete stage.dataset.renderCalls; delete stage.dataset.renderTriangles;
  for(const id of ['triangle-count','mesh-count','material-count'])$(id).textContent = '—';
  if(!renderer){showFallback('이 환경에서는 3D 화면을 열 수 없어 렌더 이미지를 표시합니다.');return;}
  try {
-  const gltf = await loader.loadAsync(`/defense/models/${model.id}.glb`);
+  const gltf = await loader.loadAsync(asset(model,'glb'));
   if(ticket!==generation){release(gltf.scene);return;}
   // Keep normalization outside the animated scene: clip tracks own their local transforms.
   current = new Group(); current.add(gltf.scene);
@@ -109,7 +118,7 @@ async function select(index:number) {
   currentMaterials = [...materials(current)].filter((material):material is MeshStandardMaterial => material instanceof MeshStandardMaterial);
   currentMaterials.forEach(material => {material.wireframe = wireEnabled;material.envMapIntensity = .55;emissionLevels.set(material,material.emissiveIntensity);});
   for(const type of ['core','barrel','bolt','turret'] as const){const object = current.getObjectByName(type==='core'?'fire-core':type);if(object)parts.push({object,position:object.position.clone(),rotation:new Vector3(object.rotation.x,object.rotation.y,object.rotation.z),type});}
-  const clip = gltf.animations.find(animation => animation.name==='dwarf-hammer-attack');
+  const clip = gltf.animations.find(animation => animation.name===model.clip);
   if(clip){
    mixer = new AnimationMixer(gltf.scene); attackAction = mixer.clipAction(clip);
    attackAction.setLoop(LoopOnce,1); attackAction.clampWhenFinished = true;
@@ -126,13 +135,21 @@ async function select(index:number) {
 }
 models.forEach((model,index) => {
  const button = document.createElement('button'); button.type = 'button'; button.setAttribute('aria-pressed',String(index===0));
- button.innerHTML = `<img src="/defense/models/${model.id}.png" alt=""/><span><strong>${model.name}</strong><small>${model.detail}</small></span>`;
+ button.innerHTML = `<img src="${asset(model,'png')}" alt=""/><span><strong>${model.name}</strong><small>${model.detail}</small></span>`;
  button.onclick = () => {void select(index);}; $('model-list').append(button);
 });
 shoot.onclick = () => {
  if(!current||reduced.matches)return;
  shotAt = elapsed; redraw = true; stage.dataset.action = 'firing';
  attackAction?.reset().play();
+};
+pose.oninput = () => {
+ if(!attackAction||!mixer)return;
+ // Evaluate a single authored pose without advancing time, including reduced motion.
+ attackAction.reset().play(); attackAction.paused = true;
+ attackAction.time = attackAction.getClip().duration*Number(pose.value)/100;
+ mixer.update(0); shotAt = -Infinity; stage.dataset.action = 'pose';
+ $('pose-value').textContent = `${pose.value}%`; redraw = true;
 };
 rotate.onclick = () => {automatic = !automatic;rotate.setAttribute('aria-pressed',String(automatic));redraw = true;};
 wire.onclick = () => {
@@ -152,7 +169,7 @@ function draw(now:number) {
   const autoMoving = automatic&&!reduced.matches&&!!current;
   if(autoMoving)pivot.rotation.y += dt*.28;
   const age = elapsed-shotAt, clipMoving = !!attackAction?.isRunning();
-  // Towers use a short procedural recoil; the dwarf uses its authored attack clip.
+  // Towers use procedural recoil; characters use their authored attack clips.
   const power = !attackAction&&!reduced.matches&&age<.8?Math.sin(Math.min(1,age/.8)*Math.PI)*(1-age/.8):0;
   for(const part of parts){
    part.object.position.copy(part.position); part.object.rotation.set(part.rotation.x,part.rotation.y,part.rotation.z);
