@@ -6,6 +6,7 @@ import { PMREMGenerator } from 'three';
 import './model-lab.css';
 
 const models = [
+ {id:'frontier-kar-reset',asset:'frontier-kar-game',name:'카르 · 변경 전장 회수',kind:'GROUNDED HAMMER RECOVERY',detail:'고정된 발 · 늦게 따라오는 망치',description:'두 발을 디딘 채 몸을 먼저 세우고, 무거운 망치와 털망토가 뒤따라 안정됩니다.',source:'frontier-kar.blend',command:'npm run models:frontier-kar',action:'▶ 강타 회수',clip:'kar-reset-0',hold:true,fitBounds:true},
  {id:'frontier-kar',asset:'frontier-kar-game',name:'카르 · 변경 전장',kind:'FRONTIER WINTER WARRIOR',detail:'흰 털망토 · 황동 망치 · 발 디딤',description:'붉은 머리와 흰 털망토, 황동 문양이 새겨진 망치를 가진 설산 전사입니다. 변경 전장에서 사용하는 몸으로 두 손을 모아 망치를 내려치는 모습을 살펴보세요.',source:'frontier-kar.blend',command:'npm run models:frontier-kar',action:'▶ 망치 강타',clip:'kar-slam',fitBounds:true},
  {id:'frontier-wood-strike',name:'통나무 병사 · 몽둥이 내려치기',kind:'FRONTIER CLUB STRIKE',detail:'발 고정 · 무기 들기 · 타격과 회수',description:'두 발을 짚고 몽둥이를 들어 올린 뒤 내려칩니다. 변경 전장에서는 0.28초의 타격 시점에 사거리와 방향을 확인하며 준비 중에는 피할 수 있습니다.',source:'frontier-wood-strike.blend',command:'npm run models:frontier-wood-strike',action:'▶ 몽둥이 내려치기',clip:'frontier-wood-strike',fitBounds:true},
  {id:'frontier-wood',name:'통나무 병사 · 변경 전장',kind:'FRONTIER WOODEN SOLDIER',detail:'목재 단면 · 가지 · 손에 쥔 몽둥이',description:'기존 통나무 병사의 관절 보행을 전장 크기에 맞춘 모델입니다. 실제 변경 전장에서는 이동 거리에 따라 걸음을 재생하고 진행 방향으로 몸을 돌립니다. 멈추면 두 발을 디디며 준비 자세로 돌아옵니다.',source:'frontier-wood.blend',command:'npm run models:frontier-wood',action:'▶ 보행 재생',clip:'frontier-wood-walk',loop:true,fitBounds:true},

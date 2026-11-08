@@ -60,7 +60,7 @@ bpy.ops.export_scene.gltf(filepath=str(DEST),export_format='GLB',use_selection=T
 def read_glb(path):
  data=path.read_bytes();length=struct.unpack_from('<I',data,12)[0];doc=json.loads(data[20:20+length]);off=20+length;blen=struct.unpack_from('<I',data,off)[0];return doc,bytearray(data[off+8:off+8+blen])
 base,blob=read_glb(DEST);by_name={n['name']:i for i,n in enumerate(base['nodes']) if 'name'in n};base['animations']=[]
-inputs=[OUT/(n+'.glb') for n in ['kar-barbarian-walk','kar-barbarian','kar-entry']]
+inputs=[OUT/(n+'.glb') for n in ['kar-barbarian-walk','kar-barbarian','kar-entry','kar-reset']]
 for path in inputs:
  doc,binary=read_glb(path)
  for original_clip in doc['animations']:
@@ -79,7 +79,7 @@ for path in inputs:
 base['buffers'][0]['byteLength']=len(blob);j=json.dumps(base,separators=(',',':')).encode();j+=b' '*((-len(j))%4);blob+=b'\0'*((-len(blob))%4)
 DEST.write_bytes(struct.pack('<4sII',b'glTF',2,28+len(j)+len(blob))+struct.pack('<I4s',len(j),b'JSON')+j+struct.pack('<I4s',len(blob),b'BIN\0')+blob)
 # The .blend contains authored parts, simplified geometry and all editable actions.
-for source in ['kar-barbarian.blend','kar-entry.blend']:
+for source in ['kar-barbarian.blend','kar-entry.blend','kar-reset.blend']:
  with bpy.data.libraries.load(str(ROOT/'art-source/defense'/source),link=False) as (src,dst):dst.actions=src.actions
  for action in dst.actions:action.use_fake_user=True
 for o in original:o.hide_render=True;o.hide_set(True)
@@ -90,15 +90,18 @@ render('walk',1);render('stride',21)
 for n,o in animated.items():
  action=bpy.data.actions.get('Kar entry 0 / '+n);assert action,n;o.animation_data.action=action
 scene.frame_end=57;render('prepare',20);render('contact',29)
+for n,o in animated.items():
+ action=bpy.data.actions.get('Kar reset 0 / '+n);assert action,n;o.animation_data.action=action
+render('recover',8);render('ready',15)
 for n,o in animated.items():o.animation_data.action=walk[n]
-scene.frame_end=81;scene.frame_set(1);scene['regeneration_command']='npm run models:frontier-kar';scene['authoring']='Original 208 parts in editable collection; runtime collection uses same rigid joints. Assign Kar entry N / joint actions for attack editing.'
+scene.frame_end=81;scene.frame_set(1);scene['regeneration_command']='npm run models:frontier-kar';scene['authoring']='Original 208 parts in editable collection; runtime collection uses same rigid joints. Assign Kar entry N / joint or Kar reset 0 / joint actions for attack/recovery editing.'
 bpy.context.preferences.filepaths.save_version=0;BLEND=ROOT/'art-source/defense/frontier-kar.blend';bpy.ops.wm.save_as_mainfile(filepath=str(BLEND))
 (OUT/'frontier-kar-game.png').write_bytes((ART/'walk.png').read_bytes())
-args=sum((['-i',str(ART/(n+'.png'))] for n in ['walk','stride','prepare','contact']),[])
-subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',*args,'-filter_complex','hstack=inputs=4','-frames:v','1','-c:v','libwebp','-quality','90',str(OUT/'frontier-kar-atlas.webp')],check=True)
+args=sum((['-i',str(ART/(n+'.png'))] for n in ['walk','stride','prepare','contact','recover','ready']),[])
+subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',*args,'-filter_complex','hstack=inputs=6','-frames:v','1','-c:v','libwebp','-quality','90',str(OUT/'frontier-kar-atlas.webp')],check=True)
 primitives=[p for m in base['meshes'] for p in m['primitives']];tris=sum(base['accessors'][p['indices']]['count']//3 for p in primitives)
-meta={'generator':'tools/blender/build_frontier_kar.py','command':'npm run models:frontier-kar','reference':'art-source/defense/atlases/melee-motion.png','runtime':{'mesh_objects':len(base['meshes']),'draws':len(primitives),'triangles':tris,'materials':len(base['materials']),'clips':[a['name'] for a in base['animations']]},'editable_meshes':sum(o.type=='MESH' for o in original),'frame':{'width':384,'height':384,'camera':list(scene.camera.location),'ortho_scale':scene.camera.data.ortho_scale,'poses':['walk 0s','walk .2s','entry0 .19s','entry0 .28s']},'files':[]}
+meta={'generator':'tools/blender/build_frontier_kar.py','command':'npm run models:frontier-kar','reference':'art-source/defense/atlases/melee-motion.png','runtime':{'mesh_objects':len(base['meshes']),'draws':len(primitives),'triangles':tris,'materials':len(base['materials']),'clips':[a['name'] for a in base['animations']]},'editable_meshes':sum(o.type=='MESH' for o in original),'frame':{'width':384,'height':384,'camera':list(scene.camera.location),'ortho_scale':scene.camera.data.ortho_scale,'poses':['walk 0s','walk .2s','entry0 .19s','entry0 .28s','reset .07s','reset .14s']},'files':[]}
 assert len(primitives)<=24 and tris<=10000,meta['runtime']
-for p in [SOURCE,ROOT/'art-source/defense/kar-barbarian.blend',ROOT/'art-source/defense/kar-entry.blend',*inputs,ROOT/meta['reference'],ROOT/meta['generator'],BLEND,DEST,*sorted(ART.glob('*.png')),OUT/'frontier-kar-game.png',OUT/'frontier-kar-atlas.webp']:
+for p in [SOURCE,ROOT/'art-source/defense/kar-barbarian.blend',ROOT/'art-source/defense/kar-entry.blend',ROOT/'art-source/defense/kar-reset.blend',*inputs,ROOT/meta['reference'],ROOT/meta['generator'],BLEND,DEST,*sorted(ART.glob('*.png')),OUT/'frontier-kar-game.png',OUT/'frontier-kar-atlas.webp']:
  meta['files'].append({'path':str(p.relative_to(ROOT)),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()})
 (OUT/'frontier-kar.json').write_text(json.dumps(meta,indent=2)+'\n');print('COMPLETE',meta['runtime'],flush=True)

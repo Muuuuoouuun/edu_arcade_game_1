@@ -30,8 +30,8 @@ function effect(s:Frontier,from:Point,to:Point,kind:'shot'|'skill'|'hit'|'impact
 function reward(s:Frontier){s.kills++;s.gold+=14;s.xp+=30;while(s.xp>=s.level*60){s.xp-=s.level*60;s.level++;s.hero.maxHp+=15;s.hero.hp=Math.min(s.hero.maxHp,s.hero.hp+25);s.message=`레벨 ${s.level} · 공격 +3 · 최대 체력 +15`;}}
 function damage(s:Frontier,e:Enemy,n:number){if(e.hp<=0)return;e.hp=Math.max(0,e.hp-n);if(e.hp===0)reward(s);}
 function beginHeroAttack(s:Frontier,kind:'basic'|'skill',targetId:number|null,heading:number){
- const h=s.hero,walkTime=h.moving?(h.walkDistance/HERO_ATTACK.stride*.8)%.8:0;h.heading=heading;h.moving=false;h.strike=HERO_ATTACK.duration;
- h.attack={kind,time:0,heading,targetId,damage:kind==='basic'?22+s.level*3:45+s.level*5,hit:false,walkTime};
+ const h=s.hero,fromMoving=h.moving,walkTime=h.moving?(h.walkDistance/HERO_ATTACK.stride*.8)%.8:0;h.heading=heading;h.moving=false;h.strike=HERO_ATTACK.duration;
+ h.attack={kind,time:0,heading,targetId,damage:kind==='basic'?22+s.level*3:45+s.level*5,hit:false,walkTime,fromMoving};
  if(kind==='basic')h.cooldown=HERO_ATTACK.interval;else h.skill=6;
 }
 function strike(s:Frontier){

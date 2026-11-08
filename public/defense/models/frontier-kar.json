@@ -17,7 +17,8 @@
       "kar-entry-4",
       "kar-entry-5",
       "kar-entry-6",
-      "kar-entry-7"
+      "kar-entry-7",
+      "kar-reset-0"
     ]
   },
   "editable_meshes": 208,
@@ -34,7 +35,9 @@
       "walk 0s",
       "walk .2s",
       "entry0 .19s",
-      "entry0 .28s"
+      "entry0 .28s",
+      "reset .07s",
+      "reset .14s"
     ]
   },
   "files": [
@@ -54,6 +57,11 @@
       "sha256": "8463b131fd074e849df7def3272f9baca49ff296b7814ececb38220cc1a91faa"
     },
     {
+      "path": "art-source/defense/kar-reset.blend",
+      "bytes": 2529532,
+      "sha256": "9135abe590da6bdab9f14d27dc84f9a330fa6c32a3473cc19300a9add23edc37"
+    },
+    {
       "path": "public/defense/models/kar-barbarian-walk.glb",
       "bytes": 1281724,
       "sha256": "601740b336faeb363c8adb9aa3d2514b761911f9f5f4eb4ec8089f5237a931cb"
@@ -69,59 +77,74 @@
       "sha256": "a71b68167f461703cd5f92a9e5227d053b5cf2500b07a5e330559dc189faa292"
     },
     {
+      "path": "public/defense/models/kar-reset.glb",
+      "bytes": 1262464,
+      "sha256": "b66f52a738d621afa19b9b6a22bcd3d917d42e7e61b50ab243b1b13da08b6f96"
+    },
+    {
       "path": "art-source/defense/atlases/melee-motion.png",
       "bytes": 1937473,
       "sha256": "9e264fcf20942375e1017348f0f555f9e44e89f6fbf097ddd2dd3789a44c5222"
     },
     {
       "path": "tools/blender/build_frontier_kar.py",
-      "bytes": 8911,
-      "sha256": "557a54744404bf8a4327dccaa4c1b75ab4a9d354752d55e0682e6933354e7283"
+      "bytes": 9223,
+      "sha256": "e1f89c9504d284b294272f4e63a2299a004c4aacdce0ab949405648b35dd9427"
     },
     {
       "path": "art-source/defense/frontier-kar.blend",
-      "bytes": 8180976,
-      "sha256": "f66db2d5af01ed76afe586081be9e145257a44cdf43998e2413bf298007f20e7"
+      "bytes": 8314020,
+      "sha256": "6dc511f47362a93b93ef525bf1f757a7a2c2e6dd4e507867dcd112652b400cd2"
     },
     {
       "path": "public/defense/models/frontier-kar-game.glb",
-      "bytes": 1189364,
-      "sha256": "ccab8343951d8180c441ec5499e4d939d57706bb1d90575bbbbd15f2e68ce6fc"
+      "bytes": 1201316,
+      "sha256": "f659c323014045dfe1144b9f8b8fbf808d14d8fa3763218fa4233d7857745c18"
     },
     {
       "path": "art-source/defense/frontier-kar/before-walk.png",
       "bytes": 141623,
-      "sha256": "7973232311fdb98165fae64eeebadeac807ca80f76a19733539b54107ae48974"
+      "sha256": "e93b1e025d917b88848a5c29c5b5e4ba14359a8ea639ed937427b53923146315"
     },
     {
       "path": "art-source/defense/frontier-kar/contact.png",
       "bytes": 132288,
-      "sha256": "5e3829d39ba69e2f5f7a9b2f7e54899db49da470e404887600928e878cf9151d"
+      "sha256": "222183b48acb0fbd52dd829e8c02d0fa20e4dfb3ceee6129e55cdcf301bd8b12"
     },
     {
       "path": "art-source/defense/frontier-kar/prepare.png",
       "bytes": 137024,
-      "sha256": "6182c95cb59785f49585517d9c788b361e4e738c5b86d825da877c5adf9f980c"
+      "sha256": "e5b1a79c1ed089cdc34053a543bf3ab96e4408f40bb669fa1894cc5741165053"
+    },
+    {
+      "path": "art-source/defense/frontier-kar/ready.png",
+      "bytes": 140838,
+      "sha256": "cb787fcfa179b06cfc1bd09d0d584e7736bcd385d534a47d97f952838c083b64"
+    },
+    {
+      "path": "art-source/defense/frontier-kar/recover.png",
+      "bytes": 137302,
+      "sha256": "21d377f077c67bcb27ffe9ce712fbb71d0328ac8e78b1cb0e1386229e0751f25"
     },
     {
       "path": "art-source/defense/frontier-kar/stride.png",
       "bytes": 140025,
-      "sha256": "d93105e3b8cf0ba17ed15d5a86ce5a70bcfe0aa4e8e9a11479f2408342f73644"
+      "sha256": "a730e8514a85c63b16fc53c640b453621d2a0e6a63872733068e0ba5da575633"
     },
     {
       "path": "art-source/defense/frontier-kar/walk.png",
       "bytes": 141326,
-      "sha256": "b4997725b90e875529c83c0d50f3b38680836b69bf916c2daa799a7bd5c4e6e5"
+      "sha256": "6dfc49025c86d2a81edfaf1e5d5163f2935cce63ec38ba123ea3e526e3d97902"
     },
     {
       "path": "public/defense/models/frontier-kar-game.png",
       "bytes": 141326,
-      "sha256": "b4997725b90e875529c83c0d50f3b38680836b69bf916c2daa799a7bd5c4e6e5"
+      "sha256": "6dfc49025c86d2a81edfaf1e5d5163f2935cce63ec38ba123ea3e526e3d97902"
     },
     {
       "path": "public/defense/models/frontier-kar-atlas.webp",
-      "bytes": 51290,
-      "sha256": "56ff16ad1319f660b5fbf05218d55b7776fd9285940d25249211e9ad647fe17e"
+      "bytes": 75520,
+      "sha256": "8b547f65060a1a3a4ab735cfa136a1fc6247feaba285b5c9b20d766e644e204f"
     }
   ]
 }
