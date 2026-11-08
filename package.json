@@ -122,7 +122,10 @@
     "models:kar-entry:check": "node tools/check-kar-entry.mjs",
     "models:kar-return": "blender --python-exit-code 1 -b --python tools/blender/build_kar_return.py --",
     "models:kar-return:pose-check": "npm run models:kar-return -- --check",
-    "models:kar-return:check": "node tools/check-kar-return.mjs"
+    "models:kar-return:check": "node tools/check-kar-return.mjs",
+    "models:kar-reset": "blender --python-exit-code 1 -b --python tools/blender/build_kar_reset.py --",
+    "models:kar-reset:pose-check": "npm run models:kar-reset -- --check",
+    "models:kar-reset:check": "node tools/check-kar-reset.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

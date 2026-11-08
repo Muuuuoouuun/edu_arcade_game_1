@@ -852,7 +852,7 @@ test('Kar keeps one grounded model through eight attack directions, walks and co
   }
   for(const elapsed of [.279999,.56,NaN])assert.equal(art.hammerContactTrail({actor:'barbarian',from,to,elapsed,hitAt:.28,duration:.56} as CombatAttack,84),null);
  }
- assert.equal(requests.filter(s=>s.includes('/kar-')&&!s.includes('/kar-entry-')&&!s.includes('/kar-return-')).length,16);assert.ok(!requests.some(s=>s.endsWith('.glb')));assert.equal(art.spriteAsset(16).src,'/defense/snow-atlas.png');
+ assert.equal(requests.filter(s=>s.includes('/kar-')&&!s.includes('/kar-entry-')&&!s.includes('/kar-return-')&&!s.includes('/kar-reset-')).length,16);assert.ok(!requests.some(s=>s.endsWith('.glb')));assert.equal(art.spriteAsset(16).src,'/defense/snow-atlas.png');
  for(const file of meta.files){const bytes=readFileSync(new URL('../../../'+file.file,import.meta.url));assert.equal(bytes.length,file.bytes);assert.equal(createHash('sha256').update(bytes).digest('hex'),file.sha256);}
 });
 
@@ -2158,5 +2158,43 @@ test('aligned Kar return remains visible at nominal 1x/2x and 20Hz 2x publicatio
   const frames=[];
   for(let tick=offset;tick/60<attack.duration;tick+=ticksPerPublication){const elapsed=tick/60;frames.push(art.karHammerReturnSpriteAsset({...attack,elapsed},{speed:230,distance:elapsed*230,heading:{x:1,y:0}})?.frame)}
   assert.ok(frames.some(frame=>frame==='weight-release'||frame==='stride-pickup'),`${ticksPerPublication}/${offset}: ${frames}`);
+ }
+});
+
+test('stationary Kar absorbs recoil, follows with heavy hammer and fur, and joins ready',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'kar-reset');const p={x:200,y:200},motion={speed:0,distance:24,heading:{x:1,y:0}};
+ for(const source of ['hero','mercenary'] as const)for(let d=0;d<8;d++){
+  const to={x:p.x+100*Math.cos(d*Math.PI/4),y:p.y+100*Math.sin(d*Math.PI/4)},a={actor:'barbarian',source,from:p,to,elapsed:.46,hitAt:.28,duration:.56} as CombatAttack;
+  for(const [elapsed,frame] of [[.42,'hold'],[.439,'hold'],[.44,'recover'],[.489,'recover'],[.49,'settle'],[.539,'settle'],[.54,'ready'],[.559,'ready']] as const){
+   const r=art.karHammerResetSpriteAsset({...a,elapsed},motion)!;assert.equal(r.direction,d);assert.equal(r.frame,frame);assert.equal(r.asset.displayScale,1.2*6.8/5.8);assert.equal(r.asset.groundY!/r.asset.height,220/256);
+   if(frame==='hold')assert.deepEqual(r.asset,art.hammerSequenceSpriteAsset('barbarian',{...a,elapsed:.43}));
+   else if(frame==='ready')assert.deepEqual(r.asset,art.directionalLocomotionSpriteAsset('barbarian',{x:to.x-p.x,y:to.y-p.y},null));
+   else{assert.equal(r.asset.src,`/defense/models/kar-reset-${d}-atlas.webp`);assert.equal(r.asset.viewBox,`${frame==='recover'?0:192} 0 192 192`)}
+  }
+  for(const elapsed of [-1,.28,.419,.56,NaN,Infinity])assert.equal(art.karHammerResetSpriteAsset({...a,elapsed},motion),null);
+  for(const speed of [-1,.501,100,NaN,Infinity])assert.equal(art.karHammerResetSpriteAsset(a,{...motion,speed}),null);
+  assert.ok(art.karHammerResetSpriteAsset(a,{...motion,speed:.5}));assert.equal(art.karHammerResetSpriteAsset(a,motion,true),null);
+  assert.equal(art.karHammerResetSpriteAsset({...a,actor:'dwarf'},motion),null);assert.equal(art.karHammerResetSpriteAsset({...a,to:p},motion),null);
+  assert.equal(art.karHammerResetSpriteAsset({...a,source:'tower'},motion),null);
+  for(const invalid of [{hitAt:0},{hitAt:NaN},{duration:.28},{duration:Infinity}])assert.equal(art.karHammerResetSpriteAsset({...a,...invalid},motion),null);
+  assert.equal(art.karHammerResetSpriteAsset(a,{...motion,heading:{x:-1,y:0}})!.direction,d);
+ }
+ assert.equal(requests.filter(s=>s.includes('/kar-reset-')).length,8);
+});
+
+test('optional stationary recovery fails independently of Kar moving return and strikes',async()=>{
+ const p={x:0,y:0},motion={speed:0,distance:24,heading:{x:1,y:0}},a={actor:'barbarian',source:'hero',from:p,to:{x:100,y:0},elapsed:.46,hitAt:.28,duration:.56} as CombatAttack;
+ for(const missing of ['kar-reset-3-atlas.webp','kar-slam-3-atlas.webp','kar-walk-3-atlas.webp']){
+  const {art}=await loadWithImageResults(s=>s.endsWith(missing),'kar-reset-fail-'+missing);assert.equal(art.karHammerResetSpriteAsset(a,motion),null);
+  if(missing.startsWith('kar-reset')){assert.ok(art.directionalActionSpriteAsset('barbarian','strike',p,a.to));assert.ok(art.karHammerReturnSpriteAsset(a,{...motion,speed:100}));}
+ }
+ const {art}=await loadWithImageResults(s=>s.includes('/kar-return-'),'kar-return-independent');assert.ok(art.karHammerResetSpriteAsset(a,motion));
+});
+
+test('stationary Kar recovery has an intermediate pose at nominal 1x/2x and 20Hz publications',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'kar-reset-cadence'),p={x:0,y:0},motion={speed:0,distance:0},a={actor:'barbarian',source:'hero',from:p,to:{x:100,y:0},hitAt:.28,duration:.56} as CombatAttack;
+ for(const ticks of [2,4,6])for(let offset=0;offset<ticks;offset++){
+  const frames=[];for(let step=offset;step/60<.56;step+=ticks)frames.push(art.karHammerResetSpriteAsset({...a,elapsed:step/60},motion)?.frame);
+  assert.ok(frames.some(f=>f==='recover'||f==='settle'),`${ticks}/${offset}: ${frames}`);
  }
 });
