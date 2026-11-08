@@ -1,0 +1,128 @@
+{
+  "id": "polar-bear-guardian-prototype",
+  "blender": "4.3.2",
+  "reference": "art-source/defense/concepts/2026-11-09/polar-bear-guardian.png",
+  "generator": "tools/blender/build_polar_bear.py",
+  "reproduction": "blender -b --python tools/blender/build_polar_bear.py -- --samples 24",
+  "scope": "Isolated original geometry prototype; no production integration",
+  "runtime": {
+    "mesh_objects": 31,
+    "triangles": 9176,
+    "materials": 9
+  },
+  "glb_bytes": 425648,
+  "editable_mesh_objects": 87,
+  "rig": "Rigid object hierarchy, not a skinned armature",
+  "joints": [
+    "polar-bear-guardian",
+    "body",
+    "head",
+    "hammer-arm",
+    "hammer-forearm",
+    "hammer",
+    "guard-arm"
+  ],
+  "coordinates": {
+    "authoring_forward": "+Y",
+    "authoring_up": "+Z",
+    "glb_forward": "-Z",
+    "glb_up": "+Y",
+    "ground_z": 0
+  },
+  "frame": {
+    "width": 640,
+    "height": 640,
+    "ground": [
+      320.0003,
+      550.0
+    ],
+    "camera_location": [
+      7.0,
+      10.0,
+      7.0
+    ],
+    "camera_rotation_radians": [
+      1.1611651182174683,
+      9.351857954698062e-08,
+      2.530866861343384
+    ],
+    "orthographic_scale": 5.449999809265137,
+    "shift_y": 0.07325460016727448,
+    "forward_screen_dx": 67.3423
+  },
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 24,
+    "transparent": true,
+    "denoising": false,
+    "render_skipped": false
+  },
+  "animation": {
+    "clip": "polar-bear-attack",
+    "fps": 30,
+    "first_frame": 1,
+    "last_frame": 25,
+    "duration_seconds": 0.8,
+    "interpolation": "LINEAR"
+  },
+  "poses": [
+    {
+      "name": "idle",
+      "frame": 1,
+      "file": "polar-bear-idle.png",
+      "projected_vertex_bbox": [
+        187.191,
+        168.073,
+        550.142,
+        587.97
+      ],
+      "min_world_z": 0.0,
+      "inside_frame": true
+    },
+    {
+      "name": "windup",
+      "frame": 7,
+      "file": "polar-bear-windup.png",
+      "projected_vertex_bbox": [
+        191.653,
+        157.627,
+        518.243,
+        587.97
+      ],
+      "min_world_z": 0.0,
+      "inside_frame": true
+    },
+    {
+      "name": "strike",
+      "frame": 11,
+      "file": "polar-bear-strike.png",
+      "projected_vertex_bbox": [
+        183.211,
+        163.598,
+        540.394,
+        587.97
+      ],
+      "min_world_z": 0.0,
+      "inside_frame": true
+    },
+    {
+      "name": "recover",
+      "frame": 17,
+      "file": "polar-bear-recover.png",
+      "projected_vertex_bbox": [
+        185.77,
+        166.268,
+        552.608,
+        587.97
+      ],
+      "min_world_z": 0.0,
+      "inside_frame": true
+    }
+  ],
+  "limitations": [
+    "Prototype rigid joints; no skin weights or deforming fur.",
+    "Four pose previews, not a final animation timing pass.",
+    "No measured game FPS or device draw-call benchmark.",
+    "No production loader/facing integration has been performed."
+  ]
+}
