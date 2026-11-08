@@ -1039,3 +1039,29 @@ test('Kar hero and mercenary remember their last step, pause, settle and cancel 
   assert.ok(observed,role+' naturally reaches a stop');
  }
 });
+
+test('a lightning tower whose windup target falls re-aims at an enemy whose arc lands, not just the front-most',()=>{
+  const s=rangedBattle('magic');s.towers[0].branch='lightning';
+  const wet=(id:number,x:number)=>{const e=positionedEnemy('wood',id,x);e.wet=5;return e;};
+  s.enemies=[positionedEnemy('wood',1,430),wet(2,395),positionedEnemy('wood',3,375)];
+  const winding=stepDefense(s,.02);assert.equal(winding.attacks[0].targetId,2);
+  const survivors=[positionedEnemy('wood',1,430),wet(4,392),positionedEnemy('wood',3,375)];
+  const fired=until({...winding,enemies:survivors},n=>n.projectiles.length>0);
+  assert.equal(fired.projectiles[0].targetId,4,'re-aim keeps the chain preference instead of the dry front body');
+});
+
+test('a lightning tower aims at the front-most enemy whose arc would land, and falls back to the front-most',()=>{
+  const lightning=(a:Enemy,b:Enemy,c:Enemy)=>{
+    const s=rangedBattle('magic');s.towers[0].branch='lightning';s.enemies=[a,b,c];return stepDefense(s,.02);
+  };
+  const front=positionedEnemy('wood',1,430),wetBody=positionedEnemy('wood',2,395),neighbor=positionedEnemy('wood',3,375);
+  wetBody.wet=5;
+  const smart=lightning(front,wetBody,neighbor);
+  assert.equal(smart.attacks[0]?.targetId,2,'the dry front body would end the arc, so the wet body with a neighbor is chosen');
+  const allDry=lightning(positionedEnemy('wood',1,430),positionedEnemy('wood',2,395),positionedEnemy('wood',3,375));
+  assert.equal(allDry.attacks[0]?.targetId,1,'with no arc available the front-most enemy is still hit');
+  const alone=lightning(positionedEnemy('metal',1,430),positionedEnemy('wood',2,395),positionedEnemy('wood',3,375));
+  assert.equal(alone.attacks[0]?.targetId,1,'a metal front body with a neighbor already chains, so it stays the target');
+  const plain=rangedBattle('magic');plain.enemies=[positionedEnemy('wood',1,430),wetBody,neighbor];
+  assert.equal(stepDefense(plain,.02).attacks[0]?.targetId,1,'non-lightning magic towers keep the front-most rule');
+});
