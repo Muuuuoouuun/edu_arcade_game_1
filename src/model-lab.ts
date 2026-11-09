@@ -155,8 +155,9 @@ hit.onclick = () => {
 pose.oninput = () => {
  if(!attackAction||!mixer)return;
  // Evaluate a single authored pose without advancing time, including reduced motion.
- stopAction(); attackAction.reset().play(); attackAction.paused = true;
- attackAction.time = attackAction.getClip().duration*Number(pose.value)/100;
+ const requestedPose = Number(pose.value);
+ stopAction(); pose.value = String(requestedPose); attackAction.reset().play(); attackAction.paused = true;
+ attackAction.time = attackAction.getClip().duration*requestedPose/100;
  mixer.update(0); shotAt = -Infinity; stage.dataset.action = 'pose';
  $('pose-value').textContent = `${pose.value}%`; redraw = true;
 };
