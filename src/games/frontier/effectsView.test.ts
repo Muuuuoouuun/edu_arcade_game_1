@@ -18,3 +18,23 @@ test('all effect kinds reuse bounded geometry and materials through expiry and r
 test('reduced motion keeps contact rings but suppresses airborne chips and ring expansion',()=>{const v=new EffectsView();v.update([fx()],true);assert.equal(v.chips.count,0);const m=v.root.children.find(o=>o instanceof Mesh&&o!==v.chips) as Mesh;const matrix=m.matrix.clone();v.update([fx('hammer',.02)],true);assert.deepEqual(m.matrix,matrix);assert.ok(m.visible);assert.equal((m.material as any).depthTest,true);assert.equal(v.chips.material instanceof Array,false);v.dispose();});
 test('debris is deterministic and rises then falls above flat, ramp and bridge surfaces',()=>{for(const to of [{x:-15,z:2},{x:-15,z:-7},{x:6,z:0}])for(const kind of ['hammer','shockwave'] as const){const e={...fx(kind),to};for(let i=0;i<8;i++){const c=contactChip(e,i);assert.deepEqual(c,contactChip(e,i));assert.ok(c.y>=heightAt(c.x,c.z)+.079);assert.ok(c.size>0);}if(kind==='hammer'&&to.z===2){const a=contactChip({...e,life:.18},0),b=contactChip({...e,life:.09},0),c=contactChip({...e,life:.001},0);assert.ok(b.y>a.y&&b.y>c.y);}}});
 test('reusing a ray slot for a ground ring resets its matrix and disappearing effects do not persist',()=>{const v=new EffectsView();v.update([{...fx('shot'),to:{x:12,z:20}}],false);v.update([fx('hammer')],false);const m=v.root.children.find(o=>o instanceof Mesh&&o!==v.chips) as Mesh;const other=new EffectsView();other.update([fx('hammer')],false);const n=other.root.children.find(o=>o instanceof Mesh&&o!==other.chips) as Mesh;assert.deepEqual(m.matrix,n.matrix);const chip=new Matrix4();v.chips.getMatrixAt(0,chip);assert.ok(chip.elements.every(Number.isFinite));v.update([fx('hammer',0)],false);assert.equal(v.chips.count,0);assert.equal(m.visible,false);v.dispose();other.dispose();});
+test('shockwave follows visible ground and water and never draws a vertical bridge across a terrain break',()=>{
+ const view=new EffectsView();
+ for(const center of [{x:-15,z:8},{x:-15,z:-7},{x:-15,z:-13},{x:-1,z:0},{x:6,z:0}]){
+  view.update([{...fx('shockwave',.09),from:center,to:center}],false);
+  const m=view.root.children.find(o=>o instanceof Mesh&&o!==view.chips) as Mesh;
+  const a=m.geometry.getAttribute('position'),ix=m.geometry.getIndex()!;
+  for(let i=0;i<64;i++){
+   let min=Infinity,max=-Infinity;
+   for(let j=0;j<4;j++){
+    const n=i*4+j,x=a.getX(n),z=a.getZ(n),y=a.getY(n);
+    const surface=x>3&&x<9&&Math.abs(z)>2.8?-2.6:heightAt(x,z);
+    assert.ok(Math.abs(y-(surface+.09))<1e-5);min=Math.min(min,y);max=Math.max(max,y);
+   }
+   if(max-min>=.9)assert.equal(ix.getX(i*6),ix.getX(i*6+1),'discontinuity is hidden');
+  }
+  const snapshot=Array.from(a.array);view.update([{...fx('shockwave',.09),from:center,to:center}],false);assert.deepEqual(Array.from(a.array),snapshot);
+ }
+ view.update([{...fx('shockwave',.09),to:{x:-15,z:-7}}],true);const m=view.root.children.find(o=>o instanceof Mesh&&o!==view.chips) as Mesh;
+ const pos=Array.from(m.geometry.getAttribute('position').array);view.update([{...fx('shockwave',.01),to:{x:-15,z:-7}}],true);assert.deepEqual(Array.from(m.geometry.getAttribute('position').array),pos);view.dispose();
+});
