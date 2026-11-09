@@ -1,0 +1,37 @@
+{
+  "fixture": {
+    "version": 1,
+    "gold": 300,
+    "cleared": [
+      1,
+      2
+    ],
+    "questClaimed": [
+      1
+    ],
+    "visitors": [
+      "mage",
+      "elf",
+      "dwarf"
+    ],
+    "seenVisitors": [
+      "mage",
+      "elf",
+      "dwarf"
+    ],
+    "training": 0,
+    "selectedHero": "mage",
+    "difficulty": "standard",
+    "processedRuns": []
+  },
+  "checks": [
+    "Fresh campaign defaults to village; locked growth directs to requests.",
+    "Facility→growth; Escape cancels with focus restored; confirm deducts100G once; Lv0→1 +8%.",
+    "Reload persists; selecting Bron is free.",
+    "Unlocked theme applies and persists.",
+    "No page horizontal overflow at360,390,844,1440px.",
+    "Insufficient balance disabled; maxLv5 stays +40%, no Lv6.",
+    "Expedition launches separate battlefield."
+  ],
+  "errors": []
+}
