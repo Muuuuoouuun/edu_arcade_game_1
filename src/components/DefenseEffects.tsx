@@ -203,7 +203,11 @@ export function EffectLayer({effects,reduced,unit=1,layer='front'}:{effects:Effe
    </g>;
    if(kind==='breach'){const r=30+(reduced?30:p*(46+(e.force??1)*9));return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} opacity={fade*.9} data-effect-ground="breach"><ellipse rx={r} ry={r*.38} fill="#d9433a24" stroke="#ff7b6b" strokeWidth={Math.min(6,2+(e.force??1)*.5)}/></g>;}
    // Skills hit the entire field; this small ring marks the caster, not a range.
-   if(kind==='skill')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} opacity={fade*.7} data-effect-ground="skill"><ellipse rx={reduced?24:20+p*10} ry={reduced?8:7+p*3} fill="none" stroke={color} strokeWidth="2"/></g>;
+   if(kind==='skill')return <g key={e.id} opacity={fade} data-effect-ground="skill">
+    {/* Draw each actual hit below actors and death poses, at its captured position. */}
+    {e.skillHero?e.skillTargets?.map(target=><g key={target.id} data-skill-target={target.id} data-skill-hero={e.skillHero} transform={`translate(${target.x},${target.y}) scale(${unit*(reduced?1:.85+.15*Math.min(1,p*8))})`}><SkillTargetMark hero={e.skillHero!}/></g>):null}
+    <ellipse cx={e.to.x} cy={e.to.y} rx={reduced?24:20+p*10} ry={reduced?8:7+p*3} fill="none" stroke={color} strokeWidth="2" opacity=".7"/>
+   </g>;
    if(!['shockwave','impact','freeze','interrupt'].includes(kind)||(kind==='impact'&&!detail))return null;
    const wide=kind==='shockwave'||kind==='interrupt';
    const radius=wide?35+p*(e.force?Math.min(145,e.force):100):12+p*30;
@@ -245,7 +249,6 @@ export function EffectLayer({effects,reduced,unit=1,layer='front'}:{effects:Effe
     <text x="-6" y="5" className="def-float-number def-float-coin">{e.text}</text>
   </g>;
   if(kind==='skill'||kind==='interrupt')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y-27})`} opacity={fade} data-effect={kind} data-skill-mode={e.skillMode}>
-   {kind==='skill'&&e.skillHero?e.skillTargets?.map(target=><g key={target.id} data-skill-target={target.id} data-skill-hero={e.skillHero} transform={`translate(${target.x-e.to.x},${target.y-e.to.y+27}) scale(${unit*(reduced?1:.85+.15*Math.min(1,p*8))})`}><SkillTargetMark hero={e.skillHero!}/></g>):null}
    {e.skillMode==='control'?<g fill="none" stroke="#8fe8d3" strokeWidth="2"><ellipse cy="22" rx={reduced?24:21+p*9} ry={reduced?8:7+p*3}/><ellipse cy="22" rx={reduced?18:15+p*7} ry={reduced?6:5+p*2}/></g>:null}
    {e.skillMode==='power'?<path d="M-32 0 -12 -8 0 -34 12 -8 32 0 12 8 0 34 -12 8Z" fill="none" stroke="#ffe49a" strokeWidth={reduced?2:4*(1-p)} opacity={1-p}/>:null}
    <circle r={reduced?22:kind==='skill'?15+p*16:15+p*65} fill={`url(#${hitCore(e.element)})`} opacity=".7"/>
