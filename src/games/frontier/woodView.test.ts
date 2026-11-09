@@ -44,3 +44,22 @@ test('attack warning stays in its committed heading and disappears at contact; f
 });
 test('committed warning follows the slope instead of disappearing under the uphill terrain',()=>{const batch=new WoodBatch(combined),e={...enemy(1),x:-15,z:-6,attack:{time:.1,target:'hero' as const,heading:Math.PI,hit:false,entryDistance:0}};batch.update([e],false,camera);const warning=batch.root.children.find(o=>o instanceof Mesh&&o.geometry.type==='RingGeometry') as import('three').InstancedMesh;const m=new Matrix4(),p=new Vector3();warning.getMatrixAt(0,m);const a=warning.geometry.attributes.position;for(let i=0;i<a.count;i++){p.fromBufferAttribute(a,i).applyMatrix4(m);assert.ok(Math.abs(p.y-heightAt(p.x,p.z)-.06)<1e-5);}batch.dispose();});
 test('attack blending and planted contact keep both soles above ramp and bridge surfaces at every heading',()=>{const view=new WoodView(combined),point=new Vector3();for(const [x,z]of [[-15,-6],[6,0],[2.1,0]])for(let heading=0;heading<8;heading++)for(const time of [0,.05,.1,.18,.28,.34,.46,.6]){view.update({...enemy(3),x,z,heading:heading*Math.PI/4,moving:false,attack:{time,target:'hero',heading:heading*Math.PI/4,hit:time>=.28,entryDistance:.7}},false);let support=Infinity;for(const mesh of view.surfaces){if(!mesh.name.startsWith('surface-leg-'))continue;const a=mesh.geometry.attributes.position;for(let i=0;i<a.count;i++){point.fromBufferAttribute(a,i).applyMatrix4(mesh.matrixWorld);support=Math.min(support,point.y-heightAt(point.x,point.z));}}assert.ok(support>=-1e-6,'sole must not enter terrain');assert.ok(support<.06,'one supporting foot remains grounded');}view.dispose();});
+test('hit recoil follows the source direction, returns to gait, and preserves foot contact on slope and bridge',()=>{
+ const view=new WoodView(combined),point=new Vector3();
+ for(const [x,z] of [[-15,-6],[6,0],[-15,8]])for(let h=0;h<8;h++)for(const moving of [false,true]){
+  const e={...enemy(3),x,z,heading:h*Math.PI/4,moving,restTime:.3,hitAt:2,hitHeading:h*Math.PI/4};
+  view.update(e,false,2);const baseline=view.surfaces.map(m=>m.matrixWorld.clone());
+  view.update(e,false,2.08);const leaned=view.surfaces.map(m=>m.matrixWorld.clone());assert.ok(leaned.some((m,i)=>m.elements.some((v,k)=>Math.abs(v-baseline[i].elements[k])>1e-3)));
+  let support=Infinity;for(const mesh of view.surfaces){if(!mesh.name.startsWith('surface-leg-'))continue;const a=mesh.geometry.attributes.position;for(let i=0;i<a.count;i++){point.fromBufferAttribute(a,i).applyMatrix4(mesh.matrixWorld);support=Math.min(support,point.y-heightAt(point.x,point.z));}}assert.ok(support>=-1e-6);assert.ok(support<.06);
+  for(let i=0;i<3;i++){view.update(e,false,2.08);view.surfaces.forEach((m,j)=>assert.deepEqual(m.matrixWorld.elements,leaned[j].elements));}
+  view.update(e,true,2.08);const reduced=view.root.quaternion.clone();view.update({...e,hitAt:undefined},true,2.08);assert.ok(view.root.quaternion.angleTo(reduced)<1e-7);
+  view.update(e,false,2.25);view.surfaces.forEach((m,j)=>assert.ok(m.matrixWorld.elements.every((v,k)=>Math.abs(v-baseline[j].elements[k])<1e-5)));
+ }
+ view.dispose();
+});
+
+test('recoil tips the model away from the source for each world direction without moving its root',()=>{
+ const view=new WoodView(combined);for(let i=0;i<8;i++){const h=i*Math.PI/4,e={...enemy(8),x:-15,z:4,moving:false,restTime:.3,hitAt:0,hitHeading:h};view.update(e,false,.08);const up=new Vector3(0,1,0).applyQuaternion(view.root.quaternion);assert.ok(up.x*Math.sin(h)+up.z*Math.cos(h)>.1);assert.deepEqual(view.root.position.toArray(),[-15,heightAt(-15,4),4]);}view.dispose();
+});
+
+test('fallback hit recoil stays above terrain without per-frame drift',()=>{const view=new WoodView(woodFallback(),false),p=new Vector3();for(const [x,z] of [[-15,-6],[-15,8]])for(let i=0;i<8;i++){const e={...enemy(1),x,z,hitAt:1,hitHeading:i*Math.PI/4};view.update(e,false,1.08);const before=view.root.matrixWorld.clone();for(const mesh of view.surfaces){const a=mesh.geometry.attributes.position;for(let j=0;j<a.count;j++){p.fromBufferAttribute(a,j).applyMatrix4(mesh.matrixWorld);assert.ok(p.y-heightAt(p.x,p.z)>=-1e-6);}}view.update(e,false,1.08);assert.deepEqual(view.root.matrixWorld.elements,before.elements);}view.dispose();});

@@ -1,7 +1,7 @@
 import {AnimationMixer,BoxGeometry,CircleGeometry,Frustum,Group,InstancedMesh,LoopOnce,LoopRepeat,Matrix4,Mesh,MeshBasicMaterial,MeshStandardMaterial,Quaternion,RingGeometry,Sphere,Vector3,type AnimationAction,type AnimationClip,type Camera,type Object3D,type BufferGeometry} from 'three';
 import {WOOD_ATTACK} from './woodAttack.ts';
 import {heightAt,type Enemy} from './engine.ts';
-export const WOOD_SCALE=.52,WOOD_STRIDE=1.5,WOOD_SETTLE=.16;
+export const WOOD_SCALE=.52,WOOD_STRIDE=1.5,WOOD_SETTLE=.16,WOOD_HIT_DURATION=.24;
 // Hard normals duplicate vertex coordinates. Contact testing needs each position only once.
 const contactCache=new WeakMap<BufferGeometry,Vector3[]>();
 function contactPoints(mesh:Mesh){let points=contactCache.get(mesh.geometry);if(!points){const unique=new Map<string,Vector3>(),a=mesh.geometry.attributes.position;for(let i=0;i<a.count;i++){const p=new Vector3().fromBufferAttribute(a,i);unique.set(`${p.x},${p.y},${p.z}`,p);}points=[...unique.values()];contactCache.set(mesh.geometry,points);}return points;}
@@ -9,7 +9,7 @@ export type WoodTemplate={scene:Group;animations:AnimationClip[]};
 /** Rigid-joint geometry is shared; only transforms and clip clocks belong to each enemy. */
 export class WoodView {
  readonly root=new Group();readonly model:Group;readonly surfaces:Mesh[]=[];private soles:{mesh:Mesh;points:Vector3[]}[]=[];private mixer?:AnimationMixer;private walk?:AnimationAction;private strike?:AnimationAction;
- private rest:{node:Object3D;position:Vector3;quaternion:Quaternion;samplePosition:Vector3;sampleQuaternion:Quaternion}[]=[];private point=new Vector3();private footPoint=new Vector3();
+ private rest:{node:Object3D;position:Vector3;quaternion:Quaternion;samplePosition:Vector3;sampleQuaternion:Quaternion}[]=[];private point=new Vector3();private footPoint=new Vector3();private hitAxis=new Vector3();private hitRotation=new Quaternion();
  readonly authored:boolean;
  constructor(template:WoodTemplate,authored=true){
   this.authored=authored;
@@ -17,7 +17,7 @@ export class WoodView {
   if(authored){this.mixer=new AnimationMixer(this.model);this.walk=this.mixer.clipAction(template.animations.find(a=>a.name==='frontier-wood-walk')!).setLoop(LoopRepeat,Infinity).play();this.mixer.setTime(0);const strike=template.animations.find(a=>a.name==='frontier-wood-strike');if(strike){this.strike=this.mixer.clipAction(strike).setLoop(LoopOnce,1).setEffectiveWeight(0).play();this.strike.clampWhenFinished=true;}}
   this.model.traverse(o=>{if(o instanceof Mesh){this.surfaces.push(o);o.visible=false;if(o.name.startsWith('surface-leg-'))this.soles.push({mesh:o,points:contactPoints(o)});}else if(o!==this.model)this.rest.push({node:o,position:o.position.clone(),quaternion:o.quaternion.clone(),samplePosition:o.position.clone(),sampleQuaternion:o.quaternion.clone()});});
  }
- update(enemy:Enemy,reduced:boolean){
+ update(enemy:Enemy,reduced:boolean,now=0){
   const attack=enemy.attack,phase=((attack?.entryDistance??enemy.walkDistance??0)/WOOD_STRIDE)%1;
   // Restore the unmodified last sample before mixer caching; terrain/settle offsets must never accumulate.
   for(const r of this.rest){r.node.position.copy(r.samplePosition);r.node.quaternion.copy(r.sampleQuaternion);}
@@ -30,7 +30,13 @@ export class WoodView {
   }
   for(const r of this.rest){r.samplePosition.copy(r.node.position);r.sampleQuaternion.copy(r.node.quaternion);}
   if(!reduced&&!enemy.moving&&!attack){const t=Math.min(1,(enemy.restTime??WOOD_SETTLE)/WOOD_SETTLE),a=t*t*(3-2*t);for(const r of this.rest){r.node.position.lerp(r.position,a);r.node.quaternion.slerp(r.quaternion,a);}}
-  this.root.position.set(enemy.x,heightAt(enemy.x,enemy.z),enemy.z);this.root.rotation.y=enemy.heading??0;this.root.updateMatrixWorld(true);
+  this.root.position.set(enemy.x,heightAt(enemy.x,enemy.z),enemy.z);this.root.rotation.set(0,enemy.heading??0,0);
+  // Visual-only impulse; the game position, heading, swing and clocks remain untouched.
+  const age=now-(enemy.hitAt??-Infinity);
+  if(!reduced&&age>=0&&age<WOOD_HIT_DURATION){const h=enemy.hitHeading??0,t=age/WOOD_HIT_DURATION,amount=.32*Math.sin(Math.PI*t)*(1-t*.4);this.hitAxis.set(Math.cos(h),0,-Math.sin(h));this.hitRotation.setFromAxisAngle(this.hitAxis,amount);this.root.quaternion.premultiply(this.hitRotation);}
+  this.root.updateMatrixWorld(true);
+  // The box fallback has no articulated legs; lift its body only when the impulse would put it underground.
+  if(!this.authored&&!reduced&&age>=0&&age<WOOD_HIT_DURATION){let clearance=Infinity;for(const mesh of this.surfaces)for(const p of contactPoints(mesh)){this.point.copy(p).applyMatrix4(mesh.matrixWorld);clearance=Math.min(clearance,this.point.y-heightAt(this.point.x,this.point.z));}if(clearance<0){this.root.position.y-=clearance;this.root.updateMatrixWorld(true);}}
   // Preserve each authored swing clearance while placing its rigid sole above the actual ramp/bridge surface.
   // This adjusts leg height; it does not claim ankle rotation or world-locked horizontal feet.
   if(this.authored)for(const {mesh,points} of this.soles){
@@ -62,11 +68,11 @@ export class WoodBatch {
   this.template.scene.traverse(o=>{if(o instanceof Mesh){const m=new InstancedMesh(o.geometry,o.material,size);m.name=o.name;m.count=0;m.frustumCulled=false;m.receiveShadow=true;this.meshes.push(m);this.root.add(m);}});
   for(const name of ['contacts','health','warnings'] as const){const old=this[name];this.root.remove(old);const next=new InstancedMesh(old.geometry,old.material,size);next.count=0;next.frustumCulled=false;this[name]=next;old.dispose();this.root.add(next);}
  }
- update(enemies:Enemy[],reduced:boolean,camera:Camera){
+ update(enemies:Enemy[],reduced:boolean,camera:Camera,now=0){
   if(enemies.length>this.capacity)this.grow(2**Math.ceil(Math.log2(enemies.length)));
   const alive=new Set(enemies.map(e=>e.id));for(const [id,view]of this.views)if(!alive.has(id)){view.dispose();this.views.delete(id);}
   camera.updateMatrixWorld();this.frustum.setFromProjectionMatrix(this.projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));let count=0,healthCount=0,warningCount=0;
-  for(const enemy of enemies){let view=this.views.get(enemy.id);if(!view){view=new WoodView(this.template,this.authored);this.views.set(enemy.id,view);}view.update(enemy,reduced);
+  for(const enemy of enemies){let view=this.views.get(enemy.id);if(!view){view=new WoodView(this.template,this.authored);this.views.set(enemy.id,view);}view.update(enemy,reduced,now);
    this.sphere.center.set(enemy.x,heightAt(enemy.x,enemy.z)+1.5,enemy.z);if(!this.frustum.intersectsSphere(this.sphere))continue;
    for(let j=0;j<this.meshes.length;j++)this.meshes[j].setMatrixAt(count,view.surfaces[j].matrixWorld);
    this.matrix.makeRotationX(-Math.PI/2);this.matrix.setPosition(enemy.x,heightAt(enemy.x,enemy.z)+.025,enemy.z);this.contacts.setMatrixAt(count,this.matrix);count++;
