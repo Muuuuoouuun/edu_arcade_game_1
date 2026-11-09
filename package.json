@@ -156,7 +156,9 @@
     "models:frontier-frost-cliffs:check": "node tools/check-frontier-frost-cliffs.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_frost_cliffs.py",
     "models:metal-death": "blender --python-exit-code 1 -b --python tools/blender/build_metal_death.py --",
     "models:wood-death": "blender --python-exit-code 1 -b --python tools/blender/build_wood_death.py --",
-    "models:ice-death": "blender --python-exit-code 1 -b --python tools/blender/build_ice_death.py --"
+    "models:ice-death": "blender --python-exit-code 1 -b --python tools/blender/build_ice_death.py --",
+    "models:golem-walk": "blender --python-exit-code 1 -b --python tools/blender/build_golem_walk.py --",
+    "models:golem-walk:check": "node tools/check-golem-walk.mjs && blender --python-exit-code 1 -b --python tools/blender/build_golem_walk.py -- --check"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

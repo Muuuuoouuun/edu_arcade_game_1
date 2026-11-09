@@ -132,6 +132,41 @@ test('ice death has actual split geometry, held sword and bounded sampled floor'
  const arm=g.nodes.find((n:{name:string})=>n.name==='arm-near');assert.ok(arm.children.some((i:number)=>g.nodes[i].name==='sword'));
 });
 
+test('stone gait follows distance with eight poses and retains the legacy hit anchor',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'golem-walk');
+ assert.equal(requests.filter(src=>src.endsWith('/stone-golem-walk-atlas.webp')).length,1);
+ const frames=Array.from({length:8},(_,i)=>art.monsterWalkingSpriteAsset('stone',i*8)!);
+ assert.equal(new Set(frames.map(f=>f.viewBox)).size,8);
+ assert.deepEqual(art.monsterWalkingSpriteAsset('stone',64),frames[0]);
+ for(const f of frames){
+  assert.equal(f.groundY,297);assert.equal(f.displayScale,384/260);
+  const [x,y,w,h]=f.viewBox.split(' ').map(Number);assert.ok(x+w<=f.width&&y+h<=f.height);
+ }
+ // Old golem crop ends at y=323 with a .1 body-size bottom: the full-frame anchor is y=297.
+ assert.equal(frames[0].groundY,68+255-.1*260);
+ for(const missing of ['stone-golem-atlas.webp','stone-golem-walk-atlas.webp']){
+  const {art:failed}=await loadWithImageResults(src=>src.endsWith('/'+missing),'golem-walk-'+missing);
+  assert.equal(failed.monsterWalkingSpriteAsset('stone',12),null);
+  assert.ok(failed.monsterSpriteAsset('stone','hit'),'hit or illustrated fallback remains available');
+ }
+});
+
+test('stone gait has articulated feet, grounded samples and real looped GLB',()=>{
+ const read=(path:string)=>readFileSync(new URL('../../../'+path,import.meta.url));
+ const m=JSON.parse(read('public/defense/models/stone-golem-walk.json').toString());
+ const hash=(b:Buffer)=>createHash('sha256').update(b).digest('hex');
+ assert.equal(hash(read(m.source)),m.source_sha256);assert.equal(hash(read(m.base_source)),m.base_source_sha256);
+ for(const f of m.files){const b=read('public/defense/models/'+f.file);assert.equal(hash(b),f.sha256);assert.equal(b.length,f.bytes);}
+ for(const f of m.renders)assert.equal(hash(read(f.path)),f.sha256);
+ assert.deepEqual(m.baked_frames,[1,5,9,13,17,21,25,29]);assert.equal(m.stride_world,64);
+ assert.equal(m.samples.length,33);assert.ok(m.samples.every((v:{lowest_vertex:number,feet:{near:number,far:number}})=>v.lowest_vertex>-.005&&Math.min(v.feet.near,v.feet.far)<.002));
+ assert.ok(m.samples.some((v:{feet:{near:number}})=>v.feet.near>.17));assert.ok(m.samples.some((v:{feet:{far:number}})=>v.feet.far>.17));
+ assert.deepEqual(m.samples[0].bounds,m.samples[32].bounds);
+ const b=read('public/defense/models/stone-golem-walk.glb');const g=JSON.parse(b.subarray(20,20+b.readUInt32LE(12)).toString());
+ assert.ok(g.nodes.some((n:{name:string})=>n.name==='foot-joint-near'));assert.ok(g.nodes.some((n:{name:string})=>n.name==='foot-joint-far'));
+ assert.ok(g.animations.some((a:{name:string,channels:unknown[]})=>a.name==='stone-golem-walk'&&a.channels.length>=12));
+});
+
 test('wolf trot keeps eight frames on the base pose ground and never mixes a partial model set',async()=>{
  const {art}=await loadWithImageResults(()=>false,'wolf-trot-ready');
  const base=art.monsterSpriteAsset('frostwolf','hit')!;
@@ -397,7 +432,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-brace-')&&!src.includes('/frost-fall-')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-stop-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,20);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-brace-')&&!src.includes('/frost-fall-')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-stop-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,21);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
