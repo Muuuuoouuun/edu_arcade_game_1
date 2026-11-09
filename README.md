@@ -18,7 +18,7 @@ Node.js 22.12 이상에서 `npm ci`, `npm run dev`로 실행합니다. 기본 �
 
 Android 설치판은 미니게임 진입점·코드와 제작 작업실용 GLB를 포함하지 않습니다. 모바일 렌더러는 기존 React/TypeScript 기반 2.5D 전장입니다. Three.js 실시간 모델은 웹 제작 작업실에서 검토합니다. [Android 빌드·설치 안내](docs/android-install.md)를 참고하세요.
 
-[기본 게임 규칙 v1 — 현재 규칙·설계 결정·적용 순서](docs/arcana-game-rules-v1.md)
+[기본 게임 규칙 v1 — 현재 규칙·설계 결정·적용 순서](docs/arcana-game-rules-v1.md) · [적·보스 모델링과 전투 연출 설계](docs/arcana-enemy-design/README.md)
 
 ## 현재 게임
 
