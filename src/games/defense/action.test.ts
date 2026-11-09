@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDefense, actDefense, stepDefense, positionOnPath } from './engine.ts';
-import { projectileScreenPosition, attackOctant, dwarfHammerFrame, petBiteFrame, DASH_DAMAGE, distanceToSegment, knockbackPresentation } from './action.ts';
+import { projectileScreenPosition, shellTrailPositions, attackOctant, dwarfHammerFrame, petBiteFrame, DASH_DAMAGE, distanceToSegment, knockbackPresentation } from './action.ts';
 import type { Enemy, Projectile } from './types.ts';
 
 function battle(hp=1000) {
@@ -88,6 +88,28 @@ test('ballista launch origin fades to the unchanged collision path',()=>{
  assert.equal(projectileScreenPosition(landed,offset).y,projectileScreenPosition(landed).y);
  assert.equal(projectileScreenPosition(landed,offset).angle,projectileScreenPosition(landed).angle,'a piercing arrow must point along its actual velocity once the launch offset has faded');
  assert.equal(projectileScreenPosition({...landed,progress:1.2},offset).angle,projectileScreenPosition(landed).angle);
+});
+
+test('shells leave the muzzle, follow the clamped flight tangent and touch their ground footprint',()=>{
+ const from={x:200,y:250},to={x:270,y:270},offset={x:22,y:-34};
+ const p={kind:'shell',from,to,position:from,progress:0,duration:.3,arcHeight:70,height:0,radius:9,velocity:{x:375,y:107}} as Projectile;
+ const sample=(t:number)=>projectileScreenPosition({...p,progress:t,position:{x:from.x+(to.x-from.x)*t,y:from.y+(to.y-from.y)*t},height:4*p.arcHeight*t*(1-t)},offset);
+ assert.deepEqual([sample(0).x,sample(0).y],[222,189]);
+ assert.deepEqual([sample(1).x,sample(1).y+p.radius],[to.x,to.y]);
+ // Compare with a finite difference of the actual trajectory at multiple phases.
+ for(const t of [.1,.5,.9]){
+  const a=sample(t-.00001),b=sample(t+.00001),expected=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
+  assert.ok(Math.abs(sample(t).angle-expected)<.001);
+ }
+ assert.equal(shellTrailPositions(p,offset).length,0);
+ const mid={...p,progress:.5};
+ const trail=shellTrailPositions(mid,offset);
+ assert.equal(trail.length,2);
+ for(let i=0;i<trail.length;i++){
+  const at=sample(.5-[.065,.13][i]/p.duration);
+  assert.ok(Math.hypot(trail[i].x-at.x,trail[i].y-at.y)<1e-8);
+ }
+ assert.deepEqual(shellTrailPositions({...p,kind:'arrow'},offset),[]);
 });
 
 

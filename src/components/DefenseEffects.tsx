@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { frostWolfBracedFallAsset, frostWolfFallAsset, crushCannonProjectileOffset, rapidCrossbowProjectileOffset, lightningTowerProjectileOffset, fireTowerProjectileOffset, idleSpriteAsset, druidCastSocket, druidProjectileOffset, taoSealSocket, taoProjectileOffset, elfArrowSocket, elfProjectileOffset, mageProjectileOffset, mageCastSocket, hammerSequenceSpriteAsset, monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, ballistaProjectileOffset, waterCannonProjectileOffset } from '../games/defense/art';
-import { projectileScreenPosition } from '../games/defense/action';
+import { projectileScreenPosition, shellTrailPositions } from '../games/defense/action';
 import type { CombatAttack, Effect, Element, Point, Projectile } from '../games/defense/types';
 
 export const FX_COLORS: Record<Element, string> = { physical:'#fff0be', fire:'#ff9d38', lightning:'#fff27a', impact:'#ecc58b', water:'#4fd6c4' };
@@ -47,18 +47,19 @@ export function ProjectileLayer({projectiles,reduced,unit=1}:{projectiles:Projec
   return <g className="def-projectiles" aria-hidden="true" pointerEvents="none">{projectiles.map((p,index)=>{
     const detail=!reduced&&index>=projectiles.length-24;
     const elfOffset=elfProjectileOffset(p,unit),rapidOffset=rapidCrossbowProjectileOffset(p),tipAnchored=!!(elfOffset??rapidOffset);
-    const {x,y,angle}=projectileScreenPosition(p,elfOffset??rapidOffset??crushCannonProjectileOffset(p)??druidProjectileOffset(p,unit)??taoProjectileOffset(p,unit)??mageProjectileOffset(p,unit)??ballistaProjectileOffset(p)??waterCannonProjectileOffset(p)??fireTowerProjectileOffset(p,reduced)??lightningTowerProjectileOffset(p,reduced));
+    const launchOffset=elfOffset??rapidOffset??crushCannonProjectileOffset(p)??druidProjectileOffset(p,unit)??taoProjectileOffset(p,unit)??mageProjectileOffset(p,unit)??ballistaProjectileOffset(p)??waterCannonProjectileOffset(p)??fireTowerProjectileOffset(p,reduced)??lightningTowerProjectileOffset(p,reduced);
+    const {x,y,angle}=projectileScreenPosition(p,launchOffset);
     const water=p.element==='water',lightning=p.element==='lightning',green=p.actor==='druid';
     return <g key={p.id} data-projectile={p.kind} data-element={p.element} data-progress={p.progress.toFixed(3)}>
       {p.kind==='shell'?<ellipse cx={p.position.x} cy={p.position.y-1} rx={Math.max(3,9-p.height*.025)} ry="3.3" fill="#142e39" opacity={Math.max(.12,.35-p.height*.002)}/>:null}
+      {p.kind==='shell'&&detail?shellTrailPositions(p,launchOffset).map((point,i)=><circle key={i} data-shell-trail={water?'water':'stone'} cx={point.x} cy={point.y} r={(water?3.5:4.5)-i*.7} fill={water?'#a2fff0':'#dcc7a3'} opacity={.37-i*.1}/>):null}
       <g transform={`translate(${x},${y}) rotate(${angle})`}>
         {p.kind==='arrow'?<g data-arrow-anchor={tipAnchored?'tip':'center'} transform={tipAnchored?'translate(-16,0)':undefined}>
           {detail?<path d="M-34 0H-10" stroke="#fff2c2" strokeWidth="3" strokeLinecap="round" opacity=".32"/>:null}
           <path d="M-16 0H9" stroke="#473f31" strokeWidth="3.5" strokeLinecap="round"/><path d="M-16 -.5H9" stroke="#ebd39a" strokeWidth="1.6"/>
           <path d="m7-4 9 4-9 4 2-4Z" fill="#faf7db" stroke="#91875d" strokeWidth=".8"/><path d="m-14 0-7-5 1 5-1 5Z" fill="#c5e3b0" stroke="#648773" strokeWidth=".8"/>
         </g>:p.kind==='shell'?<>
-          {detail?<><circle cx="-14" cy="2" r="5" fill={water?'#8ff0dc':'#e1c99e'} opacity=".25"/><circle cx="-25" cy="5" r="3" fill={water?'#8ff0dc':'#e1c99e'} opacity=".12"/></>:null}
-          <circle r={water?9:8} fill={water?'#2fb3a3':'#33494c'} stroke={water?'#c8fff0':'#1f2f30'} strokeWidth="1.8"/><path d="M-4-4Q1-8 5-3" fill="none" stroke={water?'#eaffff':'#b6cbbe'} strokeWidth="2" strokeLinecap="round"/>
+          <circle r={p.radius} fill={water?'#2fb3a3':'#33494c'} stroke={water?'#c8fff0':'#1f2f30'} strokeWidth="1.8"/><path d="M-4-4Q1-8 5-3" fill="none" stroke={water?'#eaffff':'#b6cbbe'} strokeWidth="2" strokeLinecap="round"/>
           {water?<path d="M-5 2Q0-1 5 2" fill="none" stroke="#b8fff0" strokeWidth="1.2"/>:<><path d="M-7-3-11-7" stroke="#c8a45e" strokeWidth="1.6"/><circle cx="-12" cy="-8" r="2.5" fill="#ffdb82"/></>}
         </>:lightning?<>
           <circle r="18" fill="url(#def-spark-core)" opacity=".8"/>

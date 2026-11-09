@@ -53,8 +53,27 @@ export function projectileScreenPosition(p:Projectile,launchOffset:Point={x:0,y:
   const blend=1-Math.max(0,Math.min(1,p.progress)),duration=Math.max(.1,p.duration);
   const offsetSpeed=p.progress>=0&&p.progress<1?1/duration:0;
   const heightSpeed=p.arcHeight?4*p.arcHeight*(1-2*p.progress)/duration:0;
-  return {x:p.position.x+launchOffset.x*blend,y:p.position.y-27-p.height+launchOffset.y*blend,
-    angle:Math.atan2(p.velocity.y-heightSpeed-launchOffset.y*offsetSpeed,p.velocity.x-launchOffset.x*offsetSpeed)*180/Math.PI};
+  // Shell simulation uses a fixed landing point and a duration clamped to .3–.9s.
+  // Its nominal velocity is therefore not always its actual ground velocity.
+  // Descend from the barrel's 27px presentation height to one shell radius above
+  // the ground, so the bottom touches the same footprint as the area attack.
+  const shell=p.kind==='shell', groundRise=shell?(27-p.radius)*(1-blend):0;
+  const vx=shell?(p.to.x-p.from.x)/duration:p.velocity.x;
+  const vy=shell?(p.to.y-p.from.y+27-p.radius)/duration:p.velocity.y;
+  return {x:p.position.x+launchOffset.x*blend,y:p.position.y-27+groundRise-p.height+launchOffset.y*blend,
+    angle:Math.atan2(vy-heightSpeed-launchOffset.y*offsetSpeed,vx-launchOffset.x*offsetSpeed)*180/Math.PI};
+}
+
+/** Past points on a shell's real parabola; no particles are predicted before launch. */
+export function shellTrailPositions(p:Projectile,launchOffset:Point={x:0,y:0}):Point[] {
+ if(p.kind!=='shell'||p.duration<=0)return [];
+ return [.065,.13,.195].flatMap(age=>{
+  const t=p.progress-age/p.duration;
+  if(t<0||t>1)return [];
+  const blend=1-t;
+  return [{x:p.from.x+(p.to.x-p.from.x)*t+launchOffset.x*blend,
+   y:p.from.y+(p.to.y-p.from.y)*t-27+(27-p.radius)*t-4*p.arcHeight*t*(1-t)+launchOffset.y*blend}];
+ });
 }
 
 /** Swept collision prevents a fast dash skipping targets between simulation steps. */
