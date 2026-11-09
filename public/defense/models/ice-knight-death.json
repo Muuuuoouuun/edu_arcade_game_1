@@ -1,0 +1,315 @@
+{
+  "source": "art-source/defense/ice-knight-death.blend",
+  "source_sha256": "655f70e4af6fdad771d3d207b2f914e155064e5a21a766fa3ba8e1193cfd755a",
+  "base_source": "art-source/defense/ice-knight.blend",
+  "base_source_sha256": "47f74460ce0c792b22dfd80dcda465b290dfb4f14e50ebdb2c5b57cb999f8e7e",
+  "regeneration_command": "npm run models:ice-death",
+  "reference": "public/defense/monster-models.webp",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      317.61
+    ],
+    "crop": [
+      0,
+      0,
+      384,
+      384
+    ],
+    "orthographic_scale": 5.599999904632568,
+    "battle_anchor": {
+      "initial_y": 340,
+      "ground_y": 317.61,
+      "settle_seconds": 0.1
+    }
+  },
+  "clip": "ice-knight-death",
+  "duration": 0.6333333333333333,
+  "baked_frames": [
+    1,
+    5,
+    10,
+    15,
+    20
+  ],
+  "effect_duration": 0.7,
+  "sword_parent": "arm-near",
+  "initial_floor_penetration": -0.29134,
+  "samples": [
+    {
+      "frame": 1,
+      "time": 0.0,
+      "bounds": [
+        39.963,
+        11.167,
+        269.418,
+        355.49
+      ],
+      "lowest_vertex": -0.29134
+    },
+    {
+      "frame": 2,
+      "time": 0.03333,
+      "bounds": [
+        39.975,
+        11.168,
+        269.418,
+        351.48
+      ],
+      "lowest_vertex": -0.21555
+    },
+    {
+      "frame": 3,
+      "time": 0.06667,
+      "bounds": [
+        41.392,
+        11.41,
+        269.438,
+        344.04
+      ],
+      "lowest_vertex": -0.07483
+    },
+    {
+      "frame": 4,
+      "time": 0.1,
+      "bounds": [
+        47.116,
+        13.799,
+        270.09,
+        340.444
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 5,
+      "time": 0.13333,
+      "bounds": [
+        57.459,
+        18.939,
+        271.546,
+        340.958
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 6,
+      "time": 0.16667,
+      "bounds": [
+        71.552,
+        26.551,
+        273.63,
+        341.22
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 7,
+      "time": 0.2,
+      "bounds": [
+        81.252,
+        36.375,
+        276.163,
+        341.286
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 8,
+      "time": 0.23333,
+      "bounds": [
+        82.348,
+        36.797,
+        278.973,
+        341.349
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 9,
+      "time": 0.26667,
+      "bounds": [
+        81.062,
+        38.478,
+        288.89,
+        341.41
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 10,
+      "time": 0.3,
+      "bounds": [
+        80.841,
+        41.83,
+        303.128,
+        341.472
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 11,
+      "time": 0.33333,
+      "bounds": [
+        81.617,
+        46.755,
+        313.482,
+        342.16
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 12,
+      "time": 0.36667,
+      "bounds": [
+        82.327,
+        53.089,
+        322.033,
+        343.515
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 13,
+      "time": 0.4,
+      "bounds": [
+        82.889,
+        60.263,
+        328.783,
+        344.767
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 14,
+      "time": 0.43333,
+      "bounds": [
+        83.305,
+        67.526,
+        333.755,
+        345.858
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 15,
+      "time": 0.46667,
+      "bounds": [
+        83.59,
+        74.025,
+        337.117,
+        351.013
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 16,
+      "time": 0.5,
+      "bounds": [
+        83.759,
+        78.817,
+        339.099,
+        355.169
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 17,
+      "time": 0.53333,
+      "bounds": [
+        83.828,
+        81.026,
+        339.894,
+        356.921
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 18,
+      "time": 0.56667,
+      "bounds": [
+        83.83,
+        81.093,
+        339.918,
+        356.973
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 19,
+      "time": 0.6,
+      "bounds": [
+        83.83,
+        81.093,
+        339.918,
+        356.973
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 20,
+      "time": 0.63333,
+      "bounds": [
+        83.83,
+        81.093,
+        339.918,
+        356.973
+      ],
+      "lowest_vertex": 0.001
+    }
+  ],
+  "files": [
+    {
+      "file": "ice-knight-death.glb",
+      "bytes": 156468,
+      "sha256": "24d64cbdb4275724cf425314c93fd1310a46798e0321afa0778b77d2a55e91e7"
+    },
+    {
+      "file": "ice-knight-death-atlas.webp",
+      "bytes": 57902,
+      "sha256": "704550ff1c7807b189a3808ac0e79d1f197536565306f85b43cde77e1269e74a"
+    },
+    {
+      "file": "ice-knight-death.png",
+      "bytes": 160335,
+      "sha256": "17e370b036058f0253c3ffce5cbe01c412237c71cc2c690e2543791d63270bde"
+    }
+  ],
+  "renders": [
+    {
+      "path": "art-source/defense/ice-death-frames/ice-death-0.png",
+      "sha256": "17e370b036058f0253c3ffce5cbe01c412237c71cc2c690e2543791d63270bde"
+    },
+    {
+      "path": "art-source/defense/ice-death-frames/ice-death-1.png",
+      "sha256": "0522b1e0483c483826ec5202a981839aaf89df1c949bc7c38fb5c9bac3000670"
+    },
+    {
+      "path": "art-source/defense/ice-death-frames/ice-death-2.png",
+      "sha256": "781fc1004e33920b6367d5890c69efea72b936aa1fa20561b3ae94131e94e0a4"
+    },
+    {
+      "path": "art-source/defense/ice-death-frames/ice-death-3.png",
+      "sha256": "eb364ab6867717a0ade54e6c2162119db2e14ad4697361fc6a608b6fc1091602"
+    },
+    {
+      "path": "art-source/defense/ice-death-frames/ice-death-4.png",
+      "sha256": "c17f0aee96cabe5017b9fd1e1ef46993a6d076c42e7a20b64a1a2fddf5ce46bd"
+    }
+  ],
+  "camera": {
+    "location": [
+      5.0,
+      -10.0,
+      6.900000095367432
+    ],
+    "rotation_euler": [
+      1.157740592956543,
+      3.3536032617575984e-08,
+      0.46364766359329224
+    ],
+    "samples": 64,
+    "view_transform": "Standard"
+  }
+}

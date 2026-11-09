@@ -27,6 +27,16 @@ try {
    assert.match(html,/wood-soldier-death-atlas\.webp/);
   }
  });
+ test('ice death keeps its hit location and mirrors both facings',()=>{
+  for(const facing of [-1,1])for(const reduced of [false,true]){
+   const effects=[{id:1,kind:'death',from:{x:105,y:220},to:{x:105,y:220},element:'physical',life:.4,maxLife:.7,age:.3,targetKind:'ice',targetSprite:10,targetFacing:facing}];
+   const html=renderToStaticMarkup(createElement('svg',null,createElement(EffectLayer,{effects,reduced,layer:'front'})));
+   assert.match(html,/transform="translate\(105,220\)" data-effect="death"/);
+   assert.match(html,reduced?/data-death-frame="4"/:/data-death-frame="2"/);
+   assert.match(html,facing<0?/scale\(-1,1\)/:/scale\(1,1\)/);
+   assert.match(html,/ice-knight-death-atlas\.webp/);
+  }
+ });
  const heroes=['mage','elf','dwarf','tao','barbarian','druid'];
  for(const reduced of [false,true])test(`skill marks remain under combat poses (${reduced?'reduced':'normal'} motion)`,()=>{
   const signatures=new Set();
