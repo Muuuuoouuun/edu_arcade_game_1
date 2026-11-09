@@ -115,11 +115,11 @@ function EnemyUnit({unit=1,hpScale=1,enemy:e,state:s,reduced,onActivate,onKey}:{
  const flinch=e.kind==='frostwolf'&&!knock&&!charging?frostWolfHitAsset(heading,phaseDistance,e.hit,size,e.walkCycles===undefined?undefined:e.walkCycles+e.id*7/40,reduced):null;
  const brace=e.kind==='frostwolf'&&knock&&!charging?frostWolfBraceAsset(heading,phaseDistance,e.walkCycles===undefined?undefined:e.walkCycles+e.id*7/40,e.knockVelocity??0,size,reduced):null;
  const authoredWolf=!!directional||!!flinch||!!brace;
- const gait=directional?.frame??enemyWalkFrame(e.kind,phaseDistance);
+ const gait=directional?.frame??enemyWalkFrame(e.kind,phaseDistance,size);
  const motionPose=charging?'charge':e.hit>.02||knock?'hit':enraged?'charge':boss?'idle':reduced||gait<4?'walk-a':'walk-b';
- const walking=directional?.asset??(canWalk?monsterWalkingSpriteAsset(e.kind,phaseDistance):null);
+ const walking=directional?.asset??(canWalk?monsterWalkingSpriteAsset(e.kind,phaseDistance,size):null);
  const art=brace?.asset??flinch?.asset??walking??monsterSpriteAsset(e.kind,motionPose);
- const stride=Math.sin(phaseDistance/enemyStride(e.kind)*Math.PI*2);
+ const stride=Math.sin(phaseDistance/enemyStride(e.kind,size)*Math.PI*2);
  // Authored gait already contains weight transfer; don't bounce the entire model again.
  const bob=reduced||charging||knock||flinch||walking||!moving?0:-Math.abs(stride)*(boss?1.5:e.kind==='sprout'?3.1:2.3);
  const lean=reduced||flinch||brace?0:knock?-12*facing*clamp((e.knockVelocity??0)/110):walking||!moving?0:stride*1.8+facing*1.3;

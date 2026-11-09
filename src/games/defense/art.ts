@@ -692,10 +692,10 @@ export function monsterSpriteAsset(kind:EnemyKind,pose:MonsterPose):SpriteAsset|
  return {src,viewBox:`${x} ${y} ${w} ${h}`,width:atlas?.width??(boss?1774:1086),height:atlas?.height??(boss?887:1448),displayScale:Math.max(w,h)/model.span,...(atlas&&kind==='wood'?{groundY:317.61}:atlas&&kind==='frostwolf'?{groundY:284.49}:{})};
 }
 /** Eight authored poses, complete atlas only; never swap a modeled gait onto illustrated hit art. */
-export function monsterWalkingSpriteAsset(kind:EnemyKind,distance:number):SpriteAsset|null {
+export function monsterWalkingSpriteAsset(kind:EnemyKind,distance:number,size=68):SpriteAsset|null {
  if(kind==='frostwolf'&&motionLoaded.has(WOLF_ATLAS.src)&&motionLoaded.has(WOLF_TROT_ATLAS.src))return {...WOLF_TROT_ATLAS,viewBox:`${enemyWalkFrame(kind,distance)*384+8} 100 368 228`,displayScale:368/315,groundY:284.49};
  // y=297 preserves the living golem's legacy crop/bottom offset with the full camera frame.
- if(kind==='stone'&&motionLoaded.has(GOLEM_ATLAS.src)&&motionLoaded.has(GOLEM_WALK_ATLAS.src))return {...GOLEM_WALK_ATLAS,viewBox:`${enemyWalkFrame(kind,distance)*384} 0 384 384`,displayScale:384/260,groundY:297};
+ if(kind==='stone'&&motionLoaded.has(GOLEM_ATLAS.src)&&motionLoaded.has(GOLEM_WALK_ATLAS.src))return {...GOLEM_WALK_ATLAS,viewBox:`${enemyWalkFrame(kind,distance,size)*384} 0 384 384`,displayScale:384/260,groundY:297};
  if(kind!=='wood'||!motionLoaded.has(WOOD_ATLAS.src)||!motionLoaded.has(WOOD_WALK_ATLAS.src))return null;
  return {...WOOD_WALK_ATLAS,viewBox:`${enemyWalkFrame(kind,distance)*384} 8 384 364`,displayScale:384/320,groundY:317.61};
 }

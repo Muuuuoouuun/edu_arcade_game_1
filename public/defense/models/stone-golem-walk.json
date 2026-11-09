@@ -23,7 +23,8 @@
   },
   "clip": "stone-golem-walk",
   "duration": 1,
-  "stride_world": 64,
+  "stride_world": 22.16903,
+  "stride_reference_size": 68,
   "baked_frames": [
     1,
     5,

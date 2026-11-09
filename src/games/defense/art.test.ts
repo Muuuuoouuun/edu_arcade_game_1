@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import type { CombatAttack, Projectile } from './types.ts';
+import { STONE_GOLEM_STRIDE } from './locomotion.ts';
 
 type Art = typeof import('./art.ts');
 
@@ -171,9 +172,10 @@ test('ice death has actual split geometry, held sword and bounded sampled floor'
 test('stone gait follows distance with eight poses and retains the legacy hit anchor',async()=>{
  const {art,requests}=await loadWithImageResults(()=>false,'golem-walk');
  assert.equal(requests.filter(src=>src.endsWith('/stone-golem-walk-atlas.webp')).length,1);
- const frames=Array.from({length:8},(_,i)=>art.monsterWalkingSpriteAsset('stone',i*8)!);
+ const frames=Array.from({length:8},(_,i)=>art.monsterWalkingSpriteAsset('stone',i*STONE_GOLEM_STRIDE/8)!);
  assert.equal(new Set(frames.map(f=>f.viewBox)).size,8);
- assert.deepEqual(art.monsterWalkingSpriteAsset('stone',64),frames[0]);
+ assert.deepEqual(art.monsterWalkingSpriteAsset('stone',STONE_GOLEM_STRIDE),frames[0]);
+ assert.deepEqual(art.monsterWalkingSpriteAsset('stone',STONE_GOLEM_STRIDE*1.25/8,85),frames[1],'enlarged mobile sprite takes proportionally longer strides');
  for(const f of frames){
   assert.equal(f.groundY,297);assert.equal(f.displayScale,384/260);
   const [x,y,w,h]=f.viewBox.split(' ').map(Number);assert.ok(x+w<=f.width&&y+h<=f.height);
@@ -194,7 +196,7 @@ test('stone gait has articulated feet, grounded samples and real looped GLB',()=
  assert.equal(hash(read(m.source)),m.source_sha256);assert.equal(hash(read(m.base_source)),m.base_source_sha256);
  for(const f of m.files){const b=read('public/defense/models/'+f.file);assert.equal(hash(b),f.sha256);assert.equal(b.length,f.bytes);}
  for(const f of m.renders)assert.equal(hash(read(f.path)),f.sha256);
- assert.deepEqual(m.baked_frames,[1,5,9,13,17,21,25,29]);assert.equal(m.stride_world,64);
+ assert.deepEqual(m.baked_frames,[1,5,9,13,17,21,25,29]);assert.equal(m.stride_world,STONE_GOLEM_STRIDE);assert.equal(m.stride_reference_size,68);
  assert.equal(m.samples.length,33);assert.ok(m.samples.every((v:{lowest_vertex:number,feet:{near:number,far:number}})=>v.lowest_vertex>-.005&&Math.min(v.feet.near,v.feet.far)<.002));
  assert.ok(m.samples.some((v:{feet:{near:number}})=>v.feet.near>.17));assert.ok(m.samples.some((v:{feet:{far:number}})=>v.feet.far>.17));
  assert.deepEqual(m.samples[0].bounds,m.samples[32].bounds);
