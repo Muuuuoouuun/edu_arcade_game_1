@@ -41,10 +41,26 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     const demo = await page.evaluate(() => ({ wave: __rush.state.wave, towers: __rush.state.towers.filter(Boolean).length, info: __rush.info() }));
     check(demo.towers >= 2, `demo built towers (${demo.towers}), draw calls ${demo.info.calls}`);
 
-    // 2. Desktop controls: keyboard movement per sim tick, build on a pad, mouse fire.
+    // 2. Town (kingdom) loop: title → town → upgrade → persists across reload → battle uses the upgrade.
     await page.goto(BASE + '?seed=5');
+    await page.evaluate(() => localStorage.removeItem('arcana-rush:kingdom:v1'));
+    await page.reload();
     await page.click('#btn-play');
     await page.waitForTimeout(300);
+    check(await page.isVisible('#screen-town'), 'title → town screen');
+    await page.screenshot({ path: `${OUT}/desktop-town.png` });
+    await page.click('[data-up="attack"]');
+    await page.waitForTimeout(150);
+    check(await page.evaluate(() => __rush.kingdom.perks.attack === 1), 'perk upgrade in town');
+    await page.reload();
+    await page.click('#btn-play');
+    await page.waitForTimeout(200);
+    check(await page.evaluate(() => __rush.kingdom.perks.attack === 1), 'kingdom persists across reload');
+
+    // 3. Desktop controls: keyboard movement per sim tick, build on a pad, mouse fire.
+    await page.click('#btn-battle');
+    await page.waitForTimeout(300);
+    check(await page.evaluate(() => __rush.state.mods.damage > 1), 'battle starts with kingdom modifiers');
     const t0 = await page.evaluate(() => ({ tick: __rush.state.tick, x: __rush.state.hero.x }));
     await page.keyboard.down('KeyA');
     await page.waitForFunction(() => __rush.state.hero.x <= -4.4, null, { timeout: 20000 });
@@ -63,10 +79,21 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await page.waitForTimeout(300);
     check(await page.evaluate(() => __rush.state.stats.shots >= 1), 'mouse click fires');
     await page.screenshot({ path: `${OUT}/desktop-play.png` });
+    // 4. Finish the battle by letting the town fall (fast) → reward once → back to town.
+    await page.goto(BASE + '?seed=5&speed=8');
+    await page.click('#btn-play');
+    await page.click('#btn-battle');
+    const lostBefore = await page.evaluate(() => __rush.kingdom.battles.lost);
+    await page.waitForSelector('#screen-result:not([hidden])', { timeout: 60000 });
+    check(await page.isVisible('#result-reward'), `result shows reward: ${(await page.textContent('#result-reward')).trim()}`);
+    await page.screenshot({ path: `${OUT}/desktop-result.png` });
+    await page.click('#btn-town');
+    await page.waitForTimeout(200);
+    check(await page.evaluate(n => __rush.kingdom.battles.lost === n + 1, lostBefore), 'battle recorded once in the kingdom');
     check(errors.length === 0, `desktop page errors: ${errors.join(' | ') || 'none'}`);
     await page.close();
 
-    // 3. Mobile landscape touch: joystick, tap auto-fire, drag aim-fire.
+    // 5. Mobile landscape touch: town, joystick, tap auto-fire, drag aim-fire.
     const ctx = await browser.newContext({ ...devices['Pixel 7 landscape'] });
     const mp = await ctx.newPage();
     const merrors = [];
@@ -75,6 +102,9 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await mp.waitForTimeout(800);
     await mp.screenshot({ path: `${OUT}/mobile-title.png` });
     await mp.tap('#btn-play');
+    await mp.waitForTimeout(300);
+    await mp.screenshot({ path: `${OUT}/mobile-town.png` });
+    await mp.tap('#btn-battle');
     await mp.waitForTimeout(300);
     const cdp = await ctx.newCDPSession(mp);
     const touch = (type, touchPoints) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints });

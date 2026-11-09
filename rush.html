@@ -40,16 +40,32 @@
             <li><b>필살기</b> 명중으로 충전, 보라 버튼 · Space</li>
             <li><b>궁수탑</b> 노란 원 위에서 건설·강화 · E</li>
           </ul>
-          <div class="actions"><button id="btn-play" class="primary">전투 시작</button><button id="btn-demo">자동 시연</button></div>
-          <p class="note">5웨이브 · 약 2~3분. 영웅만으로도, 탑만으로도 지키기 어렵습니다.</p>
+          <div class="actions"><button id="btn-play" class="primary">마을로</button><button id="btn-demo">자동 시연</button></div>
+          <p class="note">전투는 5웨이브, 약 2~3분. 이기면 식량·목재로 마을을 키워 다음 전투가 강해집니다.</p>
+        </div>
+      </section>
+      <section id="screen-town" class="screen" hidden>
+        <div class="card town-card">
+          <header class="town-head">
+            <div><p class="eyebrow">KINGDOM</p><h1>아르카나 마을</h1></div>
+            <div class="town-res" aria-label="자원">
+              <span><i class="res-ico food"></i><b id="res-food">0</b></span>
+              <span><i class="res-ico wood"></i><b id="res-wood">0</b></span>
+            </div>
+          </header>
+          <p id="town-reward" class="town-reward" hidden></p>
+          <button id="btn-collect" class="collect">수확 <b id="collect-amount"></b></button>
+          <ul id="town-list" class="town-list"></ul>
+          <div class="actions"><button id="btn-battle" class="primary">출전</button><button id="btn-town-title">타이틀</button></div>
         </div>
       </section>
       <section id="screen-result" class="screen" hidden>
         <div class="card">
           <p class="eyebrow">RESULT</p>
           <h1 id="result-title">결과</h1>
+          <p id="result-reward" class="result-reward" hidden></p>
           <dl id="result-stats" class="stats"></dl>
-          <div class="actions"><button id="btn-again" class="primary">다시 하기</button><button id="btn-title">타이틀</button></div>
+          <div class="actions"><button id="btn-town" class="primary">마을로</button><button id="btn-again">다시 하기</button></div>
         </div>
       </section>
       <section id="screen-pause" class="screen" hidden>

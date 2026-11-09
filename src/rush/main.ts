@@ -7,6 +7,8 @@ import { RushView } from './render.ts';
 import { RushInput } from './input.ts';
 import { playCombatSound, unlockAudio, type CombatSoundKind } from '../lib/sound.ts';
 import { playHaptic } from '../lib/haptic.ts';
+import { battleReward, collect, grantReward, kingdomMods } from './kingdom.ts';
+import { loadKingdom, saveKingdom, TownScreen } from './town.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const params = new URLSearchParams(location.search);
@@ -20,8 +22,11 @@ const canvas = $<HTMLCanvasElement>('rush-canvas');
 const surface = $('rush');
 const view = new RushView(canvas);
 let state: RushState = createRush(Number(params.get('seed')) || 1);
-let mode: 'title' | 'play' | 'demo' | 'result' = 'title';
+let mode: 'title' | 'town' | 'play' | 'demo' | 'result' = 'title';
 let paused = false;
+/** Id of the battle in progress; a battle's kingdom reward is granted once per id. */
+let battleId = '';
+const town = new TownScreen($('screen-town'));
 const input = new RushInput({
   surface: $('rush-surface'), stick: $('stick'), knob: $('stick-knob'),
   fire: $('fire'), superBtn: $('super'), build: $('build'), startWave: $('start-wave'),
@@ -118,13 +123,23 @@ function updateHud() {
 }
 
 // ---------- screens ----------
-function showScreen(id: 'title' | 'result' | 'pause' | null) {
-  for (const s of ['title', 'result', 'pause']) $(`screen-${s}`).hidden = s !== id;
+function showScreen(id: 'title' | 'town' | 'result' | 'pause' | null) {
+  for (const s of ['title', 'town', 'result', 'pause']) $(`screen-${s}`).hidden = s !== id;
   surface.classList.toggle('in-menu', id !== null);
+}
+function openTown(rewardText = '') {
+  mode = 'town';
+  paused = false;
+  input.enabled = false;
+  showScreen('town');
+  town.show(rewardText);
 }
 function start(nextMode: 'play' | 'demo') {
   unlockAudio();
-  state = createRush(Number(params.get('seed')) || (Math.floor(Math.random() * 1e9) | 1));
+  const seed = Number(params.get('seed')) || (Math.floor(Math.random() * 1e9) | 1);
+  // Permanent kingdom upgrades shape real battles; the demo always shows the base game.
+  state = createRush(seed, nextMode === 'play' ? kingdomMods(loadKingdom()) : undefined);
+  battleId = `${Date.now().toString(36)}-${seed}`;
   mode = nextMode;
   paused = false;
   input.reset();
@@ -140,6 +155,13 @@ function showResult() {
   input.enabled = false;
   $('result-title').textContent = won ? '마을을 지켰다!' : '마을이 함락됐다';
   $('screen-result').classList.toggle('won', won);
+  const reward = battleReward(s);
+  const { kingdom, granted } = grantReward(collect(loadKingdom(), Date.now()), battleId, reward);
+  const saved = granted && saveKingdom(kingdom);
+  const rewardEl = $('result-reward');
+  rewardEl.hidden = !granted;
+  rewardEl.innerHTML = `<i class="res-ico food"></i>식량 +${reward.food} <i class="res-ico wood"></i>목재 +${reward.wood}${saved ? '' : ' <small>(저장 실패: 이 기기에서 저장 공간을 쓸 수 없음)</small>'}`;
+  lastReward = granted ? `방금 전투 보상: 식량 +${reward.food} · 목재 +${reward.wood}` : '';
   const accuracy = s.stats.shots ? Math.round((s.stats.hits / (s.stats.shots * HERO.bolts)) * 100) : 0;
   const towers = s.towers.filter(Boolean).map(t => `Lv${t!.level + 1}`).join(' · ') || '없음';
   $('result-stats').innerHTML = [
@@ -149,10 +171,13 @@ function showResult() {
   ].map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   window.setTimeout(() => showScreen('result'), 700);
 }
-$('btn-play').addEventListener('click', () => start('play'));
+let lastReward = '';
+$('btn-play').addEventListener('click', () => { unlockAudio(); openTown(); });
 $('btn-demo').addEventListener('click', () => start('demo'));
+$('btn-battle').addEventListener('click', () => start('play'));
 $('btn-again').addEventListener('click', () => start('play'));
-$('btn-title').addEventListener('click', () => { mode = 'title'; showScreen('title'); });
+$('btn-town').addEventListener('click', () => { openTown(lastReward); lastReward = ''; });
+$('btn-town-title').addEventListener('click', () => { mode = 'title'; showScreen('title'); });
 $('pause').addEventListener('click', () => { if (mode === 'play') { paused = true; showScreen('pause'); } });
 $('btn-resume').addEventListener('click', () => { paused = false; showScreen(null); });
 $('btn-quit').addEventListener('click', () => { paused = false; mode = 'title'; showScreen('title'); });
@@ -202,4 +227,4 @@ if (params.has('demo')) start('demo');
 else if (params.has('play')) start('play');
 
 // Read-only handle for automated browser checks.
-Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, info: () => view.info(), towerLevels: TOWER_LEVELS.length } });
+Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get kingdom() { return town.current; }, info: () => view.info(), towerLevels: TOWER_LEVELS.length } });

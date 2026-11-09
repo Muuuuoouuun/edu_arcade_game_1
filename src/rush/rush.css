@@ -137,3 +137,67 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   .hud-town { order: 5; flex-basis: 100%; max-width: none; }
   .toast { top: calc(104px + var(--safe-t)); }
 }
+
+/* ---------- town (kingdom) screen ---------- */
+.res-ico { display: inline-block; width: 15px; height: 15px; vertical-align: -2px; margin-right: 3px; border: 2px solid var(--outline); border-radius: 50%; }
+.res-ico.food { background: radial-gradient(circle at 35% 35%, #fff3a6, #ffcf3a 60%, #d99a00); }
+.res-ico.wood { border-radius: 4px; background: linear-gradient(90deg, #c27a3c 0 30%, #a8642e 30% 70%, #8a4f22 70%); }
+.town-card { width: min(780px, 100%); text-align: left; padding-bottom: 0; }
+.town-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.town-head h1 { font-size: 32px; }
+.town-res { display: flex; gap: 8px; }
+.town-res span { display: flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 12px; background: rgba(0,0,0,0.28); border: 2px solid var(--outline); }
+.town-res b { font-family: var(--display); font-weight: 400; font-size: 20px; -webkit-text-stroke: 4px var(--outline); paint-order: stroke fill; font-variant-numeric: tabular-nums; }
+.town-reward, .result-reward { margin: 10px 0 0; padding: 8px 12px; border-radius: 12px; background: rgba(82,224,124,0.18); border: 2px solid rgba(82,224,124,0.6); font-size: 15px; }
+.result-reward { text-align: center; font-size: 17px; }
+.collect {
+  display: block; width: 100%; margin: 10px 0; padding: 9px 14px; border-radius: 14px; border: 3px solid var(--outline);
+  background: linear-gradient(#b5f08a 0 50%, #6fd34a 50%); color: #fff; font-family: var(--display); font-size: 18px; text-align: center;
+  -webkit-text-stroke: 4px var(--outline); paint-order: stroke fill; box-shadow: 0 4px 0 var(--outline); touch-action: manipulation;
+}
+.collect b { font-weight: 400; font-size: 15px; }
+.collect:disabled { background: rgba(255,255,255,0.1); cursor: default; }
+.town-list { list-style: none; margin: 0 0 4px; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+.town-row { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 6px 10px; padding: 8px 10px; border-radius: 14px; background: rgba(255,255,255,0.08); border: 2px solid rgba(29,20,51,0.9); }
+.town-row.bump { animation: townBump 0.4s ease-out; }
+@keyframes townBump { 40% { transform: scale(1.04); background: rgba(255,201,60,0.3); } }
+.town-icon {
+  flex: none; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; border: 3px solid var(--outline);
+  font-family: var(--display); font-size: 18px; color: #fff; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; box-shadow: 0 3px 0 var(--outline);
+}
+.tone-castle { background: linear-gradient(#7fd0ff, #2f9bff); }
+.tone-food { background: linear-gradient(#ffe58a, #ffc93c); }
+.tone-wood { background: linear-gradient(#e0a06a, #a8642e); }
+.tone-attack { background: linear-gradient(#ff9aa6, #ff3d55); }
+.tone-tower { background: linear-gradient(#c9a8ff, #a46bff); }
+.tone-wall { background: linear-gradient(#c7d3ea, #8796bf); }
+.town-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.town-info b { font-size: 15px; white-space: nowrap; }
+.town-info em { font-style: normal; color: var(--gold); font-size: 13px; margin-left: 2px; }
+.town-info small { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.town-up {
+  grid-column: 1 / -1; padding: 6px 9px; border-radius: 12px; border: 3px solid var(--outline); background: linear-gradient(#ffe58a 0 50%, #ffc93c 50%);
+  color: #2a1a00; font-size: 13px; font-weight: 700; box-shadow: 0 3px 0 var(--outline); touch-action: manipulation; white-space: nowrap;
+}
+.town-up:disabled { background: rgba(255,255,255,0.12); color: var(--muted); box-shadow: none; cursor: default; }
+.town-up.capped { font-weight: 600; }
+.town-up .res-ico { width: 12px; height: 12px; margin: 0 2px 0 0; }
+/* The battle button stays reachable even when the list scrolls. */
+.town-card .actions { position: sticky; bottom: 0; padding: 10px 0 14px; background: linear-gradient(rgba(38,26,74,0), #261a4a 35%); }
+@media (max-height: 420px) {
+  .town-card { padding: 10px 14px 0; }
+  .town-head .eyebrow { display: none; }
+  .town-head h1 { font-size: 22px; }
+  .town-res span { padding: 3px 9px; }
+  .town-res b { font-size: 16px; }
+  .town-list { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .town-row { gap: 4px 8px; padding: 5px 7px; }
+  .town-icon { width: 28px; height: 28px; font-size: 14px; border-radius: 8px; }
+  .town-info b { font-size: 13px; }
+  .town-info small { font-size: 11px; }
+  .town-up { padding: 3px 6px; font-size: 12px; }
+  .collect { margin: 6px 0; padding: 4px 10px; font-size: 15px; }
+  .town-reward { margin-top: 6px; padding: 4px 10px; font-size: 12.5px; }
+  .town-card .actions { padding: 6px 0 8px; }
+  .town-card .actions button { padding: 6px 18px; font-size: 17px; }
+}

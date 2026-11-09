@@ -47,8 +47,12 @@ export type RushEvent =
   | { type: 'won' }
   | { type: 'lost' };
 
+/** Battle modifiers from permanent (between-battle) upgrades. All 1 = the base game. */
+export interface RushMods { damage: number; towerCost: number; townHp: number }
+export const NO_MODS: RushMods = { damage: 1, towerCost: 1, townHp: 1 };
+
 export interface RushState {
-  seed: number; rng: number; tick: number; t: number; phase: Phase;
+  seed: number; rng: number; tick: number; t: number; phase: Phase; mods: RushMods;
   /** Index of the current wave while fighting, or of the next wave while preparing. */
   wave: number; prepT: number; groups: GroupProgress[];
   town: { hp: number; maxHp: number }; gold: number;
@@ -110,10 +114,11 @@ function confine(p: Vec, r: number): void {
 }
 
 // ---------- creation ----------
-export function createRush(seed = 1): RushState {
+export function createRush(seed = 1, mods: RushMods = NO_MODS): RushState {
+  const townHp = Math.round(TOWN.hp * mods.townHp);
   return {
-    seed, rng: seed | 0, tick: 0, t: 0, phase: 'prep', wave: 0, prepT: ECONOMY.prepTime, groups: [],
-    town: { hp: TOWN.hp, maxHp: TOWN.hp }, gold: ECONOMY.startGold,
+    seed, rng: seed | 0, tick: 0, t: 0, phase: 'prep', mods: { ...mods }, wave: 0, prepT: ECONOMY.prepTime, groups: [],
+    town: { hp: townHp, maxHp: townHp }, gold: ECONOMY.startGold,
     hero: { x: HERO_SPAWN.x, z: HERO_SPAWN.z, hp: HERO.hp, facing: -Math.PI / 2, ammo: HERO.ammoMax, reloadT: 0, fireCd: 0, superCharge: 0, downT: 0, calmT: 0 },
     enemies: [], shots: [], towers: PADS.map(() => null), coins: [], nextId: 1,
     stats: { kills: 0, shots: 0, hits: 0, supers: 0, goldEarned: 0, heroDowns: 0 },
@@ -135,7 +140,7 @@ export function padInReach(s: RushState): number {
 export function padCost(s: RushState, pad: number): number | null {
   const tower = s.towers[pad];
   const next = tower ? tower.level + 1 : 0;
-  return next < TOWER_LEVELS.length ? TOWER_LEVELS[next].cost : null;
+  return next < TOWER_LEVELS.length ? Math.round(TOWER_LEVELS[next].cost * s.mods.towerCost) : null;
 }
 export function nearestEnemy(s: RushState, from: Vec, range: number): Enemy | null {
   let best: Enemy | null = null, bestD = range;
@@ -286,7 +291,7 @@ function fire(s: RushState, aim: Vec | 'auto') {
     const a = angle + (i - half) * HERO.spread;
     s.shots.push({
       id: s.nextId++, owner: 'hero', x: h.x + Math.cos(a) * 0.5, z: h.z + Math.sin(a) * 0.5,
-      vx: Math.cos(a) * HERO.boltSpeed, vz: Math.sin(a) * HERO.boltSpeed, damage: HERO.boltDamage,
+      vx: Math.cos(a) * HERO.boltSpeed, vz: Math.sin(a) * HERO.boltSpeed, damage: HERO.boltDamage * s.mods.damage,
       life: HERO.range / HERO.boltSpeed, radius: HERO.boltRadius, target: 0, tx: 0, tz: 0,
     });
   }
@@ -308,7 +313,7 @@ function castSuper(s: RushState, aim: Vec | 'auto') {
   if (dx !== 0 || dz !== 0) h.facing = Math.atan2(dz, dx);
   s.shots.push({
     id: s.nextId++, owner: 'super', x: h.x, z: h.z, vx: dx / HERO.superTravel, vz: dz / HERO.superTravel,
-    damage: HERO.superDamage, life: HERO.superTravel, radius: HERO.superRadius, target: 0, tx: point.x, tz: point.z,
+    damage: HERO.superDamage * s.mods.damage, life: HERO.superTravel, radius: HERO.superRadius, target: 0, tx: point.x, tz: point.z,
   });
   s.stats.supers++;
 }

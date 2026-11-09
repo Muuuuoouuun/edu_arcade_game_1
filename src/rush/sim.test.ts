@@ -138,10 +138,10 @@ test('design pillars: hero alone or towers alone lose, both together win', () =>
 
 test('the rules core stays engine-free (portable to a server or another renderer)', async () => {
   const { readFile } = await import('node:fs/promises');
-  for (const file of ['sim.ts', 'data.ts', 'bot.ts']) {
+  for (const file of ['sim.ts', 'data.ts', 'bot.ts', 'kingdom.ts']) {
     const src = await readFile(new URL(`./${file}`, import.meta.url), 'utf8');
     const imports = [...src.matchAll(/from '([^']+)'/g)].map(m => m[1]);
-    assert.ok(imports.every(i => i === './data.ts' || i === './sim.ts'), `${file} imports only rules modules: ${imports.join(', ')}`);
+    assert.ok(imports.every(i => ['./data.ts', './sim.ts'].includes(i)), `${file} imports only rules modules: ${imports.join(', ')}`);
     const code = src.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
     for (const banned of ['Math.random', 'document.', 'window.', 'performance.', 'Date.now', 'requestAnimationFrame']) {
       assert.ok(!code.includes(banned), `${file} must not use ${banned}`);
