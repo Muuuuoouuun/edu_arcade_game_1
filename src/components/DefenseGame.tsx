@@ -67,6 +67,7 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
   const [, setArtRevision] = useState(0);
   const [aimingDash, setAimingDash] = useState(false);
   const aimingRef = useRef(false);
+  const skillStopRef = useRef(false);
   const [reasons, setReasons] = useState<PauseReasons>([]);
   const reasonsRef = useRef<PauseReasons>([]);
   type OpenPanel = { view: BattlePanel; session: TacticalSession };
@@ -103,6 +104,7 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
     if (action.type === 'hire' && !campaignRef.current.visitors.includes(action.hero)) return;
     const next = actDefense(before, action);
     if (next === before) return;
+    if (action.type === 'skill') skillStopRef.current = true; // skill effects are born on input, not in a step: the loop adds the stop
     combatFeedback(before, next, hapticsRef.current); publish(next);
     if (action.type === 'speed') writeSpeedPreference(next.speed);
     if (['build', 'upgrade', 'hire', 'promote'].includes(action.type)) playSound('flip');
@@ -155,9 +157,15 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
       const before = stateRef.current;
       const finishing = (before.phase === 'won' || before.phase === 'lost') && before.effects.length > 0;
       if (modeRef.current === 'battle' && !blockedRef.current && !document.hidden && (['prep', 'wave', 'intermission'].includes(before.phase) || finishing) && !before.paused) {
+        let impact = false;
+        if (skillStopRef.current) {
+          skillStopRef.current = false;
+          if (before.time < lastBig) lastBig = -Infinity;
+          if (!reducedMotion() && before.time - lastBig >= .6) { lastBig = before.time; clock = stopAt(clock, now / 1000, .05); impact = true; }
+        }
         const advanced = advanceClock(clock, now / 1000, finishing ? 1 : before.speed, fixedStep);
         clock = advanced.clock;
-        let next = before, impact = false;
+        let next = before;
         for (let i = 0; i < advanced.steps; i++) {
           const prev = next;
           next = stepDefense(next, fixedStep);
@@ -174,7 +182,7 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
         if (impact || shouldPublishDefenseFrame(before, next, lastPublishedState, now - lastPublish)) {
           lastPublish = now; lastPublishedState = next; setState(next);
         }
-      } else clock = { ...clock, accumulated: 0, last: now / 1000 };
+      } else { skillStopRef.current = false; clock = { ...clock, accumulated: 0, last: now / 1000 }; }
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
