@@ -1,3 +1,4 @@
+import{CROSSING,riverBanks}from'./terrainView';
 import {EffectsView} from './effectsView';
 import {FrontierCameraRig} from './camera';
 import * as THREE from 'three';
@@ -17,10 +18,11 @@ export class FrontierScene {
   this.scene.fog=new THREE.Fog('#abc9c5',65,135);this.scene.add(new THREE.HemisphereLight('#e7faff','#465a39',2.1));const sun=new THREE.DirectionalLight('#fff2d4',3);sun.position.set(-25,48,20);sun.castShadow=true;sun.shadow.mapSize.set(512,512);Object.assign(sun.shadow.camera,{left:-38,right:38,top:38,bottom:-38,near:1,far:120});sun.shadow.bias=-.001;sun.shadow.normalBias=.08;this.scene.add(sun);this.scene.add(this.root,this.effects.root);
   const geo=new THREE.PlaneGeometry(64,64,64,64);geo.rotateX(-Math.PI/2);const positions=geo.attributes.position;const colors=[];for(let i=0;i<positions.count;i++){const x=positions.getX(i),z=positions.getZ(i),h=heightAt(x,z);positions.setY(i,h);const path=x<0&&Math.abs(x-(-16+4*Math.sin(z*.16)))<2.2;const c=new THREE.Color(path?'#bda174':((Math.floor(x/4)+Math.floor(z/4))%2?'#6d9566':'#739b69'));colors.push(c.r,c.g,c.b);}geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.computeVertexNormals();this.ground=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1}));this.ground.receiveShadow=true;this.scene.add(this.ground);this.track(this.ground);this.pickSurfaces.push(this.ground);
   // Actual river trench: terrain vertices along the water drop below its surface.
-  for(let i=0;i<positions.count;i++){const x=positions.getX(i),z=positions.getZ(i);if(x>=3&&x<=9)positions.setY(i,-1.5);}positions.needsUpdate=true;geo.computeVertexNormals();
-  this.box(this.root,0,-3,0,64,4,64,'#6a7055');this.box(this.root,6,-.7,0,5.8,.25,64,'#5cabb5');
+  for(let i=0;i<positions.count;i++){const x=positions.getX(i),z=positions.getZ(i);if(x>3&&x<9)positions.setY(i,CROSSING.bed);}positions.needsUpdate=true;geo.computeVertexNormals();
+  for(const[x,w]of[[-14.5,35],[20.5,23]])this.box(this.root,x,-4,0,w,5,64,'#6a7055');this.box(this.root,6,CROSSING.bed-.1,0,6,.2,64,'#5c685b');this.box(this.root,6,CROSSING.water-.125,0,5.8,.25,64,'#5cabb5');const banks=riverBanks();this.root.add(banks);this.track(banks);
   // A physical bridge connects both halves; side rails can occlude feet, never the input ray.
   this.pickSurfaces.push(this.box(this.root,6,.16,0,8,.4,5.6,'#9b7550'));for(const z of [-2.8,2.8]){this.box(this.root,6,1.25,z,8,.22,.2,'#c5a67c');for(const x of [2.4,5,8,9.6])this.box(this.root,x,.65,z,.22,1.4,.22,'#715a42');}
+  for(const x of[3.4,8.6])this.box(this.root,x,-1.5,0,1,2.4,5.1,'#8a927a');for(const z of[-2.3,2.3])this.box(this.root,6,-.2,z,8,.42,.35,'#715a42');
   for(let x=-32;x<=32;x+=4)for(const z of [-32,32])this.box(this.root,x,heightAt(x,z)-1.5,z,4,3.5,2,'#7b806a');
   for(let z=-28;z<32;z+=4)for(const x of [-32,32])this.box(this.root,x,heightAt(x,z)-1.5,z,2,3.5,4,'#7b806a');
   for(let i=0;i<32;i++){const x=i%2===0?-30:30,z=-27+(i%16)*3.6;if(Math.abs(z)<4)continue;this.tree(x,z,1+(i%3)*.15);}

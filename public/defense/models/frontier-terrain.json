@@ -1,8 +1,10 @@
 {
   "generator": "tools/blender/build_frontier_terrain.py",
-  "generator_sha256": "b6a1f4075a0affc0eba1b7055a22c9b2c4c62e5aed0b1b8626349e806aa3a39c",
+  "generator_sha256": "ed394b9f48f4b40f55210f9f4e16d6e8a6505c5f2056267ba31f1967a17b967a",
   "command": "npm run models:frontier-terrain",
-  "editable_objects": 266,
+  "editable_objects": 359,
+  "runtime_materials": 1,
+  "runtime_paint": "linear vertex colors; opaque roughness .85",
   "footprint": [
     64,
     64
@@ -12,6 +14,25 @@
     3,
     9
   ],
+  "river_water_y": -2.6,
+  "river_bed_y": -4.5,
+  "crossing_camera": {
+    "location": [
+      20,
+      -17,
+      13
+    ],
+    "target": [
+      6,
+      0,
+      -0.7
+    ],
+    "orthographic_scale": 25,
+    "size": [
+      768,
+      512
+    ]
+  },
   "bridge_walkable_z": [
     -2,
     2
@@ -31,23 +52,28 @@
   "files": [
     {
       "file": "art-source/defense/frontier-terrain.blend",
-      "bytes": 2476432,
-      "sha256": "e0ee3f1633fe7b2f6be0cc91b4b64aa0b99f38f435a9dbe5a039812429bcab40"
+      "bytes": 2965880,
+      "sha256": "de7487bb7bda3dd4ec3b46cce75b029b755a8aea812b3c88f9c2900393e60c92"
     },
     {
       "file": "public/defense/models/frontier-terrain.glb",
-      "bytes": 500584,
-      "sha256": "8c9fae6872245156e35982c761d32e6725368e21315b698bbf40def681de5844"
+      "bytes": 670336,
+      "sha256": "aa80fef868493185882e44417b908a102c29d3d04fa0786e5aa0d2424126983c"
     },
     {
       "file": "public/defense/models/frontier-terrain.png",
-      "bytes": 588404,
-      "sha256": "cc8669fcd47bdc3e9b0981a8be44a61d8d43ad3aeb57b09c00305014d736ea21"
+      "bytes": 594956,
+      "sha256": "92e57d9497feac729e878582a49e3f51101f58d6b2025f0b2c742287fbef6b67"
     },
     {
       "file": "public/defense/models/frontier-terrain.webp",
-      "bytes": 20578,
-      "sha256": "1e7593eec198ab5390402750a8f12a1fde7bafdafd837e9128f6c6b4001f46d3"
+      "bytes": 21894,
+      "sha256": "2ca099636e21e46c1c24cc123e5a22855e654bb92abbedf7e531b8abf3bcaefd"
+    },
+    {
+      "file": "public/defense/models/frontier-terrain-crossing.png",
+      "bytes": 579094,
+      "sha256": "229fb0c306ebaf082a76e196c96976cf5e1a94ac1f95b8ce01acef05ca64cb10"
     }
   ]
 }

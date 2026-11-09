@@ -1,7 +1,7 @@
 """Editable terrain source for the isolated real-time frontier training ground.
 Regenerate: npm run models:frontier-terrain. X/Z game coordinates map to Blender X/-Y.
 """
-import bpy,math,json,hashlib,subprocess
+import bpy,bmesh,math,json,hashlib,subprocess
 from pathlib import Path
 from mathutils import Vector
 R=Path(__file__).resolve().parents[2];O=R/'public/defense/models';A=R/'art-source/defense'
@@ -15,13 +15,37 @@ def height(x,z):return max(0,min(1,(-z-2)/10))*4.6
 objects=[]
 def box(name,x,y,z,w,h,d,color):
  bpy.ops.mesh.primitive_cube_add(size=1,location=(x,-z,y));o=bpy.context.object;o.name=name;o.scale=(w,d,h);bpy.ops.object.transform_apply(location=False,rotation=False,scale=True);o.data.materials.append(mat(color));objects.append(o);return o
-verts=[(x,-z,-1.5 if 3<=x<=9 else height(x,z)) for z in range(-32,33) for x in range(-32,33)]
-faces=[(i,i+65,i+66,i+1) for z in range(64) for x in range(64) for i in [z*65+x]]
+verts=[(x,-z,height(x,z)) for z in range(-32,33) for x in range(-32,33)]
+faces=[(i,i+65,i+66,i+1) for z in range(64) for x in range(64) for i in [z*65+x] if not 35<=x<41]
 mesh=bpy.data.meshes.new('graded terrain mesh');mesh.from_pydata(verts,[],faces);mesh.update();o=bpy.data.objects.new('Grass slopes / river trench',mesh);bpy.context.collection.objects.link(o);objects.append(o)
 for color in ['#6d9566','#739b69']:mesh.materials.append(mat(color))
-for p in mesh.polygons:p.material_index=(p.index//64//4+p.index%64//4)%2
-box('Island foundation',0,-3,0,64,4,64,'#6a7055');box('River water',6,-.7,0,5.8,.25,64,'#5cabb5')
-box('Bridge deck',6,.16,0,8,.4,5.6,'#9b7550')
+for p in mesh.polygons:p.material_index=(math.floor(verts[p.vertices[0]][0]/4)+math.floor(-verts[p.vertices[0]][1]/4))%2
+# Separate land masses leave a real open gorge below the bridge.
+for x,w in [(-14.5,35),(20.5,23)]:box('Island foundation',x,-4,z=0,w=w,h=5,d=64,color='#6a7055')
+box('River bed',6,-4.6,0,6,.2,64,'#5c685b');box('River water',6,-2.725,0,5.8,.25,64,'#5cabb5')
+# All rock faces stay inside the blocked river x3..9. Shore tops remain at simulation height.
+for side in [-1,1]:
+ edge=3 if side==1 else 9
+ for k,z in enumerate(range(-32,32,2)):
+  vs=[]
+  for zz in [z,z+2]:
+   h=height(edge,zz);ridge=.1*math.sin(zz*.9)
+   for offset,y in [(0,h),(.18+ridge,h-.35),(.48+ridge,h*.45-1.6),(.85,-3.5)]:vs.append((edge+side*offset,-zz,y))
+  fs=[(j+4,j+5,j+1,j) if side==1 else (j,j+1,j+5,j+4) for j in range(3)]
+  m=bpy.data.meshes.new('River rock strata');m.from_pydata(vs,[],fs)
+  for color in ['#a4a58b','#8a927a','#5c685b']:m.materials.append(mat(color))
+  for face in m.polygons:face.material_index=face.index
+  o=bpy.data.objects.new('West river cliff' if side==1 else 'East river cliff',m);bpy.context.collection.objects.link(o);objects.append(o)
+
+for i in range(16):box('Bridge deck plank',2.25+i*.5,.16,0,.5,.4,5.6,'#9b7550' if i%2 else '#a17d57')
+# Two masonry abutments and longitudinal beams expose the load path under the crossing.
+for x in [3.4,8.6]:
+ for y in [-2.3,-1.5,-.7]:box('Bridge masonry support',x,y,0,1.0,.78,5.1,'#8a927a')
+for z in [-2.3,2.3]:
+ box('Bridge underbeam',6,-.2,z,8,.42,.35,'#715a42')
+ for x,lean in [(3.9,1),(8.1,-1)]:
+  brace=box('Bridge diagonal brace',x,-1.0,z,2.0,.24,.25,'#715a42');brace.rotation_euler.y=lean*math.radians(-38)
+
 for z in [-2.8,2.8]:
  box('Bridge hand rail',6,1.25,z,8,.22,.2,'#c5a67c')
  for x in [2.4,5,8,9.6]:box('Bridge post',x,.65,z,.22,1.4,.22,'#715a42')
@@ -58,11 +82,32 @@ scene=bpy.context.scene;scene.render.engine='CYCLES';scene.cycles.samples=32;sce
 world=bpy.data.worlds.new('Frontier daylight');world.use_nodes=True;world.node_tree.nodes['Background'].inputs[0].default_value=(.55,.65,.63,1);world.node_tree.nodes['Background'].inputs[1].default_value=.7;scene.world=world
 bpy.ops.object.light_add(type='AREA',location=(-25,-15,48));bpy.context.object.data.energy=45000;bpy.context.object.data.shape='DISK';bpy.context.object.data.size=25
 bpy.ops.object.camera_add(location=(0,-68,72));camera=bpy.context.object;camera.rotation_euler=(Vector((0,0,0))-camera.location).to_track_quat('-Z','Y').to_euler();camera.data.type='ORTHO';camera.data.ortho_scale=98;scene.camera=camera
-scene['regeneration_command']='npm run models:frontier-terrain';scene['coordinate_contract']='game(x,z,height) = Blender(x,-z,height); 64x64 footprint; river x3..9; bridge abs(z)<=2; highland4.6'
+scene['regeneration_command']='npm run models:frontier-terrain';scene['river_water_y']=-2.6;scene['river_bed_y']=-4.5
+scene['coordinate_contract']='game(x,z,height) = Blender(x,-z,height); 64x64 footprint; river x3..9; bridge abs(z)<=2; highland4.6'
 bpy.context.preferences.filepaths.save_version=0;blend=A/'frontier-terrain.blend';bpy.ops.wm.save_as_mainfile(filepath=str(blend));scene.render.filepath=str(O/'frontier-terrain.png');bpy.ops.render.render(write_still=True)
+# A second fixed camera makes the open water, rock strata and bridge underside reviewable.
+camera.location=(20,-17,13);camera.rotation_euler=(Vector((6,0,-.7))-camera.location).to_track_quat('-Z','Y').to_euler();camera.data.ortho_scale=25
+scene.render.resolution_x=768;scene.render.resolution_y=512;scene.render.filepath=str(O/'frontier-terrain-crossing.png');bpy.ops.render.render(write_still=True)
+# Keep editable solid planks, but remove hidden touching side faces in the shipping deck.
+# Internal shadow casters at board seams otherwise produce dotted self-shadow lines.
+for o in objects:
+ if o.name.startswith('Bridge deck plank'):
+  bm=bmesh.new();bm.from_mesh(o.data)
+  hidden=[f for f in bm.faces if abs(f.normal.x)>.9 and 2.001<o.location.x+f.calc_center_median().x<9.999]
+  bmesh.ops.delete(bm,geom=hidden,context='FACES');bm.to_mesh(o.data);bm.free()
 # Join runtime surfaces by material, preserving named editable objects in the saved blend.
 bpy.ops.object.select_all(action='DESELECT')
 for o in objects:o.select_set(True)
-bpy.context.view_layer.objects.active=objects[0];bpy.ops.object.join();bpy.ops.export_scene.gltf(filepath=str(O/'frontier-terrain.glb'),export_format='GLB',use_selection=True,export_yup=True,export_animations=False)
+bpy.context.view_layer.objects.active=objects[0];bpy.ops.object.join()
+# Terrain paints share the same opaque roughness. Bake their linear colors into one runtime surface.
+packed=bpy.context.object;colors=packed.data.color_attributes.new(name='Color',type='FLOAT_COLOR',domain='CORNER')
+for face in packed.data.polygons:
+ color=packed.data.materials[face.material_index].diffuse_color
+ for i in face.loop_indices:colors.data[i].color=color
+packed.data.materials.clear();paint=bpy.data.materials.new('Frontier terrain / vertex paint');paint.use_nodes=True
+node=paint.node_tree.nodes['Principled BSDF'];node.inputs['Roughness'].default_value=.85
+vertex=paint.node_tree.nodes.new('ShaderNodeVertexColor');vertex.layer_name='Color';paint.node_tree.links.new(vertex.outputs['Color'],node.inputs['Base Color']);packed.data.materials.append(paint)
+for face in packed.data.polygons:face.material_index=0
+bpy.ops.export_scene.gltf(filepath=str(O/'frontier-terrain.glb'),export_format='GLB',use_selection=True,export_yup=True,export_animations=False)
 subprocess.run(['ffmpeg','-y','-loglevel','error','-i',str(O/'frontier-terrain.png'),'-c:v','libwebp','-quality','90',str(O/'frontier-terrain.webp')],check=True)
-files=[blend,O/'frontier-terrain.glb',O/'frontier-terrain.png',O/'frontier-terrain.webp'];meta={'generator':'tools/blender/build_frontier_terrain.py','generator_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'command':'npm run models:frontier-terrain','editable_objects':len(objects),'footprint':[64,64],'highland_height':4.6,'river_x':[3,9],'bridge_walkable_z':[-2,2],'camera':{'size':[900,600],'orthographic_scale':98,'location':[0,-68,72]},'files':[{'file':str(p.relative_to(R)),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in files]};(O/'frontier-terrain.json').write_text(json.dumps(meta,indent=2)+'\n');print('FRONTIER_TERRAIN_PASS')
+files=[blend,O/'frontier-terrain.glb',O/'frontier-terrain.png',O/'frontier-terrain.webp',O/'frontier-terrain-crossing.png'];meta={'generator':'tools/blender/build_frontier_terrain.py','generator_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'command':'npm run models:frontier-terrain','editable_objects':len(objects),'runtime_materials':1,'runtime_paint':'linear vertex colors; opaque roughness .85','footprint':[64,64],'highland_height':4.6,'river_x':[3,9],'river_water_y':-2.6,'river_bed_y':-4.5,'crossing_camera':{'location':[20,-17,13],'target':[6,0,-.7],'orthographic_scale':25,'size':[768,512]},'bridge_walkable_z':[-2,2],'camera':{'size':[900,600],'orthographic_scale':98,'location':[0,-68,72]},'files':[{'file':str(p.relative_to(R)),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in files]};(O/'frontier-terrain.json').write_text(json.dumps(meta,indent=2)+'\n');print('FRONTIER_TERRAIN_PASS')
