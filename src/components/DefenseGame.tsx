@@ -67,7 +67,7 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
   const [, setArtRevision] = useState(0);
   const [aimingDash, setAimingDash] = useState(false);
   const aimingRef = useRef(false);
-  const skillStopRef = useRef(false);
+  const skillStopRef = useRef<false | 'big' | 'boss'>(false);
   const [reasons, setReasons] = useState<PauseReasons>([]);
   const reasonsRef = useRef<PauseReasons>([]);
   type OpenPanel = { view: BattlePanel; session: TacticalSession };
@@ -104,7 +104,7 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
     if (action.type === 'hire' && !campaignRef.current.visitors.includes(action.hero)) return;
     const next = actDefense(before, action);
     if (next === before) return;
-    if (action.type === 'skill') skillStopRef.current = true; // skill effects are born on input, not in a step: the loop adds the stop
+    if (action.type === 'skill') skillStopRef.current = bigImpact(before, next) === 'boss' ? 'boss' : 'big'; // skill effects are born on input, not in a step: the loop adds the stop
     combatFeedback(before, next, hapticsRef.current); publish(next);
     if (action.type === 'speed') writeSpeedPreference(next.speed);
     if (['build', 'upgrade', 'hire', 'promote'].includes(action.type)) playSound('flip');
@@ -159,9 +159,14 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
       if (modeRef.current === 'battle' && !blockedRef.current && !document.hidden && (['prep', 'wave', 'intermission'].includes(before.phase) || finishing) && !before.paused) {
         let impact = false;
         if (skillStopRef.current) {
+          const kind = skillStopRef.current;
           skillStopRef.current = false;
           if (before.time < lastBig) lastBig = -Infinity;
-          if (!reducedMotion() && before.time - lastBig >= .6) { lastBig = before.time; clock = stopAt(clock, now / 1000, .05); impact = true; }
+          // A skill that reaps a boss gets the boss stop and ignores the 0.6s spacing, like a boss kill in a step.
+          if (!reducedMotion() && (kind === 'boss' || before.time - lastBig >= .6)) {
+            if (kind !== 'boss') lastBig = before.time;
+            clock = stopAt(clock, now / 1000, kind === 'boss' ? .09 : .05); impact = true;
+          }
         }
         const advanced = advanceClock(clock, now / 1000, finishing ? 1 : before.speed, fixedStep);
         clock = advanced.clock;
