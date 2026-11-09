@@ -3,6 +3,7 @@
 # measurement hooks: __JOIN (mid-path spawn), __ICY (extra ice segment), __RANGE (tower range delta), __SPEED (enemy speed factor).
 # Run from this folder; never apply this patch to the game source.
 set -euo pipefail
+cd "$(dirname "$0")"
 rm -rf exp-copy && mkdir exp-copy
 git -C "$(git rev-parse --show-toplevel)" archive origin/main src | tar -x -C exp-copy
 python3 - <<'PY'
