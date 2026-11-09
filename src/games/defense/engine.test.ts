@@ -477,6 +477,19 @@ test('dash rejects invalid, paused and noncombat commands and clamps short edge 
   const cancelled=actDefense(windup,{type:'dash',point:{x:600,y:355}});assert.ok(!cancelled.attacks.some(a=>a.source==='hero'&&!a.fired));
 });
 
+test('moving cancels only an unfired hero swing: landed hero hits, mercenary and tower windups survive',()=>{
+  const s=battlefield();s.enemies=[positionedEnemy('stone',1,410)];
+  const swing=stepDefense({...s,hero:'barbarian' as const,heroCooldown:0},.02);
+  const hero=swing.attacks.find(a=>a.source==='hero');assert.ok(hero&&!hero.fired);
+  const mixed={...swing,attacks:[...swing.attacks,{...hero,source:'mercenary' as const,actor:hero.actor,fired:false},{...hero,source:'tower' as const,sourceSlot:0,fired:false}]};
+  const moved=actDefense(mixed,{type:'move',point:{x:500,y:355}});
+  assert.ok(!moved.attacks.some(a=>a.source==='hero'));assert.equal(moved.heroCooldown,0);
+  assert.ok(moved.attacks.some(a=>a.source==='mercenary'));assert.ok(moved.attacks.some(a=>a.source==='tower'));
+  const firedHero={...mixed,heroCooldown:.7,attacks:mixed.attacks.map(a=>a.source==='hero'?{...a,fired:true}:a)};
+  const kept=actDefense(firedHero,{type:'move',point:{x:500,y:355}});
+  assert.ok(kept.attacks.some(a=>a.source==='hero'&&a.fired));assert.equal(kept.heroCooldown,.7);
+});
+
 test('ending a wave stops an unfinished dash without resetting its cooldown or moving in a modal',()=>{
   for(const wave of [1,2,4]){
     const s=battlefield();s.wave=wave;s.spawned=waveSize(1,wave);s.enemies=[{...positionedEnemy('metal',1,900),hp:0}];
@@ -680,4 +693,17 @@ test('a lightning tower whose windup target falls re-aims at an enemy whose arc 
   const survivors=[positionedEnemy('wood',1,430),wet(4,392),positionedEnemy('wood',3,375)];
   const fired=until({...winding,enemies:survivors},n=>n.projectiles.length>0);
   assert.equal(fired.projectiles[0].targetId,4,'re-aim keeps the chain preference instead of the dry front body');
+});
+
+test('moving or dashing mid-windup refunds the hero cooldown but keeps attacks already launched',()=>{
+  for(const action of [{type:'move',point:{x:300,y:300}},{type:'dash',point:{x:300,y:300}}] as DefenseAction[]){
+    const s=battlefield();s.hero='mage';s.heroCooldown=0;s.nextId=100;s.enemies=[positionedEnemy('stone',1,410)];
+    const windup=stepDefense(s,.02);assert.equal(windup.attacks.filter(a=>a.source==='hero'&&!a.fired).length,1);assert.ok(windup.heroCooldown>0);
+    const moved=actDefense(windup,action);
+    assert.equal(moved.attacks.filter(a=>a.source==='hero').length,0);assert.equal(moved.heroCooldown,0);
+  }
+  const s=battlefield();s.hero='mage';s.heroCooldown=0;s.nextId=100;s.enemies=[positionedEnemy('stone',1,410)];
+  const fired=until(stepDefense(s,.02),next=>next.attacks.some(a=>a.source==='hero'&&a.fired));
+  const moved=actDefense(fired,{type:'move',point:{x:300,y:300}});
+  assert.equal(moved.heroCooldown,fired.heroCooldown);assert.equal(moved.attacks.filter(a=>a.fired).length,fired.attacks.filter(a=>a.fired).length);
 });
