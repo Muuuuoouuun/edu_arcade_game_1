@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { frostWolfBracedFallAsset, frostWolfFallAsset, crushCannonProjectileOffset, rapidCrossbowProjectileOffset, lightningTowerProjectileOffset, fireTowerProjectileOffset, idleSpriteAsset, druidCastSocket, druidProjectileOffset, taoSealSocket, taoProjectileOffset, elfArrowSocket, elfProjectileOffset, mageProjectileOffset, mageCastSocket, hammerSequenceSpriteAsset, monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, ballistaProjectileOffset, waterCannonProjectileOffset } from '../games/defense/art';
 import { projectileScreenPosition, shellTrailPositions } from '../games/defense/action';
-import type { CombatAttack, Effect, Element, Point, Projectile } from '../games/defense/types';
+import type { CombatAttack, Effect, Element, HeroId, Point, Projectile } from '../games/defense/types';
 
 export const FX_COLORS: Record<Element, string> = { physical:'#fff0be', fire:'#ff9d38', lightning:'#fff27a', impact:'#ecc58b', water:'#4fd6c4' };
 /** Water reads teal and lightning yellow-white so a wet hit followed by a shock is not one blue blob. */
@@ -9,6 +9,19 @@ export const hitCore=(element:Element)=>element==='fire'?'def-fire-core':element
 const clamp = (v:number) => Math.max(0,Math.min(1,v));
 const noise = (n:number) => { const x=Math.sin(n*127.1)*43758.5453; return x-Math.floor(x); };
 const effectKind = (effect:Effect) => effect.kind??(effect.text?.startsWith('+')?'coin':'impact');
+
+/** A compact signature at the actual hit point, never an invented local radius. */
+function SkillTargetMark({hero}:{hero:HeroId}) {
+ const common={fill:'none',strokeLinecap:'round' as const,strokeLinejoin:'round' as const};
+ switch(hero){
+  case 'mage':return <g {...common}><path d="M-16-29 0-11 7-18M-10-36 5-19" stroke="#ffb64c" strokeWidth="5"/><path d="M-10-8 0-15 10-8 6 2-6 2Z" fill="#ffd274" stroke="#fff3ba" strokeWidth="2"/></g>;
+  case 'elf':return <g {...common} stroke="#eaffcc"><path d="M-15-38 0-12M-4-42 9-19M7-41 16-26" strokeWidth="3"/><path d="m-5-17 5 5 2-7M5-25l4 6 3-7" strokeWidth="2"/><path d="m0-8 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" fill="#eaffcc" strokeWidth="1"/></g>;
+  case 'dwarf':return <g {...common} stroke="#ffe0a0" strokeWidth="3"><path d="M-19 1-9-4-4-1 1-12 7-5 18-1"/><path d="M-6-8-11-15M9-9l6-6"/></g>;
+  case 'tao':return <g {...common}><path d="m3-42-13 20 9-1-5 17 18-24-10 2 5-14Z" fill="#fff6ae" stroke="#e9bf50" strokeWidth="2"/><path d="M-13-2Q0 4 13-2" stroke="#8ce9df" strokeWidth="2"/></g>;
+  case 'barbarian':return <g {...common} stroke="#ffe3aa" strokeWidth="4"><path d="M-18-29 13-4M-11-38 20-13"/><path d="M-20 0Q0 7 20 0" stroke="#d8a56d" strokeWidth="2"/></g>;
+  case 'druid':return <g {...common} stroke="#d8f6b5" strokeWidth="3"><path d="M-14 2Q-15-15-5-23M14 2Q15-15 5-23M-10-11Q-19-13-18-21Q-10-21-10-11ZM10-11Q19-13 18-21Q10-21 10-11Z"/><path d="M-11 3Q0 8 11 3" stroke="#79c68b"/></g>;
+ }
+}
 
 /** Dynamic FX use simulation ages, never wall-clock CSS animation. */
 export const DefenseFxDefs = memo(function DefenseFxDefs(){return <defs>
@@ -189,8 +202,10 @@ export function EffectLayer({effects,reduced,unit=1,layer='front'}:{effects:Effe
     {!reduced&&kind==='build'?[-1,1].map(side=><path key={side} d="M-8 0Q0-5 8 0" transform={`translate(${side*(23+p*18)},${p*6})`} fill="none" stroke="#e1d4b6" strokeWidth={3*(1-p)} opacity=".5"/>):null}
    </g>;
    if(kind==='breach'){const r=30+(reduced?30:p*(46+(e.force??1)*9));return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} opacity={fade*.9} data-effect-ground="breach"><ellipse rx={r} ry={r*.38} fill="#d9433a24" stroke="#ff7b6b" strokeWidth={Math.min(6,2+(e.force??1)*.5)}/></g>;}
-   if(!['shockwave','skill','impact','freeze','interrupt'].includes(kind)||(kind==='impact'&&!detail))return null;
-   const wide=kind==='skill'||kind==='shockwave'||kind==='interrupt';
+   // Skills hit the entire field; this small ring marks the caster, not a range.
+   if(kind==='skill')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} opacity={fade*.7} data-effect-ground="skill"><ellipse rx={reduced?24:20+p*10} ry={reduced?8:7+p*3} fill="none" stroke={color} strokeWidth="2"/></g>;
+   if(!['shockwave','impact','freeze','interrupt'].includes(kind)||(kind==='impact'&&!detail))return null;
+   const wide=kind==='shockwave'||kind==='interrupt';
    const radius=wide?35+p*(e.force?Math.min(145,e.force):100):12+p*30;
    return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} opacity={fade*(wide?.75:.4)} data-effect-ground={kind}>
     <ellipse rx={reduced?radius*.65:radius} ry={radius*.38} fill="none" stroke={color} strokeWidth={wide?3:1.5}/>
@@ -230,10 +245,11 @@ export function EffectLayer({effects,reduced,unit=1,layer='front'}:{effects:Effe
     <text x="-6" y="5" className="def-float-number def-float-coin">{e.text}</text>
   </g>;
   if(kind==='skill'||kind==='interrupt')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y-27})`} opacity={fade} data-effect={kind} data-skill-mode={e.skillMode}>
-   {e.skillMode==='control'?<g fill="none" stroke="#8fe8d3" strokeWidth="2"><ellipse cy="22" rx={reduced?40:30+p*45} ry={reduced?14:10+p*16}/><ellipse cy="22" rx={reduced?30:22+p*32} ry={reduced?10:7+p*12}/></g>:null}
+   {kind==='skill'&&e.skillHero?e.skillTargets?.map(target=><g key={target.id} data-skill-target={target.id} data-skill-hero={e.skillHero} transform={`translate(${target.x-e.to.x},${target.y-e.to.y+27}) scale(${unit*(reduced?1:.85+.15*Math.min(1,p*8))})`}><SkillTargetMark hero={e.skillHero!}/></g>):null}
+   {e.skillMode==='control'?<g fill="none" stroke="#8fe8d3" strokeWidth="2"><ellipse cy="22" rx={reduced?24:21+p*9} ry={reduced?8:7+p*3}/><ellipse cy="22" rx={reduced?18:15+p*7} ry={reduced?6:5+p*2}/></g>:null}
    {e.skillMode==='power'?<path d="M-32 0 -12 -8 0 -34 12 -8 32 0 12 8 0 34 -12 8Z" fill="none" stroke="#ffe49a" strokeWidth={reduced?2:4*(1-p)} opacity={1-p}/>:null}
-   <circle r={reduced?22:15+p*65} fill={`url(#${hitCore(e.element)})`} opacity=".7"/>
-   {!reduced?Array.from({length:6},(_,i)=>{const angle=i*Math.PI/3,r=18+p*50;return <path key={i} d={`M${Math.cos(angle)*r} ${Math.sin(angle)*r}l${Math.cos(angle)*13} ${Math.sin(angle)*13}`} stroke={color} strokeWidth="2" strokeLinecap="round"/>;}):null}
+   <circle r={reduced?22:kind==='skill'?15+p*16:15+p*65} fill={`url(#${hitCore(e.element)})`} opacity=".7"/>
+   {!reduced?Array.from({length:6},(_,i)=>{const angle=i*Math.PI/3,r=18+p*(kind==='skill'?14:50);return <path key={i} d={`M${Math.cos(angle)*r} ${Math.sin(angle)*r}l${Math.cos(angle)*13} ${Math.sin(angle)*13}`} stroke={color} strokeWidth="2" strokeLinecap="round"/>;}):null}
    {e.text?<text y={-45-(reduced?0:p*15)} textAnchor="middle" className="def-float-number def-float-skill">{e.text}</text>:null}
   </g>;
   if(kind==='freeze')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y-35})`} opacity={fade} data-effect="freeze"><path d="M0-25v50M-22-13l44 26M-22 13l44-26M-6-18l6 5 6-5M-6 18l6-5 6 5" fill="none" stroke="#dafbff" strokeWidth="2" strokeLinecap="round"/>{e.text?<text y="-35" textAnchor="middle" className="def-float-number">{e.text}</text>:null}</g>;

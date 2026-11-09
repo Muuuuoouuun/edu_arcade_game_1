@@ -197,6 +197,30 @@ test('skills require live combat, respect cooldown, and the control promotion sl
   assert.equal(actDefense(s,{type:'move',point:{x:NaN,y:20}}),s);
 });
 
+test('skill visuals snapshot exactly the live targets at the instant of damage, including lethal and distant hits',()=>{
+ for(const hero of HERO_ORDER){
+  const s=battlefield();s.hero=hero;s.heroPosition={x:100,y:100};
+  s.enemies=[{...enemy('sprout',1,120,150),hp:1},enemy('boss',2,800,480),{...enemy('wood',3,600,300),hp:0}];
+  const original=JSON.stringify(s),cast=actDefense(s,{type:'skill'}),fx=cast.effects.find(e=>e.kind==='skill');
+  assert.ok(fx);assert.equal(fx.skillHero,hero);
+  assert.deepEqual(fx.skillTargets,[{id:1,x:120,y:150},{id:2,x:800,y:480}]);
+  assert.equal(cast.lastSkill?.hits,2);assert.equal(cast.lastSkill?.kills,1);assert.equal(cast.skillCooldown,20);
+  assert.ok(cast.enemies.find(e=>e.id===2)!.hp<s.enemies[1].hp);
+  assert.equal(JSON.stringify(s),original,'visual snapshot does not mutate the input');
+  const paused=actDefense(cast,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+  const advanced=stepDefense(cast,.1),advancedFx=advanced.effects.find(e=>e.kind==='skill');
+  assert.deepEqual(advancedFx?.skillTargets,fx.skillTargets,'target positions do not follow surviving enemies');
+  assert.ok((advancedFx?.age??0)>0);
+ }
+});
+
+test('a crowded skill keeps its aggregate hit markers within the shared effect limit',()=>{
+ const s=battlefield();s.enemies=Array.from({length:120},(_,i)=>({...enemy('sprout',i+1,100+i*3,250),hp:1}));
+ const cast=actDefense(s,{type:'skill'}),fx=cast.effects.find(e=>e.kind==='skill');
+ assert.equal(cast.effects.length,100);assert.equal(cast.lastSkill?.hits,120);assert.equal(fx?.skillTargets?.length,120);
+ assert.deepEqual(fx?.skillTargets?.[119],{id:120,x:457,y:250});
+});
+
 test('stage four uses two entrances and the boss accelerates below half health',()=>{
   let s=actDefense(createDefense(4,'dwarf'),{type:'start-wave'});s=advance(s,5);
   assert.deepEqual(new Set(s.enemies.map(e=>e.path)),new Set([0,1]));

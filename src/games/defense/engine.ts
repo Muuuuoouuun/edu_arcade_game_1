@@ -391,8 +391,10 @@ function applyDefenseAction(state:DefenseState,action:DefenseAction):DefenseStat
     if(interrupt){s.bossCharge=0;s.bossCycle=9;effect(s,s.heroPosition,s.enemies.find(e=>e.kind==='frostboss')!,'lightning','차단!','interrupt');}
     // Manual skills remain usable during a tower freeze and can interrupt its telegraph.
     const skillPower=s.hero==='barbarian'?165:s.hero==='druid'?90:115;
-    effect(s,s.heroPosition,s.heroPosition,stats.element,undefined,'skill',{force:260,...(s.promotion?{skillMode:s.promotion}:{})});
     const targets=s.enemies.filter(e=>e.hp>0),slowSeconds=skillSlowSeconds(s.hero,s.promotion);
+    // Snapshot exactly the living targets at the instant of damage: survivors can
+    // move and lethal targets can disappear before the visual effect settles.
+    const skillTargets=targets.map(({id,x,y})=>({id,x,y}));
     let kills=0,damage=0,weakHits=0;
     for(const e of targets) {
       const before=e.hp;
@@ -406,6 +408,9 @@ function applyDefenseAction(state:DefenseState,action:DefenseAction):DefenseStat
     if(supply){s.coins+=supply;s.skillSupplyWave=s.wave;}
     s.lastSkill={at:s.time,hits:targets.length,kills,damage:Math.round(damage),weakHits,supply,interrupted:interrupt,slowSeconds};
     s.skillCooldown=20;s.notice=interrupt?'충전 차단! 서리군주의 눈보라를 막았어요.':`필살기 적중 ${targets.length} · 처치 ${kills}${supply?` · 전투 보급 +${supply}`:''}`;reap(s);
+    // Add the single aggregate marker after per-target effects so the shared
+    // 100-effect cap cannot evict it during a large simultaneous hit.
+    effect(s,s.heroPosition,s.heroPosition,stats.element,undefined,'skill',{force:260,skillHero:s.hero,skillTargets,...(s.promotion?{skillMode:s.promotion}:{})});
   }
   return s;
 }
