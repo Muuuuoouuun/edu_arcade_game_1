@@ -1,3 +1,4 @@
+import{BEACON_CAPTURE}from'./beacon.ts';
 /** Small, isolated 3D training ground. No campaign saves or rewards are written. */
 import {HERO_ATTACK,hammerPoint,inHammerReach,type HeroAttack} from './heroAttack.ts';
 import {WOOD_ATTACK,inWoodStrike,type WoodAttack} from './woodAttack.ts';
@@ -89,7 +90,7 @@ export function stepFrontier(previous:Frontier,elapsed:number,axis:Point={x:0,z:
   if(s.hero.moving||s.hero.attack)s.hero.settle=undefined;
   else if(wasMoving)s.hero.settle={time:0,walkTime:(s.hero.walkDistance/HERO_ATTACK.stride*.8)%.8};
   else if(s.hero.settle){s.hero.settle.time+=dt;if(s.hero.settle.time>=.24)s.hero.settle=undefined;}
-  if(s.mode==='command'){strike(s);if(distance(s.hero,BEACON)<4&&s.beacon<1){s.beacon=Math.min(1,s.beacon+dt/3);if(s.beacon===1){s.gold+=120;s.message='동쪽 봉화 확보 · 금화 +120';}}}
+  if(s.mode==='command'){strike(s);if(distance(s.hero,BEACON)<BEACON_CAPTURE.radius&&s.beacon<1){s.beacon=Math.min(1,s.beacon+dt/BEACON_CAPTURE.seconds);if(s.beacon===1){s.gold+=BEACON_CAPTURE.reward;s.message=`동쪽 봉화 확보 · 금화 +${BEACON_CAPTURE.reward}`;}}}
  }
  // The authored hammer commits its facing and feet until recovery; dash can cancel it.
  if(s.hero.attack){const a=s.hero.attack;a.time+=dt;s.hero.heading=a.heading;s.hero.strike=Math.max(0,HERO_ATTACK.duration-a.time);

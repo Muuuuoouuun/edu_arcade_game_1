@@ -6,6 +6,7 @@ import { PMREMGenerator } from 'three';
 import './model-lab.css';
 
 const models = [
+ {id:'frontier-beacon',name:'변경 봉화 · 녹음 신호탑',kind:'CAPTURE BEACON',detail:'고정 석조 · 열리는 황동 잎',description:'석조 받침은 고정하고 네 황동 덮개가 열리며 수정이 올라옵니다. 지휘 전장에서는 점령 진행에 맞춰 움직입니다.',source:'frontier-beacon.blend',command:'npm run models:frontier-beacon',action:'▶ 점령 전개',clip:'beacon-capture',hold:true,fitBounds:true},
  {id:'frontier-kar-stop',asset:'frontier-kar-game',name:'카르 · 변경 전장 발 디딤',kind:'GROUNDED WALK STOP',detail:'마지막 걸음 · 늦게 멈추는 망치',description:'발을 차례로 디뎌 몸을 세우고, 양손 망치와 털망토가 뒤따라 멈춥니다.',source:'frontier-kar.blend',command:'npm run models:frontier-kar',action:'▶ 발 디디며 정지',clip:'kar-stop-2',hold:true,fitBounds:true},
  {id:'frontier-kar-reset',asset:'frontier-kar-game',name:'카르 · 변경 전장 회수',kind:'GROUNDED HAMMER RECOVERY',detail:'고정된 발 · 늦게 따라오는 망치',description:'두 발을 디딘 채 몸을 먼저 세우고, 무거운 망치와 털망토가 뒤따라 안정됩니다.',source:'frontier-kar.blend',command:'npm run models:frontier-kar',action:'▶ 강타 회수',clip:'kar-reset-0',hold:true,fitBounds:true},
  {id:'frontier-kar',asset:'frontier-kar-game',name:'카르 · 변경 전장',kind:'FRONTIER WINTER WARRIOR',detail:'흰 털망토 · 황동 망치 · 발 디딤',description:'붉은 머리와 흰 털망토, 황동 문양이 새겨진 망치를 가진 설산 전사입니다. 변경 전장에서 사용하는 몸으로 두 손을 모아 망치를 내려치는 모습을 살펴보세요.',source:'frontier-kar.blend',command:'npm run models:frontier-kar',action:'▶ 망치 강타',clip:'kar-slam',fitBounds:true},
