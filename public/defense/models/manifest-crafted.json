@@ -1,0 +1,48 @@
+{
+  "blender": "4.3.2",
+  "source": "art-source/defense/towers-crafted.blend",
+  "coordinate_system": "Authoring Z-up; GLB exported with Y-up; local origin at ground center.",
+  "models": [
+    {
+      "id": "fire-tower-crafted",
+      "glb": "/defense/models/fire-tower-crafted.glb",
+      "sprite": "/defense/models/fire-tower-crafted.png",
+      "sprite_status": "generated",
+      "bytes": 1067480,
+      "mesh_objects": 84,
+      "vertices_before_modifiers": 2590,
+      "editable_nodes": [
+        "fire-tower",
+        "fire-core"
+      ]
+    },
+    {
+      "id": "piercing-ballista-crafted",
+      "glb": "/defense/models/piercing-ballista-crafted.glb",
+      "sprite": "/defense/models/piercing-ballista-crafted.png",
+      "sprite_status": "generated",
+      "bytes": 1312804,
+      "mesh_objects": 141,
+      "vertices_before_modifiers": 6319,
+      "editable_nodes": [
+        "piercing-ballista",
+        "turret",
+        "bolt"
+      ]
+    },
+    {
+      "id": "water-cannon-crafted",
+      "glb": "/defense/models/water-cannon-crafted.glb",
+      "sprite": "/defense/models/water-cannon-crafted.png",
+      "sprite_status": "generated",
+      "bytes": 1356224,
+      "mesh_objects": 153,
+      "vertices_before_modifiers": 9824,
+      "editable_nodes": [
+        "water-cannon",
+        "turret",
+        "barrel"
+      ]
+    }
+  ]
+}

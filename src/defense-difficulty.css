@@ -1,0 +1,15 @@
+.camp-difficulty{padding:15px 0 12px;border-bottom:1px solid #d6c6a4;margin-bottom:9px;min-width:0}
+.camp-difficulty h3{font-family:Jua,sans-serif;font-size:19px;color:#234a3a;margin:0 0 10px}
+.camp-difficulty-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.camp-difficulty-choices button{min-width:0;min-height:48px;padding:9px 3px;display:flex;align-items:center;justify-content:center;gap:5px;background:#f5edda;border:1px solid #c8b48d;border-radius:7px;color:#62583f;box-shadow:0 2px 0 #d4c39d;transition:background .15s,border-color .15s,box-shadow .15s}
+.camp-difficulty-choices button.selected{background:#214b3b;border-color:#214b3b;color:#fff5dd;box-shadow:0 2px 0 #113a2b}
+.camp-difficulty-choices button strong{font-size:13px;line-height:1.3;font-weight:700;white-space:nowrap}
+.camp-difficulty-choices button:focus-visible{outline:3px solid #bd812f;outline-offset:3px}
+.camp-difficulty-mark{width:6px;height:6px;flex:0 0 6px;background:#98b985;border-radius:50%;box-shadow:0 0 0 2px #98b98520}
+.camp-difficulty-mark-standard{background:#e0b85d;box-shadow:0 0 0 2px #e0b85d20}
+.camp-difficulty-mark-veteran{background:#d27c55;box-shadow:0 0 0 2px #d27c5520}
+.camp-difficulty-description{color:#4b5946;font-size:12px;line-height:1.55;margin:10px 0 3px;min-height:19px;overflow-wrap:anywhere}
+.camp-difficulty-note{color:#776e5d;font-size:11px;line-height:1.5;margin:0}
+.camp-difficulty-reward{display:block;font-size:10px;line-height:1.5;color:#9a5a21;font-weight:700;margin-top:2px}
+@media(max-width:380px){.camp-difficulty-choices{gap:5px}.camp-difficulty-choices button{gap:4px;padding:10px 2px}.camp-difficulty-choices button strong{font-size:12px}.camp-difficulty-description{font-size:11px}.camp-difficulty-note{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.camp-difficulty-choices button{transition:none}}
