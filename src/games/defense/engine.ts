@@ -172,10 +172,14 @@ function resolveHit(s:DefenseState,target:Enemy,profile:DamageProfile,from:Point
 function launch(s:DefenseState,a:CombatAttack) {
   const from=ownerPosition(s,a.source,a.sourceSlot);
   let target=s.enemies.find(e=>e.id===a.targetId&&e.hp>0);
-  // A tower whose windup target fell re-aims at the front-most enemy still in range; melee stays committed.
-  if(!target&&a.source==='tower'){
-    target=pickTarget(s,orderedTargets(s,from,a.range),a.chain);
-    if(target){a.targetId=target.id;const tower=s.towers.find(t=>t.slot===a.sourceSlot);if(tower)tower.aim={x:target.x,y:target.y};}
+  // A ranged shooter whose windup target fell re-aims at the front-most enemy still in range; melee stays committed.
+  if(!target&&a.actor!=='wolf'&&a.actor!=='dwarf'&&a.actor!=='barbarian'){
+    target=pickTarget(s,orderedTargets(s,from,a.range),a.source==='tower'&&a.chain);
+    if(target){
+      a.targetId=target.id;
+      if(a.source==='tower'){const tower=s.towers.find(t=>t.slot===a.sourceSlot);if(tower)tower.aim={x:target.x,y:target.y};}
+      else{const facing=target.x<from.x?-1:1;if(a.source==='hero')s.heroFacing=facing;else if(a.source==='mercenary')s.mercenaryFacing=facing;}
+    }
   }
   a.from={...from};
   if(!target)return; // A completed windup cannot strike a target already defeated.

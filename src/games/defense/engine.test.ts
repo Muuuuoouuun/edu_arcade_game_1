@@ -1101,3 +1101,26 @@ test('moving or dashing mid-windup refunds the hero cooldown but keeps attacks a
   const moved=actDefense(fired,{type:'move',point:{x:300,y:300}});
   assert.equal(moved.heroCooldown,fired.heroCooldown);assert.equal(moved.attacks.filter(a=>a.fired).length,fired.attacks.filter(a=>a.fired).length);
 });
+
+test('a ranged hero or mercenary whose windup target falls re-aims instead of wasting the shot; melee stays committed',()=>{
+  const ranged=(owner:'hero'|'mercenary')=>{
+    const s=battlefield();s.hero=owner==='hero'?'elf':'mage';s.mercenary=owner==='mercenary'?'elf':s.mercenary;s.heroCooldown=0;s.mercCooldown=0;s.nextId=100;
+    s.heroPosition={...positionedEnemy('metal',9,410)};s.mercenaryPosition={...s.heroPosition};
+    s.enemies=[positionedEnemy('metal',1,410),positionedEnemy('metal',2,425)];
+    return stepDefense(s,.02);
+  };
+  for(const owner of ['hero','mercenary'] as const){
+    const winding=ranged(owner),swing=winding.attacks.find(a=>a.source===owner&&!a.fired);
+    assert.ok(swing,`${owner} starts a swing`);
+    const survivor=winding.enemies.filter(e=>e.id!==swing.targetId);
+    const fired=until({...winding,enemies:survivor},n=>n.attacks.some(a=>a.id===swing.id&&a.fired));
+    assert.equal(fired.projectiles.filter(p=>p.source===owner).length,1,`${owner} windup that completes still launches a shot`);
+    assert.equal(fired.projectiles.find(p=>p.source===owner)!.targetId,survivor[0].id,`${owner} shot re-aims at the remaining enemy`);
+    const empty=until({...winding,enemies:[]},n=>!n.attacks.some(a=>a.source===owner));assert.equal(empty.projectiles.length,0,'nothing to hit stays a clean miss');
+  }
+  const m=battlefield();m.hero='barbarian';m.heroCooldown=0;m.nextId=100;m.heroPosition={...positionedEnemy('metal',9,410)};
+  m.enemies=[positionedEnemy('metal',1,410),positionedEnemy('metal',2,425)];
+  const swing=stepDefense(m,.02),winding=swing.attacks.find(a=>a.source==='hero'&&!a.fired)!;
+  const done=until({...swing,enemies:swing.enemies.filter(e=>e.id!==winding.targetId)},n=>!n.attacks.some(a=>a.source==='hero'));
+  assert.equal(done.enemies.every(e=>e.hp===ENEMIES.metal.hp),true,'a melee swing at a fallen target does not hit someone else');
+});
