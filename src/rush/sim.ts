@@ -50,9 +50,12 @@ export type RushEvent =
 /** Battle modifiers from permanent (between-battle) upgrades. All 1 = the base game. */
 export interface RushMods { damage: number; towerCost: number; townHp: number }
 export const NO_MODS: RushMods = { damage: 1, towerCost: 1, townHp: 1 };
+/** Stage difficulty: multipliers on enemy health, group sizes (bosses excluded) and damage. All 1 = the base game. */
+export interface Difficulty { enemyHp: number; enemyCount: number; enemyDamage: number }
+export const BASE_DIFFICULTY: Difficulty = { enemyHp: 1, enemyCount: 1, enemyDamage: 1 };
 
 export interface RushState {
-  seed: number; rng: number; tick: number; t: number; phase: Phase; mods: RushMods;
+  seed: number; rng: number; tick: number; t: number; phase: Phase; mods: RushMods; diff: Difficulty;
   /** Index of the current wave while fighting, or of the next wave while preparing. */
   wave: number; prepT: number; groups: GroupProgress[];
   town: { hp: number; maxHp: number }; gold: number;
@@ -114,10 +117,10 @@ function confine(p: Vec, r: number): void {
 }
 
 // ---------- creation ----------
-export function createRush(seed = 1, mods: RushMods = NO_MODS): RushState {
+export function createRush(seed = 1, mods: RushMods = NO_MODS, diff: Difficulty = BASE_DIFFICULTY): RushState {
   const townHp = Math.round(TOWN.hp * mods.townHp);
   return {
-    seed, rng: seed | 0, tick: 0, t: 0, phase: 'prep', mods: { ...mods }, wave: 0, prepT: ECONOMY.prepTime, groups: [],
+    seed, rng: seed | 0, tick: 0, t: 0, phase: 'prep', mods: { ...mods }, diff: { ...diff }, wave: 0, prepT: ECONOMY.prepTime, groups: [],
     town: { hp: townHp, maxHp: townHp }, gold: ECONOMY.startGold,
     hero: { x: HERO_SPAWN.x, z: HERO_SPAWN.z, hp: HERO.hp, facing: -Math.PI / 2, ammo: HERO.ammoMax, reloadT: 0, fireCd: 0, superCharge: 0, downT: 0, calmT: 0 },
     enemies: [], shots: [], towers: PADS.map(() => null), coins: [], nextId: 1,
@@ -221,21 +224,26 @@ function beginWave(s: RushState) {
   s.events.push({ type: 'waveStart', wave: s.wave });
 }
 function waveSpawned(s: RushState) {
-  return WAVES[s.wave].every((g, i) => (s.groups[i]?.spawned ?? 0) >= g.count);
+  return WAVES[s.wave].every((g, i) => (s.groups[i]?.spawned ?? 0) >= groupCount(s, g));
 }
+/** Enemies in a spawn group after stage scaling. The boss stays a single boss. */
+export const groupCount = (s: RushState, g: { kind: EnemyKind; count: number }) =>
+  g.kind === 'boss' ? g.count : Math.max(1, Math.round(g.count * s.diff.enemyCount));
 function spawn(s: RushState) {
   WAVES[s.wave].forEach((g, i) => {
     const p = s.groups[i];
-    if (!p || p.spawned >= g.count) return;
+    const total = groupCount(s, g);
+    if (!p || p.spawned >= total) return;
     p.timer -= STEP;
-    while (p.timer <= 0 && p.spawned < g.count) {
+    while (p.timer <= 0 && p.spawned < total) {
       const start = LANES[g.lane][0], def = ENEMIES[g.kind];
       s.enemies.push({
         id: s.nextId++, kind: g.kind, x: start.x + (rand(s) - 0.5) * 1.6, z: start.z + (rand(s) - 0.5) * 0.8, kx: 0, kz: 0,
-        hp: def.hp, maxHp: def.hp, lane: g.lane, wp: 1, cd: def.cooldown * 0.5, flash: 0, chasing: false, facing: Math.PI / 2, windup: null,
+        hp: Math.round(def.hp * s.diff.enemyHp), maxHp: Math.round(def.hp * s.diff.enemyHp), lane: g.lane, wp: 1, cd: def.cooldown * 0.5, flash: 0, chasing: false, facing: Math.PI / 2, windup: null,
       });
       p.spawned++;
-      p.timer += g.interval > 0 ? g.interval : Infinity;
+      // Single-spawn groups (interval 0) can grow with stage scaling: space the extras instead of never spawning them.
+      p.timer += g.interval > 0 ? g.interval : 1.5;
     }
   });
 }
@@ -388,8 +396,8 @@ function updateEnemies(s: RushState) {
       e.windup.t -= STEP;
       if (e.windup.t <= 0) {
         const r = def.slamRadius ?? 2;
-        if (alive && dist(h, e.windup) <= r + HERO.radius) hurtHero(s, def.damage);
-        if (dist(TOWN, e.windup) <= r + TOWN.radius) hurtTown(s, def.damage);
+        if (alive && dist(h, e.windup) <= r + HERO.radius) hurtHero(s, def.damage * s.diff.enemyDamage);
+        if (dist(TOWN, e.windup) <= r + TOWN.radius) hurtTown(s, def.damage * s.diff.enemyDamage);
         s.events.push({ type: 'slam', x: e.windup.x, z: e.windup.z, radius: r });
         e.windup = null;
         e.cd = def.cooldown;
@@ -457,11 +465,11 @@ function attack(s: RushState, e: Enemy, atHero: boolean) {
     const dx = target.x - e.x, dz = target.z - e.z, d = len(dx, dz) || 1;
     s.shots.push({
       id: s.nextId++, owner: 'enemy', x: e.x, z: e.z, vx: (dx / d) * def.shotSpeed, vz: (dz / d) * def.shotSpeed,
-      damage: def.damage, life: (def.reach + 2) / def.shotSpeed, radius: 0.22, target: 0, tx: 0, tz: 0,
+      damage: def.damage * s.diff.enemyDamage, life: (def.reach + 2) / def.shotSpeed, radius: 0.22, target: 0, tx: 0, tz: 0,
     });
     return;
   }
-  if (atHero) hurtHero(s, def.damage); else hurtTown(s, def.damage);
+  if (atHero) hurtHero(s, def.damage * s.diff.enemyDamage); else hurtTown(s, def.damage * s.diff.enemyDamage);
 }
 
 // ---------- towers ----------

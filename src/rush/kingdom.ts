@@ -2,6 +2,7 @@
 // Principles taken from kingdom-builder games: the castle is the hub and caps everything else, resource
 // buildings produce over (offline) time, and permanent upgrades change the next battle.
 import { WAVE_COUNT, type RushMods, type RushState } from './sim.ts';
+import { STAGE_COUNT, starBonus, starsFor, stageRewardMul } from './stages.ts';
 
 export type Resource = 'food' | 'wood';
 export type Building = 'castle' | 'farm' | 'mill';
@@ -17,6 +18,8 @@ export interface Kingdom {
   /** Time up to which production has been collected (ms). */
   lastCollect: number;
   battles: { won: number; lost: number };
+  /** Best stars (0-3) per stage; stage n opens once stage n-1 has at least one star. */
+  stars: number[];
   /** Recently rewarded battle ids, so one battle never pays twice. */
   rewarded: string[];
 }
@@ -29,10 +32,14 @@ export const PERK_EFFECT = { attack: 0.08, towerDiscount: 0.08, townHp: 0.1 } as
 
 export const createKingdom = (now: number): Kingdom => ({
   version: 1, castle: 1, farm: 1, mill: 1, perks: { attack: 0, towerDiscount: 0, townHp: 0 },
-  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, rewarded: [],
+  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), rewarded: [],
 });
 
-const clone = (k: Kingdom): Kingdom => ({ ...k, perks: { ...k.perks }, battles: { ...k.battles }, rewarded: [...k.rewarded] });
+const clone = (k: Kingdom): Kingdom => ({ ...k, perks: { ...k.perks }, battles: { ...k.battles }, stars: [...k.stars], rewarded: [...k.rewarded] });
+
+export const stageUnlocked = (k: Kingdom, n: number) => n >= 1 && n <= STAGE_COUNT && (n === 1 || k.stars[n - 2] > 0);
+/** The furthest stage the player may enter. */
+export const latestStage = (k: Kingdom) => { let n = 1; while (n < STAGE_COUNT && stageUnlocked(k, n + 1)) n++; return n; };
 
 export const rate = (k: Kingdom): Cost => ({ food: k.farm * RATE_PER_LEVEL, wood: k.mill * RATE_PER_LEVEL });
 
@@ -111,6 +118,24 @@ export function grantReward(k: Kingdom, battleId: string, reward: Cost & { won: 
   return { kingdom: next, granted: true };
 }
 
+export type Settlement = Cost & { won: boolean; waves: number; stars: number; newStars: number; bonus: Cost };
+/**
+ * Settle a finished stage battle once: stage-scaled base reward plus a bonus for each newly earned star.
+ * Replaying with fewer stars never lowers the record.
+ */
+export function settleBattle(k: Kingdom, battleId: string, s: RushState, stage: number): { kingdom: Kingdom; granted: boolean; reward: Settlement } {
+  const base = battleReward(s), mul = stageRewardMul(stage), stars = starsFor(s);
+  const prev = k.stars[stage - 1] ?? 0, newStars = Math.max(0, stars - prev), b = starBonus(stage);
+  const bonus = { food: b.food * newStars, wood: b.wood * newStars };
+  const reward: Settlement = {
+    food: Math.round(base.food * mul) + bonus.food, wood: Math.round(base.wood * mul) + bonus.wood,
+    won: base.won, waves: base.waves, stars, newStars, bonus,
+  };
+  const result = grantReward(k, battleId, reward);
+  if (result.granted && stars > prev) result.kingdom.stars[stage - 1] = stars;
+  return { ...result, reward };
+}
+
 // ---------- save format ----------
 const count = (v: unknown, lo: number, hi: number): number | null =>
   typeof v === 'number' && Number.isInteger(v) && v >= lo && v <= hi ? v : null;
@@ -130,10 +155,13 @@ export function parseKingdom(raw: string | null, now: number): Kingdom {
     if ([farm, mill, perks.attack, perks.towerDiscount, perks.townHp, food, wood, won, lost].some(x => x === null)) return createKingdom(now);
     const last = typeof v.lastCollect === 'number' && Number.isFinite(v.lastCollect) ? Math.min(v.lastCollect, now) : now;
     const rewarded = Array.isArray(v.rewarded) ? v.rewarded.filter((x): x is string => typeof x === 'string').slice(-20) : [];
+    // Saves from before stages existed have no star record: start the ladder fresh, keep everything else.
+    const starList = Array.isArray(v.stars) && v.stars.length === STAGE_COUNT && v.stars.every(x => count(x, 0, 3) !== null)
+      ? [...v.stars] : Array(STAGE_COUNT).fill(0);
     return {
       version: 1, castle, farm: farm!, mill: mill!,
       perks: { attack: perks.attack!, towerDiscount: perks.towerDiscount!, townHp: perks.townHp! },
-      food: food!, wood: wood!, lastCollect: last, battles: { won: won!, lost: lost! }, rewarded,
+      food: food!, wood: wood!, lastCollect: last, battles: { won: won!, lost: lost! }, stars: starList, rewarded,
     };
   } catch {
     return createKingdom(now);

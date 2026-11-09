@@ -19,7 +19,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 #rush-fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 
 /* Chunky display type with a thick ink outline: readable over any part of the battlefield. */
-.hud-wave b, .hud-gold b, .hud-town b, .toast, .card h1, .actions button, .hud-pill, .hud-build, .btn-super .label, .pop, .eyebrow {
+.hud-wave b, .hud-gold b, .hud-town b, .toast, .card h1, .actions > button, .hud-pill, .hud-build, .btn-super .label, .pop, .eyebrow {
   font-family: var(--display); font-weight: 400; letter-spacing: 0.01em;
   -webkit-text-stroke: 4px var(--outline); paint-order: stroke fill; text-shadow: 0 3px 0 var(--outline);
 }
@@ -110,9 +110,9 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .howto { list-style: none; padding: 0; margin: 0 0 16px; display: grid; gap: 6px; text-align: left; font-size: 14px; color: #e3ece6; }
 .howto b { display: inline-block; min-width: 54px; color: var(--gold); font-weight: 600; }
 .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-.actions button { padding: 11px 22px; border-radius: 16px; border: 3px solid var(--outline); background: linear-gradient(#7fd0ff 0 50%, #2f9bff 50%); color: #fff; font-size: 20px; touch-action: manipulation; min-width: 132px; box-shadow: 0 5px 0 var(--outline); }
+.actions > button { padding: 11px 22px; border-radius: 16px; border: 3px solid var(--outline); background: linear-gradient(#7fd0ff 0 50%, #2f9bff 50%); color: #fff; font-size: 20px; touch-action: manipulation; min-width: 132px; box-shadow: 0 5px 0 var(--outline); }
 .actions .primary { background: linear-gradient(#ffe58a 0 50%, #ffc93c 50%); }
-.actions button:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--outline); }
+.actions > button:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--outline); }
 .note { margin: 14px 0 0; font-size: 12px; color: var(--muted); }
 .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 18px; margin: 16px 0 18px; text-align: left; }
 .stats div { display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding: 4px 0; }
@@ -199,5 +199,48 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   .collect { margin: 6px 0; padding: 4px 10px; font-size: 15px; }
   .town-reward { margin-top: 6px; padding: 4px 10px; font-size: 12.5px; }
   .town-card .actions { padding: 6px 0 8px; }
-  .town-card .actions button { padding: 6px 18px; font-size: 17px; }
+  .town-card .actions > button { padding: 6px 18px; font-size: 17px; }
+}
+
+/* ---------- stage ladder ---------- */
+.stage-strip { flex-basis: 100%; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 4px; }
+.stage-chip {
+  min-width: 46px; min-height: 46px; padding: 3px 5px; border-radius: 12px; border: 3px solid var(--outline); display: grid; place-items: center;
+  background: linear-gradient(#5d4a99, #3c2c72); box-shadow: 0 3px 0 var(--outline); color: #fff; touch-action: manipulation; line-height: 1;
+}
+.stage-chip b { font-family: var(--display); font-weight: 400; font-size: 17px; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; }
+.stage-chip span { font-size: 9px; letter-spacing: -1px; color: var(--gold); }
+.stage-chip[aria-checked="true"] { background: linear-gradient(#ffe58a 0 50%, #ffc93c 50%); transform: translateY(-2px); }
+.stage-chip[aria-checked="true"] span { color: #7a4a00; }
+.stage-chip:disabled { background: rgba(255,255,255,0.08); box-shadow: none; opacity: 0.6; cursor: default; }
+.stage-chip:disabled span { color: var(--muted); letter-spacing: 0; }
+.result-stars { margin: 6px 0 0; text-align: center; }
+.result-stars .stars { display: block; font-size: 38px; line-height: 1.1; letter-spacing: 4px; }
+.result-stars .stars i { font-style: normal; color: rgba(255,255,255,0.18); -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; }
+.result-stars .stars i.on { color: var(--gold); text-shadow: 0 3px 0 var(--outline); }
+.result-stars small { color: #9df2b6; font-size: 14px; }
+@media (max-height: 420px) {
+  /* Short landscape phones: ladder and buttons share one row. */
+  .stage-strip { flex: 1 1 auto; flex-basis: auto; flex-wrap: nowrap; margin: 0; gap: 4px; }
+  .stage-chip { min-width: 34px; min-height: 40px; padding: 2px 3px; border-radius: 10px; }
+  .stage-chip b { font-size: 14px; }
+  .stage-chip span { font-size: 7.5px; }
+  .town-card .actions { flex-wrap: nowrap; align-items: center; gap: 8px; }
+  .town-card .actions > button { min-width: 0; padding: 6px 12px; white-space: nowrap; }
+  .result-stars .stars { font-size: 28px; }
+}
+
+/* Result: the next action must stay reachable on short landscape phones. */
+#screen-result .card { padding-bottom: 0; }
+#screen-result .actions { position: sticky; bottom: 0; padding: 8px 0 14px; background: linear-gradient(rgba(38,26,74,0), #261a4a 35%); }
+@media (max-height: 420px) {
+  #screen-result .card { padding-top: 10px; }
+  #screen-result .eyebrow { display: none; }
+  .result-reward { margin-top: 4px; padding: 4px 10px; font-size: 14px; }
+  .stats { grid-template-columns: repeat(4, 1fr); gap: 2px 12px; margin: 8px 0 4px; }
+  .stats div { padding: 2px 0; }
+  .stats dt { font-size: 11px; }
+  .stats dd { font-size: 13px; }
+  #screen-result .actions { padding: 6px 0 8px; }
+  #screen-result .actions > button { padding: 6px 18px; font-size: 17px; }
 }

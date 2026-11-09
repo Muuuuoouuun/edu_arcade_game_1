@@ -7,7 +7,8 @@ import { RushView } from './render.ts';
 import { RushInput } from './input.ts';
 import { playCombatSound, unlockAudio, type CombatSoundKind } from '../lib/sound.ts';
 import { playHaptic } from '../lib/haptic.ts';
-import { battleReward, collect, grantReward, kingdomMods } from './kingdom.ts';
+import { collect, kingdomMods, settleBattle } from './kingdom.ts';
+import { stageDifficulty } from './stages.ts';
 import { loadKingdom, saveKingdom, TownScreen } from './town.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -26,6 +27,7 @@ let mode: 'title' | 'town' | 'play' | 'demo' | 'result' = 'title';
 let paused = false;
 /** Id of the battle in progress; a battle's kingdom reward is granted once per id. */
 let battleId = '';
+let stage = 1;
 const town = new TownScreen($('screen-town'));
 const input = new RushInput({
   surface: $('rush-surface'), stick: $('stick'), knob: $('stick-knob'),
@@ -96,7 +98,8 @@ const setText = (key: string, el: HTMLElement, text: string) => { if (last[key] 
 function updateHud() {
   const s = state;
   setText('wave', hud.wave, `웨이브 ${Math.min(s.wave + 1, WAVE_COUNT)}/${WAVE_COUNT}`);
-  setText('waveSub', hud.waveSub, s.phase === 'prep' ? `준비 ${Math.ceil(s.prepT)}초` : s.phase === 'wave' ? `남은 적 ${s.enemies.length}` : '');
+  const where = mode === 'demo' ? '시연' : `스테이지 ${stage}`;
+  setText('waveSub', hud.waveSub, s.phase === 'prep' ? `${where} · 준비 ${Math.ceil(s.prepT)}초` : s.phase === 'wave' ? `${where} · 남은 적 ${s.enemies.length}` : where);
   hud.townFill.style.transform = `scaleX(${s.town.hp / s.town.maxHp})`;
   setText('townHp', hud.townHp, String(Math.ceil(s.town.hp)));
   setText('gold', hud.gold, String(s.gold));
@@ -138,7 +141,8 @@ function start(nextMode: 'play' | 'demo') {
   unlockAudio();
   const seed = Number(params.get('seed')) || (Math.floor(Math.random() * 1e9) | 1);
   // Permanent kingdom upgrades shape real battles; the demo always shows the base game.
-  state = createRush(seed, nextMode === 'play' ? kingdomMods(loadKingdom()) : undefined);
+  stage = nextMode === 'play' ? town.stage : 1;
+  state = createRush(seed, nextMode === 'play' ? kingdomMods(loadKingdom()) : undefined, stageDifficulty(stage));
   battleId = `${Date.now().toString(36)}-${seed}`;
   mode = nextMode;
   paused = false;
@@ -153,10 +157,12 @@ function showResult() {
   if (mode === 'demo') { window.setTimeout(() => { if (mode === 'demo') start('demo'); }, 2500); return; }
   mode = 'result';
   input.enabled = false;
-  $('result-title').textContent = won ? '마을을 지켰다!' : '마을이 함락됐다';
+  $('result-title').textContent = won ? `스테이지 ${stage} 방어 성공!` : `스테이지 ${stage} 마을 함락`;
   $('screen-result').classList.toggle('won', won);
-  const reward = battleReward(s);
-  const { kingdom, granted } = grantReward(collect(loadKingdom(), Date.now()), battleId, reward);
+  const { kingdom, granted, reward } = settleBattle(collect(loadKingdom(), Date.now()), battleId, s, stage);
+  $('result-stars').innerHTML = won
+    ? `<span class="stars">${'<i class="on">★</i>'.repeat(reward.stars)}${'<i>★</i>'.repeat(3 - reward.stars)}</span>${reward.newStars ? `<small>새 별 +${reward.newStars}${reward.newStars === reward.stars && stage < 10 ? ` · 스테이지 ${stage + 1} 열림` : ''}</small>` : ''}`
+    : '<small>남은 마을 체력에 따라 별 1~3개를 얻어요</small>';
   const saved = granted && saveKingdom(kingdom);
   const rewardEl = $('result-reward');
   rewardEl.hidden = !granted;

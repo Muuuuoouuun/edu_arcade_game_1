@@ -1,6 +1,7 @@
 // Town (kingdom) screen: storage + DOM. Rules live in kingdom.ts.
+import { STAGE_COUNT } from './stages.ts';
 import {
-  canUpgrade, collect, createKingdom, level, maxLevel, parseKingdom, pending, PERK_EFFECT, rate, serializeKingdom, storageFull,
+  canUpgrade, collect, createKingdom, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate, serializeKingdom, storageFull,
   upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 
@@ -33,6 +34,8 @@ function bumped(k: Kingdom, u: Upgrade): Kingdom {
 export class TownScreen {
   private kingdom: Kingdom;
   private timer = 0;
+  /** Stage the battle button will start (defaults to the furthest unlocked stage). */
+  stage = 1;
   private $ = (id: string) => document.getElementById(id)!;
 
   constructor(private root: HTMLElement) {
@@ -56,6 +59,13 @@ export class TownScreen {
       }
       this.render();
     });
+    const strip = this.$('stage-strip');
+    strip.innerHTML = Array.from({ length: STAGE_COUNT }, (_, i) =>
+      `<button class="stage-chip" role="radio" data-stage="${i + 1}"><b>${i + 1}</b><span data-stars></span></button>`).join('');
+    strip.addEventListener('click', e => {
+      const n = Number((e.target as HTMLElement).closest<HTMLElement>('[data-stage]')?.dataset.stage);
+      if (n && stageUnlocked(this.kingdom, n)) { this.stage = n; this.render(); }
+    });
     this.$('btn-collect').addEventListener('click', () => {
       this.kingdom = collect(this.kingdom, Date.now());
       saveKingdom(this.kingdom);
@@ -70,6 +80,7 @@ export class TownScreen {
 
   show(rewardText = '') {
     this.reload();
+    this.stage = latestStage(this.kingdom);
     const note = this.$('town-reward');
     note.textContent = rewardText;
     note.hidden = !rewardText;
@@ -80,6 +91,15 @@ export class TownScreen {
 
   render() {
     const k = this.kingdom, now = Date.now(), wait = pending(k, now);
+    if (!stageUnlocked(k, this.stage)) this.stage = latestStage(k);
+    this.root.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach(chip => {
+      const n = Number(chip.dataset.stage), open = stageUnlocked(k, n), stars = k.stars[n - 1];
+      chip.disabled = !open;
+      chip.setAttribute('aria-checked', String(n === this.stage));
+      chip.setAttribute('aria-label', open ? `스테이지 ${n}, 별 ${stars}개` : `스테이지 ${n}, 잠김`);
+      chip.querySelector('[data-stars]')!.textContent = open ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '잠김';
+    });
+    this.$('btn-battle').textContent = `스테이지 ${this.stage} 출전`;
     this.$('res-food').textContent = String(k.food);
     this.$('res-wood').textContent = String(k.wood);
     const collectBtn = this.$('btn-collect') as HTMLButtonElement;

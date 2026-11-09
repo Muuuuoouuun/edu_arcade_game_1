@@ -56,13 +56,17 @@
           <p id="town-reward" class="town-reward" hidden></p>
           <button id="btn-collect" class="collect">수확 <b id="collect-amount"></b></button>
           <ul id="town-list" class="town-list"></ul>
-          <div class="actions"><button id="btn-battle" class="primary">출전</button><button id="btn-town-title">타이틀</button></div>
+          <div class="actions">
+            <div id="stage-strip" class="stage-strip" role="radiogroup" aria-label="스테이지 선택"></div>
+            <button id="btn-battle" class="primary">출전</button><button id="btn-town-title">타이틀</button>
+          </div>
         </div>
       </section>
       <section id="screen-result" class="screen" hidden>
         <div class="card">
           <p class="eyebrow">RESULT</p>
           <h1 id="result-title">결과</h1>
+          <p id="result-stars" class="result-stars" aria-live="polite"></p>
           <p id="result-reward" class="result-reward" hidden></p>
           <dl id="result-stats" class="stats"></dl>
           <div class="actions"><button id="btn-town" class="primary">마을로</button><button id="btn-again">다시 하기</button></div>

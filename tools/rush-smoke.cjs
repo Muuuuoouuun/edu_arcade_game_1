@@ -56,6 +56,8 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await page.click('#btn-play');
     await page.waitForTimeout(200);
     check(await page.evaluate(() => __rush.kingdom.perks.attack === 1), 'kingdom persists across reload');
+    check(await page.isDisabled('[data-stage="2"]'), 'stage 2 locked on a fresh kingdom');
+    check((await page.textContent('#btn-battle')).includes('스테이지 1'), 'battle button names the selected stage');
 
     // 3. Desktop controls: keyboard movement per sim tick, build on a pad, mouse fire.
     await page.click('#btn-battle');
