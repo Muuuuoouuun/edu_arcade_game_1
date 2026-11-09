@@ -7,7 +7,7 @@ export function cameraFrame(s:Frontier,o:CameraOptions){
  const landscape=height<430&&aspect>1.6,overview=o.overview||s.mode==='defense';
  const zoom=Math.max(.7,Math.min(1.5,o.zoom));
  const near=landscape?Math.max(12.1,Math.min(25,height/20)):aspect<1?30:25;
- const range=(overview?(s.mode==='defense'?45*(landscape?.72:1):65):near*(s.mode==='command'?1.33:1))*zoom;
+ const range=(overview?(s.mode==='defense'?(landscape?32.4:52):65):near*(s.mode==='command'?1.33:1))*zoom;
  // A lower action camera exposes the cliff faces and keeps the full 8m shockwave readable at default zoom.
  const slope=overview?.85:landscape?(s.mode==='solo'?1.6:1.35):.85;
  const lead=!overview&&!o.reduced&&s.hero.moving?1.4:0;

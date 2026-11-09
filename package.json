@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && vite build && node tools/build-prototypes.mjs",
     "test:prototype": "node prototype/tests/sim_test.js",
     "preview": "vite preview --host 0.0.0.0 --port 3100 --strictPort",
-    "test": "node --experimental-strip-types --test src/games/engine.test.ts src/games/quiz.test.ts src/games/race/engine.test.ts src/games/defense/engine.test.ts src/games/defense/campaign.test.ts src/games/defense/difficulty.test.ts src/lib/storage.test.ts src/lib/haptic.test.ts src/games/defense/tactics.test.ts src/components/defenseInput.test.ts src/components/defenseSpeed.test.ts src/components/defenseFrame.test.ts src/components/defenseSound.test.ts src/games/defense/themes.test.ts src/games/defense/fieldGuide.test.ts src/games/defense/art.test.ts src/games/defense/locomotion.test.ts src/games/defense/action.test.ts src/games/defense/terrain.test.ts src/games/defense/gateAssets.test.ts src/games/defense/gateImpact.test.ts src/games/frontier/engine.test.ts src/games/frontier/ballistaView.test.ts src/games/frontier/woodView.test.ts src/games/frontier/heroAttack.test.ts src/games/frontier/heroView.test.ts src/games/frontier/woodAttack.test.ts src/games/frontier/camera.test.ts src/games/frontier/effectsView.test.ts src/games/frontier/terrainView.test.ts src/games/frontier/beaconView.test.ts",
+    "test": "node --experimental-strip-types --test src/games/engine.test.ts src/games/quiz.test.ts src/games/race/engine.test.ts src/games/defense/engine.test.ts src/games/defense/campaign.test.ts src/games/defense/difficulty.test.ts src/lib/storage.test.ts src/lib/haptic.test.ts src/games/defense/tactics.test.ts src/components/defenseInput.test.ts src/components/defenseSpeed.test.ts src/components/defenseFrame.test.ts src/components/defenseSound.test.ts src/games/defense/themes.test.ts src/games/defense/fieldGuide.test.ts src/games/defense/art.test.ts src/games/defense/locomotion.test.ts src/games/defense/action.test.ts src/games/defense/terrain.test.ts src/games/defense/gateAssets.test.ts src/games/defense/gateImpact.test.ts src/games/frontier/engine.test.ts src/games/frontier/ballistaView.test.ts src/games/frontier/woodView.test.ts src/games/frontier/heroAttack.test.ts src/games/frontier/heroView.test.ts src/games/frontier/woodAttack.test.ts src/games/frontier/camera.test.ts src/games/frontier/effectsView.test.ts src/games/frontier/terrainView.test.ts src/games/frontier/beaconView.test.ts src/games/frontier/gateView.test.ts",
     "art:gates": "node tools/build-defense-gates.mjs",
     "art:themes": "node tools/build-defense-themes.mjs",
     "models:build": "blender -b --python tools/blender/build_towers.py && npm run models:sprites",
@@ -147,7 +147,9 @@
     "models:frontier-beacon": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_beacon.py",
     "models:frontier-beacon:check": "node tools/check-frontier-beacon.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_beacon.py",
     "models:frontier-frost": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_frost.py",
-    "models:frontier-frost:check": "node tools/check-frontier-frost.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_frost.py"
+    "models:frontier-frost:check": "node tools/check-frontier-frost.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_frost.py",
+    "models:frontier-gate-impact": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_gate_impact.py",
+    "models:frontier-gate-impact:check": "node tools/check-frontier-gate-impact.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_gate_impact.py"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

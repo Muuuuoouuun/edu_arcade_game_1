@@ -8,7 +8,7 @@ export type Bolt={id:number;targetId:number;pad:number;position:Position3;previo
 export type Mode='defense'|'command'|'solo';
 export type Point={x:number;z:number};
 export type Enemy=Point&{id:number;hp:number;cooldown:number;path:number;maxHp?:number;heading?:number;walkDistance?:number;moving?:boolean;restTime?:number;attack?:WoodAttack};
-export type Frontier={mode:Mode;phase:'ready'|'playing'|'won'|'lost';paused:boolean;speed:1|2;time:number;wave:number;remaining:number;spawnIn:number;gold:number;coreHp:number;hero:Point&{hp:number;maxHp:number;target:Point;heading:number;moving:boolean;strike:number;cooldown:number;skill:number;dash:number;walkDistance:number;settle?:{time:number;walkTime:number};attack?:HeroAttack};squad:(Point&{cooldown:number})[];enemies:Enemy[];towers:Tower[];bolts:Bolt[];beacon:number;crystals:number[];kills:number;xp:number;level:number;serial:number;effects:{id:number;from:Point;to:Point;kind:'shot'|'skill'|'hit'|'impact'|'club'|'hammer'|'shockwave';life:number}[];message:string};
+export type Frontier={mode:Mode;phase:'ready'|'playing'|'won'|'lost';paused:boolean;speed:1|2;time:number;wave:number;remaining:number;spawnIn:number;gold:number;coreHp:number;coreHitAt?:number;hero:Point&{hp:number;maxHp:number;target:Point;heading:number;moving:boolean;strike:number;cooldown:number;skill:number;dash:number;walkDistance:number;settle?:{time:number;walkTime:number};attack?:HeroAttack};squad:(Point&{cooldown:number})[];enemies:Enemy[];towers:Tower[];bolts:Bolt[];beacon:number;crystals:number[];kills:number;xp:number;level:number;serial:number;effects:{id:number;from:Point;to:Point;kind:'shot'|'skill'|'hit'|'impact'|'club'|'hammer'|'shockwave';life:number}[];message:string};
 export const MODES={defense:{name:'성문 방어',tag:'타워 디펜스',goal:'3개 웨이브를 막고 성문을 지키세요.',control:'빛나는 건설 지점을 눌러 포탑을 배치·강화하세요.',size:40},command:{name:'변경 지휘',tag:'디펜스 + 분대 지휘',goal:'분대로 동쪽 봉화를 점령하고 3개 웨이브를 막으세요.',control:'땅을 눌러 분대 이동 · 가까운 건설 지점에 전초 포탑 배치',size:64},solo:{name:'수정 원정',tag:'영웅 직접 조작',goal:'적 6마리·수정 3개를 확보한 뒤 동쪽 출구로 이동하세요.',control:'WASD / 방향 패드 이동 · 근접 강타 Q · 충격파 E · 돌진 Space (준비 취소)',size:64}} as const;
 export const PADS:Point[]=[{x:-21,z:12},{x:-9,z:8},{x:-24,z:-7},{x:-7,z:-16},{x:15,z:5},{x:19,z:-12}];
 export const CORE={x:-14,z:21},BEACON={x:19,z:-17},EXIT={x:23,z:-23};
@@ -139,7 +139,7 @@ export function stepFrontier(previous:Frontier,elapsed:number,axis:Point={x:0,z:
    if(!e.attack.hit&&e.attack.time+1e-9>=WOOD_ATTACK.contact){
     e.attack.hit=true;const target=e.attack.target==='hero'?s.hero:CORE;
     if(inWoodStrike(e.x,e.z,e.attack.heading,target)){
-     if(e.attack.target==='hero')s.hero.hp=Math.max(0,s.hero.hp-8);else s.coreHp=Math.max(0,s.coreHp-10);
+     if(e.attack.target==='hero')s.hero.hp=Math.max(0,s.hero.hp-8);else{const before=s.coreHp;s.coreHp=Math.max(0,s.coreHp-10);if(s.coreHp<before)s.coreHitAt=s.time;}
      effect(s,e,target,'club');
     }
    }
