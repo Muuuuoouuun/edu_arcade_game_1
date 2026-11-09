@@ -817,6 +817,28 @@ test('Cheongun ultimate uses eight grounded directions, simulation time and comp
  assert.ok(failed.directionalActionSpriteAsset('tao','strike',{x:0,y:0},{x:1,y:0}),'existing cast remains available');
 });
 
+test('Riel arrow rain uses eight grounded release directions and a complete-set fallback',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'riel-ultimate-ready');
+ for(let d=0;d<8;d++){
+  const a=d*Math.PI/4,h={x:Math.cos(a),y:Math.sin(a)};
+  for(const [age,index] of [[0,0],[.16,0],[.17,1],[.33,1],[.34,2],[.499,2]] as const){
+   const sample=art.rielUltimateSpriteAsset('elf',h,age)!;
+   assert.equal(sample.frame,index);assert.equal(sample.asset.src,`/defense/models/riel-ultimate-${d}-atlas.webp`);
+   assert.equal(sample.asset.viewBox,`${index*192} 0 192 192`);assert.equal(sample.asset.groundY,165);
+   assert.equal(sample.asset.displayScale,1.2*6.8/5.8);assert.equal(sample.asset.oriented,true);
+   assert.equal(art.rielUltimateSpriteAsset('elf',h,age,true)?.frame,0);
+  }
+  assert.equal(art.rielUltimateSpriteAsset('elf',h,.5),null);
+ }
+ assert.equal(art.rielUltimateSpriteAsset('elf',{x:0,y:0},.1),null);assert.equal(art.rielUltimateSpriteAsset('tao',{x:1,y:0},.1),null);
+ assert.equal(requests.filter(s=>s.includes('riel-ultimate-')).length,8);assert.ok(!requests.some(s=>s.endsWith('.glb')));
+ for(const file of ['riel-ultimate-4-atlas.webp','riel-cast-2-atlas.webp','riel-walk-7-atlas.webp']){
+  const {art:failed}=await loadWithImageResults(s=>s.endsWith(file),'riel-ultimate-fail-'+file);
+  assert.equal(failed.rielUltimateSpriteAsset('elf',{x:1,y:0},.1),null);
+  if(file.startsWith('riel-ultimate'))assert.ok(failed.directionalActionSpriteAsset('elf','strike',{x:0,y:0},{x:1,y:0}),'existing shot remains available');
+ }
+});
+
 test('Luna uses one complete modeled body and projection for idle, walking and eight cast directions',async()=>{
  const {art,requests}=await loadWithImageResults(()=>false,'luna-ready');
  const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/luna-druid.json',import.meta.url),'utf8'));
