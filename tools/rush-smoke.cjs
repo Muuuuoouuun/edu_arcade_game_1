@@ -94,6 +94,7 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await page.mouse.down(); await page.mouse.up();
     await page.waitForTimeout(300);
     check(await page.evaluate(() => __rush.state.stats.shots >= 1), 'mouse click fires');
+    check(await page.evaluate(() => new Promise(done => { const until = performance.now() + 1500; const look = () => __rush.info().heroAnim ? done(true) : performance.now() > until ? done(false) : requestAnimationFrame(look); look(); })), 'hero shoot clip plays on the baked model');
     await page.screenshot({ path: `${OUT}/desktop-play.png` });
     // 4. Finish the battle by letting the town fall (fast) → reward once → back to town.
     await page.goto(BASE + '?seed=5&speed=8');

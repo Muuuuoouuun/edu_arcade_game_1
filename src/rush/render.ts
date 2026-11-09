@@ -3,12 +3,13 @@ import {
   AnimationMixer, Box3, DodecahedronGeometry, BoxGeometry, CanvasTexture, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
   DirectionalLight, Group, HemisphereLight, LoopOnce, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera, Plane,
   PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
-  type AnimationAction, type BufferGeometry, type Material,
+  Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, type AnimationAction, type BufferGeometry, type Material,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ARENA, ENEMIES, HERO, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type Vec } from './data.ts';
 import { padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
-import { bake, hullGeometry, outlineMaterial, PAL, toon, toonify, type Part } from './look.ts';
+import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, type Part } from './look.ts';
+import { Batch } from './batch.ts';
 import { Particles } from './fx.ts';
 
 export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'super'; offset: Vec } | null;
@@ -24,7 +25,6 @@ const basic = (color: number, opacity = 1) => new MeshBasicMaterial({ color, tra
 const yaw = (a: number) => -a;
 
 type Bar = { root: Group; fill: Mesh; width: number };
-type EnemyView = { root: Group; rig: Group; body: Mesh; bar: Bar; kind: EnemyKind };
 type Fx = { mesh: Mesh; age: number; life: number; grow: number; fade: number; y0: number };
 
 export class RushView {
@@ -39,9 +39,6 @@ export class RushView {
   private ammoSegs: Mesh[] = [];
   private heroMixer: AnimationMixer | null = null;
   private heroShot: AnimationAction | null = null;
-  private enemies = new Map<number, EnemyView>();
-  private shots = new Map<number, Mesh>();
-  private coins = new Map<number, Mesh>();
   private enemyKits = new Map<EnemyKind, { body: BufferGeometry; hull: BufferGeometry }>();
   private towerKits: ({ base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; h: number } | undefined)[] = [];
   private towers: (Group | null)[] = PADS.map(() => null);
@@ -50,6 +47,21 @@ export class RushView {
   private townBar: Bar;
   private fx: Fx[] = [];
   private particles: Particles;
+  /** Instanced batches: draw calls stay fixed however many enemies, shots and coins are alive. */
+  private batches!: {
+    body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>; flash: Record<EnemyKind, Batch>;
+    shadow: Batch; ring: Batch; barBg: Batch; barFill: Batch; shots: Record<Shot['owner'], Batch>; coins: Batch;
+  };
+  private counts = { enemies: 0, shots: 0 };
+  private tmp = { m: new Matrix4(), q: new Quaternion(), e: new Euler(), p: new Vector3(), s: new Vector3(), o: new Vector3() };
+  private frustum = new Frustum();
+  private sphere = new Sphere();
+  /** Per-instance culling for the batches (InstancedMesh cannot cull individual instances itself). */
+  private onScreen(x: number, y: number, z: number, r: number) {
+    this.sphere.center.set(x, y, z);
+    this.sphere.radius = r;
+    return this.frustum.intersectsSphere(this.sphere);
+  }
   private telegraphs: { mesh: Mesh; fill: Mesh; age: number; life: number }[] = [];
   private aimFan: Mesh;
   private aimRing: Mesh;
@@ -95,6 +107,7 @@ export class RushView {
     this.townBar.root.position.set(TOWN.x, 4.6, TOWN.z);
     this.scene.add(this.townBar.root);
 
+    this.buildBatches();
     this.buildHero();
     this.heroBar = this.makeBar(1.3, this.mats.barAlly);
     this.heroBar.root.position.y = 2.55;
@@ -265,14 +278,29 @@ export class RushView {
       this.heroBody.remove(placeholder);
       this.heroBody.add(holder);
       this.hero.updateMatrixWorld(true);
+      // Bake the parts per animated node (plus one static group): 5 meshes + 5 ink hulls instead of 24 + 24.
+      // The model has no textures, so material colours become vertex colours.
+      const animated = new Set((gltf.animations[0]?.tracks ?? []).map(t => t.name.split('.')[0]));
       const meshes: Mesh[] = [];
       model.traverse(node => { if (node instanceof Mesh) meshes.push(node); });
-      const scale = new Vector3();
+      const groups = new Map<Object3D, { geo: BufferGeometry; color: number; matrix: Matrix4 }[]>();
+      const inv = new Matrix4(), ws = new Vector3(), hidden = new MeshBasicMaterial({ visible: false });
       for (const mesh of meshes) {
-        toonify(mesh);
-        // Constant on-screen ink width regardless of the node's own scale.
-        const s = mesh.getWorldScale(scale).x || 1;
-        mesh.add(new Mesh(hullGeometry(mesh.geometry), outlineMaterial(+(0.035 / s).toFixed(3))));
+        let owner: Object3D = model;
+        for (let p: Object3D | null = mesh; p && p !== model; p = p.parent) if (animated.has(p.name)) { owner = p; break; }
+        if (owner === mesh) { toonify(mesh); mesh.add(new Mesh(hullGeometry(mesh.geometry), outlineMaterial(+(0.035 / (mesh.getWorldScale(ws).x || 1)).toFixed(3)))); continue; }
+        inv.copy(owner.matrixWorld).invert();
+        const mat = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material) as Material & { color?: Color };
+        const list = groups.get(owner) ?? [];
+        groups.set(owner, list);
+        list.push({ geo: mesh.geometry, color: mat.color?.getHex() ?? 0xffffff, matrix: new Matrix4().multiplyMatrices(inv, mesh.matrixWorld) });
+        // A mesh that parents other nodes stays in the graph but draws nothing.
+        if (mesh.children.length) mesh.material = hidden; else mesh.removeFromParent();
+      }
+      for (const [owner, parts] of groups) {
+        const geo = bakeMatrices(parts), body = new Mesh(geo, this.mats.baked);
+        body.add(new Mesh(hullGeometry(geo), outlineMaterial(+(0.035 / (owner.getWorldScale(ws).x || 1)).toFixed(3))));
+        owner.add(body);
       }
       const clip = gltf.animations[0];
       if (clip) {
@@ -339,18 +367,84 @@ export class RushView {
     return kit;
   }
 
-  private makeEnemy(kind: EnemyKind): EnemyView {
-    const root = new Group(), rig = new Group(), r = ENEMIES[kind].radius, kit = this.enemyKit(kind);
-    const shadow = new Mesh(this.geo.blob, this.mats.blob); shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.02; shadow.scale.setScalar(r * 1.25);
-    const ring = new Mesh(this.geo.ring, this.mats.enemyRing); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; ring.scale.setScalar(r * 1.15);
-    const body = new Mesh(kit.body, this.mats.baked);
-    rig.add(body, new Mesh(kit.hull, outlineMaterial(kind === 'boss' ? 0.08 : 0.05)));
-    root.add(shadow, ring, rig);
-    const bar = this.makeBar(kind === 'boss' ? 2.6 : Math.max(0.9, r * 2), this.mats.barEnemy);
-    bar.root.position.y = kind === 'boss' ? r * 4.0 : r * 3.4 + 0.25;
-    root.add(bar.root);
-    this.scene.add(root);
-    return { root, rig, body, bar, kind };
+  private buildBatches() {
+    const kinds: EnemyKind[] = ['grunt', 'skirmisher', 'brute', 'boss'];
+    const per = <T,>(f: (k: EnemyKind) => T) => Object.fromEntries(kinds.map(k => [k, f(k)])) as Record<EnemyKind, T>;
+    const cap = 160;
+    this.batches = {
+      body: per(k => new Batch(this.scene, this.enemyKit(k).body, this.mats.baked, k === 'boss' ? 4 : cap)),
+      hull: per(k => new Batch(this.scene, this.enemyKit(k).hull, outlineMaterial(k === 'boss' ? 0.08 : 0.05), k === 'boss' ? 4 : cap)),
+      flash: per(k => new Batch(this.scene, this.enemyKit(k).body, this.mats.flash, k === 'boss' ? 4 : cap)),
+      shadow: new Batch(this.scene, this.geo.blob, this.mats.blob, cap),
+      ring: new Batch(this.scene, this.geo.ring, this.mats.enemyRing, cap),
+      barBg: new Batch(this.scene, this.geo.bar, this.mats.barBg, cap, { order: 5 }),
+      barFill: new Batch(this.scene, this.geo.barFill, this.mats.barEnemy, cap, { order: 5 }),
+      shots: {
+        hero: new Batch(this.scene, this.geo.bolt, this.mats.heroBolt, 240),
+        tower: new Batch(this.scene, this.geo.bolt, this.mats.towerBolt, 120),
+        enemy: new Batch(this.scene, this.geo.orb, this.mats.enemyBolt, 120),
+        super: new Batch(this.scene, this.geo.orb, this.mats.superOrb, 8),
+      },
+      coins: new Batch(this.scene, this.geo.coin, this.mats.coin, 160),
+    };
+  }
+
+  /** Matrix from position, Euler rotation (order) and scale; reuses scratch objects. */
+  private place(x: number, y: number, z: number, rx: number, ry: number, rz: number, sx: number, sy = sx, sz = sx, order: 'XYZ' | 'YXZ' = 'XYZ'): Matrix4 {
+    const t = this.tmp;
+    t.e.set(rx, ry, rz, order);
+    return t.m.compose(t.p.set(x, y, z), t.q.setFromEuler(t.e), t.s.set(sx, sy, sz));
+  }
+
+  private drawEnemies(s: RushState) {
+    const B = this.batches, t = this.tmp, cam = this.camera.quaternion;
+    this.camera.updateMatrixWorld();
+    this.frustum.setFromProjectionMatrix(t.m.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
+    const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), B.shadow, B.ring, B.barBg, B.barFill];
+    all.forEach(b => b.begin());
+    for (const e of s.enemies) {
+      const r = ENEMIES[e.kind].radius;
+      if (!this.onScreen(e.x, r * 2, e.z, r * 4 + 1)) continue;
+      const bob = Math.abs(Math.sin(this.time * 10 + e.id) * 0.06);
+      const sx = e.windup ? 1.1 : 1, sy = e.windup ? 0.88 : 1;
+      const m = this.place(e.x, bob, e.z, 0, yaw(e.facing), 0, sx, sy, sx);
+      (e.flash > 0 ? B.flash : B.body)[e.kind].push(m);
+      B.hull[e.kind].push(m);
+      B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2, 0, 0, r * 1.25));
+      B.ring.push(this.place(e.x, 0.03, e.z, -Math.PI / 2, 0, 0, r * 1.15));
+      if (e.kind === 'boss' || e.hp < e.maxHp) {
+        const boss = e.kind === 'boss', w = boss ? 2.6 : Math.max(0.9, r * 2), y = boss ? r * 4.0 : r * 3.4 + 0.25;
+        B.barBg.push(t.m.compose(t.p.set(e.x, y, e.z), cam, t.s.set(w + 0.1, 1.6, 1)));
+        // The fill is anchored at the bar's left edge, in camera-facing space.
+        t.o.set(-w / 2, 0, 0.01).applyQuaternion(cam);
+        B.barFill.push(t.m.compose(t.p.set(e.x + t.o.x, y + t.o.y, e.z + t.o.z), cam, t.s.set(Math.max(0.0001, w * Math.max(0, e.hp / e.maxHp)), 1, 1)));
+      }
+    }
+    all.forEach(b => b.end());
+    this.counts.enemies = s.enemies.length;
+  }
+
+  private drawShotsAndCoins(s: RushState) {
+    const B = this.batches;
+    Object.values(B.shots).forEach(b => b.begin());
+    for (const shot of s.shots) {
+      if (!this.onScreen(shot.x, 1, shot.z, 3)) continue;
+      if (shot.owner === 'super') {
+        // Lobbed: a parabola that lands on the target point.
+        const p = 1 - Math.max(0, shot.life) / HERO.superTravel;
+        B.shots.super.push(this.place(shot.x, 0.6 + Math.sin(p * Math.PI) * 2.6, shot.z, 0, 0, 0, 1.8));
+      } else if (shot.owner === 'enemy') B.shots.enemy.push(this.place(shot.x, 0.85, shot.z, 0, 0, 0, 1));
+      // Capsules point along +y; lay them flat along the velocity.
+      else B.shots[shot.owner].push(this.place(shot.x, shot.owner === 'tower' ? 1.6 : 0.85, shot.z, -Math.PI / 2, Math.atan2(-shot.vx, -shot.vz), 0, 1, 1, 1, 'YXZ'));
+    }
+    Object.values(B.shots).forEach(b => b.end());
+    this.counts.shots = s.shots.length;
+    B.coins.begin();
+    for (const c of s.coins) {
+      if (!(c.life > 3 || Math.floor(c.life * 6) % 2 === 0) || !this.onScreen(c.x, 0.5, c.z, 0.6)) continue; // blink before expiring
+      B.coins.push(this.place(c.x, 0.45 + Math.sin(this.time * 5 + c.id) * 0.1, c.z, Math.PI / 2, 0, this.time * 4 + c.id, 1));
+    }
+    B.coins.end();
   }
 
   /** Watchtower per level, baked: a static base and a rotating crossbow head. Open top keeps the head visible. */
@@ -508,36 +602,8 @@ export class RushView {
       seg.position.x = (i - 1) * 0.44 - (full ? 0 : (1 - seg.scale.x) * 0.2);
       seg.quaternion.copy(this.camera.quaternion);
     });
-    // Enemies
-    const seen = new Set<number>();
-    for (const e of s.enemies) {
-      seen.add(e.id);
-      let v = this.enemies.get(e.id);
-      if (!v) { v = this.makeEnemy(e.kind); this.enemies.set(e.id, v); }
-      this.updateEnemy(v, e);
-    }
-    // Geometry and materials are shared per kind, so removal only detaches the view.
-    for (const [id, v] of this.enemies) if (!seen.has(id)) { this.scene.remove(v.root); this.enemies.delete(id); }
-    // Shots
-    const live = new Set<number>();
-    for (const shot of s.shots) {
-      live.add(shot.id);
-      let m = this.shots.get(shot.id);
-      if (!m) { m = this.makeShot(shot); this.shots.set(shot.id, m); this.scene.add(m); }
-      this.updateShot(m, shot);
-    }
-    for (const [id, m] of this.shots) if (!live.has(id)) { this.scene.remove(m); this.shots.delete(id); }
-    // Coins
-    const coinIds = new Set<number>();
-    for (const c of s.coins) {
-      coinIds.add(c.id);
-      let m = this.coins.get(c.id);
-      if (!m) { m = new Mesh(this.geo.coin, this.mats.coin); m.rotation.x = Math.PI / 2; this.coins.set(c.id, m); this.scene.add(m); }
-      m.position.set(c.x, 0.45 + Math.sin(this.time * 5 + c.id) * 0.1, c.z);
-      m.rotation.z = this.time * 4 + c.id;
-      m.visible = c.life > 3 || Math.floor(c.life * 6) % 2 === 0; // blink before expiring
-    }
-    for (const [id, m] of this.coins) if (!coinIds.has(id)) { this.scene.remove(m); this.coins.delete(id); }
+    this.drawEnemies(s);
+    this.drawShotsAndCoins(s);
     // Towers
     s.towers.forEach((t, i) => {
       const level = t ? t.level : -1;
@@ -560,39 +626,6 @@ export class RushView {
     this.updateFx(this.fxPaused ? 0 : dt);
     this.particles.update(this.fxPaused ? 0 : dt);
     this.updateCamera(s, dt);
-  }
-
-  private updateEnemy(v: EnemyView, e: Enemy) {
-    v.root.position.set(e.x, 0, e.z);
-    v.rig.rotation.y = yaw(e.facing);
-    const walk = Math.sin(this.time * 10 + e.id) * 0.06;
-    v.rig.position.y = Math.abs(walk);
-    if (e.windup) v.rig.scale.set(1.1, 0.88, 1.1); else v.rig.scale.set(1, 1, 1);
-    v.body.material = e.flash > 0 ? this.mats.flash : this.mats.baked;
-    this.setBar(v.bar, e.hp / e.maxHp);
-    v.bar.root.visible = e.kind === 'boss' || e.hp < e.maxHp;
-  }
-
-  private makeShot(shot: Shot): Mesh {
-    if (shot.owner === 'hero') return new Mesh(this.geo.bolt, this.mats.heroBolt);
-    if (shot.owner === 'tower') return new Mesh(this.geo.bolt, this.mats.towerBolt);
-    if (shot.owner === 'enemy') { const m = new Mesh(this.geo.orb, this.mats.enemyBolt); return m; }
-    const m = new Mesh(this.geo.orb, this.mats.superOrb); m.scale.setScalar(1.8); return m;
-  }
-  private updateShot(m: Mesh, shot: Shot) {
-    if (shot.owner === 'super') {
-      // Lobbed: a parabola that lands on the target point.
-      const p = 1 - Math.max(0, shot.life) / HERO.superTravel;
-      m.position.set(shot.x, 0.6 + Math.sin(p * Math.PI) * 2.6, shot.z);
-      return;
-    }
-    m.position.set(shot.x, shot.owner === 'tower' ? 1.6 : 0.85, shot.z);
-    if (shot.owner === 'enemy') return;
-    // Capsules point along +y; lay them flat along the velocity.
-    m.rotation.set(0, 0, 0);
-    m.rotation.order = 'YXZ';
-    m.rotation.y = Math.atan2(-shot.vx, -shot.vz);
-    m.rotation.x = -Math.PI / 2;
   }
 
   private updateAim(s: RushState, aim: AimPreview) {
@@ -668,7 +701,7 @@ export class RushView {
 
   render() { this.renderer.render(this.scene, this.camera); }
   /** Renderer statistics for the debug overlay and performance notes. */
-  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.enemies.size, shots: this.shots.size, particles: this.particles.active }; }
+  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning() }; }
 }
 
 const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x9b4dd6, brute: 0xd0602f, boss: 0x6d55c4 };

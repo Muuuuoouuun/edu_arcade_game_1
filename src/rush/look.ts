@@ -69,14 +69,22 @@ export type Part = {
 };
 /** Bake several coloured primitives into one vertex-coloured geometry: one draw call per object. */
 export function bake(parts: Part[]): BufferGeometry {
-  const m = new Matrix4(), q = new Quaternion(), e = new Euler(), p = new Vector3(), s = new Vector3(), c = new Color();
+  const q = new Quaternion(), e = new Euler(), p = new Vector3(), s = new Vector3();
+  return bakeMatrices(parts.map(part => {
+    e.set(...(part.rot ?? [0, 0, 0]));
+    const sc = part.scale ?? 1;
+    const matrix = new Matrix4().compose(p.set(...(part.at ?? [0, 0, 0])), q.setFromEuler(e), typeof sc === 'number' ? s.set(sc, sc, sc) : s.set(...sc));
+    return { geo: part.geo, color: part.color, matrix };
+  }));
+}
+
+/** Same as bake(), with an explicit transform per part (used to merge an imported model's meshes). */
+export function bakeMatrices(parts: { geo: BufferGeometry; color: number; matrix: Matrix4 }[]): BufferGeometry {
+  const c = new Color();
   const geos = parts.map(part => {
     const g = part.geo.index ? part.geo.toNonIndexed() : part.geo.clone();
     for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal') g.deleteAttribute(name);
-    e.set(...(part.rot ?? [0, 0, 0]));
-    const sc = part.scale ?? 1;
-    m.compose(p.set(...(part.at ?? [0, 0, 0])), q.setFromEuler(e), typeof sc === 'number' ? s.set(sc, sc, sc) : s.set(...sc));
-    g.applyMatrix4(m);
+    g.applyMatrix4(part.matrix);
     c.set(part.color);
     const n = g.attributes.position.count, colors = new Float32Array(n * 3);
     for (let i = 0; i < n; i++) { colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b; }
