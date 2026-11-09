@@ -1,0 +1,62 @@
+{
+  "command": "npm run models:frontier-frost-cliffs",
+  "concept": "art-source/defense/concepts/2026-11-09-openai/frost-cliffs-reference.png",
+  "editable_meshes": 428,
+  "new_cliff_meshes": 66,
+  "runtime_surfaces": 1,
+  "playable_boundary": 28,
+  "camera": {
+    "size": [
+      960,
+      540
+    ],
+    "location": [
+      0,
+      -68,
+      72
+    ],
+    "ortho_scale": 114
+  },
+  "files": [
+    {
+      "path": "tools/blender/build_frontier_frost_cliffs.py",
+      "bytes": 7835,
+      "sha256": "39ccdfc531b06852aff1554158e86201f9be9aac3ed942bd101a37ba08d68a67"
+    },
+    {
+      "path": "art-source/defense/concepts/2026-11-09-openai/frost-cliffs-reference.png",
+      "bytes": 1981101,
+      "sha256": "70e69309a9229b11fe80f214e1269da08cda87524d2f543942d18c8c5f20707c"
+    },
+    {
+      "path": "art-source/defense/frontier-frost.blend",
+      "bytes": 3660180,
+      "sha256": "51e0a21495df43cfdf44cf6e615a9d5e752975f7355d6ff6d12f3e88bdd6af42"
+    },
+    {
+      "path": "art-source/defense/frontier-frost-cliffs.blend",
+      "bytes": 3769760,
+      "sha256": "a09f36ad3dec3a80ff4068e1dac174eacd2d90c729658421d02ae371e2286dcd"
+    },
+    {
+      "path": "public/defense/models/frontier-frost-cliffs.glb",
+      "bytes": 1267872,
+      "sha256": "9a44d7a90379cd933cef610b874bbd4cc7e3770116c505ceedcd140bd9a240b5"
+    },
+    {
+      "path": "public/defense/models/frontier-frost-cliffs.png",
+      "bytes": 650173,
+      "sha256": "778f7eb815aa08a27f45486b7a9677f96835bf38300b9266d90c60cd08f76166"
+    },
+    {
+      "path": "public/defense/models/frontier-frost-cliffs-detail.png",
+      "bytes": 741590,
+      "sha256": "b2b087f1ab53d2e267cc669d87ee7dd01d109a4caae28a19ee3b10f57ec64b5e"
+    },
+    {
+      "path": "public/defense/models/frontier-frost-cliffs.webp",
+      "bytes": 40170,
+      "sha256": "f3114b09dc987b4422a4605ad5f4606293eb3613113d0842926a92a15c878206"
+    }
+  ]
+}

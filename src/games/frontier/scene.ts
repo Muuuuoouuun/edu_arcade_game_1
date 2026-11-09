@@ -73,7 +73,16 @@ export class FrontierScene {
  private async loadBallista(){try{const model=await new GLTFLoader().loadAsync('/defense/models/frontier-ballista-game.glb');this.track(model.scene);if(this.disposed){this.release();return;}if(!model.scene.getObjectByName('aim-platform')||!model.animations.some(c=>c.name==='frontier-ballista-release'))throw new Error('Invalid ballista');this.ballista={scene:model.scene,animations:model.animations};this.ballistaBatch=new BallistaBatch(this.ballista);this.scene.add(this.ballistaBatch.root);this.track(this.ballistaBatch.root);for(const view of this.towers.values())this.scene.remove(view.root);this.towers.clear();this.loaded++;}catch{if(!this.disposed)this.onStatus('발리스타 로딩 실패 · 기본 입체 포탑으로 방어합니다.');}}
  private async loadBeacon(){try{const gltf=await new GLTFLoader().loadAsync('/defense/models/frontier-beacon.glb');if(this.disposed){gltf.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});return;}this.beacon.setModel(gltf);this.loaded++;this.renderer.shadowMap.needsUpdate=true;}catch{if(!this.disposed)this.onStatus('봉화 모델 로딩 실패 · 기본 봉화와 점령 진행은 유지됩니다.');}}
  private async loadFrostGate(){try{const gltf=await new GLTFLoader().loadAsync('/defense/models/frontier-frost-gate-impact.glb');if(this.disposed){this.track(gltf.scene);this.release();return;}this.frostGate!.setModel(gltf);this.loaded++;this.renderer.shadowMap.needsUpdate=true;}catch{if(!this.disposed)this.onStatus('성문 동작 로딩 실패 · 기본 성문과 피격 반응은 유지됩니다.');}}
- private async loadTerrain(){try{const gltf=await new GLTFLoader().loadAsync(`/defense/models/${FRONTIER_THEMES[this.theme].terrain}.glb`);this.track(gltf.scene);if(this.disposed){this.release();return;}gltf.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.castShadow=true;o.receiveShadow=true;}});this.root.clear();this.root.add(gltf.scene);this.ground.visible=false;this.loaded++;this.renderer.shadowMap.needsUpdate=true;}catch{if(!this.disposed)this.onStatus('지형 원본 로딩 실패 · 기본 입체 지형으로 계속할 수 있습니다.');}}
+ private async loadTerrain(){
+  const names=this.theme==='frost'?[FRONTIER_THEMES.frost.terrain,'frontier-frost']:[FRONTIER_THEMES.forest.terrain];
+  for(const [i,name] of names.entries())try{
+   const gltf=await new GLTFLoader().loadAsync(`/defense/models/${name}.glb`);this.track(gltf.scene);if(this.disposed){this.release();return;}
+   gltf.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.castShadow=true;o.receiveShadow=true;}});this.root.clear();this.root.add(gltf.scene);this.ground.visible=false;this.loaded++;this.renderer.shadowMap.needsUpdate=true;
+   this.renderer.domElement.dataset.terrainModel=name;if(i>0)this.onStatus('절벽 모델 로딩 실패 · 기본 서리 지형으로 계속합니다.');return;
+  }catch{if(this.disposed)return;}
+  this.renderer.domElement.dataset.terrainModel='geometry';this.onStatus('지형 원본 로딩 실패 · 기본 입체 지형으로 계속할 수 있습니다.');
+ }
+
  private resize(){const w=this.host.clientWidth,h=this.host.clientHeight;if(!w||!h)return;this.renderer.setSize(w,h);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();}
  private pick=(e:PointerEvent)=>{if(e.button!==0)return;const r=this.renderer.domElement.getBoundingClientRect();this.ray.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),this.camera);const hit=this.ray.intersectObjects(this.pickSurfaces)[0];if(hit)this.onPick({x:hit.point.x,z:hit.point.z});};
  private wheel=(e:WheelEvent)=>{e.preventDefault();this.zoom=THREE.MathUtils.clamp(this.zoom+e.deltaY*.001,.7,1.5);};

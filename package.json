@@ -149,7 +149,9 @@
     "models:frontier-frost": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_frost.py",
     "models:frontier-frost:check": "node tools/check-frontier-frost.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_frost.py",
     "models:frontier-gate-impact": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_gate_impact.py",
-    "models:frontier-gate-impact:check": "node tools/check-frontier-gate-impact.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_gate_impact.py"
+    "models:frontier-gate-impact:check": "node tools/check-frontier-gate-impact.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_gate_impact.py",
+    "models:frontier-frost-cliffs": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_frost_cliffs.py",
+    "models:frontier-frost-cliffs:check": "node tools/check-frontier-frost-cliffs.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_frost_cliffs.py"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

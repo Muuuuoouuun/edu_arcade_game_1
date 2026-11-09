@@ -6,6 +6,7 @@ import { PMREMGenerator } from 'three';
 import './model-lab.css';
 
 const models = [
+ {id:'frontier-frost-cliffs',name:'서리 협곡 · 층진 절벽',kind:'POLAR CLIFF TERRAIN',detail:'깊은 암면 틈 · 눈 처마 · 낮고 높은 능선',description:'눈이 얹힌 넓은 암면과 깊게 들어간 틈이 실제 입체로 이어집니다. 이동 가능한 땅과 다리 높이를 유지하면서 서리 협곡 바깥의 실루엣을 다듬었습니다.',source:'frontier-frost-cliffs.blend',command:'npm run models:frontier-frost-cliffs',action:'고정 지형',static:true,fitBounds:true},
  {id:'frontier-frost-gate-impact',name:'서리 성문 · 충격과 등불',kind:'FROST GATE IMPACT',detail:'고정 석조 · 두꺼운 문짝 · 뒤따르는 등불',description:'철띠로 보강한 목재 문짝이 충격에 밀렸다 돌아오고, 매달린 등불이 뒤늦게 흔들립니다. 변경 전장의 실제 성문 피해에 연결되며 분대·솔로 모드에서는 통로를 열어 둡니다.',source:'frontier-frost-gate-impact.blend',command:'npm run models:frontier-gate-impact',action:'▶ 성문 피격',clip:'frost-gate-impact',fitBounds:true},
  {id:'frontier-frost-gate',name:'서리 협곡 · 설산 성문',kind:'FROST ARCHITECTURE',detail:'열린 석조 아치 · 눈 쌓인 성벽',description:'짙은 깃발과 황동 등불, 쌓인 돌의 아치와 눈 덮인 흉벽을 회전하며 살펴보세요. 기본 석조 아치 원본이며, 현재 서리 전장에서는 보강 문짝과 피격 동작을 더한 버전을 사용합니다.',source:'frontier-frost.blend',command:'npm run models:frontier-frost',action:'고정 모형',static:true,fitBounds:true},
  {id:'frontier-frost',name:'서리 협곡 · 입체 지형',kind:'FROST TERRAIN',detail:'얼음 능선 · 고드름 · 협곡 다리',description:'눈 처마 아래 고드름과 빙하 능선이 실제 높이를 갖습니다. 숲 전장과 같은 이동 경로 위에 설산의 다른 실루엣을 더했습니다.',source:'frontier-frost.blend',command:'npm run models:frontier-frost',action:'고정 지형',static:true,fitBounds:true},
