@@ -1,4 +1,4 @@
-import { generateSessionProblems } from '../../../math_speed/functions/src/mathEngine.ts';
+import { generateSessionProblems } from './math/mathEngine.ts';
 import { random, shuffle } from './random.ts';
 
 export type GameId = 'math' | 'word' | 'memory' | 'quiz' | 'race' | 'defense';
@@ -31,7 +31,7 @@ export function makeQuestion(game: 'math' | 'word', seed: number, index: number)
       explanation: `${answer} = ${meaning}`, level: 1,
     };
   }
-  // Reuse the mobile app's deterministic domain engine: one source for all ten levels.
+  // Use the pinned copy of the mobile app's deterministic engine for all ten levels.
   const level = Math.min(10, Math.floor(index / 6) + 1);
   const [problem] = generateSessionProblems(seed + index * 101, level, 1);
   const choices = new Set<number>([problem.answer]);
