@@ -95,10 +95,10 @@ Blender 4.3.2와 FFmpeg를 확인했고, 모델 작업실용 Three.js 0.186.1을
 | 저장소 | 역할 |
 | --- | --- |
 | `edu_arcade_game_1` | React + Vite 웹 허브, 여섯 미니게임, 브라우저 개인 기록 |
-| `math_speed` | Flutter 앱 골격과 Firebase 서버. 웹 게임이 `functions/src/mathEngine.ts`의 1–10단계 문제 생성기를 직접 공유 |
+| `math_speed` | Flutter 앱 골격과 Firebase 서버. 웹 게임은 `functions/src/mathEngine.ts`의 고정된 사본을 사용 |
 | `Word_check` | 기존 교사·학생·학부모 단어 숙제 관리 서버. Node.js + SQLite |
 
-빌드·테스트 시 두 저장소가 `/workspace/edu_arcade_game_1`과 `/workspace/math_speed`에 나란히 있어야 합니다. Vite는 공유 수학 엔진을 웹 번들에 포함하므로 게임 중 Firebase 연결은 필요하지 않습니다.
+웹 빌드·테스트는 이 저장소만으로 가능합니다. 수학 엔진 사본의 출처와 갱신 방법은 [안내](src/games/math/README.md)를 참고하세요. 게임 중 Firebase 연결은 필요하지 않습니다.
 
 기존 엔진은 9단계 나눗셈에 나머지가 있어도 정수로 잘라 정답을 반환합니다. 웹 게임은 해당 단계의 곱셈 인자를 조정해 항상 나누어떨어지는 수식만 출제합니다. 전체 단계에서 표시 수식과 정답의 일치를 검증하며, 기존 모바일·서버 엔진은 별도로 수정해야 합니다.
 
@@ -138,7 +138,7 @@ Blender 4.3.2와 FFmpeg를 확인했고, 모델 작업실용 Three.js 0.186.1을
 
 짧은 가로 화면은 확대 카메라로 적을 따라갑니다. **전체 보기**를 눌러 지도 전체를 살펴보고 **전투 따라가기**로 돌아올 수 있습니다. 큰 가로 화면은 기존 45도 전체 지도를 유지합니다. `prototype/graphics/ui.css`의 조작 버튼은 최소 48px이며, 개발용 수치는 주소에 `?debug`를 붙였을 때만 표시합니다.
 
-`npm run build`는 Vite 빌드 뒤 `tools/build-prototypes.mjs`로 독립 HTML·시뮬레이션·Three.js와 라이선스를 `dist/prototype/`에 복사합니다. 전체 `dist/`를 배포해야 모드가 열립니다. 별도 프로토타입의 CommonJS 테스트는 `prototype/package.json`으로 루트의 ESM과 분리합니다. 허브 수학 문제는 같은 상위 폴더에 체크아웃한 `math_speed/functions/src/mathEngine.ts`를 사용하므로 두 저장소를 함께 준비해야 합니다.
+`npm run build`는 Vite 빌드 뒤 `tools/build-prototypes.mjs`로 독립 HTML·시뮬레이션·Three.js와 라이선스를 `dist/prototype/`에 복사합니다. 전체 `dist/`를 배포해야 모드가 열립니다. 별도 프로토타입의 CommonJS 테스트는 `prototype/package.json`으로 루트의 ESM과 분리합니다. 허브 수학 문제는 저장소에 고정한 수학 엔진 사본을 사용합니다.
 
 Playwright와 Chromium이 설치된 환경에서 `npm run preview`를 실행한 뒤 다음 명령으로 배포 산출물의 3D 게임을 검증할 수 있습니다. 스크린샷은 지정한 외부 폴더에만 기록합니다.
 
