@@ -12,6 +12,21 @@ const cache=mkdtempSync(join(tmpdir(),'arcana-fx-test-'));
 const vite=await createServer({cacheDir:cache,server:{middlewareMode:true,hmr:false},appType:'custom'});
 try {
  const {EffectLayer}=await vite.ssrLoadModule('/src/components/DefenseEffects.tsx');
+ const art=await vite.ssrLoadModule('/src/games/defense/art.ts');
+ const imageBefore=Object.getOwnPropertyDescriptor(globalThis,'Image');
+ class ReadyImage {onload=null;onerror=null;set src(_value){queueMicrotask(()=>this.onload?.());}}
+ Object.defineProperty(globalThis,'Image',{value:ReadyImage,configurable:true});
+ try {await art.preloadDefenseMotion();} finally {if(imageBefore)Object.defineProperty(globalThis,'Image',imageBefore);else Reflect.deleteProperty(globalThis,'Image');}
+ test('wood death keeps its hit point and mirrors the authored body in both directions',()=>{
+  for(const facing of [-1,1])for(const reduced of [false,true]){
+   const effects=[{id:1,kind:'death',from:{x:105,y:220},to:{x:105,y:220},element:'physical',life:.4,maxLife:.7,age:.3,targetKind:'wood',targetSprite:9,targetFacing:facing}];
+   const html=renderToStaticMarkup(createElement('svg',null,createElement(EffectLayer,{effects,reduced,layer:'front'})));
+   assert.match(html,/transform="translate\(105,220\)" data-effect="death"/);
+   assert.match(html,reduced?/data-death-frame="4"/:/data-death-frame="2"/);
+   assert.match(html,facing<0?/scale\(-1,1\)/:/scale\(1,1\)/);
+   assert.match(html,/wood-soldier-death-atlas\.webp/);
+  }
+ });
  const heroes=['mage','elf','dwarf','tao','barbarian','druid'];
  for(const reduced of [false,true])test(`skill marks remain under combat poses (${reduced?'reduced':'normal'} motion)`,()=>{
   const signatures=new Set();

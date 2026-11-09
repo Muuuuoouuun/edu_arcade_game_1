@@ -645,6 +645,7 @@ const SLIME_ATLAS=bakedAtlas('insulator-slime'),GOLEM_ATLAS=bakedAtlas('stone-go
 const WOOD_WALK_ATLAS={src:'/defense/models/wood-soldier-walk-atlas.webp',width:3072,height:384};
 const WOLF_COLLAPSE_ATLAS={src:'/defense/models/frost-wolf-collapse-atlas.webp',width:1536,height:384};
 const METAL_DEATH_ATLAS={src:'/defense/models/metal-soldier-death-atlas.webp',width:1920,height:384};
+const WOOD_DEATH_ATLAS={src:'/defense/models/wood-soldier-death-atlas.webp',width:1920,height:384};
 const FROST_STRIDE_ATLASES=Array.from({length:8},(_,d)=>`/defense/models/frost-stride-${d}-atlas.webp`);
 const WOLF_TROT_ATLAS={src:'/defense/models/frost-wolf-trot-atlas.webp',width:3072,height:384};
 const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
@@ -731,13 +732,14 @@ export function frostWolfBracedFallAsset(heading:Point,distance:number,cycles:nu
  const [x,y,w,h]=FROST_WOLF_FRAME.crop.map(v=>v*.5);
  return {...fall,brace,asset:{src:FROST_BRACE_FALL_ATLASES[fall.direction],width:2048,height:384,viewBox:`${(fall.gait*2+fall.frame-1)*128+x} ${brace*128+y} ${w} ${h}`,displayScale:FROST_WOLF_FRAME.display_scale,groundY:brace*128+FROST_WOLF_FRAME.ground_y*.5,oriented:true}};
 }
-/** Collapse follows simulation age, with the same camera, crop and ground as the living wolf. */
+/** Collapses follow simulation age and retain each modeled actor's camera scale and ground. */
 export function monsterDeathSpriteAsset(kind:EnemyKind,progress:number,reduced=false):{asset:SpriteAsset;frame:number}|null {
- if(kind==='metal'){
-  if(!motionLoaded.has(METAL_ATLAS.src)||!motionLoaded.has(METAL_DEATH_ATLAS.src))return null;
+ if(kind==='metal'||kind==='wood'){
+  const base=kind==='wood'?WOOD_ATLAS:METAL_ATLAS,death=kind==='wood'?WOOD_DEATH_ATLAS:METAL_DEATH_ATLAS;
+  if(!motionLoaded.has(base.src)||!motionLoaded.has(death.src))return null;
   const t=Math.max(0,Math.min(.7,(Number.isFinite(progress)?progress:0)*.7));
   const frame=reduced?4:t>=19/30?4:t>=14/30?3:t>=9/30?2:t>=4/30?1:0;
-  return {frame,asset:{...METAL_DEATH_ATLAS,viewBox:`${frame*384} 0 384 384`,displayScale:384/260,groundY:292.91}};
+  return {frame,asset:{...death,viewBox:`${frame*384} 0 384 384`,displayScale:384/(kind==='wood'?320:260),groundY:kind==='wood'?317.61:292.91}};
  }
  if(kind!=='frostwolf'||!motionLoaded.has(WOLF_ATLAS.src)||!motionLoaded.has(WOLF_COLLAPSE_ATLAS.src))return null;
  const frame=reduced?3:Math.max(0,Math.min(3,Math.floor((Number.isFinite(progress)?progress:0)/.24)));
@@ -768,7 +770,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_BRACE_FALL_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,METAL_DEATH_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...MAGE_ENTRY,...MAGE_RETURN,...MAGE_RESET,...KAR_SLAM,...KAR_WALK,...KAR_ENTRY,...KAR_RETURN,...KAR_RESET,...KAR_STOP,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...DRUID_ENTRY,...DRUID_RETURN,...DRUID_RESET,...DRUID_STOP,...TAO_CAST,...TAO_WALK,...TAO_ULTIMATE,...TAO_ENTRY,...TAO_RETURN,...TAO_RESET,...TAO_STOP,...ELF_CAST,...ELF_WALK,...RIEL_ENTRY,...RIEL_RETURN,...RIEL_RESET,...RIEL_STOP,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,...DWARF_STOP,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_BRACE_FALL_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,METAL_DEATH_ATLAS.src,WOOD_DEATH_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...MAGE_ENTRY,...MAGE_RETURN,...MAGE_RESET,...KAR_SLAM,...KAR_WALK,...KAR_ENTRY,...KAR_RETURN,...KAR_RESET,...KAR_STOP,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...DRUID_ENTRY,...DRUID_RETURN,...DRUID_RESET,...DRUID_STOP,...TAO_CAST,...TAO_WALK,...TAO_ULTIMATE,...TAO_ENTRY,...TAO_RETURN,...TAO_RESET,...TAO_STOP,...ELF_CAST,...ELF_WALK,...RIEL_ENTRY,...RIEL_RETURN,...RIEL_RESET,...RIEL_STOP,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,...DWARF_STOP,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;
