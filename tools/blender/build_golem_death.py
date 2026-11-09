@@ -32,7 +32,7 @@ def pivot(name,position):
 low=pivot('fracture-lower',(0,0,1.4));high=pivot('fracture-upper',(.15,0,2.4));bpy.context.view_layer.update()
 for obj in list(root.children):
  if obj.type!='MESH':continue
- target=low if obj.name in ('hips','fracture-torso-lower','moss-knee','moss-hips') else high
+ target=low if obj.name in ('hips','fracture-torso-lower','moss-knee','moss-hips') or obj.name.startswith(('moss-knee-lobe-','moss-hips-lobe-')) else high
  world=obj.matrix_world.copy();obj.parent=target;obj.matrix_world=world
 bpy.context.view_layer.update()
 parts={'root':root,'low':low,'high':high,'head':head,'arm-near':arms['near'],'arm-far':arms['far'],'leg-near':legs['near'],'leg-far':legs['far']}

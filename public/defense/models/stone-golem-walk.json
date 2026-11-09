@@ -1,8 +1,8 @@
 {
   "source": "art-source/defense/stone-golem-walk.blend",
-  "source_sha256": "ba05387b454264ba7478e425775a51d6cac05cda6213f89e33cf664a79923b42",
+  "source_sha256": "7ebdb6ca41e08d261c45fbc7610d0976f849a7377a0a6a40c6a185ee8ef54f68",
   "base_source": "art-source/defense/stone-golem.blend",
-  "base_source_sha256": "ca15bc10c3dc8da5bab6eaf36196d3d9c9c49b04a24f905a36281d61a12636c0",
+  "base_source_sha256": "d83bafe958e8a84b3586bed2c8dc42c16d1449bcb83120d664cfe74a003c5d76",
   "regeneration_command": "npm run models:golem-walk",
   "reference": "public/defense/monster-models.webp",
   "frame": {
@@ -40,8 +40,8 @@
       "frame": 1,
       "phase": 0.0,
       "bounds": [
-        113.756,
-        79.346,
+        110.24,
+        75.94,
         291.315,
         311.562
       ],
@@ -55,8 +55,8 @@
       "frame": 2,
       "phase": 0.19635,
       "bounds": [
-        114.602,
-        79.748,
+        111.123,
+        76.291,
         291.036,
         311.315
       ],
@@ -70,8 +70,8 @@
       "frame": 3,
       "phase": 0.392699,
       "bounds": [
-        115.251,
-        79.814,
+        111.802,
+        76.336,
         289.996,
         310.555
       ],
@@ -85,8 +85,8 @@
       "frame": 4,
       "phase": 0.589049,
       "bounds": [
-        115.535,
-        79.52,
+        112.103,
+        76.052,
         288.203,
         309.431
       ],
@@ -100,9 +100,9 @@
       "frame": 5,
       "phase": 0.785398,
       "bounds": [
-        115.347,
-        78.912,
-        287.633,
+        111.916,
+        75.488,
+        287.656,
         308.165
       ],
       "lowest_vertex": 0.0,
@@ -115,9 +115,9 @@
       "frame": 6,
       "phase": 0.981748,
       "bounds": [
-        114.662,
-        78.106,
-        286.839,
+        111.211,
+        74.76,
+        287.089,
         307.017
       ],
       "lowest_vertex": 0.0,
@@ -130,9 +130,9 @@
       "frame": 7,
       "phase": 1.178097,
       "bounds": [
-        113.542,
-        77.271,
-        285.554,
+        110.055,
+        74.037,
+        286.171,
         306.241
       ],
       "lowest_vertex": 0.0,
@@ -145,9 +145,9 @@
       "frame": 8,
       "phase": 1.374447,
       "bounds": [
-        112.129,
-        76.597,
-        283.93,
+        108.592,
+        73.508,
+        285.01,
         306.044
       ],
       "lowest_vertex": -0.0,
@@ -160,9 +160,9 @@
       "frame": 9,
       "phase": 1.570796,
       "bounds": [
-        110.62,
-        76.254,
-        282.186,
+        107.029,
+        73.335,
+        283.76,
         306.547
       ],
       "lowest_vertex": 0.0,
@@ -175,9 +175,9 @@
       "frame": 10,
       "phase": 1.767146,
       "bounds": [
-        109.238,
-        76.352,
-        281.61,
+        105.596,
+        73.621,
+        287.114,
         307.768
       ],
       "lowest_vertex": 0.0,
@@ -190,9 +190,9 @@
       "frame": 11,
       "phase": 1.963495,
       "bounds": [
-        108.197,
-        76.919,
-        285.795,
+        104.517,
+        74.384,
+        291.304,
         309.612
       ],
       "lowest_vertex": -0.0,
@@ -205,9 +205,9 @@
       "frame": 12,
       "phase": 2.159845,
       "bounds": [
-        107.673,
-        77.898,
-        289.899,
+        103.971,
+        75.555,
+        295.394,
         311.889
       ],
       "lowest_vertex": 0.0,
@@ -220,9 +220,9 @@
       "frame": 13,
       "phase": 2.356194,
       "bounds": [
-        107.774,
-        78.197,
-        293.857,
+        104.073,
+        75.793,
+        299.325,
         314.336
       ],
       "lowest_vertex": -0.0,
@@ -235,9 +235,9 @@
       "frame": 14,
       "phase": 2.552544,
       "bounds": [
-        108.529,
-        78.648,
-        297.599,
+        104.852,
+        76.209,
+        303.037,
         316.655
       ],
       "lowest_vertex": -0.0,
@@ -250,9 +250,9 @@
       "frame": 15,
       "phase": 2.748894,
       "bounds": [
-        109.882,
-        79.292,
-        301.032,
+        106.246,
+        76.837,
+        306.444,
         318.557
       ],
       "lowest_vertex": -0.0,
@@ -265,9 +265,9 @@
       "frame": 16,
       "phase": 2.945243,
       "bounds": [
-        111.692,
-        79.979,
-        304.028,
+        105.853,
+        77.526,
+        309.425,
         319.798
       ],
       "lowest_vertex": -0.0,
@@ -280,9 +280,9 @@
       "frame": 17,
       "phase": 3.141593,
       "bounds": [
-        112.372,
-        80.577,
-        306.426,
+        105.973,
+        78.141,
+        311.819,
         320.213
       ],
       "lowest_vertex": -0.0,
@@ -295,9 +295,9 @@
       "frame": 18,
       "phase": 3.337942,
       "bounds": [
-        112.682,
-        80.98,
-        308.047,
+        106.838,
+        78.575,
+        313.449,
         320.112
       ],
       "lowest_vertex": 0.0,
@@ -310,9 +310,9 @@
       "frame": 19,
       "phase": 3.534292,
       "bounds": [
-        113.9,
-        81.129,
-        308.725,
+        108.267,
+        78.765,
+        314.145,
         319.858
       ],
       "lowest_vertex": 0.0,
@@ -325,9 +325,9 @@
       "frame": 20,
       "phase": 3.730641,
       "bounds": [
-        115.9,
-        81.01,
-        308.332,
+        110.094,
+        78.697,
+        313.776,
         319.459
       ],
       "lowest_vertex": 0.0,
@@ -340,9 +340,9 @@
       "frame": 21,
       "phase": 3.926991,
       "bounds": [
-        118.576,
-        80.667,
-        306.807,
+        112.207,
+        78.411,
+        312.275,
         318.926
       ],
       "lowest_vertex": 0.0,
@@ -355,9 +355,9 @@
       "frame": 22,
       "phase": 4.12334,
       "bounds": [
-        119.924,
-        80.191,
-        304.166,
+        114.559,
+        77.996,
+        309.657,
         318.275
       ],
       "lowest_vertex": 0.0,
@@ -370,9 +370,9 @@
       "frame": 23,
       "phase": 4.31969,
       "bounds": [
-        119.378,
-        79.581,
-        300.508,
+        116.011,
+        77.462,
+        306.016,
         317.528
       ],
       "lowest_vertex": 0.0,
@@ -385,9 +385,9 @@
       "frame": 24,
       "phase": 4.516039,
       "bounds": [
-        118.307,
-        78.275,
-        296.004,
+        114.903,
+        76.03,
+        301.52,
         316.712
       ],
       "lowest_vertex": -0.0,
@@ -400,9 +400,9 @@
       "frame": 25,
       "phase": 4.712389,
       "bounds": [
-        116.897,
-        77.183,
-        290.883,
+        113.449,
+        74.8,
+        296.398,
         315.858
       ],
       "lowest_vertex": 0.0,
@@ -415,9 +415,9 @@
       "frame": 26,
       "phase": 4.908739,
       "bounds": [
-        115.374,
-        76.421,
-        287.836,
+        111.879,
+        73.894,
+        290.916,
         314.999
       ],
       "lowest_vertex": 0.0,
@@ -430,9 +430,9 @@
       "frame": 27,
       "phase": 5.105088,
       "bounds": [
-        113.961,
-        76.052,
-        286.181,
+        110.424,
+        73.376,
+        286.682,
         314.171
       ],
       "lowest_vertex": -0.0,
@@ -445,9 +445,9 @@
       "frame": 28,
       "phase": 5.301438,
       "bounds": [
-        112.85,
-        76.084,
-        284.87,
+        109.281,
+        73.259,
+        285.755,
         313.41
       ],
       "lowest_vertex": 0.0,
@@ -460,8 +460,8 @@
       "frame": 29,
       "phase": 5.497787,
       "bounds": [
-        112.174,
-        76.468,
+        108.587,
+        73.498,
         285.332,
         312.749
       ],
@@ -475,8 +475,8 @@
       "frame": 30,
       "phase": 5.694137,
       "bounds": [
-        111.989,
-        77.114,
+        108.4,
+        74.008,
         287.815,
         312.216
       ],
@@ -490,8 +490,8 @@
       "frame": 31,
       "phase": 5.890486,
       "bounds": [
-        112.269,
-        77.9,
+        108.693,
+        74.674,
         289.669,
         311.833
       ],
@@ -505,8 +505,8 @@
       "frame": 32,
       "phase": 6.086836,
       "bounds": [
-        112.913,
-        78.69,
+        109.363,
+        75.362,
         290.849,
         311.613
       ],
@@ -520,8 +520,8 @@
       "frame": 33,
       "phase": 6.283185,
       "bounds": [
-        113.756,
-        79.346,
+        110.24,
+        75.94,
         291.315,
         311.562
       ],
@@ -535,52 +535,52 @@
   "files": [
     {
       "file": "stone-golem-walk.glb",
-      "bytes": 258012,
-      "sha256": "1d4b03880b33e6cbaa9a2a45f6a22fc3a97d46518a2878c0892299663f1781c6"
+      "bytes": 487476,
+      "sha256": "170814efa8156559d0ea334325456f400ddc0c704a734fa634782b0b5408c49c"
     },
     {
       "file": "stone-golem-walk-atlas.webp",
-      "bytes": 57594,
-      "sha256": "b33313cfb93c675eb1a4e920f6183d664e3d02bb3fede2d83ec2a3b852040725"
+      "bytes": 55582,
+      "sha256": "a5f627ea6025a382213a60f07f1072cdc63254f324d48f566489d1d88a62992e"
     },
     {
       "file": "stone-golem-walk.png",
-      "bytes": 122111,
-      "sha256": "32df30406cca14ff97178296ab4b7162f7730e91f3460a7aa7db305501ee35ba"
+      "bytes": 117930,
+      "sha256": "2e5ed11979e469197a10283929b4d0c979ecbbdbda4fc984e7b6898212d510bc"
     }
   ],
   "renders": [
     {
       "path": "art-source/defense/golem-walk-frames/golem-walk-0.png",
-      "sha256": "32df30406cca14ff97178296ab4b7162f7730e91f3460a7aa7db305501ee35ba"
+      "sha256": "2e5ed11979e469197a10283929b4d0c979ecbbdbda4fc984e7b6898212d510bc"
     },
     {
       "path": "art-source/defense/golem-walk-frames/golem-walk-1.png",
-      "sha256": "b884ce3d03a08f2e28412e6c9d1d488117448933d4d09cbb6a0d687229c6bbed"
+      "sha256": "9e14f047b89c23fa8280f7cf50283e5b40e54f22ea0da67aa34917d3624dc4e8"
     },
     {
       "path": "art-source/defense/golem-walk-frames/golem-walk-2.png",
-      "sha256": "4ff029c418a4484bd75c22ec9ea501cb0c1b5f2a1c55795667f2d55f354537d7"
+      "sha256": "c732ed058092e0cdfe476182f4cd1d60e9ad62bb32c1814b1346390600534719"
     },
     {
       "path": "art-source/defense/golem-walk-frames/golem-walk-3.png",
-      "sha256": "9466e3bc6fd508bdfebc2ede403e31075f74ef223c7a6b74474a0a16c35cbe43"
+      "sha256": "9148dc6c700467c908416a533b6a467fd994cb309c607761ee3bcbd9f1111c44"
     },
     {
       "path": "art-source/defense/golem-walk-frames/golem-walk-4.png",
-      "sha256": "21d17071396919ea7acdedf7b0e1c9ea27889e65aecce48d5297aaae170c5049"
+      "sha256": "07133db78ba77b8807c32c284c9393a4fe9f883082122ca7e9908dbdd33e668e"
     },
     {
       "path": "art-source/defense/golem-walk-frames/golem-walk-5.png",
-      "sha256": "4ad1d90b99fd16d73186958d4b3af222518f0073f4073a268ea96a6f2ab080f1"
+      "sha256": "3a6725a10c082bfd45a1ec0c67e20f82951e0f7210f713e418d7a20b3390439e"
     },
     {
       "path": "art-source/defense/golem-walk-frames/golem-walk-6.png",
-      "sha256": "5bcc2211d5e3e807400c7a7cb285df8ca24d5943ab17ca80e8c60ba3d95694b3"
+      "sha256": "966daa0e91b0dfc65a6926d1b2c525e436c49cff94cd041bba4881df27140b87"
     },
     {
       "path": "art-source/defense/golem-walk-frames/golem-walk-7.png",
-      "sha256": "41dacf7d26dd23f85476f0b654287724679e34e49db3d03aeaf9d2199f6b9b20"
+      "sha256": "8758e7596f8dc2f4204e91cc3daf607066839c92b266263e1df6dc89e14da7fb"
     }
   ],
   "camera": {

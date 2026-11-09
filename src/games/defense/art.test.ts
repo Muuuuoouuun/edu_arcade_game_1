@@ -58,6 +58,9 @@ test('stone golem collapse retains real split stones, source hashes and grounded
  const b=read('public/defense/models/stone-golem-death.glb');const gltf=JSON.parse(b.subarray(20,20+b.readUInt32LE(12)).toString());
  assert.ok(gltf.nodes.some((n:{name:string})=>n.name==='fracture-torso-upper'));
  assert.ok(gltf.nodes.some((n:{name:string})=>n.name==='fracture-torso-lower'));
+ const lower=gltf.nodes.find((n:{name:string})=>n.name==='fracture-lower');
+ assert.ok(lower.children.some((i:number)=>gltf.nodes[i].name==='moss-knee-lobe-0'),'knee moss follows the lower rubble');
+ assert.ok(lower.children.some((i:number)=>gltf.nodes[i].name==='moss-hips-lobe-0'),'hip moss follows the lower rubble');
  assert.ok(gltf.animations.some((a:{name:string,channels:unknown[]})=>a.name==='stone-golem-death'&&a.channels.length>=10));
 });
 
@@ -169,9 +172,29 @@ test('ice death has actual split geometry, held sword and bounded sampled floor'
  const arm=g.nodes.find((n:{name:string})=>n.name==='arm-near');assert.ok(arm.children.some((i:number)=>g.nodes[i].name==='sword'));
 });
 
+test('stone source, combat crop and articulated features stay consistent across its rendered sets',()=>{
+ const read=(path:string)=>readFileSync(new URL('../../../'+path,import.meta.url));
+ const hash=(b:Buffer)=>createHash('sha256').update(b).digest('hex');
+ const m=JSON.parse(read('public/defense/models/stone-golem.json').toString());
+ assert.equal(hash(read(m.source)),m.source_sha256);
+ assert.equal(hash(read('public/defense/models/'+m.atlas.file)),m.atlas_sha256);
+ for(const f of m.renders)assert.equal(hash(read(f.path)),f.sha256);
+ assert.equal(m.bounds.length,3);
+ for(const {bounds:[x1,y1,x2,y2]} of m.bounds)assert.ok(x1>=22&&y1>=60&&x2<=362&&y2<=323,'living pose remains within the common crop');
+ for(const clip of ['walk','death']){
+  const b=read('public/defense/models/stone-golem-'+clip+'.glb');
+  const gltf=JSON.parse(b.subarray(20,20+b.readUInt32LE(12)).toString());
+  for(const name of ['eye-socket','eye-near','eye-far','knuckle-near-0','knuckle-near-1','knuckle-near-2'])
+   assert.ok(gltf.nodes.some((node:{name:string})=>node.name===name),`${clip} retains ${name}`);
+  const arm=gltf.nodes.find((node:{name:string})=>node.name==='arm-near');
+  assert.ok(arm.children.some((index:number)=>gltf.nodes[index].name==='knuckle-near-0'),'knuckles travel with the arm');
+ }
+});
+
 test('stone gait follows distance with eight poses and retains the legacy hit anchor',async()=>{
  const {art,requests}=await loadWithImageResults(()=>false,'golem-walk');
  assert.equal(requests.filter(src=>src.endsWith('/stone-golem-walk-atlas.webp')).length,1);
+ assert.equal(art.monsterSpriteAsset('stone','hit')!.viewBox,'790 60 340 263','full brow stays inside the living hit crop');
  const frames=Array.from({length:8},(_,i)=>art.monsterWalkingSpriteAsset('stone',i*STONE_GOLEM_STRIDE/8)!);
  assert.equal(new Set(frames.map(f=>f.viewBox)).size,8);
  assert.deepEqual(art.monsterWalkingSpriteAsset('stone',STONE_GOLEM_STRIDE),frames[0]);
@@ -180,8 +203,8 @@ test('stone gait follows distance with eight poses and retains the legacy hit an
   assert.equal(f.groundY,297);assert.equal(f.displayScale,384/260);
   const [x,y,w,h]=f.viewBox.split(' ').map(Number);assert.ok(x+w<=f.width&&y+h<=f.height);
  }
- // Old golem crop ends at y=323 with a .1 body-size bottom: the full-frame anchor is y=297.
- assert.equal(frames[0].groundY,68+255-.1*260);
+ // The living crop still ends at y=323; its higher top keeps the larger brow visible.
+ assert.equal(frames[0].groundY,60+263-.1*260);
  for(const missing of ['stone-golem-atlas.webp','stone-golem-walk-atlas.webp']){
   const {art:failed}=await loadWithImageResults(src=>src.endsWith('/'+missing),'golem-walk-'+missing);
   assert.equal(failed.monsterWalkingSpriteAsset('stone',12),null);

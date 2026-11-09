@@ -666,7 +666,7 @@ const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
  ice:{span:360,frames:[[0,4,384,372],[384,4,384,372],[768,4,384,372]],atlas:ICE_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
   fallback:{span:345,frames:[[53,399,309,353],[416,403,295,349],[776,401,310,351]]}},
- stone:{span:260,frames:[[22,68,340,255],[406,68,340,255],[790,68,340,255]],atlas:GOLEM_ATLAS,
+ stone:{span:260,frames:[[22,60,340,263],[406,60,340,263],[790,60,340,263]],atlas:GOLEM_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
   fallback:{span:340,frames:[[26,759,372,326],[414,757,326,328],[779,761,307,324]]}},
  frostwolf:{span:315,frames:[[8,100,368,228],[392,100,368,228],[776,100,368,228]],atlas:WOLF_ATLAS,
