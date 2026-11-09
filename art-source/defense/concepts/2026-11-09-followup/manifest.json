@@ -1,0 +1,86 @@
+{
+  "date": "2026-11-09",
+  "timezone": "Asia/Seoul",
+  "basis": "d48446242c6109e9933ea6ae929568abf1bc0407",
+  "route": "native image generation; existing Blender previews referenced for characters",
+  "items": [
+    {
+      "id": "polar-bear-refined",
+      "title": "북극곰 수호자",
+      "kind": "character",
+      "file": "polar-bear-refined.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1768954,
+      "sha256": "52de0104c0711f5066ce8c05ff039b66f06f088686c4e0427587b6683a0ad967",
+      "status": "generated-concept-not-gameplay",
+      "note": "남색 윤곽·청록 방패·닻 망치. 방패 뒤 결합부 도면 필요.",
+      "source": "exec-c7262e45-7ece-4b9b-a8bc-d97b1c5e46ee.png"
+    },
+    {
+      "id": "gecko-ranger-refined",
+      "title": "도마뱀 씨앗 궁수",
+      "kind": "character",
+      "file": "gecko-ranger-refined.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1748046,
+      "sha256": "7e509269713fa6ace5653fd17f3b92618d9feccd546efa81336aeb9ecbf69037",
+      "status": "generated-concept-not-gameplay",
+      "note": "큰 꼬리·황금 눈·씨앗 쇠뇌. 시위와 씨앗컵 발사 구조 설계 필요.",
+      "source": "exec-bbd242b4-c23f-4048-ab82-f59b2eb205c1.png"
+    },
+    {
+      "id": "polar-prism-tower",
+      "title": "극지 프리즘포",
+      "kind": "tower",
+      "file": "polar-prism-tower.png",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1558971,
+      "sha256": "5a8bc55cbd7e08e155a206614b575a9008f14c69f8855c4abb40ee1372b51c34",
+      "status": "generated-concept-not-gameplay",
+      "note": "얼음 포신·황동 지지대. 전후 클램프를 단일 회전축/슬라이더로 정리.",
+      "source": "exec-acd37e32-7411-4bfb-bee5-7aa1b3efe385.png"
+    },
+    {
+      "id": "tropical-seed-mortar",
+      "title": "열대 씨앗박격포",
+      "kind": "tower",
+      "file": "tropical-seed-mortar.png",
+      "width": 1312,
+      "height": 1199,
+      "bytes": 1672710,
+      "sha256": "7cb547f9fadc181c5ace7772bbfafb2d43c9447700ff0771a4277c649d4c1dd9",
+      "status": "generated-concept-not-gameplay",
+      "note": "씨앗 포탄·넓은 잎·목재 받침. 뒤쪽 포가 접합을 후면 도면에서 보강.",
+      "source": "exec-318e1dd4-4144-4224-9e54-e0885dda04ce.png"
+    },
+    {
+      "id": "tide-compass",
+      "title": "조류 나침반",
+      "kind": "relic",
+      "file": "tide-compass.png",
+      "width": 1536,
+      "height": 1024,
+      "bytes": 1846377,
+      "sha256": "4339d1cb0e95a61110791045c43aac40ccee638cef46251c24bfeaaff4a065b0",
+      "status": "generated-concept-not-gameplay",
+      "note": "청록 유리·황동 닻 바늘. 구조 원정 보상 유물 후보; 효과 미정.",
+      "source": "exec-1e715bc1-6421-49c7-95c8-0563ed130e1f.png"
+    },
+    {
+      "id": "storm-jade-bell",
+      "title": "폭풍 옥종",
+      "kind": "relic",
+      "file": "storm-jade-bell.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 1775131,
+      "sha256": "0ce0db567be5e72b30749d6801ed81a30914b806ccc231aad20a24b22785e03f",
+      "status": "generated-concept-not-gameplay",
+      "note": "옥 종몸체·청동 손잡이·호박색 추. 동방 지역 유물 후보; 효과 미정.",
+      "source": "exec-1689f68e-d3b3-4df3-9f87-16b492b6f1ae.png"
+    }
+  ]
+}

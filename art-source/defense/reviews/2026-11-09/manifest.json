@@ -1,0 +1,91 @@
+{
+  "date": "2026-11-09",
+  "timezone": "Asia/Seoul",
+  "source": "actual Chromium browser captures via UI; fresh isolated browser saves; no compositing",
+  "items": [
+    {
+      "id": "camp-390",
+      "title": "모바일 거점",
+      "kind": "live",
+      "file": "camp-390.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "1d37966eefa12f516de5fc4bbf3000c073e2fb3c5fb9df2704eff710e722d9b1",
+      "note": "현재 게임 · 390×844",
+      "status": "actual-browser-capture",
+      "commit": "d48446242c6109e9933ea6ae929568abf1bc0407",
+      "capture_script": "smoke.cjs",
+      "capture_script_sha256": "17fa92992f6c2e47ceac79ec6f675f139e6cdab2ad385d96f8414b3135c32110"
+    },
+    {
+      "id": "battle-focus-390",
+      "title": "모바일 전투 · 확대",
+      "kind": "live",
+      "file": "battle-focus-390.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "43b55680a983518d892558b51e0538ece1d99a537fba76a694d5e0c2935f5889",
+      "note": "현재 게임 · 실제 건설·웨이브",
+      "status": "actual-browser-capture",
+      "commit": "d48446242c6109e9933ea6ae929568abf1bc0407",
+      "capture_script": "battle-focus.cjs",
+      "capture_script_sha256": "5740139b33f917999c6e5d498155c17ffc7e98586d27c0de002ca0af10e6e007"
+    },
+    {
+      "id": "battle-390",
+      "title": "모바일 전투 · 전체",
+      "kind": "live",
+      "file": "battle-390.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "caf727b059f75f039d2b7dd7948af148e43908e6381b1794a186cdf19d877d8a",
+      "note": "현재 게임 · 빈 공간과 크기 개선 기준",
+      "status": "actual-browser-capture",
+      "commit": "d48446242c6109e9933ea6ae929568abf1bc0407",
+      "capture_script": "smoke.cjs",
+      "capture_script_sha256": "17fa92992f6c2e47ceac79ec6f675f139e6cdab2ad385d96f8414b3135c32110"
+    },
+    {
+      "id": "battle-844",
+      "title": "가로 전투",
+      "kind": "live",
+      "file": "battle-844.png",
+      "width": 844,
+      "height": 390,
+      "sha256": "4fae744d936a40e3351fcf7e50b5127b1123f1fa233dfc3c3564a4c6d1d826d4",
+      "note": "현재 게임 · 844×390",
+      "status": "actual-browser-capture",
+      "commit": "d48446242c6109e9933ea6ae929568abf1bc0407",
+      "capture_script": "smoke.cjs",
+      "capture_script_sha256": "17fa92992f6c2e47ceac79ec6f675f139e6cdab2ad385d96f8414b3135c32110"
+    },
+    {
+      "id": "workshop-kar-barbarian",
+      "title": "카르 작업실",
+      "kind": "live",
+      "file": "workshop-kar-barbarian.png",
+      "width": 1440,
+      "height": 1361,
+      "sha256": "da6825492fd42186b85e90364de73142ef55114f9fa333b710eff5841343c304",
+      "note": "실제 GLB 미리보기 · 캠페인 교체 아님",
+      "status": "actual-browser-capture",
+      "commit": "aeaa40f9ebf3d33595690ecf4c2529be9fc4af9d",
+      "capture_script": "workshop.cjs",
+      "capture_script_sha256": "51a96ae8737f33af1ea6e92a1a5faa94bc044eaab8194844b07c77811d198137"
+    },
+    {
+      "id": "workshop-fire-tower",
+      "title": "화염 수정탑 작업실",
+      "kind": "live",
+      "file": "workshop-fire-tower.png",
+      "width": 1440,
+      "height": 1340,
+      "sha256": "e87fe389f5a0e55837df58b722442f486a3ea029393c0b382d9c61719d2dfee1",
+      "note": "실제 GLB 미리보기",
+      "status": "actual-browser-capture",
+      "commit": "aeaa40f9ebf3d33595690ecf4c2529be9fc4af9d",
+      "capture_script": "workshop.cjs",
+      "capture_script_sha256": "51a96ae8737f33af1ea6e92a1a5faa94bc044eaab8194844b07c77811d198137"
+    }
+  ]
+}
