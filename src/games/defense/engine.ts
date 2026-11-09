@@ -150,7 +150,7 @@ function launch(s:DefenseState,a:CombatAttack) {
   let target=s.enemies.find(e=>e.id===a.targetId&&e.hp>0);
   // A ranged shooter whose windup target fell re-aims at the front-most enemy still in range; melee stays committed.
   if(!target&&a.actor!=='wolf'&&a.actor!=='dwarf'&&a.actor!=='barbarian'){
-    target=pickTarget(s,orderedTargets(s,from,a.range),a.chain);
+    target=pickTarget(s,orderedTargets(s,from,a.range),a.source==='tower'&&a.chain);
     if(target){
       a.targetId=target.id;
       if(a.source==='tower'){const tower=s.towers.find(t=>t.slot===a.sourceSlot);if(tower)tower.aim={x:target.x,y:target.y};}
