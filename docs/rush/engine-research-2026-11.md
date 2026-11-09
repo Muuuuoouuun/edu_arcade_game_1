@@ -16,13 +16,23 @@
 - 규칙 코어(`sim.ts`·`data.ts`·`bot.ts`)가 엔진에 의존하지 않는다는 점은 테스트로 고정했다. 그래서 전환 비용이 작게 유지된다.
 - Colyseus는 ‘채택 예정’에서 **보류**로 내린다. 협동 PvE 모드를 만들 때 다시 검토한다.
 
+## WebGPURenderer A/B 결과 (2026-11-10, 07회차)
+
+[측정 기록](cycles/07-spike.md) 요약:
+- WebGPU가 없는 환경에서는 WebGL2 백엔드로 문제없이 대체된다.
+- 우리 툰 림·잉크 외곽선(`onBeforeCompile` GLSL)이 무시돼 **외곽선이 사라진다.**
+- 기존 청크 설정에서는 `three/webgpu`가 공유 청크에 합쳐져 **기본 번들이 +600KB(gzip +169KB)** 커진다.
+- 컨테이너에서는 실제 WebGPU가 장치 손실로 동작하지 않아 성능을 판단할 수 없다.
+
+→ **WebGLRenderer 유지.** 전환하려면 `look.ts`를 TSL로 옮기고, 청크 설정을 바꾸고(사용자 확인 필요), 실기기에서 측정해야 한다.
+
 ## 결론 (요약)
 
 | 판정 | 선택 |
 | --- | --- |
 | **채택 (지금)** | TypeScript **결정적 시뮬레이션 코어** + **Three.js** 렌더러 + Vite + Capacitor(Android) |
 | 보류 (2026-11-10 PvP 제외) | Colyseus 서버. 협동 PvE 모드를 만들 때 재검토. 같은 `sim.ts`로 서버 판정 가능 |
-| 시험 (루프에서 시간 제한 스파이크) | Three.js `WebGPURenderer` A/B, PixiJS 8 / Phaser 4 (2.5D 스프라이트 경로), Babylon.js 9, ECS(Koota·bitECS) |
+| 시험 (루프에서 시간 제한 스파이크) | ~~Three.js `WebGPURenderer` A/B~~ (07회차: 보류, 위 결과), PixiJS 8 / Phaser 4 (2.5D 스프라이트 경로), Babylon.js 9, ECS(Koota·bitECS) |
 | 보류 (재검토 조건 있음) | Godot 4.6(GDScript), Unity 6(C#), Cocos Creator 3.8, libGDX(Java) |
 
 C#·Java를 지금 들여오는 것은 과합니다. 이유와 재검토 조건은 아래 [C#·Java 판단](#cjava-판단)에 적었습니다.
