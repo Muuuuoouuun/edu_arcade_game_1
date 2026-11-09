@@ -55,3 +55,11 @@ test('hit-stops change only real time: the same scripted battle ends in the same
     for (const key of ['phase', 'hp', 'outpostHp', 'kills', 'coins', 'time', 'weakHits'] as const) assert.deepEqual(stopped.s[key], plain.s[key], `stage ${stage} ${key}`);
   }
 });
+
+test('a skill that reaps a boss on input is classified as a boss impact', () => {
+  const before = { ...createDefense(1, 'barbarian', 0, 'standard'), phase: 'wave' as const };
+  const boss = { id: 900, kind: 'boss' as const, hp: 1, maxHp: 100, progress: 50, path: 0, speed: 0, wet: 0, burn: 0, slow: 0, hit: 0, x: before.heroPosition.x, y: before.heroPosition.y };
+  const next = actDefense({ ...before, enemies: [boss] }, { type: 'skill' });
+  assert.equal(next.enemies.length, 0);
+  assert.equal(bigImpact({ ...before, enemies: [boss] }, next), 'boss');
+});
