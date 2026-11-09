@@ -135,3 +135,16 @@ test('design pillars: hero alone or towers alone lose, both together win', () =>
     assert.ok(full.t > 100 && full.t < 240, `match length ${full.t}s stays in a 2–4 minute band`);
   }
 });
+
+test('the rules core stays engine-free (portable to a server or another renderer)', async () => {
+  const { readFile } = await import('node:fs/promises');
+  for (const file of ['sim.ts', 'data.ts', 'bot.ts']) {
+    const src = await readFile(new URL(`./${file}`, import.meta.url), 'utf8');
+    const imports = [...src.matchAll(/from '([^']+)'/g)].map(m => m[1]);
+    assert.ok(imports.every(i => i === './data.ts' || i === './sim.ts'), `${file} imports only rules modules: ${imports.join(', ')}`);
+    const code = src.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+    for (const banned of ['Math.random', 'document.', 'window.', 'performance.', 'Date.now', 'requestAnimationFrame']) {
+      assert.ok(!code.includes(banned), `${file} must not use ${banned}`);
+    }
+  }
+});

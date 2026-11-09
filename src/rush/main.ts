@@ -12,6 +12,8 @@ const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getEleme
 const params = new URLSearchParams(location.search);
 const speed = Math.min(8, Math.max(0.25, Number(params.get('speed')) || 1));
 const debug = params.has('debug');
+/** ?freeze=N stops the simulation at tick N (rendering continues) for matched before/after screenshots. */
+const freezeAt = Number(params.get('freeze')) || Infinity;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const canvas = $<HTMLCanvasElement>('rush-canvas');
@@ -174,7 +176,7 @@ function frame(now: number) {
   if (running) {
     acc += dt * speed;
     let guard = 0;
-    while (acc >= STEP && guard++ < 40) {
+    while (acc >= STEP && guard++ < 40 && state.tick < freezeAt) {
       const cmd = mode === 'demo' ? guardBot(state) : input.command();
       stepRush(state, cmd);
       feedback(state.events);
@@ -182,6 +184,7 @@ function frame(now: number) {
     }
   } else acc = 0;
   input.refreshAim();
+  // A frozen scene keeps rendering with real time so the camera settles and effects fade.
   view.sync(state, running ? dt : 0, mode === 'play' ? input.aim : null);
   view.render();
   updatePops(dt);
@@ -199,4 +202,4 @@ if (params.has('demo')) start('demo');
 else if (params.has('play')) start('play');
 
 // Read-only handle for automated browser checks.
-Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, info: () => view.info(), towerLevels: TOWER_LEVELS.length } });
+Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, info: () => view.info(), towerLevels: TOWER_LEVELS.length } });

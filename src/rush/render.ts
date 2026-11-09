@@ -1,29 +1,29 @@
 // Three.js view of the Arcana Rush simulation. Reads RushState, never writes it.
 import {
-  AmbientLight, AnimationMixer, Box3, BoxGeometry, CanvasTexture, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
-  DirectionalLight, DoubleSide, Group, HemisphereLight, LoopOnce, Mesh, MeshBasicMaterial, MeshLambertMaterial, MeshStandardMaterial,
-  OctahedronGeometry, PerspectiveCamera, Plane, PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace,
-  Vector2, Vector3, WebGLRenderer, type AnimationAction, type Material,
+  AnimationMixer, Box3, BoxGeometry, CanvasTexture, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
+  DirectionalLight, Group, HemisphereLight, LoopOnce, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera, Plane,
+  PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
+  type AnimationAction, type BufferGeometry, type Material,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ARENA, ENEMIES, HERO, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type Vec } from './data.ts';
 import { padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
+import { bake, hullGeometry, outlineMaterial, PAL, toon, toonify, type Part } from './look.ts';
 
 export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'super'; offset: Vec } | null;
 
-const TEAM = { ally: 0x3fa9ff, enemy: 0xff4d5e };
+const TEAM = { ally: PAL.ally, enemy: PAL.enemy };
 const HERO_MODEL_URL = '/defense/models/prototypes/gecko-ranger.glb';
 const HERO_HEIGHT = 2.0;
 /** Yaw that turns the GLB authored front (-z) toward simulation angle 0 (+x). Verified by east/north close-up renders. */
 const HERO_MODEL_YAW = -Math.PI / 2;
 
-const lambert = (color: number, extra: Record<string, unknown> = {}) => new MeshLambertMaterial({ color, ...extra });
 const basic = (color: number, opacity = 1) => new MeshBasicMaterial({ color, transparent: opacity < 1, opacity, depthWrite: opacity >= 1 });
 /** Sim angle a → Three.js yaw for an object whose front is +x. */
 const yaw = (a: number) => -a;
 
 type Bar = { root: Group; fill: Mesh; width: number };
-type EnemyView = { root: Group; body: Group; mats: MeshLambertMaterial[]; base: Color[]; bar: Bar; kind: EnemyKind };
+type EnemyView = { root: Group; rig: Group; body: Mesh; bar: Bar; kind: EnemyKind };
 type Fx = { mesh: Mesh; age: number; life: number; grow: number; fade: number; y0: number };
 
 export class RushView {
@@ -41,6 +41,8 @@ export class RushView {
   private enemies = new Map<number, EnemyView>();
   private shots = new Map<number, Mesh>();
   private coins = new Map<number, Mesh>();
+  private enemyKits = new Map<EnemyKind, { body: BufferGeometry; hull: BufferGeometry }>();
+  private towerKits: ({ base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; h: number } | undefined)[] = [];
   private towers: (Group | null)[] = PADS.map(() => null);
   private towerLevels: number[] = PADS.map(() => -1);
   private padRings: Mesh[] = [];
@@ -53,16 +55,19 @@ export class RushView {
   private raycaster = new Raycaster();
   private ground = new Plane(new Vector3(0, 1, 0), 0);
   private portrait = false;
+  /** Camera distance factor: short phone screens get a closer camera so characters stay readable. */
+  private zoom = 1;
   private time = 0;
   readonly geo = {
     blob: new CircleGeometry(1, 20), ring: new RingGeometry(0.82, 1, 32), bolt: new CapsuleGeometry(0.11, 0.5, 4, 8),
     orb: new SphereGeometry(0.28, 12, 10), coin: new CylinderGeometry(0.28, 0.28, 0.08, 14), spark: new OctahedronGeometry(0.22),
-    bar: new PlaneGeometry(1, 0.13), disc: new CircleGeometry(1, 40),
+    bar: new PlaneGeometry(1, 0.13), barFill: new PlaneGeometry(1, 0.13).translate(0.5, 0, 0), disc: new CircleGeometry(1, 40),
   };
   private mats = {
     blob: basic(0x0b1a12, 0.32), allyRing: basic(TEAM.ally, 0.85), enemyRing: basic(TEAM.enemy, 0.8),
     heroBolt: basic(0x8ff7ff), towerBolt: basic(0xffe07a), enemyBolt: basic(0xff7b3a), superOrb: basic(0xc59bff),
-    coin: new MeshStandardMaterial({ color: 0xffc83d, metalness: 0.6, roughness: 0.35, emissive: 0x6b4a00 }),
+    coin: toon(PAL.gold, { emissive: 0x5a3a00, rim: 0.5 }),
+    baked: toon(0xffffff, { vertexColors: true, rim: 0.34 }), flash: basic(0xffffff),
     barBg: basic(0x10161c, 0.8), barAlly: basic(0x52e07c), barEnemy: basic(0xff5160), barTown: basic(0x4fb8ff), ammo: basic(0xffa43a), ammoDim: basic(0x5b3a1a, 0.9),
   };
 
@@ -70,11 +75,11 @@ export class RushView {
     this.renderer = new WebGLRenderer({ canvas, antialias: devicePixelRatio < 2, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.renderer.outputColorSpace = SRGBColorSpace;
-    this.scene.background = new Color(0x2a4d3a);
-    this.scene.add(new HemisphereLight(0xdff3ff, 0x3a5a2a, 1.25));
-    this.scene.add(new AmbientLight(0xffffff, 0.25));
-    const sun = new DirectionalLight(0xfff1d6, 1.6);
-    sun.position.set(-6, 14, 8);
+    this.scene.background = new Color(PAL.water);
+    // Toon bands come from the key light; the sky/ground fill keeps the shadow band bright and colourful.
+    this.scene.add(new HemisphereLight(0xe6f6ff, 0x9c8a62, 1.15));
+    const sun = new DirectionalLight(0xfff3dc, 2.2);
+    sun.position.set(-7, 16, 9);
     this.scene.add(sun);
 
     this.buildGround();
@@ -109,80 +114,96 @@ export class RushView {
 
   // ---------- static scenery ----------
   private buildGround() {
-    const w = ARENA.maxX - ARENA.minX, d = ARENA.maxZ - ARENA.minZ, ppm = 18;
+    const w = ARENA.maxX - ARENA.minX, d = ARENA.maxZ - ARENA.minZ, ppm = 20;
     const c = document.createElement('canvas');
     c.width = Math.round(w * ppm); c.height = Math.round(d * ppm);
     const g = c.getContext('2d')!;
     const px = (v: Vec) => [(v.x - ARENA.minX) * ppm, (v.z - ARENA.minZ) * ppm] as const;
-    g.fillStyle = '#5f9c48'; g.fillRect(0, 0, c.width, c.height);
-    // Checker tiles give the eye a speed reference, like a sports pitch.
-    for (let x = 0; x < w; x += 2) for (let z = 0; z < d; z += 2) {
-      if (((x + z) / 2) % 2 === 0) { g.fillStyle = 'rgba(255,255,255,0.045)'; g.fillRect(x * ppm, z * ppm, 2 * ppm, 2 * ppm); }
-    }
+    g.fillStyle = PAL.grass; g.fillRect(0, 0, c.width, c.height);
+    // Crisp 2 m tiles: a pitch-like speed reference that stays calmer than anything interactive.
+    g.fillStyle = PAL.grassAlt;
+    for (let x = 0; x < w; x += 2) for (let z = 0; z < d; z += 2) if (((x + z) / 2) % 2 === 0) g.fillRect(x * ppm, z * ppm, 2 * ppm, 2 * ppm);
     let seed = 7;
     const r = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-    for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(${r() > 0.5 ? '30,70,30' : '160,210,110'},${0.08 + r() * 0.12})`; g.fillRect(r() * c.width, r() * c.height, 2 + r() * 5, 2 + r() * 3); }
+    g.fillStyle = PAL.grassDot;
+    for (let i = 0; i < 160; i++) { const x = r() * c.width, z = r() * c.height; g.beginPath(); g.ellipse(x, z, 4 + r() * 4, 2 + r() * 2, 0, 0, Math.PI * 2); g.fill(); }
     g.lineCap = 'round'; g.lineJoin = 'round';
-    for (const [width, color] of [[3.3, '#7a6142'], [2.6, '#c9a36b']] as const) {
+    for (const [width, color] of [[3.2, PAL.pathEdge], [2.6, PAL.path]] as const) {
       g.strokeStyle = color; g.lineWidth = width * ppm;
       for (const lane of LANES) { g.beginPath(); lane.forEach((p, i) => (i ? g.lineTo(...px(p)) : g.moveTo(...px(p)))); g.stroke(); }
     }
     const [tx, tz] = px(TOWN);
-    g.fillStyle = '#b8a07a'; g.beginPath(); g.arc(tx, tz, (TOWN.radius + 2.2) * ppm, 0, Math.PI * 2); g.fill();
-    g.strokeStyle = 'rgba(70,50,30,0.5)'; g.lineWidth = 3; g.stroke();
+    g.fillStyle = PAL.pathEdge; g.beginPath(); g.arc(tx, tz, (TOWN.radius + 2.5) * ppm, 0, Math.PI * 2); g.fill();
+    g.fillStyle = PAL.plaza; g.beginPath(); g.arc(tx, tz, (TOWN.radius + 2.2) * ppm, 0, Math.PI * 2); g.fill();
     const tex = new CanvasTexture(c);
     tex.colorSpace = SRGBColorSpace;
     tex.anisotropy = 4;
-    const ground = new Mesh(new PlaneGeometry(w, d), new MeshLambertMaterial({ map: tex }));
+    const groundMat = toon(0xffffff, { rim: 0 });
+    groundMat.map = tex;
+    const ground = new Mesh(new PlaneGeometry(w, d), groundMat);
     ground.rotation.x = -Math.PI / 2;
     ground.position.set((ARENA.minX + ARENA.maxX) / 2, 0, (ARENA.minZ + ARENA.maxZ) / 2);
-    this.scene.add(ground);
-    // Hedge border.
-    const hedge = lambert(0x2f6b33);
-    const add = (x: number, z: number, sx: number, sz: number) => { const m = new Mesh(new BoxGeometry(sx, 1.1, sz), hedge); m.position.set(x, 0.55, z); this.scene.add(m); };
-    add(ARENA.minX - 0.5, (ARENA.minZ + ARENA.maxZ) / 2, 1, d + 2); add(ARENA.maxX + 0.5, (ARENA.minZ + ARENA.maxZ) / 2, 1, d + 2);
-    add(0, ARENA.maxZ + 0.5, w + 2, 1); add(0, ARENA.minZ - 0.5, w + 2, 1);
+    // The arena is an island: a sand slab over water reads as a clear play boundary.
+    const cx = (ARENA.minX + ARENA.maxX) / 2, cz = (ARENA.minZ + ARENA.maxZ) / 2;
+    const shore = new Mesh(new BoxGeometry(w + 3.2, 0.6, d + 3.2), toon(0xf0c98a, { rim: 0 }));
+    shore.position.set(cx, -0.31, cz);
+    const water = new Mesh(new PlaneGeometry(240, 240), toon(PAL.water, { rim: 0 }));
+    water.rotation.x = -Math.PI / 2; water.position.set(cx, -0.45, cz);
+    this.scene.add(water, shore, ground);
+    // Hedge border, baked into one mesh with lighter tops.
+    const parts: Part[] = [];
+    const hedge = (x: number, z: number, sx: number, sz: number) => {
+      parts.push({ geo: new BoxGeometry(sx, 1.0, sz), color: PAL.hedge, at: [x, 0.5, z] });
+      parts.push({ geo: new BoxGeometry(sx + 0.1, 0.28, sz + 0.1), color: PAL.hedgeTop, at: [x, 1.08, z] });
+    };
+    hedge(ARENA.minX - 0.55, cz, 1.1, d + 2.2); hedge(ARENA.maxX + 0.55, cz, 1.1, d + 2.2);
+    hedge(cx, ARENA.maxZ + 0.55, w, 1.1); hedge(cx, ARENA.minZ - 0.55, w, 1.1);
+    this.addBaked(bake(parts), 0.04);
+  }
+
+  /** Add a baked static mesh with its ink hull. */
+  private addBaked(geo: BufferGeometry, outline: number, at?: Vec): Mesh {
+    const mesh = new Mesh(geo, this.mats.baked);
+    if (outline > 0) mesh.add(new Mesh(hullGeometry(geo), outlineMaterial(outline)));
+    if (at) mesh.position.set(at.x, 0, at.z);
+    this.scene.add(mesh);
+    return mesh;
   }
 
   private buildWalls() {
-    const stone = lambert(0x9aa3ad), cap = lambert(0xc5ccd3), dark = lambert(0x6d7680);
+    // Chunky blocks: pale tops catch the key light, cool sides fall into the shadow band.
+    const parts: Part[] = [];
     for (const b of WALLS) {
-      const g = new Group();
-      const body = new Mesh(new BoxGeometry(b.w, 1.2, b.d), stone); body.position.y = 0.6;
-      const top = new Mesh(new BoxGeometry(b.w + 0.12, 0.18, b.d + 0.12), cap); top.position.y = 1.29;
-      const foot = new Mesh(new BoxGeometry(b.w + 0.2, 0.16, b.d + 0.2), dark); foot.position.y = 0.08;
-      g.add(body, top, foot);
-      g.position.set(b.x, 0, b.z);
-      this.scene.add(g);
+      parts.push({ geo: new BoxGeometry(b.w, 1.2, b.d), color: PAL.stone, at: [b.x, 0.6, b.z] });
+      parts.push({ geo: new BoxGeometry(b.w + 0.14, 0.24, b.d + 0.14), color: PAL.stoneTop, at: [b.x, 1.3, b.z] });
+      parts.push({ geo: new BoxGeometry(b.w + 0.22, 0.18, b.d + 0.22), color: PAL.stoneFoot, at: [b.x, 0.09, b.z] });
     }
+    this.addBaked(bake(parts), 0.05);
   }
 
   private buildTown() {
-    const g = new Group(), stone = lambert(0xd8cbb2), roof = lambert(TEAM.ally), wood = lambert(0x8a5a35), gold = lambert(0xffd166);
-    const base = new Mesh(new CylinderGeometry(TOWN.radius, TOWN.radius + 0.15, 1.1, 24), stone); base.position.y = 0.55;
-    const keep = new Mesh(new BoxGeometry(2.2, 2.2, 2.2), stone); keep.position.y = 2.1;
-    const keepRoof = new Mesh(new ConeGeometry(1.45, 1.3, 4), roof); keepRoof.position.y = 3.95; keepRoof.rotation.y = Math.PI / 4;
-    g.add(base, keep, keepRoof);
+    const parts: Part[] = [
+      { geo: new CylinderGeometry(TOWN.radius, TOWN.radius + 0.15, 1.1, 24), color: PAL.cream, at: [0, 0.55, 0] },
+      { geo: new BoxGeometry(2.2, 2.2, 2.2), color: PAL.cream, at: [0, 2.1, 0] },
+      { geo: new ConeGeometry(1.5, 1.4, 4), color: PAL.ally, at: [0, 3.9, 0], rot: [0, Math.PI / 4, 0] },
+      { geo: new BoxGeometry(1.1, 1.3, 0.3), color: PAL.wood, at: [0, 1.2, -1.16] },
+      { geo: new OctahedronGeometry(0.28), color: PAL.gold, at: [0, 2.45, -1.2] },
+      { geo: new CylinderGeometry(0.05, 0.05, 1.4, 6), color: PAL.woodDark, at: [0, 5.2, 0] },
+      { geo: new BoxGeometry(0.8, 0.5, 0.06), color: PAL.gold, at: [0.42, 5.6, 0] },
+    ];
     for (let i = 0; i < 4; i++) {
       const a = Math.PI / 4 + (i * Math.PI) / 2, x = Math.cos(a) * 1.95, z = Math.sin(a) * 1.95;
-      const t = new Mesh(new CylinderGeometry(0.48, 0.55, 2.3, 10), stone); t.position.set(x, 1.6, z);
-      const r = new Mesh(new ConeGeometry(0.52, 0.75, 10), roof); r.position.set(x, 3.15, z);
-      g.add(t, r);
+      parts.push({ geo: new CylinderGeometry(0.5, 0.56, 2.3, 10), color: PAL.cream, at: [x, 1.6, z] });
+      parts.push({ geo: new ConeGeometry(0.62, 0.85, 10), color: PAL.ally, at: [x, 3.17, z] });
     }
-    const gate = new Mesh(new BoxGeometry(1.1, 1.3, 0.3), wood); gate.position.set(0, 1.2, -1.16);
-    const pole = new Mesh(new CylinderGeometry(0.04, 0.04, 1.4, 6), wood); pole.position.set(0, 5.2, 0);
-    const flag = new Mesh(new PlaneGeometry(0.8, 0.5), new MeshLambertMaterial({ color: 0xffd166, side: DoubleSide })); flag.position.set(0.42, 5.6, 0);
-    const crest = new Mesh(new OctahedronGeometry(0.25), gold); crest.position.set(0, 2.4, -1.15);
-    g.add(gate, pole, flag, crest);
-    g.position.set(TOWN.x, 0, TOWN.z);
-    this.scene.add(g);
+    this.addBaked(bake(parts), 0.05, TOWN);
   }
 
   private buildPads() {
     for (const p of PADS) {
       const ring = new Mesh(this.geo.ring, basic(0xffd166, 0.55));
       ring.rotation.x = -Math.PI / 2; ring.position.set(p.x, 0.03, p.z); ring.scale.setScalar(1.05);
-      const disc = new Mesh(this.geo.disc, basic(0x3d2c18, 0.35));
+      const disc = new Mesh(this.geo.disc, basic(0x3d2c18, 0.3));
       disc.rotation.x = -Math.PI / 2; disc.position.set(p.x, 0.02, p.z); disc.scale.setScalar(0.95);
       this.scene.add(ring, disc);
       this.padRings.push(ring);
@@ -194,11 +215,13 @@ export class RushView {
     const ring = new Mesh(this.geo.ring, this.mats.allyRing); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; ring.scale.setScalar(0.72);
     this.hero.add(shadow, ring, this.heroBody);
     // Fallback body, replaced if the GLB loads.
-    const cloak = lambert(0x3d8f5a), skin = lambert(0x9fd36b);
-    const body = new Mesh(new CapsuleGeometry(0.36, 0.6, 4, 10), cloak); body.position.y = 0.75;
-    const head = new Mesh(new SphereGeometry(0.3, 12, 10), skin); head.position.set(0.05, 1.45, 0);
-    const bow = new Mesh(new BoxGeometry(0.7, 0.14, 0.14), lambert(0x8a5a35)); bow.position.set(0.45, 0.95, 0);
-    const placeholder = new Group(); placeholder.add(body, head, bow); placeholder.name = 'placeholder';
+    const placeholderGeo = bake([
+      { geo: new CapsuleGeometry(0.36, 0.6, 4, 10), color: 0x3d8f5a, at: [0, 0.75, 0] },
+      { geo: new SphereGeometry(0.34, 12, 10), color: 0x9fd36b, at: [0.05, 1.5, 0] },
+      { geo: new BoxGeometry(0.7, 0.14, 0.14), color: PAL.wood, at: [0.45, 0.95, 0] },
+    ]);
+    const placeholder = new Mesh(placeholderGeo, this.mats.baked);
+    placeholder.add(new Mesh(hullGeometry(placeholderGeo), outlineMaterial(0.05)));
     this.heroBody.add(placeholder);
     new GLTFLoader().load(HERO_MODEL_URL, gltf => {
       const model = gltf.scene, box = new Box3().setFromObject(model), size = box.getSize(new Vector3()), center = box.getCenter(new Vector3());
@@ -208,6 +231,16 @@ export class RushView {
       const holder = new Group(); holder.rotation.y = HERO_MODEL_YAW; holder.add(model);
       this.heroBody.remove(placeholder);
       this.heroBody.add(holder);
+      this.hero.updateMatrixWorld(true);
+      const meshes: Mesh[] = [];
+      model.traverse(node => { if (node instanceof Mesh) meshes.push(node); });
+      const scale = new Vector3();
+      for (const mesh of meshes) {
+        toonify(mesh);
+        // Constant on-screen ink width regardless of the node's own scale.
+        const s = mesh.getWorldScale(scale).x || 1;
+        mesh.add(new Mesh(hullGeometry(mesh.geometry), outlineMaterial(+(0.035 / s).toFixed(3))));
+      }
       const clip = gltf.animations[0];
       if (clip) {
         this.heroMixer = new AnimationMixer(model);
@@ -218,72 +251,109 @@ export class RushView {
     }, undefined, () => { /* Keep the placeholder; the prototype stays playable without the model. */ });
   }
 
-  private makeEnemy(kind: EnemyKind): EnemyView {
-    const root = new Group(), body = new Group(), def = ENEMIES[kind], r = def.radius;
-    const mats: MeshLambertMaterial[] = [];
-    const m = (color: number) => { const mat = lambert(color); mats.push(mat); return mat; };
-    const shadow = new Mesh(this.geo.blob, this.mats.blob); shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.02; shadow.scale.setScalar(r * 1.25);
-    const ring = new Mesh(this.geo.ring, this.mats.enemyRing); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; ring.scale.setScalar(r * 1.15);
-    root.add(shadow, ring, body);
+  /** One baked body + hull per enemy kind, shared by every instance of that kind. */
+  private enemyKit(kind: EnemyKind): { body: BufferGeometry; hull: BufferGeometry } {
+    let kit = this.enemyKits.get(kind);
+    if (kit) return kit;
+    const r = ENEMIES[kind].radius;
+    const eyes = (x: number, y: number, z: number, size: number, white: number, pupil: number): Part[] => [
+      { geo: new SphereGeometry(size, 8, 6), color: white, at: [x, y, z] },
+      { geo: new SphereGeometry(size, 8, 6), color: white, at: [x, y, -z] },
+      { geo: new SphereGeometry(size * 0.5, 6, 5), color: pupil, at: [x + size * 0.7, y, z] },
+      { geo: new SphereGeometry(size * 0.5, 6, 5), color: pupil, at: [x + size * 0.7, y, -z] },
+    ];
+    let parts: Part[];
     if (kind === 'grunt') {
-      const torso = new Mesh(new CapsuleGeometry(r * 0.75, r * 0.7, 4, 8), m(0xb2414b)); torso.position.y = r * 1.4;
-      const head = new Mesh(new SphereGeometry(r * 0.62, 10, 8), m(0x7c2b38)); head.position.set(r * 0.15, r * 2.45, 0);
-      const hornL = new Mesh(new ConeGeometry(r * 0.16, r * 0.6, 6), m(0xf1e2c6)); hornL.position.set(r * 0.1, r * 3.0, r * 0.32); hornL.rotation.x = 0.4;
-      const hornR = hornL.clone(); hornR.position.z = -r * 0.32; hornR.rotation.x = -0.4;
-      const club = new Mesh(new BoxGeometry(r * 1.3, r * 0.3, r * 0.3), m(0x6b4426)); club.position.set(r * 0.9, r * 1.5, r * 0.6);
-      body.add(torso, head, hornL, hornR, club);
+      parts = [
+        { geo: new CapsuleGeometry(r * 0.78, r * 0.6, 4, 10), color: 0xe2463f, at: [0, r * 1.3, 0] },
+        { geo: new SphereGeometry(r * 0.78, 12, 10), color: 0xa82c42, at: [r * 0.12, r * 2.45, 0] },
+        { geo: new ConeGeometry(r * 0.2, r * 0.75, 8), color: 0xfff0d2, at: [r * 0.05, r * 3.2, r * 0.42], rot: [0.45, 0, 0] },
+        { geo: new ConeGeometry(r * 0.2, r * 0.75, 8), color: 0xfff0d2, at: [r * 0.05, r * 3.2, -r * 0.42], rot: [-0.45, 0, 0] },
+        { geo: new BoxGeometry(r * 1.5, r * 0.36, r * 0.36), color: 0x8a5428, at: [r * 0.95, r * 1.4, r * 0.75] },
+        ...eyes(r * 0.68, r * 2.55, r * 0.26, r * 0.19, 0xffffff, PAL.ink),
+      ];
     } else if (kind === 'skirmisher') {
-      const robe = new Mesh(new ConeGeometry(r * 0.95, r * 2.6, 10), m(0x8a3d9e)); robe.position.y = r * 1.3;
-      const head = new Mesh(new SphereGeometry(r * 0.5, 10, 8), m(0x5a2a6a)); head.position.y = r * 2.85;
-      const hood = new Mesh(new ConeGeometry(r * 0.6, r * 0.9, 10), m(0x3c1a48)); hood.position.y = r * 3.4;
-      const bow = new Mesh(new BoxGeometry(r * 0.25, r * 1.8, r * 0.25), m(0xe8b04a)); bow.position.set(r * 0.85, r * 1.8, 0);
-      body.add(robe, head, hood, bow);
+      parts = [
+        { geo: new ConeGeometry(r * 1.0, r * 2.4, 12), color: 0x9b4dd6, at: [0, r * 1.2, 0] },
+        { geo: new SphereGeometry(r * 0.66, 12, 10), color: 0x6b2d8a, at: [0, r * 2.75, 0] },
+        { geo: new ConeGeometry(r * 0.78, r * 1.1, 12), color: 0x40195a, at: [0, r * 3.45, 0] },
+        { geo: new BoxGeometry(r * 0.28, r * 2.0, r * 0.28), color: 0xffb52e, at: [r * 0.95, r * 1.8, 0] },
+        ...eyes(r * 0.55, r * 2.8, r * 0.24, r * 0.15, 0xffe14d, 0xb06a00),
+      ];
     } else if (kind === 'brute') {
-      const torso = new Mesh(new BoxGeometry(r * 1.6, r * 1.6, r * 1.9), m(0x8f3a2e)); torso.position.y = r * 1.25;
-      const belly = new Mesh(new SphereGeometry(r * 0.8, 10, 8), m(0xc4704f)); belly.position.set(r * 0.45, r * 1.0, 0);
-      const head = new Mesh(new BoxGeometry(r * 0.8, r * 0.7, r * 0.8), m(0x5e2420)); head.position.set(r * 0.25, r * 2.35, 0);
-      const shoulder = new Mesh(new SphereGeometry(r * 0.45, 8, 6), m(0x9aa3ad)); shoulder.position.set(0, r * 2.05, r * 0.95);
-      const shoulder2 = shoulder.clone(); shoulder2.position.z = -r * 0.95;
-      body.add(torso, belly, head, shoulder, shoulder2);
+      parts = [
+        { geo: new BoxGeometry(r * 1.6, r * 1.6, r * 2.0), color: 0xd0602f, at: [0, r * 1.25, 0] },
+        { geo: new SphereGeometry(r * 0.85, 12, 10), color: 0xf29a5c, at: [r * 0.45, r * 1.0, 0] },
+        { geo: new BoxGeometry(r * 0.95, r * 0.8, r * 0.95), color: 0x7a2c1c, at: [r * 0.25, r * 2.45, 0] },
+        { geo: new SphereGeometry(r * 0.5, 10, 8), color: 0xb8c3d6, at: [0, r * 2.1, r * 1.0] },
+        { geo: new SphereGeometry(r * 0.5, 10, 8), color: 0xb8c3d6, at: [0, r * 2.1, -r * 1.0] },
+        ...eyes(r * 0.74, r * 2.55, r * 0.22, r * 0.13, 0xffffff, PAL.ink),
+      ];
     } else {
-      const torso = new Mesh(new CylinderGeometry(r * 0.75, r * 0.95, r * 1.9, 12), m(0x3b2f5c)); torso.position.y = r * 1.05;
-      const chest = new Mesh(new SphereGeometry(r * 0.8, 12, 10), m(0x5b4590)); chest.position.y = r * 2.0;
-      const head = new Mesh(new SphereGeometry(r * 0.45, 10, 8), m(0x261d3d)); head.position.set(r * 0.2, r * 2.85, 0);
-      const crown = new Mesh(new CylinderGeometry(r * 0.45, r * 0.4, r * 0.35, 6), m(0xffd166)); crown.position.set(r * 0.2, r * 3.3, 0);
-      const fistL = new Mesh(new SphereGeometry(r * 0.42, 10, 8), m(0x8b6fd8)); fistL.position.set(r * 0.7, r * 1.5, r * 1.05);
-      const fistR = fistL.clone(); fistR.position.z = -r * 1.05;
-      body.add(torso, chest, head, crown, fistL, fistR);
+      parts = [
+        { geo: new CylinderGeometry(r * 0.75, r * 0.95, r * 1.9, 14), color: 0x4b3a8a, at: [0, r * 1.05, 0] },
+        { geo: new SphereGeometry(r * 0.85, 14, 12), color: 0x6d55c4, at: [0, r * 2.0, 0] },
+        { geo: new SphereGeometry(r * 0.55, 12, 10), color: 0x2a1f4d, at: [r * 0.2, r * 2.95, 0] },
+        { geo: new CylinderGeometry(r * 0.5, r * 0.44, r * 0.4, 6), color: PAL.gold, at: [r * 0.2, r * 3.45, 0] },
+        { geo: new SphereGeometry(r * 0.46, 12, 10), color: 0x9d83ff, at: [r * 0.7, r * 1.5, r * 1.08] },
+        { geo: new SphereGeometry(r * 0.46, 12, 10), color: 0x9d83ff, at: [r * 0.7, r * 1.5, -r * 1.08] },
+        ...eyes(r * 0.62, r * 3.0, r * 0.2, r * 0.11, 0xff4d6a, 0x5a0010),
+      ];
     }
-    const bar = this.makeBar(kind === 'boss' ? 2.6 : Math.max(0.9, r * 2), this.mats.barEnemy);
-    bar.root.position.y = kind === 'boss' ? r * 3.9 : r * 3.2 + 0.25;
-    root.add(bar.root);
-    this.scene.add(root);
-    return { root, body, mats, base: mats.map(mm => mm.color.clone()), bar, kind };
+    const body = bake(parts);
+    kit = { body, hull: hullGeometry(body) };
+    this.enemyKits.set(kind, kit);
+    return kit;
   }
 
+  private makeEnemy(kind: EnemyKind): EnemyView {
+    const root = new Group(), rig = new Group(), r = ENEMIES[kind].radius, kit = this.enemyKit(kind);
+    const shadow = new Mesh(this.geo.blob, this.mats.blob); shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.02; shadow.scale.setScalar(r * 1.25);
+    const ring = new Mesh(this.geo.ring, this.mats.enemyRing); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; ring.scale.setScalar(r * 1.15);
+    const body = new Mesh(kit.body, this.mats.baked);
+    rig.add(body, new Mesh(kit.hull, outlineMaterial(kind === 'boss' ? 0.08 : 0.05)));
+    root.add(shadow, ring, rig);
+    const bar = this.makeBar(kind === 'boss' ? 2.6 : Math.max(0.9, r * 2), this.mats.barEnemy);
+    bar.root.position.y = kind === 'boss' ? r * 4.0 : r * 3.4 + 0.25;
+    root.add(bar.root);
+    this.scene.add(root);
+    return { root, rig, body, bar, kind };
+  }
+
+  /** Watchtower per level, baked: a static base and a rotating crossbow head. Open top keeps the head visible. */
+  private towerKit(level: number): { base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; h: number } {
+    let kit = this.towerKits[level];
+    if (kit) return kit;
+    const trim = [PAL.ally, PAL.super, PAL.gold][level], h = 1.0 + level * 0.3;
+    const parts: Part[] = [
+      { geo: new CylinderGeometry(0.5, 0.68, h, 8), color: 0xece0c4, at: [0, h / 2, 0] },
+      { geo: new CylinderGeometry(0.54, 0.54, 0.18, 8), color: trim, at: [0, h * 0.62, 0] },
+      { geo: new CylinderGeometry(0.74, 0.6, 0.24, 8), color: PAL.wood, at: [0, h + 0.12, 0] },
+    ];
+    for (let i = 0; i < level; i++) parts.push({ geo: new OctahedronGeometry(0.14), color: PAL.gold, at: [(i - (level - 1) / 2) * 0.34, h * 0.62, -0.6] });
+    const base = bake(parts);
+    const head = bake([
+      { geo: new BoxGeometry(0.9, 0.2, 0.22), color: PAL.woodDark, at: [0.2, 0, 0] },
+      { geo: new BoxGeometry(0.16, 0.14, 1.15), color: trim, at: [0.5, 0, 0] },
+      { geo: new BoxGeometry(0.72, 0.07, 0.07), color: 0xfff1a8, at: [0.45, 0.13, 0] },
+    ]);
+    kit = { base, baseHull: hullGeometry(base), head, headHull: hullGeometry(head), h };
+    this.towerKits[level] = kit;
+    return kit;
+  }
   private makeTower(level: number): Group {
-    // Open-top watchtower: the rotating crossbow must stay visible from the high camera.
-    const g = new Group(), trim = [0x3fa9ff, 0x8f6bff, 0xffc23d][level], h = 1.0 + level * 0.3;
-    const base = new Mesh(new CylinderGeometry(0.5, 0.68, h, 8), lambert(0xcbbd9f)); base.position.y = h / 2;
-    const band = new Mesh(new CylinderGeometry(0.53, 0.53, 0.16, 8), lambert(trim)); band.position.y = h * 0.62;
-    const deck = new Mesh(new CylinderGeometry(0.72, 0.6, 0.22, 8), lambert(0x8a5a35)); deck.position.y = h + 0.11;
-    const head = new Group(); head.name = 'head'; head.position.y = h + 0.42;
-    const stock = new Mesh(new BoxGeometry(0.9, 0.18, 0.2), lambert(0x5b3b22)); stock.position.x = 0.2;
-    const limbs = new Mesh(new BoxGeometry(0.14, 0.12, 1.1), lambert(trim)); limbs.position.x = 0.5;
-    const bolt = new Mesh(new BoxGeometry(0.7, 0.06, 0.06), basic(0xffe07a)); bolt.position.set(0.45, 0.12, 0);
-    head.add(stock, limbs, bolt);
-    g.add(base, band, deck, head);
-    for (let i = 0; i < level; i++) {
-      const star = new Mesh(new OctahedronGeometry(0.13), basic(0xffe07a)); star.position.set((i - (level - 1) / 2) * 0.32, h * 0.62, -0.58);
-      g.add(star);
-    }
+    const kit = this.towerKit(level), g = new Group(), head = new Group();
+    g.add(new Mesh(kit.base, this.mats.baked), new Mesh(kit.baseHull, outlineMaterial(0.05)));
+    head.name = 'head'; head.position.y = kit.h + 0.44;
+    head.add(new Mesh(kit.head, this.mats.baked), new Mesh(kit.headHull, outlineMaterial(0.04)));
+    g.add(head);
     return g;
   }
 
   private makeBar(width: number, fillMat: Material): Bar {
     const root = new Group();
-    const bg = new Mesh(this.geo.bar, this.mats.barBg); bg.scale.set(width + 0.08, 1.5, 1);
-    const fill = new Mesh(new PlaneGeometry(1, 0.13).translate(0.5, 0, 0), fillMat); fill.position.set(-width / 2, 0, 0.01); fill.scale.x = width;
+    const bg = new Mesh(this.geo.bar, this.mats.barBg); bg.scale.set(width + 0.1, 1.6, 1);
+    const fill = new Mesh(this.geo.barFill, fillMat); fill.position.set(-width / 2, 0, 0.01); fill.scale.x = width;
     root.add(bg, fill);
     root.renderOrder = 5;
     return { root, fill, width };
@@ -298,6 +368,8 @@ export class RushView {
     this.renderer.setSize(width, height, false);
     this.camera.aspect = width / Math.max(1, height);
     this.portrait = height > width;
+    const short = Math.min(width, height);
+    this.zoom = short >= 720 ? 1 : short <= 420 ? 0.8 : 0.8 + ((short - 420) / 300) * 0.2;
     this.camera.fov = this.portrait ? 46 : 32;
     this.camera.updateProjectionMatrix();
   }
@@ -359,7 +431,8 @@ export class RushView {
       if (!v) { v = this.makeEnemy(e.kind); this.enemies.set(e.id, v); }
       this.updateEnemy(v, e);
     }
-    for (const [id, v] of this.enemies) if (!seen.has(id)) { this.scene.remove(v.root); v.mats.forEach(m => m.dispose()); this.enemies.delete(id); }
+    // Geometry and materials are shared per kind, so removal only detaches the view.
+    for (const [id, v] of this.enemies) if (!seen.has(id)) { this.scene.remove(v.root); this.enemies.delete(id); }
     // Shots
     const live = new Set<number>();
     for (const shot of s.shots) {
@@ -405,12 +478,11 @@ export class RushView {
 
   private updateEnemy(v: EnemyView, e: Enemy) {
     v.root.position.set(e.x, 0, e.z);
-    v.body.rotation.y = yaw(e.facing);
+    v.rig.rotation.y = yaw(e.facing);
     const walk = Math.sin(this.time * 10 + e.id) * 0.06;
-    v.body.position.y = Math.abs(walk);
-    if (e.windup) v.body.scale.set(1.08, 0.9, 1.08); else v.body.scale.set(1, 1, 1);
-    const flash = e.flash > 0;
-    v.mats.forEach((m, i) => m.color.copy(flash ? WHITE : v.base[i]));
+    v.rig.position.y = Math.abs(walk);
+    if (e.windup) v.rig.scale.set(1.1, 0.88, 1.1); else v.rig.scale.set(1, 1, 1);
+    v.body.material = e.flash > 0 ? this.mats.flash : this.mats.baked;
     this.setBar(v.bar, e.hp / e.maxHp);
     v.bar.root.visible = e.kind === 'boss' || e.hp < e.maxHp;
   }
@@ -479,12 +551,12 @@ export class RushView {
 
   private updateCamera(s: RushState, dt: number) {
     const h = s.hero, target = h.downT > 0 ? new Vector3(TOWN.x, 0, TOWN.z - 4) : new Vector3(h.x, 0, h.z);
-    // Look a little ahead toward the enemy side, and keep the view inside the arena.
-    target.z -= this.portrait ? 1.5 : 2;
+    // Look ahead toward the enemy side (hero sits in the lower half, enemies clear the top HUD); stay inside the arena.
+    target.z -= this.portrait ? 2.5 : 3.5;
     target.x = Math.max(ARENA.minX + 6, Math.min(ARENA.maxX - 6, target.x));
     target.z = Math.max(ARENA.minZ + 6, Math.min(ARENA.maxZ - 6, target.z));
     this.focus.lerp(target, 1 - Math.exp(-6 * dt));
-    const height = this.portrait ? 30 : 23, back = this.portrait ? 14 : 12.5;
+    const height = (this.portrait ? 30 : 23) * this.zoom, back = (this.portrait ? 14 : 12.5) * this.zoom;
     this.camera.position.set(this.focus.x, height, this.focus.z + back);
     if (this.shake > 0) {
       this.shake = Math.max(0, this.shake - dt * 1.8);
@@ -513,5 +585,4 @@ export class RushView {
   info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.enemies.size, shots: this.shots.size }; }
 }
 
-const WHITE = new Color(0xffffff);
 const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };
