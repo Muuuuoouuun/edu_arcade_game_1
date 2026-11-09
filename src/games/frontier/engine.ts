@@ -1,6 +1,6 @@
 import{BEACON_CAPTURE}from'./beacon.ts';
 /** Small, isolated 3D training ground. No campaign saves or rewards are written. */
-import {HERO_ATTACK,hammerPoint,inHammerReach,type HeroAttack} from './heroAttack.ts';
+import {HERO_ATTACK,hammerPoint,inHammerReach,walkContactWeight,type HeroAttack} from './heroAttack.ts';
 import {WOOD_ATTACK,inWoodStrike,type WoodAttack} from './woodAttack.ts';
 import {BALLISTA,angleDelta,turnToward,ballistaMuzzle,type Position3} from './ballista.ts';
 export type Tower={pad:number;level:number;cooldown:number;heading:number;actionTime:number|null;targetId:number|null;released:boolean};
@@ -8,7 +8,7 @@ export type Bolt={id:number;targetId:number;pad:number;position:Position3;previo
 export type Mode='defense'|'command'|'solo';
 export type Point={x:number;z:number};
 export type Enemy=Point&{id:number;hp:number;cooldown:number;path:number;maxHp?:number;heading?:number;walkDistance?:number;moving?:boolean;restTime?:number;attack?:WoodAttack;hitAt?:number;hitHeading?:number};
-export type Frontier={mode:Mode;phase:'ready'|'playing'|'won'|'lost';paused:boolean;speed:1|2;time:number;wave:number;remaining:number;spawnIn:number;gold:number;coreHp:number;coreHitAt?:number;hero:Point&{hp:number;maxHp:number;target:Point;heading:number;moving:boolean;strike:number;cooldown:number;skill:number;dash:number;walkDistance:number;settle?:{time:number;walkTime:number};attack?:HeroAttack};squad:(Point&{cooldown:number})[];enemies:Enemy[];towers:Tower[];bolts:Bolt[];beacon:number;crystals:number[];kills:number;xp:number;level:number;serial:number;effects:{id:number;from:Point;to:Point;kind:'shot'|'skill'|'hit'|'impact'|'club'|'hammer'|'shockwave';life:number}[];message:string};
+export type Frontier={mode:Mode;phase:'ready'|'playing'|'won'|'lost';paused:boolean;speed:1|2;time:number;wave:number;remaining:number;spawnIn:number;gold:number;coreHp:number;coreHitAt?:number;hero:Point&{hp:number;maxHp:number;target:Point;heading:number;moving:boolean;strike:number;cooldown:number;skill:number;dash:number;walkDistance:number;walkStartDistance?:number;settle?:{time:number;walkTime:number;walkWeight?:number};attack?:HeroAttack};squad:(Point&{cooldown:number})[];enemies:Enemy[];towers:Tower[];bolts:Bolt[];beacon:number;crystals:number[];kills:number;xp:number;level:number;serial:number;effects:{id:number;from:Point;to:Point;kind:'shot'|'skill'|'hit'|'impact'|'club'|'hammer'|'shockwave';life:number}[];message:string};
 export const MODES={defense:{name:'성문 방어',tag:'타워 디펜스',goal:'3개 웨이브를 막고 성문을 지키세요.',control:'빛나는 건설 지점을 눌러 포탑을 배치·강화하세요.',size:40},command:{name:'변경 지휘',tag:'디펜스 + 분대 지휘',goal:'분대로 동쪽 봉화를 점령하고 3개 웨이브를 막으세요.',control:'땅을 눌러 분대 이동 · 가까운 건설 지점에 전초 포탑 배치',size:64},solo:{name:'수정 원정',tag:'영웅 직접 조작',goal:'적 6마리·수정 3개를 확보한 뒤 동쪽 출구로 이동하세요.',control:'WASD / 방향 패드 이동 · 근접 강타 Q · 충격파 E · 돌진 Space (준비 취소)',size:64}} as const;
 export const PADS:Point[]=[{x:-21,z:12},{x:-9,z:8},{x:-24,z:-7},{x:-7,z:-16},{x:15,z:5},{x:19,z:-12}];
 export const CORE={x:-14,z:21},BEACON={x:19,z:-17},EXIT={x:23,z:-23};
@@ -32,7 +32,7 @@ function reward(s:Frontier){s.kills++;s.gold+=14;s.xp+=30;while(s.xp>=s.level*60
 function damage(s:Frontier,e:Enemy,n:number,source:Point){if(e.hp<=0)return;e.hp=Math.max(0,e.hp-n);e.hitAt=s.time;e.hitHeading=Math.atan2(e.x-source.x,e.z-source.z);if(e.hp===0)reward(s);}
 function beginHeroAttack(s:Frontier,kind:'basic'|'skill',targetId:number|null,heading:number){
  const h=s.hero,fromMoving=h.moving,walkTime=h.moving?(h.walkDistance/HERO_ATTACK.stride*.8)%.8:0;h.settle=undefined;h.heading=heading;h.moving=false;h.strike=HERO_ATTACK.duration;
- h.attack={kind,time:0,heading,targetId,damage:kind==='basic'?22+s.level*3:45+s.level*5,hit:false,walkTime,fromMoving};
+ h.attack={kind,time:0,heading,targetId,damage:kind==='basic'?22+s.level*3:45+s.level*5,hit:false,walkTime,fromMoving,...(fromMoving?{walkWeight:walkContactWeight(h.walkDistance,h.walkStartDistance)}:{})};
  if(kind==='basic')h.cooldown=HERO_ATTACK.interval;else h.skill=6;
 }
 function strike(s:Frontier){
@@ -85,10 +85,10 @@ export function stepFrontier(previous:Frontier,elapsed:number,axis:Point={x:0,z:
   if(s.hero.attack)next=old;
   else if(s.mode==='solo'&&(axis.x||axis.z)){const n=Math.hypot(axis.x,axis.z);next={x:old.x+axis.x/n*7*dt,z:old.z+axis.z/n*7*dt};if(!walkable(next))next=old;s.hero.target={...next};}
   else next=travel(old,s.hero.target,6*dt);
-  s.hero.moving=distance(old,next)>.001;if(s.hero.moving)s.hero.heading=Math.atan2(next.x-old.x,next.z-old.z);s.hero.x=next.x;s.hero.z=next.z;s.hero.walkDistance+=distance(old,next);
+  s.hero.moving=distance(old,next)>.001;if(s.hero.moving){s.hero.heading=Math.atan2(next.x-old.x,next.z-old.z);if(!wasMoving)s.hero.walkStartDistance=s.hero.walkDistance;}s.hero.x=next.x;s.hero.z=next.z;s.hero.walkDistance+=distance(old,next);
   // Presentation state uses simulation time; stopping never delays movement or combat.
   if(s.hero.moving||s.hero.attack)s.hero.settle=undefined;
-  else if(wasMoving)s.hero.settle={time:0,walkTime:(s.hero.walkDistance/HERO_ATTACK.stride*.8)%.8};
+  else if(wasMoving)s.hero.settle={time:0,walkTime:(s.hero.walkDistance/HERO_ATTACK.stride*.8)%.8,walkWeight:walkContactWeight(s.hero.walkDistance,s.hero.walkStartDistance)};
   else if(s.hero.settle){s.hero.settle.time+=dt;if(s.hero.settle.time>=.24)s.hero.settle=undefined;}
   if(s.mode==='command'){strike(s);if(distance(s.hero,BEACON)<BEACON_CAPTURE.radius&&s.beacon<1){s.beacon=Math.min(1,s.beacon+dt/BEACON_CAPTURE.seconds);if(s.beacon===1){s.gold+=BEACON_CAPTURE.reward;s.message=`동쪽 봉화 확보 · 금화 +${BEACON_CAPTURE.reward}`;}}}
  }

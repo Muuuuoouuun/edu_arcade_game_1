@@ -1,6 +1,6 @@
 import{AnimationMixer,LoopOnce,LoopRepeat,type AnimationAction,type AnimationClip,type Group}from'three';
 import{HERO_MODEL}from'./heroModel.ts';
-import{HERO_ATTACK}from'./heroAttack.ts';
+import{HERO_ATTACK,walkContactWeight}from'./heroAttack.ts';
 import{HeroGrounding}from'./heroGrounding.ts';
 import type{Frontier}from'./engine.ts';
 /** Existing editable Kar clips, sampled by simulation state in the shared battlefield scene. */
@@ -14,10 +14,11 @@ export class HeroView{
  update(hero:Frontier['hero'],reduced:boolean,height?:(x:number,z:number)=>number){
   this.grounding.restore();
   const attack=hero.attack,entry=attack?Math.round(attack.walkTime/.1)%8:0,action=attack?(attack.fromMoving===false?(this.slam??this.entries[entry]):(this.entries[entry]??this.slam)):undefined;
+  const q=attack?.fromMoving&&!reduced?Math.max(0,Math.min(1,attack.time/.04)):1,entryBlend=q*q*(3-2*q);
   for(const a of [this.walk,this.slam,this.reset,...this.entries,...this.stops])if(a){a.enabled=true;a.setEffectiveWeight(0);}
   // All entry clips share the authored rebound at .43s. End in the grounded idle pose.
   if(action&&this.reset&&attack!.time>=.43&&!reduced){this.reset.time=this.reset.getClip().duration*Math.min(1,(attack!.time-.43)/(HERO_ATTACK.duration-.43));this.reset.setEffectiveWeight(1);}
-  else if(action){action.time=reduced?(attack!.hit?HERO_ATTACK.contact:.19):Math.min(attack!.time,HERO_ATTACK.duration);action.setEffectiveWeight(1);}
+  else if(action){action.time=reduced?(attack!.hit?HERO_ATTACK.contact:.19):Math.min(attack!.time,HERO_ATTACK.duration);action.setEffectiveWeight(entryBlend);if(entryBlend<1){this.walk.time=attack!.walkTime;this.walk.setEffectiveWeight(1-entryBlend);}}
   else if(!hero.moving&&hero.settle&&this.stops.length===8&&!reduced){
    const {time,walkTime}=hero.settle,stop=this.stops[Math.round(walkTime/.1)%8];
    // Start from the exact last continuous walk sample, then enter the nearest authored plant.
@@ -28,7 +29,22 @@ export class HeroView{
   else if(!hero.moving&&this.slam){this.slam.time=0;this.slam.setEffectiveWeight(1);}
   else{this.walk.time=reduced||!hero.moving?0:(hero.walkDistance/HERO_ATTACK.stride*.8)%.8;this.walk.setEffectiveWeight(1);}
   this.mixer.update(0);
-  if(height)this.grounding.apply(hero.x,hero.z,height);
+  // Carry the walk correction into the authored plant/stop and let it settle
+  // before contact, avoiding a one-frame jump when movement is interrupted.
+  const fade=(time:number,duration:number)=>{const q=Math.max(0,Math.min(1,time/duration));return 1-q*q*(3-2*q);};
+  const settle=(time:number,phase:number,duration:number,weight:number)=>{
+   // The authored transitions first place the swing boot, then move the
+   // supporting boot. Keep the latter fixed until its own lift begins.
+   const first=Math.round(phase/.1)%8<4?'right':'left',half=duration/2;
+   return {time:phase,left:weight*fade(time-(first==='left'?0:half),half),right:weight*fade(time-(first==='right'?0:half),half)};
+  };
+  const weight=walkContactWeight(hero.walkDistance,hero.walkStartDistance);
+  const stride=reduced?[]:action&&attack?.fromMoving?[
+   {time:attack.walkTime,left:(attack.walkWeight??1)*(1-entryBlend),right:(attack.walkWeight??1)*(1-entryBlend)},
+   settle(attack.time,entry*.1,.18,(attack.walkWeight??1)*entryBlend)
+  ]:!hero.moving&&hero.settle&&this.stops.length===8?[settle(hero.settle.time,hero.settle.walkTime,.24,hero.settle.walkWeight??1)]:
+   !action&&hero.moving?[{time:this.walk.time,left:weight,right:weight}]:[];
+  this.grounding.apply(hero.x,hero.z,height,stride);
  }
  dispose(){this.mixer.stopAllAction();this.mixer.uncacheRoot(this.model);}
 }

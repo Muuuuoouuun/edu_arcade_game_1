@@ -1,4 +1,6 @@
 import {Matrix4,Mesh,Object3D,Vector3,type Group} from 'three';
+import {HERO_MODEL} from './heroModel.ts';
+import {HERO_ATTACK} from './heroAttack.ts';
 
 type HeightField=(x:number,z:number)=>number;
 type Foot={node:Object3D;sample:Vector3;sole:Vector3[]};
@@ -28,9 +30,19 @@ export class HeroGrounding {
  }
  /** Restore the sampled animation pose before the mixer's next evaluation. */
  restore(){if(this.applied){for(const foot of this.feet)foot.node.position.copy(foot.sample);this.applied=false;}}
- apply(x:number,z:number,height:HeightField){
+ apply(x:number,z:number,height?:HeightField,strides:{time:number;left:number;right:number}[]=[]){
   for(const foot of this.feet)foot.sample.copy(foot.node.position);
   this.applied=true;
+  for(const stride of strides){
+   // The source walk advances each boot .44 model units per planted half-cycle.
+   // Extend the same authored, linear stance to match the simulated 1.6-unit
+   // cycle. The correction travels with the model, so every heading works.
+   const phase=((stride.time/.8)%1+1)%1;
+   const triangle=phase<.5?1-4*phase:-3+4*phase;
+   const extra=Math.max(0,HERO_ATTACK.stride/(4*HERO_MODEL.scale)-.22);
+   for(const foot of this.feet){const left=foot.node.name==='left-foot';foot.node.position.z+=(left?-1:1)*triangle*extra*(left?stride.left:stride.right);}
+  }
+  if(!height)return;
   this.model.updateWorldMatrix(true,true);
   const base=height(x,z);
   for(const foot of this.feet){

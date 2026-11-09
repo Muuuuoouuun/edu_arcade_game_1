@@ -1,6 +1,16 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createFrontier,actFrontier,stepFrontier,walkable,heightAt,BEACON,EXIT,CRYSTALS,CORE,type Frontier} from './engine.ts';
+import {walkContactWeight} from './heroAttack.ts';
 const run=(s:Frontier,seconds:number)=>{for(let i=0;i<seconds*60;i++)s=stepFrontier(s,1/60);return s;};
+test('starting and interrupting a short walk preserve the distance-based visual blend',()=>{
+ assert.equal(walkContactWeight(0,0),0);assert.ok(Math.abs(walkContactWeight(.2,0)-.5)<1e-10);assert.equal(walkContactWeight(.4,0),1);
+ let s=actFrontier(createFrontier('solo'),{type:'start'});s.enemies=[];s=stepFrontier(s,.01,{x:1,z:0});
+ const expected=walkContactWeight(s.hero.walkDistance,s.hero.walkStartDistance);assert.ok(expected>0&&expected<1);
+ const attacking=actFrontier(s,{type:'skill'});assert.equal(attacking.hero.attack!.walkWeight,expected);
+ const stopping=stepFrontier(s,.01);assert.equal(stopping.hero.settle!.walkWeight,expected);
+ const paused=actFrontier(stopping,{type:'pause'});assert.equal(stepFrontier(paused,.05,{x:1,z:0}),paused);
+ const restarted=stepFrontier(stopping,.01,{x:1,z:0});assert.equal(restarted.hero.walkStartDistance,s.hero.walkDistance);
+});
 test('modes gate actions and objectives rather than only changing their names',()=>{
  let td=createFrontier('defense');td=actFrontier(td,{type:'build',pad:0});assert.equal(td.towers.length,1);assert.equal(td.gold,120);td=actFrontier(td,{type:'start'});assert.deepEqual(actFrontier(td,{type:'move',point:BEACON}).hero,td.hero);assert.deepEqual(actFrontier(td,{type:'skill'}).hero,td.hero);assert.equal(td.squad.length,0);
  let solo=actFrontier(createFrontier('solo'),{type:'start'});assert.equal(solo.enemies.length,10);assert.equal(actFrontier(solo,{type:'build',pad:0}),solo);assert.equal(solo.remaining,0);assert.equal(createFrontier('command').squad.length,3);

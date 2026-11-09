@@ -3,7 +3,7 @@ const parse=async(name:string)=>{const b=readFileSync(new URL(`../../../public/d
 const walk=await parse('kar-barbarian-walk'),slam=await parse('kar-barbarian'),entry=await parse('kar-entry'),reset=await parse('kar-reset');
 const setup=()=>{const model=walk.scene.clone(true),view=new HeroView(model,walk.animations[0]);view.setSlam(slam.animations[0]);view.setEntries(entry.animations);const root=new Group();root.add(model);let s=actFrontier(createFrontier('solo'),{type:'start'});s=actFrontier(s,{type:'skill'});return{view,root,s};};
 test('existing hammer socket faces committed direction and matches gameplay contact in eight headings',()=>{const{view,root,s}=setup();for(let i=0;i<8;i++){s.hero.heading=i*Math.PI/4;s.hero.attack!.heading=s.hero.heading;s.hero.attack!.time=.28;s.hero.attack!.hit=true;root.rotation.y=s.hero.heading;root.position.set(s.hero.x,0,s.hero.z);view.update(s.hero,false);root.updateMatrixWorld(true);const socket=root.getObjectByName('hammer-contact')!.getWorldPosition(new Vector3()),p=hammerPoint(s.hero.x,s.hero.z,s.hero.heading);assert.ok(Math.hypot(socket.x-p.x,socket.z-p.z)<1e-5);assert.ok(Math.abs(socket.y-HERO_MODEL.socket[1])<1e-5);}view.dispose();});
-test('entry from all eight walk phases keeps grips connected and reaches the same contact',()=>{const{view,root,s}=setup();for(let phase=0;phase<8;phase++){s.hero.attack!.fromMoving=true;s.hero.attack!.walkTime=phase*.1;for(const t of [0,.06,.14,.19,.28,.4,.56]){s.hero.attack!.time=t;view.update(s.hero,false);root.updateMatrixWorld(true);for(const [i,side]of ['left','right'].entries()){const arm=root.getObjectByName(side+'-forearm')!,grip=root.getObjectByName(i===0?'upper-grip':'lower-grip')!;assert.ok(new Vector3(0,1,0).applyMatrix4(arm.matrixWorld).distanceTo(grip.getWorldPosition(new Vector3()))<.002);}}}view.dispose();});
+test('entry from 32 walk samples keeps grips connected and reaches the same contact',()=>{const{view,root,s}=setup();for(let phase=0;phase<32;phase++){s.hero.attack!.fromMoving=true;s.hero.attack!.walkTime=phase*.025;for(const t of [0,.01,.02,.03,.04,.06,.14,.19,.28,.4,.56]){s.hero.attack!.time=t;view.update(s.hero,false);root.updateMatrixWorld(true);for(const [i,side]of ['left','right'].entries()){const arm=root.getObjectByName(side+'-forearm')!,grip=root.getObjectByName(i===0?'upper-grip':'lower-grip')!;assert.ok(new Vector3(0,1,0).applyMatrix4(arm.matrixWorld).distanceTo(grip.getWorldPosition(new Vector3()))<.002);}}}view.dispose();});
 test('repeated paused/reduced samples stay stable and recovery does not disable the next attack',()=>{const{view,root,s}=setup();const socket=()=>{root.updateMatrixWorld(true);return root.getObjectByName('hammer-contact')!.getWorldPosition(new Vector3()).toArray();};s.hero.attack!.time=.1;view.update(s.hero,true);const first=socket();s.hero.attack!.time=.2;view.update(s.hero,true);assert.deepEqual(socket(),first);s.hero.attack!.time=.28;s.hero.attack!.hit=true;view.update(s.hero,true);assert.notDeepEqual(socket(),first);s.hero.attack!.time=.56;view.update(s.hero,false);s.hero.attack!.time=.19;s.hero.attack!.hit=false;view.update(s.hero,false);const next=socket();view.update(s.hero,false);assert.deepEqual(socket(),next);assert.ok(next[1]>2);view.dispose();});
 test('walking-only asset remains stable when optional attack clips fail',()=>{const view=new HeroView(walk.scene.clone(true),walk.animations[0]),s=actFrontier(actFrontier(createFrontier('solo'),{type:'start'}),{type:'skill'});view.update(s.hero,false);assert.ok(view.model.getObjectByName('hammer-contact'));view.dispose();});
 
@@ -72,4 +72,51 @@ test('slope correction keeps the hammer contact and feet grounded during attack 
   for(const name of ['left-foot','right-foot'])a.root.getObjectByName(name)!.traverse(o=>{if(o instanceof Mesh){const v=o.geometry.getAttribute('position');for(let i=0;i<v.count;i++){p.fromBufferAttribute(v,i).applyMatrix4(o.matrixWorld);assert.ok(p.y-heightAt(p.x,p.z)>-.00001);}}});
  }
  a.view.dispose();b.view.dispose();
+});
+
+test('Kar planted boot stays in world space through both half-strides in all headings',()=>{
+ const model=compact.scene.clone(true),root=new Group();root.add(model);
+ const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!),hero=createFrontier('solo').hero;
+ hero.moving=true;
+ for(let direction=0;direction<8;direction++)for(const [first,last,foot] of [[0,.5,'left-foot'],[.5,1,'right-foot']] as const){
+  const heading=direction*Math.PI/4;hero.heading=heading;root.rotation.y=heading;let anchor:Vector3|undefined;
+  for(let i=0;i<=16;i++){
+   const distance=(first+(last-first)*i/16)*1.6;hero.walkDistance=distance;
+   hero.x=Math.sin(heading)*distance;hero.z=Math.cos(heading)*distance;root.position.set(hero.x,0,hero.z);
+   view.update(hero,false,()=>0);root.updateMatrixWorld(true);
+   const p=root.getObjectByName(foot)!.getWorldPosition(new Vector3());anchor??=p.clone();
+   assert.ok(Math.hypot(p.x-anchor.x,p.z-anchor.z)<.0001,`${foot}, heading ${direction}, phase ${i}: ${p.distanceTo(anchor)}`);
+  }
+ }
+ view.dispose();
+});
+
+test('moving attack retains the corrected initial stance and releases it before hammer contact',()=>{
+ const a=setup(),b=setup();
+ for(let phase=0;phase<32;phase++){
+  const h=a.s.hero;h.attack=undefined;h.moving=true;h.walkDistance=phase*.025/.8*1.6;
+  a.view.update(h,false);const walk=matrices(a.root);
+  h.moving=false;h.attack={kind:'basic',time:0,heading:0,hit:false,targetId:1,damage:25,walkTime:phase*.025,fromMoving:true};
+  a.view.update(h,false);assert.ok(error(walk,matrices(a.root))<1e-5,'attack starts at the actual walking stance');
+  h.attack.time=.28;h.attack.hit=true;b.s.hero.attack!.time=.28;b.s.hero.attack!.fromMoving=false;
+  a.view.update(h,false);b.view.update(b.s.hero,false);
+  assert.ok(error(matrices(a.root),matrices(b.root))<1e-5,'correction has settled by contact');
+ }
+ a.view.dispose();b.view.dispose();
+});
+
+test('the supporting boot stays planted while the other settles into attack or stop',()=>{
+ const {view,root,s}=setup();view.setStops(stop.animations);
+ for(let phase=0;phase<8;phase++)for(const mode of ['attack','stop'] as const){
+  const h=s.hero,time=phase*.1,support=phase<4?'left-foot':'right-foot';
+  h.attack=undefined;h.settle=undefined;h.moving=true;h.walkDistance=time/.8*1.6;view.update(h,false);
+  root.updateMatrixWorld(true);const anchor=root.getObjectByName(support)!.getWorldPosition(new Vector3());h.moving=false;
+  for(const t of [0,.02,.04,.06,.08]){
+   if(mode==='attack')h.attack={kind:'basic',time:t,heading:0,hit:false,targetId:1,damage:25,walkTime:time,fromMoving:true};
+   else h.settle={time:t,walkTime:time};
+   view.update(h,false);root.updateMatrixWorld(true);const p=root.getObjectByName(support)!.getWorldPosition(new Vector3());
+   assert.ok(p.distanceTo(anchor)<.0001,`${mode}, phase ${phase}, ${support}: ${p.distanceTo(anchor)}`);
+  }
+ }
+ view.dispose();
 });
