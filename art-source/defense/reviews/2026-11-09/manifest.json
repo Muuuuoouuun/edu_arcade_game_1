@@ -71,7 +71,7 @@
       "status": "actual-browser-capture",
       "commit": "aeaa40f9ebf3d33595690ecf4c2529be9fc4af9d",
       "capture_script": "workshop.cjs",
-      "capture_script_sha256": "c1aa35dab584c37067a3d6326e647ff260b964dee03abb1a9ed44d5d5c21e8f0"
+      "capture_script_sha256": "51a96ae8737f33af1ea6e92a1a5faa94bc044eaab8194844b07c77811d198137"
     },
     {
       "id": "workshop-fire-tower",
@@ -85,7 +85,7 @@
       "status": "actual-browser-capture",
       "commit": "aeaa40f9ebf3d33595690ecf4c2529be9fc4af9d",
       "capture_script": "workshop.cjs",
-      "capture_script_sha256": "c1aa35dab584c37067a3d6326e647ff260b964dee03abb1a9ed44d5d5c21e8f0"
+      "capture_script_sha256": "51a96ae8737f33af1ea6e92a1a5faa94bc044eaab8194844b07c77811d198137"
     }
   ]
 }
