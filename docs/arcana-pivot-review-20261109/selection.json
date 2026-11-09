@@ -1,0 +1,11 @@
+{
+  "checks": [
+    "6hero cards,3lockedafter1-2",
+    "PreviewandCancel do not change hero",
+    "Confirm updates hero,300goldunchanged",
+    "First3 tacticalhints only",
+    "Nooverflow 360/390/844/1440",
+    "Dialogactionaccessible andEscapeclose"
+  ],
+  "errors": []
+}

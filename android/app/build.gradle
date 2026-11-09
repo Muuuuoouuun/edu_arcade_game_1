@@ -4,7 +4,7 @@ android {
     namespace = "io.github.muuuuoouuun.arcade"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "io.github.muuuuoouuun.arcade"
+        applicationId "io.github.muuuuoouuun.arcana"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
