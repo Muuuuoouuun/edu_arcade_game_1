@@ -63,3 +63,17 @@ test('recoil tips the model away from the source for each world direction withou
 });
 
 test('fallback hit recoil stays above terrain without per-frame drift',()=>{const view=new WoodView(woodFallback(),false),p=new Vector3();for(const [x,z] of [[-15,-6],[-15,8]])for(let i=0;i<8;i++){const e={...enemy(1),x,z,hitAt:1,hitHeading:i*Math.PI/4};view.update(e,false,1.08);const before=view.root.matrixWorld.clone();for(const mesh of view.surfaces){const a=mesh.geometry.attributes.position;for(let j=0;j<a.count;j++){p.fromBufferAttribute(a,j).applyMatrix4(mesh.matrixWorld);assert.ok(p.y-heightAt(p.x,p.z)>=-1e-6);}}view.update(e,false,1.08);assert.deepEqual(view.root.matrixWorld.elements,before.elements);}view.dispose();});
+test('hit marker belongs only to recently damaged visible enemies, follows simulation time and supports reduced motion',()=>{
+ for(const authored of [true,false]){
+  const batch=new WoodBatch(authored?combined:woodFallback(),authored),find=()=>batch.root.getObjectByName('wood-hit-marker') as import('three').InstancedMesh;
+  const e={...enemy(1),x:0,z:4,hitAt:1,hitHeading:0},other={...enemy(2),x:2,z:4,hitAt:undefined};
+  batch.update([e,other],false,camera,.99);assert.equal(find().count,0);
+  batch.update([e,other],false,camera,1);assert.equal(find().count,1);const marker=find();assert.equal((marker.material as import('three').MeshBasicMaterial).transparent,true);assert.equal((marker.material as import('three').MeshBasicMaterial).forceSinglePass,true);assert.equal((marker.material as import('three').MeshBasicMaterial).depthTest,true);assert.equal((marker.material as import('three').MeshBasicMaterial).depthWrite,false);
+  const frame=new Matrix4();marker.getMatrixAt(0,frame);const pos=new Vector3().setFromMatrixPosition(frame);assert.ok(Math.abs(pos.y-(heightAt(e.x,e.z)+4.15))<1e-6);
+  batch.update([e,other],false,camera,1.1);const paused=new Matrix4();find().getMatrixAt(0,paused);batch.update([e,other],false,camera,1.1);const repeated=new Matrix4();find().getMatrixAt(0,repeated);assert.deepEqual(paused.elements,repeated.elements);
+  batch.update([e,other],true,camera,1.01);const reduced=new Matrix4();find().getMatrixAt(0,reduced);batch.update([e,other],true,camera,1.2);const reducedLater=new Matrix4();find().getMatrixAt(0,reducedLater);assert.deepEqual(reduced.elements,reducedLater.elements);
+  batch.update([e,other],false,camera,1.33);assert.equal(find().count,0);batch.update([{...e,x:1000}],false,camera,1.1);assert.equal(find().count,0);
+  batch.update(Array.from({length:30},(_,i)=>({...enemy(i),x:i%5,z:4,hitAt:1})),false,camera,1.1);assert.equal(find().count,30);assert.equal(batch.meshes.length,authored?8:4);
+  batch.update([{...e,hp:0}],false,camera,1.1);assert.equal(find().count,0);batch.dispose();
+ }
+});
