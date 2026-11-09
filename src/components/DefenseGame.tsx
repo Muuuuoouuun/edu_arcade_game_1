@@ -163,6 +163,7 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
           next = stepDefense(next, fixedStep);
           // Hit-stop only freezes real time: the engine state after the stop is identical to a run without it.
           const kind = bigImpact(prev, next);
+          if (next.time < lastBig) lastBig = -Infinity; // a restarted battle's clock begins again near 0
           if (kind && !reducedMotion() && (kind === 'boss' || next.time - lastBig >= .6)) {
             if (kind === 'big') lastBig = next.time;
             clock = stopAt(clock, now / 1000, kind === 'boss' ? .09 : .05); impact = true; break;

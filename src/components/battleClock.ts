@@ -13,7 +13,7 @@ export function advanceClock(c: BattleClock, now: number, speed: number, step = 
   return { clock: { ...c, accumulated, last: now }, steps };
 }
 
-/** A big impact on the current step: un-run steps of this frame are dropped (the engine runs them later in real time). */
+/** A big impact on the current step: remaining steps of this frame are discarded (game time pauses for the stop; the 0.6s gap in game time is shorter in real time at 2x). */
 export const stopAt = (c: BattleClock, now: number, length: number): BattleClock => ({ ...c, accumulated: c.accumulated % (1 / 60), stopUntil: now + length });
 
 const HEAVY = new Set(['stone', 'ice', 'metal', 'wood']);
