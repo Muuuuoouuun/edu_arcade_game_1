@@ -1,0 +1,40 @@
+{
+  "alias": "KR2",
+  "endpoint": "https://api.anthropic.com/v1/messages",
+  "requested_at_utc": "2026-11-09T09:31:57.397463+00:00",
+  "stream_complete": true,
+  "status": 200,
+  "request_id": "req_011Cgs83XhcCQYUxqCLPXWha",
+  "seconds": 32.69,
+  "requested_model": "claude-opus-5-5",
+  "inputs": {
+    "src/ArcanaApp.tsx": "a2388f6518254de99832a49741055692bfd26ababff9b1c943b362c80bdd82e0",
+    "src/arcana-shell.css": "4cb1efed98208e47075d759666e41fd673d0bc5780cd65d40d76d1970c0cda56",
+    "src/components/DefenseCamp.tsx": "678270ee2a3e81d72e85aae0b394663ddf21582b802cc49592fa00540df54fca",
+    "src/components/DefenseFieldGuide.tsx": "6dd2a366512070447f59024ff6528a85053a164c8e1ca86f018f40faea88872f",
+    "src/components/Dialog.tsx": "2c9069a72558b1fef13499f5cb1953b9bc44640133efdc6ab0c90bf1e476c510",
+    "src/lib/nativeEvents.ts": "9f56649c4426689ac921314526d67cde7ab42df02ba81f1a8c43284009d60f33",
+    "src/lib/nativeRuntime.ts": "eceb4ff8501d504247eb0e53397f1820f82c9ecea805be6090d8432f638da1c6",
+    "vite.config.ts": "183c8ffe88d8f053365813367ce7f49ea5e2032ec2f8ab9ecb237505c5f1a1f4",
+    "capacitor.config.ts": "035df5b1e9da53995136b36f8ff0a7fe9810e8bd419b398d60f5bb6da0843d5a",
+    "tools/prune-arcana-mobile.mjs": "dd64df9c60098eece54f395524ceb11e5665a20308e38e577490e36e702a4f8c"
+  },
+  "model": "claude-opus-5-5",
+  "usage": {
+    "input_tokens": 24469,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 3149,
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard",
+    "output_tokens_details": {
+      "thinking_tokens": 1368
+    }
+  },
+  "stop_reason": "end_turn"
+}

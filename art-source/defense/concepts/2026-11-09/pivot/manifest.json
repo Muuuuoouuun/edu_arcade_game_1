@@ -1,0 +1,13 @@
+{
+  "purpose": "Standalone fantasy mobile game title key art",
+  "generated_by": "OpenAI image generation tool",
+  "source": "arcana-keyart.png",
+  "dimensions": [
+    1051,
+    1497
+  ],
+  "sha256": "99dd9c6323e3fe41eb58a5de87b4dd9be68c67d5d1efec890cc872f8b528ca8a",
+  "runtime_asset": "public/defense/arcana-keyart.webp",
+  "status": "Generated still illustration; not a 3D scene or generated animation. Runtime motion is separate CSS.",
+  "concept_notes": "Original three-hero forest citadel composition. Snow/tropical scenery is concept atmosphere; playable regions remain existing forest and snow."
+}

@@ -15,6 +15,7 @@ import '../defense-difficulty.css';
 import '../defense-themes.css';
 import '../camp-art.css';
 import '../camp-redesign.css';
+import '../arcana-selection.css';
 
 type Props = {
   campaign: Campaign;
@@ -29,6 +30,8 @@ type Props = {
   themeStorageFailed: boolean;
 };
 type FacilityId = ReturnType<typeof campaignFacilities>[number]['id'];
+const heroOrder:HeroId[] = ['mage','elf','dwarf','tao','barbarian','druid'];
+const difficultyTags:Record<Difficulty,string> = {relaxed:'가볍게 모험',standard:'균형 잡힌 도전',veteran:'빠르고 거센 습격'};
 const regionNames = {forest:'청록의 숲',snow:'서리산맥'};
 const regionArt = {forest:'/defense/forest.png',snow:'/defense/snow.png'};
 const regionSummary = {forest:'숲길과 물길을 따라, 이웃 마을을 지켜요.',snow:'빙판을 달리는 적들과 서리군주가 기다려요.'};
@@ -37,6 +40,8 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
   const menuRef = useRef<HTMLElement>(null);
   const [section,setSection] = useState<'expedition'|'companions'|'home'|'growth'>('home');
   const [confirmUpgrade,setConfirmUpgrade] = useState(false);
+  const [previewHero,setPreviewHero] = useState<HeroId|null>(null);
+  const [heroNotice,setHeroNotice] = useState('');
   const [upgradeNotice,setUpgradeNotice] = useState('');
   const previousTraining = useRef(campaign.training);
   useEffect(()=>{
@@ -78,7 +83,7 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
   const letterBody = allDone ? '함께 모인 수비대로 다른 조합을 시험해 보세요. 아직 놓친 추가 퀘스트에도 다시 도전할 수 있어요.' : completed ? `${stage.name}의 길목을 다시 지켜 주세요. 새로운 영웅과 타워 조합을 시험할 수 있어요.` : stage.story;
   return <main className="camp-page camp-themed camp-art" id="main" data-screen="preparation" data-section={section} data-theme={themeId} style={{'--theme-accent':theme.accent,'--theme-ink':theme.ink} as CSSProperties}>
     <div className="camp-heading">
-      <button className="camp-back" onClick={onExit}><Icon name="back" size={18}/><span>게임으로</span></button>
+      <button className="camp-back" onClick={onExit}><Icon name="back" size={18}/><span>뒤로</span></button>
       <h1>아르카나 수비대</h1>
       <span className="camp-gold" aria-label={`성장 골드 ${campaign.gold}`}><Gold/>{campaign.gold.toLocaleString()}<small>G</small></span>
     </div>
@@ -136,12 +141,17 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
         </div>
         <section className="camp-roster" aria-label="출전 영웅 선택">
           <div className="camp-roster-heading"><h2>함께하는 동료</h2><span>영웅을 고르고 원정을 떠나요</span></div>
-          <div className={`camp-heroes ${campaign.visitors.length>4?'camp-heroes-many':''}`}>
-            {campaign.visitors.map(id=><button key={id} className={campaign.selectedHero===id?'selected':''} onClick={()=>onChooseHero(id)} aria-label={`${HEROES[id].name} 출전 영웅 선택`} aria-pressed={campaign.selectedHero===id}>
-              <DefenseSprite index={HEROES[id].sprite}/><span><strong>{HEROES[id].name}</strong><small>{HEROES[id].role}</small>{campaign.selectedHero===id?<em>출전 영웅</em>:null}</span>
-            </button>)}
+          <div className="camp-current-hero"><DefenseSprite index={HEROES[campaign.selectedHero].sprite}/><div><span>이번 원정의 영웅</span><strong>{HEROES[campaign.selectedHero].name}</strong><p>{HEROES[campaign.selectedHero].trait}</p></div><span className="camp-hero-ready">편성 중</span></div>
+          <div className="camp-heroes camp-heroes-many">
+            {heroOrder.map(id=>{
+              const unlocked=campaign.visitors.includes(id),arrival=STAGES.find(s=>s.visitor===id),selected=campaign.selectedHero===id;
+              return <button key={id} className={`${selected?'selected':''} ${unlocked?'':'camp-hero-locked'}`} onClick={()=>setPreviewHero(id)} disabled={!unlocked} aria-label={`${HEROES[id].name} ${unlocked?'영웅 살펴보기':`${arrival?.label} 방어 후 합류`}`} aria-pressed={selected}>
+                <span className="camp-hero-card-art"><DefenseSprite index={HEROES[id].sprite}/></span><span><strong>{HEROES[id].name}</strong><small>{HEROES[id].role}</small><em>{selected?'출전 영웅':unlocked?'살펴보기 ↗':`${arrival?.label} 방어 후 합류`}</em></span>
+              </button>;
+            })}
           </div>
-          <p className="camp-party-note">영웅 선택은 무료예요. 용병은 전장에서 전투 코인 120개로 한 명을 고용할 수 있어요.</p><p className="camp-hero-trait" aria-live="polite"><b>{HEROES[campaign.selectedHero].name}</b>{HEROES[campaign.selectedHero].trait}</p>
+          <p className="camp-hero-selection-notice" role="status">{heroNotice}</p>
+          <p className="camp-party-note">영웅 편성은 무료 · 용병 한 명은 전장에서 120코인으로 고용</p>
           {nextVisitorStage?.visitor?<p className="camp-next-arrival"><Icon name="star" size={16}/>{nextVisitorStage.label} 방어를 마치면 <strong>{HEROES[nextVisitorStage.visitor].name}</strong>의 방문이 기다리고 있어요.</p>:<p className="camp-next-arrival"><Icon name="star" size={16}/>여섯 동료가 모였어요. 서로 다른 조합으로 원정에 도전해요.</p>}
         </section>
       </section>
@@ -154,7 +164,7 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
           <div className="camp-region-art"><img src={regionArt[stage.region]} alt={stage.region==='snow'?'눈 덮인 서리산맥의 전장':'청록의 숲과 물길'}/><span>{stage.label} {stage.name}</span></div>
           <div className="camp-difficulty" role="group" aria-labelledby="camp-difficulty-title">
             <h3 id="camp-difficulty-title">원정 난이도</h3>
-            <div className="camp-difficulty-choices">{DIFFICULTY_ORDER.map(mode=><button key={mode} type="button" className={difficulty===mode?'selected':''} aria-pressed={difficulty===mode} aria-label={`${DIFFICULTIES[mode].name} 난이도 선택`} onClick={()=>onSelectDifficulty(mode)}><span className={`camp-difficulty-mark camp-difficulty-mark-${mode}`} aria-hidden="true"/><strong>{DIFFICULTIES[mode].name}</strong></button>)}</div>
+            <div className="camp-difficulty-choices">{DIFFICULTY_ORDER.map(mode=><button key={mode} type="button" className={difficulty===mode?'selected':''} aria-pressed={difficulty===mode} aria-label={`${DIFFICULTIES[mode].name} 난이도 선택`} onClick={()=>onSelectDifficulty(mode)}><span className={`camp-difficulty-mark camp-difficulty-mark-${mode}`} aria-hidden="true"/><strong>{DIFFICULTIES[mode].name}</strong><small>{difficultyTags[mode]}</small></button>)}</div>
             <p className="camp-difficulty-description" aria-live="polite">{difficultyInfo.description}</p>
             <p className="camp-difficulty-note">동료 해금과 추가 퀘스트 보상은 같아요.</p>
           </div>
@@ -166,7 +176,7 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
         <section className="camp-regions" aria-label="지역과 스테이지 선택"><h2>지역 선택</h2>
           <div className="camp-region-tabs">{(['forest','snow'] as const).map(region=><button key={region} onClick={()=>selectRegion(region)} disabled={region==='snow'&&!snowOpen} aria-pressed={stage.region===region} className={stage.region===region?'selected':''}><RegionIcon snow={region==='snow'}/><span>{regionNames[region]}</span></button>)}</div>
           <p>{stage.region==='forest'&&!snowOpen?'숲의 마지막 마을을 지키면, 설산에서 소식이 옵니다.':regionSummary[stage.region]}</p>
-          <nav className="camp-stages" aria-label={`${regionNames[stage.region]} 스테이지`}>{chapterStages.map(s=><button key={s.id} className={`${s.id===selectedStage?'selected':''} ${campaign.cleared.includes(s.id)?'complete':''}`} disabled={!stageUnlocked(campaign,s.id)} onClick={()=>setSelectedStage(s.id)} aria-label={`${s.label} ${s.name}${campaign.cleared.includes(s.id)?' 완료':''}`} aria-current={s.id===selectedStage?'step':undefined}><span>{campaign.cleared.includes(s.id)?'✓':s.order}</span><strong>{s.label}</strong></button>)}</nav>
+          <nav className="camp-stages" aria-label={`${regionNames[stage.region]} 스테이지`}>{chapterStages.map(s=><button key={s.id} className={`${s.id===selectedStage?'selected':''} ${campaign.cleared.includes(s.id)?'complete':''}`} disabled={!stageUnlocked(campaign,s.id)} onClick={()=>setSelectedStage(s.id)} aria-label={`${s.label} ${s.name}${campaign.cleared.includes(s.id)?' 완료':''}`} aria-current={s.id===selectedStage?'step':undefined}><span className="camp-stage-number">{campaign.cleared.includes(s.id)?'✓':s.order}</span><span className="camp-stage-card-copy"><strong>{s.label} · {s.name}</strong><small>{!stageUnlocked(campaign,s.id)?`${getStage(s.id-1).label} 방어 후 개방`:s.weather}</small></span><span className="camp-stage-state">{campaign.cleared.includes(s.id)?'방어 완료':s.id===selectedStage?'선택됨':stageUnlocked(campaign,s.id)?'원정':'잠김'}</span></button>)}</nav>
         </section>
         {stageUnlocked(campaign,stage.id)?<DefenseFieldGuide stage={stage.id} difficulty={difficulty}/>:null}
 
@@ -184,11 +194,17 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
         </div>
       </section>
     </div>
-    <p className="camp-save-note">완료한 원정과 성장은 이 브라우저에 저장돼요. 전투 중 배치는 다음 원정에서 새로 준비해요.</p>
+    <p className="camp-save-note">완료한 원정과 성장은 이 기기에 저장돼요. 전투 중 배치는 다음 원정에서 새로 준비해요.</p>
     {section==='expedition'?<div className="camp-departure-dock" aria-label="선택한 원정으로 출발">
       <div><strong>{HEROES[campaign.selectedHero].name} · {stage.label}</strong><span>{stage.name} · {difficultyInfo.name}</span></div>
       <button onClick={()=>onDepart(stage.id)} disabled={!stageUnlocked(campaign,stage.id)}><Icon name="play" size={22}/>스테이지 입장</button>
     </div>:null}
+    {previewHero?<Dialog title={`${HEROES[previewHero].name} 출전 영웅 선택`} className="camp-hero-dialog" onClose={()=>setPreviewHero(null)}>
+      <div className="camp-hero-dialog-heading"><p className="camp-art-kicker">수비대 편성</p><button className="camp-hero-dialog-close" onClick={()=>setPreviewHero(null)} aria-label="영웅 선택 닫기"><Icon name="close" size={20}/></button></div>
+      <div className="camp-hero-portrait" style={{'--hero-color':HEROES[previewHero].color} as CSSProperties}><DefenseSprite index={HEROES[previewHero].sprite}/><span aria-hidden="true"/></div>
+      <div className="camp-hero-dialog-copy"><p>{HEROES[previewHero].role}</p><h2>{HEROES[previewHero].name}</h2><p>{HEROES[previewHero].description}</p><div className="camp-hero-skill"><Icon name="star" size={18}/><span><small>필살기</small><strong>{HEROES[previewHero].skill}</strong></span></div><p className="camp-hero-confirm-note">무료 편성 · 골드를 사용하지 않아요</p></div>
+      <div className="camp-hero-dialog-actions"><button onClick={()=>setPreviewHero(null)}>돌아가기</button><button className="camp-upgrade-action" onClick={()=>{if(campaign.visitors.includes(previewHero)){onChooseHero(previewHero);setHeroNotice(`${HEROES[previewHero].name} 편성 완료`);}setPreviewHero(null);}}>이 영웅으로 출전</button></div>
+    </Dialog>:null}
     {confirmUpgrade?<Dialog title="공용 장비 강화 확인" className="camp-upgrade-dialog" onClose={()=>setConfirmUpgrade(false)}><p className="camp-art-kicker">공용 장비 강화</p><h2>Lv.{campaign.training} → Lv.{campaign.training+1}</h2><p>모든 영웅·타워 공격력 +{campaign.training*8}% → +{(campaign.training+1)*8}%</p><dl className="camp-upgrade-cost"><div><dt>사용할 성장 골드</dt><dd>{cost} G</dd></div><div><dt>강화 후 잔액</dt><dd>{Math.max(0,campaign.gold-cost).toLocaleString()} G</dd></div></dl>{storageFailed?<p className="camp-save-warning" role="status">저장할 수 없는 상태예요. 지금 강화해도 창을 닫으면 반영되지 않을 수 있어요.</p>:null}<div className="camp-upgrade-dialog-actions"><button onClick={()=>setConfirmUpgrade(false)}>돌아가기</button><button className="camp-upgrade-action" disabled={!canUpgrade} onClick={()=>{if(canUpgrade)onTrain();setConfirmUpgrade(false);}}>강화 확정</button></div></Dialog>:null}
   </main>;
 }
