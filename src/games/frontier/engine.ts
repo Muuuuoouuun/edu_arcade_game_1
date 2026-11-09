@@ -27,7 +27,7 @@ function travel(p:Point,target:Point,amount:number):Point{
 }
 export function createFrontier(mode:Mode):Frontier{return {mode,phase:'ready',paused:false,speed:1,time:0,wave:0,remaining:0,spawnIn:0,gold:180,coreHp:180,hero:{x:-14,z:14,hp:mode==='command'?180:100,maxHp:mode==='command'?180:100,target:{x:-14,z:14},heading:0,moving:false,strike:0,cooldown:0,skill:0,dash:0,walkDistance:0},squad:mode==='command'?[{x:-16,z:16,cooldown:0},{x:-12,z:16,cooldown:0},{x:-14,z:18,cooldown:0}]:[],enemies:[],towers:[],bolts:[],beacon:0,crystals:[],kills:0,xp:0,level:1,serial:1,effects:[],message:MODES[mode].goal};}
 function clone(s:Frontier):Frontier{return {...s,hero:{...s.hero,target:{...s.hero.target},settle:s.hero.settle?{...s.hero.settle}:undefined,attack:s.hero.attack?{...s.hero.attack}:undefined},squad:s.squad.map(p=>({...p})),enemies:s.enemies.map(e=>({...e,attack:e.attack?{...e.attack}:undefined})),towers:s.towers.map(t=>({...t})),bolts:s.bolts.map(b=>({...b,position:{...b.position},previous:{...b.previous}})),effects:s.effects.map(e=>({...e})),crystals:[...s.crystals]};}
-function effect(s:Frontier,from:Point,to:Point,kind:'shot'|'skill'|'hit'|'impact'|'club'|'hammer'|'shockwave'){s.effects.push({id:s.serial++,from:{x:from.x,z:from.z},to:{x:to.x,z:to.z},kind,life:kind==='skill'?.45:.18});}
+function effect(s:Frontier,from:Point,to:Point,kind:'shot'|'skill'|'hit'|'impact'|'club'|'hammer'|'shockwave'){s.effects.push({id:s.serial++,from:{x:from.x,z:from.z},to:{x:to.x,z:to.z},kind,life:kind==='skill'?.45:kind==='impact'?.46:.18});}
 function reward(s:Frontier){s.kills++;s.gold+=14;s.xp+=30;while(s.xp>=s.level*60){s.xp-=s.level*60;s.level++;s.hero.maxHp+=15;s.hero.hp=Math.min(s.hero.maxHp,s.hero.hp+25);s.message=`레벨 ${s.level} · 공격 +3 · 최대 체력 +15`;}}
 function damage(s:Frontier,e:Enemy,n:number,source:Point){if(e.hp<=0)return;e.hp=Math.max(0,e.hp-n);e.hitAt=s.time;e.hitHeading=Math.atan2(e.x-source.x,e.z-source.z);if(e.hp===0)reward(s);}
 function beginHeroAttack(s:Frontier,kind:'basic'|'skill',targetId:number|null,heading:number){
@@ -111,7 +111,7 @@ export function stepFrontier(previous:Frontier,elapsed:number,axis:Point={x:0,z:
   if(!enemy){bolt.life=0;continue;}
   const to={x:enemy.x,y:heightAt(enemy.x,enemy.z)+1.1,z:enemy.z};const d=Math.hypot(to.x-bolt.position.x,to.y-bolt.position.y,to.z-bolt.position.z);
   bolt.previous={...bolt.position};
-  if(d<=BALLISTA.boltSpeed*dt){bolt.position=to;damage(s,enemy,bolt.damage,bolt.previous);effect(s,enemy,enemy,'impact');bolt.life=0;}
+  if(d<=BALLISTA.boltSpeed*dt){bolt.position=to;damage(s,enemy,bolt.damage,bolt.previous);effect(s,bolt.previous,enemy,'impact');bolt.life=0;}
   else{const k=BALLISTA.boltSpeed*dt/d;bolt.position={x:bolt.position.x+(to.x-bolt.position.x)*k,y:bolt.position.y+(to.y-bolt.position.y)*k,z:bolt.position.z+(to.z-bolt.position.z)*k};}
  }
  s.bolts=s.bolts.filter(b=>b.life>0);

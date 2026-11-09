@@ -38,7 +38,7 @@ test('ballista aims only its heading, waits for release and applies damage on ph
  for(let i=0;i<9;i++)s=stepFrontier(s,.01);assert.equal(s.bolts.length,0);assert.equal(s.enemies[0].hp,200);
  s=stepFrontier(s,.01);assert.equal(s.bolts.length,1);assert.equal(s.enemies[0].hp,200);const bolt=s.bolts[0];assert.ok(Math.abs(bolt.position.y-2.6208)<1e-6);assert.ok(Math.abs(bolt.position.z-(12-2.0072))<1e-6);
  const releasedHeading=s.towers[0].heading;s=stepFrontier(s,.02);assert.equal(s.towers[0].heading,releasedHeading);assert.notDeepEqual(s.bolts[0].position,bolt.position);
- for(let i=0;i<40&&s.enemies[0].hp===200;i++)s=stepFrontier(s,.01);assert.equal(s.enemies[0].hp,177);assert.equal(s.enemies[0].hitAt,s.time);assert.ok(Number.isFinite(s.enemies[0].hitHeading));assert.ok(s.effects.some(e=>e.kind==='impact'));assert.equal(s.bolts.length,0);
+ for(let i=0;i<40&&s.enemies[0].hp===200;i++)s=stepFrontier(s,.01);assert.equal(s.enemies[0].hp,177);assert.equal(s.enemies[0].hitAt,s.time);assert.ok(Number.isFinite(s.enemies[0].hitHeading));const impact=s.effects.find(e=>e.kind==='impact')!;assert.ok(impact);assert.notDeepEqual(impact.from,impact.to);assert.equal(impact.life,.46);assert.equal(s.bolts.length,0);
 });
 test('ballista locks target and damage; target death, pause, upgrade and speed do not duplicate shots',()=>{
  let s=actFrontier(actFrontier(createFrontier('defense'),{type:'build',pad:0}),{type:'start'});s.remaining=1;s.spawnIn=999;s.gold=200;
