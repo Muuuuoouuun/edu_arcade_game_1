@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { PMREMGenerator } from 'three';
 import './model-lab.css';
+import { createHitClip } from './model-lab-hit';
 
 type Model = {id:string;name:string;kind:string;detail:string;description:string;source:string;command:string;action:string;clip?:string;prototype?:boolean;viewRotation?:number};
 const models:Model[] = [
@@ -19,8 +20,8 @@ const asset = (model:Model,extension:'png'|'glb') => `/defense/models/${model.pr
 const $ = <T extends HTMLElement>(id:string) => document.getElementById(id) as T;
 const stage = $<HTMLDivElement>('model-stage'), status = $<HTMLParagraphElement>('model-loading'), fallback = $<HTMLImageElement>('model-fallback');
 const shoot = $<HTMLButtonElement>('attack-preview'), rotate = $<HTMLButtonElement>('auto-rotate'), wire = $<HTMLButtonElement>('wireframe'), reset = $<HTMLButtonElement>('reset-view');
-const pose = $<HTMLInputElement>('pose-progress');
-let renderer:WebGLRenderer|null = null, controls:OrbitControls|null = null, current:Group|null = null, mixer:AnimationMixer|null = null, attackAction:AnimationAction|null = null;
+const pose = $<HTMLInputElement>('pose-progress'), hit = $<HTMLButtonElement>('hit-preview');
+let renderer:WebGLRenderer|null = null, controls:OrbitControls|null = null, current:Group|null = null, mixer:AnimationMixer|null = null, attackAction:AnimationAction|null = null, hitAction:AnimationAction|null = null;
 let currentModelId = models[0].id;
 let generation = 0, automatic = false, wireEnabled = false, shotAt = -Infinity, last = performance.now(), elapsed = 0, redraw = true, lastRender = 0;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -42,17 +43,18 @@ function release(object:Object3D) {
 // Authoring +Y becomes GLB -Z; character defaults show the face and weapon.
 function resetView() {pivot.rotation.y = models.find(model => model.id===currentModelId)?.viewRotation??0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,2.0,0);controls?.update();}
 function stopAction() {
- attackAction?.stop(); pose.value = '0'; $('pose-value').textContent = '0%'; shotAt = -Infinity; stage.dataset.action = 'idle'; redraw = true;
+ attackAction?.stop(); hitAction?.stop(); pose.value = '0'; $('pose-value').textContent = '0%'; shotAt = -Infinity; stage.dataset.action = 'idle'; redraw = true;
 }
 function clearModel() {
  mixer?.stopAllAction();
  if(mixer)mixer.uncacheRoot(mixer.getRoot());
- attackAction = null; mixer = null;
+ attackAction = null; hitAction = null; mixer = null;
  if(current){pivot.remove(current);release(current);current = null;}
  parts.length = 0; currentMaterials = []; emissionLevels.clear(); pivot.rotation.y = 0; stopAction();
 }
 function setReady(ready:boolean) {
  $('pose-control').hidden = !ready || !attackAction;
+ hit.hidden = !['polar-bear','gecko-ranger'].includes(currentModelId); hit.disabled = !ready || !hitAction || reduced.matches;
  const missingAttack = !!models.find(model => model.id===currentModelId)?.clip&&!attackAction;
  shoot.disabled = !ready || reduced.matches || missingAttack;
  rotate.disabled = !ready || reduced.matches;
@@ -123,6 +125,8 @@ async function select(index:number) {
   if(clip){
    mixer = new AnimationMixer(gltf.scene); attackAction = mixer.clipAction(clip);
    attackAction.setLoop(LoopOnce,1); attackAction.clampWhenFinished = true;
+   const hitClip = createHitClip(model.id,gltf.scene);
+   if(hitClip){hitAction = mixer.clipAction(hitClip);hitAction.setLoop(LoopOnce,1);}
    mixer.addEventListener('finished',stopAction);
   }
   $('triangle-count').textContent = Math.round(triangles).toLocaleString(); $('mesh-count').textContent = String(meshes); $('material-count').textContent = String(materials(current).size);
@@ -141,13 +145,17 @@ models.forEach((model,index) => {
 });
 shoot.onclick = () => {
  if(!current||reduced.matches)return;
- shotAt = elapsed; redraw = true; stage.dataset.action = 'firing';
+ stopAction(); shotAt = elapsed; redraw = true; stage.dataset.action = 'firing';
  attackAction?.reset().play();
+};
+hit.onclick = () => {
+ if(!hitAction||reduced.matches)return;
+ stopAction(); stage.dataset.action = 'hit'; hitAction.reset().play(); redraw = true;
 };
 pose.oninput = () => {
  if(!attackAction||!mixer)return;
  // Evaluate a single authored pose without advancing time, including reduced motion.
- attackAction.reset().play(); attackAction.paused = true;
+ stopAction(); attackAction.reset().play(); attackAction.paused = true;
  attackAction.time = attackAction.getClip().duration*Number(pose.value)/100;
  mixer.update(0); shotAt = -Infinity; stage.dataset.action = 'pose';
  $('pose-value').textContent = `${pose.value}%`; redraw = true;
@@ -169,7 +177,7 @@ function draw(now:number) {
   elapsed += dt;
   const autoMoving = automatic&&!reduced.matches&&!!current;
   if(autoMoving)pivot.rotation.y += dt*.28;
-  const age = elapsed-shotAt, clipMoving = !!attackAction?.isRunning();
+  const age = elapsed-shotAt, clipMoving = !!attackAction?.isRunning() || !!hitAction?.isRunning();
   // Towers use procedural recoil; characters use their authored attack clips.
   const power = !attackAction&&!reduced.matches&&age<.8?Math.sin(Math.min(1,age/.8)*Math.PI)*(1-age/.8):0;
   for(const part of parts){
