@@ -6,6 +6,8 @@ import { PMREMGenerator } from 'three';
 import './model-lab.css';
 
 const models = [
+ {id:'frontier-frost-gate',name:'서리 협곡 · 설산 성문',kind:'FROST ARCHITECTURE',detail:'열린 석조 아치 · 눈 쌓인 성벽',description:'짙은 깃발과 황동 등불, 쌓인 돌의 아치와 눈 덮인 흉벽을 회전하며 살펴보세요. 서리 협곡에서 사용하는 실제 입체 성문입니다.',source:'frontier-frost.blend',command:'npm run models:frontier-frost',action:'고정 모형',static:true,fitBounds:true},
+ {id:'frontier-frost',name:'서리 협곡 · 입체 지형',kind:'FROST TERRAIN',detail:'얼음 능선 · 고드름 · 협곡 다리',description:'눈 처마 아래 고드름과 빙하 능선이 실제 높이를 갖습니다. 숲 전장과 같은 이동 경로 위에 설산의 다른 실루엣을 더했습니다.',source:'frontier-frost.blend',command:'npm run models:frontier-frost',action:'고정 지형',static:true,fitBounds:true},
  {id:'frontier-beacon',name:'변경 봉화 · 녹음 신호탑',kind:'CAPTURE BEACON',detail:'고정 석조 · 열리는 황동 잎',description:'석조 받침은 고정하고 네 황동 덮개가 열리며 수정이 올라옵니다. 지휘 전장에서는 점령 진행에 맞춰 움직입니다.',source:'frontier-beacon.blend',command:'npm run models:frontier-beacon',action:'▶ 점령 전개',clip:'beacon-capture',hold:true,fitBounds:true},
  {id:'frontier-kar-stop',asset:'frontier-kar-game',name:'카르 · 변경 전장 발 디딤',kind:'GROUNDED WALK STOP',detail:'마지막 걸음 · 늦게 멈추는 망치',description:'발을 차례로 디뎌 몸을 세우고, 양손 망치와 털망토가 뒤따라 멈춥니다.',source:'frontier-kar.blend',command:'npm run models:frontier-kar',action:'▶ 발 디디며 정지',clip:'kar-stop-2',hold:true,fitBounds:true},
  {id:'frontier-kar-reset',asset:'frontier-kar-game',name:'카르 · 변경 전장 회수',kind:'GROUNDED HAMMER RECOVERY',detail:'고정된 발 · 늦게 따라오는 망치',description:'두 발을 디딘 채 몸을 먼저 세우고, 무거운 망치와 털망토가 뒤따라 안정됩니다.',source:'frontier-kar.blend',command:'npm run models:frontier-kar',action:'▶ 강타 회수',clip:'kar-reset-0',hold:true,fitBounds:true},

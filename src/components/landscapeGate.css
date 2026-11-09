@@ -1,0 +1,2 @@
+.landscape-content{display:contents}.landscape-gate{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:28px;background:#122632;color:#edf6fa;font-family:inherit}.landscape-gate>span{font-size:80px;color:#b6d9e7;line-height:1}.landscape-gate h2{font-size:26px;margin:24px 0 12px;outline:none}.landscape-gate p{line-height:1.8;color:#d3e5ed}.landscape-gate small{max-width:280px;line-height:1.7;color:#a4bcc9}
+.landscape-gate small{word-break:keep-all;text-wrap:balance}
