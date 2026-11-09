@@ -15,13 +15,49 @@ test('wolf collapse follows simulation progress, keeps ground and falls back wit
   const [x,y,w,h]=asset.viewBox.split(' ').map(Number);assert.ok(x+w<=asset.width&&y+h<=asset.height);
   assert.equal(art.monsterDeathSpriteAsset('frostwolf',p,true)?.frame,3);
  }
- assert.equal(art.monsterDeathSpriteAsset('stone',.5),null);
  assert.ok(!requests.some(src=>src.endsWith('.glb')));
  for(const missing of ['frost-wolf-atlas.webp','frost-wolf-collapse-atlas.webp']){
   const {art:failed}=await loadWithImageResults(src=>src.endsWith('/'+missing),'collapse-'+missing);
   assert.equal(failed.monsterDeathSpriteAsset('frostwolf',.5),null);
   assert.ok(failed.monsterSpriteAsset('frostwolf','death'));
  }
+});
+
+test('stone golem collapse preserves the old anchor, settles, and falls back on missing art',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'golem-death');
+ assert.equal(requests.filter(src=>src.endsWith('/stone-golem-death-atlas.webp')).length,1);
+ for(const [progress,expected] of [[0,0],[.18,0],[.2,1],[.44,2],[.68,3],[.92,4],[1,4],[NaN,0]]){
+  const result=art.monsterDeathSpriteAsset('stone',progress)!;
+  assert.equal(result.frame,expected);assert.equal(result.asset.displayScale,384/260);
+  assert.equal(art.monsterDeathSpriteAsset('stone',progress,true)?.frame,4);
+  const [x,y,w,h]=result.asset.viewBox.split(' ').map(Number);assert.ok(x+w<=result.asset.width&&y+h<=result.asset.height);
+ }
+ assert.equal(art.monsterDeathSpriteAsset('stone',0)!.asset.groundY,(323-.1*260)*2/3);
+ assert.ok(Math.abs(art.monsterDeathSpriteAsset('stone',.1/.7)!.asset.groundY!-292.91*2/3)<1e-9);
+ assert.equal(art.monsterDeathSpriteAsset('stone',0,true)!.asset.groundY,292.91*2/3);
+ for(const missing of ['stone-golem-atlas.webp','stone-golem-death-atlas.webp']){
+  const {art:failed}=await loadWithImageResults(src=>src.endsWith('/'+missing),'golem-death-'+missing);
+  assert.equal(failed.monsterDeathSpriteAsset('stone',.4),null);
+  assert.ok(failed.monsterSpriteAsset('stone','hit'));
+ }
+});
+
+test('stone golem collapse retains real split stones, source hashes and grounded samples',()=>{
+ const read=(path:string)=>readFileSync(new URL('../../../'+path,import.meta.url));
+ const m=JSON.parse(read('public/defense/models/stone-golem-death.json').toString());
+ const hash=(b:Buffer)=>createHash('sha256').update(b).digest('hex');
+ assert.equal(hash(read(m.source)),m.source_sha256);assert.equal(hash(read(m.base_source)),m.base_source_sha256);
+ for(const f of m.files){const b=read('public/defense/models/'+f.file);assert.equal(hash(b),f.sha256);assert.equal(b.length,f.bytes);}
+ for(const f of m.renders)assert.equal(hash(read(f.path)),f.sha256);
+ assert.deepEqual(m.baked_frames,[1,5,10,15,20]);assert.equal(m.effect_duration,.7);
+ assert.deepEqual(m.frame.battle_anchor,{initial_y:297,ground_y:292.91,settle_seconds:.1});
+ assert.deepEqual(m.delivery_frame,{width:256,height:256,columns:5,source_scale:2/3,display_scale:384/260});
+ assert.equal(m.samples.length,20);assert.ok(m.samples[0].lowest_vertex<-.1);
+ assert.ok(m.samples.slice(3).every((v:{lowest_vertex:number})=>v.lowest_vertex>-.005));
+ const b=read('public/defense/models/stone-golem-death.glb');const gltf=JSON.parse(b.subarray(20,20+b.readUInt32LE(12)).toString());
+ assert.ok(gltf.nodes.some((n:{name:string})=>n.name==='fracture-torso-upper'));
+ assert.ok(gltf.nodes.some((n:{name:string})=>n.name==='fracture-torso-lower'));
+ assert.ok(gltf.animations.some((a:{name:string,channels:unknown[]})=>a.name==='stone-golem-death'&&a.channels.length>=10));
 });
 
 test('metal death plays its baked 3D plates in simulation time and survives missing images',async()=>{
@@ -432,7 +468,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-brace-')&&!src.includes('/frost-fall-')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-stop-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,21);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-brace-')&&!src.includes('/frost-fall-')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-stop-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,22);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{

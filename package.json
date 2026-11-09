@@ -158,7 +158,9 @@
     "models:wood-death": "blender --python-exit-code 1 -b --python tools/blender/build_wood_death.py --",
     "models:ice-death": "blender --python-exit-code 1 -b --python tools/blender/build_ice_death.py --",
     "models:golem-walk": "blender --python-exit-code 1 -b --python tools/blender/build_golem_walk.py --",
-    "models:golem-walk:check": "node tools/check-golem-walk.mjs && blender --python-exit-code 1 -b --python tools/blender/build_golem_walk.py -- --check"
+    "models:golem-walk:check": "node tools/check-golem-walk.mjs && blender --python-exit-code 1 -b --python tools/blender/build_golem_walk.py -- --check",
+    "models:golem-death": "blender --python-exit-code 1 -b --python tools/blender/build_golem_death.py --",
+    "models:golem-death:check": "node tools/check-golem-death.mjs && blender --python-exit-code 1 -b --python tools/blender/build_golem_death.py -- --check"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
