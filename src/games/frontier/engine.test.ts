@@ -55,3 +55,17 @@ test('ballista cancels a dead target during preparation and turns by a bounded s
  s.enemies=[{id:999,x:-21,z:5,hp:100,cooldown:999,path:1}];s=stepFrontier(s,.01);s.enemies=[];s=run(s,.5);assert.equal(s.bolts.length,0);
  s.towers[0].heading=-Math.PI+.01;s.enemies=[{id:1001,x:-21.5,z:5,hp:100,cooldown:999,path:1}];const old=s.towers[0].heading;s=stepFrontier(s,.01);assert.ok(Math.abs(s.towers[0].heading-old)<=.050001);
 });
+
+test('hero stop clock follows pause/speed and is cleared by resume, attack and dash',()=>{
+ let s=actFrontier(createFrontier('solo'),{type:'start'});s.enemies=[];
+ s=stepFrontier(s,.03,{x:1,z:0});const distance=s.hero.walkDistance,position={x:s.hero.x,z:s.hero.z};
+ const walking=s;s=stepFrontier(s,.01);assert.equal(s.hero.settle?.time,0);assert.ok(Math.abs(s.hero.settle!.walkTime-distance/1.6*.8)<1e-8);assert.equal(walking.hero.settle,undefined);
+ assert.equal(s.hero.x,position.x);assert.equal(s.hero.z,position.z);
+ const stopped=s;s=stepFrontier(s,.03);assert.equal(stopped.hero.settle!.time,0);assert.equal(s.hero.settle!.time,.03);
+ const paused=actFrontier(s,{type:'pause'});assert.equal(stepFrontier(paused,.05),paused);
+ const fast=stepFrontier(actFrontier(s,{type:'speed'}),.03);assert.ok(Math.abs(fast.hero.settle!.time-.09)<1e-8);
+ assert.equal(stepFrontier(s,.01,{x:1,z:0}).hero.settle,undefined);
+ assert.equal(actFrontier(s,{type:'skill'}).hero.settle,undefined);
+ const dashed=actFrontier(s,{type:'dash'});assert.equal(dashed.hero.settle,undefined);assert.equal(stepFrontier(dashed,.01).hero.settle,undefined);
+ for(let i=0;i<8;i++)s=stepFrontier(s,.03);assert.equal(s.hero.settle,undefined);
+});

@@ -7,7 +7,7 @@ export type Bolt={id:number;targetId:number;pad:number;position:Position3;previo
 export type Mode='defense'|'command'|'solo';
 export type Point={x:number;z:number};
 export type Enemy=Point&{id:number;hp:number;cooldown:number;path:number;maxHp?:number;heading?:number;walkDistance?:number;moving?:boolean;restTime?:number;attack?:WoodAttack};
-export type Frontier={mode:Mode;phase:'ready'|'playing'|'won'|'lost';paused:boolean;speed:1|2;time:number;wave:number;remaining:number;spawnIn:number;gold:number;coreHp:number;hero:Point&{hp:number;maxHp:number;target:Point;heading:number;moving:boolean;strike:number;cooldown:number;skill:number;dash:number;walkDistance:number;attack?:HeroAttack};squad:(Point&{cooldown:number})[];enemies:Enemy[];towers:Tower[];bolts:Bolt[];beacon:number;crystals:number[];kills:number;xp:number;level:number;serial:number;effects:{id:number;from:Point;to:Point;kind:'shot'|'skill'|'hit'|'impact'|'club'|'hammer'|'shockwave';life:number}[];message:string};
+export type Frontier={mode:Mode;phase:'ready'|'playing'|'won'|'lost';paused:boolean;speed:1|2;time:number;wave:number;remaining:number;spawnIn:number;gold:number;coreHp:number;hero:Point&{hp:number;maxHp:number;target:Point;heading:number;moving:boolean;strike:number;cooldown:number;skill:number;dash:number;walkDistance:number;settle?:{time:number;walkTime:number};attack?:HeroAttack};squad:(Point&{cooldown:number})[];enemies:Enemy[];towers:Tower[];bolts:Bolt[];beacon:number;crystals:number[];kills:number;xp:number;level:number;serial:number;effects:{id:number;from:Point;to:Point;kind:'shot'|'skill'|'hit'|'impact'|'club'|'hammer'|'shockwave';life:number}[];message:string};
 export const MODES={defense:{name:'성문 방어',tag:'타워 디펜스',goal:'3개 웨이브를 막고 성문을 지키세요.',control:'빛나는 건설 지점을 눌러 포탑을 배치·강화하세요.',size:40},command:{name:'변경 지휘',tag:'디펜스 + 분대 지휘',goal:'분대로 동쪽 봉화를 점령하고 3개 웨이브를 막으세요.',control:'땅을 눌러 분대 이동 · 가까운 건설 지점에 전초 포탑 배치',size:64},solo:{name:'수정 원정',tag:'영웅 직접 조작',goal:'적 6마리·수정 3개를 확보한 뒤 동쪽 출구로 이동하세요.',control:'WASD / 방향 패드 이동 · 근접 강타 Q · 충격파 E · 돌진 Space (준비 취소)',size:64}} as const;
 export const PADS:Point[]=[{x:-21,z:12},{x:-9,z:8},{x:-24,z:-7},{x:-7,z:-16},{x:15,z:5},{x:19,z:-12}];
 export const CORE={x:-14,z:21},BEACON={x:19,z:-17},EXIT={x:23,z:-23};
@@ -25,12 +25,12 @@ function travel(p:Point,target:Point,amount:number):Point{
  return walkable(q)?q:{...p};
 }
 export function createFrontier(mode:Mode):Frontier{return {mode,phase:'ready',paused:false,speed:1,time:0,wave:0,remaining:0,spawnIn:0,gold:180,coreHp:180,hero:{x:-14,z:14,hp:mode==='command'?180:100,maxHp:mode==='command'?180:100,target:{x:-14,z:14},heading:0,moving:false,strike:0,cooldown:0,skill:0,dash:0,walkDistance:0},squad:mode==='command'?[{x:-16,z:16,cooldown:0},{x:-12,z:16,cooldown:0},{x:-14,z:18,cooldown:0}]:[],enemies:[],towers:[],bolts:[],beacon:0,crystals:[],kills:0,xp:0,level:1,serial:1,effects:[],message:MODES[mode].goal};}
-function clone(s:Frontier):Frontier{return {...s,hero:{...s.hero,target:{...s.hero.target},attack:s.hero.attack?{...s.hero.attack}:undefined},squad:s.squad.map(p=>({...p})),enemies:s.enemies.map(e=>({...e,attack:e.attack?{...e.attack}:undefined})),towers:s.towers.map(t=>({...t})),bolts:s.bolts.map(b=>({...b,position:{...b.position},previous:{...b.previous}})),effects:s.effects.map(e=>({...e})),crystals:[...s.crystals]};}
+function clone(s:Frontier):Frontier{return {...s,hero:{...s.hero,target:{...s.hero.target},settle:s.hero.settle?{...s.hero.settle}:undefined,attack:s.hero.attack?{...s.hero.attack}:undefined},squad:s.squad.map(p=>({...p})),enemies:s.enemies.map(e=>({...e,attack:e.attack?{...e.attack}:undefined})),towers:s.towers.map(t=>({...t})),bolts:s.bolts.map(b=>({...b,position:{...b.position},previous:{...b.previous}})),effects:s.effects.map(e=>({...e})),crystals:[...s.crystals]};}
 function effect(s:Frontier,from:Point,to:Point,kind:'shot'|'skill'|'hit'|'impact'|'club'|'hammer'|'shockwave'){s.effects.push({id:s.serial++,from:{x:from.x,z:from.z},to:{x:to.x,z:to.z},kind,life:kind==='skill'?.45:.18});}
 function reward(s:Frontier){s.kills++;s.gold+=14;s.xp+=30;while(s.xp>=s.level*60){s.xp-=s.level*60;s.level++;s.hero.maxHp+=15;s.hero.hp=Math.min(s.hero.maxHp,s.hero.hp+25);s.message=`레벨 ${s.level} · 공격 +3 · 최대 체력 +15`;}}
 function damage(s:Frontier,e:Enemy,n:number){if(e.hp<=0)return;e.hp=Math.max(0,e.hp-n);if(e.hp===0)reward(s);}
 function beginHeroAttack(s:Frontier,kind:'basic'|'skill',targetId:number|null,heading:number){
- const h=s.hero,fromMoving=h.moving,walkTime=h.moving?(h.walkDistance/HERO_ATTACK.stride*.8)%.8:0;h.heading=heading;h.moving=false;h.strike=HERO_ATTACK.duration;
+ const h=s.hero,fromMoving=h.moving,walkTime=h.moving?(h.walkDistance/HERO_ATTACK.stride*.8)%.8:0;h.settle=undefined;h.heading=heading;h.moving=false;h.strike=HERO_ATTACK.duration;
  h.attack={kind,time:0,heading,targetId,damage:kind==='basic'?22+s.level*3:45+s.level*5,hit:false,walkTime,fromMoving};
  if(kind==='basic')h.cooldown=HERO_ATTACK.interval;else h.skill=6;
 }
@@ -64,7 +64,7 @@ export function actFrontier(previous:Frontier,a:Command):Frontier{
  if(a.type==='move'&&s.mode!=='defense'&&walkable(a.point)){s.hero.target={...a.point};return s;}
  if(a.type==='attack'&&s.mode==='solo')strike(s);
  if(a.type==='skill'&&s.mode!=='defense'&&s.hero.skill<=0&&!s.hero.attack)beginHeroAttack(s,'skill',null,s.hero.heading);
- if(a.type==='dash'&&s.mode==='solo'&&s.hero.dash<=0){cancelHeroAttack(s);s.hero.dash=3;const target={x:s.hero.x+Math.sin(s.hero.heading)*5,z:s.hero.z+Math.cos(s.hero.heading)*5};for(let i=0;i<20;i++){const p={x:s.hero.x+(target.x-s.hero.x)/(20-i),z:s.hero.z+(target.z-s.hero.z)/(20-i)};if(!walkable(p))break;s.hero.x=p.x;s.hero.z=p.z;}s.hero.target={x:s.hero.x,z:s.hero.z};}
+ if(a.type==='dash'&&s.mode==='solo'&&s.hero.dash<=0){cancelHeroAttack(s);s.hero.settle=undefined;s.hero.moving=false;s.hero.dash=3;const target={x:s.hero.x+Math.sin(s.hero.heading)*5,z:s.hero.z+Math.cos(s.hero.heading)*5};for(let i=0;i<20;i++){const p={x:s.hero.x+(target.x-s.hero.x)/(20-i),z:s.hero.z+(target.z-s.hero.z)/(20-i)};if(!walkable(p))break;s.hero.x=p.x;s.hero.z=p.z;}s.hero.target={x:s.hero.x,z:s.hero.z};}
  if(a.type==='interact'&&s.mode==='solo'){
   const index=CRYSTALS.findIndex((p,i)=>!s.crystals.includes(i)&&distance(p,s.hero)<3.5);
   if(index>=0){s.crystals.push(index);s.hero.hp=Math.min(s.hero.maxHp,s.hero.hp+25);s.message=`수정 ${s.crystals.length}/3 · 체력 25 회복`;}
@@ -79,11 +79,16 @@ export function stepFrontier(previous:Frontier,elapsed:number,axis:Point={x:0,z:
  s.effects=s.effects.map(e=>({...e,life:e.life-dt})).filter(e=>e.life>0);
  for(const k of ['cooldown','skill','dash','strike'] as const)s.hero[k]=Math.max(0,s.hero[k]-dt);
  if(s.mode!=='defense'){
+  const wasMoving=s.hero.moving;
   const old={x:s.hero.x,z:s.hero.z};let next:Point;
   if(s.hero.attack)next=old;
   else if(s.mode==='solo'&&(axis.x||axis.z)){const n=Math.hypot(axis.x,axis.z);next={x:old.x+axis.x/n*7*dt,z:old.z+axis.z/n*7*dt};if(!walkable(next))next=old;s.hero.target={...next};}
   else next=travel(old,s.hero.target,6*dt);
   s.hero.moving=distance(old,next)>.001;if(s.hero.moving)s.hero.heading=Math.atan2(next.x-old.x,next.z-old.z);s.hero.x=next.x;s.hero.z=next.z;s.hero.walkDistance+=distance(old,next);
+  // Presentation state uses simulation time; stopping never delays movement or combat.
+  if(s.hero.moving||s.hero.attack)s.hero.settle=undefined;
+  else if(wasMoving)s.hero.settle={time:0,walkTime:(s.hero.walkDistance/HERO_ATTACK.stride*.8)%.8};
+  else if(s.hero.settle){s.hero.settle.time+=dt;if(s.hero.settle.time>=.24)s.hero.settle=undefined;}
   if(s.mode==='command'){strike(s);if(distance(s.hero,BEACON)<4&&s.beacon<1){s.beacon=Math.min(1,s.beacon+dt/3);if(s.beacon===1){s.gold+=120;s.message='동쪽 봉화 확보 · 금화 +120';}}}
  }
  // The authored hammer commits its facing and feet until recovery; dash can cancel it.

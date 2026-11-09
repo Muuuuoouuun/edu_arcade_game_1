@@ -1,4 +1,4 @@
-"""Reopen the delivered source and verify editable geometry and all eleven action sets survive saving."""
+"""Reopen the delivered source and verify editable geometry and all nineteen action sets survive saving."""
 import bpy
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
@@ -7,7 +7,7 @@ original=bpy.data.collections['Kar winter warrior / editable parts'];runtime=bpy
 assert sum(o.type=='MESH' for o in original.objects)==208
 assert sum(o.type=='MESH' for o in runtime.objects)==13
 joints=['body','head','fur-mantle','beard','war-hammer','left-foot','right-foot','left-upper','left-forearm','right-upper','right-forearm']
-for kind in ['walk','slam',*[f'entry {i}' for i in range(8)],'reset 0']:
+for kind in ['walk','slam',*[f'entry {i}' for i in range(8)],'reset 0',*[f'stop {i}' for i in range(8)]]:
  for joint in joints:
   action=bpy.data.actions.get(f'Kar {kind} / {joint}')
   assert action and len(action.fcurves)==9,(kind,joint)
@@ -15,4 +15,4 @@ for kind in ['walk','slam',*[f'entry {i}' for i in range(8)],'reset 0']:
 for name in ['hammer-contact','upper-grip','lower-grip']:
  assert bpy.data.objects[name].parent.name=='war-hammer'
 assert bpy.context.scene['regeneration_command']=='npm run models:frontier-kar'
-print('PASS editable Kar: 208 original meshes, 13 runtime meshes, 121 joint actions, named weapon sockets')
+print('PASS editable Kar: 208 original meshes, 13 runtime meshes, 209 joint actions, named weapon sockets')

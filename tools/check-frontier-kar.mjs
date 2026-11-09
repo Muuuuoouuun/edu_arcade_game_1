@@ -6,8 +6,8 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 const root=new URL('../',import.meta.url),meta=JSON.parse(readFileSync(new URL('public/defense/models/frontier-kar.json',root)));
 for(const f of meta.files){const bytes=readFileSync(new URL(f.path,root));assert.equal(bytes.length,f.bytes,f.path);assert.equal(createHash('sha256').update(bytes).digest('hex'),f.sha256,f.path);}
 async function load(name){const b=readFileSync(new URL(`public/defense/models/${name}.glb`,root));return new GLTFLoader().parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');}
-const compact=await load('frontier-kar-game'),walk=await load('kar-barbarian-walk'),slam=await load('kar-barbarian'),entry=await load('kar-entry'),reset=await load('kar-reset');
-const clips=[...walk.animations,...slam.animations,...entry.animations,...reset.animations];assert.equal(clips.length,11);assert.equal(compact.animations.length,11);
+const compact=await load('frontier-kar-game'),walk=await load('kar-barbarian-walk'),slam=await load('kar-barbarian'),entry=await load('kar-entry'),reset=await load('kar-reset'),stop=await load('kar-stop');
+const clips=[...walk.animations,...slam.animations,...entry.animations,...reset.animations,...stop.animations];assert.equal(clips.length,19);assert.equal(compact.animations.length,19);
 let draws=0,tris=0;const materials=new Set();compact.scene.traverse(o=>{if(o instanceof Mesh){draws++;tris+=o.geometry.index.count/3;materials.add(o.material);assert.ok(o.geometry.getAttribute('color'),'all runtime surfaces carry authored paint');}});
 assert.equal(draws,meta.runtime.draws);assert.equal(tris,meta.runtime.triangles);assert.ok(draws<=24&&tris<=10000);assert.equal(materials.size,2);
 const a=new Box3().setFromObject(walk.scene),b=new Box3().setFromObject(compact.scene);assert.ok(a.min.distanceTo(b.min)<.015&&a.max.distanceTo(b.max)<.015,'rest silhouette bounds preserved');

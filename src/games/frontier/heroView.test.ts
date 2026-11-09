@@ -1,4 +1,4 @@
-import test from'node:test';import assert from'node:assert/strict';import{readFileSync}from'node:fs';import{GLTFLoader}from'three/addons/loaders/GLTFLoader.js';import{Group,Vector3}from'three';import{HeroView}from'./heroView.ts';import{actFrontier,createFrontier}from'./engine.ts';import{heroRingMatrix}from'./heroEffects.ts';import{heightAt}from'./engine.ts';import{hammerPoint}from'./heroAttack.ts';import{HERO_MODEL}from'./heroModel.ts';
+import test from'node:test';import assert from'node:assert/strict';import{readFileSync}from'node:fs';import{GLTFLoader}from'three/addons/loaders/GLTFLoader.js';import{Group,Vector3,Box3}from'three';import{HeroView}from'./heroView.ts';import{actFrontier,createFrontier}from'./engine.ts';import{heroRingMatrix}from'./heroEffects.ts';import{heightAt}from'./engine.ts';import{hammerPoint}from'./heroAttack.ts';import{HERO_MODEL}from'./heroModel.ts';
 const parse=async(name:string)=>{const b=readFileSync(new URL(`../../../public/defense/models/${name}.glb`,import.meta.url));return new GLTFLoader().parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');};
 const walk=await parse('kar-barbarian-walk'),slam=await parse('kar-barbarian'),entry=await parse('kar-entry'),reset=await parse('kar-reset');
 const setup=()=>{const model=walk.scene.clone(true),view=new HeroView(model,walk.animations[0]);view.setSlam(slam.animations[0]);view.setEntries(entry.animations);const root=new Group();root.add(model);let s=actFrontier(createFrontier('solo'),{type:'start'});s=actFrontier(s,{type:'skill'});return{view,root,s};};
@@ -23,3 +23,25 @@ test('recovery starts at the shared rebound for all eight moving entries and pre
 test('recovery sampling freezes on pause, reduced motion keeps contact readable and rest resumes grounded',()=>{const{view,root,s}=setup();view.setReset(reset.animations[0]);s.hero.attack!.time=.49;view.update(s.hero,false);const frozen=matrices(root);for(let i=0;i<10;i++)view.update(s.hero,false);assert.deepEqual(matrices(root),frozen);s.hero.attack!.hit=true;view.update(s.hero,true);const contact=matrices(root);s.hero.attack!.time=.55;view.update(s.hero,true);assert.deepEqual(matrices(root),contact);s.hero.attack=undefined;view.update(s.hero,true);assert.notDeepEqual(matrices(root),contact);view.dispose();});
 
 test('entry-only loading fallback still animates a stationary attack when the optional slam file fails',()=>{const view=new HeroView(walk.scene.clone(true),walk.animations[0]);view.setEntries(entry.animations);view.setReset(reset.animations[0]);const root=new Group();root.add(view.model);const s=actFrontier(actFrontier(createFrontier('solo'),{type:'start'}),{type:'skill'});s.hero.attack!.time=.19;view.update(s.hero,false);root.updateMatrixWorld(true);const reference=setup();reference.s.hero.attack!.fromMoving=true;reference.s.hero.attack!.time=.19;reference.view.update(reference.s.hero,false);assert.ok(error(matrices(root),matrices(reference.root))<1e-6);reference.view.dispose();view.dispose();});
+
+const stop=await parse('kar-stop');
+test('continuous last walk joins stop exactly, settles to grounded idle and retains both grips',()=>{
+ const {view,root,s}=setup();view.setStops(stop.animations);s.hero.attack=undefined;
+ for(let phase=0;phase<32;phase++){
+  const walkTime=phase*.025;s.hero.moving=true;s.hero.walkDistance=walkTime/.8*1.6;view.update(s.hero,false);const before=matrices(root);
+  s.hero.moving=false;s.hero.settle={walkTime,time:0};view.update(s.hero,false);assert.ok(error(before,matrices(root))<1e-6,'no first-frame foot/body pop');
+  for(const time of [.01,.02,.03,.04,.08,.12,.16,.20,.24]){s.hero.settle.time=time;view.update(s.hero,false);root.updateMatrixWorld(true);
+   for(const side of ['left','right'])assert.ok(new Box3().setFromObject(root.getObjectByName(side+'-foot')!).min.y>-.00001,'sole never penetrates the flat ground');
+   for(const[i,side]of ['left','right'].entries()){const arm=root.getObjectByName(side+'-forearm')!,grip=root.getObjectByName(i===0?'upper-grip':'lower-grip')!;assert.ok(new Vector3(0,1,0).applyMatrix4(arm.matrixWorld).distanceTo(grip.getWorldPosition(new Vector3()))<.006);}
+  }
+  const end=matrices(root);s.hero.settle=undefined;view.update(s.hero,false);assert.ok(error(end,matrices(root))<1e-6,'no idle end pop');
+ }
+ view.dispose();
+});
+test('stop pose is simulation sampled, reduced motion holds idle, resume and attack take priority',()=>{
+ const a=setup(),b=setup();a.view.setStops(stop.animations);a.s.hero.attack=undefined;a.s.hero.settle={time:.12,walkTime:.2};a.view.update(a.s.hero,false);const frozen=matrices(a.root);a.view.update(a.s.hero,false);assert.deepEqual(matrices(a.root),frozen);
+ b.s.hero.attack=undefined;a.view.update(a.s.hero,true);b.view.update(b.s.hero,true);assert.ok(error(matrices(a.root),matrices(b.root))<1e-6);
+ a.s.hero.moving=b.s.hero.moving=true;a.s.hero.walkDistance=b.s.hero.walkDistance=.7;a.view.update(a.s.hero,false);b.view.update(b.s.hero,false);assert.ok(error(matrices(a.root),matrices(b.root))<1e-6);
+ for(const x of [a,b]){x.s.hero.attack={kind:'basic',time:.19,heading:0,hit:false,targetId:1,damage:25,walkTime:.2,fromMoving:false};x.view.update(x.s.hero,false);}assert.ok(error(matrices(a.root),matrices(b.root))<1e-6);a.view.dispose();b.view.dispose();
+});
+test('missing or incomplete stop clips preserve existing grounded idle',()=>{const a=setup(),b=setup();a.view.setStops(stop.animations.slice(0,7));for(const x of[a,b]){x.s.hero.attack=undefined;x.s.hero.settle={time:.12,walkTime:.2};x.view.update(x.s.hero,false);}assert.ok(error(matrices(a.root),matrices(b.root))<1e-6);a.view.dispose();b.view.dispose();});
