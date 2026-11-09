@@ -1,0 +1,35 @@
+{
+  "alias": "KR2",
+  "endpoint": "https://api.anthropic.com/v1/messages",
+  "requested_at_utc": "2026-11-09T13:56:19.039974+00:00",
+  "stream_complete": true,
+  "status": 200,
+  "request_id": "req_011CgsUCm38UKCKk8pbQ4piU",
+  "seconds": 59.43,
+  "requested_model": "claude-fable-5-1",
+  "max_tokens": 6000,
+  "thinking": {
+    "type": "adaptive"
+  },
+  "effort": "low",
+  "prompt_sha256": "ef33d680b11b5e21b5f2102d9d5062f2bf68afffe11d24af0b3f07cff60cf84c",
+  "model": "claude-fable-5-1",
+  "message_id": "msg_011CgsUCmrjhvPamkdYdzsyP",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 4877,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 4399,
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard",
+    "output_tokens_details": {
+      "thinking_tokens": 2715
+    }
+  }
+}
