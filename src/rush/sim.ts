@@ -2,7 +2,7 @@
 // Pure TypeScript: no DOM, no clock, no Math.random. The same seed and command stream give the same state,
 // so this module can run in tests, in the browser and later on an authoritative server.
 import {
-  ARENA, ECONOMY, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WALLS, WAVES,
+  ARENA, BUSH, BUSHES, CRATE, CRATES, ECONOMY, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WALLS, WAVES,
   type Block, type EnemyKind, type HeroDef, type HeroKind, type Vec,
 } from './data.ts';
 
@@ -13,6 +13,8 @@ export interface Hero {
   x: number; z: number; hp: number; facing: number;
   ammo: number; reloadT: number; fireCd: number;
   superCharge: number; downT: number; calmT: number;
+  /** Game time until which the hero stays visible even inside a bush (attacking reveals). */
+  exposedUntil: number;
 }
 export interface Enemy {
   id: number; kind: EnemyKind; x: number; z: number; kx: number; kz: number;
@@ -26,6 +28,7 @@ export interface Shot {
 }
 export interface Tower { level: number; cd: number; facing: number }
 export interface Coin { id: number; x: number; z: number; value: number; life: number }
+export interface Crate { id: number; x: number; z: number; hp: number }
 export interface GroupProgress { spawned: number; timer: number }
 
 export type RushEvent =
@@ -34,6 +37,8 @@ export type RushEvent =
   | { type: 'hit'; x: number; z: number; owner: ShotOwner; damage: number }
   | { type: 'kill'; x: number; z: number; kind: EnemyKind }
   | { type: 'spark'; x: number; z: number }
+  | { type: 'crateHit'; id: number; x: number; z: number }
+  | { type: 'crateBreak'; id: number; x: number; z: number }
   | { type: 'burst'; x: number; z: number; radius: number }
   | { type: 'superReady' }
   | { type: 'heroHit'; damage: number }
@@ -61,7 +66,7 @@ export interface RushState {
   /** Index of the current wave while fighting, or of the next wave while preparing. */
   wave: number; prepT: number; groups: GroupProgress[];
   town: { hp: number; maxHp: number }; gold: number;
-  hero: Hero; enemies: Enemy[]; shots: Shot[]; towers: (Tower | null)[]; coins: Coin[];
+  hero: Hero; enemies: Enemy[]; shots: Shot[]; towers: (Tower | null)[]; coins: Coin[]; crates: Crate[];
   nextId: number;
   stats: { kills: number; shots: number; hits: number; supers: number; goldEarned: number; heroDowns: number };
   events: RushEvent[];
@@ -108,8 +113,12 @@ function pushOut(p: Vec, r: number, b: Block): boolean {
 function insideBlock(x: number, z: number, pad: number): boolean {
   return WALLS.some(b => Math.abs(x - b.x) <= b.w / 2 + pad && Math.abs(z - b.z) <= b.d / 2 + pad);
 }
-function confine(p: Vec, r: number): void {
+const crateBlock = (c: Crate): Block => ({ x: c.x, z: c.z, w: CRATE.size, d: CRATE.size });
+const inCrate = (s: RushState, x: number, z: number) =>
+  s.crates.find(c => Math.abs(x - c.x) <= CRATE.size / 2 && Math.abs(z - c.z) <= CRATE.size / 2) ?? null;
+function confine(p: Vec, r: number, s?: RushState): void {
   for (const b of WALLS) pushOut(p, r, b);
+  if (s) for (const c of s.crates) pushOut(p, r, crateBlock(c));
   const tr = TOWN.radius + r, dx = p.x - TOWN.x, dz = p.z - TOWN.z, d = len(dx, dz);
   if (d < tr) {
     if (d > 1e-9) { p.x = TOWN.x + (dx / d) * tr; p.z = TOWN.z + (dz / d) * tr; } else p.z = TOWN.z - tr;
@@ -124,8 +133,9 @@ export function createRush(seed = 1, mods: RushMods = NO_MODS, diff: Difficulty 
   return {
     seed, rng: seed | 0, tick: 0, t: 0, phase: 'prep', mods: { ...mods }, diff: { ...diff }, wave: 0, prepT: ECONOMY.prepTime, groups: [],
     town: { hp: townHp, maxHp: townHp }, gold: ECONOMY.startGold,
-    hero: { kind: heroKind, x: HERO_SPAWN.x, z: HERO_SPAWN.z, hp: HEROES[heroKind].hp, facing: -Math.PI / 2, ammo: HEROES[heroKind].ammoMax, reloadT: 0, fireCd: 0, superCharge: 0, downT: 0, calmT: 0 },
-    enemies: [], shots: [], towers: PADS.map(() => null), coins: [], nextId: 1,
+    hero: { kind: heroKind, x: HERO_SPAWN.x, z: HERO_SPAWN.z, hp: HEROES[heroKind].hp, facing: -Math.PI / 2, ammo: HEROES[heroKind].ammoMax, reloadT: 0, fireCd: 0, superCharge: 0, downT: 0, calmT: 0, exposedUntil: 0 },
+    enemies: [], shots: [], towers: PADS.map(() => null), coins: [], nextId: 1 + CRATES.length,
+    crates: CRATES.map((c, i) => ({ id: 1 + i, x: c.x, z: c.z, hp: CRATE.hp })),
     stats: { kills: 0, shots: 0, hits: 0, supers: 0, goldEarned: 0, heroDowns: 0 },
     events: [],
   };
@@ -137,6 +147,11 @@ export const heroDef = (s: RushState): HeroDef => HEROES[s.hero.kind];
 export const heroAlive = (s: RushState) => s.hero.downT <= 0;
 export const superReady = (s: RushState) => s.hero.superCharge >= heroDef(s).superHits;
 
+/** Hero inside tall grass and not recently attacking: only enemies within BUSH.reveal can see them. */
+export function heroHidden(s: RushState): boolean {
+  const h = s.hero;
+  return s.t >= h.exposedUntil && BUSHES.some(b => Math.abs(h.x - b.x) <= b.w / 2 && Math.abs(h.z - b.z) <= b.d / 2);
+}
 /** Nearest pad within reach of the hero, or -1. */
 export function padInReach(s: RushState): number {
   let best = -1, bestD = PAD_REACH;
@@ -271,7 +286,7 @@ function updateHero(s: RushState, cmd: Command) {
     h.z += m.z * k * heroDef(s).speed * STEP;
     h.facing = Math.atan2(m.z, m.x);
   }
-  confine(h, heroDef(s).radius);
+  confine(h, heroDef(s).radius, s);
   // Ammo: reload continuously while not full, like a magazine that refills one round at a time.
   h.fireCd = Math.max(0, h.fireCd - STEP);
   if (h.ammo < heroDef(s).ammoMax) {
@@ -298,6 +313,7 @@ function fire(s: RushState, aim: Vec | 'auto') {
   h.ammo -= 1;
   h.fireCd = heroDef(s).fireGap;
   h.calmT = 0;
+  h.exposedUntil = s.t + BUSH.exposeAfterAttack;
   const def = heroDef(s);
   if (def.attack === 'swing') {
     // Melee cone: everything inside reach and the half-angle is hit at once and shoved back.
@@ -313,6 +329,12 @@ function fire(s: RushState, aim: Vec | 'auto') {
       const k = def.swingKnock * ENEMIES[e.kind].knockTaken;
       if (d > 1e-6) { e.kx += (dx / d) * k; e.kz += (dz / d) * k; }
       hits++;
+    }
+    for (const c of [...s.crates]) {
+      const dx = c.x - h.x, dz = c.z - h.z, d = len(dx, dz);
+      let off = Math.atan2(dz, dx) - angle;
+      off = Math.atan2(Math.sin(off), Math.cos(off));
+      if (d <= def.range + CRATE.size / 2 && Math.abs(off) <= def.swingArc) hurtCrate(s, c, def.boltDamage * s.mods.damage);
     }
     s.stats.shots++;
     s.events.push({ type: 'swing', x: h.x, z: h.z, angle, range: def.range, arc: def.swingArc, hits });
@@ -343,6 +365,7 @@ function castSuper(s: RushState, aim: Vec | 'auto') {
   const dx = point.x - h.x, dz = point.z - h.z;
   h.superCharge = 0;
   h.calmT = 0;
+  h.exposedUntil = s.t + BUSH.exposeAfterAttack;
   if (dx !== 0 || dz !== 0) h.facing = Math.atan2(dz, dx);
   s.shots.push({
     id: s.nextId++, owner: 'super', x: h.x, z: h.z, vx: dx / heroDef(s).superTravel, vz: dz / heroDef(s).superTravel,
@@ -393,6 +416,16 @@ function hurtEnemy(s: RushState, e: Enemy, damage: number, owner: ShotOwner) {
   }
 }
 
+/** Damage a crate; at 0 it breaks, stops blocking and drops a little gold. */
+function hurtCrate(s: RushState, c: Crate, damage: number) {
+  if (c.hp <= 0) return;
+  c.hp -= damage;
+  if (c.hp > 0) { s.events.push({ type: 'crateHit', id: c.id, x: c.x, z: c.z }); return; }
+  s.crates = s.crates.filter(o => o !== c);
+  s.events.push({ type: 'crateBreak', id: c.id, x: c.x, z: c.z });
+  s.coins.push({ id: s.nextId++, x: c.x, z: c.z, value: CRATE.gold, life: ECONOMY.coinLife });
+}
+
 // ---------- enemies ----------
 function nearestSegmentEnd(lane: readonly Vec[], p: Vec): number {
   let best = 1, bestD = Infinity;
@@ -406,7 +439,7 @@ function nearestSegmentEnd(lane: readonly Vec[], p: Vec): number {
 }
 
 function updateEnemies(s: RushState) {
-  const h = s.hero, alive = heroAlive(s);
+  const h = s.hero, alive = heroAlive(s), hidden = heroHidden(s);
   for (const e of s.enemies) {
     if (e.hp <= 0) continue;
     const def = ENEMIES[e.kind];
@@ -430,7 +463,7 @@ function updateEnemies(s: RushState) {
       continue;
     }
 
-    const chase = alive && dist(e, h) <= def.aggro;
+    const chase = alive && dist(e, h) <= def.aggro && (!hidden || dist(e, h) <= BUSH.reveal);
     if (e.chasing && !chase) e.wp = nearestSegmentEnd(LANES[e.lane], e);
     e.chasing = chase;
     const target: Vec = chase ? h : TOWN;
@@ -472,7 +505,7 @@ function updateEnemies(s: RushState) {
       b.x += nx * push * 2 * (wb / sum); b.z += nz * push * 2 * (wb / sum);
     }
   }
-  for (const e of list) if (e.hp > 0) confine(e, ENEMIES[e.kind].radius);
+  for (const e of list) if (e.hp > 0) confine(e, ENEMIES[e.kind].radius, s);
 }
 
 function attack(s: RushState, e: Enemy, atHero: boolean) {
@@ -536,6 +569,7 @@ function updateShots(s: RushState) {
         const k = heroDef(s).superKnock * ENEMIES[e.kind].knockTaken;
         if (d > 1e-6) { e.kx += (dx / d) * k; e.kz += (dz / d) * k; } else e.kz -= k;
       }
+      for (const c of [...s.crates]) if (len(c.x - shot.tx, c.z - shot.tz) <= shot.radius + CRATE.size / 2) hurtCrate(s, c, shot.damage);
       s.events.push({ type: 'burst', x: shot.tx, z: shot.tz, radius: shot.radius });
       continue;
     }
@@ -557,6 +591,8 @@ function updateShots(s: RushState) {
       s.events.push({ type: 'spark', x: shot.x, z: shot.z });
       continue;
     }
+    const crate = inCrate(s, shot.x, shot.z);
+    if (crate) { hurtCrate(s, crate, shot.damage); continue; }
     let hit = false;
     if (shot.owner === 'hero') {
       for (const e of s.enemies) {
@@ -598,7 +634,7 @@ function reap(s: RushState) {
     const gold = ENEMIES[e.kind].gold;
     if (gold > 0) {
       const p = { x: e.x + (rand(s) - 0.5) * 0.8, z: e.z + (rand(s) - 0.5) * 0.8 };
-      confine(p, 0.2);
+      confine(p, 0.2, s);
       s.coins.push({ id: s.nextId++, x: p.x, z: p.z, value: gold, life: ECONOMY.coinLife });
     }
   }
@@ -611,6 +647,6 @@ export function rushHash(s: RushState): string {
   return JSON.stringify([
     s.tick, s.phase, s.wave, s.gold, r(s.town.hp), r(s.hero.x), r(s.hero.z), r(s.hero.hp), s.hero.ammo, s.hero.superCharge,
     s.enemies.map(e => [e.id, e.kind, r(e.x), r(e.z), r(e.hp)]), s.shots.length, s.coins.map(c => [c.id, r(c.x), r(c.z)]),
-    s.towers.map(t => (t ? t.level : -1)), s.stats,
+    s.towers.map(t => (t ? t.level : -1)), s.crates.map(c => [c.id, Math.round(c.hp)]), s.stats,
   ]);
 }

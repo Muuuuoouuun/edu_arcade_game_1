@@ -6,8 +6,8 @@ import {
   Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, type AnimationAction, type BufferGeometry, type Material,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { ARENA, ENEMIES, HEROES, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroKind, type Vec } from './data.ts';
-import { padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
+import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroKind, type Vec } from './data.ts';
+import { heroHidden, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, type Part } from './look.ts';
 import { Batch } from './batch.ts';
 import { Particles } from './fx.ts';
@@ -52,6 +52,8 @@ export class RushView {
   private townBar: Bar;
   private fx: Fx[] = [];
   private particles: Particles;
+  private bushMeshes: Mesh[] = [];
+  private crates = new Map<number, { mesh: Mesh; wobble: number }>();
   /** Instanced batches: draw calls stay fixed however many enemies, shots and coins are alive. */
   private batches!: {
     body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>; flash: Record<EnemyKind, Batch>;
@@ -106,6 +108,7 @@ export class RushView {
     this.particles = new Particles(this.scene);
     this.buildGround();
     this.buildWalls();
+    this.buildCover();
     this.buildTown();
     this.buildPads();
     this.townBar = this.makeBar(3.2, this.mats.barTown);
@@ -230,6 +233,43 @@ export class RushView {
       parts.push({ geo: new BoxGeometry(b.w + 0.22, 0.18, b.d + 0.22), color: PAL.stoneFoot, at: [b.x, 0.09, b.z] });
     }
     this.addBaked(bake(parts), 0.05);
+  }
+
+  /** Tall-grass bushes (walk-through, see-through when the hero hides) and breakable crates. */
+  private buildCover() {
+    let seed = 3;
+    const r = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    // Tall grass, not a hedge: a thin patch with dense leaning blades, so it reads as walk-through.
+    for (const b of BUSHES) {
+      const parts: Part[] = [{ geo: new BoxGeometry(b.w, 0.12, b.d), color: 0x4cae48, at: [0, 0.06, 0] }];
+      const n = Math.round(b.w * b.d * 7);
+      for (let i = 0; i < n; i++) {
+        const x = (r() - 0.5) * (b.w - 0.2), z = (r() - 0.5) * (b.d - 0.2), h = 0.8 + r() * 0.5;
+        parts.push({ geo: new ConeGeometry(0.13, h, 4), color: [0x6bd05a, 0x58c04d, 0x7ddc63][i % 3], at: [x, h / 2 + 0.05, z], rot: [(r() - 0.5) * 0.5, r() * 3, (r() - 0.5) * 0.5] });
+      }
+      const geo = bake(parts);
+      const mat = toon(0xffffff, { vertexColors: true, rim: 0.3 });
+      mat.transparent = true;
+      const mesh = new Mesh(geo, mat);
+      mesh.add(new Mesh(hullGeometry(geo), outlineMaterial(0.03)));
+      mesh.position.set(b.x, 0, b.z);
+      mesh.renderOrder = 6; // drawn after the hero so the see-through state shows them
+      this.scene.add(mesh);
+      this.bushMeshes.push(mesh);
+    }
+    const crateGeo = bake([
+      { geo: new BoxGeometry(CRATE.size, CRATE.size, CRATE.size), color: 0xc98a4a, at: [0, CRATE.size / 2, 0] },
+      { geo: new BoxGeometry(CRATE.size * 1.04, CRATE.size * 0.14, CRATE.size * 1.04), color: 0x8a5428, at: [0, CRATE.size * 0.78, 0] },
+      { geo: new BoxGeometry(CRATE.size * 1.04, CRATE.size * 0.14, CRATE.size * 1.04), color: 0x8a5428, at: [0, CRATE.size * 0.22, 0] },
+    ]);
+    const crateHull = hullGeometry(crateGeo);
+    CRATES.forEach((c, i) => {
+      const mesh = new Mesh(crateGeo, this.mats.baked);
+      mesh.add(new Mesh(crateHull, outlineMaterial(0.04)));
+      mesh.position.set(c.x, 0, c.z);
+      this.scene.add(mesh);
+      this.crates.set(1 + i, { mesh, wobble: 0 });
+    });
   }
 
   private buildTown() {
@@ -575,6 +615,16 @@ export class RushView {
           fx.emit({ kind: 'spark', n: 6, color: 0xffffff, at: [ev.x, 0.9, ev.z], speed: 6, up: 2, size: 0.22, life: 0.25 });
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.45);
           break;
+        case 'crateHit': {
+          const c = this.crates.get(ev.id);
+          if (c) c.wobble = 0.18;
+          fx.emit({ kind: 'shard', n: 3, color: 0xc98a4a, at: [ev.x, 0.7, ev.z], speed: 3, up: 3, size: 0.08, life: 0.3 });
+          break;
+        }
+        case 'crateBreak':
+          fx.emit({ kind: 'shard', n: 12, color: 0xc98a4a, at: [ev.x, 0.5, ev.z], speed: 5, up: 5, size: 0.14, life: 0.6 });
+          fx.emit({ kind: 'puff', n: 4, color: 0xf0d9a8, at: [ev.x, 0.4, ev.z], speed: 1.5, up: 1, size: 0.26, life: 0.45 });
+          break;
         case 'spark':
           fx.emit({ kind: 'spark', n: 3, color: 0xffffff, at: [ev.x, 0.9, ev.z], speed: 2.5, up: 1, size: 0.1, life: 0.15 });
           break;
@@ -656,6 +706,22 @@ export class RushView {
     });
     this.drawEnemies(s);
     this.drawShotsAndCoins(s);
+    // Cover: bushes turn see-through while the hero hides in one; broken crates disappear.
+    const hiding = alive && heroHidden(s);
+    BUSHES.forEach((b, i) => {
+      const mesh = this.bushMeshes[i], mat = mesh.material as Material & { opacity: number };
+      const inside = hiding && Math.abs(h.x - b.x) <= b.w / 2 && Math.abs(h.z - b.z) <= b.d / 2;
+      mat.opacity = inside ? 0.4 : 1;
+      mat.depthWrite = !inside;
+      mesh.children[0].visible = !inside;
+    });
+    const standing = new Set(s.crates.map(c => c.id));
+    for (const [id, c] of this.crates) {
+      c.mesh.visible = standing.has(id);
+      c.wobble = Math.max(0, c.wobble - worldDt);
+      const k = Math.sin(c.wobble * 60) * c.wobble * 0.5;
+      c.mesh.rotation.set(k * 0.4, 0, k);
+    }
     // Towers
     s.towers.forEach((t, i) => {
       const level = t ? t.level : -1;

@@ -19,6 +19,16 @@ export const WALLS: readonly Block[] = [
   { x: -9.5, z: 3, w: 1.2, d: 4 }, { x: 9.5, z: 3, w: 1.2, d: 4 },
 ];
 
+/** Tall grass: walkable; a hero inside is hidden from enemies further than BUSH.reveal (see sim). */
+export const BUSHES: readonly Block[] = [
+  { x: -6, z: -7, w: 2.4, d: 2 }, { x: 6, z: -7, w: 2.4, d: 2 },
+  { x: -3.6, z: 1.5, w: 2, d: 1.6 }, { x: 3.6, z: 1.5, w: 2, d: 1.6 },
+];
+export const BUSH = { reveal: 1.8, exposeAfterAttack: 1 } as const;
+/** Breakable wooden crates beside the lanes (never on them): cover that can be shot away. */
+export const CRATES: readonly Vec[] = [{ x: -2.2, z: -9 }, { x: 2.2, z: -9 }, { x: -8.5, z: -16 }, { x: 8.5, z: -16 }];
+export const CRATE = { size: 1, hp: 120, gold: 4 } as const;
+
 /** Enemy lanes from the northern edge to the town gate. The last point sits on the town edge. */
 export const LANES: readonly (readonly Vec[])[] = [
   [{ x: 0, z: -25 }, { x: 0, z: -17 }, { x: 0, z: -6 }, { x: 0, z: 7.4 }],

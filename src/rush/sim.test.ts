@@ -148,3 +148,43 @@ test('the rules core stays engine-free (portable to a server or another renderer
     }
   }
 });
+
+test('tall grass hides the hero from enemies beyond 1.8 m; attacking reveals for a second', async () => {
+  const { BUSHES, BUSH } = await import('./data.ts');
+  const { heroHidden } = await import('./sim.ts');
+  const s = createRush(1);
+  const b = BUSHES[0];
+  s.hero.x = b.x; s.hero.z = b.z;
+  assert.ok(heroHidden(s), 'hidden inside the bush');
+  const watcher = enemy(s, 'grunt', b.x, b.z - 2.6); // inside the grunt's 3.2 m aggro, outside 1.8 m
+  watcher.cd = 0;
+  steps(s, 3);
+  assert.equal(watcher.chasing, false, 'a hidden hero is not chased from 2.6 m');
+  steps(s, 1, { fire: { x: 1, z: 0 } });
+  assert.equal(heroHidden(s), false, 'attacking reveals');
+  steps(s, 2);
+  assert.equal(watcher.chasing, true, 'a revealed hero is chased');
+  steps(s, Math.ceil((BUSH.exposeAfterAttack + 0.1) / STEP));
+  s.hero.x = b.x; s.hero.z = b.z;
+  assert.ok(heroHidden(s), 'hidden again after the reveal window');
+  const close = enemy(s, 'grunt', b.x + 1.2, b.z);
+  steps(s, 2);
+  assert.equal(close.chasing, true, 'enemies right next to the bush still find the hero');
+});
+
+test('crates block movement and shots, break after enough damage and drop gold', async () => {
+  const { CRATES, CRATE } = await import('./data.ts');
+  const s = createRush(1);
+  const c = CRATES[0];
+  s.hero.x = c.x; s.hero.z = c.z + 3;
+  steps(s, 90, { move: { x: 0, z: -1 } });
+  assert.ok(s.hero.z >= c.z + CRATE.size / 2 + HERO.radius - 1e-6, `stopped at the crate (${s.hero.z.toFixed(2)})`);
+  const crate = s.crates[0], earned = s.stats.goldEarned;
+  let volleys = 0;
+  while (s.crates.includes(crate) && volleys++ < 20) steps(s, Math.ceil(HERO.reload / STEP) + 1, { fire: { x: 0, z: -1 } });
+  assert.ok(!s.crates.includes(crate), 'the crate broke');
+  // The hero stands right next to it, so the dropped coin may already be collected.
+  assert.ok(s.coins.some(k => k.value === CRATE.gold) || s.stats.goldEarned >= earned + CRATE.gold, 'it dropped gold');
+  steps(s, 60, { move: { x: 0, z: -1 } });
+  assert.ok(s.hero.z < c.z, 'the path is open once it is gone');
+});
