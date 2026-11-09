@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => ({
         arcana: fileURLToPath(new URL('./index.html', import.meta.url)),
         arcade: fileURLToPath(new URL('./arcade.html', import.meta.url)),
         models: fileURLToPath(new URL('./model-lab.html', import.meta.url)),
+        rush: fileURLToPath(new URL('./rush.html', import.meta.url)),
       },
       output: {
         manualChunks(id) {
