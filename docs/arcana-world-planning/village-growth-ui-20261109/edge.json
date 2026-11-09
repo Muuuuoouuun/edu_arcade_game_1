@@ -1,0 +1,29 @@
+{
+  "targets": [
+    {
+      "section": "home",
+      "short": []
+    },
+    {
+      "section": "companions",
+      "short": []
+    },
+    {
+      "section": "growth",
+      "short": []
+    },
+    {
+      "section": "expedition",
+      "short": []
+    }
+  ],
+  "checks": [
+    "All visible camp buttons ≥44px tall across4tabs",
+    "Roster only companions; no duplicate roster",
+    "Paid quest receipt causes no extra reward",
+    "Storage failure visible inside confirmation, in-memory upgrade retained with explicit persistence warning",
+    "Confirmation focus trap wraps Tab; Escape closes"
+  ],
+  "errors": [],
+  "failed": []
+}

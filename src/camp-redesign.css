@@ -1,0 +1,227 @@
+/* Village preparation: illustrated home, focused companions, growth and expedition. */
+.camp-art{--village-ink:#203d33;--village-muted:#5d6859;--village-paper:#fff8e9;--village-brass:#b28b4f;padding-bottom:calc(26px + env(safe-area-inset-bottom));color:var(--village-ink)}
+.camp-art[data-section=expedition]{padding-bottom:calc(112px + env(safe-area-inset-bottom))}
+.camp-art button{touch-action:manipulation}
+.camp-art button:focus-visible,.camp-upgrade-dialog button:focus-visible{outline:3px solid #8a5b21;outline-offset:4px}
+.camp-art .camp-heading{margin-bottom:12px;gap:12px}
+.camp-art .camp-back{width:auto;height:auto;min-width:44px;min-height:44px}
+.camp-art .camp-gold{font-variant-numeric:tabular-nums;white-space:nowrap}
+.camp-art .camp-panorama{height:440px;min-height:0;border-radius:20px;border:1px solid #a58d614d;box-shadow:0 12px 32px #213c3026}
+.camp-art .camp-panorama>picture>img{object-position:center 48%}
+.camp-art .camp-panorama-shade{background:linear-gradient(90deg,#112d29b8,transparent 65%),linear-gradient(0deg,#112d29d6,transparent 55%)}
+.camp-art .camp-panorama-copy{padding:34px;max-width:580px}
+.camp-art .camp-art-kicker{font-size:10px;letter-spacing:2px;margin-bottom:13px;color:#ffe3a3}
+.camp-art .camp-panorama-copy h2{font-size:clamp(30px,3.6vw,48px);line-height:1.18;letter-spacing:-1px}
+.camp-art .camp-panorama-copy>p:not(.camp-art-kicker){max-width:330px;margin-top:13px;font-size:14px;line-height:1.7}
+.camp-art .camp-panorama-party{display:none}
+.camp-art .camp-panorama-caption{left:34px;bottom:23px;color:#eef0d9}
+.camp-art .camp-expedition-card{right:26px;bottom:26px;width:305px;padding:19px;border:1px solid #c7aa70;background:#143b32f5;border-radius:13px;box-shadow:0 8px 24px #0c211d45}
+.camp-art .camp-expedition-card>span{color:#edcc8a;letter-spacing:.7px;font-size:10px}
+.camp-art .camp-expedition-card h3{margin:7px 0 9px;font-size:23px;line-height:1.25}
+.camp-art .camp-expedition-card>p:not(.camp-territory):not(.camp-stage-reason){display:none}
+.camp-art .camp-expedition-card .camp-territory{margin-top:6px;gap:5px 8px;font-size:11px}
+.camp-art .camp-territory-pips i{width:9px;height:9px}
+.camp-art .camp-expedition-card .camp-stage-reason{font-size:11px;line-height:1.5;margin-top:7px;padding:5px 8px}
+.camp-art .camp-expedition-card>small{display:none}
+.camp-art .camp-enter-stage{min-height:46px;margin-top:12px;font-size:15px;border-radius:8px;box-shadow:0 3px 0 #8e6b36}
+.camp-art:not([data-section=home]) .camp-panorama{height:185px}
+.camp-art:not([data-section=home]) .camp-panorama-copy{padding:30px 34px}
+.camp-art:not([data-section=home]) .camp-panorama-copy h2{font-size:32px}
+.camp-art:not([data-section=home]) .camp-panorama-copy>p:not(.camp-art-kicker),.camp-art:not([data-section=home]) .camp-expedition-card{display:none}
+.camp-art:not([data-section=home]) .camp-panorama-caption{bottom:21px}
+.camp-art .camp-hero-state{display:flex;align-items:center;gap:12px;min-width:0;padding:12px 16px;margin:12px 0;background:#f5eedc;border:1px solid #cdbb95;border-radius:11px}
+.camp-art .camp-hero-state>.def-sprite{width:45px;height:50px;flex-shrink:0}
+.camp-art .camp-hero-state strong{display:block;font-size:15px;color:#203d33}
+.camp-art .camp-hero-state p,.camp-art .camp-hero-state small{font-size:11px;line-height:1.5;color:#586653}
+.camp-art .camp-hero-state button{margin-left:auto;min-height:44px;padding:9px 13px;border:1px solid #af9563;border-radius:7px;background:#fff9e9;color:#254738;font-size:12px;font-weight:700;flex-shrink:0}
+.camp-art .camp-art-nav{grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:16px 0 22px;border:1px solid #af986e;border-radius:12px;scroll-margin-top:16px;background:#d4c09a}
+.camp-art .camp-art-nav button{min-width:0;min-height:66px;padding:12px 9px;gap:6px;flex-direction:column;background:#f7f0df;color:#53604d;border-right:1px solid #d2c3a2}
+.camp-art .camp-art-nav button:last-child{border-right:0}
+.camp-art .camp-art-nav strong{font-family:Jua,sans-serif;font-size:20px;font-weight:400}
+.camp-art .camp-art-nav span{font-size:10px}
+.camp-art .camp-art-nav button[aria-pressed=true]{background:var(--theme-ink,#244b40);color:#fff2ce;box-shadow:inset 0 -4px #e3bf70}
+.camp-art .camp-layout{display:block;max-width:1180px}
+.camp-art[data-section=home] .camp-command,.camp-art[data-section=companions] .camp-command,.camp-art[data-section=growth] .camp-command,.camp-art[data-section=growth] .camp-village{display:none}
+.camp-art:not([data-section=growth]) .camp-growth{display:none}
+.camp-art:not([data-section=expedition]) .camp-departure-dock{display:none}
+.camp-art .camp-home{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;padding:25px;background:#f8f0df;border:1px solid #c4ad82;border-radius:16px;box-shadow:inset 0 0 0 4px #fff9e9}
+.camp-art:not([data-section=home]) .camp-home{display:none}
+.camp-art .camp-theme-heading{margin-bottom:13px}
+.camp-art .camp-theme-heading h3,.camp-art .camp-services-heading h3{font-family:Jua,sans-serif;font-weight:400;font-size:23px;color:#284a39}
+.camp-art .camp-theme-heading p{font-size:12px;line-height:1.6;color:#64705a;margin-top:5px}
+.camp-art .camp-theme-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.camp-art .camp-theme-option{min-width:0;overflow:hidden;border-radius:9px;border:1px solid #c9b68b;background:#fffaed;padding:0;text-align:left}
+.camp-art .camp-theme-option img{display:block;width:100%;height:115px;object-fit:cover}
+.camp-art .camp-theme-option>span{display:block;padding:10px 11px;min-height:57px}
+.camp-art .camp-theme-option strong{display:block;font-size:14px;line-height:1.35;color:#294836}
+.camp-art .camp-theme-option small{display:block;font-size:10px;margin-top:4px;color:#636b55}
+.camp-art .camp-theme-option.selected{border:2px solid #6d8150;box-shadow:0 0 0 2px #e3ead3}
+.camp-art .camp-theme-option:disabled{opacity:.64;filter:saturate(.45)}
+.camp-art .camp-services{min-width:0;margin:0;padding:0;border:0;background:transparent}
+.camp-art .camp-services-heading{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:13px;flex-wrap:wrap}
+.camp-art .camp-services-heading>span{font-size:11px;color:#64705a}
+.camp-art .camp-service-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.camp-art .camp-service{min-height:84px;min-width:0;display:flex;align-items:center;gap:8px;padding:10px 9px;background:#fff9e9;border:1px solid #c8b58c;border-radius:9px;text-align:left;color:#334d38}
+.camp-art .camp-service>.def-sprite{width:45px;height:52px;flex-shrink:0}
+.camp-art .camp-service>span{font-size:13px;line-height:1.4;font-weight:700;overflow-wrap:anywhere}
+.camp-art .camp-service>svg{margin-left:auto;flex-shrink:0;transform:rotate(180deg)}
+.camp-art .camp-service.selected{background:#e8edda;border-color:#748957;box-shadow:inset 0 0 0 1px #748957}
+.camp-art .camp-service-detail{display:flex;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-top:12px;padding:17px;background:#e8edde;border:1px solid #a2b28b;border-radius:10px;box-shadow:none;color:#254133}
+.camp-art .camp-service-detail>div{flex:1;min-width:0}
+.camp-art .camp-service-detail strong{font-family:Jua,sans-serif;font-size:21px;font-weight:400}
+.camp-art .camp-service-detail p{font-size:12px;line-height:1.7;color:#57684e;margin-top:6px}
+.camp-art .camp-service-detail>button:not(.camp-facility-action){min-width:44px;min-height:44px;background:#f6f8ed;border:1px solid #bdc9aa;border-radius:7px;padding:10px}
+.camp-art .camp-facility-action{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 17px;border-radius:7px;border:1px solid #405e41;background:#31583e;color:#fff7df;font-size:13px;font-weight:700}
+.camp-art .camp-service-detail .camp-facility-action{margin-top:10px}
+.camp-art .camp-service-next{font-size:12px;line-height:1.7;color:#687359;margin-top:14px}
+.camp-art .camp-roster{padding:25px;background:linear-gradient(120deg,#fff9e9,#eee9d5);border:1px solid #bda779;box-shadow:inset 0 0 0 4px #fff9e9}
+.camp-art .camp-roster-heading{margin-bottom:18px}
+.camp-art .camp-roster-heading h2{font-size:28px}
+.camp-art .camp-heroes,.camp-art .camp-heroes-many{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.camp-art .camp-heroes>button{min-height:116px;border-radius:11px;padding:12px;background:#fffbef}
+.camp-art .camp-heroes .def-sprite{width:82px;height:88px}
+.camp-art .camp-heroes>button.selected{padding:11px;background:#e8efd7;border-color:#668447}
+.camp-art .camp-hero-trait{line-height:1.7;margin-top:17px;padding:13px 15px;background:#e3e9d6;border-radius:8px;color:#3f583a;font-size:13px}
+.camp-art .camp-hero-trait b{margin-right:10px}
+.camp-art .camp-next-arrival{font-size:12px;margin-top:16px;color:#647056}
+.camp-art .camp-growth{display:grid;grid-template-columns:minmax(210px,.8fr) minmax(0,1.2fr);gap:18px 30px;padding:32px;border:1px solid #baa16c;border-radius:18px;background:radial-gradient(ellipse at 22% 35%,#ecddb880,transparent 50%),#fff8e9;box-shadow:inset 0 0 0 5px #f1e7ce,0 12px 28px #503e1912;overflow:hidden}
+.camp-growth>.camp-upgrade-hero{grid-column:1;grid-row:1;align-self:center;min-width:0;max-width:100%;width:100%;object-fit:contain;filter:drop-shadow(0 12px 8px #54432626)}
+.camp-upgrade-hero{position:relative;text-align:center}.camp-upgrade-hero img{position:relative;display:block;width:100%;max-height:420px;object-fit:contain}.camp-upgrade-hero>span{display:block;font-size:10px;letter-spacing:1px;color:#856433;margin-top:8px}.camp-upgrade-hero>p{font-size:12px;color:#5f6b53;line-height:1.6;margin-top:8px}.camp-upgrade-glow{position:absolute;inset:10% 0 20%;border-radius:50%;background:radial-gradient(ellipse,#e8c98166,transparent 65%);pointer-events:none}
+.camp-growth>.camp-upgrade-copy,.camp-growth>.camp-upgrade-stats,.camp-growth>.camp-upgrade-cost,.camp-growth>.camp-upgrade-action,.camp-growth>p,.camp-growth>small{grid-column:2;min-width:0}
+.camp-upgrade-copy>span,.camp-upgrade-copy>small{display:block;color:#8a612d;font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:8px}
+.camp-upgrade-copy h2{font-family:Jua,sans-serif;font-size:34px;font-weight:400;line-height:1.2;color:#284332}
+.camp-upgrade-copy p{font-size:13px;line-height:1.8;color:#627057;margin-top:11px}
+.camp-upgrade-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.camp-upgrade-stats>div{padding:16px;border:1px solid #c8b88e;border-radius:10px;background:#f3ecd8;text-align:left}
+.camp-upgrade-stats>div:last-child{background:#e3edd4;border-color:#98ad75}
+.camp-upgrade-stats span,.camp-upgrade-stats small{display:block;font-size:11px;color:#5d684f;line-height:1.5}
+.camp-upgrade-stats strong{display:block;font-family:Jua,sans-serif;font-weight:400;font-size:31px;line-height:1.3;color:#274c35;margin:5px 0}
+.camp-upgrade-cost{padding:13px 16px;border-top:1px solid #cebd96;border-bottom:1px solid #cebd96;color:#56634b}
+.camp-upgrade-cost>div,.camp-upgrade-cost>p{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:12px;line-height:1.7;margin:5px 0}
+.camp-upgrade-cost strong,.camp-upgrade-cost b{font-variant-numeric:tabular-nums;color:#765329;white-space:nowrap}
+.camp-upgrade-cost>div:last-child,.camp-upgrade-cost>p:last-child{border-top:1px dashed #c6b58a;padding-top:8px;margin-top:8px}
+.camp-upgrade-action{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:52px;padding:12px 18px;background:linear-gradient(110deg,#f8d88c,#e6bb66);border:1px solid #ae8240;border-radius:9px;box-shadow:inset 0 1px #fff0ba,0 3px 0 #997337;color:#493c24;font-family:Jua,sans-serif;font-size:22px;font-weight:400}
+.camp-upgrade-action svg{width:23px;height:23px;flex-shrink:0}
+.camp-upgrade-action:disabled{opacity:1;color:#696753;background:#e2ddcb;border-color:#b8ad90;box-shadow:none;cursor:not-allowed}
+.camp-growth>p,.camp-growth>small{font-size:12px;line-height:1.7;color:#637057;margin:0}
+.camp-growth[data-state=locked] .camp-upgrade-hero{filter:saturate(.55) drop-shadow(0 12px 8px #54432620)}
+.camp-growth[data-state=max] .camp-upgrade-stats>div:last-child{background:#e5eacc}
+.camp-upgrade-dialog{background:#fff8e9;border:1px solid #bda16c;border-radius:18px;color:#284332;text-align:left;padding:27px;width:min(450px,100%)}
+.camp-upgrade-dialog h2{font-family:Jua,sans-serif;font-size:29px;color:#284332}
+.camp-upgrade-dialog>p{font-size:13px;line-height:1.7;color:#5f6b54;margin:13px 0 20px}
+.camp-upgrade-dialog .camp-upgrade-cost{margin:16px 0}
+.camp-upgrade-dialog .camp-upgrade-action{margin-top:18px}
+.camp-upgrade-dialog .text-button{min-height:44px;color:#526247;margin:10px auto 0;font-size:13px}
+.camp-art .camp-save-note{color:#65705e;max-width:640px;margin:20px auto 0;font-size:11px;line-height:1.7}
+@media(max-width:900px){
+ .camp-art .camp-home{gap:20px;padding:20px;grid-template-columns:1fr}
+ .camp-art .camp-service-list{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .camp-art .camp-theme-options{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .camp-art .camp-theme-option img{height:100px}
+ .camp-art .camp-heroes .def-sprite{width:63px;height:75px}
+ .camp-art .camp-growth{gap:18px;padding:25px;grid-template-columns:minmax(180px,.7fr) minmax(0,1fr)}
+ .camp-upgrade-copy h2{font-size:30px}
+}
+@media(max-width:700px){
+ .camp-art .camp-heading h1{font-size:clamp(23px,6vw,30px);letter-spacing:-.8px}
+ .camp-art .camp-heading{gap:8px;min-height:44px;margin-bottom:10px}
+ .camp-art .camp-gold{font-size:17px;min-width:0;gap:4px}
+ .camp-art .camp-back{width:44px;padding:9px;flex-shrink:0}
+ .camp-art .camp-panorama{height:370px;border-radius:14px}
+ .camp-art .camp-panorama>picture>img{object-position:58% center}
+ .camp-art .camp-panorama-copy{padding:22px 20px}
+ .camp-art .camp-panorama-copy h2{font-size:29px}
+ .camp-art .camp-art-kicker{font-size:9px;margin-bottom:9px}
+ .camp-art .camp-panorama-copy>p:not(.camp-art-kicker){display:none}
+ .camp-art .camp-expedition-card{left:16px;right:16px;bottom:30px;width:auto;padding:15px;border-radius:11px}
+ .camp-art .camp-expedition-card h3{font-size:21px;margin:6px 0}
+ .camp-art .camp-panorama-caption{left:20px;bottom:10px;font-size:9px}
+ .camp-art .camp-enter-stage{min-height:44px;margin-top:10px;font-size:14px}
+ .camp-art:not([data-section=home]) .camp-panorama{height:175px}
+ .camp-art:not([data-section=home]) .camp-panorama-copy{padding:23px 20px}
+ .camp-art:not([data-section=home]) .camp-panorama-copy h2{font-size:28px}
+ .camp-art:not([data-section=home]) .camp-panorama-caption{bottom:17px}
+ .camp-art .camp-hero-state{padding:10px 12px;gap:9px;margin:10px 0}
+ .camp-art .camp-hero-state button{font-size:11px;padding:8px 10px}
+ .camp-art .camp-art-nav{margin:12px 0 17px;border-radius:9px}
+ .camp-art .camp-art-nav button{min-height:62px;padding:10px 3px;gap:4px}
+ .camp-art .camp-art-nav strong{font-size:18px}
+ .camp-art .camp-art-nav span{font-size:9px;line-height:1.3}
+ .camp-art .camp-home{padding:16px;gap:23px}
+ .camp-art .camp-theme-heading h3,.camp-art .camp-services-heading h3{font-size:22px}
+ .camp-art .camp-theme-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .camp-art .camp-theme-option img{height:95px}
+ .camp-art .camp-theme-option>span{padding:9px;min-height:55px}
+ .camp-art .camp-theme-option strong{font-size:13px}
+ .camp-art .camp-service-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .camp-art .camp-service{min-height:86px;gap:5px;padding:8px 7px}
+ .camp-art .camp-service>.def-sprite{width:38px;height:45px}
+ .camp-art .camp-service>span{font-size:12px}
+ .camp-art .camp-service>svg{width:11px}
+ .camp-art .camp-service-detail{padding:13px}
+ .camp-art .camp-roster{padding:17px}
+ .camp-art .camp-roster-heading{display:block;margin-bottom:14px}
+ .camp-art .camp-roster-heading h2{font-size:25px}
+ .camp-art .camp-roster-heading>span{display:block;font-size:11px;margin-top:6px;color:#687059}
+ .camp-art .camp-heroes,.camp-art .camp-heroes-many{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .camp-art .camp-heroes>button{flex-direction:column;gap:3px;text-align:center;min-height:156px;padding:10px 7px}
+ .camp-art .camp-heroes>button.selected{padding:9px 6px}
+ .camp-art .camp-heroes .def-sprite{width:76px;height:80px}
+ .camp-art .camp-heroes strong{font-size:20px}
+ .camp-art .camp-hero-trait{font-size:12px;padding:12px}
+ .camp-art .camp-next-arrival{justify-content:flex-start;font-size:11px}
+ .camp-art .camp-growth{grid-template-columns:minmax(0,1fr);gap:16px;padding:22px 18px;border-radius:14px}
+ .camp-growth>.camp-upgrade-hero{grid-column:1;grid-row:auto;height:auto;max-height:none;object-fit:contain}
+ .camp-upgrade-hero img{height:230px;max-height:230px;width:100%;object-fit:contain}
+ .camp-growth>.camp-upgrade-copy,.camp-growth>.camp-upgrade-stats,.camp-growth>.camp-upgrade-cost,.camp-growth>.camp-upgrade-action,.camp-growth>p,.camp-growth>small{grid-column:1}
+ .camp-upgrade-copy h2{font-size:29px}
+ .camp-upgrade-copy p{font-size:12px;margin-top:8px}
+ .camp-upgrade-stats>div{padding:13px 12px}
+ .camp-upgrade-stats strong{font-size:29px}
+ .camp-upgrade-cost{padding:11px 3px}
+ .camp-upgrade-action{font-size:21px;min-height:52px}
+ .camp-upgrade-dialog{padding:24px 20px;border-radius:15px}
+ .camp-upgrade-dialog h2{font-size:27px}
+ .camp-art .camp-save-note{margin-top:17px;font-size:10px;padding:0 8px}
+}
+@media(max-width:380px){
+ .camp-art .camp-panorama{height:360px}
+ .camp-art .camp-panorama-copy h2{font-size:26px}
+ .camp-art .camp-expedition-card{left:12px;right:12px;padding:13px}
+ .camp-art .camp-expedition-card h3{font-size:20px}
+ .camp-art .camp-art-nav strong{font-size:17px}
+ .camp-art .camp-art-nav span{font-size:8px}
+ .camp-art .camp-home{padding:13px}
+ .camp-art .camp-service{flex-wrap:wrap;justify-content:center;text-align:center;min-height:105px}
+ .camp-art .camp-service>span{flex-basis:100%;order:1}
+ .camp-art .camp-service>svg{display:none}
+ .camp-art .camp-growth{padding:18px 14px}
+ .camp-upgrade-stats strong{font-size:26px}
+}
+@media(prefers-reduced-motion:reduce){.camp-art *,.camp-upgrade-dialog *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Growth content remains grouped beside Bron; amounts are definition-list values. */
+.camp-growth>.camp-upgrade-copy{grid-row:1}
+.camp-upgrade-copy .camp-art-kicker,.camp-upgrade-dialog .camp-art-kicker{color:#8a612d;font-size:10px;font-weight:700;letter-spacing:1.5px;margin:0 0 10px}
+.camp-upgrade-copy .camp-upgrade-stats{margin-top:21px}
+.camp-upgrade-copy .camp-upgrade-cost{margin:18px 0}
+.camp-upgrade-cost dt{font-size:12px;line-height:1.6}
+.camp-upgrade-cost dd{margin:0;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;color:#765329;white-space:nowrap}
+.camp-upgrade-copy>.camp-facility-action{margin-top:12px}
+.camp-upgrade-notice:empty{display:none}
+.camp-upgrade-copy .camp-upgrade-notice{padding:10px 12px;background:#e3edd4;border-radius:8px;color:#315b36;font-size:12px;margin-top:14px}
+.camp-upgrade-note{border-top:1px solid #d5c8a7;margin-top:23px;padding-top:16px}
+.camp-upgrade-note strong{font-size:12px;color:#4a5b40}
+.camp-upgrade-note p{font-size:11px;line-height:1.8;margin-top:6px;color:#657158}
+.camp-upgrade-dialog-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:20px}
+.camp-upgrade-dialog-actions>button{min-height:48px;border:1px solid #bbaa83;border-radius:8px;padding:10px;background:#ede7d6;color:#4f5b42;font-size:14px;font-weight:700}
+.camp-upgrade-dialog-actions>.camp-upgrade-action{margin:0;background:linear-gradient(110deg,#f8d88c,#e6bb66);border-color:#ae8240;font-size:20px;color:#493c24}
+@media(max-width:700px){.camp-growth>.camp-upgrade-copy{grid-row:auto}.camp-upgrade-hero img{height:220px;max-height:220px}.camp-upgrade-copy .camp-upgrade-stats{margin-top:17px}.camp-upgrade-note{margin-top:20px}}
+.camp-art .camp-hero-state{grid-column:1/-1;margin:0}
+.camp-art .camp-hero-state h2{font-size:20px;line-height:1.45;letter-spacing:-.4px}
+.camp-art .camp-hero-state .camp-art-kicker{color:#687459;font-size:10px;margin:0 0 6px}
+.camp-art .camp-party-note{font-size:12px;line-height:1.7;color:#647056;margin-top:16px}
+@media(max-width:700px){.camp-art .camp-hero-state h2{font-size:17px}.camp-art .camp-hero-state{align-items:flex-start}.camp-art .camp-hero-state button{align-self:center}}
+.camp-art .camp-theme-picker{padding:0;min-width:0}
+.camp-art .camp-theme-option{display:block}
+.camp-art .camp-theme-option>img{width:100%;aspect-ratio:auto}
