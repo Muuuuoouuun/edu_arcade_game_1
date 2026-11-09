@@ -42,11 +42,11 @@ def crag(name,cx,cz,width,depth,h,seed):
   rings.append(ring)
  faces=[tuple(reversed(rings[0]))];mi=[0]
  for k in range(len(rings)-1):
-  for j in range(8):faces.append((rings[k][j],rings[k][(j+1)%8],rings[k+1][(j+1)%8],rings[k+1][j]));mi.append((0 if j in [5,6] else 1+(j+seed)%3) if k%2==0 else (4 if k==3 else 3))
+  for j in range(8):faces.append((rings[k][j],rings[k][(j+1)%8],rings[k+1][(j+1)%8],rings[k+1][j]));mi.append((0 if j in [5,6] else 1+(j+seed+k)%3) if k%2==0 else 3)
  faces.append(tuple(rings[-1]));mi.append(4)
  facets=[];facet_mats=[]
  for i,(face,color) in enumerate(zip(faces,mi)):
-  if len(face)==4 and color<4 and i%2==0:
+  if len(face)==4 and color<4 and i%4==0:
    center=sum((Vector(vs[j]) for j in face),Vector())/4
    radial=Vector((center.x-cx,center.y+cz,0)).normalized();center+=radial*(.12+.08*math.sin(seed+i));index=len(vs);vs.append(tuple(center))
    for j in range(4):facets.append((face[j],face[(j+1)%4],index));facet_mats.append(color)
@@ -56,12 +56,25 @@ def crag(name,cx,cz,width,depth,h,seed):
  capvs=[]
  for dz,scale in [(0,1.10),(.22,1.08),(.43,.86)]:
   for j in range(8):
-   p=Vector(vs[rings[-1][j]]);p.x=cx+(p.x-cx)*scale;p.y=-cz+(p.y+cz)*scale;p.z+=dz;capvs.append(tuple(p))
+   p=Vector(vs[rings[-1][j]])
+   # Snow gathers unevenly and droops below the rocky rim, as actual geometry.
+   bulge=1+.08*math.sin(seed*1.2+j*2.4)
+   p.x=cx+(p.x-cx)*scale*bulge;p.y=-cz+(p.y+cz)*scale*bulge
+   droop=(.12+.34*(.5+.5*math.sin(seed*1.9+j*2.7))) if dz==0 else 0
+   p.z+=dz-droop+.07*math.sin(seed+j*1.3)*(1 if dz else 0);capvs.append(tuple(p))
+ # Mid-edge points extend the lower rim into physical, uneven hanging snow tongues.
+ for j in range(8):
+  a=Vector(capvs[j]);b=Vector(capvs[(j+1)%8])
+  depth=.40+.55*(.5+.5*math.sin(seed*1.5+j*2.2))
+  for t,weight in ((.28,.35),(.50,1),(.72,.35)):
+   mid=a.lerp(b,t);mid.z-=depth*weight;capvs.append(tuple(mid))
  capfaces=[tuple(reversed(range(8)))];capmi=[3]
- for k in range(2):
-  for j in range(8):capfaces.append((k*8+j,k*8+(j+1)%8,(k+1)*8+(j+1)%8,(k+1)*8+j));capmi.append(4 if k==0 else 5)
+ for j in range(8):
+  nxt=(j+1)%8;mid=24+j*3
+  capfaces.append((j,mid,mid+1,mid+2,nxt,8+nxt,8+j));capmi.append(5)
+  capfaces.append((8+j,8+nxt,16+nxt,16+j));capmi.append(5)
  center=tuple(sum(v[j] for v in capvs[16:24])/8 for j in range(3));capvs.append((center[0],center[1],center[2]+.18))
- for j in range(8):capfaces.append((16+j,16+(j+1)%8,24));capmi.append(5)
+ for j in range(8):capfaces.append((16+j,16+(j+1)%8,48));capmi.append(5)
  mesh(name+' snow cornice',capvs,capfaces,capmi)
  # A dark notched companion rock breaks the regular upper contour, instead of painted cracks.
  return body
