@@ -1,6 +1,6 @@
 // Arcana Rush prototype bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
-import { ECONOMY, HERO, TOWER_LEVELS } from './data.ts';
+import { ECONOMY, HEROES, TOWER_LEVELS } from './data.ts';
 import { createRush, padCost, padInReach, stepRush, superReady, WAVE_COUNT, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
@@ -62,8 +62,9 @@ function updatePops(dt: number) {
 }
 
 // ---------- events → feedback ----------
+// A melee swing sounds like an impact rather than a bowstring.
 const SOUND: Partial<Record<RushEvent['type'], CombatSoundKind>> = {
-  fire: 'arrow', burst: 'skill', slam: 'cannon', townHit: 'breach', heroDown: 'breach', build: 'cast', waveStart: 'surge', superReady: 'freeze',
+  fire: 'arrow', swing: 'slash', burst: 'skill', slam: 'cannon', townHit: 'breach', heroDown: 'breach', build: 'cast', waveStart: 'surge', superReady: 'freeze',
 };
 let toastTimer = 0;
 function toast(text: string, cls = '') {
@@ -81,7 +82,7 @@ function feedback(events: RushEvent[]) {
     else if (ev.type === 'heroHit') pop(String(Math.round(ev.damage)), state.hero.x, state.hero.z, 'hurt', 2.2);
     else if (ev.type === 'coin') pop(`+${ev.value}`, state.hero.x, state.hero.z, 'gold', 2.4);
     else if (ev.type === 'burst') playHaptic('skill', true);
-    else if (ev.type === 'heroDown') { playHaptic('breach', true); toast(`쓰러졌다! ${HERO.respawn}초 뒤 마을에서 복귀`, 'bad'); }
+    else if (ev.type === 'heroDown') { playHaptic('breach', true); toast(`쓰러졌다! ${HEROES[state.hero.kind].respawn}초 뒤 마을에서 복귀`, 'bad'); }
     else if (ev.type === 'superReady') toast('필살기 준비 완료!', 'super');
     else if (ev.type === 'waveStart') { playHaptic('surge', true); toast(ev.wave === WAVE_COUNT - 1 ? `마지막 웨이브 · 보스 출현!` : `웨이브 ${ev.wave + 1} 시작`, ev.wave === WAVE_COUNT - 1 ? 'bad' : ''); }
     else if (ev.type === 'waveClear') toast(`웨이브 ${ev.wave + 1} 방어 성공 · +${ev.bonus}G`, 'good');
@@ -118,11 +119,11 @@ function updateHud() {
     hud.build.disabled = cost === null || s.gold < cost;
   }
   hud.ammo.forEach((el, i) => {
-    const fill = s.hero.ammo > i ? 1 : s.hero.ammo === i ? s.hero.reloadT / HERO.reload : 0;
+    const fill = s.hero.ammo > i ? 1 : s.hero.ammo === i ? s.hero.reloadT / HEROES[s.hero.kind].reload : 0;
     el.style.setProperty('--fill', String(fill));
   });
   hud.fire.classList.toggle('empty', s.hero.ammo < 1);
-  const charge = s.hero.superCharge / HERO.superHits;
+  const charge = s.hero.superCharge / HEROES[s.hero.kind].superHits;
   hud.superRing.style.setProperty('--charge', String(charge));
   hud.superBtn.classList.toggle('ready', superReady(s));
   surface.classList.toggle('hero-down', s.hero.downT > 0);
@@ -146,7 +147,8 @@ function start(nextMode: 'play' | 'demo') {
   const seed = Number(params.get('seed')) || (Math.floor(Math.random() * 1e9) | 1);
   // Permanent kingdom upgrades shape real battles; the demo always shows the base game.
   stage = nextMode === 'play' ? town.stage : 1;
-  state = createRush(seed, nextMode === 'play' ? kingdomMods(loadKingdom()) : undefined, stageDifficulty(stage));
+  const kingdom = loadKingdom();
+  state = createRush(seed, nextMode === 'play' ? kingdomMods(kingdom) : undefined, stageDifficulty(stage), nextMode === 'play' ? kingdom.hero : 'ranger');
   battleId = `${Date.now().toString(36)}-${seed}`;
   mode = nextMode;
   paused = false;
@@ -172,7 +174,7 @@ function showResult() {
   rewardEl.hidden = !granted;
   rewardEl.innerHTML = `<i class="res-ico food"></i>식량 +${reward.food} <i class="res-ico wood"></i>목재 +${reward.wood}${saved ? '' : ' <small>(저장 실패: 이 기기에서 저장 공간을 쓸 수 없음)</small>'}`;
   lastReward = granted ? `방금 전투 보상: 식량 +${reward.food} · 목재 +${reward.wood}` : '';
-  const accuracy = s.stats.shots ? Math.round((s.stats.hits / (s.stats.shots * HERO.bolts)) * 100) : 0;
+  const accuracy = s.stats.shots ? Math.min(100, Math.round((s.stats.hits / (s.stats.shots * HEROES[s.hero.kind].bolts)) * 100)) : 0;
   const towers = s.towers.filter(Boolean).map(t => `Lv${t!.level + 1}`).join(' · ') || '없음';
   $('result-stats').innerHTML = [
     ['도달 웨이브', `${s.wave + 1}/${WAVE_COUNT}`], ['전투 시간', `${Math.floor(s.t / 60)}:${String(Math.floor(s.t % 60)).padStart(2, '0')}`],

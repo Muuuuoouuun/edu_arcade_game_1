@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createRush, NO_MODS, stepRush, type RushMods, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { STAGE_COUNT, stageDifficulty, starBonus, starsFor } from './stages.ts';
-import { createKingdom, latestStage, parseKingdom, serializeKingdom, settleBattle, stageUnlocked } from './kingdom.ts';
+import { chooseHero, createKingdom, heroUnlocked, latestStage, parseKingdom, serializeKingdom, settleBattle, stageUnlocked } from './kingdom.ts';
 
 const LIMIT = 60 * 60 * 8;
 const play = (seed: number, stage: number, mods: RushMods = NO_MODS) => {
@@ -75,3 +75,55 @@ test('older saves without star records still load, keeping their progress', () =
   const withStars = { ...createKingdom(0), stars: [3, 2, 1, 0, 0, 0, 0, 0, 0, 0] };
   assert.deepEqual(parseKingdom(serializeKingdom(withStars), 0).stars, withStars.stars);
 });
+
+test('Bron: a melee cone hits in front, not behind, and shoves enemies back', async () => {
+  const { createRush: create, stepRush: step } = await import('./sim.ts');
+  const { ENEMIES } = await import('./data.ts');
+  const s = create(1, undefined, undefined, 'bron');
+  const h = s.hero;
+  const mk = (x: number, z: number) => { const e = { id: s.nextId++, kind: 'grunt' as const, x, z, kx: 0, kz: 0, hp: 1000, maxHp: 1000, lane: 0, wp: 1, cd: 99, flash: 0, chasing: false, facing: 0, windup: null }; s.enemies.push(e); return e; };
+  const front = mk(h.x + 2, h.z), back = mk(h.x - 2, h.z), far = mk(h.x + 5, h.z);
+  step(s, { fire: { x: 1, z: 0 } });
+  assert.ok(front.hp < 1000 && front.kx > 0, 'front enemy hit and pushed');
+  assert.equal(back.hp, 1000, 'behind is safe');
+  assert.equal(far.hp, 1000, 'out of reach');
+  assert.ok(s.events.some(e => e.type === 'swing'));
+  assert.ok(ENEMIES.grunt.radius > 0);
+});
+
+test('Bron: the super slams around himself; both heroes keep the progression shape', async () => {
+  const { createRush: create, stepRush: step } = await import('./sim.ts');
+  const { HEROES } = await import('./data.ts');
+  const s = create(1, undefined, undefined, 'bron');
+  s.hero.superCharge = HEROES.bron.superHits;
+  const ring = [[2, 0], [-2, 0], [0, 2]].map(([dx, dz]) => { const e = { id: s.nextId++, kind: 'grunt' as const, x: s.hero.x + dx, z: s.hero.z + dz, kx: 0, kz: 0, hp: 60, maxHp: 60, lane: 0, wp: 1, cd: 99, flash: 0, chasing: false, facing: 0, windup: null }; s.enemies.push(e); return e; });
+  step(s, { super: { x: 5, z: 0 } }); // aim is ignored for a self-centred slam
+  for (let i = 0; i < 12; i++) step(s, {});
+  assert.ok(ring.every(e => e.hp <= 0), 'every enemy around him is hit');
+  for (const seed of [1, 2]) {
+    for (const n of [1, 2, 3]) assert.equal(playHero(seed, n, 'bron').phase, 'won', `bron stage ${n} seed ${seed}`);
+    assert.equal(playHero(seed, 10, 'bron').phase, 'lost', `bron stage 10 seed ${seed} without upgrades`);
+    assert.equal(playHero(seed, 10, 'bron', MAXED).phase, 'won', `bron stage 10 seed ${seed} maxed`);
+  }
+});
+
+test('Bron joins after a star on stage 2; the choice is saved and old saves take the ranger', () => {
+  let k = createKingdom(0);
+  assert.equal(k.hero, 'ranger');
+  assert.equal(heroUnlocked(k, 'bron'), false);
+  assert.equal(chooseHero(k, 'bron').hero, 'ranger', 'locked heroes cannot be chosen');
+  k = { ...k, stars: [3, 1, 0, 0, 0, 0, 0, 0, 0, 0] };
+  k = chooseHero(k, 'bron');
+  assert.equal(k.hero, 'bron');
+  assert.equal(parseKingdom(serializeKingdom(k), 0).hero, 'bron');
+  const old = { ...k } as Record<string, unknown>;
+  delete old.hero;
+  assert.equal(parseKingdom(JSON.stringify(old), 0).hero, 'ranger');
+  assert.equal(parseKingdom(JSON.stringify({ ...k, stars: Array(10).fill(0) }), 0).hero, 'ranger', 'a tampered save cannot skip the unlock');
+});
+
+function playHero(seed: number, stage: number, hero: 'ranger' | 'bron', mods: RushMods = NO_MODS) {
+  const s = createRush(seed, mods, stageDifficulty(stage), hero);
+  while (s.phase !== 'won' && s.phase !== 'lost' && s.tick < LIMIT) stepRush(s, guardBot(s));
+  return s;
+}

@@ -2,6 +2,7 @@
 // Principles taken from kingdom-builder games: the castle is the hub and caps everything else, resource
 // buildings produce over (offline) time, and permanent upgrades change the next battle.
 import { WAVE_COUNT, type RushMods, type RushState } from './sim.ts';
+import type { HeroKind } from './data.ts';
 import { STAGE_COUNT, starBonus, starsFor, stageRewardMul } from './stages.ts';
 
 export type Resource = 'food' | 'wood';
@@ -20,6 +21,8 @@ export interface Kingdom {
   battles: { won: number; lost: number };
   /** Best stars (0-3) per stage; stage n opens once stage n-1 has at least one star. */
   stars: number[];
+  /** Hero taken into battle. */
+  hero: HeroKind;
   /** Recently rewarded battle ids, so one battle never pays twice. */
   rewarded: string[];
 }
@@ -32,12 +35,18 @@ export const PERK_EFFECT = { attack: 0.08, towerDiscount: 0.08, townHp: 0.1 } as
 
 export const createKingdom = (now: number): Kingdom => ({
   version: 1, castle: 1, farm: 1, mill: 1, perks: { attack: 0, towerDiscount: 0, townHp: 0 },
-  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), rewarded: [],
+  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), hero: 'ranger', rewarded: [],
 });
 
 const clone = (k: Kingdom): Kingdom => ({ ...k, perks: { ...k.perks }, battles: { ...k.battles }, stars: [...k.stars], rewarded: [...k.rewarded] });
 
 export const stageUnlocked = (k: Kingdom, n: number) => n >= 1 && n <= STAGE_COUNT && (n === 1 || k.stars[n - 2] > 0);
+/** Heroes join through progress: Bron arrives once stage 2 has a star. */
+export const heroUnlocked = (k: Kingdom, hero: HeroKind) => hero === 'ranger' || (hero === 'bron' && k.stars[1] > 0);
+export function chooseHero(k: Kingdom, hero: HeroKind): Kingdom {
+  if (!heroUnlocked(k, hero) || k.hero === hero) return k;
+  return { ...clone(k), hero };
+}
 /** The furthest stage the player may enter. */
 export const latestStage = (k: Kingdom) => { let n = 1; while (n < STAGE_COUNT && stageUnlocked(k, n + 1)) n++; return n; };
 
@@ -161,7 +170,9 @@ export function parseKingdom(raw: string | null, now: number): Kingdom {
     return {
       version: 1, castle, farm: farm!, mill: mill!,
       perks: { attack: perks.attack!, towerDiscount: perks.towerDiscount!, townHp: perks.townHp! },
-      food: food!, wood: wood!, lastCollect: last, battles: { won: won!, lost: lost! }, stars: starList, rewarded,
+      food: food!, wood: wood!, lastCollect: last, battles: { won: won!, lost: lost! }, stars: starList,
+      // Saves from before hero choice (or naming an unknown or still-locked hero) take the ranger.
+      hero: v.hero === 'bron' && starList[1] > 0 ? 'bron' : 'ranger', rewarded,
     };
   } catch {
     return createKingdom(now);

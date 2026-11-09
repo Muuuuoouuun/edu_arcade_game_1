@@ -6,7 +6,7 @@ import {
   Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, type AnimationAction, type BufferGeometry, type Material,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { ARENA, ENEMIES, HERO, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type Vec } from './data.ts';
+import { ARENA, ENEMIES, HEROES, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroKind, type Vec } from './data.ts';
 import { padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, type Part } from './look.ts';
 import { Batch } from './batch.ts';
@@ -15,7 +15,7 @@ import { Particles } from './fx.ts';
 export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'super'; offset: Vec } | null;
 
 const TEAM = { ally: PAL.ally, enemy: PAL.enemy };
-const HERO_MODEL_URL = '/defense/models/prototypes/gecko-ranger.glb';
+const HERO_MODELS: Record<HeroKind, string> = { ranger: '/defense/models/prototypes/gecko-ranger.glb', bron: '/defense/models/dwarf-guardian.glb' };
 const HERO_HEIGHT = 2.0;
 /** Yaw that turns the GLB authored front (-z) toward simulation angle 0 (+x). Verified by east/north close-up renders. */
 const HERO_MODEL_YAW = -Math.PI / 2;
@@ -37,8 +37,13 @@ export class RushView {
   private heroBody = new Group();
   private heroBar: Bar;
   private ammoSegs: Mesh[] = [];
-  private heroMixer: AnimationMixer | null = null;
-  private heroShot: AnimationAction | null = null;
+  /** One loaded model per hero kind; only the current hero's rig is visible. */
+  private heroRigs = new Map<HeroKind, { holder: Group; mixer: AnimationMixer | null; shot: AnimationAction | null } | 'loading'>();
+  private heroKind: HeroKind | null = null;
+  private heroPlaceholder: Mesh | null = null;
+  private get heroRig() { const r = this.heroKind ? this.heroRigs.get(this.heroKind) : undefined; return r && r !== 'loading' ? r : null; }
+  private get heroMixer() { return this.heroRig?.mixer ?? null; }
+  private get heroShot() { return this.heroRig?.shot ?? null; }
   private enemyKits = new Map<EnemyKind, { body: BufferGeometry; hull: BufferGeometry }>();
   private towerKits: ({ base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; h: number } | undefined)[] = [];
   private towers: (Group | null)[] = PADS.map(() => null);
@@ -112,7 +117,7 @@ export class RushView {
     this.heroBar = this.makeBar(1.3, this.mats.barAlly);
     this.heroBar.root.position.y = 2.55;
     this.hero.add(this.heroBar.root);
-    for (let i = 0; i < HERO.ammoMax; i++) {
+    for (let i = 0; i < HEROES.ranger.ammoMax; i++) {
       const seg = new Mesh(new PlaneGeometry(0.4, 0.1), this.mats.ammo);
       seg.position.set((i - 1) * 0.44, 2.37, 0);
       this.ammoSegs.push(seg);
@@ -120,11 +125,11 @@ export class RushView {
     }
     this.scene.add(this.hero);
 
-    this.aimFan = new Mesh(new CircleGeometry(HERO.range, 24, -HERO.spread * 1.6, HERO.spread * 3.2), basic(0xffffff, 0.22));
+    this.aimFan = new Mesh(this.fanGeometry('ranger'), basic(0xffffff, 0.22));
     this.aimFan.rotation.x = -Math.PI / 2;
     this.aimRing = new Mesh(this.geo.ring, basic(0xc59bff, 0.7));
     this.aimRing.rotation.x = -Math.PI / 2;
-    this.aimRing.scale.setScalar(HERO.superRadius);
+    this.aimRing.scale.setScalar(HEROES.ranger.superRadius);
     this.aimLine = new Mesh(new PlaneGeometry(1, 0.12), basic(0xc59bff, 0.45));
     this.aimLine.rotation.x = -Math.PI / 2;
     for (const m of [this.aimFan, this.aimRing, this.aimLine]) { m.visible = false; m.renderOrder = 2; this.scene.add(m); }
@@ -269,14 +274,39 @@ export class RushView {
     const placeholder = new Mesh(placeholderGeo, this.mats.baked);
     placeholder.add(new Mesh(hullGeometry(placeholderGeo), outlineMaterial(0.05)));
     this.heroBody.add(placeholder);
-    new GLTFLoader().load(HERO_MODEL_URL, gltf => {
+    this.heroPlaceholder = placeholder;
+  }
+
+  /** Aim preview shape: a long narrow fan for bolts, a short wide fan for a melee swing. */
+  private fanGeometry(kind: HeroKind) {
+    const d = HEROES[kind];
+    return d.attack === 'swing' ? new CircleGeometry(d.range, 20, -d.swingArc, d.swingArc * 2) : new CircleGeometry(d.range, 24, -d.spread * 1.6, d.spread * 3.2);
+  }
+
+  /** Show the given hero, loading its model the first time (the placeholder stands in meanwhile). */
+  private showHero(kind: HeroKind) {
+    if (kind === this.heroKind) return;
+    this.heroKind = kind;
+    for (const [k, rig] of this.heroRigs) if (rig !== 'loading') rig.holder.visible = k === kind;
+    const rig = this.heroRigs.get(kind);
+    if (this.heroPlaceholder) this.heroPlaceholder.visible = !rig || rig === 'loading';
+    this.aimFan.geometry.dispose();
+    this.aimFan.geometry = this.fanGeometry(kind);
+    if (!HEROES[kind].superSelf) this.aimRing.scale.setScalar(HEROES[kind].superRadius);
+    if (!rig) this.loadHeroModel(kind);
+  }
+
+  private loadHeroModel(kind: HeroKind) {
+    this.heroRigs.set(kind, 'loading');
+    new GLTFLoader().load(HERO_MODELS[kind], gltf => {
       const model = gltf.scene, box = new Box3().setFromObject(model), size = box.getSize(new Vector3()), center = box.getCenter(new Vector3());
       const k = HERO_HEIGHT / Math.max(size.y, 0.01);
       model.scale.setScalar(k);
       model.position.set(-center.x * k, -box.min.y * k, -center.z * k);
       const holder = new Group(); holder.rotation.y = HERO_MODEL_YAW; holder.add(model);
-      this.heroBody.remove(placeholder);
       this.heroBody.add(holder);
+      holder.visible = this.heroKind === kind;
+      if (this.heroKind === kind && this.heroPlaceholder) this.heroPlaceholder.visible = false;
       this.hero.updateMatrixWorld(true);
       // Bake the parts per animated node (plus one static group): 5 meshes + 5 ink hulls instead of 24 + 24.
       // The model has no textures, so material colours become vertex colours.
@@ -303,13 +333,15 @@ export class RushView {
         owner.add(body);
       }
       const clip = gltf.animations[0];
+      let mixer: AnimationMixer | null = null, shot: AnimationAction | null = null;
       if (clip) {
-        this.heroMixer = new AnimationMixer(model);
-        this.heroShot = this.heroMixer.clipAction(clip);
-        this.heroShot.setLoop(LoopOnce, 1);
-        this.heroShot.clampWhenFinished = false;
+        mixer = new AnimationMixer(model);
+        shot = mixer.clipAction(clip);
+        shot.setLoop(LoopOnce, 1);
+        shot.clampWhenFinished = false;
       }
-    }, undefined, () => { /* Keep the placeholder; the prototype stays playable without the model. */ });
+      this.heroRigs.set(kind, { holder, mixer, shot });
+    }, undefined, () => { this.heroRigs.delete(kind); /* Keep the placeholder; the prototype stays playable without the model. */ });
   }
 
   /** One baked body + hull per enemy kind, shared by every instance of that kind. */
@@ -431,7 +463,7 @@ export class RushView {
       if (!this.onScreen(shot.x, 1, shot.z, 3)) continue;
       if (shot.owner === 'super') {
         // Lobbed: a parabola that lands on the target point.
-        const p = 1 - Math.max(0, shot.life) / HERO.superTravel;
+        const p = 1 - Math.max(0, shot.life) / HEROES[s.hero.kind].superTravel;
         B.shots.super.push(this.place(shot.x, 0.6 + Math.sin(p * Math.PI) * 2.6, shot.z, 0, 0, 0, 1.8));
       } else if (shot.owner === 'enemy') B.shots.enemy.push(this.place(shot.x, 0.85, shot.z, 0, 0, 0, 1));
       // Capsules point along +y; lay them flat along the velocity.
@@ -507,6 +539,14 @@ export class RushView {
     fx.density = reducedMotion ? 0.5 : 1;
     for (const ev of events) {
       switch (ev.type) {
+        case 'swing': {
+          if (this.heroShot) { this.heroShot.reset(); this.heroShot.play(); }
+          this.swingFx(ev.x, ev.z, ev.angle, ev.range, ev.arc);
+          const tipX = ev.x + Math.cos(ev.angle) * ev.range * 0.7, tipZ = ev.z + Math.sin(ev.angle) * ev.range * 0.7;
+          fx.emit({ kind: ev.hits ? 'shard' : 'puff', n: ev.hits ? 6 : 2, color: ev.hits ? 0xffd166 : 0xf0d9a8, at: [tipX, 0.6, tipZ], speed: 4, up: 3, size: ev.hits ? 0.12 : 0.18, life: 0.35, dir: ev.angle, cone: ev.arc * 2 });
+          if (ev.hits && !reducedMotion) this.shake = Math.max(this.shake, 0.18);
+          break;
+        }
         case 'fire': {
           if (this.heroShot) { this.heroShot.reset(); this.heroShot.play(); }
           const mx = hp.x + Math.cos(ev.angle) * 0.75, mz = hp.z + Math.sin(ev.angle) * 0.75;
@@ -576,6 +616,17 @@ export class RushView {
     if (ink) add(this.geo.inkRing, PAL.ink, 3);
     add(this.geo.ring, color, 4);
   }
+  /** A quick sweeping fan where the hammer passed. */
+  private swingFx(x: number, z: number, angle: number, range: number, arc: number) {
+    const mesh = new Mesh(new CircleGeometry(1, 16, -arc, arc * 2), basic(0xfff1c2, 0.55));
+    mesh.rotation.set(-Math.PI / 2, 0, -angle);
+    mesh.position.set(x, 0.07, z);
+    mesh.scale.setScalar(range * 0.3);
+    mesh.renderOrder = 4;
+    this.scene.add(mesh);
+    this.fx.push({ mesh, age: 0, life: 0.16, grow: range, fade: 0.55, y0: 0.07 });
+  }
+
   private telegraph(x: number, z: number, radius: number, time: number) {
     const mesh = new Mesh(this.geo.ring, basic(0xff3b4e, 0.85));
     const fill = new Mesh(this.geo.disc, basic(0xff3b4e, 0.28));
@@ -588,15 +639,16 @@ export class RushView {
   sync(s: RushState, dt: number, aim: AimPreview, held = false) {
     const worldDt = held ? 0 : dt;
     this.time += worldDt;
-    const h = s.hero, alive = h.downT <= 0;
+    const h = s.hero, alive = h.downT <= 0, def = HEROES[h.kind];
+    this.showHero(h.kind);
     // Hero
     this.hero.visible = alive;
     this.hero.position.set(h.x, 0, h.z);
     this.heroBody.rotation.y = yaw(h.facing);
     this.heroMixer?.update(worldDt);
-    this.setBar(this.heroBar, h.hp / HERO.hp);
+    this.setBar(this.heroBar, h.hp / def.hp);
     this.ammoSegs.forEach((seg, i) => {
-      const full = h.ammo > i, partial = h.ammo === i ? h.reloadT / HERO.reload : 0;
+      const full = h.ammo > i, partial = h.ammo === i ? h.reloadT / def.reload : 0;
       seg.material = full ? this.mats.ammo : this.mats.ammoDim;
       seg.scale.x = full ? 1 : Math.max(0.05, partial);
       seg.position.x = (i - 1) * 0.44 - (full ? 0 : (1 - seg.scale.x) * 0.2);
@@ -639,7 +691,9 @@ export class RushView {
       this.aimFan.rotation.set(-Math.PI / 2, 0, -a);
       (this.aimFan.material as MeshBasicMaterial).opacity = h.ammo >= 1 ? 0.24 : 0.1;
     } else {
-      const l = Math.hypot(aim.offset.x, aim.offset.z), k = l > HERO.superRange ? HERO.superRange / l : 1;
+      const hd = HEROES[h.kind];
+      if (hd.superSelf) { this.aimRing.visible = true; this.aimRing.position.set(h.x, 0.06, h.z); this.aimRing.scale.setScalar(hd.superRadius); return; }
+      const l = Math.hypot(aim.offset.x, aim.offset.z), k = l > hd.superRange ? hd.superRange / l : 1;
       const tx = h.x + aim.offset.x * k, tz = h.z + aim.offset.z * k;
       this.aimRing.visible = this.aimLine.visible = true;
       this.aimRing.position.set(tx, 0.06, tz);

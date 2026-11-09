@@ -2,13 +2,14 @@
 // Pure TypeScript: no DOM, no clock, no Math.random. The same seed and command stream give the same state,
 // so this module can run in tests, in the browser and later on an authoritative server.
 import {
-  ARENA, ECONOMY, ENEMIES, HERO, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WALLS, WAVES,
-  type Block, type EnemyKind, type Vec,
+  ARENA, ECONOMY, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WALLS, WAVES,
+  type Block, type EnemyKind, type HeroDef, type HeroKind, type Vec,
 } from './data.ts';
 
 export type Phase = 'prep' | 'wave' | 'won' | 'lost';
 
 export interface Hero {
+  kind: HeroKind;
   x: number; z: number; hp: number; facing: number;
   ammo: number; reloadT: number; fireCd: number;
   superCharge: number; downT: number; calmT: number;
@@ -29,6 +30,7 @@ export interface GroupProgress { spawned: number; timer: number }
 
 export type RushEvent =
   | { type: 'fire'; x: number; z: number; angle: number }
+  | { type: 'swing'; x: number; z: number; angle: number; range: number; arc: number; hits: number }
   | { type: 'hit'; x: number; z: number; owner: ShotOwner; damage: number }
   | { type: 'kill'; x: number; z: number; kind: EnemyKind }
   | { type: 'spark'; x: number; z: number }
@@ -117,12 +119,12 @@ function confine(p: Vec, r: number): void {
 }
 
 // ---------- creation ----------
-export function createRush(seed = 1, mods: RushMods = NO_MODS, diff: Difficulty = BASE_DIFFICULTY): RushState {
+export function createRush(seed = 1, mods: RushMods = NO_MODS, diff: Difficulty = BASE_DIFFICULTY, heroKind: HeroKind = 'ranger'): RushState {
   const townHp = Math.round(TOWN.hp * mods.townHp);
   return {
     seed, rng: seed | 0, tick: 0, t: 0, phase: 'prep', mods: { ...mods }, diff: { ...diff }, wave: 0, prepT: ECONOMY.prepTime, groups: [],
     town: { hp: townHp, maxHp: townHp }, gold: ECONOMY.startGold,
-    hero: { x: HERO_SPAWN.x, z: HERO_SPAWN.z, hp: HERO.hp, facing: -Math.PI / 2, ammo: HERO.ammoMax, reloadT: 0, fireCd: 0, superCharge: 0, downT: 0, calmT: 0 },
+    hero: { kind: heroKind, x: HERO_SPAWN.x, z: HERO_SPAWN.z, hp: HEROES[heroKind].hp, facing: -Math.PI / 2, ammo: HEROES[heroKind].ammoMax, reloadT: 0, fireCd: 0, superCharge: 0, downT: 0, calmT: 0 },
     enemies: [], shots: [], towers: PADS.map(() => null), coins: [], nextId: 1,
     stats: { kills: 0, shots: 0, hits: 0, supers: 0, goldEarned: 0, heroDowns: 0 },
     events: [],
@@ -130,8 +132,10 @@ export function createRush(seed = 1, mods: RushMods = NO_MODS, diff: Difficulty 
 }
 
 // ---------- queries used by the UI and bots ----------
+/** The current hero's numbers. */
+export const heroDef = (s: RushState): HeroDef => HEROES[s.hero.kind];
 export const heroAlive = (s: RushState) => s.hero.downT <= 0;
-export const superReady = (s: RushState) => s.hero.superCharge >= HERO.superHits;
+export const superReady = (s: RushState) => s.hero.superCharge >= heroDef(s).superHits;
 
 /** Nearest pad within reach of the hero, or -1. */
 export function padInReach(s: RushState): number {
@@ -160,9 +164,9 @@ export function bestSuperPoint(s: RushState): Vec | null {
   for (const e of s.enemies) {
     if (e.hp <= 0) continue;
     const d = dist(e, s.hero);
-    if (d > HERO.superRange) continue;
+    if (d > heroDef(s).superRange) continue;
     let count = 0;
-    for (const o of s.enemies) if (o.hp > 0 && dist(o, e) <= HERO.superRadius) count++;
+    for (const o of s.enemies) if (o.hp > 0 && dist(o, e) <= heroDef(s).superRadius) count++;
     if (count > bestCount || (count === bestCount && d < bestD)) { best = { x: e.x, z: e.z }; bestCount = count; bestD = d; }
   }
   return best;
@@ -254,7 +258,7 @@ function updateHero(s: RushState, cmd: Command) {
   if (h.downT > 0) {
     h.downT -= STEP;
     if (h.downT <= 0) {
-      h.downT = 0; h.hp = HERO.hp; h.x = HERO_SPAWN.x; h.z = HERO_SPAWN.z; h.ammo = HERO.ammoMax; h.reloadT = 0; h.calmT = 0;
+      h.downT = 0; h.hp = heroDef(s).hp; h.x = HERO_SPAWN.x; h.z = HERO_SPAWN.z; h.ammo = heroDef(s).ammoMax; h.reloadT = 0; h.calmT = 0;
       s.events.push({ type: 'heroBack' });
     }
     return;
@@ -263,20 +267,20 @@ function updateHero(s: RushState, cmd: Command) {
   const m = cmd.move;
   if (m && (m.x !== 0 || m.z !== 0)) {
     const l = len(m.x, m.z), k = Math.min(1, l) / l;
-    h.x += m.x * k * HERO.speed * STEP;
-    h.z += m.z * k * HERO.speed * STEP;
+    h.x += m.x * k * heroDef(s).speed * STEP;
+    h.z += m.z * k * heroDef(s).speed * STEP;
     h.facing = Math.atan2(m.z, m.x);
   }
-  confine(h, HERO.radius);
+  confine(h, heroDef(s).radius);
   // Ammo: reload continuously while not full, like a magazine that refills one round at a time.
   h.fireCd = Math.max(0, h.fireCd - STEP);
-  if (h.ammo < HERO.ammoMax) {
+  if (h.ammo < heroDef(s).ammoMax) {
     h.reloadT += STEP;
-    if (h.reloadT >= HERO.reload) { h.ammo++; h.reloadT = h.ammo < HERO.ammoMax ? h.reloadT - HERO.reload : 0; }
+    if (h.reloadT >= heroDef(s).reload) { h.ammo++; h.reloadT = h.ammo < heroDef(s).ammoMax ? h.reloadT - heroDef(s).reload : 0; }
   }
   // Out-of-combat regeneration.
   h.calmT += STEP;
-  if (h.calmT >= HERO.regenDelay && h.hp < HERO.hp) h.hp = Math.min(HERO.hp, h.hp + HERO.hp * HERO.regenRate * STEP);
+  if (h.calmT >= heroDef(s).regenDelay && h.hp < heroDef(s).hp) h.hp = Math.min(heroDef(s).hp, h.hp + heroDef(s).hp * heroDef(s).regenRate * STEP);
 
   if (cmd.fire && h.ammo >= 1 && h.fireCd <= 0) fire(s, cmd.fire);
   if (cmd.super && superReady(s)) castSuper(s, cmd.super);
@@ -287,20 +291,40 @@ function fire(s: RushState, aim: Vec | 'auto') {
   const h = s.hero;
   let angle = h.facing;
   if (aim === 'auto') {
-    const target = nearestEnemy(s, h, HERO.range);
+    const target = nearestEnemy(s, h, heroDef(s).attack === 'swing' ? heroDef(s).range + 1.5 : heroDef(s).range);
     if (target) angle = Math.atan2(target.z - h.z, target.x - h.x);
   } else if (aim.x !== 0 || aim.z !== 0) angle = Math.atan2(aim.z, aim.x);
   h.facing = angle;
   h.ammo -= 1;
-  h.fireCd = HERO.fireGap;
+  h.fireCd = heroDef(s).fireGap;
   h.calmT = 0;
-  const half = (HERO.bolts - 1) / 2;
-  for (let i = 0; i < HERO.bolts; i++) {
-    const a = angle + (i - half) * HERO.spread;
+  const def = heroDef(s);
+  if (def.attack === 'swing') {
+    // Melee cone: everything inside reach and the half-angle is hit at once and shoved back.
+    let hits = 0;
+    for (const e of s.enemies) {
+      if (e.hp <= 0) continue;
+      const er = ENEMIES[e.kind].radius, dx = e.x - h.x, dz = e.z - h.z, d = len(dx, dz);
+      if (d > def.range + er) continue;
+      let off = Math.atan2(dz, dx) - angle;
+      off = Math.atan2(Math.sin(off), Math.cos(off));
+      if (Math.abs(off) > def.swingArc && d > er + def.radius) continue; // touching enemies are always hit
+      hurtEnemy(s, e, def.boltDamage * s.mods.damage, 'hero');
+      const k = def.swingKnock * ENEMIES[e.kind].knockTaken;
+      if (d > 1e-6) { e.kx += (dx / d) * k; e.kz += (dz / d) * k; }
+      hits++;
+    }
+    s.stats.shots++;
+    s.events.push({ type: 'swing', x: h.x, z: h.z, angle, range: def.range, arc: def.swingArc, hits });
+    return;
+  }
+  const half = (heroDef(s).bolts - 1) / 2;
+  for (let i = 0; i < heroDef(s).bolts; i++) {
+    const a = angle + (i - half) * heroDef(s).spread;
     s.shots.push({
       id: s.nextId++, owner: 'hero', x: h.x + Math.cos(a) * 0.5, z: h.z + Math.sin(a) * 0.5,
-      vx: Math.cos(a) * HERO.boltSpeed, vz: Math.sin(a) * HERO.boltSpeed, damage: HERO.boltDamage * s.mods.damage,
-      life: HERO.range / HERO.boltSpeed, radius: HERO.boltRadius, target: 0, tx: 0, tz: 0,
+      vx: Math.cos(a) * heroDef(s).boltSpeed, vz: Math.sin(a) * heroDef(s).boltSpeed, damage: heroDef(s).boltDamage * s.mods.damage,
+      life: heroDef(s).range / heroDef(s).boltSpeed, radius: heroDef(s).boltRadius, target: 0, tx: 0, tz: 0,
     });
   }
   s.stats.shots++;
@@ -310,9 +334,10 @@ function fire(s: RushState, aim: Vec | 'auto') {
 function castSuper(s: RushState, aim: Vec | 'auto') {
   const h = s.hero;
   let point: Vec | null;
-  if (aim === 'auto') point = bestSuperPoint(s) ?? { x: h.x + Math.cos(h.facing) * HERO.superRange * 0.6, z: h.z + Math.sin(h.facing) * HERO.superRange * 0.6 };
+  if (heroDef(s).superSelf) point = { x: h.x, z: h.z }; // ground slam around the hero
+  else if (aim === 'auto') point = bestSuperPoint(s) ?? { x: h.x + Math.cos(h.facing) * heroDef(s).superRange * 0.6, z: h.z + Math.sin(h.facing) * heroDef(s).superRange * 0.6 };
   else {
-    const l = len(aim.x, aim.z), k = l > HERO.superRange ? HERO.superRange / l : 1;
+    const l = len(aim.x, aim.z), k = l > heroDef(s).superRange ? heroDef(s).superRange / l : 1;
     point = { x: h.x + aim.x * k, z: h.z + aim.z * k };
   }
   const dx = point.x - h.x, dz = point.z - h.z;
@@ -320,8 +345,8 @@ function castSuper(s: RushState, aim: Vec | 'auto') {
   h.calmT = 0;
   if (dx !== 0 || dz !== 0) h.facing = Math.atan2(dz, dx);
   s.shots.push({
-    id: s.nextId++, owner: 'super', x: h.x, z: h.z, vx: dx / HERO.superTravel, vz: dz / HERO.superTravel,
-    damage: HERO.superDamage * s.mods.damage, life: HERO.superTravel, radius: HERO.superRadius, target: 0, tx: point.x, tz: point.z,
+    id: s.nextId++, owner: 'super', x: h.x, z: h.z, vx: dx / heroDef(s).superTravel, vz: dz / heroDef(s).superTravel,
+    damage: heroDef(s).superDamage * s.mods.damage, life: heroDef(s).superTravel, radius: heroDef(s).superRadius, target: 0, tx: point.x, tz: point.z,
   });
   s.stats.supers++;
 }
@@ -346,7 +371,7 @@ function hurtHero(s: RushState, damage: number) {
   s.events.push({ type: 'heroHit', damage });
   if (h.hp <= 0) {
     h.hp = 0;
-    h.downT = HERO.respawn;
+    h.downT = heroDef(s).respawn;
     s.stats.heroDowns++;
     s.events.push({ type: 'heroDown' });
   }
@@ -363,8 +388,8 @@ function hurtEnemy(s: RushState, e: Enemy, damage: number, owner: ShotOwner) {
   if (owner === 'hero') {
     s.stats.hits++;
     const before = s.hero.superCharge;
-    s.hero.superCharge = Math.min(HERO.superHits, before + 1);
-    if (before < HERO.superHits && s.hero.superCharge >= HERO.superHits) s.events.push({ type: 'superReady' });
+    s.hero.superCharge = Math.min(heroDef(s).superHits, before + 1);
+    if (before < heroDef(s).superHits && s.hero.superCharge >= heroDef(s).superHits) s.events.push({ type: 'superReady' });
   }
 }
 
@@ -396,7 +421,7 @@ function updateEnemies(s: RushState) {
       e.windup.t -= STEP;
       if (e.windup.t <= 0) {
         const r = def.slamRadius ?? 2;
-        if (alive && dist(h, e.windup) <= r + HERO.radius) hurtHero(s, def.damage * s.diff.enemyDamage);
+        if (alive && dist(h, e.windup) <= r + heroDef(s).radius) hurtHero(s, def.damage * s.diff.enemyDamage);
         if (dist(TOWN, e.windup) <= r + TOWN.radius) hurtTown(s, def.damage * s.diff.enemyDamage);
         s.events.push({ type: 'slam', x: e.windup.x, z: e.windup.z, radius: r });
         e.windup = null;
@@ -409,7 +434,7 @@ function updateEnemies(s: RushState) {
     if (e.chasing && !chase) e.wp = nearestSegmentEnd(LANES[e.lane], e);
     e.chasing = chase;
     const target: Vec = chase ? h : TOWN;
-    const targetR = chase ? HERO.radius : TOWN.radius;
+    const targetR = chase ? heroDef(s).radius : TOWN.radius;
     const gap = dist(e, target) - targetR - def.radius;
 
     if (gap <= def.reach) {
@@ -508,7 +533,7 @@ function updateShots(s: RushState) {
         const dx = e.x - shot.tx, dz = e.z - shot.tz, d = len(dx, dz);
         if (d > shot.radius + ENEMIES[e.kind].radius) continue;
         hurtEnemy(s, e, shot.damage, 'super');
-        const k = HERO.superKnock * ENEMIES[e.kind].knockTaken;
+        const k = heroDef(s).superKnock * ENEMIES[e.kind].knockTaken;
         if (d > 1e-6) { e.kx += (dx / d) * k; e.kz += (dz / d) * k; } else e.kz -= k;
       }
       s.events.push({ type: 'burst', x: shot.tx, z: shot.tz, radius: shot.radius });
@@ -541,7 +566,7 @@ function updateShots(s: RushState) {
         break;
       }
     } else {
-      if (heroAlive(s) && dist(s.hero, shot) <= HERO.radius + shot.radius) { hurtHero(s, shot.damage); hit = true; }
+      if (heroAlive(s) && dist(s.hero, shot) <= heroDef(s).radius + shot.radius) { hurtHero(s, shot.damage); hit = true; }
       else if (dist(TOWN, shot) <= TOWN.radius + shot.radius) { hurtTown(s, shot.damage); hit = true; }
     }
     if (!hit && shot.life > 0) keep.push(shot);
@@ -556,8 +581,8 @@ function updateCoins(s: RushState) {
     c.life -= STEP;
     if (alive) {
       const dx = h.x - c.x, dz = h.z - c.z, d = len(dx, dz);
-      if (d <= HERO.pickup) { addGold(s, c.value); s.events.push({ type: 'coin', value: c.value }); continue; }
-      if (d <= HERO.magnet) { const step = Math.min(d, HERO.magnetSpeed * STEP); c.x += (dx / d) * step; c.z += (dz / d) * step; }
+      if (d <= heroDef(s).pickup) { addGold(s, c.value); s.events.push({ type: 'coin', value: c.value }); continue; }
+      if (d <= heroDef(s).magnet) { const step = Math.min(d, heroDef(s).magnetSpeed * STEP); c.x += (dx / d) * step; c.z += (dz / d) * step; }
     }
     if (c.life > 0) keep.push(c);
   }

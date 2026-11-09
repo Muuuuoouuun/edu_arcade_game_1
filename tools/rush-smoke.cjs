@@ -73,6 +73,8 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await page.waitForTimeout(200);
     check(await page.evaluate(() => __rush.kingdom.perks.attack === 1), 'kingdom persists across reload');
     check(await page.isDisabled('[data-stage="2"]'), 'stage 2 locked on a fresh kingdom');
+    await page.click('#btn-hero');
+    check((await page.textContent('#hero-name')).includes('도마뱀') && await page.isVisible('#town-reward'), 'Bron stays locked on a fresh kingdom (hint shown)');
     check((await page.textContent('#btn-battle')).includes('스테이지 1'), 'battle button names the selected stage');
 
     // 3. Desktop controls: keyboard movement per sim tick, build on a pad, mouse fire.

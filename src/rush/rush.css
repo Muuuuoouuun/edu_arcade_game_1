@@ -293,3 +293,13 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   .town-tag { padding: 3px 9px; }
   .town-tag b { font-size: 13px; }
 }
+
+/* Hero choice (cycle 09) */
+.hero-pick {
+  min-height: 44px; padding: 3px 12px; border-radius: 14px; border: 3px solid var(--outline); background: rgba(29, 20, 51, 0.88);
+  color: #fff; display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; box-shadow: 0 4px 0 var(--outline); touch-action: manipulation;
+}
+.hero-pick small { font-size: 10px; color: var(--muted); }
+.hero-pick b { font-family: var(--display); font-weight: 400; font-size: 15px; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; }
+.hero-pick.has-more b::after { content: ' ⇄'; color: var(--gold); -webkit-text-stroke: 0; }
+@media (max-height: 420px) { .hero-pick b { font-size: 13px; } }

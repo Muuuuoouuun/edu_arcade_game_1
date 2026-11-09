@@ -1,6 +1,6 @@
 // Scripted players for balance checks and the in-browser demo. They only issue Commands, like a person would.
-import { HERO, PADS, TOWN, type Vec } from './data.ts';
-import { bestSuperPoint, heroAlive, nearestEnemy, padCost, superReady, type Command, type RushState } from './sim.ts';
+import { PADS, TOWN, type Vec } from './data.ts';
+import { bestSuperPoint, heroAlive, heroDef, nearestEnemy, padCost, superReady, type Command, type RushState } from './sim.ts';
 
 const GUARD: Vec = { x: 0, z: 2.5 };
 const toward = (from: Vec, to: Vec): Vec => {
@@ -20,7 +20,9 @@ export function guardBot(s: RushState): Command {
     const score = cost * 10 + Math.hypot(pad.x - h.x, pad.z - h.z);
     if (score < padBest) { padBest = score; padGoal = i; }
   });
-  const threat = nearestEnemy(s, h, HERO.range);
+  const def = heroDef(s), melee = def.attack === 'swing';
+  // A melee hero looks further out and closes in; a ranged hero keeps its distance.
+  const threat = nearestEnemy(s, h, melee ? 7 : def.range);
   const coin = s.coins.reduce<{ c: Vec | null; d: number }>((best, c) => {
     const d = Math.hypot(c.x - h.x, c.z - h.z);
     return d < best.d && Math.hypot(c.x - TOWN.x, c.z - TOWN.z) < 16 ? { c, d } : best;
@@ -32,16 +34,23 @@ export function guardBot(s: RushState): Command {
   } else if (coin && (!threat || Math.hypot(coin.x - h.x, coin.z - h.z) < 3)) {
     cmd.move = toward(h, coin);
   } else if (threat) {
-    // Keep a little distance from melee threats; otherwise hold the guard line.
     const d = Math.hypot(threat.x - h.x, threat.z - h.z);
-    cmd.move = d < 3 ? toward(threat, h) : toward(h, GUARD);
+    // Melee: close in, but stay leashed to the gate so the hero is not surrounded far from the towers.
+    if (melee) cmd.move = Math.hypot(threat.x - GUARD.x, threat.z - GUARD.z) > 8 ? toward(h, GUARD) : d > def.range * 0.8 ? toward(h, threat) : { x: 0, z: 0 };
+    // Keep a little distance from melee threats; otherwise hold the guard line.
+    else cmd.move = d < 3 ? toward(threat, h) : toward(h, GUARD);
   } else {
     cmd.move = toward(h, GUARD);
   }
-  if (threat) cmd.fire = 'auto';
+  if (threat && (!melee || Math.hypot(threat.x - h.x, threat.z - h.z) <= def.range + 0.6)) cmd.fire = 'auto';
   if (superReady(s)) {
-    const point = bestSuperPoint(s);
-    if (point) cmd.super = { x: point.x - h.x, z: point.z - h.z };
+    if (melee) {
+      const near = s.enemies.filter(e => e.hp > 0 && Math.hypot(e.x - h.x, e.z - h.z) <= def.superRadius).length;
+      if (near >= 3) cmd.super = 'auto';
+    } else {
+      const point = bestSuperPoint(s);
+      if (point) cmd.super = { x: point.x - h.x, z: point.z - h.z };
+    }
   }
   if (s.phase === 'prep' && padGoal < 0 && s.prepT < 9) cmd.startWave = true;
   return cmd;

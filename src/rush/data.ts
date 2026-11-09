@@ -31,14 +31,38 @@ export const PADS: readonly Vec[] = [
 ];
 export const PAD_REACH = 1.8;
 
-export const HERO = {
-  speed: 5.2, hp: 420, radius: 0.5,
-  ammoMax: 3, reload: 1.25, fireGap: 0.32,
-  bolts: 3, spread: 0.13, boltDamage: 24, boltSpeed: 22, range: 9.5, boltRadius: 0.25,
-  superHits: 12, superRange: 8, superRadius: 3.2, superDamage: 150, superKnock: 7, superTravel: 0.35,
-  regenDelay: 3, regenRate: 0.12, respawn: 4,
-  pickup: 1.3, magnet: 2.8, magnetSpeed: 9,
-} as const;
+export type HeroKind = 'ranger' | 'bron';
+export type HeroDef = {
+  name: string; attack: 'bolts' | 'swing';
+  speed: number; hp: number; radius: number;
+  ammoMax: number; reload: number; fireGap: number;
+  /** bolts: projectile fan · swing: instant melee cone (range = reach, swingArc = half angle). */
+  bolts: number; spread: number; boltDamage: number; boltSpeed: number; range: number; boltRadius: number;
+  swingArc: number; swingKnock: number;
+  /** superSelf: the super lands on the hero (no aiming). */
+  superHits: number; superRange: number; superRadius: number; superDamage: number; superKnock: number; superTravel: number; superSelf: boolean;
+  regenDelay: number; regenRate: number; respawn: number;
+  pickup: number; magnet: number; magnetSpeed: number;
+};
+const COMMON = { regenDelay: 3, regenRate: 0.12, respawn: 4, pickup: 1.3, magnet: 2.8, magnetSpeed: 9 } as const;
+export const HEROES: Record<HeroKind, HeroDef> = {
+  ranger: {
+    name: '도마뱀 궁수', attack: 'bolts', speed: 5.2, hp: 420, radius: 0.5,
+    ammoMax: 3, reload: 1.25, fireGap: 0.32,
+    bolts: 3, spread: 0.13, boltDamage: 24, boltSpeed: 22, range: 9.5, boltRadius: 0.25, swingArc: 0, swingKnock: 0,
+    superHits: 12, superRange: 8, superRadius: 3.2, superDamage: 150, superKnock: 7, superTravel: 0.35, superSelf: false,
+    ...COMMON,
+  },
+  bron: {
+    name: '브론', attack: 'swing', speed: 4.8, hp: 800, radius: 0.55,
+    ammoMax: 3, reload: 0.85, fireGap: 0.36,
+    bolts: 1, spread: 0, boltDamage: 58, boltSpeed: 0, range: 2.8, boltRadius: 0, swingArc: 0.96, swingKnock: 4,
+    superHits: 8, superRange: 0, superRadius: 4, superDamage: 130, superKnock: 10, superTravel: 0.12, superSelf: true,
+    ...COMMON,
+  },
+};
+/** The default hero (kept for code that predates hero choice). */
+export const HERO = HEROES.ranger;
 
 export type EnemyKind = 'grunt' | 'skirmisher' | 'brute' | 'boss';
 export type EnemyDef = {

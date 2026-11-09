@@ -1,8 +1,9 @@
 // Town (kingdom) screen: storage + DOM. Rules live in kingdom.ts.
 import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
+import { HEROES, type HeroKind } from './data.ts';
 import {
-  canUpgrade, collect, createKingdom, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate, serializeKingdom, storageFull,
+  canUpgrade, chooseHero, collect, createKingdom, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate, serializeKingdom, storageFull,
   upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 
@@ -79,6 +80,15 @@ export class TownScreen {
       const n = Number((e.target as HTMLElement).closest<HTMLElement>('[data-stage]')?.dataset.stage);
       if (n && stageUnlocked(this.kingdom, n)) { this.stage = n; this.render(); }
     });
+    // Hero choice: cycle through unlocked heroes; a locked one explains how it joins.
+    this.$('btn-hero').addEventListener('click', () => {
+      const order: HeroKind[] = ['ranger', 'bron'];
+      const next = order[(order.indexOf(this.kingdom.hero) + 1) % order.length];
+      if (!heroUnlocked(this.kingdom, next)) { this.note(`${HEROES[next].name}: 스테이지 2에서 별을 얻으면 합류해요`); return; }
+      this.kingdom = chooseHero(this.kingdom, next);
+      saveKingdom(this.kingdom);
+      this.render();
+    });
     this.$('btn-collect').addEventListener('click', () => {
       this.kingdom = collect(this.kingdom, Date.now());
       saveKingdom(this.kingdom);
@@ -87,6 +97,8 @@ export class TownScreen {
   }
 
   get current(): Kingdom { return this.kingdom; }
+  /** Short message in the reward line (reused for hints). */
+  private note(text: string) { const el = this.$('town-reward'); el.textContent = text; el.hidden = false; }
   /** Pin the name tags over their buildings (call every frame while the town is shown). */
   layout(rect: { width: number; height: number }) {
     for (const p of SPOTS) {
@@ -122,6 +134,8 @@ export class TownScreen {
       chip.querySelector('[data-stars]')!.textContent = open ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '잠김';
     });
     this.$('btn-battle').textContent = `스테이지 ${this.stage} 출전`;
+    this.$('hero-name').textContent = HEROES[k.hero].name;
+    this.$('btn-hero').classList.toggle('has-more', heroUnlocked(k, 'bron'));
     this.view.sync(k);
     for (const r of ROWS) {
       const tag = this.root.querySelector<HTMLElement>(`[data-select="${r.id}"]`)!;
