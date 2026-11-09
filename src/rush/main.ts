@@ -222,6 +222,7 @@ function frame(now: number) {
   const stopped = running && seconds < clock.stopUntil;
   input.refreshAim();
   // Rendering keeps real time (camera settles, effects fade); during a hit-stop the world pose holds still.
+  view.fxPaused = state.tick >= freezeAt;
   view.sync(state, running ? dt : 0, mode === 'play' ? input.aim : null, stopped);
   view.render();
   updatePops(dt);

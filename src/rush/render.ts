@@ -1,6 +1,6 @@
 // Three.js view of the Arcana Rush simulation. Reads RushState, never writes it.
 import {
-  AnimationMixer, Box3, BoxGeometry, CanvasTexture, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
+  AnimationMixer, Box3, DodecahedronGeometry, BoxGeometry, CanvasTexture, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
   DirectionalLight, Group, HemisphereLight, LoopOnce, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera, Plane,
   PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
   type AnimationAction, type BufferGeometry, type Material,
@@ -9,6 +9,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ARENA, ENEMIES, HERO, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type Vec } from './data.ts';
 import { padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, hullGeometry, outlineMaterial, PAL, toon, toonify, type Part } from './look.ts';
+import { Particles } from './fx.ts';
 
 export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'super'; offset: Vec } | null;
 
@@ -48,6 +49,7 @@ export class RushView {
   private padRings: Mesh[] = [];
   private townBar: Bar;
   private fx: Fx[] = [];
+  private particles: Particles;
   private telegraphs: { mesh: Mesh; fill: Mesh; age: number; life: number }[] = [];
   private aimFan: Mesh;
   private aimRing: Mesh;
@@ -55,11 +57,13 @@ export class RushView {
   private raycaster = new Raycaster();
   private ground = new Plane(new Vector3(0, 1, 0), 0);
   private portrait = false;
+  /** Debug `?freeze`: hold effects too, so a frozen tick can be compared before/after. */
+  fxPaused = false;
   /** Camera distance factor: short phone screens get a closer camera so characters stay readable. */
   private zoom = 1;
   private time = 0;
   readonly geo = {
-    blob: new CircleGeometry(1, 20), ring: new RingGeometry(0.82, 1, 32), bolt: new CapsuleGeometry(0.11, 0.5, 4, 8),
+    blob: new CircleGeometry(1, 20), ring: new RingGeometry(0.82, 1, 32), inkRing: new RingGeometry(0.74, 1.08, 32), bolt: new CapsuleGeometry(0.11, 0.5, 4, 8),
     orb: new SphereGeometry(0.28, 12, 10), coin: new CylinderGeometry(0.28, 0.28, 0.08, 14), spark: new OctahedronGeometry(0.22),
     bar: new PlaneGeometry(1, 0.13), barFill: new PlaneGeometry(1, 0.13).translate(0.5, 0, 0), disc: new CircleGeometry(1, 40),
   };
@@ -82,6 +86,7 @@ export class RushView {
     sun.position.set(-7, 16, 9);
     this.scene.add(sun);
 
+    this.particles = new Particles(this.scene);
     this.buildGround();
     this.buildWalls();
     this.buildTown();
@@ -145,7 +150,7 @@ export class RushView {
     ground.position.set((ARENA.minX + ARENA.maxX) / 2, 0, (ARENA.minZ + ARENA.maxZ) / 2);
     // The arena is an island: a sand slab over water reads as a clear play boundary.
     const cx = (ARENA.minX + ARENA.maxX) / 2, cz = (ARENA.minZ + ARENA.maxZ) / 2;
-    const shore = new Mesh(new BoxGeometry(w + 3.2, 0.6, d + 3.2), toon(0xf0c98a, { rim: 0 }));
+    const shore = new Mesh(new BoxGeometry(w + 7.4, 0.6, d + 7.4), toon(0xf0c98a, { rim: 0 }));
     shore.position.set(cx, -0.31, cz);
     const water = new Mesh(new PlaneGeometry(240, 240), toon(PAL.water, { rim: 0 }));
     water.rotation.x = -Math.PI / 2; water.position.set(cx, -0.45, cz);
@@ -158,6 +163,34 @@ export class RushView {
     };
     hedge(ARENA.minX - 0.55, cz, 1.1, d + 2.2); hedge(ARENA.maxX + 0.55, cz, 1.1, d + 2.2);
     hedge(cx, ARENA.maxZ + 0.55, w, 1.1); hedge(cx, ARENA.minZ - 0.55, w, 1.1);
+    this.addBaked(bake(parts), 0.04);
+    this.buildShoreDecor();
+  }
+
+  /** Bushes, rocks and crates on the sand outside the hedge: decoration only, never inside the play area. */
+  private buildShoreDecor() {
+    let seed = 11;
+    const r = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    const parts: Part[] = [];
+    const place = (x: number, z: number) => {
+      const pick = r();
+      if (pick < 0.5) {
+        const k = 0.45 + r() * 0.3;
+        parts.push({ geo: new SphereGeometry(k, 8, 6), color: 0x4fae4a, at: [x, k * 0.7, z] });
+        parts.push({ geo: new SphereGeometry(k * 0.75, 8, 6), color: 0x6cc75a, at: [x + k * 0.6, k * 0.55, z + k * 0.3] });
+        parts.push({ geo: new SphereGeometry(k * 0.6, 8, 6), color: 0x5bbd52, at: [x - k * 0.5, k * 0.5, z - k * 0.4] });
+      } else if (pick < 0.8) {
+        const k = 0.35 + r() * 0.3;
+        parts.push({ geo: new DodecahedronGeometry(k), color: 0xa3adc4, at: [x, k * 0.6, z], rot: [r(), r() * 3, 0] });
+      } else {
+        const k = 0.7 + r() * 0.2;
+        parts.push({ geo: new BoxGeometry(k, k, k), color: 0xc98a4a, at: [x, k / 2, z], rot: [0, r() * 1.5, 0] });
+        parts.push({ geo: new BoxGeometry(k * 1.02, k * 0.16, k * 1.02), color: 0x8a5428, at: [x, k * 0.5, z], rot: [0, 0, 0] });
+      }
+    };
+    // Walk the band between the hedge (1.1 m) and the shore edge (3.7 m) on all four sides.
+    for (let x = ARENA.minX - 2; x <= ARENA.maxX + 2; x += 2.2 + r() * 1.6) { place(x, ARENA.minZ - 1.9 - r() * 1.2); place(x, ARENA.maxZ + 1.9 + r() * 1.2); }
+    for (let z = ARENA.minZ; z <= ARENA.maxZ; z += 2.2 + r() * 1.6) { place(ARENA.minX - 1.9 - r() * 1.2, z); place(ARENA.maxX + 1.9 + r() * 1.2, z); }
     this.addBaked(bake(parts), 0.04);
   }
 
@@ -374,30 +407,80 @@ export class RushView {
     this.camera.updateProjectionMatrix();
   }
 
-  /** Apply one simulation step's events (FX, animation triggers). */
+  /** Apply one simulation step's events: the effect grammar (docs/rush/art-direction.md) and animation triggers. */
   applyEvents(events: RushEvent[], reducedMotion: boolean) {
+    const fx = this.particles, hp = this.hero.position;
+    fx.density = reducedMotion ? 0.5 : 1;
     for (const ev of events) {
-      if (ev.type === 'fire' && this.heroShot) { this.heroShot.reset(); this.heroShot.play(); }
-      else if (ev.type === 'burst') { this.ring(ev.x, ev.z, 0xc59bff, ev.radius, 0.45, 0.9); this.ring(ev.x, ev.z, 0xffffff, ev.radius * 0.6, 0.25, 1); if (!reducedMotion) this.shake = Math.max(this.shake, 0.45); }
-      else if (ev.type === 'kill') this.ring(ev.x, ev.z, ev.kind === 'boss' ? 0xffd166 : 0xffb0b8, ev.kind === 'boss' ? 4 : 1.1, 0.35, 0.8);
-      else if (ev.type === 'spark') this.ring(ev.x, ev.z, 0xffffff, 0.35, 0.15, 0.7);
-      else if (ev.type === 'hit' && ev.owner !== 'super') this.ring(ev.x, ev.z, ev.owner === 'tower' ? 0xffe07a : 0x8ff7ff, 0.5, 0.14, 0.9);
-      else if (ev.type === 'telegraph') this.telegraph(ev.x, ev.z, ev.radius, ev.time);
-      else if (ev.type === 'slam') { this.ring(ev.x, ev.z, 0xff5d73, ev.radius, 0.35, 0.9); if (!reducedMotion) this.shake = Math.max(this.shake, 0.6); }
-      else if (ev.type === 'townHit' && !reducedMotion) this.shake = Math.max(this.shake, 0.12);
-      else if (ev.type === 'heroDown') this.ring(this.hero.position.x, this.hero.position.z, 0xff5d73, 1.6, 0.5, 0.9);
-      else if (ev.type === 'build') { const p = PADS[ev.pad]; this.ring(p.x, p.z, 0xffd166, 1.8, 0.45, 0.9); }
+      switch (ev.type) {
+        case 'fire': {
+          if (this.heroShot) { this.heroShot.reset(); this.heroShot.play(); }
+          const mx = hp.x + Math.cos(ev.angle) * 0.75, mz = hp.z + Math.sin(ev.angle) * 0.75;
+          fx.emit({ kind: 'puff', n: 2, color: 0xffffff, at: [mx, 1.0, mz], speed: 1.2, up: 0.4, size: 0.12, life: 0.22, dir: ev.angle, cone: 0.6 });
+          break;
+        }
+        case 'hit':
+          if (ev.owner === 'hero') {
+            fx.emit({ kind: 'shard', n: 4, color: 0x8ff7ff, at: [ev.x, 0.95, ev.z], speed: 4, up: 3, size: 0.1, life: 0.38 });
+            fx.emit({ kind: 'spark', n: 2, color: 0xffffff, at: [ev.x, 1.0, ev.z], speed: 3, up: 1, size: 0.16, life: 0.16 });
+          } else if (ev.owner === 'tower') {
+            fx.emit({ kind: 'shard', n: 3, color: 0xffe07a, at: [ev.x, 1.2, ev.z], speed: 3.5, up: 3, size: 0.09, life: 0.32 });
+          }
+          break;
+        case 'kill': {
+          const boss = ev.kind === 'boss';
+          fx.emit({ kind: 'shard', n: boss ? 26 : 8, color: KILL_COLOR[ev.kind], at: [ev.x, 0.8, ev.z], speed: boss ? 8 : 5.5, up: boss ? 8 : 5, size: boss ? 0.22 : 0.13, life: boss ? 0.9 : 0.55 });
+          fx.emit({ kind: 'puff', n: boss ? 8 : 3, color: 0xefe6d2, at: [ev.x, 0.6, ev.z], speed: boss ? 2.6 : 1.6, up: 1.2, size: boss ? 0.4 : 0.2, life: boss ? 0.6 : 0.38 });
+          if (boss) { this.ring(ev.x, ev.z, PAL.gold, 4.2, 0.6, 0.95, true); if (!reducedMotion) this.shake = Math.max(this.shake, 0.7); }
+          break;
+        }
+        case 'burst':
+          this.ring(ev.x, ev.z, 0xc59bff, ev.radius, 0.45, 0.95, true);
+          this.ring(ev.x, ev.z, 0xffffff, ev.radius * 0.6, 0.25, 1);
+          fx.emit({ kind: 'shard', n: 16, color: PAL.super, at: [ev.x, 0.5, ev.z], speed: 7, up: 7, size: 0.16, life: 0.7 });
+          fx.emit({ kind: 'spark', n: 6, color: 0xffffff, at: [ev.x, 0.9, ev.z], speed: 6, up: 2, size: 0.22, life: 0.25 });
+          if (!reducedMotion) this.shake = Math.max(this.shake, 0.45);
+          break;
+        case 'spark':
+          fx.emit({ kind: 'spark', n: 3, color: 0xffffff, at: [ev.x, 0.9, ev.z], speed: 2.5, up: 1, size: 0.1, life: 0.15 });
+          break;
+        case 'telegraph': this.telegraph(ev.x, ev.z, ev.radius, ev.time); break;
+        case 'slam':
+          this.ring(ev.x, ev.z, 0xff5d73, ev.radius, 0.35, 0.95, true);
+          fx.emit({ kind: 'puff', n: 10, color: 0xe8c99a, at: [ev.x, 0.3, ev.z], speed: 3.5, up: 0.8, size: 0.28, life: 0.45 });
+          if (!reducedMotion) this.shake = Math.max(this.shake, 0.6);
+          break;
+        case 'townHit': if (!reducedMotion) this.shake = Math.max(this.shake, 0.12); break;
+        case 'heroDown':
+          this.ring(hp.x, hp.z, 0xff5d73, 1.6, 0.5, 0.9, true);
+          fx.emit({ kind: 'shard', n: 10, color: 0x7fd36b, at: [hp.x, 1.0, hp.z], speed: 4, up: 5, size: 0.14, life: 0.6 });
+          break;
+        case 'coin':
+          fx.emit({ kind: 'spark', n: 3, color: PAL.gold, at: [hp.x, 1.6, hp.z], speed: 1.5, up: 3, size: 0.14, life: 0.35 });
+          break;
+        case 'build': {
+          const p = PADS[ev.pad];
+          this.ring(p.x, p.z, 0xffd166, 1.8, 0.45, 0.9);
+          fx.emit({ kind: 'puff', n: 8, color: 0xf0d9a8, at: [p.x, 0.3, p.z], speed: 2.5, up: 0.8, size: 0.26, life: 0.45 });
+          break;
+        }
+      }
     }
   }
 
-  private ring(x: number, z: number, color: number, radius: number, life: number, opacity: number) {
-    const mesh = new Mesh(this.geo.ring, basic(color, opacity));
-    mesh.rotation.x = -Math.PI / 2;
-    mesh.position.set(x, 0.06, z);
-    mesh.scale.setScalar(radius * 0.3);
-    mesh.renderOrder = 3;
-    this.scene.add(mesh);
-    this.fx.push({ mesh, age: 0, life, grow: radius, fade: opacity, y0: 0.06 });
+  private ring(x: number, z: number, color: number, radius: number, life: number, opacity: number, ink = false) {
+    const add = (geo: RingGeometry, c: number, order: number) => {
+      const mesh = new Mesh(geo, basic(c, opacity));
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.set(x, 0.06, z);
+      mesh.scale.setScalar(radius * 0.3);
+      mesh.renderOrder = order;
+      this.scene.add(mesh);
+      this.fx.push({ mesh, age: 0, life, grow: radius, fade: opacity, y0: 0.06 });
+    };
+    // Shockwaves get an ink band underneath, like the characters' outlines.
+    if (ink) add(this.geo.inkRing, PAL.ink, 3);
+    add(this.geo.ring, color, 4);
   }
   private telegraph(x: number, z: number, radius: number, time: number) {
     const mesh = new Mesh(this.geo.ring, basic(0xff3b4e, 0.85));
@@ -474,7 +557,8 @@ export class RushView {
     });
     this.setBar(this.townBar, s.town.hp / s.town.maxHp);
     this.updateAim(s, aim);
-    this.updateFx(dt);
+    this.updateFx(this.fxPaused ? 0 : dt);
+    this.particles.update(this.fxPaused ? 0 : dt);
     this.updateCamera(s, dt);
   }
 
@@ -584,7 +668,8 @@ export class RushView {
 
   render() { this.renderer.render(this.scene, this.camera); }
   /** Renderer statistics for the debug overlay and performance notes. */
-  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.enemies.size, shots: this.shots.size }; }
+  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.enemies.size, shots: this.shots.size, particles: this.particles.active }; }
 }
 
+const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x9b4dd6, brute: 0xd0602f, boss: 0x6d55c4 };
 const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };
