@@ -39,6 +39,8 @@
     "models:mage": "blender --python-exit-code 1 -b --python tools/blender/build_mage.py --",
     "models:elf": "blender --python-exit-code 1 -b --python tools/blender/build_elf.py --",
     "models:tao": "blender --python-exit-code 1 -b --python tools/blender/build_tao.py --",
+    "models:cheongun-ultimate": "blender --python-exit-code 1 -b --python tools/blender/build_cheongun_ultimate.py --",
+    "models:cheongun-ultimate:check": "node tools/check-cheongun-ultimate.mjs",
     "models:druid": "blender --python-exit-code 1 -b --python tools/blender/build_druid.py --",
     "models:pet-wolf": "blender --python-exit-code 1 -b --python tools/blender/build_pet_wolf.py --",
     "models:fire-action": "blender --python-exit-code 1 -b --python tools/blender/build_fire_tower_action.py --",

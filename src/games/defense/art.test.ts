@@ -618,6 +618,26 @@ test('a missing Cheongun cast or walk image falls back as a whole without disabl
  }
 });
 
+test('Cheongun ultimate uses eight grounded directions, simulation time and complete-set fallback',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'tao-ultimate-ready');
+ for(let d=0;d<8;d++){
+  const a=d*Math.PI/4,h={x:Math.cos(a),y:Math.sin(a)};
+  for(const [age,index] of [[0,0],[.16,0],[.17,1],[.33,1],[.34,2],[.499,2]] as const){
+   const sample=art.taoUltimateSpriteAsset('tao',h,age)!;
+   assert.equal(sample.frame,index);assert.equal(sample.asset.src,`/defense/models/cheongun-ultimate-${d}-atlas.webp`);
+   assert.equal(sample.asset.viewBox,`${index*192} 0 192 192`);assert.equal(sample.asset.groundY,165);
+   assert.equal(sample.asset.displayScale,1.2*6.8/5.8);assert.equal(sample.asset.oriented,true);
+   assert.equal(art.taoUltimateSpriteAsset('tao',h,age,true)?.frame,0);
+  }
+  assert.equal(art.taoUltimateSpriteAsset('tao',h,.5),null);
+ }
+ assert.equal(art.taoUltimateSpriteAsset('tao',{x:0,y:0},.1),null);assert.equal(art.taoUltimateSpriteAsset('elf',{x:1,y:0},.1),null);
+ assert.equal(requests.filter(s=>s.includes('cheongun-ultimate-')).length,8);assert.ok(!requests.some(s=>s.endsWith('.glb')));
+ const {art:failed}=await loadWithImageResults(s=>s.endsWith('cheongun-ultimate-4-atlas.webp'),'tao-ultimate-fail');
+ assert.equal(failed.taoUltimateSpriteAsset('tao',{x:1,y:0},.1),null);
+ assert.ok(failed.directionalActionSpriteAsset('tao','strike',{x:0,y:0},{x:1,y:0}),'existing cast remains available');
+});
+
 test('Luna uses one complete modeled body and projection for idle, walking and eight cast directions',async()=>{
  const {art,requests}=await loadWithImageResults(()=>false,'luna-ready');
  const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/luna-druid.json',import.meta.url),'utf8'));
