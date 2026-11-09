@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {AnimationMixer, LoopOnce, Quaternion, Vector3} from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import {createHitClip} from '../../src/model-lab-hit.ts';
+import {createHitClip, hitFlashStrength} from '../../src/model-lab-hit.ts';
 
 for(const id of ['polar-bear','gecko-ranger']) test(`${id} hit clip remains grounded and returns to rest`,async()=>{
  const bytes=await readFile(`public/defense/models/prototypes/${id}.glb`);
@@ -20,3 +20,5 @@ for(const id of ['polar-bear','gecko-ranger']) test(`${id} hit clip remains grou
  mixer.setTime(.48);assert.ok(body.quaternion.angleTo(start)<1e-6);
  assert.equal(createHitClip('unknown',root),null);
 });
+
+test('hit accent is short and bounded',()=>{assert.equal(hitFlashStrength(0),0);assert.equal(hitFlashStrength(.16),0);assert.ok(hitFlashStrength(.08)>.37);assert.equal(hitFlashStrength(1),0)});

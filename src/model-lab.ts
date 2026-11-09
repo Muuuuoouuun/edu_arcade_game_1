@@ -1,10 +1,10 @@
-import { AmbientLight, AnimationMixer, Box3, DirectionalLight, GridHelper, Group, LoopOnce, Mesh, MeshStandardMaterial, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Scene, ShadowMaterial, SRGBColorSpace, Vector3, WebGLRenderer, ACESFilmicToneMapping, type AnimationAction, type Object3D, type Material } from 'three';
+import { AmbientLight, AnimationMixer, Box3, Color, DirectionalLight, GridHelper, Group, LoopOnce, Mesh, MeshStandardMaterial, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Scene, ShadowMaterial, SRGBColorSpace, Vector3, WebGLRenderer, ACESFilmicToneMapping, type AnimationAction, type Object3D, type Material } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { PMREMGenerator } from 'three';
 import './model-lab.css';
-import { createHitClip } from './model-lab-hit';
+import { createHitClip, hitFlashStrength } from './model-lab-hit';
 
 type Model = {id:string;name:string;kind:string;detail:string;description:string;source:string;command:string;action:string;clip?:string;prototype?:boolean;viewRotation?:number};
 const models:Model[] = [
@@ -29,6 +29,7 @@ const scene = new Scene(), camera = new PerspectiveCamera(35,1,.05,100), loader 
 const pivot = new Group(); scene.add(pivot);
 let currentMaterials:MeshStandardMaterial[] = [];
 const emissionLevels = new Map<MeshStandardMaterial,number>();
+const baseColors = new Map<MeshStandardMaterial,Color>(), flashColor = new Color(0xff694b);
 const parts:{object:Object3D;position:Vector3;rotation:Vector3;type:'core'|'barrel'|'bolt'|'turret'}[] = [];
 
 function materials(object:Object3D) {
@@ -43,14 +44,14 @@ function release(object:Object3D) {
 // Authoring +Y becomes GLB -Z; character defaults show the face and weapon.
 function resetView() {pivot.rotation.y = models.find(model => model.id===currentModelId)?.viewRotation??0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,2.0,0);controls?.update();}
 function stopAction() {
- attackAction?.stop(); hitAction?.stop(); pose.value = '0'; $('pose-value').textContent = '0%'; shotAt = -Infinity; stage.dataset.action = 'idle'; redraw = true;
+ attackAction?.stop(); hitAction?.stop(); baseColors.forEach((color,material) => material.color.copy(color)); pose.value = '0'; $('pose-value').textContent = '0%'; shotAt = -Infinity; stage.dataset.action = 'idle'; redraw = true;
 }
 function clearModel() {
  mixer?.stopAllAction();
  if(mixer)mixer.uncacheRoot(mixer.getRoot());
  attackAction = null; hitAction = null; mixer = null;
  if(current){pivot.remove(current);release(current);current = null;}
- parts.length = 0; currentMaterials = []; emissionLevels.clear(); pivot.rotation.y = 0; stopAction();
+ parts.length = 0; currentMaterials = []; emissionLevels.clear(); baseColors.clear(); pivot.rotation.y = 0; stopAction();
 }
 function setReady(ready:boolean) {
  $('pose-control').hidden = !ready || !attackAction;
@@ -119,7 +120,7 @@ async function select(index:number) {
   let triangles = 0, meshes = 0;
   current.traverse(node => {if(node instanceof Mesh){node.castShadow = true;node.receiveShadow = true;meshes++;triangles += (node.geometry.index?.count??node.geometry.attributes.position.count)/3;}});
   currentMaterials = [...materials(current)].filter((material):material is MeshStandardMaterial => material instanceof MeshStandardMaterial);
-  currentMaterials.forEach(material => {material.wireframe = wireEnabled;material.envMapIntensity = .55;emissionLevels.set(material,material.emissiveIntensity);});
+  currentMaterials.forEach(material => {material.wireframe = wireEnabled;material.envMapIntensity = .55;emissionLevels.set(material,material.emissiveIntensity);baseColors.set(material,material.color.clone());});
   for(const type of ['core','barrel','bolt','turret'] as const){const object = current.getObjectByName(type==='core'?'fire-core':type);if(object)parts.push({object,position:object.position.clone(),rotation:new Vector3(object.rotation.x,object.rotation.y,object.rotation.z),type});}
   const clip = gltf.animations.find(animation => animation.name===model.clip);
   if(clip){
@@ -190,6 +191,8 @@ function draw(now:number) {
   }
   if(current){current.rotation.z = power*.018;for(const material of currentMaterials)if(material.emissive.getHex()!==0)material.emissiveIntensity = (emissionLevels.get(material)??.6)+power*2;}
   if(clipMoving){mixer?.update(dt);redraw = true;}
+  const flash = hitAction?.isRunning() ? hitFlashStrength(hitAction.time) : 0;
+  baseColors.forEach((color,material) => material.color.copy(color).lerp(flashColor,flash));
   if(!attackAction&&age>=.8&&stage.dataset.action==='firing'){stage.dataset.action = 'idle';redraw = true;}
   if(controls?.update())redraw = true;
   if(renderer&&(redraw||autoMoving||power>0||clipMoving)&&now-lastRender>=33){
