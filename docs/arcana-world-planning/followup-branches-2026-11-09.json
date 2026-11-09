@@ -1,0 +1,850 @@
+{
+  "checked_at_kst": "2026-11-09T11:40:29.430150+09:00",
+  "repositories": {
+    "edu_arcade_game_1": {
+      "main": "aeaa40f9ebf3d33595690ecf4c2529be9fc4af9d",
+      "local_head": "aeaa40f9ebf3d33595690ecf4c2529be9fc4af9d",
+      "branches": [
+        {
+          "branch": "claude/nice-meitner-5fin85",
+          "head": "bf7c1c67ebb23a9d7386d87c67f470dea362b0f9",
+          "ahead": 0,
+          "behind": 326,
+          "merged": true
+        },
+        {
+          "branch": "claude/wizardly-shannon-zqnwg0",
+          "head": "6fa82a706a5240a3b5335f6e46d1963c3e0edb3a",
+          "ahead": 0,
+          "behind": 17,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-android-install-20261106",
+          "head": "3038bb9278816924f7f974f690aae4b94fcfb3c8",
+          "ahead": 0,
+          "behind": 133,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-api-production-20261109",
+          "head": "1686b6c491bd6c5e74069d8acfcc007687274437",
+          "ahead": 0,
+          "behind": 82,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-art-camp-20261031",
+          "head": "080c5a77edea1fbd9cf81d673db2da401c5126ee",
+          "ahead": 0,
+          "behind": 282,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-character-motion",
+          "head": "86fc245d1b2628b2faeabe86b2032bcd273e5787",
+          "ahead": 0,
+          "behind": 5,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-concept-expansion-20261106",
+          "head": "597a9bb9f28200a63ca0a81a98997fc8a5da07f9",
+          "ahead": 0,
+          "behind": 116,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-development-loop-20261030",
+          "head": "f6b4777e9487dfbc5f94ec27b324154395ce89e9",
+          "ahead": 0,
+          "behind": 178,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-dwarf-model-20261031",
+          "head": "ee6f695a69f50649f651820b6af2461ff6f38400",
+          "ahead": 0,
+          "behind": 284,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-graphics-20261029",
+          "head": "f6d2dd7c0a42826c4b2fdb56bbe789f97efe55bf",
+          "ahead": 0,
+          "behind": 322,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-hourly-production-20261101",
+          "head": "9ee075692fc3a352266025103399deaa2038b799",
+          "ahead": 0,
+          "behind": 274,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-kar-3d-preview-20261109",
+          "head": "f5f0c28c8868a42ef307d9f073a845b4ec0236fd",
+          "ahead": 0,
+          "behind": 12,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-lightning-model-20261031",
+          "head": "9b0939d7505663d43e456c9dc33af40690b83469",
+          "ahead": 0,
+          "behind": 278,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261030-0342",
+          "head": "053a10962601ef57f73f1f4af8f43fe07253a92b",
+          "ahead": 0,
+          "behind": 307,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261030-0542",
+          "head": "caf1c5132f31664433e7a5716dc3136cd1077410",
+          "ahead": 0,
+          "behind": 304,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261030-1142",
+          "head": "681454258782a95c4441db7e50b7c5e4b5ccc215",
+          "ahead": 0,
+          "behind": 299,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261030-1542",
+          "head": "933d51e40723500868b50888b43d3d43871c98dd",
+          "ahead": 0,
+          "behind": 297,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261030-1942",
+          "head": "d4579a68f2b6abe5260bd16e841471158f3a993e",
+          "ahead": 0,
+          "behind": 295,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261030-2042",
+          "head": "86ce3f3477abd41a275e6b459a7acc12946f4999",
+          "ahead": 0,
+          "behind": 293,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261030-2142",
+          "head": "e2acd5db0db0f6293840a27b9271f2149415b31d",
+          "ahead": 0,
+          "behind": 291,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261030-2342",
+          "head": "d89f881150259df557c532d9d2a962166c8236ce",
+          "ahead": 0,
+          "behind": 288,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261031-0342",
+          "head": "c5b83821ca3bec3891af6b2313fe1ad03cc25f36",
+          "ahead": 0,
+          "behind": 286,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261031-2342",
+          "head": "988a9720c7ea62c9b7c35c448eb781a5da1eab58",
+          "ahead": 0,
+          "behind": 276,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261101-0224",
+          "head": "04814daceee6c3a9be783dcfc4f2f8d4dd389f5b",
+          "ahead": 0,
+          "behind": 271,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-0115",
+          "head": "e2ef306fd29e8d961b3a927806625dc64e20dbec",
+          "ahead": 0,
+          "behind": 267,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-0214",
+          "head": "8f45cc36f23e7fdb38aff67ba8652ac5d385f5b3",
+          "ahead": 0,
+          "behind": 265,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-0315",
+          "head": "87a22cb05c7faeb9950076ae67a6c106521f67a0",
+          "ahead": 0,
+          "behind": 263,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-0415",
+          "head": "d7b80f4e650f5b52cb174d996fd73c3be086cce7",
+          "ahead": 0,
+          "behind": 261,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-0514",
+          "head": "c814a2828ca0bfcc001d2ff3ead40b98cfc759dc",
+          "ahead": 0,
+          "behind": 259,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-0614",
+          "head": "7a5981ea774bcc8afb57fa629ec8843f9c3a27dc",
+          "ahead": 0,
+          "behind": 257,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-0714",
+          "head": "df08b41ec335416ef4b0c10c4c16997791962773",
+          "ahead": 0,
+          "behind": 255,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-0814",
+          "head": "3a959ad4a129bb0ebabab120839cc9accfa6610b",
+          "ahead": 0,
+          "behind": 252,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-0920",
+          "head": "bb9e92cefdc285266db6294d01272165db70feec",
+          "ahead": 0,
+          "behind": 250,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-1013",
+          "head": "e8b24ba030fa3a7a1e7ca5fdf80c451cf8736cbd",
+          "ahead": 0,
+          "behind": 248,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-1114",
+          "head": "8cb3f68d2c52689ecdb58dae0dd2505211bfcd06",
+          "ahead": 0,
+          "behind": 246,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-1215",
+          "head": "2d7117eb566c7f3e569dc9eb53544b1cffe0e4e2",
+          "ahead": 0,
+          "behind": 244,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-1316",
+          "head": "567cdbaccc7e9134610ac22809fee07101119d0d",
+          "ahead": 0,
+          "behind": 242,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-1414",
+          "head": "a83106b6076c1b2b825faa18532f042f9b363580",
+          "ahead": 0,
+          "behind": 240,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-1514",
+          "head": "2924c0fc2f08edfefcc6e99d5060e95a2ddd1b5b",
+          "ahead": 0,
+          "behind": 237,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-1614",
+          "head": "34d5832f7267042d8eb63352d4af64bf67948c9d",
+          "ahead": 0,
+          "behind": 235,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-1814",
+          "head": "656860a3910ac2465724a67dae7aa0d1b4b198ee",
+          "ahead": 0,
+          "behind": 233,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-1913",
+          "head": "abed7888617d1a251520202fc628c258e4d18f8b",
+          "ahead": 0,
+          "behind": 230,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-2013",
+          "head": "701a582edf6b8d955a5c58986febeaee963d0618",
+          "ahead": 0,
+          "behind": 227,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-2113",
+          "head": "223b3933e5dbea2ec35b1e5a1d54357fb4df137d",
+          "ahead": 0,
+          "behind": 225,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-2213",
+          "head": "b7386d904bb94721743b5e2333de26f59f06c37a",
+          "ahead": 0,
+          "behind": 223,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261102-2313",
+          "head": "eede58146fc030934afb0266de59d2336ff39972",
+          "ahead": 0,
+          "behind": 221,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-0014",
+          "head": "81510e1b9da01150b96a97ed6c33b76158b0779f",
+          "ahead": 0,
+          "behind": 217,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-0514",
+          "head": "6553f8a3dc620f426b1f97de6efc4780c76459f6",
+          "ahead": 0,
+          "behind": 214,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-0615",
+          "head": "f759776089e63eb569e0cc625ed43ff156bcc6a4",
+          "ahead": 0,
+          "behind": 212,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-0715",
+          "head": "f66a223cd715fc530803b2c9214410deaf045c19",
+          "ahead": 0,
+          "behind": 210,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-0813",
+          "head": "99fae02c060a3efb963fd12b64402653303de8ea",
+          "ahead": 0,
+          "behind": 208,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-0915",
+          "head": "9f3fa32b20dfd630289eb03fb8dca5b0ffae2dd6",
+          "ahead": 0,
+          "behind": 205,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-1015",
+          "head": "270529cbbdbaf0dfe607171e254ff547f22cf960",
+          "ahead": 0,
+          "behind": 202,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-1120",
+          "head": "bea73745857ba941cab1e6b0a3b6763ea73cab0c",
+          "ahead": 0,
+          "behind": 199,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-1213",
+          "head": "1b65fba9f531302c056bdd82cd30ef58de597baf",
+          "ahead": 0,
+          "behind": 196,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-1314",
+          "head": "a075e7a084069bfc494a020a6b2de9e54037f781",
+          "ahead": 0,
+          "behind": 194,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-1414",
+          "head": "8a70cf39efc77e20b5f746271daa034a37c1bbda",
+          "ahead": 0,
+          "behind": 192,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-1513",
+          "head": "51e9fc1e3fa0a0e9087ff91b88bd4f629907f510",
+          "ahead": 0,
+          "behind": 190,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-1614",
+          "head": "96b88b125a8c8f38baf0f5677b2f981ff0df3473",
+          "ahead": 0,
+          "behind": 188,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-1715",
+          "head": "ee808164d3a15c51094421e46c4ff243ca1abdc4",
+          "ahead": 0,
+          "behind": 186,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-1813",
+          "head": "b2b3bdc940e68346e54d1e780fd349217338649f",
+          "ahead": 0,
+          "behind": 183,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-1914",
+          "head": "52aca5398b0cc911c4a748d0d55cf70480de160e",
+          "ahead": 0,
+          "behind": 181,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261103-2015",
+          "head": "ba5141ee49d51877614ab6408e620a54da9d5524",
+          "ahead": 0,
+          "behind": 179,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261106-1020",
+          "head": "c3b536154a5a99f61450b30134e62f38e63ebb4c",
+          "ahead": 0,
+          "behind": 129,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261106-1215",
+          "head": "c0cf1307dbd5b7c376a67bdcde0ffc3681b1c41b",
+          "ahead": 0,
+          "behind": 127,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261106-1320",
+          "head": "c94ab8ff0a5cba2c9e259862b54c6717ae256186",
+          "ahead": 0,
+          "behind": 125,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261106-1415",
+          "head": "b12fa8890336ae38b2e2d2c078a74c8af75e7a1f",
+          "ahead": 0,
+          "behind": 121,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261106-1615",
+          "head": "360d2e503f10ddde47ddf01fde794f2a268c2120",
+          "ahead": 0,
+          "behind": 118,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261106-1715",
+          "head": "30ee577e15043163295b53ee0df851ff6e97f52b",
+          "ahead": 0,
+          "behind": 113,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261106-1815",
+          "head": "4b580b8e56538f612790e895317fe537568056d9",
+          "ahead": 0,
+          "behind": 109,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261106-1915",
+          "head": "9214ec36af22e87eb428189f929a6a9406502f14",
+          "ahead": 0,
+          "behind": 107,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261106-2015",
+          "head": "81bb4afeb5b47c054470ed8aef8350af4731f865",
+          "ahead": 0,
+          "behind": 105,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261106-2115",
+          "head": "e8cca5e99d2c38cb8d2d106abb4ec0939097370b",
+          "ahead": 0,
+          "behind": 102,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261106-2315",
+          "head": "33f608362494a624850791ae2c5c7b13d8e2c28e",
+          "ahead": 0,
+          "behind": 99,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261107-0015",
+          "head": "af798dd5038bee0f205135aaf9716a896938745d",
+          "ahead": 0,
+          "behind": 97,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261107-0215",
+          "head": "9052039c42adb4aaa8aa4b4e2ffd3e2904de5b12",
+          "ahead": 0,
+          "behind": 95,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261107-0315",
+          "head": "5a0c225185a6fa2cadc5d20921068a3c8cd0d8d2",
+          "ahead": 0,
+          "behind": 93,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261107-0416",
+          "head": "547bc716f8b7c63fb1624d56e0e4bc335578d4e4",
+          "ahead": 0,
+          "behind": 90,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261107-0916",
+          "head": "b2a873c9d2f74d419b85c39f5c1953e1577de883",
+          "ahead": 0,
+          "behind": 88,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261107-1015",
+          "head": "4e21c338fc6e740804e8e75d3538c21a46df9012",
+          "ahead": 0,
+          "behind": 86,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261107-1020",
+          "head": "cfef6986e94de5e993fe328a0cdf1d413b853c57",
+          "ahead": 0,
+          "behind": 78,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261109-0158",
+          "head": "93ca3aaefa7993105e17b6c9973fe22f89d96b2e",
+          "ahead": 0,
+          "behind": 73,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261109-0258",
+          "head": "6e2dcd0a690ff15cb85b0e069e5420b779cd4798",
+          "ahead": 0,
+          "behind": 70,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261109-0358",
+          "head": "2f5c7d53b93e09413e7ac82245fc77876dd7ff01",
+          "ahead": 0,
+          "behind": 68,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261109-0458",
+          "head": "7de64e690cefb9e1864d4b99defe17a2a3cd6853",
+          "ahead": 0,
+          "behind": 66,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261109-0558",
+          "head": "ec1cba9447ce6fdbcb9d9395fc6708a37c0f7ee2",
+          "ahead": 0,
+          "behind": 64,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261109-0658",
+          "head": "1061a20f63e3c98175027787ee2eec26db958afd",
+          "ahead": 0,
+          "behind": 61,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261109-0758",
+          "head": "c07dff558cf2e0eb4f403bd8646e69e11f76de79",
+          "ahead": 0,
+          "behind": 59,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-loop-20261109-0858",
+          "head": "a0e46a18c189ea7ad4cdcbf4b8945e064df3c4ea",
+          "ahead": 0,
+          "behind": 5,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-math-integrated-20261109",
+          "head": "40a7d4ad6964e8bd4b3c3147472a9ae543c49697",
+          "ahead": 0,
+          "behind": 9,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-mobile-baseline-20261106",
+          "head": "a168afe059506183f5550eec3ad34cb65e7194d7",
+          "ahead": 0,
+          "behind": 135,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-mobile-battle-20261102",
+          "head": "0dbf5882d955c8866b4fcdc76aa356b5753e4b6c",
+          "ahead": 0,
+          "behind": 269,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-mobile-integration-20261109",
+          "head": "c9487bbbc46b703360358b4badadeb8a3fea1912",
+          "ahead": 0,
+          "behind": 14,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-model-actions-20261109",
+          "head": "f93be6572825a054f0907b00357497cbd77b80d1",
+          "ahead": 0,
+          "behind": 75,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-modeling-focus-20261030",
+          "head": "9d0443b9f4b021205b5dbaf1a437ae2500ce946f",
+          "ahead": 0,
+          "behind": 302,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-polar-tropical-concepts-20261106",
+          "head": "1c7fd5a58115acf2ea4b0ffce7b89071f4541146",
+          "ahead": 0,
+          "behind": 111,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-self-contained-math-20261109",
+          "head": "bfdca24b293b687623a94391d9e8e4d648a4f518",
+          "ahead": 0,
+          "behind": 12,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-stage-experience-20261106",
+          "head": "0bf3414e7fde26a360a25f1f606a68c4b4101acc",
+          "ahead": 94,
+          "behind": 85,
+          "merged": false,
+          "changed_file_count": 5503,
+          "code_file_examples": [
+            "src/camp.css",
+            "src/components/DefenseBattle.tsx",
+            "src/components/DefenseBoard.tsx",
+            "src/components/DefenseCamp.tsx",
+            "src/components/DefenseEffects.tsx",
+            "src/components/DefenseGame.tsx",
+            "src/components/DefenseTerrain.tsx",
+            "src/components/DefenseThemeScenery.tsx",
+            "src/components/defenseInput.test.ts",
+            "src/components/defenseInput.ts",
+            "src/components/defenseSpeed.test.ts",
+            "src/components/defenseSpeed.ts",
+            "src/defense-board.css",
+            "src/defense-mobile.css",
+            "src/frontier.css"
+          ],
+          "subject": "feat(frontier): deepen river crossing and ground the walkable banks",
+          "patch_equivalence": {
+            "+": 76,
+            "-": 4
+          }
+        },
+        {
+          "branch": "codex/arcana-subject-concepts-20261109",
+          "head": "c43a0f45da04d9854efbb656213bf088dc8b040f",
+          "ahead": 0,
+          "behind": 84,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-theme-campaign-20261030",
+          "head": "86e35c122c9e804e157b9c976d01a1d9831fb7da",
+          "ahead": 0,
+          "behind": 311,
+          "merged": true
+        },
+        {
+          "branch": "codex/arcana-world-art-planning",
+          "head": "8e09b967b038db433df713a95892813694735674",
+          "ahead": 0,
+          "behind": 322,
+          "merged": true
+        }
+      ],
+      "open_prs": []
+    },
+    "math_speed": {
+      "main": "8a316f3b6095db0ccf285e4ef43db6fd9a560275",
+      "local_head": "8a316f3b6095db0ccf285e4ef43db6fd9a560275",
+      "branches": [
+        {
+          "branch": "origin",
+          "head": "8a316f3b6095db0ccf285e4ef43db6fd9a560275",
+          "ahead": 0,
+          "behind": 0,
+          "merged": true
+        },
+        {
+          "branch": "claude/busy-newton-36e6a2",
+          "head": "e33e5a294a3cb8931ab0770b59d190ad16bd94d6",
+          "ahead": 0,
+          "behind": 12,
+          "merged": true
+        },
+        {
+          "branch": "claude/game-graphics-ui-polish-g4gn20",
+          "head": "8fb8e631e5d4f57e5a615324089b442b117a2171",
+          "ahead": 0,
+          "behind": 10,
+          "merged": true
+        },
+        {
+          "branch": "claude/gracious-ptolemy-hqd6k5",
+          "head": "e15437b7c27e5c1172268b0599a7148f3b2ba570",
+          "ahead": 0,
+          "behind": 14,
+          "merged": true
+        },
+        {
+          "branch": "claude/kind-clarke-jctdfa",
+          "head": "aa04c9692ef300652ee2301ef03465084462095b",
+          "ahead": 0,
+          "behind": 14,
+          "merged": true
+        }
+      ],
+      "open_prs": []
+    },
+    "Word_check": {
+      "main": "926c7fa4e49ccf127747b968f01813bd564ee11e",
+      "local_head": "926c7fa4e49ccf127747b968f01813bd564ee11e",
+      "branches": [
+        {
+          "branch": "origin",
+          "head": "926c7fa4e49ccf127747b968f01813bd564ee11e",
+          "ahead": 0,
+          "behind": 0,
+          "merged": true
+        },
+        {
+          "branch": "codex/initial-commit",
+          "head": "da6d9c45ab0cb667b5a6751d516f7ac1a38bc0f8",
+          "ahead": 0,
+          "behind": 2,
+          "merged": true
+        }
+      ],
+      "open_prs": []
+    }
+  },
+  "defense_atlas": {
+    "full_name": "Muuuuoouuun/defense_atlas",
+    "description": "국방 데이터 허브 — 정보와 기회의 접근 격차를 낮추는 커뮤니티·도구",
+    "default_branch": "main",
+    "pushed_at": "2026-11-01T01:46:51Z",
+    "fork": false,
+    "relation": "Unrelated national-defense data hub. README confirms research/community SQLite MVP, not Arcana game."
+  },
+  "loop": {
+    "running": true,
+    "job_running": false,
+    "last_run": "20261109T015814Z-32def8c7",
+    "receipt_status": "success",
+    "actual_summary_status": "blocked, no change",
+    "reason": "Worker GitHub credentials HTTP401; parent audit gh access currently succeeds. Do not mark development complete from CLI success alone.",
+    "summary_path": "/workspace/.cloud-setup/arcana-loop/runs/20261109T015814Z-32def8c7/summary.md"
+  },
+  "recommendations": [
+    "Keep aeaa40f main as integration baseline; it includes PR84–96 verified merges.",
+    "PR96 merged concurrently during audit. Keep workshop hit reactions distinct from campaign hit integration; real-device and full-loop validation remain.",
+    "Do not blanket merge stage-experience: +94/-85 commits, 5503 files (4578 source-art,656 public-art), 76 non-equivalent and4 equivalent nonmerge patches. Select one Frontier/terrain/model slice after dependency and save checks.",
+    "Planning branch wizardly-shannon6fa82a7 is already ancestral to main via PR93; do not treat it as separate pending planning.",
+    "Make one coherent playable vertical slice: camp → 3–5minute combat → reward/upgrade → retry; then single hero/tower production integration and actual Android lifecycle/performance evidence."
+  ],
+  "initial_snapshot": {
+    "checked_at_kst": "2026-11-09T11:32:43.300765+09:00",
+    "main": "d48446242c6109e9933ea6ae929568abf1bc0407",
+    "open_prs": [
+      {
+        "headRefName": "codex/arcana-character-motion",
+        "headRefOid": "86fc245d1b2628b2faeabe86b2032bcd273e5787",
+        "isDraft": true,
+        "number": 96,
+        "title": "시안: 북극곰·도마뱀 피격 모션 작업실",
+        "updatedAt": "2026-11-09T01:04:31Z"
+      }
+    ],
+    "note": "PR96 was draft at first inspection and merged concurrently during audit."
+  },
+  "latest_merge": {
+    "pr": 96,
+    "sha": "aeaa40f9ebf3d33595690ecf4c2529be9fc4af9d",
+    "status": "merged",
+    "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/96"
+  }
+}
