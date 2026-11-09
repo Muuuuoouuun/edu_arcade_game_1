@@ -14,6 +14,9 @@ Cycle 68 bake: the painted ivory robe sits at 64px gray 108, only 8 away from th
 cone robe overlapped Ian's draft (0.71). So the outer robe and front panel are ink-teal/jade with ivory kept
 for collar and cuffs (gray 85), long hair and two jade ribbons stream back and the talisman is held out to the
 front (Ian 0.53, Riel 0.57, Bron 0.36 at 64px).
+Cycle 71: windup raises the talisman high behind the head with the sword fingers far forward, recover keeps the
+throwing arm low and forward (64px overlap with idle: windup 0.85 -> 0.66, recover 0.81 -> 0.70). Five poses at
+WebP q84 = 110,238 B (<= 112 KB).
 Each pose is built from pose parameters in a fresh scene; a production script should key the same values
 on pivots (body, head, ribbon, near-arm, far-arm, talisman, orbit, sleeves).
 """
@@ -168,11 +171,13 @@ orbit=False;sleeve_lift=0;ribbon=.10;robe_flare=0;tal_tilt=0
 if POSE=='idle':
  HF=SF+D*.60+Z*.10;HN=SN-D*.22+Vector((0,.10,-.42));TAL=HF+Z*.34
 elif POSE=='windup':
- HF=SN-D*.18+Z*.62;HN=SF+D*.64+Z*.06;TAL=HF+Z*.30-D*.06;tal_tilt=-.35;ribbon=.18
+ # cycle 71: talisman hand high behind the head, sword fingers reaching far forward (idle overlap 0.85 -> <=0.80)
+ HF=SN-D*.36+Z*.98;HN=SF+D*.98+Z*.16;TAL=HF+Z*.30-D*.12;tal_tilt=-.55;ribbon=.26;sleeve_lift=.08
 elif POSE=='strike':
  HF=SF+D*1.02+Z*.10;HN=SN+Vector((.02,-.18,-.36));TAL=HF+D*.50+Z*.08;tal_tilt=.25;ribbon=.34;robe_flare=.10;sleeve_lift=.12
 elif POSE=='recover':
- HF=SF+D*.58-Z*.28;HN=SN-D*.20+Vector((0,.10,-.38));TAL=None;ribbon=.22;robe_flare=.04
+ # cycle 71: follow-through — throwing arm still low and forward, back hand at the chest (idle overlap 0.81 -> <=0.80)
+ HF=SF+D*.92-Z*.12;HN=Vector((.06,.48,1.46));TAL=None;ribbon=.22;robe_flare=.06
 else: # cast — 뇌운 결계: both arms up, talisman overhead, charms circling the waist
  HF=SF+D*.10+Z*.80;HN=SN-D*.10+Z*.80;TAL=(HF+HN)/2+Z*.36;orbit=True;ribbon=.28;robe_flare=.12;sleeve_lift=.28
 tal_up=(Z+D*tal_tilt).normalized();tal_face=CAM
