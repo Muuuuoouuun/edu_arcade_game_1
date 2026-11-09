@@ -1,0 +1,26 @@
+{
+  "created": "2026-11-09",
+  "kind": "design-storyboard-not-runtime-atlas",
+  "generator": "OpenAI image_gen tool",
+  "reference": "public/defense/boss-models.webp",
+  "source": "art-source/defense/concepts/2026-11-09/enemy-design/boss-motion-storyboard.png",
+  "sha256": "dc32614b892e0a3d30984978c8f4033e0f067707ff9fbbf164bb825656fb01ff",
+  "size": [
+    1774,
+    887
+  ],
+  "preview": "docs/arcana-enemy-design/boss-motion-storyboard.webp",
+  "review": "Eight concept panels inspected. Tree root feet are stylized rather than anatomical rig reference. Frost release panel shows one example tower, while actual freeze is global across towers. New image is not a rig, animation, or production sprite sheet.",
+  "destruction_storyboard": {
+    "source": "art-source/defense/concepts/2026-11-09/enemy-design/enemy-destruction-storyboard.png",
+    "sha256": "7172c46a1e466019b18edaaa3639d1199a3386a65f253bd03150de520652ae07",
+    "size": [
+      1536,
+      1024
+    ],
+    "preview": "docs/arcana-enemy-design/enemy-destruction-storyboard.webp",
+    "reference": "boss-motion-storyboard.png",
+    "generator": "OpenAI image_gen tool",
+    "review": "Nine panels inspected: burn, ice shatter, metal disassembly. Stylized non-gory breakup; no new gameplay damage. Metal soldier is a new design candidate, not an exact render of existing Blender model. Stable camera/ground/rig topology must be reconstructed for actual animation; this is not a runtime atlas."
+  }
+}
