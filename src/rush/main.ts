@@ -1,6 +1,6 @@
 // Arcana Rush prototype bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
-import { ECONOMY, HERO, STEP, TOWER_LEVELS } from './data.ts';
+import { ECONOMY, HERO, TOWER_LEVELS } from './data.ts';
 import { createRush, padCost, padInReach, stepRush, superReady, WAVE_COUNT, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
@@ -9,6 +9,7 @@ import { playCombatSound, unlockAudio, type CombatSoundKind } from '../lib/sound
 import { playHaptic } from '../lib/haptic.ts';
 import { collect, kingdomMods, settleBattle } from './kingdom.ts';
 import { stageDifficulty } from './stages.ts';
+import { advanceClock, createClock, hitStopFor, tryStop } from './clock.ts';
 import { loadKingdom, saveKingdom, TownScreen } from './town.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -199,24 +200,29 @@ function resize() {
 new ResizeObserver(resize).observe(surface);
 resize();
 
-let prev = performance.now(), acc = 0, fpsFrames = 0, fpsT = 0, fps = 0;
+let prev = performance.now(), fpsFrames = 0, fpsT = 0, fps = 0, hitStops = 0;
+let clock = createClock(prev / 1000);
 function frame(now: number) {
   const dt = Math.min(0.1, (now - prev) / 1000);
   prev = now;
   const running = (mode === 'play' && !paused) || mode === 'demo';
+  const seconds = now / 1000;
   if (running) {
-    acc += dt * speed;
-    let guard = 0;
-    while (acc >= STEP && guard++ < 40 && state.tick < freezeAt) {
+    const r = advanceClock(clock, seconds, speed);
+    clock = r.clock;
+    for (let i = 0; i < Math.min(r.steps, 40) && state.tick < freezeAt; i++) {
       const cmd = mode === 'demo' ? guardBot(state) : input.command();
       stepRush(state, cmd);
       feedback(state.events);
-      acc -= STEP;
+      // A big moment freezes the world for a beat; the rest of this frame's steps are dropped, not replayed.
+      const next = tryStop(clock, seconds, state.tick, hitStopFor(state.events), reducedMotion ? 0 : 1);
+      if (next !== clock) { clock = next; hitStops++; break; }
     }
-  } else acc = 0;
+  } else clock = { ...clock, acc: 0, last: seconds };
+  const stopped = running && seconds < clock.stopUntil;
   input.refreshAim();
-  // A frozen scene keeps rendering with real time so the camera settles and effects fade.
-  view.sync(state, running ? dt : 0, mode === 'play' ? input.aim : null);
+  // Rendering keeps real time (camera settles, effects fade); during a hit-stop the world pose holds still.
+  view.sync(state, running ? dt : 0, mode === 'play' ? input.aim : null, stopped);
   view.render();
   updatePops(dt);
   updateHud();
@@ -233,4 +239,4 @@ if (params.has('demo')) start('demo');
 else if (params.has('play')) start('play');
 
 // Read-only handle for automated browser checks.
-Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get kingdom() { return town.current; }, info: () => view.info(), towerLevels: TOWER_LEVELS.length } });
+Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, info: () => view.info(), towerLevels: TOWER_LEVELS.length } });

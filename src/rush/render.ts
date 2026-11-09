@@ -407,14 +407,16 @@ export class RushView {
     this.telegraphs.push({ mesh, fill, age: 0, life: time });
   }
 
-  sync(s: RushState, dt: number, aim: AimPreview) {
-    this.time += dt;
+  /** `held` = hit-stop: the world pose (walk bob, coin spin, hero clip) holds; effects and camera keep moving. */
+  sync(s: RushState, dt: number, aim: AimPreview, held = false) {
+    const worldDt = held ? 0 : dt;
+    this.time += worldDt;
     const h = s.hero, alive = h.downT <= 0;
     // Hero
     this.hero.visible = alive;
     this.hero.position.set(h.x, 0, h.z);
     this.heroBody.rotation.y = yaw(h.facing);
-    this.heroMixer?.update(dt);
+    this.heroMixer?.update(worldDt);
     this.setBar(this.heroBar, h.hp / HERO.hp);
     this.ammoSegs.forEach((seg, i) => {
       const full = h.ammo > i, partial = h.ammo === i ? h.reloadT / HERO.reload : 0;

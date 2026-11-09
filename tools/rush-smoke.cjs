@@ -40,6 +40,20 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await page.screenshot({ path: `${OUT}/desktop-demo.png` });
     const demo = await page.evaluate(() => ({ wave: __rush.state.wave, towers: __rush.state.towers.filter(Boolean).length, info: __rush.info() }));
     check(demo.towers >= 2, `demo built towers (${demo.towers}), draw calls ${demo.info.calls}`);
+    // Hit-stop: catch a stop in progress and confirm the simulation does not advance during it.
+    const stop = await page.evaluate(() => new Promise(done => {
+      const deadline = performance.now() + 45000;
+      const look = () => {
+        const now = performance.now() / 1000;
+        if (__rush.stopUntil > now + 0.03) {
+          const tick = __rush.state.tick;
+          setTimeout(() => done({ held: __rush.state.tick === tick, stops: __rush.hitStops }), 15);
+        } else if (performance.now() > deadline) done({ held: false, stops: __rush.hitStops, timeout: true });
+        else requestAnimationFrame(look);
+      };
+      look();
+    }));
+    check(stop.held, `hit-stop holds the simulation (${stop.stops} stops${stop.timeout ? ', none caught' : ''})`);
 
     // 2. Town (kingdom) loop: title → town → upgrade → persists across reload → battle uses the upgrade.
     await page.goto(BASE + '?seed=5');
