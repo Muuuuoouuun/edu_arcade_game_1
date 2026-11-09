@@ -1,0 +1,19 @@
+{
+  "status": 200,
+  "request_id": "req_a37b63e749b34a759feb18c4a5e7e6de",
+  "requested_model": "gpt-5.5",
+  "model": "gpt-5.5-2026-04-23",
+  "status_body": "completed",
+  "usage": {
+    "input_tokens": 213,
+    "input_tokens_details": {
+      "cache_write_tokens": 0,
+      "cached_tokens": 0
+    },
+    "output_tokens": 998,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 1211
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "fixture": {
+    "version": 1,
+    "gold": 300,
+    "cleared": [
+      1,
+      2
+    ],
+    "questClaimed": [
+      1
+    ],
+    "visitors": [
+      "mage",
+      "elf",
+      "dwarf"
+    ],
+    "seenVisitors": [
+      "mage",
+      "elf",
+      "dwarf"
+    ],
+    "training": 0,
+    "selectedHero": "mage",
+    "difficulty": "standard",
+    "processedRuns": []
+  },
+  "checks": [
+    "Legacy campaign readable; hero preview cancel unchanged, confirm free; growth cancel/confirm preserves costs.",
+    "Native back closes dialogs, camp→title; title leaves minimization to native runtime.",
+    "Native back pauses battle/resumes; background pauses until explicit resume.",
+    "Legacy arcade still opens same campaign without losing upgrade.",
+    "Pruned production mobile bundle loads title/camp/battle with no asset failures.",
+    "Reduced-motion disables opening animation; no overflow at360/390/844/1440."
+  ],
+  "errors": [],
+  "bad": []
+}
