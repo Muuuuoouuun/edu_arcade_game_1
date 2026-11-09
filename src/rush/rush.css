@@ -244,3 +244,52 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   #screen-result .actions { padding: 6px 0 8px; }
   #screen-result .actions > button { padding: 6px 18px; font-size: 17px; }
 }
+
+/* ---------- 3D town screen (cycle 08): the island is the background, tags sit on the buildings ---------- */
+#screen-town.town-screen { background: none; display: block; padding: 0; pointer-events: none; }
+#screen-town.town-screen[hidden] { display: none; }
+#screen-town.town-screen > * { pointer-events: auto; }
+#rush.in-town .hud-top, #rush.in-town .btn-fire, #rush.in-town .btn-super, #rush.in-town .hud-pill, #rush.in-town .hud-build, #rush.in-town .toast { display: none; }
+.town-tags { position: absolute; inset: 0; pointer-events: none !important; }
+.town-tag {
+  position: absolute; left: 0; top: 0; pointer-events: auto; min-height: 44px; padding: 5px 12px; border-radius: 14px;
+  border: 3px solid var(--outline); background: rgba(29, 20, 51, 0.88); color: #fff; display: flex; align-items: center; gap: 6px;
+  box-shadow: 0 4px 0 var(--outline); white-space: nowrap; touch-action: manipulation;
+}
+.town-tag b { font-family: var(--display); font-weight: 400; font-size: 15px; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; }
+.town-tag em { font-style: normal; color: var(--gold); font-size: 13px; font-weight: 700; }
+.town-tag .up { display: none; font-style: normal; color: #9df2b6; font-size: 13px; animation: tagUp 0.9s ease-in-out infinite; }
+.town-tag.can .up { display: inline; }
+.town-tag.on { background: linear-gradient(#ffe58a 0 50%, #ffc93c 50%); }
+.town-tag.on em { color: #7a4a00; }
+.town-tag.on .up { color: #2f7a3a; }
+@keyframes tagUp { 50% { transform: translateY(-3px); } }
+.town-bar { position: absolute; top: calc(8px + var(--safe-t)); left: calc(10px + var(--safe-l)); right: calc(10px + var(--safe-r)); display: flex; align-items: center; gap: 10px; }
+.town-bar h1 { margin: 0; flex: 1; font-family: var(--display); font-weight: 400; font-size: 26px; color: #fff; -webkit-text-stroke: 6px var(--outline); paint-order: stroke fill; text-shadow: 0 3px 0 var(--outline); }
+.town-bar .collect { width: auto; margin: 0; padding: 7px 14px; min-height: 44px; }
+.town-screen .town-reward { position: absolute; top: calc(64px + var(--safe-t)); left: 50%; transform: translateX(-50%); margin: 0; background: rgba(29, 20, 51, 0.88); white-space: nowrap; }
+.town-dock {
+  position: absolute; left: calc(10px + var(--safe-l)); right: calc(10px + var(--safe-r)); bottom: calc(10px + var(--safe-b));
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+}
+.town-dock .town-list { margin: 0; width: min(360px, 46%); grid-template-columns: 1fr; flex: none; }
+.town-row:not(.selected) { display: none; }
+.town-dock .town-row { background: rgba(29, 20, 51, 0.92); }
+.town-dock .town-up { min-height: 44px; }
+.town-dock .actions { flex: 1; justify-content: flex-end; align-items: center; min-width: 0; }
+.town-dock .stage-strip { flex-basis: 100%; justify-content: flex-end; }
+.town-dock .stage-chip { min-height: 44px; }
+.town-dock .actions > button { min-height: 44px; min-width: 0; }
+@media (max-height: 420px) {
+  .town-bar h1 { font-size: 19px; -webkit-text-stroke-width: 5px; }
+  .town-bar .town-res b { font-size: 15px; }
+  .town-dock { gap: 8px; bottom: calc(6px + var(--safe-b)); }
+  .town-dock .town-list { width: 290px; }
+  .town-dock .town-row { padding: 5px 7px; }
+  .town-dock .actions { gap: 6px; }
+  .town-dock .stage-strip { flex-wrap: nowrap; gap: 3px; }
+  .town-dock .stage-chip { min-width: 32px; padding: 2px; }
+  .town-dock .actions > button { padding: 6px 12px; font-size: 16px; }
+  .town-tag { padding: 3px 9px; }
+  .town-tag b { font-size: 13px; }
+}

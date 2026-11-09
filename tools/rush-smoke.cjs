@@ -63,6 +63,8 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await page.waitForTimeout(300);
     check(await page.isVisible('#screen-town'), 'title → town screen');
     await page.screenshot({ path: `${OUT}/desktop-town.png` });
+    await page.click('[data-select="attack"]');
+    check(await page.isVisible('[data-up="attack"]'), 'tapping a building tag shows its card');
     await page.click('[data-up="attack"]');
     await page.waitForTimeout(150);
     check(await page.evaluate(() => __rush.kingdom.perks.attack === 1), 'perk upgrade in town');

@@ -1,5 +1,6 @@
 // Town (kingdom) screen: storage + DOM. Rules live in kingdom.ts.
 import { STAGE_COUNT } from './stages.ts';
+import { SPOTS, type TownView } from './townScene.ts';
 import {
   canUpgrade, collect, createKingdom, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate, serializeKingdom, storageFull,
   upgrade, upgradeCost, type Kingdom, type Upgrade,
@@ -36,10 +37,21 @@ export class TownScreen {
   private timer = 0;
   /** Stage the battle button will start (defaults to the furthest unlocked stage). */
   stage = 1;
+  /** Building whose upgrade card is shown (picked by tapping its name tag in the 3D town). */
+  selected: Upgrade = 'castle';
   private $ = (id: string) => document.getElementById(id)!;
 
-  constructor(private root: HTMLElement) {
+  constructor(private root: HTMLElement, private view: TownView) {
     this.kingdom = loadKingdom();
+    const tags = this.$('town-tags');
+    tags.innerHTML = SPOTS.map(p => {
+      const row = ROWS.find(r => r.id === p.id)!;
+      return `<button class="town-tag" data-select="${p.id}" aria-label="${row.name}"><b>${row.name}</b><em data-tag-level></em><i class="up" aria-hidden="true">▲</i></button>`;
+    }).join('');
+    tags.addEventListener('click', e => {
+      const id = (e.target as HTMLElement).closest<HTMLElement>('[data-select]')?.dataset.select as Upgrade | undefined;
+      if (id) { this.selected = id; this.render(); }
+    });
     const list = this.$('town-list');
     list.innerHTML = ROWS.map(r => `
       <li class="town-row" data-id="${r.id}">
@@ -54,6 +66,7 @@ export class TownScreen {
       this.kingdom = upgrade(before, id, Date.now());
       saveKingdom(this.kingdom);
       if (level(this.kingdom, id) > level(before, id)) {
+        this.view.bump(id);
         const row = list.querySelector<HTMLElement>(`[data-id="${id}"]`);
         row?.classList.remove('bump'); void row?.offsetWidth; row?.classList.add('bump');
       }
@@ -74,6 +87,15 @@ export class TownScreen {
   }
 
   get current(): Kingdom { return this.kingdom; }
+  /** Pin the name tags over their buildings (call every frame while the town is shown). */
+  layout(rect: { width: number; height: number }) {
+    for (const p of SPOTS) {
+      const tag = this.root.querySelector<HTMLElement>(`[data-select="${p.id}"]`);
+      if (!tag) continue;
+      const at = this.view.labelAt(p.id, rect);
+      tag.style.transform = `translate(${Math.round(at.x)}px, ${Math.round(at.y)}px) translate(-50%, -100%)`;
+    }
+  }
   /** Replace the kingdom (e.g. after a battle reward) and persist it. */
   set(k: Kingdom) { this.kingdom = k; saveKingdom(k); this.render(); }
   reload() { this.kingdom = loadKingdom(); }
@@ -100,6 +122,14 @@ export class TownScreen {
       chip.querySelector('[data-stars]')!.textContent = open ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '잠김';
     });
     this.$('btn-battle').textContent = `스테이지 ${this.stage} 출전`;
+    this.view.sync(k);
+    for (const r of ROWS) {
+      const tag = this.root.querySelector<HTMLElement>(`[data-select="${r.id}"]`)!;
+      tag.querySelector('[data-tag-level]')!.textContent = `Lv ${level(k, r.id)}`;
+      tag.classList.toggle('can', canUpgrade(k, r.id));
+      tag.classList.toggle('on', r.id === this.selected);
+      this.root.querySelector<HTMLElement>(`[data-id="${r.id}"]`)!.classList.toggle('selected', r.id === this.selected);
+    }
     this.$('res-food').textContent = String(k.food);
     this.$('res-wood').textContent = String(k.wood);
     const collectBtn = this.$('btn-collect') as HTMLButtonElement;

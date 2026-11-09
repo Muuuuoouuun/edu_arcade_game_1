@@ -11,6 +11,7 @@ import { collect, kingdomMods, settleBattle } from './kingdom.ts';
 import { stageDifficulty } from './stages.ts';
 import { advanceClock, createClock, hitStopFor, tryStop } from './clock.ts';
 import { loadKingdom, saveKingdom, TownScreen } from './town.ts';
+import { TownView } from './townScene.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const params = new URLSearchParams(location.search);
@@ -29,7 +30,8 @@ let paused = false;
 /** Id of the battle in progress; a battle's kingdom reward is granted once per id. */
 let battleId = '';
 let stage = 1;
-const town = new TownScreen($('screen-town'));
+const townView = new TownView();
+const town = new TownScreen($('screen-town'), townView);
 const input = new RushInput({
   surface: $('rush-surface'), stick: $('stick'), knob: $('stick-knob'),
   fire: $('fire'), superBtn: $('super'), build: $('build'), startWave: $('start-wave'),
@@ -130,6 +132,7 @@ function updateHud() {
 function showScreen(id: 'title' | 'town' | 'result' | 'pause' | null) {
   for (const s of ['title', 'town', 'result', 'pause']) $(`screen-${s}`).hidden = s !== id;
   surface.classList.toggle('in-menu', id !== null);
+  surface.classList.toggle('in-town', id === 'town');
 }
 function openTown(rewardText = '') {
   mode = 'town';
@@ -196,6 +199,7 @@ window.addEventListener('keydown', e => { if (e.code === 'Escape' && mode === 'p
 function resize() {
   const r = surface.getBoundingClientRect();
   view.resize(Math.max(1, Math.round(r.width)), Math.max(1, Math.round(r.height)));
+  townView.resize(Math.max(1, Math.round(r.width)), Math.max(1, Math.round(r.height)));
 }
 new ResizeObserver(resize).observe(surface);
 resize();
@@ -224,7 +228,12 @@ function frame(now: number) {
   // Rendering keeps real time (camera settles, effects fade); during a hit-stop the world pose holds still.
   view.fxPaused = state.tick >= freezeAt;
   view.sync(state, running ? dt : 0, mode === 'play' ? input.aim : null, stopped);
-  view.render();
+  if (mode === 'town') {
+    // The kingdom has its own island scene; the battle scene is not drawn behind it.
+    townView.update(dt);
+    view.renderer.render(townView.scene, townView.camera);
+    town.layout(canvas.getBoundingClientRect());
+  } else view.render();
   updatePops(dt);
   updateHud();
   if (toastTimer > 0 && (toastTimer -= dt) <= 0) $('toast').classList.remove('show');
