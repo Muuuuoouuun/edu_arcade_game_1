@@ -13,6 +13,7 @@ import { createDefense, actDefense, stepDefense, questSatisfied as isQuestSatisf
 import { STAGES, HEROES, TOWERS, BRANCHES, ENEMIES, getStage, getSlots, stageLabel, getRegion, STAGE_COUNT } from '../games/defense/data';
 import { readCampaign, writeCampaign, stageUnlocked, completeRun, acknowledgeVisitor, trainCampaign, selectHero, selectDifficulty, trainingCost, resultFollowUp, lossAdvice } from '../games/defense/campaign';
 import { shouldPublishDefenseFrame } from './defenseFrame';
+import { advanceClock, bigImpact, createClock, stopAt } from './battleClock';
 import { readSpeedPreference, startingSpeed, writeSpeedPreference } from './defenseSpeed';
 import { combatCueFor } from './defenseSound';
 import { DIFFICULTIES } from '../games/defense/difficulty';
@@ -36,6 +37,7 @@ const greeting: Record<HeroId, string> = {
   barbarian: '서리산맥까지 올라왔다고? 마음에 드는군! 내 전투 망치로 앞길을 열어 주지.',
   druid: '다친 숲의 친구들을 돌봐 주셨군요. 저와 달빛 늑대도 함께하겠어요.',
 };
+function reducedMotion() { return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches; }
 function freshRunId() { return crypto.randomUUID(); }
 function latestStage(c: Campaign) { return Math.min(STAGE_COUNT, c.cleared.length + 1); }
 function completedWaves(s: DefenseState) { return s.phase === 'won' ? 4 : ['intermission', 'promotion'].includes(s.phase) ? s.wave : Math.max(0, s.wave - 1); }
@@ -146,25 +148,33 @@ export default function DefenseGame({ blocked, onExit, onFinish, sound, onToggle
   }, []);
   useEffect(() => {
     if (mode !== 'battle') return;
-    let frame = 0, last = performance.now(), lastPublish = last, accumulated = 0;
+    let frame = 0, lastPublish = performance.now(), lastBig = -Infinity, clock = createClock(lastPublish / 1000);
     let lastPublishedState = stateRef.current;
     const fixedStep = 1 / 60;
     const tick = (now: number) => {
-      const elapsed = Math.min(0.1, Math.max(0, (now - last) / 1000)); last = now;
       const before = stateRef.current;
       const finishing = (before.phase === 'won' || before.phase === 'lost') && before.effects.length > 0;
       if (modeRef.current === 'battle' && !blockedRef.current && !document.hidden && (['prep', 'wave', 'intermission'].includes(before.phase) || finishing) && !before.paused) {
-        accumulated += elapsed * (finishing ? 1 : before.speed);
-        let next = before;
-        while (accumulated >= fixedStep) {
-          next = stepDefense(next, fixedStep); accumulated -= fixedStep;
-          if (next.phase === 'promotion' || (!finishing && (next.phase === 'won' || next.phase === 'lost'))) { accumulated = 0; break; }
+        const advanced = advanceClock(clock, now / 1000, finishing ? 1 : before.speed, fixedStep);
+        clock = advanced.clock;
+        let next = before, impact = false;
+        for (let i = 0; i < advanced.steps; i++) {
+          const prev = next;
+          next = stepDefense(next, fixedStep);
+          // Hit-stop only freezes real time: the engine state after the stop is identical to a run without it.
+          const kind = bigImpact(prev, next);
+          if (next.time < lastBig) lastBig = -Infinity; // a restarted battle's clock begins again near 0
+          if (kind && !reducedMotion() && (kind === 'boss' || next.time - lastBig >= .6)) {
+            if (kind === 'big') lastBig = next.time;
+            clock = stopAt(clock, now / 1000, kind === 'boss' ? .09 : .05); impact = true; break;
+          }
+          if (next.phase === 'promotion' || (!finishing && (next.phase === 'won' || next.phase === 'lost'))) { clock = { ...clock, accumulated: 0 }; break; }
         }
         combatFeedback(before, next, hapticsRef.current); stateRef.current = next;
-        if (shouldPublishDefenseFrame(before, next, lastPublishedState, now - lastPublish)) {
+        if (impact || shouldPublishDefenseFrame(before, next, lastPublishedState, now - lastPublish)) {
           lastPublish = now; lastPublishedState = next; setState(next);
         }
-      } else accumulated = 0;
+      } else clock = { ...clock, accumulated: 0, last: now / 1000 };
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
