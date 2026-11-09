@@ -89,7 +89,7 @@ export class FrontierScene {
  private contextLost=(e:Event)=>{e.preventDefault();this.onStatus('3D 화면 연결이 끊겼습니다. 새로고침해 다시 시작해 주세요.');};
  render(s:Frontier,dt:number){
   const {landscape:wide}=this.cameraRig.update(s,dt,{width:this.host.clientWidth,height:this.host.clientHeight,zoom:this.zoom,overview:this.overview,reduced:this.reduced});this.landscape=wide;this.hero.visible=s.mode!=='defense';this.hero.position.set(s.hero.x,heightAt(s.hero.x,s.hero.z),s.hero.z);this.hero.rotation.y=s.hero.heading;
-  this.heroView?.update(s.hero,this.reduced);
+  this.heroView?.update(s.hero,this.reduced,heightAt);
   this.frostGate?.update(s.time,s.coreHitAt,s.coreHp,s.mode!=='defense',this.reduced);this.renderer.domElement.dataset.gateImpact=JSON.stringify(this.frostGate?{...this.frostGate.state,loaded:this.frostGate.loaded,angles:this.frostGate.angles,hp:s.coreHp,hitAt:s.coreHitAt}:null);
   if(!this.heroAim){this.heroAim=new THREE.Mesh(new THREE.RingGeometry(1.32,HERO_ATTACK.radius,32),new THREE.MeshBasicMaterial({color:'#ffe4a4',transparent:true,opacity:.7,side:THREE.DoubleSide,depthWrite:false}));this.heroAim.matrixAutoUpdate=false;this.scene.add(this.heroAim);this.track(this.heroAim);}
   const heroAction=s.hero.attack;this.heroAim.visible=s.mode!=='defense'&&!!heroAction&&!heroAction.hit;

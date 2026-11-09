@@ -1,0 +1,50 @@
+import {Matrix4,Mesh,Object3D,Vector3,type Group} from 'three';
+
+type HeightField=(x:number,z:number)=>number;
+type Foot={node:Object3D;sample:Vector3;sole:Vector3[]};
+
+/** Vertical sole placement over the existing height field; no extra renderer or IK rig. */
+export class HeroGrounding {
+ private feet:Foot[]=[];
+ private applied=false;
+ private point=new Vector3();private target=new Vector3();
+ private model:Group;
+ constructor(model:Group){
+  this.model=model;
+  model.updateWorldMatrix(true,true);
+  for(const name of ['left-foot','right-foot']){
+   const node=model.getObjectByName(name);if(!node?.parent)continue;
+   const inverse=new Matrix4().copy(node.matrixWorld).invert(),matrix=new Matrix4();
+   const vertices=new Map<string,Vector3>();
+   node.traverse(o=>{if(!(o instanceof Mesh))return;const a=o.geometry.getAttribute('position');if(!a)return;
+    matrix.multiplyMatrices(inverse,o.matrixWorld);
+    for(let i=0;i<a.count;i++){const p=new Vector3().fromBufferAttribute(a,i).applyMatrix4(matrix);vertices.set(`${p.x.toFixed(5)},${p.y.toFixed(5)},${p.z.toFixed(5)}`,p);}
+   });
+   const all=[...vertices.values()];if(!all.length)continue;
+   const bottom=Math.min(...all.map(p=>p.y));
+   // Only the shoe sole, not the rest of the leg, participates in grounding.
+   this.feet.push({node,sample:node.position.clone(),sole:all.filter(p=>p.y<=bottom+.025)});
+  }
+ }
+ /** Restore the sampled animation pose before the mixer's next evaluation. */
+ restore(){if(this.applied){for(const foot of this.feet)foot.node.position.copy(foot.sample);this.applied=false;}}
+ apply(x:number,z:number,height:HeightField){
+  for(const foot of this.feet)foot.sample.copy(foot.node.position);
+  this.applied=true;
+  this.model.updateWorldMatrix(true,true);
+  const base=height(x,z);
+  for(const foot of this.feet){
+   let flat=Infinity,clearance=Infinity;
+   for(const p of foot.sole){this.point.copy(p).applyMatrix4(foot.node.matrixWorld);
+    flat=Math.min(flat,this.point.y-base);clearance=Math.min(clearance,this.point.y-height(this.point.x,this.point.z));
+   }
+   // Preserve the animation's authored lift while making its lowest sole point
+   // touch the local slope when the authored foot is planted.
+   const lift=Math.max(0,flat)-clearance;
+   if(!Number.isFinite(lift))continue;
+   foot.node.getWorldPosition(this.target);this.target.y+=lift;
+   foot.node.position.copy(foot.node.parent!.worldToLocal(this.target));
+   foot.node.updateWorldMatrix(false,true);
+  }
+ }
+}

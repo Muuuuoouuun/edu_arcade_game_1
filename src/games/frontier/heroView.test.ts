@@ -1,4 +1,4 @@
-import test from'node:test';import assert from'node:assert/strict';import{readFileSync}from'node:fs';import{GLTFLoader}from'three/addons/loaders/GLTFLoader.js';import{Group,Vector3,Box3}from'three';import{HeroView}from'./heroView.ts';import{actFrontier,createFrontier}from'./engine.ts';import{heroRingMatrix}from'./heroEffects.ts';import{heightAt}from'./engine.ts';import{hammerPoint}from'./heroAttack.ts';import{HERO_MODEL}from'./heroModel.ts';
+import test from'node:test';import assert from'node:assert/strict';import{readFileSync}from'node:fs';import{GLTFLoader}from'three/addons/loaders/GLTFLoader.js';import{AnimationClip,Group,Mesh,Vector3,Box3}from'three';import{HeroView}from'./heroView.ts';import{actFrontier,createFrontier}from'./engine.ts';import{heroRingMatrix}from'./heroEffects.ts';import{heightAt}from'./engine.ts';import{hammerPoint}from'./heroAttack.ts';import{HERO_MODEL}from'./heroModel.ts';
 const parse=async(name:string)=>{const b=readFileSync(new URL(`../../../public/defense/models/${name}.glb`,import.meta.url));return new GLTFLoader().parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');};
 const walk=await parse('kar-barbarian-walk'),slam=await parse('kar-barbarian'),entry=await parse('kar-entry'),reset=await parse('kar-reset');
 const setup=()=>{const model=walk.scene.clone(true),view=new HeroView(model,walk.animations[0]);view.setSlam(slam.animations[0]);view.setEntries(entry.animations);const root=new Group();root.add(model);let s=actFrontier(createFrontier('solo'),{type:'start'});s=actFrontier(s,{type:'skill'});return{view,root,s};};
@@ -45,3 +45,31 @@ test('stop pose is simulation sampled, reduced motion holds idle, resume and att
  for(const x of [a,b]){x.s.hero.attack={kind:'basic',time:.19,heading:0,hit:false,targetId:1,damage:25,walkTime:.2,fromMoving:false};x.view.update(x.s.hero,false);}assert.ok(error(matrices(a.root),matrices(b.root))<1e-6);a.view.dispose();b.view.dispose();
 });
 test('missing or incomplete stop clips preserve existing grounded idle',()=>{const a=setup(),b=setup();a.view.setStops(stop.animations.slice(0,7));for(const x of[a,b]){x.s.hero.attack=undefined;x.s.hero.settle={time:.12,walkTime:.2};x.view.update(x.s.hero,false);}assert.ok(error(matrices(a.root),matrices(b.root))<1e-6);a.view.dispose();b.view.dispose();});
+
+const compact=await parse('frontier-kar-game');
+test('Kar soles clear the actual ramp in every heading and walk phase without moving the hammer or body',()=>{
+ const make=()=>{const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!);view.setSlam(compact.animations.find(c=>c.name==='kar-slam')!);return{root,view,hero:createFrontier('solo').hero};};
+ const a=make(),b=make(),point=new Vector3();
+ for(let direction=0;direction<8;direction++)for(let phase=0;phase<16;phase++){
+  for(const x of [a,b]){Object.assign(x.hero,{x:-14,z:-7,heading:direction*Math.PI/4,moving:true,walkDistance:phase*.1});x.root.position.set(-14,heightAt(-14,-7),-7);x.root.rotation.y=x.hero.heading;}
+  a.view.update(a.hero,false,heightAt);b.view.update(b.hero,false);a.root.updateMatrixWorld(true);b.root.updateMatrixWorld(true);
+  for(const name of ['body','war-hammer','hammer-contact'])assert.ok(a.root.getObjectByName(name)!.getWorldPosition(new Vector3()).distanceTo(b.root.getObjectByName(name)!.getWorldPosition(new Vector3()))<1e-6);
+  for(const name of ['left-foot','right-foot']){let clearance=Infinity;a.root.getObjectByName(name)!.traverse(o=>{if(o instanceof Mesh){const v=o.geometry.getAttribute('position');for(let i=0;i<v.count;i++){point.fromBufferAttribute(v,i).applyMatrix4(o.matrixWorld);clearance=Math.min(clearance,point.y-heightAt(point.x,point.z));}}});assert.ok(clearance>-.00001,`${name}: ${clearance}`);}
+  const once=matrices(a.root);a.view.update(a.hero,false,heightAt);assert.ok(error(once,matrices(a.root))<1e-6,'repeated simulation sample must not accumulate');
+ }
+ a.view.dispose();b.view.dispose();
+});
+test('flat ground, bridge deck and a model without foot nodes remain safe',()=>{
+ const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!),hero=createFrontier('solo').hero;
+ for(const [x,z] of [[-14,14],[6,0]]){hero.x=x;hero.z=z;hero.moving=true;hero.walkDistance=.35;root.position.set(x,heightAt(x,z),z);view.update(hero,false);const original=matrices(root);view.update(hero,false,heightAt);assert.ok(error(original,matrices(root))<1e-6,'flat ground keeps authored poses');}
+ view.dispose();const fallback=new HeroView(new Group(),new AnimationClip('empty',1,[]));assert.doesNotThrow(()=>fallback.update(hero,true,heightAt));fallback.dispose();
+});
+test('slope correction keeps the hammer contact and feet grounded during attack and reduced motion',()=>{
+ const make=()=>{const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!);view.setSlam(compact.animations.find(c=>c.name==='kar-slam')!);view.setReset(compact.animations.find(c=>c.name==='kar-reset-0')!);const s=actFrontier(actFrontier(createFrontier('solo'),{type:'start'}),{type:'skill'});return{root,view,hero:s.hero};};
+ const a=make(),b=make(),p=new Vector3();for(const reduced of [false,true])for(const time of [0,.19,.28,.43,.56]){
+  for(const x of [a,b]){x.hero.x=-14;x.hero.z=-7;x.hero.attack!.time=time;x.hero.attack!.hit=time>=.28;x.root.position.set(-14,heightAt(-14,-7),-7);x.view.update(x.hero,reduced,x===a?heightAt:undefined);x.root.updateMatrixWorld(true);}
+  assert.ok(a.root.getObjectByName('hammer-contact')!.getWorldPosition(new Vector3()).distanceTo(b.root.getObjectByName('hammer-contact')!.getWorldPosition(new Vector3()))<1e-6);
+  for(const name of ['left-foot','right-foot'])a.root.getObjectByName(name)!.traverse(o=>{if(o instanceof Mesh){const v=o.geometry.getAttribute('position');for(let i=0;i<v.count;i++){p.fromBufferAttribute(v,i).applyMatrix4(o.matrixWorld);assert.ok(p.y-heightAt(p.x,p.z)>-.00001);}}});
+ }
+ a.view.dispose();b.view.dispose();
+});

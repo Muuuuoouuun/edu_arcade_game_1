@@ -1,16 +1,18 @@
 import{AnimationMixer,LoopOnce,LoopRepeat,type AnimationAction,type AnimationClip,type Group}from'three';
 import{HERO_MODEL}from'./heroModel.ts';
 import{HERO_ATTACK}from'./heroAttack.ts';
+import{HeroGrounding}from'./heroGrounding.ts';
 import type{Frontier}from'./engine.ts';
 /** Existing editable Kar clips, sampled by simulation state in the shared battlefield scene. */
 export class HeroView{
- readonly model:Group;private mixer:AnimationMixer;private walk:AnimationAction;private slam?:AnimationAction;private reset?:AnimationAction;private entries:AnimationAction[]=[];private stops:AnimationAction[]=[];
- constructor(model:Group,walk:AnimationClip){this.model=model;model.scale.setScalar(HERO_MODEL.scale);model.position.y=HERO_MODEL.baseY;model.rotation.y=HERO_MODEL.forwardCorrection;this.mixer=new AnimationMixer(model);this.walk=this.mixer.clipAction(walk).setLoop(LoopRepeat,Infinity).play();}
+ readonly model:Group;private mixer:AnimationMixer;private walk:AnimationAction;private slam?:AnimationAction;private reset?:AnimationAction;private entries:AnimationAction[]=[];private stops:AnimationAction[]=[];private grounding:HeroGrounding;
+ constructor(model:Group,walk:AnimationClip){this.model=model;model.scale.setScalar(HERO_MODEL.scale);model.position.y=HERO_MODEL.baseY;model.rotation.y=HERO_MODEL.forwardCorrection;this.mixer=new AnimationMixer(model);this.walk=this.mixer.clipAction(walk).setLoop(LoopRepeat,Infinity).play();this.grounding=new HeroGrounding(model);}
  setSlam(clip:AnimationClip){this.slam=this.mixer.clipAction(clip).setLoop(LoopOnce,1);this.slam.clampWhenFinished=true;this.slam.setEffectiveWeight(0).play();}
  setReset(clip:AnimationClip){this.reset=this.mixer.clipAction(clip).setLoop(LoopOnce,1);this.reset.clampWhenFinished=true;this.reset.setEffectiveWeight(0).play();}
  setEntries(clips:AnimationClip[]){this.entries=Array.from({length:8},(_,i)=>{const a=this.mixer.clipAction(clips.find(c=>c.name===`kar-entry-${i}`)!).setLoop(LoopOnce,1);a.clampWhenFinished=true;return a.setEffectiveWeight(0).play();});}
  setStops(clips:AnimationClip[]){const ordered=Array.from({length:8},(_,i)=>clips.find(c=>c.name===`kar-stop-${i}`));if(ordered.some(c=>!c))return;this.stops=ordered.map(clip=>{const a=this.mixer.clipAction(clip!).setLoop(LoopOnce,1);a.clampWhenFinished=true;return a.setEffectiveWeight(0).play();});}
- update(hero:Frontier['hero'],reduced:boolean){
+ update(hero:Frontier['hero'],reduced:boolean,height?:(x:number,z:number)=>number){
+  this.grounding.restore();
   const attack=hero.attack,entry=attack?Math.round(attack.walkTime/.1)%8:0,action=attack?(attack.fromMoving===false?(this.slam??this.entries[entry]):(this.entries[entry]??this.slam)):undefined;
   for(const a of [this.walk,this.slam,this.reset,...this.entries,...this.stops])if(a){a.enabled=true;a.setEffectiveWeight(0);}
   // All entry clips share the authored rebound at .43s. End in the grounded idle pose.
@@ -26,6 +28,7 @@ export class HeroView{
   else if(!hero.moving&&this.slam){this.slam.time=0;this.slam.setEffectiveWeight(1);}
   else{this.walk.time=reduced||!hero.moving?0:(hero.walkDistance/HERO_ATTACK.stride*.8)%.8;this.walk.setEffectiveWeight(1);}
   this.mixer.update(0);
+  if(height)this.grounding.apply(hero.x,hero.z,height);
  }
  dispose(){this.mixer.stopAllAction();this.mixer.uncacheRoot(this.model);}
 }
