@@ -7,8 +7,9 @@ export type Tower={pad:number;level:number;cooldown:number;heading:number;action
 export type Bolt={id:number;targetId:number;pad:number;position:Position3;previous:Position3;damage:number;life:number};
 export type Mode='defense'|'command'|'solo';
 export type Point={x:number;z:number};
+export type SquadMember=Point&{cooldown:number;heading?:number;walkDistance?:number;moving?:boolean;restTime?:number;shotAt?:number;shotHeading?:number};
 export type Enemy=Point&{id:number;hp:number;cooldown:number;path:number;maxHp?:number;heading?:number;walkDistance?:number;moving?:boolean;restTime?:number;attack?:WoodAttack;hitAt?:number;hitHeading?:number};
-export type Frontier={mode:Mode;phase:'ready'|'playing'|'won'|'lost';paused:boolean;speed:1|2;time:number;wave:number;remaining:number;spawnIn:number;gold:number;coreHp:number;coreHitAt?:number;hero:Point&{hp:number;maxHp:number;target:Point;heading:number;moving:boolean;strike:number;cooldown:number;skill:number;dash:number;walkDistance:number;walkStartDistance?:number;settle?:{time:number;walkTime:number;walkWeight?:number};attack?:HeroAttack};squad:(Point&{cooldown:number})[];enemies:Enemy[];towers:Tower[];bolts:Bolt[];beacon:number;crystals:number[];kills:number;xp:number;level:number;serial:number;effects:{id:number;from:Point;to:Point;kind:'shot'|'skill'|'hit'|'impact'|'club'|'hammer'|'shockwave';life:number}[];message:string};
+export type Frontier={mode:Mode;phase:'ready'|'playing'|'won'|'lost';paused:boolean;speed:1|2;time:number;wave:number;remaining:number;spawnIn:number;gold:number;coreHp:number;coreHitAt?:number;hero:Point&{hp:number;maxHp:number;target:Point;heading:number;moving:boolean;strike:number;cooldown:number;skill:number;dash:number;walkDistance:number;walkStartDistance?:number;settle?:{time:number;walkTime:number;walkWeight?:number};attack?:HeroAttack};squad:SquadMember[];enemies:Enemy[];towers:Tower[];bolts:Bolt[];beacon:number;crystals:number[];kills:number;xp:number;level:number;serial:number;effects:{id:number;from:Point;to:Point;kind:'shot'|'skill'|'hit'|'impact'|'club'|'hammer'|'shockwave';life:number}[];message:string};
 export const MODES={defense:{name:'성문 방어',tag:'타워 디펜스',goal:'3개 웨이브를 막고 성문을 지키세요.',control:'빛나는 건설 지점을 눌러 포탑을 배치·강화하세요.',size:40},command:{name:'변경 지휘',tag:'디펜스 + 분대 지휘',goal:'분대로 동쪽 봉화를 점령하고 3개 웨이브를 막으세요.',control:'땅을 눌러 분대 이동 · 가까운 건설 지점에 전초 포탑 배치',size:64},solo:{name:'수정 원정',tag:'영웅 직접 조작',goal:'적 6마리·수정 3개를 확보한 뒤 동쪽 출구로 이동하세요.',control:'WASD / 방향 패드 이동 · 근접 강타 Q · 충격파 E · 돌진 Space (준비 취소)',size:64}} as const;
 export const PADS:Point[]=[{x:-21,z:12},{x:-9,z:8},{x:-24,z:-7},{x:-7,z:-16},{x:15,z:5},{x:19,z:-12}];
 export const CORE={x:-14,z:21},BEACON={x:19,z:-17},EXIT={x:23,z:-23};
@@ -100,7 +101,13 @@ export function stepFrontier(previous:Frontier,elapsed:number,axis:Point={x:0,z:
   }
   if(a.time+1e-9>=HERO_ATTACK.duration)s.hero.attack=undefined;
  }
- for(const [i,unit] of s.squad.entries()){const target={x:s.hero.x+(i-1)*2,z:s.hero.z+2.5},p=travel(unit,target,6.5*dt);unit.x=p.x;unit.z=p.z;unit.cooldown-=dt;const enemy=s.enemies.find(e=>e.hp>0&&distance(e,unit)<7);if(enemy&&unit.cooldown<=0){damage(s,enemy,8+s.level,unit);unit.cooldown=.9;effect(s,unit,enemy,'shot');}}
+ for(const [i,unit] of s.squad.entries()){
+  const target={x:s.hero.x+(i-1)*2,z:s.hero.z+2.5},p=travel(unit,target,6.5*dt),dx=p.x-unit.x,dz=p.z-unit.z,dist=Math.hypot(dx,dz),wasMoving=unit.moving??false;
+  unit.moving=dist>.001;if(unit.moving){unit.heading=Math.atan2(dx,dz);unit.walkDistance=(unit.walkDistance??0)+dist;unit.restTime=0;}
+  else if(wasMoving)unit.restTime=0;else if(unit.restTime!==undefined)unit.restTime+=dt;
+  unit.x=p.x;unit.z=p.z;unit.cooldown-=dt;const enemy=s.enemies.find(e=>e.hp>0&&distance(e,unit)<7);
+  if(enemy&&unit.cooldown<=0){unit.shotAt=s.time;unit.shotHeading=Math.atan2(enemy.x-unit.x,enemy.z-unit.z);damage(s,enemy,8+s.level,unit);unit.cooldown=.9;effect(s,unit,enemy,'shot');}
+ }
  if(s.mode!=='solo'){
   s.spawnIn-=dt;if(s.remaining>0&&s.spawnIn<=0){const east=s.mode==='command'&&s.wave>1&&s.remaining%2===0;s.enemies.push({...(east?{x:24,z:-25}:PATH[0]),id:s.serial++,hp:50+s.wave*12,maxHp:50+s.wave*12,cooldown:0,path:east?2:1});s.remaining--;s.spawnIn=1.5;}
   if(s.remaining===0&&s.enemies.length===0){if(s.wave<3){s.wave++;s.remaining=6+s.wave*2;s.spawnIn=4;s.gold+=50;s.message=`웨이브 ${s.wave} · 정비 보급 +50`;}else if(s.mode==='defense'||s.beacon===1){s.phase='won';s.message='성문 방어 완료';}}
