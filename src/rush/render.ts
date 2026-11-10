@@ -36,6 +36,8 @@ export class RushView {
   private shake = 0;
   private hero = new Group();
   private heroBody = new Group();
+  /** Team-blue cape per hero (cycle 29): the ally colour on the body itself, not only the ring underfoot. */
+  private capes = new Map<HeroKind, Mesh>();
   private heroBar: Bar;
   private ammoSegs: Mesh[] = [];
   /** One loaded model per hero kind; only the current hero's rig is visible. */
@@ -330,6 +332,20 @@ export class RushView {
     placeholder.add(new Mesh(hullGeometry(placeholderGeo), outlineMaterial(0.05)));
     this.heroBody.add(placeholder);
     this.heroPlaceholder = placeholder;
+    for (const kind of Object.keys(CAPE) as HeroKind[]) {
+      const c = CAPE[kind];
+      // Hangs from the shoulders and flares back (local -x is behind the hero), with a gold clasp on top.
+      const geo = bake([
+        { geo: new BoxGeometry(0.07, c.h, c.w), color: TEAM.ally, at: [c.x, c.y - c.h / 2, 0], rot: [0, 0, -0.22] },
+        { geo: new BoxGeometry(0.08, 0.1, c.w * 1.02), color: 0x1f6fd0, at: [c.x - c.h * 0.22, c.y - c.h + 0.04, 0], rot: [0, 0, -0.22] },
+        { geo: new BoxGeometry(0.16, 0.08, c.w * 0.9), color: PAL.gold, at: [c.x + 0.05, c.y + 0.02, 0] },
+      ]);
+      const cape = new Mesh(geo, this.mats.baked);
+      cape.add(new Mesh(hullGeometry(geo), outlineMaterial(0.035)));
+      cape.visible = false;
+      this.heroBody.add(cape);
+      this.capes.set(kind, cape);
+    }
   }
 
   /** Aim preview shape: a long narrow fan for bolts, a short wide fan for a melee swing. */
@@ -343,6 +359,7 @@ export class RushView {
     if (kind === this.heroKind) return;
     this.heroKind = kind;
     for (const [k, rig] of this.heroRigs) if (rig !== 'loading') rig.holder.visible = k === kind;
+    for (const [k, cape] of this.capes) cape.visible = k === kind;
     const rig = this.heroRigs.get(kind);
     if (this.heroPlaceholder) this.heroPlaceholder.visible = !rig || rig === 'loading';
     this.aimFan.geometry.dispose();
@@ -916,6 +933,11 @@ export class RushView {
   info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
 }
 
+/** Cape placement per hero model (shoulder height y, back offset x, height h, width w), tuned on the model sheet. */
+const CAPE: Record<HeroKind, { x: number; y: number; h: number; w: number }> = {
+  ranger: { x: -0.3, y: 1.2, h: 0.85, w: 0.7 },
+  bron: { x: -0.4, y: 1.15, h: 0.85, w: 0.95 },
+};
 const BRANCH_COLOR: Record<TowerBranch, number> = { fire: 0xff7a2f, frost: 0x4fc3ff };
 const ICE = new MeshBasicMaterial({ color: 0xc4f2ff, transparent: true, opacity: 0.4, depthWrite: false });
 const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4 };

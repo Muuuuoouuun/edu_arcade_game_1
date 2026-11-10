@@ -321,10 +321,11 @@ hud.debug.hidden = !debug;
 requestAnimationFrame(frame);
 showScreen('title');
 if (params.has('sheet')) {
-  // Model sheet (cycle 11): the four enemies and the hero, front-facing, frozen on a flat background.
-  state = createRush(1);
+  // Model sheet (cycle 11): the enemies and the hero, front-facing, frozen on a flat background. ?hero=bron shows Bron.
+  state = createRush(1, undefined, undefined, params.get('hero') === 'bron' ? 'bron' : 'ranger');
   state.crates = [];
-  Object.assign(state.hero, { x: 8.2, z: 2, facing: Math.PI / 2 });
+  // ?back=1 turns the hero away from the camera, as in battle where it faces the enemies at the top.
+  Object.assign(state.hero, { x: 9.4, z: 2, facing: params.has('back') ? -Math.PI / 2 : Math.PI / 2 });
   (['grunt', 'skirmisher', 'brute', 'shield', 'boss'] as const).forEach((kind, i) => state.enemies.push({
     id: 900 + i, kind, x: [-6.4, -4, -1.2, 1.4, 5][i], z: 2, kx: 0, kz: 0, hp: 1, maxHp: 1, lane: 0, wp: 1, cd: 0, flash: 0, chasing: false, facing: Math.PI / 2, windup: null,
     // ?frost=1 shows the frost shell (cycle 16) on every enemy.
