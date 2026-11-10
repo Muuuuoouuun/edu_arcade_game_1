@@ -6,6 +6,7 @@ import { PMREMGenerator } from 'three';
 import './model-lab.css';
 
 const models = [
+ {id:'frontier-forest-doors',name:'녹음 성문 · 목재 양문',kind:'FOREST GATE DOORS',detail:'곡선 널판 · 철띠 · 충격 반동',description:'녹음 성문의 두 목재 문짝이 충격을 받고 경첩을 중심으로 뒤로 밀렸다 돌아옵니다. 3D 미리보기는 문짝을 표시하며 원본 렌더는 석조 아치와 함께 보여 줍니다.',source:'frontier-forest-doors.blend',command:'npm run models:frontier-forest-doors',action:'▶ 성문 충격',clip:'forest-door-impact',fitBounds:true},
  {id:'frontier-terrain',name:'녹음 협곡 · 숲 전장',kind:'VERDANT FRONTIER TERRAIN',detail:'넓은 수관 · 풀밭 · 교량',description:'넓은 잎과 가지가 숲 경계를 이루고 풀밭의 색면이 불규칙하게 이어집니다. 강과 다리, 전투 경로의 높이는 기존과 같습니다.',source:'frontier-terrain.blend',command:'npm run models:frontier-terrain',action:'고정 지형',static:true,fitBounds:true},
  {id:'frontier-frost-cliffs',name:'서리 협곡 · 층진 절벽',kind:'POLAR CLIFF TERRAIN',detail:'깊은 암면 틈 · 눈 처마 · 낮고 높은 능선',description:'눈이 얹힌 넓은 암면과 깊게 들어간 틈이 실제 입체로 이어집니다. 이동 가능한 땅과 다리 높이를 유지하면서 서리 협곡 바깥의 실루엣을 다듬었습니다.',source:'frontier-frost-cliffs.blend',command:'npm run models:frontier-frost-cliffs',action:'고정 지형',static:true,fitBounds:true},
  {id:'frontier-frost-gate-impact',name:'서리 성문 · 충격과 등불',kind:'FROST GATE IMPACT',detail:'고정 석조 · 두꺼운 문짝 · 뒤따르는 등불',description:'철띠로 보강한 목재 문짝이 충격에 밀렸다 돌아오고, 매달린 등불이 뒤늦게 흔들립니다. 변경 전장의 실제 성문 피해에 연결되며 분대·솔로 모드에서는 통로를 열어 둡니다.',source:'frontier-frost-gate-impact.blend',command:'npm run models:frontier-gate-impact',action:'▶ 성문 피격',clip:'frost-gate-impact',fitBounds:true},
