@@ -4,11 +4,10 @@ import {GateOcclusion} from './gateOcclusion';
 import {FRONTIER_THEMES,type FrontierTheme} from './themes';
 import{BeaconView}from'./beaconView';
 import{CROSSING,bridgePickSurface,riverBanks}from'./terrainView';
-import {EffectsView} from './effectsView';
+import {EffectsView,createShockwaveGeometry,projectShockwave} from './effectsView';
 import {FrontierCameraRig} from './camera';
 import * as THREE from 'three';
 import {HeroView} from './heroView';
-import {heroRingMatrix} from './heroEffects';
 import {hammerPoint,HERO_ATTACK} from './heroAttack';
 import {WoodBatch,woodFallback} from './woodView';
 import {BallistaBatch,BallistaView,type BallistaTemplate} from './ballistaView';
@@ -99,9 +98,10 @@ export class FrontierScene {
   this.heroView?.update(s.hero,this.reduced,heightAt);
   this.frostGate?.update(s.time,s.coreHitAt,s.coreHp,s.mode!=='defense',this.reduced);this.renderer.domElement.dataset.gateImpact=JSON.stringify(this.frostGate?{...this.frostGate.state,loaded:this.frostGate.loaded,angles:this.frostGate.angles,hp:s.coreHp,hitAt:s.coreHitAt}:null);
   this.forestDoors?.update(s.time,s.coreHitAt,s.coreHp,s.mode!=='defense',this.reduced);this.gateTarget.set(s.hero.x,heightAt(s.hero.x,s.hero.z)+1.5,s.hero.z);const gateCamera=s.mode!=='defense'?this.camera:null;this.forestDoors?.updateOcclusion(gateCamera&&Math.hypot(s.hero.x-CORE.x,s.hero.z-CORE.z)<8?gateCamera:null,this.gateTarget);this.renderer.getDrawingBufferSize(this.gateViewport);this.gateOcclusion?.update(gateCamera,this.gateTarget,this.gateViewport);const nearTerrainEdge=Math.max(Math.abs(s.hero.x),Math.abs(s.hero.z))>18;this.terrainOcclusion?.update(gateCamera&&nearTerrainEdge?gateCamera:null,this.gateTarget,this.gateViewport);this.renderer.domElement.dataset.terrainFaded=String(this.terrainOcclusion?.count??0);this.renderer.domElement.dataset.gateFaded=String(this.gateOcclusion?.count??0);this.renderer.domElement.dataset.forestDoors=JSON.stringify(this.forestDoors?{...this.forestDoors.state,loaded:this.forestDoors.loaded,faded:this.forestDoors.faded,angles:this.forestDoors.angles,hp:s.coreHp,hitAt:s.coreHitAt}:null);
-  if(!this.heroAim){this.heroAim=new THREE.Mesh(new THREE.RingGeometry(1.32,HERO_ATTACK.radius,32),new THREE.MeshBasicMaterial({color:'#ffe4a4',transparent:true,opacity:.7,side:THREE.DoubleSide,depthWrite:false}));this.heroAim.matrixAutoUpdate=false;this.scene.add(this.heroAim);this.track(this.heroAim);}
-  const heroAction=s.hero.attack;this.heroAim.visible=s.mode!=='defense'&&!!heroAction&&!heroAction.hit;
-  if(heroAction){const p=heroAction.kind==='skill'?s.hero:hammerPoint(s.hero.x,s.hero.z,heroAction.heading);this.heroAim.matrix.copy(heroRingMatrix(p,heroAction.kind==='skill'?HERO_ATTACK.skillRadius/HERO_ATTACK.radius:1));}
+  if(s.mode!=='defense'&&!this.heroAim){this.heroAim=new THREE.Mesh(createShockwaveGeometry(32),new THREE.MeshBasicMaterial({color:'#ffe4a4',transparent:true,opacity:.7,side:THREE.DoubleSide,depthWrite:false}));this.heroAim.matrixAutoUpdate=false;this.heroAim.frustumCulled=false;this.scene.add(this.heroAim);this.track(this.heroAim);}
+  const heroAction=s.hero.attack;if(this.heroAim){this.heroAim.visible=!!heroAction&&!heroAction.hit;
+   if(this.heroAim.visible&&heroAction){const p=heroAction.kind==='skill'?s.hero:hammerPoint(s.hero.x,s.hero.z,heroAction.heading),radius=heroAction.kind==='skill'?HERO_ATTACK.skillRadius:HERO_ATTACK.radius;projectShockwave(this.heroAim.geometry,p,1,1.32*radius/HERO_ATTACK.radius,radius);this.heroAim.matrix.identity();}}
+  this.renderer.domElement.dataset.heroAimCells=String(this.heroAim?.visible?this.heroAim.geometry.drawRange.count/6:0);
   this.units.forEach((g,i)=>{const p=s.squad[i];if(p){g.position.set(p.x,heightAt(p.x,p.z),p.z);g.rotation.y=s.hero.heading;}});
   this.wood.update(s.enemies,this.reduced,this.camera,s.time);
   for(const t of s.towers){let view=this.towers.get(t.pad);if(!view){view=new BallistaView(this.ballista);const p=PADS[t.pad];view.root.position.set(p.x,heightAt(p.x,p.z),p.z);this.towers.set(t.pad,view);this.scene.add(view.root);this.track(view.root);}view.update(t,this.reduced);}

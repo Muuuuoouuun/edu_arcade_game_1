@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {Matrix4,Mesh} from 'three';
-import {EffectsView,contactChip,boltSplinter,shockwaveSurface} from './effectsView.ts';import {createFrontier,actFrontier,stepFrontier,heightAt,type Frontier} from './engine.ts';
+import {EffectsView,contactChip,boltSplinter,shockwaveSurface,createShockwaveGeometry,projectShockwave} from './effectsView.ts';import {createFrontier,actFrontier,stepFrontier,heightAt,type Frontier} from './engine.ts';
+import {HERO_ATTACK} from './heroAttack.ts';
 type Fx=Frontier['effects'][number];const fx=(kind:Fx['kind']='hammer',life=.09,id=1):Fx=>({id,kind,life,from:{x:-15,z:-7},to:{x:-15,z:-7}});
 test('contact debris appears only when the simulation produces a landed effect; pause and speed share its clock',()=>{
  let s=actFrontier(createFrontier('solo'),{type:'start'});s.enemies=[];s=actFrontier(s,{type:'skill'});const v=new EffectsView();
@@ -18,25 +19,44 @@ test('all effect kinds reuse bounded geometry and materials through expiry and r
 test('reduced motion keeps contact rings but suppresses airborne chips and ring expansion',()=>{const v=new EffectsView();v.update([fx()],true);assert.equal(v.chips.count,0);const m=v.root.children.find(o=>o instanceof Mesh&&o!==v.chips) as Mesh;const matrix=m.matrix.clone();v.update([fx('hammer',.02)],true);assert.deepEqual(m.matrix,matrix);assert.ok(m.visible);assert.equal((m.material as any).depthTest,true);assert.equal(v.chips.material instanceof Array,false);v.dispose();});
 test('debris is deterministic and rises then falls above flat, ramp and bridge surfaces',()=>{for(const to of [{x:-15,z:2},{x:-15,z:-7},{x:6,z:0}])for(const kind of ['hammer','shockwave'] as const){const e={...fx(kind),to};for(let i=0;i<8;i++){const c=contactChip(e,i);assert.deepEqual(c,contactChip(e,i));assert.ok(c.y>=heightAt(c.x,c.z)+.079);assert.ok(c.size>0);}if(kind==='hammer'&&to.z===2){const a=contactChip({...e,life:.18},0),b=contactChip({...e,life:.09},0),c=contactChip({...e,life:.001},0);assert.ok(b.y>a.y&&b.y>c.y);}}});
 test('reusing a ray slot for a ground ring resets its matrix and disappearing effects do not persist',()=>{const v=new EffectsView();v.update([{...fx('shot'),to:{x:12,z:20}}],false);v.update([fx('hammer')],false);const m=v.root.children.find(o=>o instanceof Mesh&&o!==v.chips) as Mesh;const other=new EffectsView();other.update([fx('hammer')],false);const n=other.root.children.find(o=>o instanceof Mesh&&o!==other.chips) as Mesh;assert.deepEqual(m.matrix,n.matrix);const chip=new Matrix4();v.chips.getMatrixAt(0,chip);assert.ok(chip.elements.every(Number.isFinite));v.update([fx('hammer',0)],false);assert.equal(v.chips.count,0);assert.equal(m.visible,false);v.dispose();other.dispose();});
-test('shockwave follows visible ground and water and never draws a vertical bridge across a terrain break',()=>{
+test('shockwave refines only boundary cells, keeps safe surfaces and reuses geometry',()=>{
  const view=new EffectsView();
- for(const center of [{x:-15,z:8},{x:-15,z:-7},{x:-15,z:-13},{x:-1,z:0},{x:6,z:0}]){
-  view.update([{...fx('shockwave',.09),from:center,to:center}],false);
+ const area=(ax:number,az:number,bx:number,bz:number,cx:number,cz:number)=>Math.abs((bx-ax)*(cz-az)-(bz-az)*(cx-ax))/2;
+ for(const center of [{x:-15,z:8},{x:-15,z:-7},{x:-15,z:-13},{x:-1,z:0},{x:6,z:0},{x:27,z:27}]){
+  view.update([{...fx('shockwave',.09),from:center,to:center}],true);
   const m=view.root.children.find(o=>o instanceof Mesh&&o!==view.chips) as Mesh;
-  const a=m.geometry.getAttribute('position'),ix=m.geometry.getIndex()!;
-  for(let i=0;i<64;i++){
-   let min=Infinity,max=-Infinity;
-   for(let j=0;j<4;j++){
-    const n=i*4+j,x=a.getX(n),z=a.getZ(n),y=a.getY(n);
-    const surface=x>3&&x<9&&Math.abs(z)>2.8?-2.6:heightAt(x,z);
-    assert.ok(Math.abs(y-(surface+.09))<1e-5);min=Math.min(min,y);max=Math.max(max,y);
+  const g=m.geometry,a=g.getAttribute('position'),ix=g.getIndex()!,end=Math.min(ix.count,g.drawRange.count);let covered=0;
+  assert.equal(end%6,0);assert.ok(end<=64*16*6);
+  for(let i=0;i<end;i+=6){let lo=Infinity,hi=-Infinity;
+   for(const j of [0,1,2,4]){const n=ix.getX(i+j),x=a.getX(n),z=a.getZ(n),y=a.getY(n);
+    assert.ok(Math.abs(x)<=32.00001&&Math.abs(z)<=32.00001);assert.ok(Math.abs(y-(shockwaveSurface(x,z)+.09))<1e-5);lo=Math.min(lo,y);hi=Math.max(hi,y);
    }
-   if(max-min>=.9)assert.equal(ix.getX(i*6),ix.getX(i*6+1),'discontinuity is hidden');
+   assert.ok(hi-lo<.90001,'no cell bridges a terrain discontinuity');
+   for(const k of [0,3]){const n=ix.getX(i+k),o=ix.getX(i+k+1),q=ix.getX(i+k+2);covered+=area(a.getX(n),a.getZ(n),a.getX(o),a.getZ(o),a.getX(q),a.getZ(q));}
   }
-  const snapshot=Array.from(a.array);view.update([{...fx('shockwave',.09),from:center,to:center}],false);assert.deepEqual(Array.from(a.array),snapshot);
+  if(center.x===-15&&center.z===8){assert.equal(end,64*6,'flat ground keeps the original 64 cells');assert.ok(Math.abs(covered-19.57206)<.001);}
+  if(center.x===6&&center.z===0){assert.ok(end>64*6,'bridge boundary is refined');assert.ok(covered>19,'bridge coverage improves over the old 17.13');}
+  const snapshot=Array.from(a.array),drawCount=g.drawRange.count;view.update([{...fx('shockwave',.01),to:center}],true);assert.deepEqual(Array.from(a.array),snapshot);assert.equal(g.drawRange.count,drawCount);
  }
- view.update([{...fx('shockwave',.09),to:{x:-15,z:-7}}],true);const m=view.root.children.find(o=>o instanceof Mesh&&o!==view.chips) as Mesh;
- const pos=Array.from(m.geometry.getAttribute('position').array);view.update([{...fx('shockwave',.01),to:{x:-15,z:-7}}],true);assert.deepEqual(Array.from(m.geometry.getAttribute('position').array),pos);view.dispose();
+ view.dispose();
+});
+
+test('a reused shockwave buffer drops old boundary cells when the next effect is flat or off-map',()=>{
+ const g=createShockwaveGeometry(),positions=g.getAttribute('position'),indices=g.getIndex();
+ projectShockwave(g,{x:6,z:0},1);assert.ok(g.drawRange.count>64*6);
+ projectShockwave(g,{x:-15,z:8},1);assert.equal(g.drawRange.count,64*6);
+ projectShockwave(g,{x:50,z:50},1);assert.equal(g.drawRange.count,0);
+ assert.equal(g.getAttribute('position'),positions);assert.equal(g.getIndex(),indices);g.dispose();
+});
+
+test('skill and hammer anticipation project their real radii onto bridge and river surfaces',()=>{
+ const g=createShockwaveGeometry(32),a=g.getAttribute('position');
+ projectShockwave(g,{x:-15,z:8},1,1.32*HERO_ATTACK.skillRadius/HERO_ATTACK.radius,HERO_ATTACK.skillRadius);assert.equal(g.drawRange.count,32*6,'flat anticipation retains its original segment count');
+ for(const [inner,outer] of [[1.32,HERO_ATTACK.radius],[1.32*HERO_ATTACK.skillRadius/HERO_ATTACK.radius,HERO_ATTACK.skillRadius]]){
+  const center={x:6,z:0};projectShockwave(g,center,1,inner,outer);assert.ok(g.drawRange.count>0&&g.drawRange.count<=32*16*6);
+  for(let n=0;n<g.drawRange.count/6*4;n++){const x=a.getX(n),z=a.getZ(n),d=Math.hypot(x-center.x,z-center.z);assert.ok(d>=inner-1e-5&&d<=outer+1e-5);assert.ok(Math.abs(a.getY(n)-shockwaveSurface(x,z)-.09)<1e-5);}
+ }
+ g.dispose();
 });
 
 test('bolt fragments follow incoming momentum, gravity and ground without affecting reduced-motion or pooled lifetime',()=>{

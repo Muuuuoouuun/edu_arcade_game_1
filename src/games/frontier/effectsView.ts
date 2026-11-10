@@ -1,32 +1,35 @@
-import {BufferGeometry,Float32BufferAttribute,CylinderGeometry,DoubleSide,Group,InstancedMesh,Mesh,MeshBasicMaterial,MeshStandardMaterial,Object3D,OctahedronGeometry,RingGeometry,TorusGeometry,Vector3} from 'three';
+import {BufferGeometry,DynamicDrawUsage,Float32BufferAttribute,CylinderGeometry,DoubleSide,Group,InstancedMesh,Mesh,MeshBasicMaterial,MeshStandardMaterial,Object3D,OctahedronGeometry,RingGeometry,TorusGeometry,Vector3} from 'three';
 import {heightAt,type Frontier} from './engine.ts';
 import {heroRingMatrix} from './heroEffects.ts';
 import {CROSSING} from './terrainView.ts';
 type Effect=Frontier['effects'][number];
-const LIMIT=128,CHIPS=8,SEGMENTS=64;
+const LIMIT=128,CHIPS=8,SEGMENTS=64,SUBDIVISIONS=4;
 /** Project the expanding ring onto the visible surface; skip steep breaks rather than draw vertical streaks. */
 export function shockwaveSurface(x:number,z:number){
  if(x>CROSSING.left&&x<CROSSING.right&&Math.abs(z)>2.8)return CROSSING.water;
  return heightAt(x,z);
 }
-export function createShockwaveGeometry(){
- const g=new BufferGeometry();g.setAttribute('position',new Float32BufferAttribute(new Float32Array(SEGMENTS*4*3),3));g.setIndex(Array.from({length:SEGMENTS},(_,i)=>[4*i,4*i+1,4*i+2,4*i+1,4*i+3,4*i+2]).flat());return g;
+export function createShockwaveGeometry(segments=SEGMENTS){
+ const maxQuads=segments*SUBDIVISIONS*SUBDIVISIONS,g=new BufferGeometry();g.userData.shockSegments=segments;g.setAttribute('position',new Float32BufferAttribute(new Float32Array(maxQuads*4*3),3).setUsage(DynamicDrawUsage));g.setIndex(Array.from({length:maxQuads},(_,i)=>[4*i,4*i+1,4*i+2,4*i+1,4*i+3,4*i+2]).flat());g.setDrawRange(0,0);return g;
 }
-export function projectShockwave(g:BufferGeometry,center:{x:number;z:number},scale:number){
- const a=g.getAttribute('position'),indices=g.getIndex()!;
- for(let i=0;i<SEGMENTS;i++){
-  let lo=Infinity,hi=-Infinity,valid=true;
-  for(let end=0;end<2;end++)for(let side=0;side<2;side++){
-   const angle=(i+end)*2*Math.PI/SEGMENTS,r=(side?8:7.6)*scale,x=center.x+Math.cos(angle)*r,z=center.z+Math.sin(angle)*r;
-   const y=shockwaveSurface(x,z)+.09;lo=Math.min(lo,y);hi=Math.max(hi,y);valid&&=Math.abs(x)<=32&&Math.abs(z)<=32;
-   a.setXYZ(i*4+end*2+side,x,y,z);
+export function projectShockwave(g:BufferGeometry,center:{x:number;z:number},scale:number,inner=7.6,outer=8){
+ const a=g.getAttribute('position') as Float32BufferAttribute;let count=0;
+ const quad=(angle0:number,angle1:number,r0:number,r1:number,split:boolean)=>{
+  const c0=Math.cos(angle0),s0=Math.sin(angle0),c1=Math.cos(angle1),s1=Math.sin(angle1);
+  const x0=center.x+c0*r0,z0=center.z+s0*r0,x1=center.x+c0*r1,z1=center.z+s0*r1;
+  const x2=center.x+c1*r0,z2=center.z+s1*r0,x3=center.x+c1*r1,z3=center.z+s1*r1;
+  const y0=shockwaveSurface(x0,z0)+.09,y1=shockwaveSurface(x1,z1)+.09,y2=shockwaveSurface(x2,z2)+.09,y3=shockwaveSurface(x3,z3)+.09;
+  const valid=Math.max(Math.abs(x0),Math.abs(z0),Math.abs(x1),Math.abs(z1),Math.abs(x2),Math.abs(z2),Math.abs(x3),Math.abs(z3))<=32;
+  const safe=Math.max(y0,y1,y2,y3)-Math.min(y0,y1,y2,y3)<.9;
+  if(valid&&safe){const n=count++*4;a.setXYZ(n,x0,y0,z0);a.setXYZ(n+1,x1,y1,z1);a.setXYZ(n+2,x2,y2,z2);a.setXYZ(n+3,x3,y3,z3);return;}
+  // Split only a cell touching a terrain break or the map edge; never draw a vertical wall.
+  if(split)for(let u=0;u<SUBDIVISIONS;u++)for(let v=0;v<SUBDIVISIONS;v++){
+   const t0=u/SUBDIVISIONS,t1=(u+1)/SUBDIVISIONS,q0=v/SUBDIVISIONS,q1=(v+1)/SUBDIVISIONS;
+   quad(angle0+(angle1-angle0)*t0,angle0+(angle1-angle0)*t1,r0+(r1-r0)*q0,r0+(r1-r0)*q1,false);
   }
-  // Do not bridge water/land and deck discontinuities with spurious walls.
-  const base=i*4,visible=valid&&hi-lo<.9;
-  indices.setX(i*6,base);indices.setX(i*6+1,visible?base+1:base);indices.setX(i*6+2,visible?base+2:base);
-  indices.setX(i*6+3,visible?base+1:base);indices.setX(i*6+4,visible?base+3:base);indices.setX(i*6+5,visible?base+2:base);
- }
- a.needsUpdate=true;indices.needsUpdate=true;
+ };
+ const segments=g.userData.shockSegments as number;for(let i=0;i<segments;i++)quad(i*2*Math.PI/segments,(i+1)*2*Math.PI/segments,inner*scale,outer*scale,true);
+ g.setDrawRange(0,count*6);if(count){a.clearUpdateRanges();a.addUpdateRange(0,count*4*3);a.needsUpdate=true;}
 }
 /** Cosmetic debris is sampled from simulation age; no wall clock, random state or damage. */
 export function contactChip(fx:Effect,index:number){
