@@ -169,7 +169,8 @@
     "models:riel-ultimate:check": "node tools/check-riel-ultimate.mjs && blender --python-exit-code 1 -b --python tools/blender/build_riel_ultimate.py -- --check",
     "models:base-cannon-action": "blender --python-exit-code 1 -b --python tools/blender/build_base_cannon_action.py --",
     "models:base-crossbow-action": "blender --python-exit-code 1 -b --python tools/blender/build_base_crossbow_action.py --",
-    "models:metal-walk": "blender --python-exit-code 1 -b --python tools/blender/build_metal_walk.py --"
+    "models:metal-walk": "blender --python-exit-code 1 -b --python tools/blender/build_metal_walk.py --",
+    "models:base-magic-action": "blender --python-exit-code 1 -b --python tools/blender/build_base_magic_action.py --"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

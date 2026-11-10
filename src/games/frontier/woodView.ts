@@ -74,12 +74,12 @@ export class WoodBatch {
   this.template=template;this.authored=authored;
   this.contacts=new InstancedMesh(new CircleGeometry(.8,12),new MeshBasicMaterial({color:'#183d2d',transparent:true,opacity:.25,depthWrite:false}),1);
   this.warnings=new InstancedMesh(new RingGeometry(.55,WOOD_ATTACK.hitReach,24,1,-Math.PI/2-WOOD_ATTACK.halfArc,WOOD_ATTACK.halfArc*2),new MeshBasicMaterial({color:'#df6449',transparent:true,opacity:.68,depthWrite:false,side:2}),1);
-  this.health=new InstancedMesh(new BoxGeometry(1,.11,.08),new MeshBasicMaterial({color:'#ffbd9d'}),1);this.hitMarkers=new InstancedMesh(hitMarkerGeometry(),new MeshBasicMaterial({vertexColors:true,transparent:true,opacity:1,depthTest:true,depthWrite:false,forceSinglePass:true,side:2}),1);this.hitMarkers.name='wood-hit-marker';this.grow(16);
+  this.health=new InstancedMesh(new BoxGeometry(1,.11,.08),new MeshBasicMaterial({color:'#ffbd9d'}),1);this.health.name='wood-health';this.health.visible=false;this.hitMarkers=new InstancedMesh(hitMarkerGeometry(),new MeshBasicMaterial({vertexColors:true,transparent:true,opacity:1,depthTest:true,depthWrite:false,forceSinglePass:true,side:2}),1);this.hitMarkers.name='wood-hit-marker';this.grow(16);
  }
  private grow(size:number){
   this.capacity=size;for(const mesh of this.meshes){this.root.remove(mesh);mesh.dispose();}this.meshes=[];
   this.template.scene.traverse(o=>{if(o instanceof Mesh){const m=new InstancedMesh(o.geometry,o.material,size);m.name=o.name;m.count=0;m.frustumCulled=false;m.receiveShadow=true;this.meshes.push(m);this.root.add(m);}});
-  for(const name of ['contacts','health','warnings','hitMarkers'] as const){const old=this[name];this.root.remove(old);const next=new InstancedMesh(old.geometry,old.material,size);next.count=0;next.name=old.name;next.frustumCulled=false;this[name]=next;old.dispose();this.root.add(next);}
+  for(const name of ['contacts','health','warnings','hitMarkers'] as const){const old=this[name];this.root.remove(old);const next=new InstancedMesh(old.geometry,old.material,size);next.count=0;next.name=old.name;next.visible=old.visible;next.frustumCulled=false;this[name]=next;old.dispose();this.root.add(next);}
  }
  update(enemies:Enemy[],reduced:boolean,camera:Camera,now=0){
   if(enemies.length>this.capacity)this.grow(2**Math.ceil(Math.log2(enemies.length)));

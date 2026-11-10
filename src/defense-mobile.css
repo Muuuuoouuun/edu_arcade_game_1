@@ -243,3 +243,10 @@ body:has(.battle-page) .defense-dialog{max-height:calc(100dvh - env(safe-area-in
 .battle-skill-benefit{margin:0 0 8px;padding:8px 5px;display:grid;gap:4px;font-size:11px;line-height:1.4;color:#ebdfb3;text-align:center}.battle-skill-benefit strong{color:#bce4ce;font-weight:500}.battle-skill-benefit small{font-size:10px;color:#b5c9bc}
 @media(orientation:portrait){.battle-skill-benefit{grid-column:1/-1;margin:0;padding:2px 4px;display:flex;flex-wrap:wrap;justify-content:center;gap:2px 8px}.battle-skill-benefit small{display:none}.battle-skill-result{font-size:11px;padding:7px 9px}.battle-skill-result strong{font-size:12px}}
 .battle-large-text .battle-skill-benefit{display:none}
+
+/* Combat canvas first: keep actionable controls while hiding persistent information overlays. */
+.battle-page{grid-template-rows:minmax(0,1fr)}
+.battle-page .battle-hud{position:absolute;top:calc(env(safe-area-inset-top) + 4px);right:calc(env(safe-area-inset-right) + 8px);min-height:0;padding:0;background:transparent;border:0;z-index:8}
+.battle-page .battle-hud>span,.battle-page .battle-skill-benefit,.battle-page .battle-input-note,.battle-page .battle-skill-result,.battle-page .battle-portrait-summary,.battle-page .battle-camera>span,.battle-page .def-town-label,.battle-page .def-threat-list,.battle-page .def-boss-warning,.battle-page .def-world-label,.battle-page .def-pet-label,.battle-page .def-tower-level,.battle-page .def-float-number,.battle-page .def-monster>rect,.battle-page [data-effect=coin]{display:none}
+
+.battle-page .def-unopened-region-label{display:none}

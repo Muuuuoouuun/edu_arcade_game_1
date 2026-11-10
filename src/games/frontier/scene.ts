@@ -1,7 +1,7 @@
 import {FrostGateView} from './gateView';
 import {FRONTIER_THEMES,type FrontierTheme} from './themes';
 import{BeaconView}from'./beaconView';
-import{CROSSING,riverBanks}from'./terrainView';
+import{CROSSING,bridgePickSurface,riverBanks}from'./terrainView';
 import {EffectsView} from './effectsView';
 import {FrontierCameraRig} from './camera';
 import * as THREE from 'three';
@@ -24,7 +24,7 @@ export class FrontierScene {
   for(let i=0;i<positions.count;i++){const x=positions.getX(i),z=positions.getZ(i);if(x>3&&x<9)positions.setY(i,CROSSING.bed);}positions.needsUpdate=true;geo.computeVertexNormals();
   for(const[x,w]of[[-14.5,35],[20.5,23]])this.box(this.root,x,-4,0,w,5,64,'#6a7055');this.box(this.root,6,CROSSING.bed-.1,0,6,.2,64,'#5c685b');this.box(this.root,6,CROSSING.water-.125,0,5.8,.25,64,'#5cabb5');const banks=riverBanks();this.root.add(banks);this.track(banks);
   // A physical bridge connects both halves; side rails can occlude feet, never the input ray.
-  this.pickSurfaces.push(this.box(this.root,6,.16,0,8,.4,5.6,'#9b7550'));for(const z of [-2.8,2.8]){this.box(this.root,6,1.25,z,8,.22,.2,'#c5a67c');for(const x of [2.4,5,8,9.6])this.box(this.root,x,.65,z,.22,1.4,.22,'#715a42');}
+  const bridge=bridgePickSurface();this.root.add(bridge);this.track(bridge);this.pickSurfaces.push(bridge);for(const z of [-2.8,2.8]){this.box(this.root,6,1.25,z,8,.22,.2,'#c5a67c');for(const x of [2.4,5,8,9.6])this.box(this.root,x,.65,z,.22,1.4,.22,'#715a42');}
   for(const x of[3.4,8.6])this.box(this.root,x,-1.5,0,1,2.4,5.1,'#8a927a');for(const z of[-2.3,2.3])this.box(this.root,6,-.2,z,8,.42,.35,'#715a42');
   for(let x=-32;x<=32;x+=4)for(const z of [-32,32])this.box(this.root,x,heightAt(x,z)-1.5,z,4,3.5,2,'#7b806a');
   for(let z=-28;z<32;z+=4)for(const x of [-32,32])this.box(this.root,x,heightAt(x,z)-1.5,z,2,3.5,4,'#7b806a');

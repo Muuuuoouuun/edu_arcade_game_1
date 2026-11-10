@@ -18,3 +18,13 @@
 @media(orientation:landscape) and (max-height:500px){
  .frontier-menu{padding:12px 24px}.frontier-menu h1{font-size:24px;margin:6px 0}.frontier-menu h1 br{display:none}.frontier-menu>p{font-size:12px;line-height:1.5;margin:6px 0}.frontier-menu .frontier-eyebrow{font-size:10px;margin:0}.frontier-themes{margin:8px 0}.frontier-themes button{grid-template-columns:64px 1fr;column-gap:10px;padding:6px 10px}.frontier-themes img{width:64px;height:36px}.frontier-themes span{font-size:16px}.frontier-themes small{font-size:11px}.frontier-modes{margin-top:8px;gap:10px}.frontier-modes>button{padding:12px}.frontier-modes h2{font-size:18px;margin:6px 0}.frontier-modes p{font-size:12px;min-height:0;margin:6px 0}.frontier-modes small{font-size:11px;min-height:0}.frontier-modes b{font-size:12px;margin-top:8px}
 }
+
+/* Keep controls on the 3D scene; informational HUD is hidden during combat. */
+.frontier[data-menu=false]{position:relative}
+.frontier[data-menu=false] .frontier-hud{position:absolute;top:calc(env(safe-area-inset-top) + 6px);left:calc(env(safe-area-inset-left) + 8px);z-index:4;padding:0;background:transparent;gap:6px;min-height:0;height:auto;flex-wrap:nowrap}
+.frontier[data-menu=false] .frontier-hud>span,.frontier[data-menu=false] .frontier-compass,.frontier[data-menu=false] .frontier-actions>small,.frontier[data-menu=false] .frontier-actions>span,.frontier[data-menu=false] .frontier-pads small{display:none}
+.frontier[data-menu=false] .frontier-objective{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.frontier[data-menu=false] .frontier-controls{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 6px);left:calc(env(safe-area-inset-left) + 8px);right:calc(env(safe-area-inset-right) + 8px);z-index:2;padding:0;background:transparent;border:0;pointer-events:none;min-height:0}
+.frontier[data-menu=false] .frontier-controls button{pointer-events:auto}
+.frontier[data-menu=false] .frontier-solo{width:100%;justify-content:space-between}
+.frontier[data-menu=false] .frontier-actions{margin-left:auto}

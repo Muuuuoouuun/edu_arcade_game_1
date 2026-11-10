@@ -3,6 +3,11 @@ import {WoodBatch,WoodView,woodFallback,WOOD_STRIDE}from'./woodView.ts';import{a
 const data=readFileSync(new URL('../../../public/defense/models/frontier-wood-game.glb',import.meta.url));const template=await new GLTFLoader().parseAsync(data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength),'');
 const camera=new PerspectiveCamera(60,1,.1,200);camera.position.set(0,30,50);camera.lookAt(0,0,0);
 const enemy=(id:number):Enemy=>({id,x:(id%5)*2,z:Math.floor(id/5)*2,hp:40,maxHp:62,cooldown:0,path:0,walkDistance:id*.113,heading:id*.4,moving:true,restTime:0});
+test('combat health bars stay hidden when the enemy batch grows',()=>{
+ const batch=new WoodBatch(template);assert.equal(batch.root.getObjectByName('wood-health')?.visible,false);
+ batch.update(Array.from({length:30},(_,i)=>enemy(i)),false,camera);
+ assert.equal(batch.root.getObjectByName('wood-health')?.visible,false);assert.equal(batch.meshes[0].count,30);batch.dispose();
+});
 test('wooden enemies retain independent gait/heading through batch growth, culling and removal',()=>{
  const batch=new WoodBatch(template),enemies=Array.from({length:30},(_,i)=>enemy(i));batch.update(enemies,false,camera);assert.equal(batch.meshes.length,8);assert.equal(batch.views.size,30);assert.equal(batch.meshes[0].count,30);
  for(let j=0;j<8;j++)for(let i=0;i<30;i++){const m=new Matrix4();batch.meshes[j].getMatrixAt(i,m);const view=batch.views.get(i)!;assert.equal(view.surfaces[j].geometry,batch.meshes[j].geometry);assert.ok(m.elements.every((v,k)=>Math.abs(v-view.surfaces[j].matrixWorld.elements[k])<1e-5));}

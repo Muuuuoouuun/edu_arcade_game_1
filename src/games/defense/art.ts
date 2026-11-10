@@ -1,3 +1,4 @@
+import { BASE_MAGIC_SOCKETS } from './baseMagicSockets.ts';
 import { BASE_CROSSBOW_MUZZLES } from './baseCrossbowMuzzles.ts';
 import { BASE_CANNON_MUZZLES } from './baseCannonMuzzles.ts';
 import { TAO_ENTRY_SOCKETS } from './taoEntrySockets.ts';
@@ -535,6 +536,21 @@ const BAKED_BRANCHES:BakedTower[] = [
  {kind:'cannon',branch:'crush',asset:{src:'/defense/models/crush-cannon-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/crush-cannon-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
 ];
 const bakedFor=(kind:TowerKind,branch:Branch|null)=>BAKED_BRANCHES.find(model=>model.kind===kind&&model.branch===branch)??BAKED_TOWERS[kind];
+const BASE_MAGIC_ACTION_ATLAS='/defense/models/base-magic-action-atlas.webp';
+/** Lv.1's fixed foundation supports a floating crystal and a moving focus ring. */
+export function baseMagicActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,windup=0,recoil=0,reduced=false) {
+ if(kind!=='magic'||branch!==null||level!==1||!motionLoaded.has(BASE_MAGIC_ACTION_ATLAS))return null;
+ const charge=Number.isFinite(windup)&&windup>0,release=Number.isFinite(recoil)&&recoil>0;
+ const pose=reduced?0:charge?(windup<.5?1:2):release?(recoil>.16?3:recoil>.08?4:5):0;
+ const [x,y]=BASE_MAGIC_SOCKETS[pose],size=92+level*4;
+ return {direction:0,pose,muzzle:{x:x*size,y:y*size},asset:{src:BASE_MAGIC_ACTION_ATLAS,viewBox:`${pose*256+12.8} 9.6 230.4 230.4`,width:1536,height:256,displayScale:1.16} as SpriteAsset};
+}
+/** Preserve the launch-level crystal socket even if the tower upgrades or is sold. */
+export function baseMagicProjectileOffset(p:Projectile,reduced=false):Point|undefined {
+ if(p.source!=='tower'||p.actor!=='magic'||p.element!=='fire'||p.sourceLevel!==1)return undefined;
+ const render=baseMagicActionSpriteAsset('magic',null,1,0,.24,reduced);
+ return render?{x:render.muzzle.x,y:render.muzzle.y+39}:undefined;
+}
 const FIRE_ACTION_ATLAS='/defense/models/fire-action-atlas.webp',FIRE_LV3_ACTION_ATLAS='/defense/models/fire-lv3-action-atlas.webp';
 /** Fixed masonry; the crystal, bronze retainers and ascended halo charge and release. */
 export function fireTowerActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,windup=0,recoil=0,reduced=false) {
@@ -837,7 +853,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,GOLEM_WALK_ATLAS.src,ICE_WALK_ATLAS.src,METAL_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_BRACE_FALL_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,METAL_DEATH_ATLAS.src,WOOD_DEATH_ATLAS.src,ICE_DEATH_ATLAS.src,GOLEM_DEATH_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...MAGE_ENTRY,...MAGE_RETURN,...MAGE_RESET,...KAR_SLAM,...KAR_WALK,...KAR_ENTRY,...KAR_RETURN,...KAR_RESET,...KAR_STOP,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...DRUID_ULTIMATE,...DRUID_ENTRY,...DRUID_RETURN,...DRUID_RESET,...DRUID_STOP,...TAO_CAST,...TAO_WALK,...TAO_ULTIMATE,...TAO_ENTRY,...TAO_RETURN,...TAO_RESET,...TAO_STOP,...ELF_CAST,...ELF_WALK,...RIEL_ULTIMATE,...RIEL_ENTRY,...RIEL_RETURN,...RIEL_RESET,...RIEL_STOP,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,...DWARF_STOP,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...BASE_CANNON_ACTION_ATLASES,...BASE_CROSSBOW_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,GOLEM_WALK_ATLAS.src,ICE_WALK_ATLAS.src,METAL_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_BRACE_FALL_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,METAL_DEATH_ATLAS.src,WOOD_DEATH_ATLAS.src,ICE_DEATH_ATLAS.src,GOLEM_DEATH_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...MAGE_ENTRY,...MAGE_RETURN,...MAGE_RESET,...KAR_SLAM,...KAR_WALK,...KAR_ENTRY,...KAR_RETURN,...KAR_RESET,...KAR_STOP,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...DRUID_ULTIMATE,...DRUID_ENTRY,...DRUID_RETURN,...DRUID_RESET,...DRUID_STOP,...TAO_CAST,...TAO_WALK,...TAO_ULTIMATE,...TAO_ENTRY,...TAO_RETURN,...TAO_RESET,...TAO_STOP,...ELF_CAST,...ELF_WALK,...RIEL_ULTIMATE,...RIEL_ENTRY,...RIEL_RETURN,...RIEL_RESET,...RIEL_STOP,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,...DWARF_STOP,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...BASE_CANNON_ACTION_ATLASES,...BASE_CROSSBOW_ACTION_ATLASES,BASE_MAGIC_ACTION_ATLAS,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

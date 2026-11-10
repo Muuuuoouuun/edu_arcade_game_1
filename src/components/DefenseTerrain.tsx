@@ -47,7 +47,7 @@ export const DefenseTerrain=memo(function DefenseTerrain({stageId,asset}:{stageI
   {!asset?<>{paths.map((p,i)=><g key={i}><path d={pathD(p)} fill="none" stroke={snow?'#70929788':'#89744499'} strokeWidth="52" strokeLinejoin="round"/><path d={pathD(p)} fill="none" stroke="url(#def-road)" strokeWidth="45" strokeLinejoin="round"/><path d={pathD(p)} fill="none" stroke="url(#def-gravel)" strokeWidth="43" strokeLinejoin="round"/></g>)}
   {!snow?[430,...(stage.expanded?[235]:[])].map(y=><image key={y} href="/defense/bridge.png" x="620" y={y-52} width="180" height="103" preserveAspectRatio="none"/>):<g mask="url(#def-ice-mask)"><rect x="300" width="220" height="600" fill="#8fd5ee" opacity=".65"/><rect x="300" width="220" height="600" fill="url(#def-ice-lines)"/></g>}
   </>:<image href={asset} width="900" height="600" preserveAspectRatio="none"/>}
-  {!stage.expanded?<g opacity=".9"><rect x="695" y="66" width="168" height="54" rx="9" fill="#1c463be0"/><text x="779" y="88" textAnchor="middle" fill="#f4ead3" fontSize="17" fontFamily="Jua">{snow?'산맥 피난소':'강 건너 마을'}</text><text x="779" y="108" textAnchor="middle" fill="#c4d8ba" fontSize="14">{snow?'2-4에서 길이 열립니다':'1-4에서 길이 열립니다'}</text></g>:null}
+  {!stage.expanded?<g className="def-unopened-region-label" opacity=".9"><rect x="695" y="66" width="168" height="54" rx="9" fill="#1c463be0"/><text x="779" y="88" textAnchor="middle" fill="#f4ead3" fontSize="17" fontFamily="Jua">{snow?'산맥 피난소':'강 건너 마을'}</text><text x="779" y="108" textAnchor="middle" fill="#c4d8ba" fontSize="14">{snow?'2-4에서 길이 열립니다':'1-4에서 길이 열립니다'}</text></g>:null}
  </g>;
 });
 

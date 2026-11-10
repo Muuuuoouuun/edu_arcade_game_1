@@ -526,7 +526,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','ice-knight-walk','frost-wolf','frost-wolf-trot','metal-soldier','metal-soldier-walk'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-brace-')&&!src.includes('/frost-fall-')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-stop-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')&&!src.includes('/base-cannon-action-')&&!src.includes('/base-crossbow-action-')).length,24);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-brace-')&&!src.includes('/frost-fall-')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-stop-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')&&!src.includes('/base-cannon-action-')&&!src.includes('/base-crossbow-action-')&&!src.includes('/base-magic-action-')).length,24);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -2661,4 +2661,36 @@ test('metal marching delivers grounded articulated boots and projected planted s
  const b=read('public/defense/models/metal-soldier-walk.glb');const g=JSON.parse(b.subarray(20,20+b.readUInt32LE(12)).toString());
  for(const side of ['near','far']){const foot=g.nodes.find((n:{name:string})=>n.name==='foot-joint-'+side);assert.ok(foot.children.some((i:number)=>g.nodes[i].name==='boot-'+side));}
  assert.ok(g.animations.some((a:{name:string,channels:unknown[]})=>a.name==='metal-soldier-walk'&&a.channels.length>=12));
+});
+
+test('base magic crystal charges before the hit and releases from its modeled socket',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'base-magic-action');
+ const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/base-magic-action.json',import.meta.url),'utf8'));
+ for(const [windup,recoil,pose] of [[0,0,0],[.2,0,1],[.5,0,2],[0,.24,3],[0,.16,4],[0,.08,5],[-1,0,0],[NaN,Infinity,0]]){
+  const r=art.baseMagicActionSpriteAsset('magic',null,1,windup,recoil)!;
+  assert.equal(r.pose,pose);assert.equal(r.asset.src,'/defense/models/base-magic-action-atlas.webp');
+  const [x,y,w,h]=r.asset.viewBox.split(' ').map(Number);assert.ok(x+w<=r.asset.width&&y+h<=r.asset.height);
+  const p=meta.poses[pose],[sx,sy]=p.socket;
+  assert.equal(p.foundation_drift,0);assert.ok(p.fixed_meshes>20);
+  assert.ok(Math.abs(r.muzzle.x-(sx-320)/576*meta.display_scale*96)<.001);
+  assert.ok(Math.abs(r.muzzle.y-(.1+(sy-600)/576*meta.display_scale)*96)<.001);
+  assert.equal(art.baseMagicActionSpriteAsset('magic',null,1,windup,recoil,true)?.pose,0);
+ }
+ const from={x:200,y:200},shot={source:'tower',actor:'magic',element:'fire',sourceLevel:1,from,to:{x:300,y:200}} as Projectile;
+ const copy=structuredClone(shot),offset=art.baseMagicProjectileOffset(shot);assert.ok(offset);assert.deepEqual(shot,copy);
+ assert.deepEqual(art.baseMagicProjectileOffset({...shot,to:{x:999,y:999}}),offset);
+ for(const partial of [{sourceLevel:2},{element:'lightning' as const},{source:'hero' as const}])assert.equal(art.baseMagicProjectileOffset({...shot,...partial}),undefined);
+ assert.equal(art.baseMagicActionSpriteAsset('magic','fire',2),null);assert.equal(art.baseMagicActionSpriteAsset('cannon',null,1),null);
+ assert.equal(meta.hit_at,.15);assert.deepEqual(meta.clearance,{sampled_frames:40,ring_crystal_crossings:0});
+ assert.equal(requests.filter(s=>s.endsWith('/base-magic-action-atlas.webp')).length,1);
+ for(const key of ['source','generator'])assert.equal(createHash('sha256').update(readFileSync(new URL('../../../'+meta[key],import.meta.url))).digest('hex'),meta[key+'_sha256']);
+ for(const f of meta.files)assert.equal(createHash('sha256').update(readFileSync(new URL('../../../public/defense/models/'+f.file,import.meta.url))).digest('hex'),f.sha256);
+ const b=readFileSync(new URL('../../../public/defense/models/base-magic-action.glb',import.meta.url));const g=JSON.parse(b.subarray(20,20+b.readUInt32LE(12)).toString());
+ assert.ok(g.animations.some((a:{name:string,channels:unknown[]})=>a.name==='base-magic-release'&&a.channels.length>=3));
+});
+
+test('base crystal loading failure keeps the original base tower and upgraded branches',async()=>{
+ const {art}=await loadWithImageResults(s=>s.endsWith('/base-magic-action-atlas.webp'),'base-magic-failure');
+ assert.equal(art.baseMagicActionSpriteAsset('magic',null,1,.5,0),null);
+ assert.ok(art.towerSpriteAsset('magic',null,1));assert.ok(art.fireTowerActionSpriteAsset('magic','fire',2,.5,0));
 });

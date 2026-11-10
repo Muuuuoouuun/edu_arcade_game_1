@@ -699,6 +699,14 @@ test('hero attacks carry a finite splash limit so a saved battle survives JSON',
 });
 
 
+test('a base magic bolt keeps its launch level when the tower upgrades or is sold',()=>{
+ const s=rangedBattle('magic');s.coins=1000;
+ const windup=stepDefense(s,.02);assert.equal(windup.towers[0].recoil??0,0);assert.equal(windup.projectiles.length,0);
+ const fired=until(windup,n=>n.projectiles.length>0),bolt=fired.projectiles[0];assert.equal(bolt.sourceLevel,1);assert.equal(bolt.actor,'magic');
+ const upgraded=actDefense(fired,{type:'upgrade',slot:2,branch:'fire'});assert.equal(upgraded.towers[0].level,2);assert.equal(upgraded.projectiles[0].sourceLevel,1);
+ const sold=actDefense(fired,{type:'sell',slot:2});assert.equal(sold.towers.length,0);assert.equal(sold.projectiles[0].sourceLevel,1);
+});
+
 test('water cannon recoil starts only on launch and a flying shell keeps its source level',()=>{
  const s=rangedBattle('cannon');s.coins=1000;s.towers[0].level=2;s.towers[0].branch='water';
  const windup=stepDefense(s,.02);assert.equal(windup.towers[0].recoil??0,0);

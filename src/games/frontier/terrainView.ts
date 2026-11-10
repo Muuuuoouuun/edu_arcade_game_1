@@ -1,6 +1,13 @@
-import{BufferGeometry,Float32BufferAttribute,Color,Mesh,MeshStandardMaterial}from'three';
+import{BoxGeometry,BufferGeometry,Float32BufferAttribute,Color,Mesh,MeshStandardMaterial}from'three';
 /** Visual gorge remains inside the blocked river; the gameplay surface is unchanged. */
 export const CROSSING={left:3,right:9,water:-2.6,bed:-4.5,deck:.36} as const;
+/** Input retains the deck when the visual root is replaced by a loaded GLB. */
+export function bridgePickSurface(){
+ const mesh=new Mesh(new BoxGeometry(8,.4,5.6),new MeshStandardMaterial({color:'#9b7550',roughness:.85}));
+ mesh.position.set(6,.16,0);mesh.castShadow=mesh.receiveShadow=true;
+ // The GLB can arrive before the first render: the detached pick mesh must already be in world space.
+ mesh.updateMatrixWorld(true);return mesh;
+}
 export function riverBanks(){
  const positions:number[]=[],colors:number[]=[];
  for(const side of[-1,1]){const edge=side===1?CROSSING.left:CROSSING.right;
