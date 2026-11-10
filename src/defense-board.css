@@ -23,3 +23,5 @@
 .def-board{contain:layout paint}.def-hit,.def-knocked .def-sprite-body,.def-boss-model .def-sprite-body,.def-hit.def-boss-model .def-sprite-body,.def-skill-cast .def-sprite-body{filter:none}.def-dash-trail{pointer-events:none}.def-map:focus-visible{outline:3px solid #f8e2a5;outline-offset:-4px}
 .def-breach-flash{position:absolute;inset:0;z-index:6;pointer-events:none;box-shadow:inset 0 0 70px 18px #d63a30cc,inset 0 0 14px 3px #ff8a78}.def-float-breach{fill:#ffe3dc;stroke:#8f2a24;stroke-width:4px;paint-order:stroke;font-size:26px}
 @media(min-width:601px) and (min-height:700px){.def-town-label{--town-label-top:62%}}
+
+.def-terrain-3d{position:absolute;inset:0;pointer-events:none}.def-terrain-3d canvas{display:block;width:100%;height:100%}.def-map{position:relative}

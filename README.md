@@ -16,9 +16,9 @@ Node.js 22.12 이상에서 `npm ci`, `npm run dev`로 실행합니다. 기본 �
 | `npm run build:mobile` | `dist-mobile/` 아르카나 전용 빌드 |
 | `npm run android:debug` | 아르카나 전용 웹 동기화 후 Android 디버그 APK |
 
-Android 설치판은 미니게임 진입점·코드와 제작 작업실용 GLB를 포함하지 않습니다. 모바일 렌더러는 기존 React/TypeScript 기반 2.5D 전장입니다. Three.js 실시간 모델은 웹 제작 작업실에서 검토합니다. [Android 빌드·설치 안내](docs/android-install.md)를 참고하세요.
+Android 설치판은 미니게임 진입점·코드와 제작 작업실용 GLB를 포함하지 않습니다. 전투 지형은 Three.js 3D 메시로 표시하고, 캐릭터·타워와 전투 효과는 기존 스프라이트를 함께 사용합니다. GLB 모델은 웹 제작 작업실에서 검토하며 실시간 전투 유닛에는 아직 연결하지 않았습니다. [Android 빌드·설치 안내](docs/android-install.md)를 참고하세요.
 
-[기본 게임 규칙 v1 — 현재 규칙·설계 결정·적용 순서](docs/arcana-game-rules-v1.md) · [적·보스 모델링과 전투 연출 설계](docs/arcana-enemy-design/README.md)
+[3D 전장과 모델링 방향](docs/arcana-3d-world-direction.md) · [기본 게임 규칙 v1 — 현재 규칙·설계 결정·적용 순서](docs/arcana-game-rules-v1.md) · [적·보스 모델링과 전투 연출 설계](docs/arcana-enemy-design/README.md)
 
 ## 현재 게임
 

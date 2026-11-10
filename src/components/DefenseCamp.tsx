@@ -33,7 +33,6 @@ type FacilityId = ReturnType<typeof campaignFacilities>[number]['id'];
 const heroOrder:HeroId[] = ['mage','elf','dwarf','tao','barbarian','druid'];
 const difficultyTags:Record<Difficulty,string> = {relaxed:'가볍게 모험',standard:'균형 잡힌 도전',veteran:'빠르고 거센 습격'};
 const regionNames = {forest:'청록의 숲',snow:'서리산맥'};
-const regionArt = {forest:'/defense/forest.png',snow:'/defense/snow.png'};
 const regionSummary = {forest:'숲길과 물길을 따라, 이웃 마을을 지켜요.',snow:'빙판을 달리는 적들과 서리군주가 기다려요.'};
 
 export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDifficulty,onTrain,onExit,storageFailed,themeId,onSelectTheme,themeStorageFailed}:Props) {
@@ -161,7 +160,7 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
           <div className="camp-letter-rule" aria-hidden="true"/>
           <p className="camp-sender"><span>보낸 사람</span><strong>{request?.stage===selectedStage?request.from:stage.region==='snow'?'서리산맥의 전령':'청록 마을의 촌장'}</strong></p>
           <p className="camp-letter-body">{letterBody}</p>
-          <div className="camp-region-art"><img src={regionArt[stage.region]} alt={stage.region==='snow'?'눈 덮인 서리산맥의 전장':'청록의 숲과 물길'}/><span>{stage.label} {stage.name}</span></div>
+          <div className={`camp-region-art camp-region-art-${stage.region}`}><span>{stage.label} {stage.name}</span></div>
           <div className="camp-difficulty" role="group" aria-labelledby="camp-difficulty-title">
             <h3 id="camp-difficulty-title">원정 난이도</h3>
             <div className="camp-difficulty-choices">{DIFFICULTY_ORDER.map(mode=><button key={mode} type="button" className={difficulty===mode?'selected':''} aria-pressed={difficulty===mode} aria-label={`${DIFFICULTIES[mode].name} 난이도 선택`} onClick={()=>onSelectDifficulty(mode)}><span className={`camp-difficulty-mark camp-difficulty-mark-${mode}`} aria-hidden="true"/><strong>{DIFFICULTIES[mode].name}</strong><small>{difficultyTags[mode]}</small></button>)}</div>

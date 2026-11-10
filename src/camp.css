@@ -39,3 +39,5 @@
 }
 .camp-hero-trait{margin:11px 0 0;padding:8px 11px;border-radius:9px;background:#eaf0da;color:#4f6b3d;font-size:12px;line-height:1.5;word-break:keep-all}.camp-hero-trait b{font-family:Jua,sans-serif;font-weight:400;font-size:15px;margin-right:7px;color:#3f5a30}
 @media(max-width:600px){.camp-hero-trait{font-size:11px}}
+
+.camp-region-art-forest{background:linear-gradient(145deg,#203f36,#628762 55%,#b3be82)}.camp-region-art-snow{background:linear-gradient(145deg,#385b6d,#85adb5 55%,#d3e2dc)}
