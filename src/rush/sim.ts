@@ -3,7 +3,7 @@
 // so this module can run in tests, in the browser and later on an authoritative server.
 import {
   ARENA, BUSH, BUSHES, CRATE, CRATES, ECONOMY, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WALLS, WAVES,
-  type Block, type EnemyKind, type HeroDef, type HeroKind, type Vec, TOWER_BRANCH, type TowerBranch } from './data.ts';
+  type Block, type EnemyKind, type HeroDef, type HeroKind, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
 
 export type Phase = 'prep' | 'wave' | 'won' | 'lost';
 
@@ -61,8 +61,8 @@ export type RushEvent =
 
 /** Battle modifiers from permanent (between-battle) upgrades. All 1 = the base game. */
 /** Battle modifiers from the kingdom. heroHp scales the hero's max health (hero level, cycle 14). */
-export interface RushMods { damage: number; towerCost: number; townHp: number; heroHp: number }
-export const NO_MODS: RushMods = { damage: 1, towerCost: 1, townHp: 1, heroHp: 1 };
+export interface RushMods { damage: number; towerCost: number; townHp: number; heroHp: number; forge: number }
+export const NO_MODS: RushMods = { damage: 1, towerCost: 1, townHp: 1, heroHp: 1, forge: 0 };
 /** Stage difficulty: multipliers on enemy health, group sizes (bosses excluded) and damage. All 1 = the base game. */
 export interface Difficulty { enemyHp: number; enemyCount: number; enemyDamage: number }
 export const BASE_DIFFICULTY: Difficulty = { enemyHp: 1, enemyCount: 1, enemyDamage: 1 };
@@ -455,10 +455,11 @@ function towerHit(s: RushState, target: Enemy, shot: Shot) {
   hurtEnemy(s, target, shot.damage, 'tower');
   if (shot.branch === 'fire') {
     const f = TOWER_BRANCH.fire;
-    for (const e of s.enemies) if (e !== target && e.hp > 0 && dist(e, at) <= f.splash + ENEMIES[e.kind].radius) hurtEnemy(s, e, shot.damage * f.splashShare, 'tower');
+    const share = f.splashShare + FORGE.splashShare * s.mods.forge;
+    for (const e of s.enemies) if (e !== target && e.hp > 0 && dist(e, at) <= f.splash + ENEMIES[e.kind].radius) hurtEnemy(s, e, shot.damage * share, 'tower');
     s.events.push({ type: 'splash', x: at.x, z: at.z, radius: f.splash });
   } else if (shot.branch === 'frost' && target.hp > 0) {
-    target.slowT = TOWER_BRANCH.frost.slowTime;
+    target.slowT = TOWER_BRANCH.frost.slowTime + FORGE.slowTime * s.mods.forge;
     s.events.push({ type: 'chill', x: at.x, z: at.z });
   }
 }

@@ -19,6 +19,8 @@ export const SPOTS: readonly Spot[] = [
   { id: 'attack', x: -6.2, z: -4, label: 2.6 },
   { id: 'towerDiscount', x: 6.2, z: -4, label: 3 },
   { id: 'townHp', x: 0, z: 1.6, label: 0.9 },
+  // Behind the castle, left (cycle 20): the camera-side front of the island is under the HUD on phones.
+  { id: 'forge', x: -4.3, z: -7.2, label: 2.9 },
 ];
 
 const C = { cream: PAL.cream, roof: PAL.ally, wood: PAL.wood, dark: PAL.woodDark, gold: PAL.gold, stone: PAL.stone, stoneTop: PAL.stoneTop, red: 0xd9473f, hay: 0xf2c94c, crop: 0x9bd35a, purple: PAL.super, leaf: 0x4fae4a };
@@ -106,6 +108,23 @@ function buildingParts(id: Upgrade, stage: number): Part[] {
     if (s >= 2) {
       parts.push({ geo: new CylinderGeometry(0.35, 0.45, 1.3, 8), color: 0xece0c4, at: [-1.3, 0.65, 0.4] });
       parts.push({ geo: new OctahedronGeometry(0.22), color: C.gold, at: [-1.3, 1.5, 0.4] });
+    }
+    return parts;
+  }
+  if (id === 'forge') {
+    // Stone smithy with a glowing chimney and an anvil; from stage 2 a fire crystal and an ice crystal (the two branches).
+    const k = 1 + 0.15 * s, parts: Part[] = [
+      { geo: new BoxGeometry(1.8 * k, 1.1 * k, 1.4 * k), color: C.stone, at: [0, 0.55 * k, -0.2] },
+      { geo: new BoxGeometry(2.0 * k, 0.18, 1.6 * k), color: C.stoneTop, at: [0, 1.1 * k + 0.09, -0.2] },
+      { geo: new CylinderGeometry(0.26, 0.32, 1.3 * k, 8), color: C.dark, at: [0.55 * k, 1.1 * k + 0.6 * k, -0.5] },
+      { geo: new CylinderGeometry(0.2, 0.2, 0.12, 8), color: 0xff7a2f, at: [0.55 * k, 1.1 * k + 1.27 * k, -0.5] },
+      { geo: new BoxGeometry(0.6, 0.28, 0.32), color: 0x4a4f63, at: [-0.2, 0.42, 0.85] },
+      { geo: new BoxGeometry(0.28, 0.28, 0.24), color: C.dark, at: [-0.2, 0.14, 0.85] },
+    ];
+    if (s >= 1) parts.push({ geo: new CylinderGeometry(0.2, 0.26, 1.0 * k, 8), color: C.dark, at: [-0.6 * k, 1.1 * k + 0.45 * k, -0.6] });
+    if (s >= 2) {
+      parts.push({ geo: new ConeGeometry(0.3, 0.8, 6), color: 0xff7a2f, at: [-1.25, 0.4, 0.7] }, { geo: new ConeGeometry(0.17, 0.45, 6), color: 0xffd04a, at: [-1.25, 0.35, 0.72] });
+      parts.push({ geo: new OctahedronGeometry(0.34), color: 0x8fe6ff, at: [1.25, 0.45, 0.7], scale: [0.8, 1.4, 0.8] });
     }
     return parts;
   }

@@ -1,9 +1,9 @@
 // Town (kingdom) screen: storage + DOM. Rules live in kingdom.ts.
 import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
-import { HEROES, type HeroKind } from './data.ts';
+import { FORGE, HEROES, type HeroKind } from './data.ts';
 import {
-  canTrain, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
+  CASTLE_MAX, HERO_LV_PER_CASTLE, canTrain, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
   serializeKingdom, storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 
@@ -26,6 +26,7 @@ const ROWS: Row[] = [
   { id: 'attack', name: '영웅 공격', badge: '공', tone: 'attack', label: '화살·필살기', value: k => `+${pct(PERK_EFFECT.attack * k.perks.attack)}` },
   { id: 'towerDiscount', name: '탑 설계도', badge: '탑', tone: 'tower', label: '탑 비용', value: k => `−${pct(PERK_EFFECT.towerDiscount * k.perks.towerDiscount)}` },
   { id: 'townHp', name: '성벽 보강', badge: '벽', tone: 'wall', label: '마을 체력', value: k => `+${pct(PERK_EFFECT.townHp * k.perks.townHp)}` },
+  { id: 'forge', name: '대장간', badge: '철', tone: 'forge', label: '화염 범위·냉기 시간', value: k => `+${pct(FORGE.splashShare * k.perks.forge)}·+${(FORGE.slowTime * k.perks.forge).toFixed(2)}초` },
 ];
 /** The same kingdom one level higher in `u` (for the "now → next" preview only). */
 function bumped(k: Kingdom, u: Upgrade): Kingdom {
@@ -165,7 +166,7 @@ export class TownScreen {
     trainBtn.disabled = !tc || !canTrain(k, k.hero);
     trainBtn.querySelector('[data-cost]')!.innerHTML = tc
       ? `훈련 <i class="res-ico food"></i>${tc.food} <i class="res-ico wood"></i>${tc.wood}`
-      : '성 Lv 필요';
+      : k.heroLv[k.hero] >= CASTLE_MAX * HERO_LV_PER_CASTLE ? '최대' : '성 Lv 필요';
     trainBtn.classList.toggle('capped', !tc);
     this.$('btn-hero').classList.toggle('can', canTrain(k, k.hero));
     this.$('btn-hero').classList.toggle('has-more', heroUnlocked(k, 'bron'));
@@ -191,7 +192,7 @@ export class TownScreen {
       btn.disabled = !cost || !canUpgrade(k, r.id);
       btn.querySelector('[data-cost]')!.innerHTML = cost
         ? `<i class="res-ico food"></i>${cost.food} <i class="res-ico wood"></i>${cost.wood}`
-        : r.id === 'castle' ? '최대' : '성 Lv 필요';
+        : r.id === 'castle' || level(k, r.id) >= CASTLE_MAX ? '최대' : '성 Lv 필요';
       btn.classList.toggle('capped', !cost);
     }
   }

@@ -99,6 +99,8 @@ export const TOWER_BRANCH = {
   fire: { damage: 0.85, splash: 1.3, splashShare: 0.3 },
   frost: { damage: 0.8, slow: 0.65, bossSlow: 0.85, slowTime: 1 },
 } as const;
+/** Town forge (cycle 20): per level, fire splash share +5 points and frost slow +0.15 s. */
+export const FORGE = { splashShare: 0.05, slowTime: 0.15 } as const;
 
 export const ECONOMY = { startGold: 60, waveBonus: 30, earlyBonusPerSecond: 2, prepTime: 12, coinLife: 14 } as const;
 

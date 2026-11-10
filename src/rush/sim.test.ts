@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ECONOMY, ENEMIES, HERO, HERO_SPAWN, PADS, STEP, TOWER_LEVELS } from './data.ts';
-import { createRush, padCost, rushHash, stepRush, superReady, type Command, type Enemy, type RushState } from './sim.ts';
+import { createRush, NO_MODS, padCost, rushHash, stepRush, superReady, type Command, type Enemy, type RushState } from './sim.ts';
 import { guardBot, idleBot } from './bot.ts';
 
 const steps = (s: RushState, n: number, cmd: Command | ((s: RushState) => Command) = {}) => {
@@ -246,4 +246,30 @@ test('tower branches play different roles: fire hits extra enemies per bolt, onl
     assert.equal(frost.splashes, 0);
     assert.ok(frost.slowed > 0 && fire.slowed === 0, `seed ${seed}: slowed enemy-ticks frost ${frost.slowed}, fire ${fire.slowed}`);
   }
+});
+
+test('forge levels widen fire splash and lengthen frost slows', async () => {
+  const { PADS, TOWER_BRANCH, FORGE } = await import('./data.ts');
+  const splash = (forge: number) => {
+    const s = createRush(2, { ...NO_MODS, forge });
+    s.phase = 'wave'; s.groups = [];
+    s.towers[0] = { level: 1, cd: 0, facing: 0, branch: 'fire' };
+    const a = enemy(s, 'brute', PADS[0].x, PADS[0].z - 3), b = enemy(s, 'brute', PADS[0].x + 0.9, PADS[0].z - 3);
+    a.hp = a.maxHp = b.hp = b.maxHp = 1e6;
+    let hits: number[] = [];
+    for (let i = 0; i < 120 && hits.length < 2; i++) { stepRush(s, {}); hits = s.events.filter(e => e.type === 'hit' && e.owner === 'tower').map(e => (e as { damage: number }).damage); }
+    return hits[1] / hits[0];
+  };
+  assert.ok(Math.abs(splash(0) - TOWER_BRANCH.fire.splashShare) < 1e-9, `splash share ${splash(0)}`);
+  assert.ok(Math.abs(splash(5) - (TOWER_BRANCH.fire.splashShare + 5 * FORGE.splashShare)) < 1e-9, `forge 5 splash share ${splash(5)}`);
+  const slow = (forge: number) => {
+    const s = createRush(3, { ...NO_MODS, forge });
+    s.phase = 'wave'; s.groups = [];
+    s.towers[0] = { level: 1, cd: 0, facing: 0, branch: 'frost' };
+    const e = enemy(s, 'brute', PADS[0].x, PADS[0].z - 3);
+    e.hp = e.maxHp = 1e6;
+    for (let i = 0; i < 120 && !s.events.some(v => v.type === 'chill'); i++) stepRush(s, {});
+    return e.slowT ?? 0;
+  };
+  assert.ok(Math.abs(slow(0) - TOWER_BRANCH.frost.slowTime) < 1e-9 && Math.abs(slow(5) - (TOWER_BRANCH.frost.slowTime + 5 * FORGE.slowTime)) < 1e-9, `slow ${slow(0)} / ${slow(5)}`);
 });

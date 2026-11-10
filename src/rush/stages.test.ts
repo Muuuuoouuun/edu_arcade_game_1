@@ -11,7 +11,7 @@ const play = (seed: number, stage: number, mods: RushMods = NO_MODS) => {
   while (s.phase !== 'won' && s.phase !== 'lost' && s.tick < LIMIT) stepRush(s, guardBot(s));
   return s;
 };
-const MAXED: RushMods = { damage: 1.4, towerCost: 0.6, townHp: 1.5, heroHp: 1 }; // castle 5 with every perk at 5, hero Lv1
+const MAXED: RushMods = { damage: 1.4, towerCost: 0.6, townHp: 1.5, heroHp: 1, forge: 5 }; // castle 5 with every perk at 5, hero Lv1
 
 test('stage 1 is exactly the base game', () => {
   assert.deepEqual(stageDifficulty(1), { enemyHp: 1, enemyCount: 1, enemyDamage: 1 });

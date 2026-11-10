@@ -172,6 +172,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .tone-tower { background: linear-gradient(#c9a8ff, #a46bff); }
 .tone-wall { background: linear-gradient(#c7d3ea, #8796bf); }
 .tone-hero { background: linear-gradient(#9ff0c8, #2fbf7f); }
+.tone-forge { background: linear-gradient(#ffb27a, #c0512a); }
 .town-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .town-info b { font-size: 15px; white-space: nowrap; }
 .town-info em { font-style: normal; color: var(--gold); font-size: 13px; margin-left: 2px; }

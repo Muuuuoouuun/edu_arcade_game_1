@@ -58,8 +58,8 @@ test('perks change the next battle: town HP, tower cost and arrow damage', () =>
   s.hero.x = PADS[0].x; s.hero.z = PADS[0].z;
   stepRush(s, { fire: { x: 0, z: -1 } });
   assert.ok(Math.abs(s.shots[0].damage - HERO.boltDamage * 1.24) < 1e-9);
-  assert.deepEqual(createRush(1).mods, { damage: 1, towerCost: 1, townHp: 1, heroHp: 1 }, 'a fresh kingdom changes nothing');
-  assert.deepEqual(kingdomMods(createKingdom(T0)), { damage: 1, towerCost: 1, townHp: 1, heroHp: 1 });
+  assert.deepEqual(createRush(1).mods, { damage: 1, towerCost: 1, townHp: 1, heroHp: 1, forge: 0 }, 'a fresh kingdom changes nothing');
+  assert.deepEqual(kingdomMods(createKingdom(T0)), { damage: 1, towerCost: 1, townHp: 1, heroHp: 1, forge: 0 });
 });
 
 test('a battle pays once, scaled by waves defended, with a victory bonus', () => {
@@ -111,7 +111,7 @@ test('hero training: castle caps the level, costs grow, collect first, only unlo
 });
 
 test('hero level feeds battle modifiers for the chosen hero only', () => {
-  const k = { ...createKingdom(T0), castle: 5, heroLv: { ranger: 6, bron: 1 }, perks: { attack: 2, towerDiscount: 0, townHp: 0 } };
+  const k = { ...createKingdom(T0), castle: 5, heroLv: { ranger: 6, bron: 1 }, perks: { attack: 2, towerDiscount: 0, townHp: 0, forge: 0 } };
   const m = kingdomMods(k);
   assert.ok(Math.abs(m.heroHp - 1.5) < 1e-9 && Math.abs(m.damage - 1.16 * 1.5) < 1e-9, JSON.stringify(m));
   assert.equal(kingdomMods({ ...k, hero: 'bron' }).heroHp, 1, 'bron keeps his own level');
@@ -126,4 +126,20 @@ test('hero levels load from old saves and clamp to the castle cap', () => {
   assert.deepEqual(parseKingdom(JSON.stringify(old), T0).heroLv, { ranger: 1, bron: 1 });
   const tampered = { ...old, castle: 2, heroLv: { ranger: 9, bron: 'x' } };
   assert.deepEqual(parseKingdom(JSON.stringify(tampered), T0).heroLv, { ranger: 4, bron: 1 });
+});
+
+test('forge: castle caps it, costs grow, old saves start it at 0, battles get its level', () => {
+  let k = rich(createKingdom(T0));
+  assert.equal(k.perks.forge, 0);
+  assert.deepEqual(upgradeCost(k, 'forge'), { food: 50, wood: 60 });
+  k = upgrade(k, 'forge', T0);
+  assert.equal(k.perks.forge, 1);
+  assert.equal(upgradeCost(k, 'forge'), null, 'castle 1 caps the forge at 1');
+  assert.equal(kingdomMods(k).forge, 1);
+  const old = JSON.parse(serializeKingdom({ ...k, castle: 3, perks: { ...k.perks, attack: 2 } }));
+  delete old.perks.forge;
+  const loaded = parseKingdom(JSON.stringify(old), T0);
+  assert.equal(loaded.perks.forge, 0, 'missing forge → 0');
+  assert.deepEqual([loaded.castle, loaded.perks.attack], [3, 2], 'the rest of an old save is kept');
+  assert.equal(parseKingdom(JSON.stringify({ ...old, perks: { ...old.perks, forge: 9 } }), T0).castle, 1, 'a forge above the castle cap is a broken save');
 });
