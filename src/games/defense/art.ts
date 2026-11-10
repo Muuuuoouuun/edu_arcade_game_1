@@ -771,6 +771,12 @@ export function frostWolfDirectionalWalkAsset(heading:Point,distance:number,size
  const frame=frostWolfWalkFrame(heading,distance,size,cycles),[x,y,w,h]=FROST_WOLF_FRAME.crop;
  return {direction,frame,asset:{src:FROST_STRIDE_ATLASES[direction],width:2048,height:256,viewBox:`${frame*256+x} ${y} ${w} ${h}`,displayScale:FROST_WOLF_FRAME.display_scale,groundY:FROST_WOLF_FRAME.ground_y}};
 }
+/** Reduced motion keeps the authored facing and a stable grounded pose across all travel. */
+export function frostWolfRestAsset(heading:Point,size=73):{asset:SpriteAsset;frame:number;direction:number}|null {
+ if(!Number.isFinite(size)||size<=0)return null;
+ const walk=frostWolfDirectionalWalkAsset(heading,0,size,size*.5/73);
+ return walk?{...walk,asset:{...walk.asset,oriented:true}}:null;
+}
 const FROST_FLINCH_ATLASES=Array.from({length:8},(_,d)=>`/defense/models/frost-flinch-${d}-atlas.webp`);
 /** Ordinary hits keep the current heading and gait; knockback/death retain their own poses. */
 export function frostWolfHitAsset(heading:Point,distance:number,hit:number,size=73,cycles?:number,reduced=false):{asset:SpriteAsset;frame:number;direction:number;phase:'compress'|'release'}|null {
@@ -782,9 +788,10 @@ export function frostWolfHitAsset(heading:Point,distance:number,hit:number,size=
 const FROST_BRACE_ATLASES=Array.from({length:8},(_,d)=>`/defense/models/frost-brace-${d}-atlas.webp`);
 /** Strength follows the engine's decaying knock speed, while the gait stays frozen. */
 export function frostWolfBraceAsset(heading:Point,distance:number,cycles:number|undefined,velocity:number,size=73,reduced=false):{asset:SpriteAsset;frame:number;gait:number;direction:number}|null {
- if(!Number.isFinite(velocity)||velocity<=7||!Number.isFinite(distance)||!Number.isFinite(size)||size<=0||(cycles!==undefined&&!Number.isFinite(cycles))||!FROST_BRACE_ATLASES.every(src=>motionLoaded.has(src)))return null;
+ if(!Number.isFinite(velocity)||velocity<=7||!Number.isFinite(distance)||!Number.isFinite(size)||size<=0||(cycles!==undefined&&!Number.isFinite(cycles)))return null;
+ if(reduced){const rest=frostWolfRestAsset(heading,size);return rest?{asset:rest.asset,frame:3,gait:rest.frame,direction:rest.direction}:null;}
+ if(!FROST_BRACE_ATLASES.every(src=>motionLoaded.has(src)))return null;
  const walk=frostWolfDirectionalWalkAsset(heading,distance,size,cycles);if(!walk)return null;
- if(reduced)return {asset:{...walk.asset,oriented:true},frame:3,gait:walk.frame,direction:walk.direction};
  const frame=velocity>65?0:velocity>22?1:2,[x,y,w,h]=FROST_WOLF_FRAME.crop.map(v=>v*.75);
  return {frame,gait:walk.frame,direction:walk.direction,asset:{src:FROST_BRACE_ATLASES[walk.direction],width:1536,height:576,viewBox:`${walk.frame*192+x} ${frame*192+y} ${w} ${h}`,displayScale:FROST_WOLF_FRAME.display_scale,groundY:frame*192+FROST_WOLF_FRAME.ground_y*.75,oriented:true}};
 }

@@ -1739,13 +1739,33 @@ test('wolf knockback holds direction and gait through strong, soft and recovery 
    assert.equal(brace.direction,d);assert.equal(brace.gait,gait);assert.equal(brace.frame,frame);assert.equal(brace.asset.oriented,true);
    assert.equal(brace.asset.src,`/defense/models/frost-brace-${d}-atlas.webp`);assert.equal(brace.asset.viewBox,`${gait*192+4} ${frame*192+20} 184 152`);
    assert.equal(brace.asset.displayScale,walk.asset.displayScale);assert.equal((brace.asset.groundY!-frame*192)/192,walk.asset.groundY!/256);
-   const still=art.frostWolfBraceAsset(heading,0,cycles,velocity,size,true)!;assert.equal(still.frame,3);assert.deepEqual(still.asset,{...walk.asset,oriented:true});
+   const still=art.frostWolfBraceAsset(heading,0,cycles,velocity,size,true)!;assert.equal(still.frame,3);assert.equal(still.gait,4);assert.deepEqual(still.asset,art.frostWolfRestAsset(heading,size)!.asset);
   }
  }
  for(const velocity of [-1,0,7,NaN,Infinity])assert.equal(art.frostWolfBraceAsset({x:1,y:0},0,0,velocity),null);
  for(const size of [0,-1,NaN])assert.equal(art.frostWolfBraceAsset({x:1,y:0},0,0,80,size),null);
  assert.equal(art.frostWolfBraceAsset({x:0,y:0},0,0,80),null);assert.equal(art.frostWolfBraceAsset({x:1,y:0},0,NaN,80),null);
  assert.equal(requests.filter(p=>/\/frost-brace-\d+-atlas/.test(p)).length,8);
+});
+
+test('reduced wolf motion holds a grounded directional pose through travel and knockback',async()=>{
+ const {art}=await loadWithImageResults(()=>false,'wolf-directional-rest');
+ const metadata=JSON.parse(readFileSync(new URL('../../../public/defense/models/frost-wolf-stride.json',import.meta.url),'utf8'));
+ const feet=metadata.samples.find((sample:{cycle:number})=>sample.cycle===.5).feet;
+ for(const foot of Object.values(feet) as {lowest_paw:number}[])assert.ok(Math.abs(foot.lowest_paw)<.001,'fixed pose plants each paw');
+ for(let d=0;d<8;d++)for(const size of [73,91.25]){
+  const heading={x:Math.cos(d*Math.PI/4),y:Math.sin(d*Math.PI/4)};
+  const rest=art.frostWolfRestAsset(heading,size)!;
+  assert.equal(rest.direction,d);assert.equal(rest.frame,4);assert.equal(rest.asset.oriented,true);
+  assert.match(rest.asset.src,new RegExp(`/frost-stride-${d}-atlas\\.webp$`));
+  for(const cycles of [0,.25,.5,1,9.1])assert.deepEqual(art.frostWolfBraceAsset(heading,100,cycles,80,size,true)?.asset,rest.asset);
+ }
+ for(const size of [0,-1,NaN,Infinity])assert.equal(art.frostWolfRestAsset({x:1,y:0},size),null);
+ assert.equal(art.frostWolfRestAsset({x:0,y:0}),null);
+ const {art:braceMissing}=await loadWithImageResults(src=>src.endsWith('frost-brace-2-atlas.webp'),'wolf-rest-brace-fail');
+ assert.deepEqual(braceMissing.frostWolfBraceAsset({x:0,y:-1},0,.2,80,73,true)?.asset,braceMissing.frostWolfRestAsset({x:0,y:-1})?.asset);
+ const {art:strideMissing}=await loadWithImageResults(src=>src.endsWith('frost-stride-2-atlas.webp'),'wolf-rest-stride-fail');
+ assert.equal(strideMissing.frostWolfRestAsset({x:0,y:-1}),null);
 });
 
 test('optional brace failure retains ordinary flinch, walking and directional collapse',async()=>{
