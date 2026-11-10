@@ -8,6 +8,7 @@ import { createHitClip, hitFlashStrength } from './model-lab-hit';
 import { createBronIdle } from './model-lab-motion';
 
 const models = [
+ {id:'frontier-relic',name:'변경 전장 · 회복 수정',kind:'FRONTIER RECOVERY CRYSTAL',detail:'석재 받침 · 황동 고정쇠 · 청록 결정',description:'수정 원정의 회복 수정입니다. 전장에서는 가까이 다가가 상호작용하고, 수집한 뒤 수정이 사라져 빈 받침이 남습니다. 작업실에서는 고정된 3D 형태를 살펴봅니다.',source:'frontier-relic.blend',command:'npm run models:frontier-relic',action:'고정 모형',static:true,fitBounds:true},
  {id:'frontier-squad',name:'변경 전장 · 석궁 지원병',kind:'FRONTIER SUPPORT SCOUT',detail:'청록 천 · 금속 투구 · 양손 석궁',description:'작은 지원병이 양손으로 석궁을 잡고 발을 디딥니다. 전장에서는 실제 이동 거리에 따라 다리를 움직이고 표적을 향합니다. 작업실에서는 모델의 고정 자세를 살펴봅니다.',source:'frontier-squad.blend',command:'npm run models:frontier-squad',action:'고정 모형',static:true,fitBounds:true},
  {id:'frontier-forest-doors',name:'녹음 성문 · 목재 양문',kind:'FOREST GATE DOORS',detail:'곡선 널판 · 철띠 · 충격 반동',description:'녹음 성문의 두 목재 문짝이 충격을 받고 경첩을 중심으로 뒤로 밀렸다 돌아옵니다. 3D 미리보기는 문짝을 표시하며 원본 렌더는 석조 아치와 함께 보여 줍니다.',source:'frontier-forest-doors.blend',command:'npm run models:frontier-forest-doors',action:'▶ 성문 충격',clip:'forest-door-impact',fitBounds:true},
  {id:'frontier-terrain',name:'녹음 협곡 · 숲 전장',kind:'VERDANT FRONTIER TERRAIN',detail:'넓은 수관 · 풀밭 · 교량',description:'넓은 잎과 가지가 숲 경계를 이루고 풀밭의 색면이 불규칙하게 이어집니다. 강과 다리, 전투 경로의 높이는 기존과 같습니다.',source:'frontier-terrain.blend',command:'npm run models:frontier-terrain',action:'고정 지형',static:true,fitBounds:true},

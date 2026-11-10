@@ -15,7 +15,7 @@ const frontierModels = new Set([
   'frontier-kar-game.glb', 'kar-barbarian-walk.glb', 'kar-barbarian.glb',
   'kar-reset.glb', 'kar-stop.glb', 'kar-entry.glb',
   'frontier-wood-game.glb', 'frontier-wood-strike-game.glb',
-  'frontier-ballista-game.glb', 'frontier-beacon.glb', 'frontier-squad.glb',
+  'frontier-ballista-game.glb', 'frontier-beacon.glb', 'frontier-squad.glb', 'frontier-relic.glb',
 ]);
 await stat(new URL('frontier.html', output));
 for (const file of frontierModels) await stat(new URL(file, models));
