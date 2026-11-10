@@ -2,7 +2,7 @@
 
 DRAFT from the 3-hour direction loop (cycle 46). Copy to tools/blender/build_mage.py to use.
 Run: blender -b --python tools/blender/build_mage.py
-Options after --: --samples 128 --size 640 --only idle|windup|strike|recover --skip-render --out DIR
+Options after --: --samples 128 --size 640 --only idle|windup|strike|recover|cast --skip-render --out DIR --scale .95
 Same contract as build_dwarf.py: 640px frame, orthographic camera at (7,10,7) looking at (0,0,1.7),
 ortho scale 5.8, ground origin projected to (320,550), native facing screen-right, no per-pose crop.
 Faithful port of the painted Ian (ranged-motion.webp, atlas.png cell 0): navy robe with gold hem,
@@ -14,6 +14,9 @@ Writes mage-<pose>.png and mage-model.json (frame/ground/nativeFacing like dwarf
 crystal_center_px per pose: the staff crystal in frame pixels, usable as the spell windup/launch point).
 Pivots: body, head, hat (secondary lag), staff-arm, staff, free-arm, cape. Legs and root never move.
 Cycle 46 bake (Blender 5.2, 128 samples): 107 mesh objects, 20,919 triangles, WebP q88 19.5~21.4 KB per pose.
+Cycle 77: taller, less drooping hat tip (64px overlap with Riel's draft 0.64 -> 0.52), --scale .95 with displayScale
+1.32 (idle 40.6px on 844x390), fifth pose `cast` (유성 낙하): staff raised overhead and a meteor above the crystal
+(--only cast). Five poses at WebP q85 = 92,620 B.
 """
 import argparse, json, math, sys
 from pathlib import Path
@@ -25,7 +28,8 @@ ROOT=Path(__file__).resolve().parents[2]
 p=argparse.ArgumentParser()
 p.add_argument('--samples',type=int,default=128)
 p.add_argument('--size',type=int,default=640)
-p.add_argument('--only',choices=['idle','windup','strike','recover'])
+p.add_argument('--only',choices=['idle','windup','strike','recover','cast'])
+p.add_argument('--scale',type=float,default=.95,help='whole-body scale about the ground origin (cycle 77: the taller hat makes ~40.5px idle on an 844x390 screen with displayScale 1.32)')
 p.add_argument('--skip-render',action='store_true')
 p.add_argument('--out',default=str(ROOT/'public/defense/models'))
 p.add_argument('--blend',default=str(ROOT/'art-source/defense/mage.blend'))
@@ -235,14 +239,14 @@ cyl('Hat / wide brim',(0,.04,2.72),.86,.06,'robe',hat,32,.02)
 cyl('Hat / brim gold edge',(0,.04,2.72),.88,.035,'gold',hat,32,0)
 cyl('Hat / gold band',(0,.0,2.82),.47,.14,'gold',hat,24,.01)
 rings=[]
-for k in range(11):
- t=k/10;z=2.78+t*1.02;r=.46*(1-t)**1.05+.015
- back=-.62*t**2.4;side=.42*t**2.6
- rings.append((z-(.42*t**3.2),r,r*.95,back,side))
+for k in range(11):  # cycle 77: taller, less drooping tip so Ian's head peak parts from Riel's round hood at 64px
+ t=k/10;z=2.78+t*1.32;r=.46*(1-t)**1.05+.015
+ back=-.40*t**2.4;side=.26*t**2.6
+ rings.append((z-(.18*t**3.2),r,r*.95,back,side))
 cone=lathe('Hat / tall drooping cone',rings,'robelight',hat,20,(),0,True)
 star('Hat / gold star front',(0,.47,2.84),(0,1,0),.10,'goldlight',hat)
 star('Hat / gold star side',(.36,.32,2.84),(.7,.7,0),.08,'goldlight',hat)
-star('Hat / gold star cone',(.22,.10,3.18),(.8,.55,.2),.07,'goldlight',hat)
+star('Hat / gold star cone',(.14,.12,3.26),(.8,.55,.2),.07,'goldlight',hat)
 uv('Hat / tip bead',(rings[-1][4],rings[-1][3],rings[-1][0]),(.055,.055,.055),'gold',hat)
 
 # Claw staff with the warm crystal. Built upright in the hand, crystal at the top.
@@ -264,10 +268,17 @@ POSES={
  'idle':   {'frame':1, 'body':(0,0,0),       'head':(0,0,0),      'hat':(0,0,0),      'staff-arm':(0,0,0),         'staff':(0,0,0),       'free-arm':(0,0,0),        'cape':(0,0,0)},
  'windup': {'frame':5, 'body':(.07,0,-.10),  'head':(.06,0,0),    'hat':(-.07,0,0),   'staff-arm':(1.15,0,.45),    'staff':(-1.25,0,0),    'free-arm':(.55,-.70,0),   'cape':(.08,0,0)},
  'strike': {'frame':9, 'body':(-.10,0,.16),  'head':(-.04,0,.14), 'hat':(.14,0,0),    'staff-arm':(.62,0,.85),     'staff':(-1.90,0,0),   'free-arm':(-.55,-.35,0),  'cape':(-.38,0,0)},
+ # cycle 77: cast (유성 낙하) — staff raised upright overhead, free hand up, a meteor above the crystal
+ 'cast':   {'frame':21,'body':(-.04,0,.05),  'head':(-.10,0,.05), 'hat':(.10,0,0),    'staff-arm':(2.20,0,.10),    'staff':(-2.20,0,0),   'free-arm':(2.00,0,-.20),  'cape':(-.10,0,0)},
  'recover':{'frame':13,'body':(-.03,0,.06),  'head':(-.02,0,.05), 'hat':(-.04,0,0),   'staff-arm':(.40,0,.35),     'staff':(-.45,0,0),    'free-arm':(.35,-.45,0),   'cape':(-.12,0,0)},
 }
 PIVOTS={'body':body,'head':head,'hat':hat,'staff-arm':staff_arm,'staff':staff,'free-arm':free_arm,'cape':cape}
-scene=bpy.context.scene;scene.render.fps=30;scene.frame_start=1;scene.frame_end=17
+scene=bpy.context.scene;scene.render.fps=30;scene.frame_start=1;scene.frame_end=21
+# Meteor for the cast pose only (shown on its frame).
+METEOR=[ico('Cast / meteor',(-1.00,.70,4.05),(.30,.30,.30),'crystal',ROOT_OBJ,2),ico('Cast / meteor core',(-1.00,.70,4.05),(.16,.16,.16),'core',ROOT_OBJ,1)]
+for k in range(4):METEOR.append(rod('Cast / meteor trail',(-1.00+.10*k,.70-.12*k,4.05+.16*k),(-.92+.10*k,.58-.12*k,4.30+.16*k),.07-.012*k,'core',ROOT_OBJ,8))
+for o in METEOR:
+ for f,show in ((1,False),(20,False),(21,True)):o.hide_render=not show;o.hide_viewport=not show;o.keyframe_insert('hide_render',frame=f);o.keyframe_insert('hide_viewport',frame=f)
 for pose in list(POSES.values())+[dict(POSES['idle'],frame=17)]:
  for key,obj in PIVOTS.items():
   obj.rotation_euler=Euler(pose[key],'XYZ');obj.keyframe_insert(data_path='rotation_euler',frame=pose['frame'])
@@ -293,8 +304,9 @@ area('Warm large key',(-4,6,8),850,4,(1,.83,.65))
 area('Cool soft armor fill',(5,3,5),600,4,(.65,.83,1))
 area('Warm edge light',(1,-5,7),1000,3,(1,.80,.52))
 
+ROOT_OBJ.scale=(opts.scale,)*3
 scene.frame_set(1);bpy.context.view_layer.update();ground=world_to_camera_view(scene,camera,Vector((0,0,0)))
-manifest={'id':'fire-mage-ian','generator':'model-drafts/build_mage_draft.py (cycle 46)','blender':bpy.app.version_string,'nativeFacing':1,
+manifest={'id':'fire-mage-ian','generator':'model-drafts/build_mage_draft.py (cycle 46, cycle 77 hat/scale/cast)','blender':bpy.app.version_string,'nativeFacing':1,
  'frame':{'width':opts.size,'height':opts.size,'ground':[round(ground.x*opts.size,3),round((1-ground.y)*opts.size,3)],'orthographic_scale':cam_data.ortho_scale},
  'pivot_names':list(PIVOTS),'poses':[]}
 for name,pose in POSES.items():
