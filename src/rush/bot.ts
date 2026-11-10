@@ -8,7 +8,7 @@ const toward = (from: Vec, to: Vec): Vec => {
   return d < 0.25 ? { x: 0, z: 0 } : { x: dx / d, z: dz / d };
 };
 
-const BOT_BRANCH: readonly TowerBranch[] = ['fire', 'fire', 'frost', 'frost'];
+const BOT_BRANCH: readonly TowerBranch[] = ['fire', 'frost', 'fire', 'frost'];
 
 /** A competent-but-plain player: guards the gate, shoots with auto-aim, collects coins, builds and upgrades towers. */
 export function guardBot(s: RushState): Command {
