@@ -1,7 +1,13 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {Matrix4,Mesh} from 'three';
-import {EffectsView,contactChip,boltSplinter,shockwaveSurface,createShockwaveGeometry,projectShockwave} from './effectsView.ts';import {createFrontier,actFrontier,stepFrontier,heightAt,type Frontier} from './engine.ts';
+import test from 'node:test';import assert from 'node:assert/strict';import {Matrix4,Mesh,Vector3} from 'three';
+import {EffectsView,contactChip,boltSplinter,shockwaveSurface,createShockwaveGeometry,projectShockwave,squadShotOrigin} from './effectsView.ts';import {createFrontier,actFrontier,stepFrontier,heightAt,type Frontier} from './engine.ts';
 import {HERO_ATTACK} from './heroAttack.ts';
 type Fx=Frontier['effects'][number];const fx=(kind:Fx['kind']='hammer',life=.09,id=1):Fx=>({id,kind,life,from:{x:-15,z:-7},to:{x:-15,z:-7}});
+test('support shot starts at the model muzzle and falls back safely at close range',()=>{
+ const shot={...fx('shot',.18),from:{x:0,z:3},to:{x:5,z:3}},v=new EffectsView();
+ for(const reduced of [false,true]){v.update([shot],reduced,true);const m=v.root.children.find(o=>o instanceof Mesh&&o!==v.chips) as Mesh,p=new Vector3(0,-.5,0).applyMatrix4(m.matrix),q=squadShotOrigin(shot.from,shot.to,reduced);assert.ok(p.distanceTo(new Vector3(q.x,q.y,q.z))<1e-6);}
+ const close=squadShotOrigin(shot.from,{x:.1,z:3});assert.ok(close.x>0&&close.x<.1);const same=squadShotOrigin(shot.from,shot.from);assert.ok(Object.values(same).every(Number.isFinite));
+ v.update([shot],false,false);const m=v.root.children.find(o=>o instanceof Mesh&&o!==v.chips) as Mesh,p=new Vector3(0,-.5,0).applyMatrix4(m.matrix);assert.ok(p.distanceTo(new Vector3(shot.from.x,heightAt(shot.from.x,shot.from.z)+1.7,shot.from.z))<1e-6);v.dispose();
+});
 test('contact debris appears only when the simulation produces a landed effect; pause and speed share its clock',()=>{
  let s=actFrontier(createFrontier('solo'),{type:'start'});s.enemies=[];s=actFrontier(s,{type:'skill'});const v=new EffectsView();
  for(let i=0;i<5;i++)s=stepFrontier(s,.05);v.update(s.effects,false);assert.equal(v.chips.count,0);

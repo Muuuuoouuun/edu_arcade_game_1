@@ -1,8 +1,10 @@
-import {Group,Mesh} from 'three';
+import {Group,Mesh,Object3D} from 'three';
 import {heightAt,type SquadMember} from './engine.ts';
 
-/** Visual gait of the existing rigid support soldiers, measured in world distance. */
+/** Visual gait of rigid support soldiers, measured in world distance. */
 export const SQUAD_STRIDE=1.2,SQUAD_SETTLE=.16,SQUAD_SHOT=.18;
+// The authored muzzle is 1.32 forward and recoils .16 at the instant of firing.
+export const SQUAD_MUZZLE={forward:1.32,recoil:.16,height:1.33};
 const smooth=(n:number)=>{const t=Math.max(0,Math.min(1,n));return t*t*(3-2*t);};
 function foot(phase:number){
  const p=((phase%1)+1)%1;
@@ -10,14 +12,27 @@ function foot(phase:number){
  return p<.5?{z:.3-1.2*p,lift:0}:{z:-.3+1.2*(p-.5),lift:.20*Math.sin(Math.PI*(p-.5)*2)};
 }
 
+/** Reject damaged or partial downloads before replacing the usable fallback. */
+export function validSquadModel(model:Object3D){
+ for(const name of ['squad-body','squad-left-foot','squad-right-foot','squad-weapon']){
+  const part=model.getObjectByName(name);if(!part)return false;let visible=false;
+  part.traverse(o=>{if(o instanceof Mesh&&o.geometry.getAttribute('position')?.count>0)visible=true;});
+  if(!visible)return false;
+ }
+ for(const [name,x] of [['squad-left-foot',-.28],['squad-right-foot',.28]] as const){const p=model.getObjectByName(name)!.position;if(Math.abs(p.x-x)>.001||Math.abs(p.y-.3)>.001||Math.abs(p.z)>.001)return false;}
+ const mount=model.getObjectByName('squad-weapon')!,weapon=mount.position,socket=mount.getObjectByName('squad-muzzle');
+ return !!socket&&socket.parent===mount&&Math.abs(socket.position.x)<.001&&Math.abs(socket.position.y-SQUAD_MUZZLE.height)<.001&&Math.abs(socket.position.z-(SQUAD_MUZZLE.forward-.2))<.001&&Math.abs(weapon.z-.2)<.001&&Math.abs(weapon.x)<.001&&Math.abs(weapon.y)<.001;
+}
+
 export class SquadView {
- readonly root:Group;readonly index:number;private legs:Mesh[];private weapon:Mesh;
+ readonly root:Group;readonly index:number;private legs:Object3D[];private weapon:Object3D;
  constructor(root:Group,index:number){
   this.root=root;this.index=index;
   const left=root.getObjectByName('squad-left-foot'),right=root.getObjectByName('squad-right-foot'),weapon=root.getObjectByName('squad-weapon');
-  if(!(left instanceof Mesh)||!(right instanceof Mesh)||!(weapon instanceof Mesh))throw new Error('Incomplete support soldier');
+  if(!left||!right||!weapon)throw new Error('Incomplete support soldier');
   this.legs=[left,right];this.weapon=weapon;
  }
+ get feet(){return this.legs.map(o=>o.position.toArray());}
  update(unit:SquadMember,time:number,reduced:boolean){
   const age=time-(unit.shotAt??-Infinity),shooting=age>=0&&age<SQUAD_SHOT;
   const heading=shooting?(unit.shotHeading??unit.heading??0):(unit.heading??0);

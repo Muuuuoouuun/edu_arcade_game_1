@@ -148,6 +148,8 @@
     "models:frontier-wood-strike:check": "node tools/check-frontier-wood-strike.mjs",
     "models:frontier-kar": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_kar.py",
     "models:frontier-kar:check": "node tools/check-frontier-kar.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_kar.py",
+    "models:frontier-squad": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_squad.py",
+    "models:frontier-squad:check": "node --experimental-strip-types tools/check-frontier-squad.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_squad.py",
     "models:frontier-beacon": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_beacon.py",
     "models:frontier-beacon:check": "node tools/check-frontier-beacon.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_beacon.py",
     "models:frontier-frost": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_frost.py",

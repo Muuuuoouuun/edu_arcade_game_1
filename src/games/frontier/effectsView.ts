@@ -2,8 +2,14 @@ import {BufferGeometry,DynamicDrawUsage,Float32BufferAttribute,CylinderGeometry,
 import {heightAt,type Frontier} from './engine.ts';
 import {heroRingMatrix} from './heroEffects.ts';
 import {CROSSING} from './terrainView.ts';
+import {SQUAD_MUZZLE} from './squadView.ts';
 type Effect=Frontier['effects'][number];
 const LIMIT=128,CHIPS=8,SEGMENTS=64,SUBDIVISIONS=4;
+/** Fixed emission point from the committed aim; clamp very close targets to avoid a backwards ray. */
+export function squadShotOrigin(from:{x:number;z:number},to:{x:number;z:number},reduced=false){
+ const dx=to.x-from.x,dz=to.z-from.z,d=Math.hypot(dx,dz),reach=Math.min(SQUAD_MUZZLE.forward-(reduced?0:SQUAD_MUZZLE.recoil),d*.8),k=d>1e-8?reach/d:0;
+ return{x:from.x+dx*k,y:heightAt(from.x,from.z)+SQUAD_MUZZLE.height,z:from.z+dz*k};
+}
 /** Project the expanding ring onto the visible surface; skip steep breaks rather than draw vertical streaks. */
 export function shockwaveSurface(x:number,z:number){
  if(x>CROSSING.left&&x<CROSSING.right&&Math.abs(z)>2.8)return CROSSING.water;
@@ -64,7 +70,7 @@ export class EffectsView{
   this.chips.count=0;this.chips.frustumCulled=false;this.chips.receiveShadow=true;this.root.add(this.chips);
  }
  get allocated(){return this.slots.length;}
- update(effects:Effect[],reduced:boolean){
+ update(effects:Effect[],reduced:boolean,squadModel=false){
   if(this.disposed)return;
   for(const m of this.slots)m.visible=false;this.chips.count=0;this.impactChipCount=0;let used=0;
   for(const fx of effects.slice(-LIMIT)){
@@ -73,6 +79,7 @@ export class EffectsView{
    m.visible=true;m.frustumCulled=true;m.geometry=this.shapes[fx.kind];m.material.opacity=Math.max(0,Math.min(1,fx.life/.18));
    const p=this.pose;p.position.set(0,0,0);p.rotation.set(0,0,0);p.scale.set(1,1,1);
    this.a.set(fx.from.x,heightAt(fx.from.x,fx.from.z)+1.7,fx.from.z);this.b.set(fx.to.x,heightAt(fx.to.x,fx.to.z)+1.5,fx.to.z);
+   if(fx.kind==='shot'&&squadModel){const muzzle=squadShotOrigin(fx.from,fx.to,reduced);this.a.set(muzzle.x,muzzle.y,muzzle.z);}
    if(fx.kind==='hammer'||fx.kind==='shockwave'){
     const shock=fx.kind==='shockwave';m.material.color.set(shock?'#72f4d1':'#ffce72');
     if(shock){let g=this.projected.get(used-1);if(!g){g=createShockwaveGeometry();this.projected.set(used-1,g);}projectShockwave(g,fx.to,reduced?1:.85+(1-fx.life/.18)*.15);m.geometry=g;m.matrix.identity();m.frustumCulled=false;}

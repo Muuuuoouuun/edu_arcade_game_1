@@ -1,8 +1,10 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {BoxGeometry,Group,Mesh,MeshBasicMaterial,Vector3} from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {actFrontier,createFrontier,heightAt,stepFrontier,type SquadMember} from './engine.ts';
-import {SquadView,SQUAD_SHOT} from './squadView.ts';
+import {SquadView,SQUAD_SHOT,validSquadModel} from './squadView.ts';
 
 function fixture(){
  const root=new Group(),mat=new MeshBasicMaterial();
@@ -49,4 +51,21 @@ test('an initially stationary soldier stays planted and doubled speed doubles mo
  const still=stepFrontier(s,.05),{view,left,right}=fixture();view.update(still.squad[0],still.time,false);near(left.position.z,0);near(right.position.z,0);
  s.hero.target={x:-5,z:14};const normal=stepFrontier(s,.05),fast=stepFrontier(actFrontier(s,{type:'speed'}),.05);
  near(fast.squad[0].walkDistance!,2*normal.squad[0].walkDistance!);
+});
+
+test('authored support model shares geometry, follows existing gait and rejects incomplete assets',async()=>{
+ const b=readFileSync('public/defense/models/frontier-squad.glb'),g=await new GLTFLoader().parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');
+ assert.equal(validSquadModel(g.scene),true);
+ const a=new Group(),c=new Group();a.add(g.scene.clone(true));c.add(g.scene.clone(true));
+ const first=a.getObjectByName('surface-squad-weapon') as Mesh,second=c.getObjectByName('surface-squad-weapon') as Mesh;
+ assert.equal(first.geometry,second.geometry);assert.equal(first.material,second.material);
+ const view=new SquadView(a,0),weapon=a.getObjectByName('squad-weapon')!,leg=a.getObjectByName('squad-left-foot')!;
+ view.update({x:0,z:0,cooldown:0,moving:true,walkDistance:.12,heading:0,shotAt:2,shotHeading:1.2},2,false);
+ assert.ok(leg.position.z>0);assert.ok(weapon.position.z<.2);near(a.rotation.y,1.2);
+ view.update({x:0,z:0,cooldown:0,moving:true,walkDistance:.12,heading:0,shotAt:2,shotHeading:1.2},2,true);
+ near(leg.position.z,0);near(weapon.position.z,.2);
+ const broken=g.scene.clone(true),brokenLeg=broken.getObjectByName('squad-left-foot')!;brokenLeg.parent!.remove(brokenLeg);
+ assert.equal(validSquadModel(broken),false);
+ const wrong=g.scene.clone(true);wrong.getObjectByName('squad-weapon')!.position.z+=1;assert.equal(validSquadModel(wrong),false);
+ const wrongSocket=g.scene.clone(true);wrongSocket.getObjectByName('squad-muzzle')!.position.y+=1;assert.equal(validSquadModel(wrongSocket),false);
 });

@@ -1,0 +1,93 @@
+{
+  "command": "npm run models:frontier-squad",
+  "concept": "art-source/defense/concepts/2026-11-06/verdant-heart.png",
+  "runtime": {
+    "meshes": 4,
+    "triangles": 1060,
+    "materials": 1,
+    "forward": [
+      0,
+      0,
+      1
+    ],
+    "ground": 0,
+    "walk_stride": 1.2,
+    "muzzle_rest": [
+      0,
+      1.33,
+      1.32
+    ],
+    "muzzle_recoil": 0.16,
+    "procedural_motion": true
+  },
+  "camera": {
+    "position": [
+      5,
+      -10,
+      6.9
+    ],
+    "rotation": [
+      1.157740592956543,
+      0,
+      0.46364766359329224
+    ],
+    "ortho_scale": 6.3,
+    "resolution": [
+      384,
+      384
+    ]
+  },
+  "preview_frames": [
+    1,
+    9,
+    17,
+    25
+  ],
+  "files": [
+    {
+      "path": "tools/blender/build_frontier_squad.py",
+      "bytes": 9383,
+      "sha256": "3f2075d3b75baa40306dc4a65ea19933508891e38a2598723f90d10a1ebcbd0b"
+    },
+    {
+      "path": "art-source/defense/frontier-squad.blend",
+      "bytes": 932636,
+      "sha256": "39fe0383d5f2cb8ead2f40f5ff8ccac863ffb5e8cf0e99e461e1ddabef076c6c"
+    },
+    {
+      "path": "art-source/defense/frontier-squad/walk-0.png",
+      "bytes": 98877,
+      "sha256": "0a01c8f2269b34c494b6e5b3cb806efe5cd1d7b9e4cbab895311f7bbe74052d8"
+    },
+    {
+      "path": "art-source/defense/frontier-squad/walk-1.png",
+      "bytes": 98023,
+      "sha256": "3f2fc78a36903a2632518e019d5ee1b2cb16cad073a02b7b53cd23ac303d0677"
+    },
+    {
+      "path": "art-source/defense/frontier-squad/walk-2.png",
+      "bytes": 98122,
+      "sha256": "225a9f763f69652e392608535bad8bded014c113a53000b9c5c3237b090b6792"
+    },
+    {
+      "path": "art-source/defense/frontier-squad/walk-3.png",
+      "bytes": 99397,
+      "sha256": "ad28de5d5ae6e2078566cfd79b1adcd146ed62378af0706d4714ccf0a39b42a4"
+    },
+    {
+      "path": "public/defense/models/frontier-squad.glb",
+      "bytes": 125448,
+      "sha256": "2f12b80dca7e45379bb9c5145f056c543996c22546a626ebbc9fab6db481b351"
+    },
+    {
+      "path": "public/defense/models/frontier-squad.png",
+      "bytes": 98877,
+      "sha256": "0a01c8f2269b34c494b6e5b3cb806efe5cd1d7b9e4cbab895311f7bbe74052d8"
+    },
+    {
+      "path": "public/defense/models/frontier-squad-atlas.webp",
+      "bytes": 16138,
+      "sha256": "6ba06626b86aca3c6ee78c13a06ff769c03716fe1f398278b9cdf1161cc8232e"
+    }
+  ]
+}
