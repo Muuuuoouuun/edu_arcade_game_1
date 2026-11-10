@@ -1113,6 +1113,8 @@ test('a lightning tower aims at the front-most enemy whose arc would land, and f
   wetBody.wet=5;
   const smart=lightning(front,wetBody,neighbor);
   assert.equal(smart.attacks[0]?.targetId,2,'the dry front body would end the arc, so the wet body with a neighbor is chosen');
+  const landed=advance({...smart,towers:smart.towers.map(x=>({...x,cooldown:99}))},1);
+  assert.ok(landed.enemies.find(e=>e.id===3)!.hp<ENEMIES.wood.hp,'the arc really reached the neighbor behind the wet body');
   const allDry=lightning(positionedEnemy('wood',1,430),positionedEnemy('wood',2,395),positionedEnemy('wood',3,375));
   assert.equal(allDry.attacks[0]?.targetId,1,'with no arc available the front-most enemy is still hit');
   const alone=lightning(positionedEnemy('metal',1,430),positionedEnemy('wood',2,395),positionedEnemy('wood',3,375));

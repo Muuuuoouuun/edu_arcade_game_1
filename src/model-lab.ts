@@ -1,9 +1,11 @@
-import { AmbientLight, AnimationMixer, Box3, DirectionalLight, GridHelper, Group, LoopOnce, LoopRepeat, Mesh, MeshStandardMaterial, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Scene, ShadowMaterial, SRGBColorSpace, Vector3, WebGLRenderer, ACESFilmicToneMapping, type AnimationAction, type Object3D, type Material } from 'three';
+import { AmbientLight, AnimationMixer, Box3, Color, DirectionalLight, GridHelper, Group, LoopOnce, LoopRepeat, Mesh, MeshStandardMaterial, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Scene, ShadowMaterial, SRGBColorSpace, Vector3, WebGLRenderer, ACESFilmicToneMapping, type AnimationAction, type Object3D, type Material } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { PMREMGenerator } from 'three';
 import './model-lab.css';
+import { createHitClip, hitFlashStrength } from './model-lab-hit';
+import { createBronIdle } from './model-lab-motion';
 
 const models = [
  {id:'frontier-forest-doors',name:'녹음 성문 · 목재 양문',kind:'FOREST GATE DOORS',detail:'곡선 널판 · 철띠 · 충격 반동',description:'녹음 성문의 두 목재 문짝이 충격을 받고 경첩을 중심으로 뒤로 밀렸다 돌아옵니다. 3D 미리보기는 문짝을 표시하며 원본 렌더는 석조 아치와 함께 보여 줍니다.',source:'frontier-forest-doors.blend',command:'npm run models:frontier-forest-doors',action:'▶ 성문 충격',clip:'forest-door-impact',fitBounds:true},
@@ -97,7 +99,9 @@ const models = [
 const $ = <T extends HTMLElement>(id:string) => document.getElementById(id) as T;
 const stage = $<HTMLDivElement>('model-stage'), status = $<HTMLParagraphElement>('model-loading'), fallback = $<HTMLImageElement>('model-fallback');
 const shoot = $<HTMLButtonElement>('attack-preview'), rotate = $<HTMLButtonElement>('auto-rotate'), wire = $<HTMLButtonElement>('wireframe'), reset = $<HTMLButtonElement>('reset-view');
-let renderer:WebGLRenderer|null = null, controls:OrbitControls|null = null, current:Group|null = null, mixer:AnimationMixer|null = null, attackAction:AnimationAction|null = null;
+const idleButton=$<HTMLButtonElement>('idle-preview'),pose=$<HTMLInputElement>('pose-progress'),hit=$<HTMLButtonElement>('hit-preview');
+let idleRig:ReturnType<typeof createBronIdle> = null,idleEnabled=false;
+let renderer:WebGLRenderer|null = null, controls:OrbitControls|null = null, current:Group|null = null, mixer:AnimationMixer|null = null, attackAction:AnimationAction|null = null, hitAction:AnimationAction|null = null;
 const stopLabel=document.createElement('label');stopLabel.className='lab-stop-phase';stopLabel.textContent='출발 걸음 ';stopLabel.hidden=true;
 const stopSelect=document.createElement('select');stopSelect.setAttribute('aria-label','정지 동작 출발 걸음');
 for(let i=0;i<8;i++){const option=document.createElement('option');option.value=String(i);option.textContent=`걸음 ${i+1}`;stopSelect.append(option);}
@@ -110,6 +114,7 @@ const scene = new Scene(), camera = new PerspectiveCamera(35,1,.05,100), loader 
 const pivot = new Group(); scene.add(pivot);
 let currentMaterials:MeshStandardMaterial[] = [];
 const emissionLevels = new Map<MeshStandardMaterial,number>();
+const baseColors = new Map<MeshStandardMaterial,Color>(), flashColor = new Color(0xff694b);
 const parts:{object:Object3D;position:Vector3;rotation:Vector3;type:'core'|'barrel'|'bolt'|'turret'}[] = [];
 
 function materials(object:Object3D) {
@@ -133,16 +138,22 @@ function fitModelView() {
  controls.maxDistance=Math.max(22,distance*1.5);controls.target.copy(center);camera.position.copy(center).addScaledVector(direction,distance);controls.update();
 }
 function stopAction() {
- attackAction?.stop(); shotAt = -Infinity; stage.dataset.action = 'idle'; shoot.textContent=models.find(model=>model.id===currentModelId)?.action??'▶ 동작 재생'; redraw = true;
+ attackAction?.stop();hitAction?.stop();idleRig?.restore();idleEnabled=false;idleButton.setAttribute('aria-pressed','false');$('motion-state').textContent='REST · 기본 자세';baseColors.forEach((color,material)=>material.color.copy(color));pose.value='0';$('pose-value').textContent='0%';shotAt = -Infinity; stage.dataset.action = 'idle'; shoot.textContent=models.find(model=>model.id===currentModelId)?.action??'▶ 동작 재생'; redraw = true;
 }
 function clearModel() {
+ stopAction(); idleRig = null;
  mixer?.stopAllAction();
  if(mixer)mixer.uncacheRoot(mixer.getRoot());
- attackAction = null; mixer = null;
+ attackAction = null; hitAction = null; mixer = null;
  if(current){pivot.remove(current);release(current);current = null;}
- parts.length = 0; currentMaterials = []; emissionLevels.clear(); pivot.rotation.y = 0; stopAction();
+ parts.length = 0; currentMaterials = []; emissionLevels.clear(); baseColors.clear(); pivot.rotation.y = 0; stopAction();
 }
 function setReady(ready:boolean) {
+ $('motion-review').hidden=currentModelId!=='dwarf-guardian';
+ idleButton.disabled=!ready||!idleRig||reduced.matches;
+ document.querySelectorAll<HTMLButtonElement>('[data-review-pose]').forEach(button=>{button.disabled=!ready||!attackAction;});
+ $('pose-control').hidden=!ready||!attackAction;
+ hit.hidden=!['polar-bear','gecko-ranger'].includes(currentModelId);hit.disabled=!ready||!hitAction||reduced.matches;
  const missingAttack = !!models.find(model=>model.id===currentModelId)?.clip&&!attackAction;
  const staticModel=!!models.find(model=>model.id===currentModelId)?.static;
  shoot.hidden=staticModel;shoot.disabled = staticModel || !ready || reduced.matches || missingAttack;
@@ -202,7 +213,7 @@ async function select(index:number) {
  $('model-format').textContent = 'GLB · 실시간 3D'; $('model-hint').textContent = '드래그하여 회전 · 휠 또는 두 손가락으로 확대';
  fallback.src = `/defense/models/${model.asset??model.id}.png`; fallback.alt = `${model.name}의 정사영 렌더 이미지`; fallback.hidden = true;
  $<HTMLAnchorElement>('download-model').href = `/defense/models/${model.asset??model.id}.glb`;
- document.querySelectorAll<HTMLButtonElement>('#model-list button').forEach((button,i) => button.setAttribute('aria-pressed',String(i===index)));
+ document.querySelectorAll<HTMLButtonElement>('#model-list button').forEach((button,i) => {button.setAttribute('aria-pressed',String(i===index));if(i===index){const list=$('model-list');list.scrollLeft+=button.getBoundingClientRect().left-list.getBoundingClientRect().left;}});
  clearModel(); stage.dataset.loaded = 'loading';
  delete stage.dataset.renderCalls; delete stage.dataset.renderTriangles;
  for(const id of ['triangle-count','mesh-count','material-count'])$(id).textContent = '—';
@@ -217,14 +228,16 @@ async function select(index:number) {
   let triangles = 0, meshes = 0;
   current.traverse(node => {if(node instanceof Mesh){node.castShadow = true;node.receiveShadow = true;meshes++;triangles += (node.geometry.index?.count??node.geometry.attributes.position.count)/3;}});
   currentMaterials = [...materials(current)].filter((material):material is MeshStandardMaterial => material instanceof MeshStandardMaterial);
-  currentMaterials.forEach(material => {material.wireframe = wireEnabled;material.envMapIntensity = .55;emissionLevels.set(material,material.emissiveIntensity);});
+  currentMaterials.forEach(material => {material.wireframe = wireEnabled;material.envMapIntensity = .55;emissionLevels.set(material,material.emissiveIntensity);baseColors.set(material,material.color.clone());});
   for(const type of ['core','barrel','bolt','turret'] as const){const object = current.getObjectByName(type==='core'?'fire-core':type);if(object&&(type!=='core'||!model.clip))parts.push({object,position:object.position.clone(),rotation:new Vector3(object.rotation.x,object.rotation.y,object.rotation.z),type});}
+  idleRig=model.id==='dwarf-guardian'?createBronIdle(gltf.scene):null;
   const clip = gltf.animations.find(animation => animation.name===(model.stopVariants?`${model.id}-${stopSelect.value}`:model.clip));
   if(clip){
    mixer = new AnimationMixer(gltf.scene); attackAction = mixer.clipAction(clip);
    attackAction.setLoop(model.loop?LoopRepeat:LoopOnce,model.loop?Infinity:1); attackAction.clampWhenFinished = true;
+   const hitClip=createHitClip(model.id,gltf.scene);if(hitClip){hitAction=mixer.clipAction(hitClip);hitAction.setLoop(LoopOnce,1);}
    if(model.stopVariants){attackAction.play();mixer.setTime(0);attackAction.paused=true;}
-   mixer.addEventListener('finished',()=>{if(model.hold){stage.dataset.action='settled';redraw=true;}else stopAction();});
+   mixer.addEventListener('finished',event=>{if(event.action===hitAction)stopAction();else if(model.hold){stage.dataset.action='settled';redraw=true;}else stopAction();});
   }
   $('triangle-count').textContent = Math.round(triangles).toLocaleString(); $('mesh-count').textContent = String(meshes); $('material-count').textContent = String(materials(current).size);
   stage.dataset.loaded = model.id; status.hidden = true; setReady(true);
@@ -244,9 +257,34 @@ shoot.onclick = () => {
  if(!current||reduced.matches||models.find(model=>model.id===currentModelId)?.static)return;
  const looping=models.find(model=>model.id===currentModelId)?.loop;
  if(looping&&attackAction?.isRunning()){stopAction();return;}
+ stopAction();
  shotAt = elapsed; redraw = true; stage.dataset.action = looping?'walking':'firing';
+ $('motion-state').textContent='ATTACK · 동작 재생';
  if(looping)shoot.textContent='■ 보행 멈춤';
  attackAction?.reset().play();
+};
+hit.onclick = () => {
+ if(!hitAction||reduced.matches)return;
+ stopAction(); stage.dataset.action = 'hit'; hitAction.reset().play(); redraw = true;
+};
+function reviewPose(requestedPose:number, label='POSE · 자유 포즈') {
+ if(!attackAction||!mixer)return;
+ // Evaluate a single authored pose without advancing time, including reduced motion.
+ stopAction(); pose.value = String(requestedPose); attackAction.reset().play(); attackAction.paused = true;
+ attackAction.time = attackAction.getClip().duration*requestedPose/100;
+ mixer.update(0); shotAt = -Infinity; stage.dataset.action = 'pose';
+ $('pose-value').textContent = `${Math.round(requestedPose*10)/10}%`; $('motion-state').textContent = label; redraw = true;
+}
+pose.oninput = () => reviewPose(Number(pose.value));
+document.querySelectorAll<HTMLButtonElement>('[data-review-pose]').forEach(button => {
+ button.onclick = () => reviewPose(Number(button.dataset.reviewPose),button.dataset.reviewLabel);
+});
+idleButton.onclick = () => {
+ if(!idleRig||reduced.matches)return;
+ const next = !idleEnabled; stopAction(); idleEnabled = next;
+ idleButton.setAttribute('aria-pressed',String(next));
+ stage.dataset.action = next?'breathing':'idle';
+ $('motion-state').textContent = next?'IDLE · 경계하며 호흡':'REST · 기본 자세'; redraw = true;
 };
 rotate.onclick = () => {automatic = !automatic;rotate.setAttribute('aria-pressed',String(automatic));redraw = true;};
 wire.onclick = () => {
@@ -262,6 +300,8 @@ function syncReducedMotion(){
 }
 reduced.addEventListener('change',syncReducedMotion);
 
+document.addEventListener('visibilitychange',() => {last = performance.now();redraw = true;});
+
 function draw(now:number) {
  // Some embedded browsers update matches before dispatching the change event.
  if(reducedMode!==reduced.matches)syncReducedMotion();
@@ -270,8 +310,8 @@ function draw(now:number) {
   elapsed += dt;
   const autoMoving = automatic&&!reduced.matches&&!!current;
   if(autoMoving)pivot.rotation.y += dt*.28;
-  const age = elapsed-shotAt, clipMoving = !!attackAction?.isRunning();
-  // Towers use a short procedural recoil; the dwarf uses its authored attack clip.
+  const age = elapsed-shotAt, clipMoving = !!attackAction?.isRunning() || !!hitAction?.isRunning();
+  // Towers use procedural recoil; characters use their authored attack clips.
   const power = !attackAction&&!reduced.matches&&age<.8?Math.sin(Math.min(1,age/.8)*Math.PI)*(1-age/.8):0;
   for(const part of parts){
    part.object.position.copy(part.position); part.object.rotation.set(part.rotation.x,part.rotation.y,part.rotation.z);
@@ -282,9 +322,13 @@ function draw(now:number) {
   }
   if(current){current.rotation.z = power*.018;for(const material of currentMaterials)if(material.emissive.getHex()!==0)material.emissiveIntensity = (emissionLevels.get(material)??.6)+power*2;}
   if(clipMoving){mixer?.update(dt);redraw = true;}
+  const idleMoving = idleEnabled&&!reduced.matches&&!!idleRig;
+  if(idleMoving)idleRig?.update(dt);
+  const flash = hitAction?.isRunning() ? hitFlashStrength(hitAction.time) : 0;
+  baseColors.forEach((color,material) => material.color.copy(color).lerp(flashColor,flash));
   if(!attackAction&&age>=.8&&stage.dataset.action==='firing'){stage.dataset.action = 'idle';redraw = true;}
   if(controls?.update())redraw = true;
-  if(renderer&&(redraw||autoMoving||power>0||clipMoving)&&now-lastRender>=33){
+  if(renderer&&(redraw||autoMoving||power>0||clipMoving||idleMoving)&&now-lastRender>=33){
    renderer.shadowMap.needsUpdate = true; renderer.render(scene,camera);
    stage.dataset.renderCalls = String(renderer.info.render.calls); stage.dataset.renderTriangles = String(renderer.info.render.triangles);
    redraw = false; lastRender = now;
@@ -294,4 +338,4 @@ function draw(now:number) {
 }
 // Allow a direct preview link without accepting arbitrary asset paths.
 const requestedModel = new URLSearchParams(location.search).get('model');
-void select(Math.max(0,models.findIndex(model => model.id===requestedModel))); requestAnimationFrame(draw);
+void select(requestedModel?Math.max(0,models.findIndex(model => model.id===requestedModel)):3); requestAnimationFrame(draw);

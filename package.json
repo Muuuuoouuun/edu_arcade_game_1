@@ -1,5 +1,5 @@
 {
-  "name": "playground-arcade",
+  "name": "arcana-guardians",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && vite build && node tools/build-prototypes.mjs",
     "test:prototype": "node prototype/tests/sim_test.js",
     "preview": "vite preview --host 0.0.0.0 --port 3100 --strictPort",
-    "test": "node --experimental-strip-types --test src/games/engine.test.ts src/games/quiz.test.ts src/games/race/engine.test.ts src/games/defense/engine.test.ts src/games/defense/campaign.test.ts src/games/defense/difficulty.test.ts src/lib/storage.test.ts src/lib/haptic.test.ts src/games/defense/tactics.test.ts src/components/defenseInput.test.ts src/components/defenseSpeed.test.ts src/components/defenseFrame.test.ts src/components/defenseSound.test.ts src/games/defense/themes.test.ts src/games/defense/fieldGuide.test.ts src/games/defense/art.test.ts src/games/defense/locomotion.test.ts src/games/defense/action.test.ts src/games/defense/terrain.test.ts src/games/defense/gateAssets.test.ts src/games/defense/gateImpact.test.ts src/games/frontier/engine.test.ts src/games/frontier/ballistaView.test.ts src/games/frontier/woodView.test.ts src/games/frontier/heroAttack.test.ts src/games/frontier/heroView.test.ts src/games/frontier/woodAttack.test.ts src/games/frontier/camera.test.ts src/games/frontier/effectsView.test.ts src/games/frontier/terrainView.test.ts src/games/frontier/beaconView.test.ts src/games/frontier/gateView.test.ts src/games/frontier/forestDoors.test.ts src/games/frontier/gateOcclusion.test.ts tools/test-defense-effect-layers.mjs",
+    "test": "node --experimental-strip-types --test src/games/engine.test.ts src/games/quiz.test.ts src/games/race/engine.test.ts src/games/defense/engine.test.ts src/games/defense/campaign.test.ts src/games/defense/difficulty.test.ts src/lib/storage.test.ts src/lib/haptic.test.ts src/games/defense/tactics.test.ts src/components/defenseInput.test.ts src/components/defenseSpeed.test.ts src/components/defenseFrame.test.ts src/components/defenseSound.test.ts src/games/defense/themes.test.ts src/games/defense/fieldGuide.test.ts src/games/defense/art.test.ts src/games/defense/locomotion.test.ts src/games/defense/action.test.ts src/games/defense/terrain.test.ts src/games/defense/gateAssets.test.ts src/games/defense/gateImpact.test.ts src/games/frontier/engine.test.ts src/games/frontier/ballistaView.test.ts src/games/frontier/woodView.test.ts src/games/frontier/heroAttack.test.ts src/games/frontier/heroView.test.ts src/games/frontier/woodAttack.test.ts src/games/frontier/camera.test.ts src/games/frontier/effectsView.test.ts src/games/frontier/terrainView.test.ts src/games/frontier/beaconView.test.ts src/games/frontier/gateView.test.ts src/games/frontier/forestDoors.test.ts src/games/frontier/gateOcclusion.test.ts tools/test-defense-effect-layers.mjs src/components/battleClock.test.ts",
     "art:gates": "node tools/build-defense-gates.mjs",
     "art:themes": "node tools/build-defense-themes.mjs",
     "models:build": "blender -b --python tools/blender/build_towers.py && npm run models:sprites",
@@ -18,7 +18,7 @@
     "models:dwarf": "blender -b --python tools/blender/build_dwarf.py && npm run models:hero-sprites",
     "models:hero-sprites": "node tools/build-hero-sprites.mjs",
     "models:slime": "blender -b --python tools/blender/build_slime.py",
-    "android:sync": "npm run build && cap sync android",
+    "android:sync": "npm run build:mobile && cap sync android",
     "android:debug": "npm run android:sync && cd android && ./gradlew assembleDebug",
     "android:open": "cap open android",
     "models:water-action-lv3": "blender --python-exit-code 1 -b --python tools/blender/build_water_cannon_action.py -- --level 3",
@@ -172,7 +172,8 @@
     "models:base-cannon-action": "blender --python-exit-code 1 -b --python tools/blender/build_base_cannon_action.py --",
     "models:base-crossbow-action": "blender --python-exit-code 1 -b --python tools/blender/build_base_crossbow_action.py --",
     "models:metal-walk": "blender --python-exit-code 1 -b --python tools/blender/build_metal_walk.py --",
-    "models:base-magic-action": "blender --python-exit-code 1 -b --python tools/blender/build_base_magic_action.py --"
+    "models:base-magic-action": "blender --python-exit-code 1 -b --python tools/blender/build_base_magic_action.py --",
+    "build:mobile": "tsc --noEmit && vite build --mode mobile && node tools/prune-arcana-mobile.mjs && node --test tools/tests/mobile-frontier-assets.test.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

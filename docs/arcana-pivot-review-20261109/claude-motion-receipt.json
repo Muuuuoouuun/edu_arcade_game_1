@@ -1,0 +1,28 @@
+{
+  "alias": "KR2",
+  "endpoint": "https://api.anthropic.com/v1/messages",
+  "requested_at_utc": "2026-11-09T09:28:03.999585+00:00",
+  "stream_complete": true,
+  "status": 200,
+  "request_id": "req_011Cgs7kKfbYjy4K9SaV1hYk",
+  "seconds": 64.1,
+  "prompt_sha256": "a7b2e8b675e289dfa67477c24c0aedfdbcaa72fbed439e3dfbe87f993cdd8384",
+  "model": "claude-fable-5-1",
+  "usage": {
+    "input_tokens": 8300,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 4500,
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard",
+    "output_tokens_details": {
+      "thinking_tokens": 3218
+    }
+  },
+  "stop_reason": "max_tokens"
+}

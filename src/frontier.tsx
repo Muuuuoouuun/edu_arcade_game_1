@@ -5,6 +5,9 @@ import {FrontierScene} from './games/frontier/scene';
 import './frontier.css';
 import {LandscapeGate,usePortrait} from './components/LandscapeGate';
 import {FRONTIER_THEMES,type FrontierTheme} from './games/frontier/themes';
+import {NATIVE_BACK,NATIVE_BACKGROUND} from './lib/nativeEvents';
+import {startNativeRuntime} from './lib/nativeRuntime';
+void startNativeRuntime().catch(()=>{/* Browser controls remain available if a plugin fails. */});
 function App(){
  const portrait=usePortrait(),[theme,setTheme]=useState<FrontierTheme>('frost');
  const portraitRef=useRef(portrait);portraitRef.current=portrait;
@@ -19,10 +22,11 @@ function App(){
   let raf=0,last=performance.now(),published=0;
   const frame=(now:number)=>{const dt=Math.min(.05,(now-last)/1000);last=now;const k=keys.current;const input={x:axis.current.x+(k.has('d')||k.has('arrowright')?1:0)-(k.has('a')||k.has('arrowleft')?1:0),z:axis.current.z+(k.has('s')||k.has('arrowdown')?1:0)-(k.has('w')||k.has('arrowup')?1:0)};if(orientation.matches){keys.current.clear();axis.current={x:0,z:0};if(live.current.phase==='playing'&&!live.current.paused)live.current=actFrontier(live.current,{type:'pause'});}else live.current=stepFrontier(live.current,dt,renderer.landscape?{x:input.z,z:-input.x}:input);renderer.render(live.current,dt);if(now-published>80){setState({...live.current});published=now;}raf=requestAnimationFrame(frame);};raf=requestAnimationFrame(frame);
   const down=(e:KeyboardEvent)=>{if(portraitRef.current||live.current.phase!=='playing'||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(k)){keys.current.add(k);e.preventDefault();}else if(!e.repeat&&['q','e',' ','f','escape'].includes(k)){e.preventDefault();dispatch({type:k==='q'?'attack':k==='e'?'skill':k===' '?'dash':k==='f'?'interact':'pause'});}};
-  const up=(e:KeyboardEvent)=>keys.current.delete(e.key.toLowerCase()),clear=()=>{keys.current.clear();axis.current={x:0,z:0};};const hidden=()=>{clear();if(document.hidden&&live.current.phase==='playing'&&!live.current.paused)dispatch({type:'pause'});};
-  window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);document.addEventListener('visibilitychange',hidden);
-  return()=>{cancelAnimationFrame(raf);renderer.dispose();scene.current=null;reduced.removeEventListener('change',change);window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',hidden);};
+  const up=(e:KeyboardEvent)=>keys.current.delete(e.key.toLowerCase()),clear=()=>{keys.current.clear();axis.current={x:0,z:0};};const background=()=>{clear();if(live.current.phase==='playing'&&!live.current.paused)dispatch({type:'pause'});};const hidden=()=>{if(document.hidden)background();};
+  window.addEventListener('keydown',down);window.addEventListener('keyup',up);window.addEventListener('blur',clear);window.addEventListener(NATIVE_BACKGROUND,background);document.addEventListener('visibilitychange',hidden);
+  return()=>{cancelAnimationFrame(raf);renderer.dispose();scene.current=null;reduced.removeEventListener('change',change);window.removeEventListener('keydown',down);window.removeEventListener('keyup',up);window.removeEventListener('blur',clear);window.removeEventListener(NATIVE_BACKGROUND,background);document.removeEventListener('visibilitychange',hidden);};
  },[mode,menu,generation,theme]);
+ useEffect(()=>{const back=(event:Event)=>{event.preventDefault();if(menu)window.location.assign('/');else{setMenu(true);axis.current={x:0,z:0};keys.current.clear();}};window.addEventListener(NATIVE_BACK,back);return()=>window.removeEventListener(NATIVE_BACK,back);},[menu]);
  const switchMap=()=>{
   // Freeze simulation while the renderer and its input surfaces are replaced.
   if(live.current.phase==='playing'&&!live.current.paused){live.current=actFrontier(live.current,{type:'pause'});setState(live.current);}

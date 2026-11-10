@@ -14,6 +14,7 @@ import { createDefense, actDefense, stepDefense, questSatisfied as isQuestSatisf
 import { STAGES, HEROES, TOWERS, BRANCHES, ENEMIES, getStage, getSlots, stageLabel, getRegion, STAGE_COUNT } from '../games/defense/data';
 import { readCampaign, writeCampaign, stageUnlocked, completeRun, acknowledgeVisitor, trainCampaign, selectHero, selectDifficulty, trainingCost, resultFollowUp, lossAdvice } from '../games/defense/campaign';
 import { shouldPublishDefenseFrame } from './defenseFrame';
+import { advanceClock, bigImpact, createClock, stopAt } from './battleClock';
 import { readSpeedPreference, startingSpeed, writeSpeedPreference } from './defenseSpeed';
 import { combatCueFor } from './defenseSound';
 import { DIFFICULTIES } from '../games/defense/difficulty';
@@ -37,6 +38,7 @@ const greeting: Record<HeroId, string> = {
   barbarian: '서리산맥까지 올라왔다고? 마음에 드는군! 내 전투 망치로 앞길을 열어 주지.',
   druid: '다친 숲의 친구들을 돌봐 주셨군요. 저와 달빛 늑대도 함께하겠어요.',
 };
+function reducedMotion() { return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches; }
 function freshRunId() { return crypto.randomUUID(); }
 function latestStage(c: Campaign) { return Math.min(STAGE_COUNT, c.cleared.length + 1); }
 function completedWaves(s: DefenseState) { return s.phase === 'won' ? 4 : ['intermission', 'promotion'].includes(s.phase) ? s.wave : Math.max(0, s.wave - 1); }
@@ -67,6 +69,7 @@ export default function DefenseGame({ blocked: externalBlocked, onExit, onFinish
   const [, setArtRevision] = useState(0);
   const [aimingDash, setAimingDash] = useState(false);
   const aimingRef = useRef(false);
+  const skillStopRef = useRef<false | 'big' | 'boss'>(false);
   const [reasons, setReasons] = useState<PauseReasons>([]);
   const reasonsRef = useRef<PauseReasons>([]);
   type OpenPanel = { view: BattlePanel; session: TacticalSession };
@@ -103,6 +106,7 @@ export default function DefenseGame({ blocked: externalBlocked, onExit, onFinish
     if (action.type === 'hire' && !campaignRef.current.visitors.includes(action.hero)) return;
     const next = actDefense(before, action);
     if (next === before) return;
+    if (action.type === 'skill') skillStopRef.current = bigImpact(before, next) === 'boss' ? 'boss' : 'big'; // skill effects are born on input, not in a step: the loop adds the stop
     combatFeedback(before, next, hapticsRef.current); publish(next);
     if (action.type === 'speed') writeSpeedPreference(next.speed);
     if (['build', 'upgrade', 'hire', 'promote'].includes(action.type)) playSound('flip');
@@ -148,25 +152,44 @@ export default function DefenseGame({ blocked: externalBlocked, onExit, onFinish
   }, []);
   useEffect(() => {
     if (mode !== 'battle') return;
-    let frame = 0, last = performance.now(), lastPublish = last, accumulated = 0;
+    let frame = 0, lastPublish = performance.now(), lastBig = -Infinity, clock = createClock(lastPublish / 1000);
     let lastPublishedState = stateRef.current;
     const fixedStep = 1 / 60;
     const tick = (now: number) => {
-      const elapsed = Math.min(0.1, Math.max(0, (now - last) / 1000)); last = now;
       const before = stateRef.current;
       const finishing = (before.phase === 'won' || before.phase === 'lost') && before.effects.length > 0;
       if (modeRef.current === 'battle' && !blockedRef.current && !document.hidden && (['prep', 'wave', 'intermission'].includes(before.phase) || finishing) && !before.paused) {
-        accumulated += elapsed * (finishing ? 1 : before.speed);
+        let impact = false;
+        if (skillStopRef.current) {
+          const kind = skillStopRef.current;
+          skillStopRef.current = false;
+          if (before.time < lastBig) lastBig = -Infinity;
+          // A skill that reaps a boss gets the boss stop and ignores the 0.6s spacing, like a boss kill in a step.
+          if (!reducedMotion() && (kind === 'boss' || before.time - lastBig >= .6)) {
+            if (kind !== 'boss') lastBig = before.time;
+            clock = stopAt(clock, now / 1000, kind === 'boss' ? .09 : .05); impact = true;
+          }
+        }
+        const advanced = advanceClock(clock, now / 1000, finishing ? 1 : before.speed, fixedStep);
+        clock = advanced.clock;
         let next = before;
-        while (accumulated >= fixedStep) {
-          next = stepDefense(next, fixedStep); accumulated -= fixedStep;
-          if (next.phase === 'promotion' || (!finishing && (next.phase === 'won' || next.phase === 'lost'))) { accumulated = 0; break; }
+        for (let i = 0; i < advanced.steps; i++) {
+          const prev = next;
+          next = stepDefense(next, fixedStep);
+          // Hit-stop only freezes real time: the engine state after the stop is identical to a run without it.
+          const kind = bigImpact(prev, next);
+          if (next.time < lastBig) lastBig = -Infinity; // a restarted battle's clock begins again near 0
+          if (kind && !reducedMotion() && (kind === 'boss' || next.time - lastBig >= .6)) {
+            if (kind === 'big') lastBig = next.time;
+            clock = stopAt(clock, now / 1000, kind === 'boss' ? .09 : .05); impact = true; break;
+          }
+          if (next.phase === 'promotion' || (!finishing && (next.phase === 'won' || next.phase === 'lost'))) { clock = { ...clock, accumulated: 0 }; break; }
         }
         combatFeedback(before, next, hapticsRef.current); stateRef.current = next;
-        if (shouldPublishDefenseFrame(before, next, lastPublishedState, now - lastPublish)) {
+        if (impact || shouldPublishDefenseFrame(before, next, lastPublishedState, now - lastPublish)) {
           lastPublish = now; lastPublishedState = next; setState(next);
         }
-      } else accumulated = 0;
+      } else { skillStopRef.current = false; clock = { ...clock, accumulated: 0, last: now / 1000 }; }
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
@@ -282,7 +305,7 @@ export default function DefenseGame({ blocked: externalBlocked, onExit, onFinish
     {!blocked && reasons.includes('manual') && !systemPaused && !terminal && !arriving && !tactical ? <Dialog title="원정 일시정지" className="defense-dialog" onClose={() => resume('manual')}><h2>잠시 숨 고르기</h2><p>전투와 재사용 시간이 멈췄어요.</p><button className="defense-primary" onClick={() => resume('manual')}>계속 방어하기</button><button className="defense-secondary" onClick={() => openPanel({ kind: 'party' })}>수비대와 전술 보기</button><button className="defense-secondary" onClick={onToggleSound}><Icon name={sound ? 'sound' : 'muted'} size={20}/>{sound ? '효과음 끄기' : '효과음 켜기'}</button><button className="defense-secondary" onClick={() => begin(state.stage)}>이 스테이지 다시 준비</button><button className="defense-text-button" onClick={returnToCamp}>거점으로 돌아가기</button><small>현재 전투는 종료되고, 완료한 원정과 성장 기록은 유지돼요.</small></Dialog> : null}
     {!blocked && state.phase === 'promotion' && !state.paused ? <Dialog title="영웅 전직" className="defense-dialog defense-promotion-dialog"><DefenseSprite index={hero.sprite}/><h2>새로운 힘이 깨어났어요</h2><p>{hero.name}의 이번 원정 전직을 선택하세요.</p><div className="defense-promotions"><button onClick={() => dispatch({ type: 'promote', choice: 'power' })}><strong>{promotionNames[state.hero][0]}</strong><span>{powerDescription}</span></button><button onClick={() => dispatch({ type: 'promote', choice: 'control' })}><strong>{promotionNames[state.hero][1]}</strong><span>{controlDescription}</span></button></div><small>다음 원정에서는 다른 길도 선택할 수 있어요.</small></Dialog> : null}
 
-    {!blocked && terminal && state.effects.length === 0 && reward && !arriving ? <Dialog title={state.phase === 'won' ? '방어 성공' : '다시 도전'} className="defense-dialog defense-result"><DefenseSprite index={state.phase === 'won' ? 15 : hero.sprite}/><h2>{state.phase === 'won' ? state.stage === STAGE_COUNT ? '서리산맥을 지켰어요!' : state.stage === 4 ? '청록의 숲을 지켰어요!' : '마을을 지켰어요!' : '수비대를 다시 모아요'}</h2><p>{state.phase === 'won' ? stage.expanded && state.outpostHp <= 0 ? `본 마을은 지켰어요. ${sideVillage} 구조는 다시 도전할 수 있어요.` : state.stage === 4 ? '거점에 서리산맥의 새로운 구조 요청이 도착했어요.' : state.stage === STAGE_COUNT ? '피난소까지 안전해졌어요. 두 지역 원정 완료!' : '안전해진 길로 새로운 소식이 찾아옵니다.' : '거점에서 장비와 수비대를 정비하고 다시 도전해 보세요.'}</p><div className="defense-result-stats"><span>격퇴<strong>{state.kills}</strong></span><span>방어 웨이브<strong>{completedWaves(state)} / 4</strong></span><span>성장 골드<strong>+{reward.goldEarned} G</strong></span></div>{(state.weakHits || 0) > 0 ? <p className="defense-weak-hits">약점 명중 {state.weakHits}번</p> : null}{reward.difficultyBonus > 0 ? <p className="defense-difficulty-reward">{DIFFICULTIES[state.difficulty].name} 보너스 +{reward.difficultyBonus} G 포함</p> : null}{reward.questReward > 0 ? <p className="defense-quest-reward">추가 퀘스트 완료! +{reward.questReward} G 포함</p> : null}{reward.firstClear ? <p className="defense-first-clear">첫 클리어 보상을 받았어요.</p> : null}{advice ? <div className="defense-follow-up"><p>다음엔 · {advice}</p></div> : null}{state.phase === 'won' && followUp ? <div className="defense-follow-up"><p>{followUp.next ? `다음 요청 · ${followUp.next.label} ${followUp.next.name}` : '마지막 요청을 마쳤어요'}{followUp.upcomingVisitor ? ` — ${HEROES[followUp.upcomingVisitor].name} 합류 예정` : ''}</p>{followUp.pendingQuest ? <p>남은 추가 퀘스트 · {followUp.pendingQuest.text} (+{followUp.pendingQuest.reward} G)</p> : null}</div> : null}<button className="defense-primary" onClick={returnToCamp}>거점으로 돌아가기</button><button className="defense-secondary" onClick={() => begin(state.phase === 'won' && state.stage < STAGE_COUNT ? state.stage + 1 : state.stage)}>{state.phase === 'won' && state.stage < STAGE_COUNT ? '다음 원정 바로 출발' : '같은 스테이지 다시 하기'}</button><button className="defense-text-button" onClick={onExit}>게임 허브로</button></Dialog> : null}
+    {!blocked && terminal && state.effects.length === 0 && reward && !arriving ? <Dialog title={state.phase === 'won' ? '방어 성공' : '다시 도전'} className="defense-dialog defense-result"><DefenseSprite index={state.phase === 'won' ? 15 : hero.sprite}/><h2>{state.phase === 'won' ? state.stage === STAGE_COUNT ? '서리산맥을 지켰어요!' : state.stage === 4 ? '청록의 숲을 지켰어요!' : '마을을 지켰어요!' : '수비대를 다시 모아요'}</h2><p>{state.phase === 'won' ? stage.expanded && state.outpostHp <= 0 ? `본 마을은 지켰어요. ${sideVillage} 구조는 다시 도전할 수 있어요.` : state.stage === 4 ? '거점에 서리산맥의 새로운 구조 요청이 도착했어요.' : state.stage === STAGE_COUNT ? '피난소까지 안전해졌어요. 두 지역 원정 완료!' : '안전해진 길로 새로운 소식이 찾아옵니다.' : '거점에서 장비와 수비대를 정비하고 다시 도전해 보세요.'}</p><div className="defense-result-stats"><span>격퇴<strong>{state.kills}</strong></span><span>방어 웨이브<strong>{completedWaves(state)} / 4</strong></span><span>성장 골드<strong>+{reward.goldEarned} G</strong></span></div>{(state.weakHits || 0) > 0 ? <p className="defense-weak-hits">약점 명중 {state.weakHits}번</p> : null}{reward.difficultyBonus > 0 ? <p className="defense-difficulty-reward">{DIFFICULTIES[state.difficulty].name} 보너스 +{reward.difficultyBonus} G 포함</p> : null}{reward.questReward > 0 ? <p className="defense-quest-reward">추가 퀘스트 완료! +{reward.questReward} G 포함</p> : null}{reward.firstClear ? <p className="defense-first-clear">첫 클리어 보상을 받았어요.</p> : null}{advice ? <div className="defense-follow-up"><p>다음엔 · {advice}</p></div> : null}{state.phase === 'won' && followUp ? <div className="defense-follow-up"><p>{followUp.next ? `다음 요청 · ${followUp.next.label} ${followUp.next.name}` : '마지막 요청을 마쳤어요'}{followUp.upcomingVisitor ? ` — ${HEROES[followUp.upcomingVisitor].name} 합류 예정` : ''}</p>{followUp.pendingQuest ? <p>남은 추가 퀘스트 · {followUp.pendingQuest.text} (+{followUp.pendingQuest.reward} G)</p> : null}</div> : null}<button className="defense-primary" onClick={returnToCamp}>거점으로 돌아가기</button><button className="defense-secondary" onClick={() => begin(state.phase === 'won' && state.stage < STAGE_COUNT ? state.stage + 1 : state.stage)}>{state.phase === 'won' && state.stage < STAGE_COUNT ? '다음 원정 바로 출발' : '같은 스테이지 다시 하기'}</button><button className="defense-text-button" onClick={onExit}>시작 화면으로</button></Dialog> : null}
   </>}
     {!blocked && arriving && (!terminal || state.effects.length === 0) ? <Dialog title="새로운 방문자" className="defense-dialog defense-visitor-dialog"><div className="defense-arrival-art"><DefenseSprite index={HEROES[arriving].sprite}/></div><p className="defense-arrival-line">수비대의 소문을 듣고 찾아왔어요</p><h2>{HEROES[arriving].name}의 방문</h2><p className="defense-greeting">“{greeting[arriving]}”</p><div className="defense-unlock-note">{arriving === 'elf' ? '엘프 궁수 · 영웅 선택과 용병 고용 해금' : arriving === 'dwarf' ? '드워프 공병 · 대장간과 영구 장비 강화 해금' : arriving === 'tao' ? '동방의 도사 · 부적과 번개 지원 해금' : arriving === 'barbarian' ? '바바리안 전사 · 충격 돌진과 근접 방어 해금' : arriving === 'druid' ? '수인 드루이드 · 달빛 늑대 펫과 소환 전투 해금' : '수비대에 합류'}</div><button className="defense-primary" onClick={joinVisitor}>수비대에 맞이하기</button></Dialog> : null}
   </div><LandscapeGate active={rotate}/></div>;

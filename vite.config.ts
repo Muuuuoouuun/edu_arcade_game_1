@@ -1,15 +1,25 @@
 import { defineConfig } from 'vite';
+import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig({
+function entryPoints(mode:string):Record<string,string>{
+  const inputs:Record<string,string>={
+    arcana:fileURLToPath(new URL('./index.html',import.meta.url)),
+    frontier:fileURLToPath(new URL('./frontier.html',import.meta.url)),
+  };
+  if(mode!=='mobile'){
+    inputs.arcade=fileURLToPath(new URL('./arcade.html',import.meta.url));
+    inputs.models=fileURLToPath(new URL('./model-lab.html',import.meta.url));
+  }
+  return inputs;
+}
+
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
   build: {
+    outDir: mode === 'mobile' ? 'dist-mobile' : 'dist',
     rollupOptions: {
-      input: {
-        arcade: new URL('./index.html', import.meta.url).pathname,
-        models: new URL('./model-lab.html', import.meta.url).pathname,
-        frontier: new URL('./frontier.html', import.meta.url).pathname,
-      },
+      input: entryPoints(mode),
       output: {
         manualChunks(id) {
           if (!id.includes('/node_modules/three/')) return;
@@ -23,9 +33,8 @@ export default defineConfig({
   server: {
     fs: {
       allow: [
-        new URL('.', import.meta.url).pathname,
-        new URL('../math_speed/functions/src', import.meta.url).pathname,
+        fileURLToPath(new URL('.', import.meta.url)),
       ],
     },
   },
-});
+}));

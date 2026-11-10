@@ -1,0 +1,13 @@
+{
+  "package": "io.github.muuuuoouuun.arcana.debug",
+  "app_name": "아르카나 수비대",
+  "apk_bytes": 39565093,
+  "sha256": "1a2b9808061f2a72817b592e14c92edd096db7258defed9dda5a7b6492bfc625",
+  "legacy_or_workshop_assets": [],
+  "mobile_html": [
+    "assets/public/index.html"
+  ],
+  "configured_secret_matches_in_packaged_text": [],
+  "physical_device_installed": false,
+  "validation": "assembleDebug + lintDebug; browser production bundle and simulated native events"
+}
