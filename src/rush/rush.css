@@ -146,6 +146,8 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .res-ico { display: inline-block; width: 15px; height: 15px; vertical-align: -2px; margin-right: 3px; border: 2px solid var(--outline); border-radius: 50%; }
 .res-ico.food { background: radial-gradient(circle at 35% 35%, #fff3a6, #ffcf3a 60%, #d99a00); }
 .res-ico.wood { border-radius: 4px; background: linear-gradient(90deg, #c27a3c 0 30%, #a8642e 30% 70%, #8a4f22 70%); }
+/* Hero shard (cycle 26): a small violet gem. */
+.res-ico.shard { border-radius: 3px; transform: rotate(45deg) scale(0.85); background: linear-gradient(135deg, #f0dcff, #a46bff 55%, #6a3fd0); }
 .town-card { width: min(780px, 100%); text-align: left; padding-bottom: 0; }
 .town-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .town-head h1 { font-size: 32px; }

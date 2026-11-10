@@ -25,6 +25,8 @@ export interface Kingdom {
   hero: HeroKind;
   /** Level per hero (cycle 14); only the hero taken into battle gets its bonus. */
   heroLv: Record<HeroKind, number>;
+  /** Hero shards (cycle 26): earned from stage stars and high-stage wins, spent on hero training from Lv3. */
+  shards: number;
   /** Recently rewarded battle ids, so one battle never pays twice. */
   rewarded: string[];
 }
@@ -40,7 +42,7 @@ export const HERO_GROWTH = { hp: 0.1, damage: 0.1 } as const;
 
 export const createKingdom = (now: number): Kingdom => ({
   version: 1, castle: 1, farm: 1, mill: 1, perks: { attack: 0, towerDiscount: 0, townHp: 0, forge: 0 },
-  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), hero: 'ranger', heroLv: { ranger: 1, bron: 1 }, rewarded: [],
+  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), hero: 'ranger', heroLv: { ranger: 1, bron: 1 }, shards: 0, rewarded: [],
 });
 
 const clone = (k: Kingdom): Kingdom => ({ ...k, perks: { ...k.perks }, battles: { ...k.battles }, stars: [...k.stars], heroLv: { ...k.heroLv }, rewarded: [...k.rewarded] });
@@ -115,21 +117,25 @@ export const heroMaxLevel = (k: Kingdom): number => k.castle * HERO_LV_PER_CASTL
 /** Health and attack multipliers a hero level gives. */
 export const heroGrowth = (lv: number) => ({ hp: 1 + HERO_GROWTH.hp * (lv - 1), damage: 1 + HERO_GROWTH.damage * (lv - 1) });
 /** Cost of the hero's next level, or null when locked or capped by the castle. */
-export function trainCost(k: Kingdom, hero: HeroKind): Cost | null {
+export type TrainCost = Cost & { shards: number };
+/** Shards a training step needs: none up to Lv3, then one more per level (Lv3→4: 1 … Lv9→10: 7). */
+export const SHARDS_FROM_LV = 3;
+export function trainCost(k: Kingdom, hero: HeroKind): TrainCost | null {
   const l = k.heroLv[hero];
   if (!heroUnlocked(k, hero) || l >= heroMaxLevel(k)) return null;
-  return { food: 45 * l, wood: 25 * l };
+  return { food: 45 * l, wood: 25 * l, shards: Math.max(0, l - SHARDS_FROM_LV + 1) };
 }
 export function canTrain(k: Kingdom, hero: HeroKind): boolean {
   const c = trainCost(k, hero);
-  return !!c && k.food >= c.food && k.wood >= c.wood;
+  return !!c && k.food >= c.food && k.wood >= c.wood && k.shards >= c.shards;
 }
 /** Collects first, then pays and levels the hero up. Unaffordable or capped → unchanged (but collected). */
 export function train(k: Kingdom, hero: HeroKind, now: number): Kingdom {
   const next = collect(k, now), c = trainCost(next, hero);
-  if (!c || next.food < c.food || next.wood < c.wood) return next;
+  if (!c || next.food < c.food || next.wood < c.wood || next.shards < c.shards) return next;
   next.food -= c.food;
   next.wood -= c.wood;
+  next.shards -= c.shards;
   next.heroLv[hero]++;
   return next;
 }
@@ -152,17 +158,20 @@ export function battleReward(s: RushState): Cost & { waves: number; won: boolean
   return { food: 10 + 15 * waves + (won ? 40 : 0), wood: 8 + 12 * waves + (won ? 30 : 0), waves, won };
 }
 /** Grants a battle's reward once per battle id. */
-export function grantReward(k: Kingdom, battleId: string, reward: Cost & { won: boolean }): { kingdom: Kingdom; granted: boolean } {
+export function grantReward(k: Kingdom, battleId: string, reward: Cost & { won: boolean; shards?: number }): { kingdom: Kingdom; granted: boolean } {
   if (k.rewarded.includes(battleId)) return { kingdom: k, granted: false };
   const next = clone(k);
   next.food += reward.food;
   next.wood += reward.wood;
+  next.shards += reward.shards ?? 0;
   if (reward.won) next.battles.won++; else next.battles.lost++;
   next.rewarded = [...next.rewarded, battleId].slice(-20);
   return { kingdom: next, granted: true };
 }
 
-export type Settlement = Cost & { won: boolean; waves: number; stars: number; newStars: number; bonus: Cost };
+export type Settlement = Cost & { won: boolean; waves: number; stars: number; newStars: number; bonus: Cost; shards: number };
+/** Shards from one battle: 2 per newly earned star, plus floor(stage / 3) for a win from stage 3 up (repeatable). */
+export const shardReward = (stage: number, won: boolean, newStars: number) => 2 * newStars + (won ? Math.floor(stage / 3) : 0);
 /**
  * Settle a finished stage battle once: stage-scaled base reward plus a bonus for each newly earned star.
  * Replaying with fewer stars never lowers the record.
@@ -173,7 +182,7 @@ export function settleBattle(k: Kingdom, battleId: string, s: RushState, stage: 
   const bonus = { food: b.food * newStars, wood: b.wood * newStars };
   const reward: Settlement = {
     food: Math.round(base.food * mul) + bonus.food, wood: Math.round(base.wood * mul) + bonus.wood,
-    won: base.won, waves: base.waves, stars, newStars, bonus,
+    won: base.won, waves: base.waves, stars, newStars, bonus, shards: shardReward(stage, base.won, newStars),
   };
   const result = grantReward(k, battleId, reward);
   if (result.granted && stars > prev) result.kingdom.stars[stage - 1] = stars;
@@ -212,7 +221,9 @@ export function parseKingdom(raw: string | null, now: number): Kingdom {
       // Saves from before hero choice (or naming an unknown or still-locked hero) take the ranger.
       hero: v.hero === 'bron' && starList[1] > 0 ? 'bron' : 'ranger',
       // Saves from before hero training start every hero at Lv1; levels above the castle cap are clamped.
-      heroLv: { ranger: heroLevel(v.heroLv?.ranger, castle), bron: heroLevel(v.heroLv?.bron, castle) }, rewarded,
+      heroLv: { ranger: heroLevel(v.heroLv?.ranger, castle), bron: heroLevel(v.heroLv?.bron, castle) },
+      // Saves from before shards (cycle 26) get 2 per star already earned, so past progress still counts.
+      shards: v.shards === undefined ? 2 * starList.reduce((a: number, b: number) => a + b, 0) : count(v.shards, 0, 1e6) ?? 0, rewarded,
     };
   } catch {
     return createKingdom(now);

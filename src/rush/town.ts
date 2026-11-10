@@ -165,7 +165,7 @@ export class TownScreen {
     heroRow.querySelector('[data-effect]')!.textContent = `${g.hp === g.damage ? '체력·공격 ' : ''}${growth(g)}${tc ? ` → ${growth(heroGrowth(lv + 1))}` : ''}`;
     trainBtn.disabled = !tc || !canTrain(k, k.hero);
     trainBtn.querySelector('[data-cost]')!.innerHTML = tc
-      ? `훈련 <i class="res-ico food"></i>${tc.food} <i class="res-ico wood"></i>${tc.wood}`
+      ? `훈련 <i class="res-ico food"></i>${tc.food} <i class="res-ico wood"></i>${tc.wood}${tc.shards ? ` <i class="res-ico shard"></i>${tc.shards}` : ''}`
       : k.heroLv[k.hero] >= CASTLE_MAX * HERO_LV_PER_CASTLE ? '최대' : '성 Lv 필요';
     trainBtn.classList.toggle('capped', !tc);
     this.$('btn-hero').classList.toggle('can', canTrain(k, k.hero));
@@ -181,6 +181,7 @@ export class TownScreen {
     }
     this.$('res-food').textContent = String(k.food);
     this.$('res-wood').textContent = String(k.wood);
+    this.$('res-shard').textContent = String(k.shards);
     const collectBtn = this.$('btn-collect') as HTMLButtonElement;
     collectBtn.disabled = wait.food + wait.wood === 0;
     this.$('collect-amount').textContent = wait.food + wait.wood === 0 ? '생산 중…' : `식량 +${wait.food} · 목재 +${wait.wood}${storageFull(k, now) ? ' (창고 가득)' : ''}`;

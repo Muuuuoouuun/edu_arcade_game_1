@@ -225,8 +225,9 @@ function showResult() {
   const saved = granted && saveKingdom(kingdom);
   const rewardEl = $('result-reward');
   rewardEl.hidden = !granted;
-  rewardEl.innerHTML = `<i class="res-ico food"></i>식량 +${reward.food} <i class="res-ico wood"></i>목재 +${reward.wood}${saved ? '' : ' <small>(저장 실패: 이 기기에서 저장 공간을 쓸 수 없음)</small>'}`;
-  lastReward = granted ? `방금 전투 보상: 식량 +${reward.food} · 목재 +${reward.wood}` : '';
+  const shardText = reward.shards ? ` <i class="res-ico shard"></i>조각 +${reward.shards}` : '';
+  rewardEl.innerHTML = `<i class="res-ico food"></i>식량 +${reward.food} <i class="res-ico wood"></i>목재 +${reward.wood}${shardText}${saved ? '' : ' <small>(저장 실패: 이 기기에서 저장 공간을 쓸 수 없음)</small>'}`;
+  lastReward = granted ? `방금 전투 보상: 식량 +${reward.food} · 목재 +${reward.wood}${reward.shards ? ` · 영웅 조각 +${reward.shards}` : ''}` : '';
   const accuracy = s.stats.shots ? Math.min(100, Math.round((s.stats.hits / (s.stats.shots * HEROES[s.hero.kind].bolts)) * 100)) : 0;
   const towers = s.towers.filter(Boolean).map(t => `Lv${t!.level + 1}`).join(' · ') || '없음';
   $('result-stats').innerHTML = [

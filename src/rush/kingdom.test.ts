@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  battleReward, canUpgrade, collect, createKingdom, grantReward, heroMaxLevel, kingdomMods, parseKingdom, pending, RATE_PER_LEVEL,
+  battleReward, canUpgrade, collect, createKingdom, grantReward, heroMaxLevel, kingdomMods, parseKingdom, pending, RATE_PER_LEVEL, settleBattle,
   serializeKingdom, STORAGE_MINUTES, train, trainCost, upgrade, upgradeCost, type Kingdom,
 } from './kingdom.ts';
 import { createRush, heroMaxHp, padCost, stepRush, WAVE_COUNT } from './sim.ts';
@@ -95,7 +95,7 @@ test('hero training: castle caps the level, costs grow, collect first, only unlo
   let k = createKingdom(T0);
   assert.deepEqual(k.heroLv, { ranger: 1, bron: 1 });
   assert.equal(heroMaxLevel(k), 2, 'castle 1 allows hero Lv2');
-  assert.deepEqual(trainCost(k, 'ranger'), { food: 45, wood: 25 });
+  assert.deepEqual(trainCost(k, 'ranger'), { food: 45, wood: 25, shards: 0 });
   assert.equal(trainCost(k, 'bron'), null, 'locked hero cannot train');
   k = train(k, 'ranger', T0);
   assert.equal(k.heroLv.ranger, 2);
@@ -142,4 +142,40 @@ test('forge: castle caps it, costs grow, old saves start it at 0, battles get it
   assert.equal(loaded.perks.forge, 0, 'missing forge → 0');
   assert.deepEqual([loaded.castle, loaded.perks.attack], [3, 2], 'the rest of an old save is kept');
   assert.equal(parseKingdom(JSON.stringify({ ...old, perks: { ...old.perks, forge: 9 } }), T0).castle, 1, 'a forge above the castle cap is a broken save');
+});
+
+test('hero shards: earned from new stars and high-stage wins, once per battle; training needs them from Lv3', async () => {
+  const { shardReward } = await import('./kingdom.ts');
+  assert.equal(shardReward(1, true, 3), 6, 'three new stars on stage 1');
+  assert.equal(shardReward(3, true, 0), 1, 'a repeat win on stage 3');
+  assert.equal(shardReward(9, true, 1), 2 + 3);
+  assert.equal(shardReward(9, false, 0), 0, 'a loss pays no shards');
+  // Settling pays once per battle id.
+  const won = createRush(1);
+  won.phase = 'won';
+  won.town.hp = won.town.maxHp;
+  let k = createKingdom(T0);
+  const first = settleBattle(k, 'b1', won, 1);
+  assert.equal(first.reward.shards, 6);
+  assert.equal(first.kingdom.shards, 6);
+  assert.equal(settleBattle(first.kingdom, 'b1', won, 1).kingdom.shards, 6, 'same battle id pays once');
+  // Training: Lv1→2 and 2→3 cost no shards; Lv3→4 needs 1.
+  k = { ...rich(createKingdom(T0)), castle: 5, shards: 0 };
+  k = train(train(k, 'ranger', T0), 'ranger', T0);
+  assert.equal(k.heroLv.ranger, 3);
+  assert.equal(trainCost(k, 'ranger')!.shards, 1);
+  assert.equal(train(k, 'ranger', T0).heroLv.ranger, 3, 'no shard, no Lv4');
+  const paid = train({ ...k, shards: 1 }, 'ranger', T0);
+  assert.deepEqual([paid.heroLv.ranger, paid.shards], [4, 0]);
+  // Lv1 → Lv10 needs 1 + 2 + … + 7 = 28 shards.
+  let total = 0;
+  for (let l = 1; l < 10; l++) total += Math.max(0, l - 2);
+  assert.equal(total, 28);
+});
+
+test('saves from before shards get 2 per star already earned', () => {
+  const old = JSON.parse(serializeKingdom({ ...createKingdom(T0), stars: [3, 2, 1, 0, 0, 0, 0, 0, 0, 0] }));
+  delete old.shards;
+  assert.equal(parseKingdom(JSON.stringify(old), T0).shards, 12);
+  assert.equal(parseKingdom(JSON.stringify({ ...old, shards: 5 }), T0).shards, 5, 'an existing count is kept');
 });
