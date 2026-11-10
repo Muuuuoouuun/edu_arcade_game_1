@@ -1,3 +1,4 @@
+import { BASE_CROSSBOW_MUZZLES } from './baseCrossbowMuzzles.ts';
 import { BASE_CANNON_MUZZLES } from './baseCannonMuzzles.ts';
 import { TAO_ENTRY_SOCKETS } from './taoEntrySockets.ts';
 import { CRUSH_CANNON_LV3_MUZZLES, CRUSH_CANNON_LV3_FRAME } from './crushCannonLv3Muzzles.ts';
@@ -570,6 +571,21 @@ export function lightningTowerProjectileOffset(p:Projectile,reduced=false):Point
  const render=lightningTowerActionSpriteAsset('magic','lightning',p.sourceLevel,0,.24,reduced);
  return render?{x:render.muzzle.x,y:12+render.muzzle.y+27}:undefined;
 }
+const BASE_CROSSBOW_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/base-crossbow-action-${i}-atlas.webp`);
+/** Lv.1: fixed keep, aimed bow and string release only when the engine fires. */
+export function baseCrossbowActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,from:Point,to:Point,recoil=0,reduced=false) {
+ const direction=attackOctant(from,to);
+ if(kind!=='crossbow'||branch!==null||level!==1||direction===null||!BASE_CROSSBOW_ACTION_ATLASES.every(src=>motionLoaded.has(src)))return null;
+ const pose=reduced||!Number.isFinite(recoil)||recoil<=0?0:recoil>.16?1:recoil>.08?2:3;
+ const [x,y]=BASE_CROSSBOW_MUZZLES[direction][0],size=92+level*4;
+ return {direction,pose,muzzle:{x:x*size,y:y*size},asset:{src:BASE_CROSSBOW_ACTION_ATLASES[direction],viewBox:`${pose*192+9.6} 7.2 172.8 172.8`,width:768,height:192,displayScale:1.16} as SpriteAsset};
+}
+/** Hold the modeled arrow tip at the launch snapshot through later target motion or upgrades. */
+export function baseCrossbowProjectileOffset(p:Projectile):Point|undefined {
+ if(p.source!=='tower'||p.actor!=='crossbow'||p.pierce||p.sourceLevel!==1||!p.launchAim)return undefined;
+ const render=baseCrossbowActionSpriteAsset('crossbow',null,1,p.from,p.launchAim);
+ return render?{x:render.muzzle.x,y:render.muzzle.y+39}:undefined;
+}
 const BASE_CANNON_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/base-cannon-action-${i}-atlas.webp`);
 /** Lv.1: the base stays planted as the aimed barrel recoils after release. */
 export function baseCannonActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,from:Point,to:Point,recoil=0,reduced=false) {
@@ -818,7 +834,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,GOLEM_WALK_ATLAS.src,ICE_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_BRACE_FALL_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,METAL_DEATH_ATLAS.src,WOOD_DEATH_ATLAS.src,ICE_DEATH_ATLAS.src,GOLEM_DEATH_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...MAGE_ENTRY,...MAGE_RETURN,...MAGE_RESET,...KAR_SLAM,...KAR_WALK,...KAR_ENTRY,...KAR_RETURN,...KAR_RESET,...KAR_STOP,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...DRUID_ULTIMATE,...DRUID_ENTRY,...DRUID_RETURN,...DRUID_RESET,...DRUID_STOP,...TAO_CAST,...TAO_WALK,...TAO_ULTIMATE,...TAO_ENTRY,...TAO_RETURN,...TAO_RESET,...TAO_STOP,...ELF_CAST,...ELF_WALK,...RIEL_ULTIMATE,...RIEL_ENTRY,...RIEL_RETURN,...RIEL_RESET,...RIEL_STOP,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,...DWARF_STOP,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...BASE_CANNON_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,GOLEM_WALK_ATLAS.src,ICE_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_BRACE_FALL_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,METAL_DEATH_ATLAS.src,WOOD_DEATH_ATLAS.src,ICE_DEATH_ATLAS.src,GOLEM_DEATH_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...MAGE_ENTRY,...MAGE_RETURN,...MAGE_RESET,...KAR_SLAM,...KAR_WALK,...KAR_ENTRY,...KAR_RETURN,...KAR_RESET,...KAR_STOP,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...DRUID_ULTIMATE,...DRUID_ENTRY,...DRUID_RETURN,...DRUID_RESET,...DRUID_STOP,...TAO_CAST,...TAO_WALK,...TAO_ULTIMATE,...TAO_ENTRY,...TAO_RETURN,...TAO_RESET,...TAO_STOP,...ELF_CAST,...ELF_WALK,...RIEL_ULTIMATE,...RIEL_ENTRY,...RIEL_RETURN,...RIEL_RESET,...RIEL_STOP,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,...DWARF_STOP,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...BASE_CANNON_ACTION_ATLASES,...BASE_CROSSBOW_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;
