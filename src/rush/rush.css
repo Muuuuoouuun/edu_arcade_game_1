@@ -306,3 +306,8 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 
 /* Model sheet (?sheet=1): characters only. */
 #rush.sheet .hud-top, #rush.sheet .btn-fire, #rush.sheet .btn-super, #rush.sheet .hud-pill, #rush.sheet .hud-build, #rush.sheet .toast { display: none; }
+
+/* Pause settings (cycle 12): one tap cycles graphics quality auto -> high -> low. */
+.settings { display: flex; justify-content: center; margin: 4px 0 14px; }
+.setting { padding: 8px 18px; border-radius: 999px; border: 3px solid var(--outline); background: #3a2a6e; color: #fff; font-size: 16px; touch-action: manipulation; box-shadow: 0 4px 0 var(--outline); }
+.setting:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--outline); }

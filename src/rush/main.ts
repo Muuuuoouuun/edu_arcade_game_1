@@ -12,6 +12,7 @@ import { stageDifficulty } from './stages.ts';
 import { advanceClock, createClock, hitStopFor, tryStop } from './clock.ts';
 import { loadKingdom, saveKingdom, TownScreen } from './town.ts';
 import { TownView } from './townScene.ts';
+import { createFrameWatch, nextPref, parsePref, PREF_LABEL, resolveQuality, watchFrame, type QualityPref } from './quality.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const params = new URLSearchParams(location.search);
@@ -20,10 +21,16 @@ const debug = params.has('debug');
 /** ?freeze=N stops the simulation at tick N (rendering continues) for matched before/after screenshots. */
 const freezeAt = Number(params.get('freeze')) || Infinity;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+/** Graphics quality (cycle 12): saved preference, or ?quality=high|low to pin one run for matched captures. */
+const QUALITY_KEY = 'arcana-rush:quality:v1';
+const pinnedQuality = params.get('quality') === 'high' || params.get('quality') === 'low' ? params.get('quality') as QualityPref : null;
+let qualityPref: QualityPref = pinnedQuality ?? (() => { try { return parsePref(localStorage.getItem(QUALITY_KEY)); } catch { return 'auto'; } })();
+const frameWatch = createFrameWatch();
 
 const canvas = $<HTMLCanvasElement>('rush-canvas');
 const surface = $('rush');
 const view = new RushView(canvas);
+view.setQuality(resolveQuality(qualityPref, false));
 let state: RushState = createRush(Number(params.get('seed')) || 1);
 let mode: 'title' | 'town' | 'play' | 'demo' | 'result' = 'title';
 let paused = false;
@@ -192,6 +199,17 @@ $('btn-town').addEventListener('click', () => { openTown(lastReward); lastReward
 $('btn-town-title').addEventListener('click', () => { mode = 'title'; showScreen('title'); });
 $('pause').addEventListener('click', () => { if (mode === 'play') { paused = true; showScreen('pause'); } });
 $('btn-resume').addEventListener('click', () => { paused = false; showScreen(null); });
+function qualityLabel() {
+  const auto = qualityPref === 'auto' ? `(${PREF_LABEL[view.quality]})` : '';
+  $('btn-quality').textContent = `그래픽: ${PREF_LABEL[qualityPref]}${auto}`;
+}
+function applyQuality() { view.setQuality(resolveQuality(qualityPref, frameWatch.dropped)); qualityLabel(); }
+$('btn-quality').addEventListener('click', () => {
+  qualityPref = nextPref(qualityPref);
+  if (!pinnedQuality) try { localStorage.setItem(QUALITY_KEY, qualityPref); } catch { /* private mode: keep it for this session */ }
+  applyQuality();
+});
+qualityLabel();
 $('btn-quit').addEventListener('click', () => { paused = false; mode = 'title'; showScreen('title'); });
 $('rush-surface').addEventListener('pointerdown', () => { if (mode === 'demo') { mode = 'title'; showScreen('title'); } });
 document.addEventListener('visibilitychange', () => { if (document.hidden && mode === 'play') { paused = true; showScreen('pause'); } });
@@ -209,9 +227,15 @@ resize();
 let prev = performance.now(), fpsFrames = 0, fpsT = 0, fps = 0, hitStops = 0;
 let clock = createClock(prev / 1000);
 function frame(now: number) {
-  const dt = Math.min(0.1, (now - prev) / 1000);
+  const rawDt = (now - prev) / 1000;
+  const dt = Math.min(0.1, rawDt);
   prev = now;
   const running = (mode === 'play' && !paused) || mode === 'demo';
+  // Auto quality: a slow battle drops to low once per session; the player can override it in the pause menu.
+  if (running && qualityPref === 'auto' && watchFrame(frameWatch, rawDt)) {
+    applyQuality();
+    if (mode === 'play') toast('그래픽을 낮춤으로 바꿨어요 · 일시정지에서 변경');
+  }
   const seconds = now / 1000;
   if (running) {
     const r = advanceClock(clock, seconds, speed);
@@ -262,4 +286,4 @@ if (params.has('sheet')) {
 else if (params.has('play')) start('play');
 
 // Read-only handle for automated browser checks.
-Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, info: () => view.info(), towerLevels: TOWER_LEVELS.length } });
+Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, get quality() { return { pref: qualityPref, tier: view.quality, autoDropped: frameWatch.dropped }; }, info: () => view.info(), towerLevels: TOWER_LEVELS.length } });

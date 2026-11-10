@@ -152,6 +152,21 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await touch('touchEnd', []);
     await mp.waitForTimeout(250);
     check((await mp.evaluate(() => __rush.state.stats.shots)) > shots, 'drag-aim fire');
+    // Graphics quality (cycle 12): auto follows the frame rate; the pause button cycles auto -> high -> low and persists.
+    const auto = await mp.evaluate(() => ({ ...__rush.quality, fps: __rush.fps }));
+    check(auto.fps < 30 ? auto.tier === 'low' : auto.fps > 50 ? auto.tier === 'high' : true, `auto quality at ${auto.fps}fps → ${auto.tier}`);
+    await mp.tap('#pause');
+    await mp.waitForTimeout(200);
+    await mp.tap('#btn-quality');
+    const high = await mp.evaluate(() => ({ ...__rush.quality, w: __rush.info().buffer[0] }));
+    await mp.tap('#btn-quality');
+    await mp.waitForTimeout(100);
+    await mp.screenshot({ path: `${OUT}/mobile-pause.png` });
+    const low = await mp.evaluate(() => ({ ...__rush.quality, w: __rush.info().buffer[0] }));
+    check(high.pref === 'high' && low.pref === 'low' && low.w < high.w && (await mp.textContent('#btn-quality')).includes('낮음'), `pause button sets quality (buffer width ${high.w} → ${low.w})`);
+    await mp.reload();
+    await mp.waitForTimeout(500);
+    check(await mp.evaluate(() => __rush.quality.pref === 'low' && __rush.quality.tier === 'low'), 'quality setting persists across reload');
     check(merrors.length === 0, `mobile page errors: ${merrors.join(' | ') || 'none'}`);
     await ctx.close();
   } finally {

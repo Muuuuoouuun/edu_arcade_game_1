@@ -11,6 +11,7 @@ import { heroHidden, padInReach, type Enemy, type RushEvent, type RushState, typ
 import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, type Part } from './look.ts';
 import { Batch } from './batch.ts';
 import { Particles } from './fx.ts';
+import { QUALITY, type Quality } from './quality.ts';
 
 export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'super'; offset: Vec } | null;
 
@@ -53,6 +54,11 @@ export class RushView {
   private fx: Fx[] = [];
   private particles: Particles;
   private bushMeshes: Mesh[] = [];
+  /** Low quality hides these (cycle 12): ink hulls on walls, hedges and bushes, and the shore decor. */
+  private terrainHulls: Mesh[] = [];
+  private decor: Mesh[] = [];
+  quality: Quality = 'high';
+  private size = { w: 1, h: 1 };
   /** Model-sheet mode (?sheet=1): only characters on a flat background, for silhouette checks. */
   private sheetMode = false;
   private crates = new Map<number, { mesh: Mesh; wobble: number }>();
@@ -186,7 +192,7 @@ export class RushView {
     };
     hedge(ARENA.minX - 0.55, cz, 1.1, d + 2.2); hedge(ARENA.maxX + 0.55, cz, 1.1, d + 2.2);
     hedge(cx, ARENA.maxZ + 0.55, w, 1.1); hedge(cx, ARENA.minZ - 0.55, w, 1.1);
-    this.addBaked(bake(parts), 0.04);
+    this.addBaked(bake(parts), 0.04, undefined, 'terrain');
     this.buildShoreDecor();
   }
 
@@ -214,13 +220,18 @@ export class RushView {
     // Walk the band between the hedge (1.1 m) and the shore edge (3.7 m) on all four sides.
     for (let x = ARENA.minX - 2; x <= ARENA.maxX + 2; x += 2.2 + r() * 1.6) { place(x, ARENA.minZ - 1.9 - r() * 1.2); place(x, ARENA.maxZ + 1.9 + r() * 1.2); }
     for (let z = ARENA.minZ; z <= ARENA.maxZ; z += 2.2 + r() * 1.6) { place(ARENA.minX - 1.9 - r() * 1.2, z); place(ARENA.maxX + 1.9 + r() * 1.2, z); }
-    this.addBaked(bake(parts), 0.04);
+    this.addBaked(bake(parts), 0.04, undefined, 'decor');
   }
 
   /** Add a baked static mesh with its ink hull. */
-  private addBaked(geo: BufferGeometry, outline: number, at?: Vec): Mesh {
+  private addBaked(geo: BufferGeometry, outline: number, at?: Vec, role?: 'terrain' | 'decor'): Mesh {
     const mesh = new Mesh(geo, this.mats.baked);
-    if (outline > 0) mesh.add(new Mesh(hullGeometry(geo), outlineMaterial(outline)));
+    if (outline > 0) {
+      const hull = new Mesh(hullGeometry(geo), outlineMaterial(outline));
+      mesh.add(hull);
+      if (role === 'terrain') this.terrainHulls.push(hull);
+    }
+    if (role === 'decor') this.decor.push(mesh);
     if (at) mesh.position.set(at.x, 0, at.z);
     this.scene.add(mesh);
     return mesh;
@@ -234,7 +245,7 @@ export class RushView {
       parts.push({ geo: new BoxGeometry(b.w + 0.14, 0.24, b.d + 0.14), color: PAL.stoneTop, at: [b.x, 1.3, b.z] });
       parts.push({ geo: new BoxGeometry(b.w + 0.22, 0.18, b.d + 0.22), color: PAL.stoneFoot, at: [b.x, 0.09, b.z] });
     }
-    this.addBaked(bake(parts), 0.05);
+    this.addBaked(bake(parts), 0.05, undefined, 'terrain');
   }
 
   /** Tall-grass bushes (walk-through, see-through when the hero hides) and breakable crates. */
@@ -253,7 +264,9 @@ export class RushView {
       const mat = toon(0xffffff, { vertexColors: true, rim: 0.3 });
       mat.transparent = true;
       const mesh = new Mesh(geo, mat);
-      mesh.add(new Mesh(hullGeometry(geo), outlineMaterial(0.03)));
+      const hull = new Mesh(hullGeometry(geo), outlineMaterial(0.03));
+      mesh.add(hull);
+      this.terrainHulls.push(hull);
       mesh.position.set(b.x, 0, b.z);
       mesh.renderOrder = 6; // drawn after the hero so the see-through state shows them
       this.scene.add(mesh);
@@ -587,7 +600,18 @@ export class RushView {
   }
 
   // ---------- frame ----------
+  /** Graphics tier (cycle 12): render scale, terrain outlines, decor and particle count. Rules never change. */
+  setQuality(q: Quality) {
+    this.quality = q;
+    const spec = QUALITY[q];
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio, spec.pixelRatio));
+    this.renderer.setSize(this.size.w, this.size.h, false);
+    for (const h of this.terrainHulls) h.visible = spec.terrainOutlines;
+    for (const d of this.decor) d.visible = spec.decor;
+  }
+
   resize(width: number, height: number) {
+    this.size = { w: width, h: height };
     this.renderer.setSize(width, height, false);
     this.camera.aspect = width / Math.max(1, height);
     this.portrait = height > width;
@@ -600,7 +624,7 @@ export class RushView {
   /** Apply one simulation step's events: the effect grammar (docs/rush/art-direction.md) and animation triggers. */
   applyEvents(events: RushEvent[], reducedMotion: boolean) {
     const fx = this.particles, hp = this.hero.position;
-    fx.density = reducedMotion ? 0.5 : 1;
+    fx.density = (reducedMotion ? 0.5 : 1) * QUALITY[this.quality].particles;
     for (const ev of events) {
       switch (ev.type) {
         case 'swing': {
@@ -854,7 +878,7 @@ export class RushView {
 
   render() { this.renderer.render(this.scene, this.camera); }
   /** Renderer statistics for the debug overlay and performance notes. */
-  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning() }; }
+  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
 }
 
 const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4 };
