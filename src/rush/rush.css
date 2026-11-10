@@ -303,3 +303,6 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .hero-pick b { font-family: var(--display); font-weight: 400; font-size: 15px; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; }
 .hero-pick.has-more b::after { content: ' ⇄'; color: var(--gold); -webkit-text-stroke: 0; }
 @media (max-height: 420px) { .hero-pick b { font-size: 13px; } }
+
+/* Model sheet (?sheet=1): characters only. */
+#rush.sheet .hud-top, #rush.sheet .btn-fire, #rush.sheet .btn-super, #rush.sheet .hud-pill, #rush.sheet .hud-build, #rush.sheet .toast { display: none; }

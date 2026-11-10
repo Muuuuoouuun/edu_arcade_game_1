@@ -53,6 +53,8 @@ export class RushView {
   private fx: Fx[] = [];
   private particles: Particles;
   private bushMeshes: Mesh[] = [];
+  /** Model-sheet mode (?sheet=1): only characters on a flat background, for silhouette checks. */
+  private sheetMode = false;
   private crates = new Map<number, { mesh: Mesh; wobble: number }>();
   /** Instanced batches: draw calls stay fixed however many enemies, shots and coins are alive. */
   private batches!: {
@@ -395,43 +397,64 @@ export class RushView {
       { geo: new SphereGeometry(size * 0.5, 6, 5), color: pupil, at: [x + size * 0.7, y, z] },
       { geo: new SphereGeometry(size * 0.5, 6, 5), color: pupil, at: [x + size * 0.7, y, -z] },
     ];
+    // Silhouette by role (cycle 11): grunt = small, round, club raised to one side; skirmisher = tall and thin
+    // with a wide hat brim and a bow held across (a T in front view); brute = wide and low with huge fists;
+    // boss = big and tall, arms raised overhead, spiked crown, cape.
     let parts: Part[];
     if (kind === 'grunt') {
       parts = [
-        { geo: new CapsuleGeometry(r * 0.78, r * 0.6, 4, 10), color: 0xe2463f, at: [0, r * 1.3, 0] },
-        { geo: new SphereGeometry(r * 0.78, 12, 10), color: 0xa82c42, at: [r * 0.12, r * 2.45, 0] },
-        { geo: new ConeGeometry(r * 0.2, r * 0.75, 8), color: 0xfff0d2, at: [r * 0.05, r * 3.2, r * 0.42], rot: [0.45, 0, 0] },
-        { geo: new ConeGeometry(r * 0.2, r * 0.75, 8), color: 0xfff0d2, at: [r * 0.05, r * 3.2, -r * 0.42], rot: [-0.45, 0, 0] },
-        { geo: new BoxGeometry(r * 1.5, r * 0.36, r * 0.36), color: 0x8a5428, at: [r * 0.95, r * 1.4, r * 0.75] },
-        ...eyes(r * 0.68, r * 2.55, r * 0.26, r * 0.19, 0xffffff, PAL.ink),
+        { geo: new SphereGeometry(r * 0.82, 12, 10), color: 0xe2463f, at: [0, r * 1.0, 0], scale: [1, 0.95, 1.05] },
+        { geo: new SphereGeometry(r * 0.66, 12, 10), color: 0xc4344a, at: [r * 0.15, r * 1.95, 0] },
+        { geo: new ConeGeometry(r * 0.24, r * 0.95, 8), color: 0xfff0d2, at: [r * 0.05, r * 2.6, r * 0.5], rot: [0.75, 0, 0] },
+        { geo: new ConeGeometry(r * 0.24, r * 0.95, 8), color: 0xfff0d2, at: [r * 0.05, r * 2.6, -r * 0.5], rot: [-0.75, 0, 0] },
+        { geo: new SphereGeometry(r * 0.3, 8, 6), color: 0x6e1f2c, at: [r * 0.1, r * 0.25, r * 0.45] },
+        { geo: new SphereGeometry(r * 0.3, 8, 6), color: 0x6e1f2c, at: [r * 0.1, r * 0.25, -r * 0.45] },
+        { geo: new BoxGeometry(r * 0.26, r * 1.7, r * 0.26), color: 0xeedcb4, at: [r * 0.45, r * 1.95, r * 1.0], rot: [-0.6, 0, 0] },
+        { geo: new SphereGeometry(r * 0.5, 10, 8), color: 0xfff3dc, at: [r * 0.45, r * 2.7, r * 1.55] },
+        ...eyes(r * 0.58, r * 2.05, r * 0.24, r * 0.18, 0xffffff, PAL.ink),
       ];
     } else if (kind === 'skirmisher') {
       parts = [
-        { geo: new ConeGeometry(r * 1.0, r * 2.4, 12), color: 0x9b4dd6, at: [0, r * 1.2, 0] },
-        { geo: new SphereGeometry(r * 0.66, 12, 10), color: 0x6b2d8a, at: [0, r * 2.75, 0] },
-        { geo: new ConeGeometry(r * 0.78, r * 1.1, 12), color: 0x40195a, at: [0, r * 3.45, 0] },
-        { geo: new BoxGeometry(r * 0.28, r * 2.0, r * 0.28), color: 0xffb52e, at: [r * 0.95, r * 1.8, 0] },
-        ...eyes(r * 0.55, r * 2.8, r * 0.24, r * 0.15, 0xffe14d, 0xb06a00),
+        { geo: new ConeGeometry(r * 0.62, r * 2.6, 12), color: 0x2fa38f, at: [0, r * 1.3, 0] },
+        { geo: new SphereGeometry(r * 0.55, 12, 10), color: 0x237f72, at: [0, r * 2.75, 0] },
+        { geo: new CylinderGeometry(r * 1.0, r * 1.0, r * 0.12, 16), color: 0x26a08c, at: [0, r * 3.2, 0] },
+        { geo: new ConeGeometry(r * 0.5, r * 2.0, 12), color: 0x1d7d6e, at: [-r * 0.15, r * 4.2, 0], rot: [0, 0, 0.25] },
+        { geo: new BoxGeometry(r * 0.22, r * 0.22, r * 2.8), color: 0xffb52e, at: [r * 0.75, r * 1.9, 0] },
+        { geo: new BoxGeometry(r * 0.06, r * 0.06, r * 2.6), color: 0xfff1c2, at: [r * 0.55, r * 1.9, 0] },
+        { geo: new CylinderGeometry(r * 0.22, r * 0.22, r * 1.1, 8), color: 0x7a4a24, at: [-r * 0.55, r * 2.0, r * 0.3], rot: [0.3, 0, 0] },
+        ...eyes(r * 0.48, r * 2.78, r * 0.2, r * 0.14, 0xffe14d, 0xb06a00),
       ];
     } else if (kind === 'brute') {
       parts = [
-        { geo: new BoxGeometry(r * 1.6, r * 1.6, r * 2.0), color: 0xd0602f, at: [0, r * 1.25, 0] },
-        { geo: new SphereGeometry(r * 0.85, 12, 10), color: 0xf29a5c, at: [r * 0.45, r * 1.0, 0] },
-        { geo: new BoxGeometry(r * 0.95, r * 0.8, r * 0.95), color: 0x7a2c1c, at: [r * 0.25, r * 2.45, 0] },
-        { geo: new SphereGeometry(r * 0.5, 10, 8), color: 0xb8c3d6, at: [0, r * 2.1, r * 1.0] },
-        { geo: new SphereGeometry(r * 0.5, 10, 8), color: 0xb8c3d6, at: [0, r * 2.1, -r * 1.0] },
-        ...eyes(r * 0.74, r * 2.55, r * 0.22, r * 0.13, 0xffffff, PAL.ink),
+        { geo: new BoxGeometry(r * 1.6, r * 1.5, r * 2.1), color: 0xe8842a, at: [0, r * 1.2, 0] },
+        { geo: new SphereGeometry(r * 0.85, 12, 10), color: 0xf29a5c, at: [r * 0.45, r * 0.95, 0] },
+        { geo: new BoxGeometry(r * 0.95, r * 0.8, r * 0.95), color: 0x7a2c1c, at: [r * 0.3, r * 2.25, 0] },
+        { geo: new SphereGeometry(r * 0.52, 10, 8), color: 0xb8c3d6, at: [0, r * 2.0, r * 1.05] },
+        { geo: new SphereGeometry(r * 0.52, 10, 8), color: 0xb8c3d6, at: [0, r * 2.0, -r * 1.05] },
+        { geo: new BoxGeometry(r * 0.5, r * 1.1, r * 0.5), color: 0xe8842a, at: [r * 0.3, r * 1.25, r * 1.35] },
+        { geo: new BoxGeometry(r * 0.5, r * 1.1, r * 0.5), color: 0xe8842a, at: [r * 0.3, r * 1.25, -r * 1.35] },
+        { geo: new SphereGeometry(r * 0.55, 10, 8), color: 0x7a2c1c, at: [r * 0.45, r * 0.6, r * 1.4] },
+        { geo: new SphereGeometry(r * 0.55, 10, 8), color: 0x7a2c1c, at: [r * 0.45, r * 0.6, -r * 1.4] },
+        ...eyes(r * 0.78, r * 2.35, r * 0.22, r * 0.13, 0xffffff, PAL.ink),
       ];
     } else {
       parts = [
+        { geo: new BoxGeometry(r * 0.25, r * 2.6, r * 2.4), color: 0x8a1f3a, at: [-r * 0.75, r * 1.5, 0] },
         { geo: new CylinderGeometry(r * 0.75, r * 0.95, r * 1.9, 14), color: 0x4b3a8a, at: [0, r * 1.05, 0] },
         { geo: new SphereGeometry(r * 0.85, 14, 12), color: 0x6d55c4, at: [0, r * 2.0, 0] },
-        { geo: new SphereGeometry(r * 0.55, 12, 10), color: 0x2a1f4d, at: [r * 0.2, r * 2.95, 0] },
-        { geo: new CylinderGeometry(r * 0.5, r * 0.44, r * 0.4, 6), color: PAL.gold, at: [r * 0.2, r * 3.45, 0] },
-        { geo: new SphereGeometry(r * 0.46, 12, 10), color: 0x9d83ff, at: [r * 0.7, r * 1.5, r * 1.08] },
-        { geo: new SphereGeometry(r * 0.46, 12, 10), color: 0x9d83ff, at: [r * 0.7, r * 1.5, -r * 1.08] },
-        ...eyes(r * 0.62, r * 3.0, r * 0.2, r * 0.11, 0xff4d6a, 0x5a0010),
+        { geo: new SphereGeometry(r * 0.6, 12, 10), color: 0x2a1f4d, at: [r * 0.2, r * 3.0, 0] },
+        { geo: new CylinderGeometry(r * 0.52, r * 0.46, r * 0.28, 10), color: PAL.gold, at: [r * 0.2, r * 3.55, 0] },
+        // Arms raised overhead: a tall 'Y' that never reads like the low, wide brute.
+        { geo: new BoxGeometry(r * 0.38, r * 1.3, r * 0.38), color: 0x6d55c4, at: [r * 0.3, r * 2.85, r * 0.95], rot: [0.45, 0, 0] },
+        { geo: new BoxGeometry(r * 0.38, r * 1.3, r * 0.38), color: 0x6d55c4, at: [r * 0.3, r * 2.85, -r * 0.95], rot: [-0.45, 0, 0] },
+        { geo: new SphereGeometry(r * 0.46, 12, 10), color: 0x9d83ff, at: [r * 0.3, r * 3.55, r * 1.25] },
+        { geo: new SphereGeometry(r * 0.46, 12, 10), color: 0x9d83ff, at: [r * 0.3, r * 3.55, -r * 1.25] },
+        ...eyes(r * 0.68, r * 3.05, r * 0.22, r * 0.12, 0xff4d6a, 0x5a0010),
       ];
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        parts.push({ geo: new ConeGeometry(r * 0.12, r * 0.55, 6), color: PAL.gold, at: [r * 0.2 + Math.cos(a) * r * 0.42, r * 3.9, Math.sin(a) * r * 0.42] });
+      }
     }
     const body = bake(parts);
     kit = { body, hull: hullGeometry(body) };
@@ -482,6 +505,7 @@ export class RushView {
       const m = this.place(e.x, bob, e.z, 0, yaw(e.facing), 0, sx, sy, sx);
       (e.flash > 0 ? B.flash : B.body)[e.kind].push(m);
       B.hull[e.kind].push(m);
+      if (this.sheetMode) continue;
       B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2, 0, 0, r * 1.25));
       B.ring.push(this.place(e.x, 0.03, e.z, -Math.PI / 2, 0, 0, r * 1.15));
       if (e.kind === 'boss' || e.hp < e.maxHp) {
@@ -734,7 +758,7 @@ export class RushView {
       if (t && this.towers[i]) this.towers[i]!.getObjectByName('head')!.rotation.y = yaw(t.facing);
     });
     const reach = alive ? padInReach(s) : -1;
-    this.padRings.forEach((ring, i) => {
+    if (!this.sheetMode) this.padRings.forEach((ring, i) => {
       (ring.material as MeshBasicMaterial).opacity = i === reach ? 0.6 + Math.sin(this.time * 8) * 0.3 : 0.45;
       ring.scale.setScalar(i === reach ? 1.15 : 1.05);
       ring.visible = !towerMaxed(s, i) || i === reach;
@@ -806,6 +830,15 @@ export class RushView {
     this.camera.lookAt(this.focus);
   }
 
+  /** Model sheet: hide everything but character bodies, outlines and the hero on a flat background. */
+  sheet() {
+    this.sheetMode = true;
+    const keep = new Set<Object3D>([this.hero, ...Object.values(this.batches.body).map(b => b.mesh), ...Object.values(this.batches.hull).map(b => b.mesh), ...Object.values(this.batches.flash).map(b => b.mesh)]);
+    for (const o of this.scene.children) if (!keep.has(o) && !(o instanceof HemisphereLight) && !(o instanceof DirectionalLight)) o.visible = false;
+    this.hero.children.filter(c => c !== this.heroBody).forEach(c => (c.visible = false));
+    this.scene.background = new Color(0x2b3a55);
+  }
+
   /** Screen point → ground point (for mouse aim). */
   groundPoint(clientX: number, clientY: number, rect: DOMRect): Vec | null {
     const ndc = new Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
@@ -824,5 +857,5 @@ export class RushView {
   info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning() }; }
 }
 
-const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x9b4dd6, brute: 0xd0602f, boss: 0x6d55c4 };
+const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4 };
 const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };

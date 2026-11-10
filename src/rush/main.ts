@@ -247,7 +247,18 @@ function frame(now: number) {
 hud.debug.hidden = !debug;
 requestAnimationFrame(frame);
 showScreen('title');
-if (params.has('demo')) start('demo');
+if (params.has('sheet')) {
+  // Model sheet (cycle 11): the four enemies and the hero, front-facing, frozen on a flat background.
+  state = createRush(1);
+  state.crates = [];
+  Object.assign(state.hero, { x: 8.2, z: 2, facing: Math.PI / 2 });
+  (['grunt', 'skirmisher', 'brute', 'boss'] as const).forEach((kind, i) => state.enemies.push({
+    id: 900 + i, kind, x: [-4.6, -1.6, 1.6, 5][i], z: 2, kx: 0, kz: 0, hp: 1, maxHp: 1, lane: 0, wp: 1, cd: 0, flash: 0, chasing: false, facing: Math.PI / 2, windup: null,
+  }));
+  view.sheet();
+  showScreen(null);
+  surface.classList.add('sheet');
+} else if (params.has('demo')) start('demo');
 else if (params.has('play')) start('play');
 
 // Read-only handle for automated browser checks.
