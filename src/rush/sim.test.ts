@@ -188,3 +188,62 @@ test('crates block movement and shots, break after enough damage and drop gold',
   steps(s, 60, { move: { x: 0, z: -1 } });
   assert.ok(s.hero.z < c.z, 'the path is open once it is gone');
 });
+
+test('tower branches: Lv2 picks fire or frost and Lv3 keeps it; fire splashes, frost slows (boss less)', async () => {
+  const { PADS, TOWER_BRANCH, ENEMIES } = await import('./data.ts');
+  const s = createRush(1);
+  s.gold = 1000;
+  Object.assign(s.hero, { x: PADS[0].x, z: PADS[0].z });
+  stepRush(s, { build: true });
+  stepRush(s, { build: 'frost' });
+  assert.equal(s.towers[0]!.branch, 'frost');
+  stepRush(s, { build: 'fire' });
+  assert.deepEqual([s.towers[0]!.level, s.towers[0]!.branch], [2, 'frost'], 'Lv3 keeps the Lv2 branch');
+  Object.assign(s.hero, { x: PADS[1].x, z: PADS[1].z });
+  stepRush(s, { build: true }); stepRush(s, { build: true });
+  assert.equal(s.towers[1]!.branch, 'fire', 'a plain build picks fire');
+
+  // Fire: the neighbour of the target takes splash damage.
+  const f = createRush(2);
+  f.phase = 'wave'; f.groups = [];
+  f.towers[0] = { level: 1, cd: 0, facing: 0, branch: 'fire' };
+  const a = enemy(f, 'brute', PADS[0].x, PADS[0].z - 3), b = enemy(f, 'brute', PADS[0].x + 0.9, PADS[0].z - 3);
+  for (let i = 0; i < 40 && a.hp === a.maxHp && b.hp === b.maxHp; i++) stepRush(f, {});
+  for (let i = 0; i < 20; i++) stepRush(f, {});
+  assert.ok(a.hp < a.maxHp && b.hp < b.maxHp, 'both brutes hurt by one fire tower');
+
+  // Frost: a slowed grunt covers less ground; the boss is slowed less.
+  const pace = (kind: 'grunt' | 'boss', branch: 'frost' | undefined) => {
+    const g = createRush(3);
+    g.phase = 'wave'; g.groups = [];
+    g.towers[0] = { level: 1, cd: 0, facing: 0, ...(branch ? { branch } : {}) };
+    const e = enemy(g, kind, 0, -6);
+    e.hp = e.maxHp = 1e6;
+    for (let i = 0; i < 30; i++) { e.slowT = branch ? TOWER_BRANCH.frost.slowTime : 0; stepRush(g, {}); }
+    return Math.abs(e.z + 6) / (ENEMIES[kind].speed * 0.5);
+  };
+  assert.ok(Math.abs(pace('grunt', 'frost') - TOWER_BRANCH.frost.slow) < 0.05, `grunt pace ${pace('grunt', 'frost')}`);
+  assert.ok(Math.abs(pace('boss', 'frost') - TOWER_BRANCH.frost.bossSlow) < 0.05, `boss pace ${pace('boss', 'frost')}`);
+});
+
+test('tower branches play different roles: fire hits extra enemies per bolt, only frost slows', () => {
+  const run = (seed: number, branch: 'fire' | 'frost') => {
+    const s = createRush(seed);
+    let hits = 0, splashes = 0, slowed = 0;
+    while (s.phase !== 'won' && s.phase !== 'lost' && s.tick < 60 * 60 * 6) {
+      const c = guardBot(s);
+      if (typeof c.build === 'string') c.build = branch;
+      stepRush(s, c);
+      for (const ev of s.events) { if (ev.type === 'hit' && ev.owner === 'tower') hits++; if (ev.type === 'splash') splashes++; }
+      for (const e of s.enemies) if ((e.slowT ?? 0) > 0) slowed++;
+    }
+    return { hits, splashes, slowed };
+  };
+  for (const seed of [1, 2, 3]) {
+    const fire = run(seed, 'fire'), frost = run(seed, 'frost');
+    // Fire: every landing is one target hit plus splash hits on neighbours.
+    assert.ok(fire.splashes > 0 && fire.hits - fire.splashes >= fire.splashes * 0.1, `seed ${seed}: fire ${fire.hits} hits over ${fire.splashes} landings`);
+    assert.equal(frost.splashes, 0);
+    assert.ok(frost.slowed > 0 && fire.slowed === 0, `seed ${seed}: slowed enemy-ticks frost ${frost.slowed}, fire ${fire.slowed}`);
+  }
+});

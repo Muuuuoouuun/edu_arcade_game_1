@@ -23,6 +23,7 @@ const freezeAt = Number(params.get('freeze')) || Infinity;
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 /** Graphics quality (cycle 12): saved preference, or ?quality=high|low to pin one run for matched captures. */
 const QUALITY_KEY = 'arcana-rush:quality:v1';
+const BRANCH_NAME = { fire: '화염', frost: '냉기' } as const;
 const pinnedQuality = params.get('quality') === 'high' || params.get('quality') === 'low' ? params.get('quality') as QualityPref : null;
 let qualityPref: QualityPref = pinnedQuality ?? (() => { try { return parsePref(localStorage.getItem(QUALITY_KEY)); } catch { return 'auto'; } })();
 const frameWatch = createFrameWatch();
@@ -41,7 +42,7 @@ const townView = new TownView();
 const town = new TownScreen($('screen-town'), townView);
 const input = new RushInput({
   surface: $('rush-surface'), stick: $('stick'), knob: $('stick-knob'),
-  fire: $('fire'), superBtn: $('super'), build: $('build'), startWave: $('start-wave'),
+  fire: $('fire'), superBtn: $('super'), build: $('build'), buildFrost: $('build-frost'), startWave: $('start-wave'),
 }, (x, y) => view.groundPoint(x, y, canvas.getBoundingClientRect()), () => state.hero);
 
 // ---------- floating numbers ----------
@@ -93,7 +94,7 @@ function feedback(events: RushEvent[]) {
     else if (ev.type === 'superReady') toast('필살기 준비 완료!', 'super');
     else if (ev.type === 'waveStart') { playHaptic('surge', true); toast(ev.wave === WAVE_COUNT - 1 ? `마지막 웨이브 · 보스 출현!` : `웨이브 ${ev.wave + 1} 시작`, ev.wave === WAVE_COUNT - 1 ? 'bad' : ''); }
     else if (ev.type === 'waveClear') toast(`웨이브 ${ev.wave + 1} 방어 성공 · +${ev.bonus}G`, 'good');
-    else if (ev.type === 'build') toast(ev.level === 0 ? '궁수탑 건설!' : `궁수탑 Lv${ev.level + 1}`, 'good');
+    else if (ev.type === 'build') toast(ev.level === 0 ? '궁수탑 건설!' : `${ev.branch ? BRANCH_NAME[ev.branch] : '궁수'}탑 Lv${ev.level + 1}`, 'good');
     else if (ev.type === 'won' || ev.type === 'lost') showResult();
   }
 }
@@ -101,7 +102,7 @@ function feedback(events: RushEvent[]) {
 // ---------- HUD ----------
 const hud = {
   wave: $('wave-label'), waveSub: $('wave-sub'), townFill: $('town-fill'), townHp: $('town-hp'), gold: $('gold'),
-  startWave: $<HTMLButtonElement>('start-wave'), build: $<HTMLButtonElement>('build'), fire: $('fire'), superBtn: $('super'),
+  startWave: $<HTMLButtonElement>('start-wave'), build: $<HTMLButtonElement>('build'), buildFrost: $<HTMLButtonElement>('build-frost'), fire: $('fire'), superBtn: $('super'),
   ammo: [...document.querySelectorAll<HTMLElement>('#fire .ammo i')], superRing: $('super-ring'), debug: $('debug'),
 };
 const last: Record<string, string> = {};
@@ -120,10 +121,16 @@ function updateHud() {
   const pad = s.hero.downT > 0 ? -1 : padInReach(s);
   const cost = pad >= 0 ? padCost(s, pad) : null;
   hud.build.hidden = pad < 0 || mode !== 'play';
+  // Lv1 → Lv2 is a choice (cycle 15): the build button splits into fire and frost.
+  const tower = pad >= 0 ? s.towers[pad] : null, choose = !!tower && tower.level === 0 && cost !== null;
+  hud.buildFrost.hidden = hud.build.hidden || !choose;
+  hud.build.classList.toggle('fire', choose);
+  hud.build.classList.toggle('split-l', choose);
   if (pad >= 0) {
-    const level = s.towers[pad] ? s.towers[pad]!.level + 1 : 0;
-    setText('build', hud.build, cost === null ? '최대 강화' : level === 0 ? `궁수탑 건설 ${cost}G` : `강화 Lv${level + 1} · ${cost}G`);
+    const level = tower ? tower.level + 1 : 0, branch = tower?.branch ? BRANCH_NAME[tower.branch] : '';
+    setText('build', hud.build, cost === null ? '최대 강화' : level === 0 ? `궁수탑 건설 ${cost}G` : choose ? `화염 Lv2 · ${cost}G` : `${branch} Lv${level + 1} · ${cost}G`);
     hud.build.disabled = cost === null || s.gold < cost;
+    if (choose) { setText('buildFrost', hud.buildFrost, `냉기 Lv2 · ${cost}G`); hud.buildFrost.disabled = s.gold < cost!; }
   }
   hud.ammo.forEach((el, i) => {
     const fill = s.hero.ammo > i ? 1 : s.hero.ammo === i ? s.hero.reloadT / HEROES[s.hero.kind].reload : 0;

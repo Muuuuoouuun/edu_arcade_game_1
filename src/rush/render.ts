@@ -6,7 +6,7 @@ import {
   Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, type AnimationAction, type BufferGeometry, type Material,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroKind, type Vec } from './data.ts';
+import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroKind, type TowerBranch, type Vec } from './data.ts';
 import { heroHidden, heroMaxHp, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, type Part } from './look.ts';
 import { Batch } from './batch.ts';
@@ -46,9 +46,9 @@ export class RushView {
   private get heroMixer() { return this.heroRig?.mixer ?? null; }
   private get heroShot() { return this.heroRig?.shot ?? null; }
   private enemyKits = new Map<EnemyKind, { body: BufferGeometry; hull: BufferGeometry }>();
-  private towerKits: ({ base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; h: number } | undefined)[] = [];
+  private towerKits = new Map<string, { base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; h: number }>();
   private towers: (Group | null)[] = PADS.map(() => null);
-  private towerLevels: number[] = PADS.map(() => -1);
+  private towerLevels: string[] = PADS.map(() => '');
   private padRings: Mesh[] = [];
   private townBar: Bar;
   private fx: Fx[] = [];
@@ -65,7 +65,7 @@ export class RushView {
   /** Instanced batches: draw calls stay fixed however many enemies, shots and coins are alive. */
   private batches!: {
     body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>; flash: Record<EnemyKind, Batch>;
-    shadow: Batch; ring: Batch; barBg: Batch; barFill: Batch; shots: Record<Shot['owner'], Batch>; coins: Batch;
+    shadow: Batch; ring: Batch; frostRing: Batch; barBg: Batch; barFill: Batch; shots: Record<Shot['owner'], Batch>; branchShots: Record<TowerBranch, Batch>; coins: Batch;
   };
   private counts = { enemies: 0, shots: 0 };
   private tmp = { m: new Matrix4(), q: new Quaternion(), e: new Euler(), p: new Vector3(), s: new Vector3(), o: new Vector3() };
@@ -485,6 +485,7 @@ export class RushView {
       flash: per(k => new Batch(this.scene, this.enemyKit(k).body, this.mats.flash, k === 'boss' ? 4 : cap)),
       shadow: new Batch(this.scene, this.geo.blob, this.mats.blob, cap),
       ring: new Batch(this.scene, this.geo.ring, this.mats.enemyRing, cap),
+      frostRing: new Batch(this.scene, this.geo.ring, basic(0x8fe6ff, 0.9), cap),
       barBg: new Batch(this.scene, this.geo.bar, this.mats.barBg, cap, { order: 5 }),
       barFill: new Batch(this.scene, this.geo.barFill, this.mats.barEnemy, cap, { order: 5 }),
       shots: {
@@ -493,6 +494,7 @@ export class RushView {
         enemy: new Batch(this.scene, this.geo.orb, this.mats.enemyBolt, 120),
         super: new Batch(this.scene, this.geo.orb, this.mats.superOrb, 8),
       },
+      branchShots: { fire: new Batch(this.scene, this.geo.bolt, basic(BRANCH_COLOR.fire), 120), frost: new Batch(this.scene, this.geo.bolt, basic(0xbff3ff), 120) },
       coins: new Batch(this.scene, this.geo.coin, this.mats.coin, 160),
     };
   }
@@ -508,7 +510,7 @@ export class RushView {
     const B = this.batches, t = this.tmp, cam = this.camera.quaternion;
     this.camera.updateMatrixWorld();
     this.frustum.setFromProjectionMatrix(t.m.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
-    const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), B.shadow, B.ring, B.barBg, B.barFill];
+    const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), B.shadow, B.ring, B.frostRing, B.barBg, B.barFill];
     all.forEach(b => b.begin());
     for (const e of s.enemies) {
       const r = ENEMIES[e.kind].radius;
@@ -521,6 +523,7 @@ export class RushView {
       if (this.sheetMode) continue;
       B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2, 0, 0, r * 1.25));
       B.ring.push(this.place(e.x, 0.03, e.z, -Math.PI / 2, 0, 0, r * 1.15));
+      if ((e.slowT ?? 0) > 0) B.frostRing.push(this.place(e.x, 0.05, e.z, -Math.PI / 2, 0, 0, r * 1.5)); // frost slow
       if (e.kind === 'boss' || e.hp < e.maxHp) {
         const boss = e.kind === 'boss', w = boss ? 2.6 : Math.max(0.9, r * 2), y = boss ? r * 4.0 : r * 3.4 + 0.25;
         B.barBg.push(t.m.compose(t.p.set(e.x, y, e.z), cam, t.s.set(w + 0.1, 1.6, 1)));
@@ -535,7 +538,7 @@ export class RushView {
 
   private drawShotsAndCoins(s: RushState) {
     const B = this.batches;
-    Object.values(B.shots).forEach(b => b.begin());
+    [...Object.values(B.shots), ...Object.values(B.branchShots)].forEach(b => b.begin());
     for (const shot of s.shots) {
       if (!this.onScreen(shot.x, 1, shot.z, 3)) continue;
       if (shot.owner === 'super') {
@@ -544,9 +547,9 @@ export class RushView {
         B.shots.super.push(this.place(shot.x, 0.6 + Math.sin(p * Math.PI) * 2.6, shot.z, 0, 0, 0, 1.8));
       } else if (shot.owner === 'enemy') B.shots.enemy.push(this.place(shot.x, 0.85, shot.z, 0, 0, 0, 1));
       // Capsules point along +y; lay them flat along the velocity.
-      else B.shots[shot.owner].push(this.place(shot.x, shot.owner === 'tower' ? 1.6 : 0.85, shot.z, -Math.PI / 2, Math.atan2(-shot.vx, -shot.vz), 0, 1, 1, 1, 'YXZ'));
+      else (shot.branch ? B.branchShots[shot.branch] : B.shots[shot.owner]).push(this.place(shot.x, shot.owner === 'tower' ? 1.6 : 0.85, shot.z, -Math.PI / 2, Math.atan2(-shot.vx, -shot.vz), 0, 1, 1, 1, 'YXZ'));
     }
-    Object.values(B.shots).forEach(b => b.end());
+    [...Object.values(B.shots), ...Object.values(B.branchShots)].forEach(b => b.end());
     this.counts.shots = s.shots.length;
     B.coins.begin();
     for (const c of s.coins) {
@@ -557,16 +560,20 @@ export class RushView {
   }
 
   /** Watchtower per level, baked: a static base and a rotating crossbow head. Open top keeps the head visible. */
-  private towerKit(level: number): { base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; h: number } {
-    let kit = this.towerKits[level];
+  private towerKit(level: number, branch?: TowerBranch): { base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; h: number } {
+    const key = `${level}${branch ?? ''}`;
+    let kit = this.towerKits.get(key);
     if (kit) return kit;
-    const trim = [PAL.ally, PAL.super, PAL.gold][level], h = 1.0 + level * 0.3;
+    // Lv2+ wear their branch colour (cycle 15): fire orange with a flame, frost sky-blue with a crystal.
+    const trim = branch ? BRANCH_COLOR[branch] : PAL.ally, h = 1.0 + level * 0.3;
     const parts: Part[] = [
       { geo: new CylinderGeometry(0.5, 0.68, h, 8), color: 0xece0c4, at: [0, h / 2, 0] },
       { geo: new CylinderGeometry(0.54, 0.54, 0.18, 8), color: trim, at: [0, h * 0.62, 0] },
       { geo: new CylinderGeometry(0.74, 0.6, 0.24, 8), color: PAL.wood, at: [0, h + 0.12, 0] },
     ];
     for (let i = 0; i < level; i++) parts.push({ geo: new OctahedronGeometry(0.14), color: PAL.gold, at: [(i - (level - 1) / 2) * 0.34, h * 0.62, -0.6] });
+    if (branch === 'fire') parts.push({ geo: new ConeGeometry(0.2, 0.5, 6), color: 0xffb02e, at: [0, h + 0.5, -0.62] }, { geo: new ConeGeometry(0.12, 0.3, 6), color: 0xff4d1f, at: [0, h + 0.42, -0.62] });
+    if (branch === 'frost') parts.push({ geo: new OctahedronGeometry(0.24), color: 0xd8f8ff, at: [0, h + 0.5, -0.62], scale: [0.8, 1.4, 0.8] });
     const base = bake(parts);
     const head = bake([
       { geo: new BoxGeometry(0.9, 0.2, 0.22), color: PAL.woodDark, at: [0.2, 0, 0] },
@@ -574,11 +581,11 @@ export class RushView {
       { geo: new BoxGeometry(0.72, 0.07, 0.07), color: 0xfff1a8, at: [0.45, 0.13, 0] },
     ]);
     kit = { base, baseHull: hullGeometry(base), head, headHull: hullGeometry(head), h };
-    this.towerKits[level] = kit;
+    this.towerKits.set(key, kit);
     return kit;
   }
-  private makeTower(level: number): Group {
-    const kit = this.towerKit(level), g = new Group(), head = new Group();
+  private makeTower(level: number, branch?: TowerBranch): Group {
+    const kit = this.towerKit(level, branch), g = new Group(), head = new Group();
     g.add(new Mesh(kit.base, this.mats.baked), new Mesh(kit.baseHull, outlineMaterial(0.05)));
     head.name = 'head'; head.position.y = kit.h + 0.44;
     head.add(new Mesh(kit.head, this.mats.baked), new Mesh(kit.headHull, outlineMaterial(0.04)));
@@ -656,6 +663,13 @@ export class RushView {
           if (boss) { this.ring(ev.x, ev.z, PAL.gold, 4.2, 0.6, 0.95, true); if (!reducedMotion) this.shake = Math.max(this.shake, 0.7); }
           break;
         }
+        case 'splash': // fire tower
+          this.ring(ev.x, ev.z, BRANCH_COLOR.fire, ev.radius, 0.3, 0.85);
+          fx.emit({ kind: 'shard', n: 5, color: 0xffb02e, at: [ev.x, 0.7, ev.z], speed: 4.5, up: 4, size: 0.11, life: 0.4 });
+          break;
+        case 'chill': // frost tower
+          fx.emit({ kind: 'spark', n: 3, color: 0xd8f8ff, at: [ev.x, 0.9, ev.z], speed: 2.5, up: 1.5, size: 0.18, life: 0.3 });
+          break;
         case 'burst':
           this.ring(ev.x, ev.z, 0xc59bff, ev.radius, 0.45, 0.95, true);
           this.ring(ev.x, ev.z, 0xffffff, ev.radius * 0.6, 0.25, 1);
@@ -772,12 +786,12 @@ export class RushView {
     }
     // Towers
     s.towers.forEach((t, i) => {
-      const level = t ? t.level : -1;
-      if (level !== this.towerLevels[i]) {
+      const key = t ? `${t.level}${t.branch ?? ''}` : '';
+      if (key !== this.towerLevels[i]) {
         if (this.towers[i]) this.scene.remove(this.towers[i]!);
-        this.towers[i] = t ? this.makeTower(t.level) : null;
+        this.towers[i] = t ? this.makeTower(t.level, t.branch) : null;
         if (this.towers[i]) { this.towers[i]!.position.set(PADS[i].x, 0, PADS[i].z); this.scene.add(this.towers[i]!); }
-        this.towerLevels[i] = level;
+        this.towerLevels[i] = key;
       }
       if (t && this.towers[i]) this.towers[i]!.getObjectByName('head')!.rotation.y = yaw(t.facing);
     });
@@ -881,5 +895,6 @@ export class RushView {
   info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
 }
 
+const BRANCH_COLOR: Record<TowerBranch, number> = { fire: 0xff7a2f, frost: 0x4fc3ff };
 const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4 };
 const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };

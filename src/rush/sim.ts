@@ -3,8 +3,7 @@
 // so this module can run in tests, in the browser and later on an authoritative server.
 import {
   ARENA, BUSH, BUSHES, CRATE, CRATES, ECONOMY, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WALLS, WAVES,
-  type Block, type EnemyKind, type HeroDef, type HeroKind, type Vec,
-} from './data.ts';
+  type Block, type EnemyKind, type HeroDef, type HeroKind, type Vec, TOWER_BRANCH, type TowerBranch } from './data.ts';
 
 export type Phase = 'prep' | 'wave' | 'won' | 'lost';
 
@@ -20,13 +19,17 @@ export interface Enemy {
   id: number; kind: EnemyKind; x: number; z: number; kx: number; kz: number;
   hp: number; maxHp: number; lane: number; wp: number; cd: number; flash: number; chasing: boolean; facing: number;
   windup: { x: number; z: number; t: number } | null;
+  /** Seconds of frost slow left (cycle 15). */
+  slowT?: number;
 }
 export type ShotOwner = 'hero' | 'super' | 'tower' | 'enemy';
 export interface Shot {
   id: number; owner: ShotOwner; x: number; z: number; vx: number; vz: number;
   damage: number; life: number; radius: number; target: number; tx: number; tz: number;
+  branch?: TowerBranch;
 }
-export interface Tower { level: number; cd: number; facing: number }
+/** branch is chosen when Lv1 becomes Lv2 and kept at Lv3. */
+export interface Tower { level: number; cd: number; facing: number; branch?: TowerBranch }
 export interface Coin { id: number; x: number; z: number; value: number; life: number }
 export interface Crate { id: number; x: number; z: number; hp: number }
 export interface GroupProgress { spawned: number; timer: number }
@@ -48,7 +51,9 @@ export type RushEvent =
   | { type: 'telegraph'; x: number; z: number; radius: number; time: number }
   | { type: 'slam'; x: number; z: number; radius: number }
   | { type: 'coin'; value: number }
-  | { type: 'build'; pad: number; level: number }
+  | { type: 'build'; pad: number; level: number; branch?: TowerBranch }
+  | { type: 'splash'; x: number; z: number; radius: number }
+  | { type: 'chill'; x: number; z: number }
   | { type: 'waveStart'; wave: number }
   | { type: 'waveClear'; wave: number; bonus: number }
   | { type: 'won' }
@@ -78,7 +83,8 @@ export interface Command {
   move?: Vec;
   fire?: Vec | 'auto';
   super?: Vec | 'auto';
-  build?: boolean;
+  /** true builds or upgrades; a branch name also picks fire or frost when Lv1 becomes Lv2 (true → fire). */
+  build?: boolean | TowerBranch;
   startWave?: boolean;
 }
 
@@ -302,7 +308,7 @@ function updateHero(s: RushState, cmd: Command) {
 
   if (cmd.fire && h.ammo >= 1 && h.fireCd <= 0) fire(s, cmd.fire);
   if (cmd.super && superReady(s)) castSuper(s, cmd.super);
-  if (cmd.build) build(s);
+  if (cmd.build) build(s, cmd.build);
 }
 
 function fire(s: RushState, aim: Vec | 'auto') {
@@ -377,16 +383,18 @@ function castSuper(s: RushState, aim: Vec | 'auto') {
   s.stats.supers++;
 }
 
-function build(s: RushState) {
+function build(s: RushState, choice: boolean | TowerBranch) {
   const pad = padInReach(s);
   if (pad < 0) return;
   const cost = padCost(s, pad);
   if (cost === null || s.gold < cost) return;
   s.gold -= cost;
   const tower = s.towers[pad];
-  if (tower) tower.level++;
-  else s.towers[pad] = { level: 0, cd: 0, facing: -Math.PI / 2 };
-  s.events.push({ type: 'build', pad, level: s.towers[pad]!.level });
+  if (tower) {
+    tower.level++;
+    if (tower.level === 1) tower.branch = choice === 'frost' ? 'frost' : 'fire';
+  } else s.towers[pad] = { level: 0, cd: 0, facing: -Math.PI / 2 };
+  s.events.push({ type: 'build', pad, level: s.towers[pad]!.level, branch: s.towers[pad]!.branch });
 }
 
 function hurtHero(s: RushState, damage: number) {
@@ -441,6 +449,20 @@ function nearestSegmentEnd(lane: readonly Vec[], p: Vec): number {
   return best;
 }
 
+/** A tower bolt lands: plain damage, plus the branch effect (fire splash or frost slow). */
+function towerHit(s: RushState, target: Enemy, shot: Shot) {
+  const at = { x: target.x, z: target.z };
+  hurtEnemy(s, target, shot.damage, 'tower');
+  if (shot.branch === 'fire') {
+    const f = TOWER_BRANCH.fire;
+    for (const e of s.enemies) if (e !== target && e.hp > 0 && dist(e, at) <= f.splash + ENEMIES[e.kind].radius) hurtEnemy(s, e, shot.damage * f.splashShare, 'tower');
+    s.events.push({ type: 'splash', x: at.x, z: at.z, radius: f.splash });
+  } else if (shot.branch === 'frost' && target.hp > 0) {
+    target.slowT = TOWER_BRANCH.frost.slowTime;
+    s.events.push({ type: 'chill', x: at.x, z: at.z });
+  }
+}
+
 function updateEnemies(s: RushState) {
   const h = s.hero, alive = heroAlive(s), hidden = heroHidden(s);
   for (const e of s.enemies) {
@@ -448,6 +470,9 @@ function updateEnemies(s: RushState) {
     const def = ENEMIES[e.kind];
     e.flash = Math.max(0, e.flash - STEP);
     e.cd = Math.max(0, e.cd - STEP);
+    const slowed = (e.slowT ?? 0) > 0;
+    if (slowed) e.slowT = Math.max(0, e.slowT! - STEP);
+    const pace = slowed ? (e.kind === 'boss' ? TOWER_BRANCH.frost.bossSlow : TOWER_BRANCH.frost.slow) : 1;
     // Knockback impulse decays quickly.
     e.x += e.kx * STEP; e.z += e.kz * STEP;
     const decay = Math.exp(-8 * STEP);
@@ -485,7 +510,7 @@ function updateEnemies(s: RushState) {
       }
       const dx = goal.x - e.x, dz = goal.z - e.z, d = len(dx, dz);
       if (d > 1e-6) {
-        const step = Math.min(d, def.speed * STEP);
+        const step = Math.min(d, def.speed * pace * STEP);
         e.x += (dx / d) * step; e.z += (dz / d) * step;
         e.facing = Math.atan2(dz, dx);
       }
@@ -550,9 +575,10 @@ function updateTowers(s: RushState) {
     if (!pick) return;
     tower.cd = lvl.cooldown;
     tower.facing = Math.atan2(pick.z - pad.z, pick.x - pad.x);
+    const branch = tower.branch;
     s.shots.push({
-      id: s.nextId++, owner: 'tower', x: pad.x, z: pad.z, vx: 0, vz: 0, damage: lvl.damage,
-      life: 2, radius: 0.2, target: pick.id, tx: pick.x, tz: pick.z,
+      id: s.nextId++, owner: 'tower', x: pad.x, z: pad.z, vx: 0, vz: 0, damage: lvl.damage * (branch ? TOWER_BRANCH[branch].damage : 1),
+      life: 2, radius: 0.2, target: pick.id, tx: pick.x, tz: pick.z, ...(branch ? { branch } : {}),
     });
   });
 }
@@ -581,7 +607,7 @@ function updateShots(s: RushState) {
       if (target) { shot.tx = target.x; shot.tz = target.z; }
       const dx = shot.tx - shot.x, dz = shot.tz - shot.z, d = len(dx, dz), step = TOWER_SHOT_SPEED * STEP;
       shot.life -= STEP;
-      if (target && d <= step + ENEMIES[target.kind].radius) { hurtEnemy(s, target, shot.damage, 'tower'); continue; }
+      if (target && d <= step + ENEMIES[target.kind].radius) { towerHit(s, target, shot); continue; }
       if (!target && d <= step) continue; // target vanished; the bolt fizzles where it was going
       if (shot.life <= 0) continue;
       shot.vx = (dx / d) * TOWER_SHOT_SPEED; shot.vz = (dz / d) * TOWER_SHOT_SPEED;
@@ -650,6 +676,6 @@ export function rushHash(s: RushState): string {
   return JSON.stringify([
     s.tick, s.phase, s.wave, s.gold, r(s.town.hp), r(s.hero.x), r(s.hero.z), r(s.hero.hp), s.hero.ammo, s.hero.superCharge,
     s.enemies.map(e => [e.id, e.kind, r(e.x), r(e.z), r(e.hp)]), s.shots.length, s.coins.map(c => [c.id, r(c.x), r(c.z)]),
-    s.towers.map(t => (t ? t.level : -1)), s.crates.map(c => [c.id, Math.round(c.hp)]), s.stats,
+    s.towers.map(t => (t ? `${t.level}${t.branch ?? ''}` : -1)), s.crates.map(c => [c.id, Math.round(c.hp)]), s.stats,
   ]);
 }

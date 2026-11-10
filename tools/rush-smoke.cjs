@@ -99,6 +99,14 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await page.keyboard.press('KeyE');
     await page.waitForTimeout(300);
     check(await page.evaluate(() => __rush.state.towers[0] !== null), 'tower built with E');
+    // Lv2 choice (cycle 15): with enough gold the build button splits; R picks frost.
+    await page.evaluate(() => { __rush.state.gold += 500; });
+    await page.waitForTimeout(150);
+    check(await page.isVisible('#build-frost'), 'Lv1 tower offers fire and frost');
+    await page.screenshot({ path: `${OUT}/desktop-branch-choice.png` });
+    await page.keyboard.press('KeyR');
+    await page.waitForTimeout(300);
+    check(await page.evaluate(() => __rush.state.towers[0]?.level === 1 && __rush.state.towers[0]?.branch === 'frost') && !(await page.isVisible('#build-frost')), 'R upgrades to a frost tower');
     await page.click('#start-wave');
     await page.mouse.move(640, 200);
     await page.mouse.down(); await page.mouse.up();

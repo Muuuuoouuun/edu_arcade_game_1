@@ -1,5 +1,5 @@
 // Scripted players for balance checks and the in-browser demo. They only issue Commands, like a person would.
-import { PADS, TOWN, type Vec } from './data.ts';
+import { PADS, TOWN, type TowerBranch, type Vec } from './data.ts';
 import { bestSuperPoint, heroAlive, heroDef, nearestEnemy, padCost, superReady, type Command, type RushState } from './sim.ts';
 
 const GUARD: Vec = { x: 0, z: 2.5 };
@@ -7,6 +7,8 @@ const toward = (from: Vec, to: Vec): Vec => {
   const dx = to.x - from.x, dz = to.z - from.z, d = Math.hypot(dx, dz);
   return d < 0.25 ? { x: 0, z: 0 } : { x: dx / d, z: dz / d };
 };
+
+const BOT_BRANCH: readonly TowerBranch[] = ['fire', 'fire', 'frost', 'frost'];
 
 /** A competent-but-plain player: guards the gate, shoots with auto-aim, collects coins, builds and upgrades towers. */
 export function guardBot(s: RushState): Command {
@@ -30,7 +32,8 @@ export function guardBot(s: RushState): Command {
 
   if (padGoal >= 0 && (!threat || s.phase === 'prep')) {
     cmd.move = toward(h, PADS[padGoal]);
-    cmd.build = true;
+    // Lv2 choice: fire on the inner pads where lanes merge into a crowd, frost on the outer pads that meet them first.
+    cmd.build = s.towers[padGoal]?.level === 0 ? BOT_BRANCH[padGoal] : true;
   } else if (coin && (!threat || Math.hypot(coin.x - h.x, coin.z - h.z) < 3)) {
     cmd.move = toward(h, coin);
   } else if (threat) {

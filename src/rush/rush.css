@@ -315,3 +315,11 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 
 /* Hero card (cycle 14): the hero button glows when training is affordable. */
 .hero-pick.can { box-shadow: 0 0 0 3px var(--gold), 0 4px 0 var(--outline); }
+
+/* Tower Lv2 choice (cycle 15): the build button splits into fire (left) and frost (right). */
+.hud-build.fire { background: linear-gradient(#ffc08a 0 50%, #ff7a2f 50%); }
+.hud-build.frost { background: linear-gradient(#c8f4ff 0 50%, #4fc3ff 50%); }
+.hud-build.split-l { transform: translateX(calc(-100% - 6px)); }
+.hud-build.split-r { transform: translateX(6px); }
+.hud-build.split-l:active { transform: translateX(calc(-100% - 6px)) translateY(2px); }
+.hud-build.split-r:active { transform: translateX(6px) translateY(2px); }

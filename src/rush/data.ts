@@ -93,6 +93,12 @@ export const TOWER_LEVELS: readonly TowerLevel[] = [
   { cost: 160, damage: 52, cooldown: 0.6, range: 9 },
 ];
 export const TOWER_SHOT_SPEED = 16;
+/** Lv2 choice (cycle 15), kept at Lv3: fire splashes around the target, frost slows it. */
+export type TowerBranch = 'fire' | 'frost';
+export const TOWER_BRANCH = {
+  fire: { damage: 0.85, splash: 1.3, splashShare: 0.3 },
+  frost: { damage: 0.8, slow: 0.65, bossSlow: 0.85, slowTime: 1 },
+} as const;
 
 export const ECONOMY = { startGold: 60, waveBonus: 30, earlyBonusPerSecond: 2, prepTime: 12, coinLife: 14 } as const;
 
