@@ -1,0 +1,677 @@
+{
+  "source": "art-source/defense/base-cannon-action.blend",
+  "level": 1,
+  "regeneration_command": "npm run models:base-cannon-action",
+  "display_scale": 1.16,
+  "base_source_sha256": "24fe4195df3defadf72b45aa952cdb3f8ab7a4b8ac207b259a6654a151ea684a",
+  "generator": "tools/blender/build_base_cannon_action.py",
+  "reference": "art-source/defense/concepts/2026-10-29/props/six-tower-modules.png",
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 32,
+    "denoising": false
+  },
+  "frame": {
+    "width": 640,
+    "height": 640,
+    "ground": [
+      320.0001525878906,
+      488.6482238769531
+    ],
+    "crop": [
+      32,
+      24,
+      576,
+      576
+    ],
+    "orthographic_scale": 7.5
+  },
+  "delivery_frame": {
+    "width": 192,
+    "height": 192,
+    "crop": [
+      9.6,
+      7.2,
+      172.8,
+      172.8
+    ]
+  },
+  "animation": {
+    "clip": "base-cannon-fire",
+    "fps": 100,
+    "first_frame": 1,
+    "last_frame": 53,
+    "duration_seconds": 0.52,
+    "hit_at": 0.28,
+    "peak_recoil_at": 0.29
+  },
+  "directions": [
+    {
+      "index": 0,
+      "yaw": 2.2142973163788913,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            522.0694580078125,
+            259.5283203125
+          ],
+          "bounds": [
+            149.68019104003906,
+            198.79112243652344,
+            547.29052734375,
+            577.4376220703125
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            492.0321044921875,
+            267.54779052734375
+          ],
+          "bounds": [
+            149.68019104003906,
+            206.81060791015625,
+            517.253173828125,
+            577.4376220703125
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            508.4161071777344,
+            263.17352294921875
+          ],
+          "bounds": [
+            149.68019104003906,
+            202.43634033203125,
+            533.63720703125,
+            577.4376220703125
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            518.6561279296875,
+            260.43963623046875
+          ],
+          "bounds": [
+            149.68019104003906,
+            199.70245361328125,
+            543.877197265625,
+            577.4376220703125
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "yaw": 1.1394394450420453,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            416.1562805175781,
+            355.68450927734375
+          ],
+          "bounds": [
+            149.68019104003906,
+            242.70458984375,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            401.86279296875,
+            349.4104919433594
+          ],
+          "bounds": [
+            149.68019104003906,
+            242.70458984375,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            409.65924072265625,
+            352.8326721191406
+          ],
+          "bounds": [
+            149.68019104003906,
+            242.70458984375,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            414.531982421875,
+            354.9715576171875
+          ],
+          "bounds": [
+            149.68019104003906,
+            242.70458984375,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "yaw": 0.6435013233700159,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            320.00018310546875,
+            368.85601806640625
+          ],
+          "bounds": [
+            149.68019104003906,
+            242.70458984375,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            320.00018310546875,
+            360.62408447265625
+          ],
+          "bounds": [
+            149.68019104003906,
+            242.70458984375,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            320.00018310546875,
+            365.1142272949219
+          ],
+          "bounds": [
+            149.68019104003906,
+            242.70458984375,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            320.00018310546875,
+            367.92059326171875
+          ],
+          "bounds": [
+            149.68019104003906,
+            242.70458984375,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "yaw": 0.1475630759167614,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            223.8440704345703,
+            355.6845397949219
+          ],
+          "bounds": [
+            149.68019104003906,
+            242.70458984375,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            238.1375274658203,
+            349.4105224609375
+          ],
+          "bounds": [
+            149.68019104003906,
+            242.70458984375,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            230.34109497070312,
+            352.83270263671875
+          ],
+          "bounds": [
+            149.68019104003906,
+            242.70458984375,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            225.4683074951172,
+            354.9715881347656
+          ],
+          "bounds": [
+            149.68019104003906,
+            242.70458984375,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "yaw": -0.9272953372109017,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            117.93084716796875,
+            259.5283203125
+          ],
+          "bounds": [
+            92.70977783203125,
+            198.79112243652344,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            147.96817016601562,
+            267.54779052734375
+          ],
+          "bounds": [
+            122.74713134765625,
+            206.81060791015625,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            131.58416748046875,
+            263.17352294921875
+          ],
+          "bounds": [
+            106.36311340332031,
+            202.43634033203125,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            121.34417724609375,
+            260.43963623046875
+          ],
+          "bounds": [
+            96.12310791015625,
+            199.70245361328125,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "yaw": -2.002153208547748,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            223.84405517578125,
+            163.3721160888672
+          ],
+          "bounds": [
+            149.68019104003906,
+            112.86441802978516,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            238.13751220703125,
+            185.68508911132812
+          ],
+          "bounds": [
+            149.68019104003906,
+            135.17738342285156,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            230.341064453125,
+            173.51437377929688
+          ],
+          "bounds": [
+            149.68019104003906,
+            123.00666809082031,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            225.4683074951172,
+            165.90771484375
+          ],
+          "bounds": [
+            149.68019104003906,
+            115.39997100830078,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "yaw": -2.4980913302197774,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            320.0001220703125,
+            150.20062255859375
+          ],
+          "bounds": [
+            149.68019104003906,
+            100.1251220703125,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            320.0001220703125,
+            174.47146606445312
+          ],
+          "bounds": [
+            149.68019104003906,
+            124.3960189819336,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            320.0001220703125,
+            161.2328338623047
+          ],
+          "bounds": [
+            149.68019104003906,
+            111.15734100341797,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            320.0001220703125,
+            152.95867919921875
+          ],
+          "bounds": [
+            149.68019104003906,
+            102.88318634033203,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "yaw": -2.994029577673032,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            416.15625,
+            163.3721160888672
+          ],
+          "bounds": [
+            149.68019104003906,
+            112.8643798828125,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "recoil",
+          "muzzle": [
+            401.8627624511719,
+            185.68508911132812
+          ],
+          "bounds": [
+            149.68019104003906,
+            135.17733764648438,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.22,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "return",
+          "muzzle": [
+            409.6591796875,
+            173.5143280029297
+          ],
+          "bounds": [
+            149.68019104003906,
+            123.00666809082031,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.1,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        },
+        {
+          "name": "settle",
+          "muzzle": [
+            414.531982421875,
+            165.9076690673828
+          ],
+          "bounds": [
+            149.68019104003906,
+            115.39997100830078,
+            490.32012939453125,
+            577.4376220703125
+          ],
+          "recoil": 0.025,
+          "foundation_drift": 0.0,
+          "fixed_meshes": 98
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "file": "base-cannon-action-0-atlas.webp",
+      "bytes": 19574,
+      "sha256": "08a2b20c6b22e6c2836fbe12b6a5792936b66608875a8b528b5ab2275a8261e3"
+    },
+    {
+      "file": "base-cannon-action-1-atlas.webp",
+      "bytes": 17068,
+      "sha256": "44db0e8f3bf6df2544b3191e1e8f1d44a6c9408b88c5867f9d8f2e4d8845cc63"
+    },
+    {
+      "file": "base-cannon-action-2-atlas.webp",
+      "bytes": 17234,
+      "sha256": "a26b52e9880d262e9bab15285d32ebb54ec44bc57ae0fe9a014fabbcb0593556"
+    },
+    {
+      "file": "base-cannon-action-3-atlas.webp",
+      "bytes": 17270,
+      "sha256": "58299298fca0d8aef486642aaf0a58938a1c395bbebb599c730dd8ed07a398aa"
+    },
+    {
+      "file": "base-cannon-action-4-atlas.webp",
+      "bytes": 20362,
+      "sha256": "50f2fb2e28e7dc966e023aa5f8412a890cde2e995f7ff712365a75de698c87bc"
+    },
+    {
+      "file": "base-cannon-action-5-atlas.webp",
+      "bytes": 21504,
+      "sha256": "5a58b400d2ea89638116dfe578fae738c2ec5d52545eb65f5538d53b2f1117ae"
+    },
+    {
+      "file": "base-cannon-action-6-atlas.webp",
+      "bytes": 20924,
+      "sha256": "dc57969f309160507d5422beb5d9408894be13695d4c0c8a7912298ce0b9bce8"
+    },
+    {
+      "file": "base-cannon-action-7-atlas.webp",
+      "bytes": 21202,
+      "sha256": "5c1c155c297a0b337fd8dabb97d24d1413ece939d5b91277e10598d47ea2bd6a"
+    },
+    {
+      "file": "base-cannon-action.glb",
+      "bytes": 1067452,
+      "sha256": "66670308f47b4bfdc254d5a0c1bc2da40324b0555a48f36db6ad476c89bd33fc"
+    },
+    {
+      "file": "base-cannon-action.png",
+      "bytes": 419662,
+      "sha256": "9bd44f7c027926214be13d5a2129f516acbe5a74638688be355b4a6df3e2f509"
+    }
+  ],
+  "ammunition_grounding": {
+    "deck_top": 2.1715199947357178,
+    "contact_errors": [
+      0.0008802413940429688,
+      0.0008802413940429688
+    ],
+    "parent": "aim-platform"
+  },
+  "runtime": {
+    "mesh_objects": 17,
+    "triangles": 24110,
+    "materials": 11
+  },
+  "source_sha256": "a7c548f8375b4d660ed75db3fb6e817ec7aea6f909acee9bae9f6bedcbac3be9",
+  "generator_sha256": "d6ceaf5690f7f768da5da757fda6c33b913394147d0fe9bc9a322d61aa6e98aa"
+}

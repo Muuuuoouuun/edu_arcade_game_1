@@ -166,7 +166,8 @@
     "models:luna-ultimate": "blender --python-exit-code 1 -b --python tools/blender/build_luna_ultimate.py --",
     "models:luna-ultimate:check": "node tools/check-luna-ultimate.mjs && blender --python-exit-code 1 -b --python tools/blender/build_luna_ultimate.py -- --check",
     "models:riel-ultimate": "blender --python-exit-code 1 -b --python tools/blender/build_riel_ultimate.py --",
-    "models:riel-ultimate:check": "node tools/check-riel-ultimate.mjs && blender --python-exit-code 1 -b --python tools/blender/build_riel_ultimate.py -- --check"
+    "models:riel-ultimate:check": "node tools/check-riel-ultimate.mjs && blender --python-exit-code 1 -b --python tools/blender/build_riel_ultimate.py -- --check",
+    "models:base-cannon-action": "blender --python-exit-code 1 -b --python tools/blender/build_base_cannon_action.py --"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",

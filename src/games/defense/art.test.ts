@@ -526,7 +526,7 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
  for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','ice-knight-walk','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-brace-')&&!src.includes('/frost-fall-')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-stop-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,23);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-brace-')&&!src.includes('/frost-fall-')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-stop-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')&&!src.includes('/base-cannon-action-')).length,23);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -2544,4 +2544,41 @@ test('both Kar stop steps are published at 1x/2x with every publication offset',
   const frames=new Set();for(let i=offset;i/60<.24;i+=ticks)frames.add(art.karStopSpriteAsset('barbarian',{distance:24,speed:0,settle:{frame:3,heading,elapsed:i/60}})?.frame);
   for(const frame of [1,2])assert.ok(frames.has(frame),`${ticks}/${offset}/${frame}`);
  }
+});
+
+test('base cannon aims in eight directions, anchors its foundation, and launches from the authored muzzle',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'base-cannon-action');
+ const meta=JSON.parse(readFileSync(new URL('../../../public/defense/models/base-cannon-action.json',import.meta.url),'utf8'));
+ const from={x:200,y:200},size=96;
+ for(let d=0;d<8;d++){
+  const a=d*Math.PI/4,to={x:from.x+100*Math.cos(a),y:from.y+100*Math.sin(a)};
+  for(const [recoil,pose] of [[0,0],[.24,1],[.16,2],[.08,3],[-1,0],[NaN,0],[Infinity,0]]){
+   const r=art.baseCannonActionSpriteAsset('cannon',null,1,from,to,recoil)!;
+   assert.equal(r.direction,d);assert.equal(r.pose,pose);assert.equal(r.asset.src,`/defense/models/base-cannon-action-${d}-atlas.webp`);
+   const p=meta.directions[d].poses[pose],[mx,my]=meta.directions[d].poses[0].muzzle;
+   assert.equal(p.foundation_drift,0);assert.ok(p.fixed_meshes>20);
+   assert.ok(Math.abs(r.muzzle.x-(mx-320)/576*meta.display_scale*size)<.001);
+   assert.ok(Math.abs(r.muzzle.y-(.1+(my-600)/576*meta.display_scale)*size)<.001);
+   assert.equal(art.baseCannonActionSpriteAsset('cannon',null,1,from,to,recoil,true)?.pose,0);
+  }
+  const shot={source:'tower',actor:'cannon',element:'impact',sourceLevel:1,from,to,launchAim:{...to}} as Projectile;
+  const original=structuredClone(shot),offset=art.baseCannonProjectileOffset(shot);assert.ok(offset);assert.deepEqual(shot,original);
+  assert.deepEqual(art.baseCannonProjectileOffset({...shot,to:{x:999,y:999}}),offset);
+  for(const partial of [{launchAim:undefined},{sourceLevel:2},{element:'water' as const},{source:'hero' as const}])assert.equal(art.baseCannonProjectileOffset({...shot,...partial}),undefined);
+ }
+ assert.equal(art.baseCannonActionSpriteAsset('cannon','crush',2,from,{x:300,y:200}),null);
+ assert.equal(art.baseCannonActionSpriteAsset('crossbow',null,1,from,{x:300,y:200}),null);
+ assert.equal(art.baseCannonActionSpriteAsset('cannon',null,1,from,from),null);
+ assert.equal(meta.ammunition_grounding.parent,'aim-platform');assert.equal(meta.ammunition_grounding.contact_errors.length,2);assert.ok(meta.ammunition_grounding.contact_errors.every((e:number)=>Math.abs(e)<.005));
+ assert.equal(requests.filter(s=>s.includes('/base-cannon-action-')).length,8);
+ for(const key of ['source','generator'])assert.equal(createHash('sha256').update(readFileSync(new URL('../../../'+meta[key],import.meta.url))).digest('hex'),meta[key+'_sha256']);
+ for(const f of meta.files)assert.equal(createHash('sha256').update(readFileSync(new URL('../../../public/defense/models/'+f.file,import.meta.url))).digest('hex'),f.sha256);
+});
+
+test('base cannon falls back to existing art if any directional image fails',async()=>{
+ const {art}=await loadWithImageResults(s=>s.endsWith('base-cannon-action-3-atlas.webp'),'base-cannon-failure');
+ const from={x:0,y:0},to={x:100,y:0};
+ assert.equal(art.baseCannonActionSpriteAsset('cannon',null,1,from,to,.24),null);
+ assert.ok(art.towerSpriteAsset('cannon',null,1));
+ assert.ok(art.crushCannonActionSpriteAsset('cannon','crush',2,from,to,.24));
 });

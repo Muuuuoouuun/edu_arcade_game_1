@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { frostWolfBracedFallAsset, frostWolfFallAsset, crushCannonProjectileOffset, rapidCrossbowProjectileOffset, lightningTowerProjectileOffset, fireTowerProjectileOffset, idleSpriteAsset, druidCastSocket, druidProjectileOffset, taoSealSocket, taoProjectileOffset, elfArrowSocket, elfProjectileOffset, mageProjectileOffset, mageCastSocket, hammerSequenceSpriteAsset, monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, ballistaProjectileOffset, waterCannonProjectileOffset } from '../games/defense/art';
+import { frostWolfBracedFallAsset, frostWolfFallAsset, baseCannonProjectileOffset, crushCannonProjectileOffset, rapidCrossbowProjectileOffset, lightningTowerProjectileOffset, fireTowerProjectileOffset, idleSpriteAsset, druidCastSocket, druidProjectileOffset, taoSealSocket, taoProjectileOffset, elfArrowSocket, elfProjectileOffset, mageProjectileOffset, mageCastSocket, hammerSequenceSpriteAsset, monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, ballistaProjectileOffset, waterCannonProjectileOffset } from '../games/defense/art';
 import { projectileScreenPosition, shellTrailPositions } from '../games/defense/action';
 import type { CombatAttack, Effect, Element, HeroId, Point, Projectile } from '../games/defense/types';
 
@@ -60,7 +60,7 @@ export function ProjectileLayer({projectiles,reduced,unit=1}:{projectiles:Projec
   return <g className="def-projectiles" aria-hidden="true" pointerEvents="none">{projectiles.map((p,index)=>{
     const detail=!reduced&&index>=projectiles.length-24;
     const elfOffset=elfProjectileOffset(p,unit),rapidOffset=rapidCrossbowProjectileOffset(p),tipAnchored=!!(elfOffset??rapidOffset);
-    const launchOffset=elfOffset??rapidOffset??crushCannonProjectileOffset(p)??druidProjectileOffset(p,unit)??taoProjectileOffset(p,unit)??mageProjectileOffset(p,unit)??ballistaProjectileOffset(p)??waterCannonProjectileOffset(p)??fireTowerProjectileOffset(p,reduced)??lightningTowerProjectileOffset(p,reduced);
+    const launchOffset=elfOffset??rapidOffset??baseCannonProjectileOffset(p)??crushCannonProjectileOffset(p)??druidProjectileOffset(p,unit)??taoProjectileOffset(p,unit)??mageProjectileOffset(p,unit)??ballistaProjectileOffset(p)??waterCannonProjectileOffset(p)??fireTowerProjectileOffset(p,reduced)??lightningTowerProjectileOffset(p,reduced);
     const {x,y,angle}=projectileScreenPosition(p,launchOffset);
     const water=p.element==='water',lightning=p.element==='lightning',green=p.actor==='druid';
     return <g key={p.id} data-projectile={p.kind} data-element={p.element} data-progress={p.progress.toFixed(3)}>
