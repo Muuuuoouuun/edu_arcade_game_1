@@ -47,7 +47,8 @@ export class TownScreen {
     const tags = this.$('town-tags');
     tags.innerHTML = SPOTS.map(p => {
       const row = ROWS.find(r => r.id === p.id)!;
-      return `<button class="town-tag" data-select="${p.id}" aria-label="${row.name}"><b>${row.name}</b><em data-tag-level></em><i class="up" aria-hidden="true">▲</i></button>`;
+      // Icon badge (cycle 17): the card below names the building, so the tag keeps only its icon, level and upgrade dot.
+      return `<button class="town-tag tone-${row.tone}" data-select="${p.id}" aria-label="${row.name}"><span class="tag-ico" aria-hidden="true">${row.badge}</span><em data-tag-level></em><i class="up" aria-hidden="true">▲</i></button>`;
     }).join('');
     tags.addEventListener('click', e => {
       const id = (e.target as HTMLElement).closest<HTMLElement>('[data-select]')?.dataset.select as Upgrade | undefined;
@@ -171,7 +172,8 @@ export class TownScreen {
     this.view.sync(k);
     for (const r of ROWS) {
       const tag = this.root.querySelector<HTMLElement>(`[data-select="${r.id}"]`)!;
-      tag.querySelector('[data-tag-level]')!.textContent = `Lv ${level(k, r.id)}`;
+      tag.querySelector('[data-tag-level]')!.textContent = String(level(k, r.id));
+      tag.setAttribute('aria-label', `${r.name} Lv ${level(k, r.id)}${canUpgrade(k, r.id) ? ', 강화 가능' : ''}`);
       tag.classList.toggle('can', canUpgrade(k, r.id));
       tag.classList.toggle('on', r.id === this.selected);
       this.root.querySelector<HTMLElement>(`[data-id="${r.id}"]`)!.classList.toggle('selected', r.id === this.selected);
