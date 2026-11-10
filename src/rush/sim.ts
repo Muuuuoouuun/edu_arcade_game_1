@@ -55,8 +55,9 @@ export type RushEvent =
   | { type: 'lost' };
 
 /** Battle modifiers from permanent (between-battle) upgrades. All 1 = the base game. */
-export interface RushMods { damage: number; towerCost: number; townHp: number }
-export const NO_MODS: RushMods = { damage: 1, towerCost: 1, townHp: 1 };
+/** Battle modifiers from the kingdom. heroHp scales the hero's max health (hero level, cycle 14). */
+export interface RushMods { damage: number; towerCost: number; townHp: number; heroHp: number }
+export const NO_MODS: RushMods = { damage: 1, towerCost: 1, townHp: 1, heroHp: 1 };
 /** Stage difficulty: multipliers on enemy health, group sizes (bosses excluded) and damage. All 1 = the base game. */
 export interface Difficulty { enemyHp: number; enemyCount: number; enemyDamage: number }
 export const BASE_DIFFICULTY: Difficulty = { enemyHp: 1, enemyCount: 1, enemyDamage: 1 };
@@ -133,7 +134,7 @@ export function createRush(seed = 1, mods: RushMods = NO_MODS, diff: Difficulty 
   return {
     seed, rng: seed | 0, tick: 0, t: 0, phase: 'prep', mods: { ...mods }, diff: { ...diff }, wave: 0, prepT: ECONOMY.prepTime, groups: [],
     town: { hp: townHp, maxHp: townHp }, gold: ECONOMY.startGold,
-    hero: { kind: heroKind, x: HERO_SPAWN.x, z: HERO_SPAWN.z, hp: HEROES[heroKind].hp, facing: -Math.PI / 2, ammo: HEROES[heroKind].ammoMax, reloadT: 0, fireCd: 0, superCharge: 0, downT: 0, calmT: 0, exposedUntil: 0 },
+    hero: { kind: heroKind, x: HERO_SPAWN.x, z: HERO_SPAWN.z, hp: Math.round(HEROES[heroKind].hp * mods.heroHp), facing: -Math.PI / 2, ammo: HEROES[heroKind].ammoMax, reloadT: 0, fireCd: 0, superCharge: 0, downT: 0, calmT: 0, exposedUntil: 0 },
     enemies: [], shots: [], towers: PADS.map(() => null), coins: [], nextId: 1 + CRATES.length,
     crates: CRATES.map((c, i) => ({ id: 1 + i, x: c.x, z: c.z, hp: CRATE.hp })),
     stats: { kills: 0, shots: 0, hits: 0, supers: 0, goldEarned: 0, heroDowns: 0 },
@@ -145,6 +146,8 @@ export function createRush(seed = 1, mods: RushMods = NO_MODS, diff: Difficulty 
 /** The current hero's numbers. */
 export const heroDef = (s: RushState): HeroDef => HEROES[s.hero.kind];
 export const heroAlive = (s: RushState) => s.hero.downT <= 0;
+/** The hero's max health with the kingdom's hero-level bonus. */
+export const heroMaxHp = (s: RushState) => Math.round(heroDef(s).hp * s.mods.heroHp);
 export const superReady = (s: RushState) => s.hero.superCharge >= heroDef(s).superHits;
 
 /** Hero inside tall grass and not recently attacking: only enemies within BUSH.reveal can see them. */
@@ -273,7 +276,7 @@ function updateHero(s: RushState, cmd: Command) {
   if (h.downT > 0) {
     h.downT -= STEP;
     if (h.downT <= 0) {
-      h.downT = 0; h.hp = heroDef(s).hp; h.x = HERO_SPAWN.x; h.z = HERO_SPAWN.z; h.ammo = heroDef(s).ammoMax; h.reloadT = 0; h.calmT = 0;
+      h.downT = 0; h.hp = heroMaxHp(s); h.x = HERO_SPAWN.x; h.z = HERO_SPAWN.z; h.ammo = heroDef(s).ammoMax; h.reloadT = 0; h.calmT = 0;
       s.events.push({ type: 'heroBack' });
     }
     return;
@@ -295,7 +298,7 @@ function updateHero(s: RushState, cmd: Command) {
   }
   // Out-of-combat regeneration.
   h.calmT += STEP;
-  if (h.calmT >= heroDef(s).regenDelay && h.hp < heroDef(s).hp) h.hp = Math.min(heroDef(s).hp, h.hp + heroDef(s).hp * heroDef(s).regenRate * STEP);
+  if (h.calmT >= heroDef(s).regenDelay && h.hp < heroMaxHp(s)) h.hp = Math.min(heroMaxHp(s), h.hp + heroMaxHp(s) * heroDef(s).regenRate * STEP);
 
   if (cmd.fire && h.ammo >= 1 && h.fireCd <= 0) fire(s, cmd.fire);
   if (cmd.super && superReady(s)) castSuper(s, cmd.super);

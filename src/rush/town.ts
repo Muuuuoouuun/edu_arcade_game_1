@@ -3,8 +3,8 @@ import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
 import { HEROES, type HeroKind } from './data.ts';
 import {
-  canUpgrade, chooseHero, collect, createKingdom, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate, serializeKingdom, storageFull,
-  upgrade, upgradeCost, type Kingdom, type Upgrade,
+  canTrain, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
+  serializeKingdom, storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 
 const KEY = 'arcana-rush:kingdom:v1';
@@ -38,8 +38,8 @@ export class TownScreen {
   private timer = 0;
   /** Stage the battle button will start (defaults to the furthest unlocked stage). */
   stage = 1;
-  /** Building whose upgrade card is shown (picked by tapping its name tag in the 3D town). */
-  selected: Upgrade = 'castle';
+  /** Card shown: a building (picked by tapping its name tag in the 3D town) or the hero (hero button). */
+  selected: Upgrade | 'hero' = 'castle';
   private $ = (id: string) => document.getElementById(id)!;
 
   constructor(private root: HTMLElement, private view: TownView) {
@@ -59,8 +59,25 @@ export class TownScreen {
         <span class="town-icon tone-${r.tone}" aria-hidden="true">${r.badge}</span>
         <div class="town-info"><b>${r.name} <em data-level></em></b><small data-effect></small></div>
         <button class="town-up" data-up="${r.id}" aria-label="${r.name} 강화"><span data-cost></span></button>
-      </li>`).join('');
+      </li>`).join('') + `
+      <li class="town-row" data-id="hero">
+        <span class="town-icon tone-hero" aria-hidden="true">영</span>
+        <div class="town-info"><b><span data-hero-name></span> <em data-level></em></b><small data-effect></small></div>
+        <button class="town-up" data-train aria-label="영웅 훈련"><span data-cost></span></button>
+      </li>`;
     list.addEventListener('click', e => {
+      if ((e.target as HTMLElement).closest('[data-train]')) {
+        // Hero training (cycle 14): levels the hero taken into battle; the castle caps it.
+        const before = this.kingdom, hero = before.hero;
+        this.kingdom = train(before, hero, Date.now());
+        saveKingdom(this.kingdom);
+        if (this.kingdom.heroLv[hero] > before.heroLv[hero]) {
+          const row = list.querySelector<HTMLElement>('[data-id="hero"]');
+          row?.classList.remove('bump'); void row?.offsetWidth; row?.classList.add('bump');
+        }
+        this.render();
+        return;
+      }
       const id = (e.target as HTMLElement).closest<HTMLElement>('[data-up]')?.dataset.up as Upgrade | undefined;
       if (!id) return;
       const before = this.kingdom;
@@ -82,6 +99,8 @@ export class TownScreen {
     });
     // Hero choice: cycle through unlocked heroes; a locked one explains how it joins.
     this.$('btn-hero').addEventListener('click', () => {
+      // The hero card opens on the first tap; later taps also switch heroes.
+      if (this.selected !== 'hero') { this.selected = 'hero'; this.render(); return; }
       const order: HeroKind[] = ['ranger', 'bron'];
       const next = order[(order.indexOf(this.kingdom.hero) + 1) % order.length];
       if (!heroUnlocked(this.kingdom, next)) { this.note(`${HEROES[next].name}: 스테이지 2에서 별을 얻으면 합류해요`); return; }
@@ -134,7 +153,20 @@ export class TownScreen {
       chip.querySelector('[data-stars]')!.textContent = open ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '잠김';
     });
     this.$('btn-battle').textContent = `스테이지 ${this.stage} 출전`;
-    this.$('hero-name').textContent = HEROES[k.hero].name;
+    this.$('hero-name').textContent = `${HEROES[k.hero].name} Lv${k.heroLv[k.hero]}`;
+    const heroRow = this.root.querySelector<HTMLElement>('[data-id="hero"]')!;
+    const lv = k.heroLv[k.hero], g = heroGrowth(lv), tc = trainCost(k, k.hero), trainBtn = heroRow.querySelector<HTMLButtonElement>('[data-train]')!;
+    const growth = (x: { hp: number; damage: number }) => x.hp === x.damage ? `+${pct(x.hp - 1)}` : `체력 +${pct(x.hp - 1)} · 공격 +${pct(x.damage - 1)}`;
+    heroRow.classList.toggle('selected', this.selected === 'hero');
+    heroRow.querySelector('[data-hero-name]')!.textContent = HEROES[k.hero].name;
+    heroRow.querySelector('[data-level]')!.textContent = `Lv ${lv}/${heroMaxLevel(k)}`;
+    heroRow.querySelector('[data-effect]')!.textContent = `${g.hp === g.damage ? '체력·공격 ' : ''}${growth(g)}${tc ? ` → ${growth(heroGrowth(lv + 1))}` : ''}`;
+    trainBtn.disabled = !tc || !canTrain(k, k.hero);
+    trainBtn.querySelector('[data-cost]')!.innerHTML = tc
+      ? `훈련 <i class="res-ico food"></i>${tc.food} <i class="res-ico wood"></i>${tc.wood}`
+      : '성 Lv 필요';
+    trainBtn.classList.toggle('capped', !tc);
+    this.$('btn-hero').classList.toggle('can', canTrain(k, k.hero));
     this.$('btn-hero').classList.toggle('has-more', heroUnlocked(k, 'bron'));
     this.view.sync(k);
     for (const r of ROWS) {

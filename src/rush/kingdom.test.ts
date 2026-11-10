@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  battleReward, canUpgrade, collect, createKingdom, grantReward, kingdomMods, parseKingdom, pending, RATE_PER_LEVEL,
-  serializeKingdom, STORAGE_MINUTES, upgrade, upgradeCost, type Kingdom,
+  battleReward, canUpgrade, collect, createKingdom, grantReward, heroMaxLevel, kingdomMods, parseKingdom, pending, RATE_PER_LEVEL,
+  serializeKingdom, STORAGE_MINUTES, train, trainCost, upgrade, upgradeCost, type Kingdom,
 } from './kingdom.ts';
-import { createRush, padCost, stepRush, WAVE_COUNT } from './sim.ts';
+import { createRush, heroMaxHp, padCost, stepRush, WAVE_COUNT } from './sim.ts';
 import { HERO, PADS, TOWER_LEVELS, TOWN } from './data.ts';
 import { guardBot } from './bot.ts';
 
@@ -58,8 +58,8 @@ test('perks change the next battle: town HP, tower cost and arrow damage', () =>
   s.hero.x = PADS[0].x; s.hero.z = PADS[0].z;
   stepRush(s, { fire: { x: 0, z: -1 } });
   assert.ok(Math.abs(s.shots[0].damage - HERO.boltDamage * 1.24) < 1e-9);
-  assert.deepEqual(createRush(1).mods, { damage: 1, towerCost: 1, townHp: 1 }, 'a fresh kingdom changes nothing');
-  assert.deepEqual(kingdomMods(createKingdom(T0)), { damage: 1, towerCost: 1, townHp: 1 });
+  assert.deepEqual(createRush(1).mods, { damage: 1, towerCost: 1, townHp: 1, heroHp: 1 }, 'a fresh kingdom changes nothing');
+  assert.deepEqual(kingdomMods(createKingdom(T0)), { damage: 1, towerCost: 1, townHp: 1, heroHp: 1 });
 });
 
 test('a battle pays once, scaled by waves defended, with a victory bonus', () => {
@@ -89,4 +89,41 @@ test('saves round-trip; broken or tampered saves fall back to a fresh kingdom', 
     assert.equal(parseKingdom(bad, T0).castle, 1, `fallback for ${String(bad).slice(0, 30)}`);
   }
   assert.equal(parseKingdom(serializeKingdom({ ...k, lastCollect: T0 + 99 * MIN }), T0).lastCollect, T0, 'a future mark is clamped');
+});
+
+test('hero training: castle caps the level, costs grow, collect first, only unlocked heroes', () => {
+  let k = createKingdom(T0);
+  assert.deepEqual(k.heroLv, { ranger: 1, bron: 1 });
+  assert.equal(heroMaxLevel(k), 2, 'castle 1 allows hero Lv2');
+  assert.deepEqual(trainCost(k, 'ranger'), { food: 45, wood: 25 });
+  assert.equal(trainCost(k, 'bron'), null, 'locked hero cannot train');
+  k = train(k, 'ranger', T0);
+  assert.equal(k.heroLv.ranger, 2);
+  assert.deepEqual([k.food, k.wood], [120 - 45, 120 - 25]);
+  assert.equal(trainCost(k, 'ranger'), null, 'capped by castle 1');
+  assert.equal(train(k, 'ranger', T0).heroLv.ranger, 2);
+  // Poor kingdom: training collects production first, then pays if it can.
+  const poor = { ...createKingdom(T0), food: 0, wood: 0 };
+  assert.equal(train(poor, 'ranger', T0).heroLv.ranger, 1, 'unaffordable → unchanged');
+  const later = train(poor, 'ranger', T0 + 10 * 60000);
+  assert.equal(later.heroLv.ranger, 2, 'ten minutes of production pays for Lv2');
+  assert.equal(poor.heroLv.ranger, 1, 'input kingdom is not mutated');
+});
+
+test('hero level feeds battle modifiers for the chosen hero only', () => {
+  const k = { ...createKingdom(T0), castle: 5, heroLv: { ranger: 6, bron: 1 }, perks: { attack: 2, towerDiscount: 0, townHp: 0 } };
+  const m = kingdomMods(k);
+  assert.ok(Math.abs(m.heroHp - 1.5) < 1e-9 && Math.abs(m.damage - 1.16 * 1.5) < 1e-9, JSON.stringify(m));
+  assert.equal(kingdomMods({ ...k, hero: 'bron' }).heroHp, 1, 'bron keeps his own level');
+  const s = createRush(1, m);
+  assert.equal(s.hero.hp, Math.round(420 * 1.5));
+  assert.equal(heroMaxHp(s), s.hero.hp);
+});
+
+test('hero levels load from old saves and clamp to the castle cap', () => {
+  const old = JSON.parse(serializeKingdom(createKingdom(T0)));
+  delete old.heroLv;
+  assert.deepEqual(parseKingdom(JSON.stringify(old), T0).heroLv, { ranger: 1, bron: 1 });
+  const tampered = { ...old, castle: 2, heroLv: { ranger: 9, bron: 'x' } };
+  assert.deepEqual(parseKingdom(JSON.stringify(tampered), T0).heroLv, { ranger: 4, bron: 1 });
 });

@@ -23,6 +23,8 @@ export interface Kingdom {
   stars: number[];
   /** Hero taken into battle. */
   hero: HeroKind;
+  /** Level per hero (cycle 14); only the hero taken into battle gets its bonus. */
+  heroLv: Record<HeroKind, number>;
   /** Recently rewarded battle ids, so one battle never pays twice. */
   rewarded: string[];
 }
@@ -32,13 +34,16 @@ export const CASTLE_MAX = 5;
 export const RATE_PER_LEVEL = 8;
 export const STORAGE_MINUTES = 120;
 export const PERK_EFFECT = { attack: 0.08, towerDiscount: 0.08, townHp: 0.1 } as const;
+/** Hero training: the castle allows two hero levels per castle level; each level adds health and attack. */
+export const HERO_LV_PER_CASTLE = 2;
+export const HERO_GROWTH = { hp: 0.1, damage: 0.1 } as const;
 
 export const createKingdom = (now: number): Kingdom => ({
   version: 1, castle: 1, farm: 1, mill: 1, perks: { attack: 0, towerDiscount: 0, townHp: 0 },
-  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), hero: 'ranger', rewarded: [],
+  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), hero: 'ranger', heroLv: { ranger: 1, bron: 1 }, rewarded: [],
 });
 
-const clone = (k: Kingdom): Kingdom => ({ ...k, perks: { ...k.perks }, battles: { ...k.battles }, stars: [...k.stars], rewarded: [...k.rewarded] });
+const clone = (k: Kingdom): Kingdom => ({ ...k, perks: { ...k.perks }, battles: { ...k.battles }, stars: [...k.stars], heroLv: { ...k.heroLv }, rewarded: [...k.rewarded] });
 
 export const stageUnlocked = (k: Kingdom, n: number) => n >= 1 && n <= STAGE_COUNT && (n === 1 || k.stars[n - 2] > 0);
 /** Heroes join through progress: Bron arrives once stage 2 has a star. */
@@ -104,12 +109,40 @@ export function upgrade(k: Kingdom, u: Upgrade, now: number): Kingdom {
   return next;
 }
 
-/** Battle modifiers from permanent upgrades. */
-export const kingdomMods = (k: Kingdom): RushMods => ({
-  damage: 1 + PERK_EFFECT.attack * k.perks.attack,
-  towerCost: Math.max(0.6, 1 - PERK_EFFECT.towerDiscount * k.perks.towerDiscount),
-  townHp: 1 + PERK_EFFECT.townHp * k.perks.townHp,
-});
+// ---------- hero training ----------
+export const heroMaxLevel = (k: Kingdom): number => k.castle * HERO_LV_PER_CASTLE;
+/** Health and attack multipliers a hero level gives. */
+export const heroGrowth = (lv: number) => ({ hp: 1 + HERO_GROWTH.hp * (lv - 1), damage: 1 + HERO_GROWTH.damage * (lv - 1) });
+/** Cost of the hero's next level, or null when locked or capped by the castle. */
+export function trainCost(k: Kingdom, hero: HeroKind): Cost | null {
+  const l = k.heroLv[hero];
+  if (!heroUnlocked(k, hero) || l >= heroMaxLevel(k)) return null;
+  return { food: 45 * l, wood: 25 * l };
+}
+export function canTrain(k: Kingdom, hero: HeroKind): boolean {
+  const c = trainCost(k, hero);
+  return !!c && k.food >= c.food && k.wood >= c.wood;
+}
+/** Collects first, then pays and levels the hero up. Unaffordable or capped → unchanged (but collected). */
+export function train(k: Kingdom, hero: HeroKind, now: number): Kingdom {
+  const next = collect(k, now), c = trainCost(next, hero);
+  if (!c || next.food < c.food || next.wood < c.wood) return next;
+  next.food -= c.food;
+  next.wood -= c.wood;
+  next.heroLv[hero]++;
+  return next;
+}
+
+/** Battle modifiers from permanent upgrades and the chosen hero's level. */
+export const kingdomMods = (k: Kingdom): RushMods => {
+  const g = heroGrowth(k.heroLv[k.hero]);
+  return {
+    damage: (1 + PERK_EFFECT.attack * k.perks.attack) * g.damage,
+    towerCost: Math.max(0.6, 1 - PERK_EFFECT.towerDiscount * k.perks.towerDiscount),
+    townHp: 1 + PERK_EFFECT.townHp * k.perks.townHp,
+    heroHp: g.hp,
+  };
+};
 
 /** Reward for a finished battle: a small participation base, more per wave defended, plus a victory bonus. */
 export function battleReward(s: RushState): Cost & { waves: number; won: boolean } {
@@ -149,6 +182,8 @@ export function settleBattle(k: Kingdom, battleId: string, s: RushState, stage: 
 const count = (v: unknown, lo: number, hi: number): number | null =>
   typeof v === 'number' && Number.isInteger(v) && v >= lo && v <= hi ? v : null;
 
+const heroLevel = (v: unknown, castle: number) => (typeof v === 'number' && Number.isInteger(v) ? Math.min(Math.max(1, v), castle * HERO_LV_PER_CASTLE) : 1);
+
 /** Parse a saved kingdom; anything malformed falls back to a fresh kingdom rather than crashing the game. */
 export function parseKingdom(raw: string | null, now: number): Kingdom {
   try {
@@ -172,7 +207,9 @@ export function parseKingdom(raw: string | null, now: number): Kingdom {
       perks: { attack: perks.attack!, towerDiscount: perks.towerDiscount!, townHp: perks.townHp! },
       food: food!, wood: wood!, lastCollect: last, battles: { won: won!, lost: lost! }, stars: starList,
       // Saves from before hero choice (or naming an unknown or still-locked hero) take the ranger.
-      hero: v.hero === 'bron' && starList[1] > 0 ? 'bron' : 'ranger', rewarded,
+      hero: v.hero === 'bron' && starList[1] > 0 ? 'bron' : 'ranger',
+      // Saves from before hero training start every hero at Lv1; levels above the castle cap are clamped.
+      heroLv: { ranger: heroLevel(v.heroLv?.ranger, castle), bron: heroLevel(v.heroLv?.bron, castle) }, rewarded,
     };
   } catch {
     return createKingdom(now);

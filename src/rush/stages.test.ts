@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createRush, NO_MODS, stepRush, type RushMods, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { STAGE_COUNT, stageDifficulty, starBonus, starsFor } from './stages.ts';
-import { chooseHero, createKingdom, heroUnlocked, latestStage, parseKingdom, serializeKingdom, settleBattle, stageUnlocked } from './kingdom.ts';
+import { chooseHero, createKingdom, heroGrowth, heroUnlocked, latestStage, parseKingdom, serializeKingdom, settleBattle, stageUnlocked } from './kingdom.ts';
 
 const LIMIT = 60 * 60 * 8;
 const play = (seed: number, stage: number, mods: RushMods = NO_MODS) => {
@@ -11,7 +11,7 @@ const play = (seed: number, stage: number, mods: RushMods = NO_MODS) => {
   while (s.phase !== 'won' && s.phase !== 'lost' && s.tick < LIMIT) stepRush(s, guardBot(s));
   return s;
 };
-const MAXED: RushMods = { damage: 1.4, towerCost: 0.6, townHp: 1.5 }; // castle 5 with every perk at 5
+const MAXED: RushMods = { damage: 1.4, towerCost: 0.6, townHp: 1.5, heroHp: 1 }; // castle 5 with every perk at 5, hero Lv1
 
 test('stage 1 is exactly the base game', () => {
   assert.deepEqual(stageDifficulty(1), { enemyHp: 1, enemyCount: 1, enemyDamage: 1 });
@@ -127,3 +127,14 @@ function playHero(seed: number, stage: number, hero: 'ranger' | 'bron', mods: Ru
   while (s.phase !== 'won' && s.phase !== 'lost' && s.tick < LIMIT) stepRush(s, guardBot(s));
   return s;
 }
+
+test('hero training pays off: Lv10 wins clearly more of stages 7-8, but stage 10 still needs the kingdom', () => {
+  // The bot run is chaotic seed to seed, so the claim is about totals, not every single seed.
+  const lv = (n: number): RushMods => { const g = heroGrowth(n); return { ...NO_MODS, damage: g.damage, heroHp: g.hp }; };
+  for (const hero of ['ranger', 'bron'] as const) {
+    const wins = (n: number) => [7, 8].reduce((sum, stage) => sum + [1, 2, 3, 4, 5, 6].filter(seed => playHero(seed, stage, hero, lv(n)).phase === 'won').length, 0);
+    const low = wins(1), high = wins(10);
+    assert.ok(high >= low + 3, `${hero}: stage 7-8 wins Lv1 ${low} → Lv10 ${high}`);
+    for (const seed of [1, 2, 3, 4]) assert.equal(playHero(seed, 10, hero, lv(10)).phase, 'lost', `${hero} Lv10 alone, stage 10 seed ${seed}`);
+  }
+});

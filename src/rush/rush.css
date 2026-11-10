@@ -171,6 +171,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .tone-attack { background: linear-gradient(#ff9aa6, #ff3d55); }
 .tone-tower { background: linear-gradient(#c9a8ff, #a46bff); }
 .tone-wall { background: linear-gradient(#c7d3ea, #8796bf); }
+.tone-hero { background: linear-gradient(#9ff0c8, #2fbf7f); }
 .town-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .town-info b { font-size: 15px; white-space: nowrap; }
 .town-info em { font-style: normal; color: var(--gold); font-size: 13px; margin-left: 2px; }
@@ -311,3 +312,6 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .settings { display: flex; justify-content: center; margin: 4px 0 14px; }
 .setting { padding: 8px 18px; border-radius: 999px; border: 3px solid var(--outline); background: #3a2a6e; color: #fff; font-size: 16px; touch-action: manipulation; box-shadow: 0 4px 0 var(--outline); }
 .setting:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--outline); }
+
+/* Hero card (cycle 14): the hero button glows when training is affordable. */
+.hero-pick.can { box-shadow: 0 0 0 3px var(--gold), 0 4px 0 var(--outline); }

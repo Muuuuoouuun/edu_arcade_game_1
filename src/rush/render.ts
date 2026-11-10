@@ -7,7 +7,7 @@ import {
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroKind, type Vec } from './data.ts';
-import { heroHidden, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
+import { heroHidden, heroMaxHp, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, type Part } from './look.ts';
 import { Batch } from './batch.ts';
 import { Particles } from './fx.ts';
@@ -744,7 +744,7 @@ export class RushView {
     this.hero.position.set(h.x, 0, h.z);
     this.heroBody.rotation.y = yaw(h.facing);
     this.heroMixer?.update(worldDt);
-    this.setBar(this.heroBar, h.hp / def.hp);
+    this.setBar(this.heroBar, h.hp / heroMaxHp(s));
     this.ammoSegs.forEach((seg, i) => {
       const full = h.ammo > i, partial = h.ammo === i ? h.reloadT / def.reload : 0;
       seg.material = full ? this.mats.ammo : this.mats.ammoDim;
