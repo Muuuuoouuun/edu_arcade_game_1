@@ -210,7 +210,7 @@ def build(coll):
 POSES = {
     'march': {'joints': {'body': (6, 0, 0), 'head': (4, 0, 0), 'armL': (-14, 0, 0), 'foreL': (-12, 0, 0), 'armR': (12, 0, 0), 'foreR': (-6, 0, 0)}, 'glow': 1.0},
     'rage': {'joints': {'body': (-10, 0, 0), 'head': (-16, 0, 0), 'armL': (0, -118, 0), 'foreL': (0, -72, 0), 'armR': (0, 118, 0), 'foreR': (0, 72, 0)}, 'glow': 1.9},
-    'rush': {'joints': {'body': (30, 0, 0), 'head': (-20, 0, 0), 'armL': (-58, 0, 8), 'foreL': (-28, 0, 0), 'armR': (-50, 0, -8), 'foreR': (-34, 0, 0)}, 'glow': 1.6},
+    'rush': {'joints': {'body': (26, 0, 0), 'head': (-18, 0, 0), 'armL': (-34, 0, 8), 'foreL': (-30, 0, 0), 'armR': (-26, 0, -8), 'foreR': (-36, 0, 0)}, 'glow': 1.6},
 }
 
 if __name__ == '__main__':

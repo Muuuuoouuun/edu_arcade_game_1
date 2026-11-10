@@ -19,7 +19,7 @@ def parse(default_poses):
     ap.add_argument('--out', required=True); ap.add_argument('--poses', default=','.join(default_poses))
     ap.add_argument('--views', default='sprite,front,side,back,battle-flank,battle-turned')
     ap.add_argument('--size', type=int, default=640); ap.add_argument('--samples', type=int, default=64)
-    ap.add_argument('--glb', action='store_true'); ap.add_argument('--blend', action='store_true')
+    ap.add_argument('--glb', action='store_true'); ap.add_argument('--blend', action='store_true'); ap.add_argument('--all-views', action='store_true')
     return ap.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 
 
@@ -57,7 +57,10 @@ def run(unit_id, build, poses, height, glow_names=(), default_poses=None, ground
         apply_pose(joints, poses[pose], glow_mats)
         zs = [(o.matrix_world @ Vector(c)).z for o in unit_objs if not o.hide_render for c in o.bound_box]
         info['poses'][pose] = {'top_z': round(max(zs), 3), 'min_z': round(min(zs), 3)}
+        first = pose == [p for p in args.poses.split(',') if p][0]
         for view in [v for v in args.views.split(',') if v]:
+            if view != 'sprite' and not first and not args.all_views:      # turnaround and battle angles: first pose only
+                continue
             render(scene, cams[view], os.path.join(args.out, f'{unit_id}-{pose}-{view}.png'))
     apply_pose(joints, poses[(default_poses or list(poses))[0]], glow_mats)
     if args.glb:

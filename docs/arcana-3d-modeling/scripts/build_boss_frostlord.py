@@ -219,8 +219,8 @@ def build(coll):
 
 
 POSES = {
-    # sword carried low and forward, tip just above the road
-    'march': {'joints': {'body': (4, 0, 0), 'head': (2, 0, 0), 'armL': (10, 0, 0), 'foreL': (-14, 0, 0), 'armR': (-12, 0, 0), 'foreR': (-10, 0, 0), 'sword': (128, 0, 16)}, 'glow': 1.0},
+    # sword carried low across the body (kept inside the 640 sprite frame), tip above the road
+    'march': {'joints': {'body': (4, 0, 0), 'head': (2, 0, 0), 'armL': (10, 0, 0), 'foreL': (-14, 0, 0), 'armR': (-12, 0, 0), 'foreR': (-10, 0, 0), 'sword': (104, 0, 46)}, 'glow': 1.0},
     # the 2.5 s charge: blade raised overhead, rune on the ground, eyes and blade flare
     'channel': {'joints': {'body': (-6, 0, 0), 'head': (-10, 0, 0), 'armL': (-128, -30, 0), 'foreL': (-30, 0, 0), 'armR': (-128, 30, 0), 'foreR': (-30, 0, 0), 'sword': (158, 0, 0)}, 'glow': 2.4, 'show': ['fx:rune']},
     # interrupted: knocked back, blade dropped to the side, light dimmed
