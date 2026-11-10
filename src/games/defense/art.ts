@@ -11,7 +11,7 @@ import { KAR_HAMMER_TRAIL } from './karHammerTrail.ts';
 import { FIRE_TOWER_LV3_SOCKETS } from './fireTowerLv3Sockets.ts';
 import { FIRE_TOWER_SOCKETS } from './fireTowerSockets.ts';
 import { FROST_WOLF_FRAME } from './frostWolfGait.ts';
-import { frostWolfWalkFrame, enemyWalkFrame, walkFrame, petWalkFrame, MAGE_STOP_DURATION, type Locomotion } from './locomotion.ts';
+import { frostWolfWalkFrame, enemyWalkFrame, metalWalkFrame, walkFrame, petWalkFrame, MAGE_STOP_DURATION, type Locomotion } from './locomotion.ts';
 import { attackOctant, dwarfHammerFrame, karHammerFrame, petBiteFrame } from './action.ts';
 import { MAGE_ENTRY_SOCKETS } from './mageEntrySockets.ts';
 import { MAGE_SOCKETS } from './mageSockets.ts';
@@ -696,6 +696,7 @@ const SLIME_ATLAS=bakedAtlas('insulator-slime'),GOLEM_ATLAS=bakedAtlas('stone-go
 const WOOD_WALK_ATLAS={src:'/defense/models/wood-soldier-walk-atlas.webp',width:3072,height:384};
 const GOLEM_WALK_ATLAS={src:'/defense/models/stone-golem-walk-atlas.webp',width:3072,height:384};
 const ICE_WALK_ATLAS={src:'/defense/models/ice-knight-walk-atlas.webp',width:2048,height:256};
+const METAL_WALK_ATLAS={src:'/defense/models/metal-soldier-walk-atlas.webp',width:2048,height:256};
 const WOLF_COLLAPSE_ATLAS={src:'/defense/models/frost-wolf-collapse-atlas.webp',width:1536,height:384};
 const METAL_DEATH_ATLAS={src:'/defense/models/metal-soldier-death-atlas.webp',width:1920,height:384};
 const WOOD_DEATH_ATLAS={src:'/defense/models/wood-soldier-death-atlas.webp',width:1920,height:384};
@@ -740,6 +741,8 @@ export function monsterWalkingSpriteAsset(kind:EnemyKind,distance:number,size=68
  if(kind==='frostwolf'&&motionLoaded.has(WOLF_ATLAS.src)&&motionLoaded.has(WOLF_TROT_ATLAS.src))return {...WOLF_TROT_ATLAS,viewBox:`${enemyWalkFrame(kind,distance)*384+8} 100 368 228`,displayScale:368/315,groundY:284.49};
  // The delivery sheet is shifted 22px from its raw camera render, aligning planted feet with the existing hit/death anchor.
  if(kind==='ice'&&motionLoaded.has(ICE_ATLAS.src)&&motionLoaded.has(ICE_WALK_ATLAS.src))return {...ICE_WALK_ATLAS,viewBox:`${enemyWalkFrame(kind,distance,size)*256} 0 256 256`,displayScale:384/360,groundY:339.61*2/3};
+ // Full-frame anchor matches the legacy hit crop and keeps contact through pose changes.
+ if(kind==='metal'&&motionLoaded.has(METAL_ATLAS.src)&&motionLoaded.has(METAL_WALK_ATLAS.src))return {...METAL_WALK_ATLAS,viewBox:`${metalWalkFrame(distance,size)*256} 0 256 256`,displayScale:384/260,groundY:296*2/3};
  // y=297 preserves the living golem's legacy crop/bottom offset with the full camera frame.
  if(kind==='stone'&&motionLoaded.has(GOLEM_ATLAS.src)&&motionLoaded.has(GOLEM_WALK_ATLAS.src))return {...GOLEM_WALK_ATLAS,viewBox:`${enemyWalkFrame(kind,distance,size)*384} 0 384 384`,displayScale:384/260,groundY:297};
  if(kind!=='wood'||!motionLoaded.has(WOOD_ATLAS.src)||!motionLoaded.has(WOOD_WALK_ATLAS.src))return null;
@@ -834,7 +837,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,GOLEM_WALK_ATLAS.src,ICE_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_BRACE_FALL_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,METAL_DEATH_ATLAS.src,WOOD_DEATH_ATLAS.src,ICE_DEATH_ATLAS.src,GOLEM_DEATH_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...MAGE_ENTRY,...MAGE_RETURN,...MAGE_RESET,...KAR_SLAM,...KAR_WALK,...KAR_ENTRY,...KAR_RETURN,...KAR_RESET,...KAR_STOP,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...DRUID_ULTIMATE,...DRUID_ENTRY,...DRUID_RETURN,...DRUID_RESET,...DRUID_STOP,...TAO_CAST,...TAO_WALK,...TAO_ULTIMATE,...TAO_ENTRY,...TAO_RETURN,...TAO_RESET,...TAO_STOP,...ELF_CAST,...ELF_WALK,...RIEL_ULTIMATE,...RIEL_ENTRY,...RIEL_RETURN,...RIEL_RESET,...RIEL_STOP,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,...DWARF_STOP,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...BASE_CANNON_ACTION_ATLASES,...BASE_CROSSBOW_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,GOLEM_WALK_ATLAS.src,ICE_WALK_ATLAS.src,METAL_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_BRACE_FALL_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,METAL_DEATH_ATLAS.src,WOOD_DEATH_ATLAS.src,ICE_DEATH_ATLAS.src,GOLEM_DEATH_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...MAGE_ENTRY,...MAGE_RETURN,...MAGE_RESET,...KAR_SLAM,...KAR_WALK,...KAR_ENTRY,...KAR_RETURN,...KAR_RESET,...KAR_STOP,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...DRUID_ULTIMATE,...DRUID_ENTRY,...DRUID_RETURN,...DRUID_RESET,...DRUID_STOP,...TAO_CAST,...TAO_WALK,...TAO_ULTIMATE,...TAO_ENTRY,...TAO_RETURN,...TAO_RESET,...TAO_STOP,...ELF_CAST,...ELF_WALK,...RIEL_ULTIMATE,...RIEL_ENTRY,...RIEL_RETURN,...RIEL_RESET,...RIEL_STOP,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,...DWARF_STOP,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...BASE_CANNON_ACTION_ATLASES,...BASE_CROSSBOW_ACTION_ATLASES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

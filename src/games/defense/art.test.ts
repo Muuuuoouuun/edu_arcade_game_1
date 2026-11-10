@@ -525,8 +525,8 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
- for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','ice-knight-walk','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-brace-')&&!src.includes('/frost-fall-')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-stop-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')&&!src.includes('/base-cannon-action-')&&!src.includes('/base-crossbow-action-')).length,23);
+ for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','ice-knight-walk','frost-wolf','frost-wolf-trot','metal-soldier','metal-soldier-walk'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-brace-')&&!src.includes('/frost-fall-')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-stop-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')&&!src.includes('/base-cannon-action-')&&!src.includes('/base-crossbow-action-')).length,24);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{
@@ -2618,4 +2618,47 @@ test('base crossbow falls back consistently if any directional image fails',asyn
  assert.equal(art.baseCrossbowActionSpriteAsset('crossbow',null,1,from,to,.24),null);
  assert.ok(art.towerSpriteAsset('crossbow',null,1));
  assert.ok(art.ballistaActionSpriteAsset('crossbow','pierce',2,from,to,.24));
+});
+
+test('metal marching supplies eight size-scaled frames and preserves the legacy hit anchor',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'metal-walk-ready');
+ const m=JSON.parse(readFileSync(new URL('../../../public/defense/models/metal-soldier-walk.json',import.meta.url),'utf8'));
+ assert.equal(requests.filter(src=>src.endsWith('/metal-soldier-walk-atlas.webp')).length,1);
+ const frames=Array.from({length:8},(_,i)=>art.monsterWalkingSpriteAsset('metal',i*m.stride_world/8)!);
+ assert.equal(new Set(frames.map(f=>f.viewBox)).size,8);
+ assert.deepEqual(art.monsterWalkingSpriteAsset('metal',m.stride_world),frames[0]);
+ assert.deepEqual(art.monsterWalkingSpriteAsset('metal',m.stride_world*1.25/8,85),frames[1]);
+ for(const f of frames){assert.equal(f.displayScale,384/260);assert.equal(f.groundY,296*2/3);}
+ // Old crop bottom is pixel 322, drawn at +10% of displayed size: 322 - .1*260 = 296.
+ assert.equal(m.frame.display_anchor_y,322-.1*260);
+ for(const missing of ['metal-soldier-atlas.webp','metal-soldier-walk-atlas.webp']){
+  const {art:failed}=await loadWithImageResults(src=>src.endsWith('/'+missing),'metal-walk-'+missing);
+  assert.equal(failed.monsterWalkingSpriteAsset('metal',12),null);
+  if(missing==='metal-soldier-atlas.webp')assert.equal(failed.spriteAsset(12).src,'/defense/atlas.png');
+  else assert.ok(failed.monsterSpriteAsset('metal','hit'));
+ }
+});
+
+test('metal marching delivers grounded articulated boots and projected planted stride',()=>{
+ const read=(path:string)=>readFileSync(new URL('../../../'+path,import.meta.url));
+ const m=JSON.parse(read('public/defense/models/metal-soldier-walk.json').toString());
+ const hash=(b:Buffer)=>createHash('sha256').update(b).digest('hex');
+ assert.equal(hash(read(m.source)),m.source_sha256);assert.equal(hash(read(m.base_source)),m.base_source_sha256);
+ assert.equal(hash(read(m.generator)),m.generator_sha256);
+ for(const f of m.files){const b=read('public/defense/models/'+f.file);assert.equal(hash(b),f.sha256);assert.equal(b.length,f.bytes);}
+ for(const f of m.renders)assert.equal(hash(read(f.path)),f.sha256);
+ assert.deepEqual(m.boot_parents,{near:'foot-joint-near',far:'foot-joint-far'});
+ assert.equal(m.samples.length,33);assert.ok(m.samples.every((v:{lowest_vertex:number,feet:{near:number,far:number}})=>v.lowest_vertex>-.005&&Math.min(v.feet.near,v.feet.far)<.002));
+ const stride=Number((Math.abs(m.samples[16].foot_projected_x.far-m.samples[0].foot_projected_x.far)*2*68/260).toFixed(5));
+ assert.equal(m.stride_world,stride);
+ for(const [side,start,end] of [['far',0,16],['near',16,32]] as const){
+  const positions=m.samples.slice(start,end+1).map((v:{frame:number,foot_projected_x:Record<string,number>})=>v.foot_projected_x[side]*68/260+(v.frame-1)/32*stride);
+  assert.ok(Math.max(...positions)-Math.min(...positions)<3.1,`${side} support-foot movement`);
+  const held=Array.from({length:end-start+1},(_,j)=>{const i=start+j;return m.samples[Math.floor(i/4)*4%32].foot_projected_x[side]*68/260+i/32*stride;});
+  assert.ok(Math.max(...held)-Math.min(...held)<5.3,`${side} support foot with eight held frames`);
+ }
+ assert.deepEqual(m.samples[0].bounds,m.samples[32].bounds);
+ const b=read('public/defense/models/metal-soldier-walk.glb');const g=JSON.parse(b.subarray(20,20+b.readUInt32LE(12)).toString());
+ for(const side of ['near','far']){const foot=g.nodes.find((n:{name:string})=>n.name==='foot-joint-'+side);assert.ok(foot.children.some((i:number)=>g.nodes[i].name==='boot-'+side));}
+ assert.ok(g.animations.some((a:{name:string,channels:unknown[]})=>a.name==='metal-soldier-walk'&&a.channels.length>=12));
 });

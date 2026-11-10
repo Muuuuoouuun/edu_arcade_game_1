@@ -1,3 +1,4 @@
+import { METAL_SOLDIER_STRIDE } from './metalSoldierGait.ts';
 import { attackOctant } from './action.ts';
 import { FROST_WOLF_STRIDE } from './frostWolfGait.ts';
 import { PET_WOLF_STRIDE } from './petWolfGait.ts';
@@ -72,6 +73,12 @@ export const STONE_GOLEM_STRIDE = 22.16903;
 // Ice knight's planted foot travel at the same 68-unit display size.
 export const ICE_KNIGHT_STRIDE = 24.83730;
 export const enemyStride = (kind: EnemyKind, size = 68) => kind === 'stone' || kind === 'ice' ? (kind === 'stone' ? STONE_GOLEM_STRIDE : ICE_KNIGHT_STRIDE) * (Number.isFinite(size) && size > 0 ? size / 68 : 1) : kind === 'frostwolf' ? 40 : kind === 'wood' ? 52 : 48;
+
+/** The new metal gait uses camera-projected support-foot travel; legacy fallback keeps its old cadence. */
+export function metalWalkFrame(distance:number,size=68):number {
+ const stride=METAL_SOLDIER_STRIDE*(Number.isFinite(size)&&size>0?size/68:1);
+ return Math.floor((Math.max(0,distance)/stride+1e-9)*8)%8;
+}
 
 /** Impulses slide a body; they must not wind its gait backwards or flip its facing. */
 export function advanceEnemyGait(distance: number, before: number, after: number, dt: number, bracing: boolean): Locomotion {

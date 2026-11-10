@@ -2,7 +2,7 @@ import { gateImpact } from '../games/defense/gateImpact';
 import { gatePlacement } from '../games/defense/gateAssets';
 import { knockbackPresentation } from '../games/defense/action';
 import { DefenseTerrain, BridgeFrontRail, useTerrainAsset } from './DefenseTerrain';
-import { WALK_STRIDE, enemyStride, enemyWalkFrame } from '../games/defense/locomotion';
+import { WALK_STRIDE, enemyStride, enemyWalkFrame, metalWalkFrame } from '../games/defense/locomotion';
 import type { Locomotion } from '../games/defense/locomotion';
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, ReactNode } from 'react';
@@ -118,16 +118,16 @@ function EnemyUnit({unit=1,hpScale=1,enemy:e,state:s,reduced,onActivate,onKey}:{
  const flinch=e.kind==='frostwolf'&&!knock&&!charging?frostWolfHitAsset(heading,phaseDistance,e.hit,size,e.walkCycles===undefined?undefined:e.walkCycles+e.id*7/40,reduced):null;
  const brace=e.kind==='frostwolf'&&knock&&!charging?frostWolfBraceAsset(heading,phaseDistance,e.walkCycles===undefined?undefined:e.walkCycles+e.id*7/40,e.knockVelocity??0,size,reduced):null;
  const authoredWolf=!!directional||!!flinch||!!brace;
- const gait=directional?.frame??enemyWalkFrame(e.kind,phaseDistance,size);
- const motionPose=charging?'charge':e.hit>.02||knock?'hit':enraged?'charge':boss?'idle':reduced||gait<4?'walk-a':'walk-b';
  const walking=directional?.asset??(canWalk?monsterWalkingSpriteAsset(e.kind,phaseDistance,size):null);
+ const gait=directional?.frame??(e.kind==='metal'&&walking?metalWalkFrame(phaseDistance,size):enemyWalkFrame(e.kind,phaseDistance,size));
+ const motionPose=charging?'charge':e.hit>.02||knock?'hit':enraged?'charge':boss?'idle':reduced||gait<4?'walk-a':'walk-b';
  const art=brace?.asset??flinch?.asset??walking??monsterSpriteAsset(e.kind,motionPose);
  const stride=Math.sin(phaseDistance/enemyStride(e.kind,size)*Math.PI*2);
  // Authored gait already contains weight transfer; don't bounce the entire model again.
  const bob=reduced||charging||knock||flinch||walking||!moving?0:-Math.abs(stride)*(boss?1.5:e.kind==='sprout'?3.1:2.3);
  const lean=reduced||flinch||brace?0:knock?-12*facing*clamp((e.knockVelocity??0)/110):walking||!moving?0:stride*1.8+facing*1.3;
  const shake=reduced||authoredWolf?0:Math.sin((1-hit)*Math.PI*3)*hit*3;
- const hpArt=boss?monsterSpriteAsset(e.kind,'charge')??art:authoredWolf?monsterSpriteAsset(e.kind,'walk-a')??art:art;
+ const hpArt=boss?monsterSpriteAsset(e.kind,'charge')??art:authoredWolf||(e.kind==='metal'&&!!walking)?monsterSpriteAsset(e.kind,'walk-a')??art:art;
  const [,,hpWidth,hpHeight]=hpArt?.viewBox.split(' ').map(Number)??[0,0,1,1];
  const modelHeight=hpArt?size*(hpArt.displayScale??1)*Math.min(1,hpHeight/hpWidth):size;
  // Reserve room for a boss's raised arms so the health bar stays fixed through its cast.
