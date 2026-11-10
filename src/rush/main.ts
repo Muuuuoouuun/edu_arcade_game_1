@@ -89,7 +89,7 @@ function updatePops(dt: number) {
 // ---------- events → feedback ----------
 // A melee swing sounds like an impact rather than a bowstring.
 const SOUND: Partial<Record<RushEvent['type'], CombatSoundKind>> = {
-  fire: 'arrow', swing: 'slash', burst: 'skill', slam: 'cannon', townHit: 'breach', heroDown: 'breach', build: 'cast', waveStart: 'surge', superReady: 'freeze',
+  fire: 'arrow', swing: 'slash', burst: 'skill', slam: 'cannon', roar: 'surge', summon: 'cast', townHit: 'breach', heroDown: 'breach', build: 'cast', waveStart: 'surge', superReady: 'freeze',
 };
 let toastTimer = 0;
 function toast(text: string, cls = '') {
@@ -110,6 +110,7 @@ function feedback(events: RushEvent[]) {
     else if (ev.type === 'burst') playHaptic('skill', true);
     else if (ev.type === 'heroDown') { playHaptic('breach', true); toast(`쓰러졌다! ${HEROES[state.hero.kind].respawn}초 뒤 마을에서 복귀`, 'bad'); }
     else if (ev.type === 'superReady') toast('필살기 준비 완료!', 'super');
+    else if (ev.type === 'roar') { playHaptic('surge', true); toast('보스가 부하를 부른다!', 'bad'); }
     else if (ev.type === 'waveStart') { playHaptic('surge', true); toast(ev.wave === WAVE_COUNT - 1 ? `마지막 웨이브 · 보스 출현!` : `웨이브 ${ev.wave + 1} 시작`, ev.wave === WAVE_COUNT - 1 ? 'bad' : ''); }
     else if (ev.type === 'waveClear') toast(`웨이브 ${ev.wave + 1} 방어 성공 · +${ev.bonus}G`, 'good');
     else if (ev.type === 'build') toast(ev.level === 0 ? '궁수탑 건설!' : `${ev.branch ? BRANCH_NAME[ev.branch] : '궁수'}탑 Lv${ev.level + 1}`, 'good');

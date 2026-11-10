@@ -80,13 +80,17 @@ export type EnemyDef = {
   aggro: number; gold: number; knockTaken: number; shotSpeed?: number; windup?: number; slamRadius?: number;
   /** Shield-bearer (cycle 27): hero bolts from within shieldArc (rad) of its facing deal this share of damage. */
   shield?: number; shieldArc?: number;
+  /** Boss rally (cycle 33): the first time health drops to `at` of max, it stands and roars for `roar` s, then
+   * calls `count` minions of `kind` in a ring of radius `ring` around itself. Only from stage `minStage`. */
+  summon?: { at: number; roar: number; count: number; kind: EnemyKind; ring: number; minStage: number };
 };
 export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   grunt: { hp: 60, speed: 2.5, radius: 0.42, damage: 9, reach: 0.6, cooldown: 0.8, aggro: 3.2, gold: 6, knockTaken: 1 },
   skirmisher: { hp: 45, speed: 2.2, radius: 0.4, damage: 12, reach: 6, cooldown: 1.7, aggro: 7, gold: 8, knockTaken: 1, shotSpeed: 9 },
   brute: { hp: 260, speed: 1.5, radius: 0.7, damage: 28, reach: 0.7, cooldown: 1.3, aggro: 3, gold: 18, knockTaken: 0.35 },
   shield: { hp: 90, speed: 1.9, radius: 0.5, damage: 14, reach: 0.6, cooldown: 1, aggro: 3.2, gold: 10, knockTaken: 0.6, shield: 0.25, shieldArc: 1 },
-  boss: { hp: 1800, speed: 1.25, radius: 1.15, damage: 70, reach: 2.2, cooldown: 2.6, aggro: 5, gold: 0, knockTaken: 0.1, windup: 0.9, slamRadius: 2.8 },
+  boss: { hp: 1800, speed: 1.25, radius: 1.15, damage: 70, reach: 2.2, cooldown: 2.6, aggro: 5, gold: 0, knockTaken: 0.1, windup: 0.9, slamRadius: 2.8,
+    summon: { at: 0.5, roar: 1, count: 3, kind: 'skirmisher', ring: 1.9, minStage: 6 } },
 };
 
 export type TowerLevel = { cost: number; damage: number; cooldown: number; range: number };

@@ -729,6 +729,13 @@ export class RushView {
           fx.emit({ kind: 'spark', n: 3, color: 0xffffff, at: [ev.x, 0.9, ev.z], speed: 2.5, up: 1, size: 0.1, life: 0.15 });
           break;
         case 'telegraph': this.telegraph(ev.x, ev.z, ev.radius, ev.time); break;
+        // Boss rally (cycle 33): amber, not the red of a slam, because the roar itself does no damage.
+        case 'roar': this.telegraph(ev.x, ev.z, ev.radius, ev.time, 0xffb02e); break;
+        case 'summon':
+          this.ring(ev.x, ev.z, 0xffb02e, 3, 0.4, 0.95, true);
+          fx.emit({ kind: 'puff', n: 12, color: 0xe8c99a, at: [ev.x, 0.4, ev.z], speed: 4, up: 1, size: 0.3, life: 0.5 });
+          if (!reducedMotion) this.shake = Math.max(this.shake, 0.35);
+          break;
         case 'slam':
           this.ring(ev.x, ev.z, 0xff5d73, ev.radius, 0.35, 0.95, true);
           fx.emit({ kind: 'puff', n: 10, color: 0xe8c99a, at: [ev.x, 0.3, ev.z], speed: 3.5, up: 0.8, size: 0.28, life: 0.45 });
@@ -777,9 +784,9 @@ export class RushView {
     this.fx.push({ mesh, age: 0, life: 0.16, grow: range, fade: 0.55, y0: 0.07 });
   }
 
-  private telegraph(x: number, z: number, radius: number, time: number) {
-    const mesh = new Mesh(this.geo.ring, basic(0xff3b4e, 0.85));
-    const fill = new Mesh(this.geo.disc, basic(0xff3b4e, 0.28));
+  private telegraph(x: number, z: number, radius: number, time: number, color = 0xff3b4e) {
+    const mesh = new Mesh(this.geo.ring, basic(color, 0.85));
+    const fill = new Mesh(this.geo.disc, basic(color, 0.28));
     for (const m of [mesh, fill]) { m.rotation.x = -Math.PI / 2; m.position.set(x, 0.05, z); m.renderOrder = 3; this.scene.add(m); }
     mesh.scale.setScalar(radius); fill.scale.setScalar(0.01);
     this.telegraphs.push({ mesh, fill, age: 0, life: time });

@@ -3,7 +3,7 @@
 // so this module can run in tests, in the browser and later on an authoritative server.
 import {
   ARENA, BUSH, BUSHES, CRATE, CRATES, ECONOMY, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WALLS, WAVES,
-  type Block, type EnemyKind, type HeroDef, type HeroKind, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
+  type Block, type EnemyDef, type EnemyKind, type HeroDef, type HeroKind, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
 
 export type Phase = 'prep' | 'wave' | 'won' | 'lost';
 
@@ -21,6 +21,8 @@ export interface Enemy {
   windup: { x: number; z: number; t: number } | null;
   /** Seconds of frost slow left (cycle 15). */
   slowT?: number;
+  /** Boss rally (cycle 33): seconds of roar left, and whether it has already called its minions. */
+  roarT?: number; rallied?: boolean;
 }
 export type ShotOwner = 'hero' | 'super' | 'tower' | 'enemy';
 export interface Shot {
@@ -50,6 +52,8 @@ export type RushEvent =
   | { type: 'townHit'; damage: number }
   | { type: 'telegraph'; x: number; z: number; radius: number; time: number }
   | { type: 'slam'; x: number; z: number; radius: number }
+  | { type: 'roar'; x: number; z: number; radius: number; time: number }
+  | { type: 'summon'; x: number; z: number; count: number }
   | { type: 'coin'; value: number }
   | { type: 'build'; pad: number; level: number; branch?: TowerBranch }
   | { type: 'splash'; x: number; z: number; radius: number }
@@ -516,6 +520,19 @@ function updateEnemies(s: RushState) {
       }
       continue;
     }
+    // Rally (cycle 33): once below the threshold it stands still and roars, then calls minions. A slam already
+    // winding up lands first; a boss killed mid-roar calls nobody.
+    const call = def.summon;
+    if (call && !e.rallied && (s.diff.stage ?? 1) >= call.minStage && e.hp <= e.maxHp * call.at) {
+      e.rallied = true;
+      e.roarT = call.roar;
+      s.events.push({ type: 'roar', x: e.x, z: e.z, radius: call.ring + ENEMIES[call.kind].radius, time: call.roar });
+    }
+    if (e.roarT) {
+      e.roarT = Math.max(0, e.roarT - STEP);
+      if (e.roarT === 0) rally(s, e, call!);
+      continue;
+    }
 
     const chase = alive && dist(e, h) <= def.aggro && (!hidden || dist(e, h) <= BUSH.reveal);
     if (e.chasing && !chase) e.wp = nearestSegmentEnd(LANES[e.lane], e);
@@ -563,6 +580,18 @@ function updateEnemies(s: RushState) {
     }
   }
   for (const e of list) if (e.hp > 0) confine(e, ENEMIES[e.kind].radius, s);
+}
+
+function rally(s: RushState, boss: Enemy, call: NonNullable<EnemyDef['summon']>) {
+  const def = ENEMIES[call.kind], hp = Math.round(def.hp * s.diff.enemyHp);
+  for (let i = 0; i < call.count; i++) {
+    const a = boss.facing + ((i + 0.5) / call.count) * Math.PI * 2;
+    s.enemies.push({
+      id: s.nextId++, kind: call.kind, x: boss.x + Math.cos(a) * call.ring, z: boss.z + Math.sin(a) * call.ring, kx: 0, kz: 0,
+      hp, maxHp: hp, lane: boss.lane, wp: boss.wp, cd: def.cooldown * 0.5, flash: 0, chasing: false, facing: boss.facing, windup: null,
+    });
+  }
+  s.events.push({ type: 'summon', x: boss.x, z: boss.z, count: call.count });
 }
 
 function attack(s: RushState, e: Enemy, atHero: boolean) {

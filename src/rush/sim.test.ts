@@ -331,3 +331,39 @@ test('auto-aim skips a raised shield when another target is close, but still sho
   assert.equal(autoTarget(s, s.hero, 9.5), shield);
   assert.ok(SHIELD_AIM_PENALTY > 0);
 });
+
+test('boss rally: from stage 6, below half health it roars in place for a second, then calls its minions once', async () => {
+  const { stageDifficulty } = await import('./stages.ts');
+  const call = ENEMIES.boss.summon!;
+  const setup = (stage: number) => {
+    const s = createRush(1, NO_MODS, stageDifficulty(stage));
+    Object.assign(s.hero, { x: 9, z: 9 }); // far away: the boss walks its lane
+    const b = enemy(s, 'boss', 0, -8);
+    b.hp = Math.floor(b.maxHp * call.at);
+    return { s, b };
+  };
+  const run = (s: RushState, n: number) => { const seen: string[] = []; for (let i = 0; i < n; i++) { stepRush(s, {}); seen.push(...s.events.map(e => e.type)); } return seen; };
+  const { s, b } = setup(6);
+  assert.ok(run(s, 1).includes('roar'), 'roars on dropping to half');
+  const at = { x: b.x, z: b.z }, roarTicks = Math.round(call.roar / STEP);
+  const during = run(s, roarTicks - 2);
+  assert.ok(!during.includes('summon') && s.enemies.length === 1, 'nobody yet during the roar');
+  assert.ok(Math.hypot(b.x - at.x, b.z - at.z) < 1e-9, 'stands still while roaring');
+  assert.ok(run(s, 3).includes('summon'), 'calls when the roar ends');
+  const minions = s.enemies.filter(e => e !== b);
+  assert.equal(minions.length, call.count);
+  assert.ok(minions.every(m => m.kind === call.kind && m.hp === Math.round(ENEMIES[call.kind].hp * stageDifficulty(6).enemyHp) && m.lane === b.lane));
+  assert.ok(minions.every(m => Math.hypot(m.x - b.x, m.z - b.z) > ENEMIES.boss.radius), 'minions appear around the boss, not inside it');
+  b.hp = Math.floor(b.maxHp * 0.2);
+  const later = run(s, 120);
+  assert.ok(!later.includes('roar') && !later.includes('summon'), 'only once per boss');
+  // Stage 5 and below: no rally, the boss keeps walking.
+  const low = setup(5);
+  const seen = run(low.s, 90);
+  assert.ok(!seen.includes('roar') && low.s.enemies.length === 1 && Math.hypot(low.b.x, low.b.z + 8) > 0.5, 'no rally before stage 6');
+  // A boss killed mid-roar calls nobody.
+  const cut = setup(6);
+  run(cut.s, 1);
+  cut.b.hp = 0;
+  assert.ok(!run(cut.s, roarTicks + 5).includes('summon'), 'killed during the roar: no minions');
+});
