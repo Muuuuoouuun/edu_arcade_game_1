@@ -79,3 +79,7 @@ test('hero stop clock follows pause/speed and is cleared by resume, attack and d
  const dashed=actFrontier(s,{type:'dash'});assert.equal(dashed.hero.settle,undefined);assert.equal(stepFrontier(dashed,.01).hero.settle,undefined);
  for(let i=0;i<8;i++)s=stepFrontier(s,.03);assert.equal(s.hero.settle,undefined);
 });
+
+test('a lethal ballista impact records one fall at the actual target with the incoming direction',()=>{
+ let s=actFrontier(createFrontier('defense'),{type:'start'});s.remaining=1;s.spawnIn=999;s.enemies=[{id:77,x:-20,z:5,hp:20,maxHp:60,cooldown:999,path:0}];s.bolts=[{id:100,pad:0,targetId:77,position:{x:-21,y:1.1,z:5},previous:{x:-22,y:1.1,z:5},damage:23,life:1}];s=stepFrontier(s,.05);assert.equal(s.enemies.length,0);assert.equal(s.kills,1);assert.equal(s.fallen?.length,1);assert.ok(s.effects.some(e=>e.kind==='impact'));assert.ok(Math.abs(s.fallen![0].enemy.hitHeading!-Math.PI/2)<1e-6);const gold=s.gold;s=stepFrontier(s,.05);assert.equal(s.kills,1);assert.equal(s.gold,gold);
+});

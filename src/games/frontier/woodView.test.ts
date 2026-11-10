@@ -94,3 +94,13 @@ test('hit marker belongs only to recently damaged visible enemies, follows simul
   batch.update([{...e,hp:0}],false,camera,1.1);assert.equal(find().count,0);batch.dispose();
  }
 });
+
+test('defeated bodies fall away from the hit and stay grounded across terrain, without becoming live targets',()=>{
+ const point=new Vector3();for(const [x,z] of [[-15,8],[-15,-6],[6,0],[6,2.7],[-15,-20]])for(const heading of [0,Math.PI/2,Math.PI,Math.PI*1.5]){
+  const e={...enemy(3),x,z,hp:0,moving:false,hitHeading:heading};for(const [source,authored] of [[combined,true],[woodFallback(),false]] as const){const view=new WoodView(source,authored);
+   for(const age of [0,.1,.25,.4,.55]){view.update(e,false,age,age);let low=Infinity;for(const mesh of view.surfaces){const a=mesh.geometry.attributes.position;for(let i=0;i<a.count;i++){point.fromBufferAttribute(a,i).applyMatrix4(mesh.matrixWorld);low=Math.min(low,point.y-shockwaveSurface(point.x,point.z));}}assert.ok(low>=-1e-5,`fall penetrated terrain: ${low}`);assert.ok(low<1e-5,`fall floats: ${low}`);}
+   view.update(e,false,.25,.25);const up=new Vector3(0,1,0).applyQuaternion(view.root.quaternion);assert.ok(up.x*Math.sin(heading)+up.z*Math.cos(heading)>.5,'falls away from source');const matrix=view.surfaces[0].matrixWorld.clone();view.update(e,false,.25,.25);assert.ok(view.surfaces[0].matrixWorld.elements.every((v,i)=>Math.abs(v-matrix.elements[i])<1e-6),'paused fall stays fixed');view.dispose();
+  }
+ }
+ const batch=new WoodBatch(combined),e={...enemy(4),x:0,z:0,hp:0,hitHeading:0};batch.update([],false,camera,1.2,[{enemy:e,at:1}]);assert.equal(batch.fallenCount,1);assert.equal(batch.meshes[0].count,1);assert.equal(batch.markerCount,0);assert.equal(batch.warningCount,0);batch.update([],true,camera,1.2,[{enemy:e,at:1}]);assert.equal(batch.fallenCount,0);assert.equal(batch.views.size,0);batch.update([],false,camera,1.61,[{enemy:e,at:1}]);assert.equal(batch.fallenCount,0);batch.dispose();
+});

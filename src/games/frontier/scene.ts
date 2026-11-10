@@ -131,7 +131,7 @@ export class FrontierScene {
   this.renderer.domElement.dataset.heroAimCells=String(this.heroAim?.visible?this.heroAim.geometry.drawRange.count/6:0);
   this.units.forEach((view,i)=>{const p=s.squad[i];if(p)view.update(p,s.time,this.reduced);});
   this.renderer.domElement.dataset.squadModel=this.squadLoaded?'glb':'geometry';this.renderer.domElement.dataset.squadMotion=JSON.stringify(s.squad.map((u,i)=>({x:u.x,z:u.z,heading:u.heading,distance:u.walkDistance??0,moving:u.moving??false,shotAt:u.shotAt,shotHeading:u.shotHeading,feet:this.units[i]?.feet})));
-  this.wood.update(s.enemies,this.reduced,this.camera,s.time);
+  this.wood.update(s.enemies,this.reduced,this.camera,s.time,s.fallen);this.renderer.domElement.dataset.woodFallen=String(this.wood.fallenCount);
   for(const t of s.towers){let view=this.towers.get(t.pad);if(!view){view=new BallistaView(this.ballista);const p=PADS[t.pad];view.root.position.set(p.x,heightAt(p.x,p.z),p.z);this.towers.set(t.pad,view);this.scene.add(view.root);this.track(view.root);}view.update(t,this.reduced);}
   this.ballistaBatch?.update([...this.towers.values()],this.camera);
   const boltMatrix=new THREE.Object3D();this.boltShaft.count=this.boltTip.count=Math.min(64,s.bolts.length);

@@ -15,3 +15,12 @@ test('attack records whether preparation starts from moving feet without changin
 test('enemy reaction starts only on landed damage and uses simulation time through pause and 2x',()=>{
  let s=actFrontier(setup(),{type:'attack'});s=run(s,.27);assert.equal(s.enemies[0].hitAt,undefined);s=run(s,.01);assert.equal(s.enemies[0].hitAt,s.time);assert.ok(Math.abs(s.enemies[0].hitHeading!)<.1);const pause=actFrontier(s,{type:'pause'});assert.equal(stepFrontier(pause,.05),pause);const fast=stepFrontier(actFrontier(s,{type:'speed'}),.04),normal=stepFrontier(stepFrontier(s,.04),.04);assert.ok(Math.abs(fast.time-normal.time)<1e-7);assert.equal(fast.enemies[0].hitAt,s.enemies[0].hitAt);
 });
+
+test('lethal contact removes attackers immediately and creates bounded visual-only falls once',()=>{
+ let s=setup();s.enemies=[{id:91,x:-15,z:1.5,hp:20,maxHp:60,cooldown:0,path:0,attack:{time:.27,target:'hero',heading:Math.PI,hit:false,entryDistance:0}},{id:92,x:-14,z:1.3,hp:20,maxHp:60,cooldown:999,path:0}];
+ const initialGold=s.gold;const prepared=actFrontier(s,{type:'skill'});const atContact=run(prepared,.28);assert.equal(atContact.enemies.length,0);assert.equal(atContact.kills,2);assert.equal(atContact.gold,initialGold+28);assert.equal(atContact.hero.hp,atContact.hero.maxHp);assert.equal(atContact.fallen?.length,2);assert.equal(prepared.fallen,undefined);assert.ok(atContact.fallen!.every(f=>f.at===atContact.time&&f.enemy.hp===0));
+ const paused=actFrontier(atContact,{type:'pause'});assert.equal(stepFrontier(paused,.05),paused);const fast=stepFrontier(actFrontier(atContact,{type:'speed'}),.05);assert.ok(Math.abs(fast.time-atContact.time-.1)<1e-6);assert.equal(fast.fallen?.length,2);
+ const expired=run(atContact,.61);assert.equal(expired.fallen?.length,0);assert.equal(expired.kills,2);assert.equal(expired.gold,atContact.gold);
+});
+
+test('simultaneous defeats retain at most 32 visual bodies without losing rewards',()=>{let s=setup();s.enemies=Array.from({length:40},(_,i)=>({id:100+i,x:-15+(i%5)*.1,z:1.2,hp:20,maxHp:60,cooldown:999,path:0}));s=run(actFrontier(s,{type:'skill'}),.28);assert.equal(s.enemies.length,0);assert.equal(s.kills,40);assert.equal(s.fallen?.length,32);assert.equal(s.gold,180+14*40);});
