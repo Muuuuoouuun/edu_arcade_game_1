@@ -31,11 +31,11 @@ test('authored gate masks the hero locally while retaining material settings',as
 });
 test('fallback surfaces and replaced models restore original material settings',()=>{
  const root=new Group(),material=new MeshBasicMaterial({opacity:.73,transparent:true,depthWrite:true}),cube=new Mesh(new BoxGeometry(2,2,2),material);material.forceSinglePass=true;root.add(cube);
- const v=new GateOcclusion(root),camera=new PerspectiveCamera();camera.position.set(0,0,5);camera.updateMatrixWorld();const target=new Vector3(0,0,-5),hook=material.onBeforeCompile,cacheKey=material.customProgramCacheKey;
- v.update(camera,target);assert.equal(v.count,1);assert.equal(material.opacity,.73);const mask=compile(material);assert.ok(mask.z>0);
+ const v=new GateOcclusion(root,false,true),camera=new PerspectiveCamera();camera.position.set(0,0,5);camera.updateMatrixWorld();const target=new Vector3(0,0,-5),hook=material.onBeforeCompile,cacheKey=material.customProgramCacheKey;
+ v.prepare();v.update(camera,target);assert.equal(v.count,1);assert.equal(material.opacity,.73);const mask=compile(material);assert.ok(mask.z>0);
  const unsupported={uniforms:{},fragmentShader:'void main(){\n#include <clipping_planes_fragment>\n}'};material.onBeforeCompile(unsupported as Parameters<Material['onBeforeCompile']>[0],{} as WebGLRenderer);assert.equal(unsupported.fragmentShader,'void main(){\n#include <clipping_planes_fragment>\n}');
  root.clear();v.invalidate();assert.equal(material.opacity,.73);assert.equal(material.transparent,true);assert.equal(material.depthWrite,true);assert.equal(material.forceSinglePass,true);assert.equal(material.onBeforeCompile,hook);assert.equal(material.customProgramCacheKey,cacheKey);assert.equal(mask.z,0);
- const replacement=new Mesh(new BoxGeometry(2,2,2),new MeshBasicMaterial());root.add(replacement);v.update(camera,target);assert.equal(v.count,1,'same eye and target retested after model swap');
+ const replacement=new Mesh(new BoxGeometry(2,2,2),new MeshBasicMaterial());root.add(replacement);v.prepare();v.update(camera,target);assert.equal(v.count,1,'same eye and target retested after model swap');
  v.update(camera,new Vector3(0,0,3));assert.equal(v.count,0,'surfaces beyond the hero remain opaque');
  v.update(camera,new Vector3(5,0,-5));assert.equal(v.count,0);assert.equal(replacement.material.opacity,1);v.dispose();
 });
@@ -61,4 +61,40 @@ test('actual gate occlusion samples are handled even away from the gate',async()
   v.update(camera,target);assert.ok(v.count>0,`${mode} ${w} ${x},${z}`);
  }
  assert.ok(blocked>0);assert.ok(far>0,'the gate can occlude an actor more than eight units away');v.dispose();
+});
+
+test('terrain masking uses projected hero depth so the ground behind remains visible',()=>{
+ const root=new Group(),material=new MeshBasicMaterial(),cube=new Mesh(new BoxGeometry(2,2,2),material);root.add(cube);
+ const camera=new PerspectiveCamera(42,844/390,.1,200);camera.position.set(0,0,5);camera.lookAt(0,0,-5);camera.updateMatrixWorld();
+ const target=new Vector3(0,0,-5),v=new GateOcclusion(root,true);v.update(camera,target,new Vector2(844,390));assert.equal(v.count,1);
+ const shader={uniforms:{} as Record<string,{value:number|Vector4}>,fragmentShader:'void main() {\n#include <clipping_planes_fragment>\n}'};
+ material.onBeforeCompile(shader as Parameters<Material['onBeforeCompile']>[0],{} as WebGLRenderer);
+ assert.match(shader.fragmentShader,/gl_FragCoord\.z < arcanaGateDepth/);
+ assert.ok(Math.abs((shader.uniforms.arcanaGateDepth.value as number)-(target.clone().project(camera).z+1)/2)<1e-8);
+ assert.ok((shader.uniforms.arcanaGateMask.value as Vector4).z>0);v.dispose();
+});
+
+test('authored frost cliffs can reveal previously blocked mobile hero locations',async()=>{
+ const b=readFileSync('public/defense/models/frontier-frost-forest.glb');const root=(await new GLTFLoader().parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'')).scene;root.updateMatrixWorld(true);
+ const v=new GateOcclusion(root,true,true);let blocked=0;
+ for(const mode of ['solo','command'] as const)for(const zoom of [.7,1,1.5])for(const x of [24,27])for(const z of [-25,-19,-13,-7,7,13,25]){
+  const s=createFrontier(mode);s.hero.x=x;s.hero.z=z;const frame=cameraFrame(s,{width:844,height:390,zoom,overview:false,reduced:true});
+  const camera=new PerspectiveCamera(42,844/390,.1,200);camera.position.copy(frame.target).add(frame.offset);camera.lookAt(frame.target);camera.updateMatrixWorld();
+  const target=new Vector3(x,heightAt(x,z)+1.5,z),dir=target.clone().sub(camera.position),hits=new Raycaster(camera.position,dir.clone().normalize(),0,dir.length()-.15).intersectObject(root,true);
+  if(!hits.length)continue;blocked++;v.update(camera,target,new Vector2(844,390));assert.ok(v.count,`${mode}, ${zoom}, ${x}, ${z}`);
+ }
+ assert.ok(blocked>=40,`expected existing blocked views, got ${blocked}`);v.dispose();
+});
+
+test('partitioned terrain raycasts agree with the original mesh over varied cameras',async()=>{
+ const b=readFileSync('public/defense/models/frontier-frost-forest.glb');const data=b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength);
+ const original=(await new GLTFLoader().parseAsync(data,'')).scene,partitioned=(await new GLTFLoader().parseAsync(data,'')).scene;
+ const slow=new GateOcclusion(original,true),fast=new GateOcclusion(partitioned,true,true);let checked=0,blocked=0;
+ for(const [width,height] of [[844,390],[1440,900]])for(const mode of ['solo','command'] as const)for(const zoom of [.7,1,1.5])for(const overview of [false,true])for(const x of [-27,-20,0,20,24,27])for(const z of [-25,-13,0,13,25]){
+  const s=createFrontier(mode);s.hero.x=x;s.hero.z=z;const frame=cameraFrame(s,{width,height,zoom,overview,reduced:true});
+  const camera=new PerspectiveCamera(42,width/height,.1,200);camera.position.copy(frame.target).add(frame.offset);camera.lookAt(frame.target);camera.updateMatrixWorld();
+  const target=new Vector3(x,heightAt(x,z)+1.5,z);slow.update(camera,target,new Vector2(width,height));fast.update(camera,target,new Vector2(width,height));
+  assert.equal(fast.count,slow.count,`${width} ${mode} ${zoom} ${overview} ${x} ${z}`);if(Math.max(Math.abs(x),Math.abs(z))<=18)assert.equal(slow.count,0,`interior ${width} ${mode} ${zoom} ${overview} ${x} ${z}`);blocked+=slow.count>0?1:0;checked++;
+ }
+ assert.equal(checked,720);assert.ok(blocked>0);slow.dispose();fast.dispose();
 });
