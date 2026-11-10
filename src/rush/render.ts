@@ -64,7 +64,7 @@ export class RushView {
   private crates = new Map<number, { mesh: Mesh; wobble: number }>();
   /** Instanced batches: draw calls stay fixed however many enemies, shots and coins are alive. */
   private batches!: {
-    body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>; flash: Record<EnemyKind, Batch>;
+    body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>; flash: Record<EnemyKind, Batch>; ice: Record<EnemyKind, Batch>;
     shadow: Batch; ring: Batch; frostRing: Batch; barBg: Batch; barFill: Batch; shots: Record<Shot['owner'], Batch>; branchShots: Record<TowerBranch, Batch>; coins: Batch;
   };
   private counts = { enemies: 0, shots: 0 };
@@ -483,6 +483,8 @@ export class RushView {
       body: per(k => new Batch(this.scene, this.enemyKit(k).body, this.mats.baked, k === 'boss' ? 4 : cap)),
       hull: per(k => new Batch(this.scene, this.enemyKit(k).hull, outlineMaterial(k === 'boss' ? 0.08 : 0.05), k === 'boss' ? 4 : cap)),
       flash: per(k => new Batch(this.scene, this.enemyKit(k).body, this.mats.flash, k === 'boss' ? 4 : cap)),
+      // Frost shell (cycle 16): the same body, a little larger, pale ice blue and see-through. Drawn only while slowed.
+      ice: per(k => new Batch(this.scene, this.enemyKit(k).body, ICE, k === 'boss' ? 4 : cap, { order: 4 })),
       shadow: new Batch(this.scene, this.geo.blob, this.mats.blob, cap),
       ring: new Batch(this.scene, this.geo.ring, this.mats.enemyRing, cap),
       frostRing: new Batch(this.scene, this.geo.ring, basic(0x8fe6ff, 0.9), cap),
@@ -510,7 +512,7 @@ export class RushView {
     const B = this.batches, t = this.tmp, cam = this.camera.quaternion;
     this.camera.updateMatrixWorld();
     this.frustum.setFromProjectionMatrix(t.m.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
-    const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), B.shadow, B.ring, B.frostRing, B.barBg, B.barFill];
+    const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), ...Object.values(B.ice), B.shadow, B.ring, B.frostRing, B.barBg, B.barFill];
     all.forEach(b => b.begin());
     for (const e of s.enemies) {
       const r = ENEMIES[e.kind].radius;
@@ -520,6 +522,9 @@ export class RushView {
       const m = this.place(e.x, bob, e.z, 0, yaw(e.facing), 0, sx, sy, sx);
       (e.flash > 0 ? B.flash : B.body)[e.kind].push(m);
       B.hull[e.kind].push(m);
+      // Frost shell; blinks in its last quarter second so the player sees the slow wearing off.
+      const ice = e.slowT ?? 0;
+      if (ice > 0 && (ice > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.ice[e.kind].push(this.place(e.x, bob - 0.02, e.z, 0, yaw(e.facing), 0, sx * 1.08, sy * 1.06, sx * 1.08));
       if (this.sheetMode) continue;
       B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2, 0, 0, r * 1.25));
       B.ring.push(this.place(e.x, 0.03, e.z, -Math.PI / 2, 0, 0, r * 1.15));
@@ -896,5 +901,6 @@ export class RushView {
 }
 
 const BRANCH_COLOR: Record<TowerBranch, number> = { fire: 0xff7a2f, frost: 0x4fc3ff };
+const ICE = new MeshBasicMaterial({ color: 0xc4f2ff, transparent: true, opacity: 0.4, depthWrite: false });
 const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4 };
 const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };

@@ -318,7 +318,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 
 /* Tower Lv2 choice (cycle 15): the build button splits into fire (left) and frost (right). */
 .hud-build.fire { background: linear-gradient(#ffc08a 0 50%, #ff7a2f 50%); }
-.hud-build.frost { background: linear-gradient(#c8f4ff 0 50%, #4fc3ff 50%); }
+.hud-build.frost { background: linear-gradient(#4cb8ee 0 50%, #0f74c0 50%); } /* cycle 16: white on the lower half 4.9:1 (was 2.0:1) */
 .hud-build.split-l { transform: translateX(calc(-100% - 6px)); }
 .hud-build.split-r { transform: translateX(6px); }
 .hud-build.split-l:active { transform: translateX(calc(-100% - 6px)) translateY(2px); }

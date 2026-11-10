@@ -285,6 +285,8 @@ if (params.has('sheet')) {
   Object.assign(state.hero, { x: 8.2, z: 2, facing: Math.PI / 2 });
   (['grunt', 'skirmisher', 'brute', 'boss'] as const).forEach((kind, i) => state.enemies.push({
     id: 900 + i, kind, x: [-4.6, -1.6, 1.6, 5][i], z: 2, kx: 0, kz: 0, hp: 1, maxHp: 1, lane: 0, wp: 1, cd: 0, flash: 0, chasing: false, facing: Math.PI / 2, windup: null,
+    // ?frost=1 shows the frost shell (cycle 16) on every enemy.
+    ...(params.has('frost') ? { slowT: 99 } : {}),
   }));
   view.sheet();
   showScreen(null);
