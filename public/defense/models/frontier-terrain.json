@@ -1,10 +1,17 @@
 {
   "generator": "tools/blender/build_frontier_terrain.py",
-  "generator_sha256": "ed394b9f48f4b40f55210f9f4e16d6e8a6505c5f2056267ba31f1967a17b967a",
+  "generator_sha256": "27b116468b549b52e4697bc63e8af34f67991eb10ba647831d0fce4129de17db",
   "command": "npm run models:frontier-terrain",
-  "editable_objects": 359,
+  "editable_objects": 389,
   "runtime_materials": 1,
   "runtime_paint": "linear vertex colors; opaque roughness .85",
+  "forest_tree_count": 28,
+  "forest_crown_meshes": 56,
+  "meadow_palette_colors": 4,
+  "forest_outer_verge_x": [
+    32,
+    41
+  ],
   "footprint": [
     64,
     64
@@ -52,28 +59,28 @@
   "files": [
     {
       "file": "art-source/defense/frontier-terrain.blend",
-      "bytes": 2965880,
-      "sha256": "de7487bb7bda3dd4ec3b46cce75b029b755a8aea812b3c88f9c2900393e60c92"
+      "bytes": 3230108,
+      "sha256": "b6edd6161570658ac755eda6930d77bb53cafe020f4c2a8d73e885f1b34d9841"
     },
     {
       "file": "public/defense/models/frontier-terrain.glb",
-      "bytes": 670336,
-      "sha256": "aa80fef868493185882e44417b908a102c29d3d04fa0786e5aa0d2424126983c"
+      "bytes": 795640,
+      "sha256": "2def90c31ff81edd3c37afb4d11cba97c34126c511a3604d35fb328a5f59a486"
     },
     {
       "file": "public/defense/models/frontier-terrain.png",
-      "bytes": 594956,
-      "sha256": "92e57d9497feac729e878582a49e3f51101f58d6b2025f0b2c742287fbef6b67"
+      "bytes": 634829,
+      "sha256": "b5cd83d1eedc0ea17160c0e8dad1f3694d7f6d18486591a249ec38eae5d67128"
     },
     {
       "file": "public/defense/models/frontier-terrain.webp",
-      "bytes": 21894,
-      "sha256": "2ca099636e21e46c1c24cc123e5a22855e654bb92abbedf7e531b8abf3bcaefd"
+      "bytes": 25260,
+      "sha256": "7fca0a2bd3c819d2a9d66d73c2149d396a9b70026e2d1fe4ddc0cabf964b62b9"
     },
     {
       "file": "public/defense/models/frontier-terrain-crossing.png",
-      "bytes": 579094,
-      "sha256": "229fb0c306ebaf082a76e196c96976cf5e1a94ac1f95b8ce01acef05ca64cb10"
+      "bytes": 579022,
+      "sha256": "ad247a38418b2ce6825fd669f5b46c6e677d268f664a413e9f13a9072bd4ae8b"
     }
   ]
 }

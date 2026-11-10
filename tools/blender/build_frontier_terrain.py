@@ -18,10 +18,21 @@ def box(name,x,y,z,w,h,d,color):
 verts=[(x,-z,height(x,z)) for z in range(-32,33) for x in range(-32,33)]
 faces=[(i,i+65,i+66,i+1) for z in range(64) for x in range(64) for i in [z*65+x] if not 35<=x<41]
 mesh=bpy.data.meshes.new('graded terrain mesh');mesh.from_pydata(verts,[],faces);mesh.update();o=bpy.data.objects.new('Grass slopes / river trench',mesh);bpy.context.collection.objects.link(o);objects.append(o)
-for color in ['#6d9566','#739b69']:mesh.materials.append(mat(color))
-for p in mesh.polygons:p.material_index=(math.floor(verts[p.vertices[0]][0]/4)+math.floor(-verts[p.vertices[0]][1]/4))%2
+for color in ['#6f9663','#739a66','#779d69','#7ba16b']:mesh.materials.append(mat(color))
+# Large irregular meadow patches replace the grid without a texture or extra draw calls.
+for p in mesh.polygons:
+ x,z=verts[p.vertices[0]][0],-verts[p.vertices[0]][1]
+ variation=.65*math.sin(x*.22+math.sin(z*.13)*1.1)+.35*math.cos(z*.26-x*.11)
+ p.material_index=0 if variation<-.48 else 1 if variation<0 else 2 if variation<.48 else 3
+# Continue the eastern verge beyond the walkable map so foreground trees have actual ground.
+# Its heights follow the same north/south slope, but no gameplay coordinates are extended.
+edgeverts=[(x,-z,height(x,z)) for z in range(-32,33) for x in (32,41)]
+edgefaces=[(2*i,2*i+2,2*i+3,2*i+1) for i in range(64)]
+edge=bpy.data.meshes.new('Forest outer verge');edge.from_pydata(edgeverts,[],edgefaces);edge.materials.append(mat('#739a66'))
+o=bpy.data.objects.new('Forest outer verge',edge);bpy.context.collection.objects.link(o);objects.append(o)
 # Separate land masses leave a real open gorge below the bridge.
 for x,w in [(-14.5,35),(20.5,23)]:box('Island foundation',x,-4,z=0,w=w,h=5,d=64,color='#6a7055')
+box('Forest verge foundation',36.5,-4,z=0,w=9,h=5,d=64,color='#6a7055')
 box('River bed',6,-4.6,0,6,.2,64,'#5c685b');box('River water',6,-2.725,0,5.8,.25,64,'#5cabb5')
 # All rock faces stay inside the blocked river x3..9. Shore tops remain at simulation height.
 for side in [-1,1]:
@@ -54,11 +65,15 @@ for x in range(-32,33,4):
 for z in range(-28,32,4):
  for x in [-32,32]:box('Stratified edge',x,height(x,z)-1.5,z,2,3.5,4,'#7b806a')
 for i in range(32):
- x=-30 if i%2==0 else 30;z=-27+(i%16)*3.6;s=1+(i%3)*.15
+ side=-1 if i%2==0 else 1;x=-31 if side<0 else 38;z=-27+(i%16)*3.6;s=1+(i%3)*.12
  if abs(z)<4:continue
- box('Pine trunk',x,height(x,z)+1.3*s,z,.55*s,2.6*s,.55*s,'#76624b')
- for j in range(2):
-  bpy.ops.mesh.primitive_cone_add(vertices=7,radius1=(1.8-j*.3)*s,radius2=0,depth=3.2*s,location=(x,-z,height(x,z)+(3+j*1.3)*s));o=bpy.context.object;o.name='Pine crown';o.data.materials.append(mat('#396e59' if j else '#477c5c'));objects.append(o)
+ base=height(x,z)
+ bpy.ops.mesh.primitive_cone_add(vertices=7,radius1=.55*s,radius2=.29*s,depth=3.3*s,location=(x,-z,base+1.65*s));o=bpy.context.object;o.name='Verdant trunk';o.data.materials.append(mat('#735740'));objects.append(o)
+ branch=box('Verdant branch',x-side*.42*s,base+3.0*s,z,.23*s,2.1*s,.23*s,'#735740');branch.rotation_euler.y=side*math.radians(33)
+ # Low-poly leaf masses keep a broad, asymmetrical outline at battle scale.
+ for j,(offset,depth,radii,color) in enumerate([(.55,-.9,(1.95,2.05,1.25),'#396e4d'),(-.55,.9,(1.5,1.8,1.08),'#6b9653')]):
+  bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1,radius=1,location=(x+side*offset*s,-(z+depth*s),base+(4.35+j*.38)*s))
+  o=bpy.context.object;o.name='Verdant crown';o.scale=tuple(v*s for v in radii);bpy.ops.object.transform_apply(location=False,rotation=False,scale=True);o.data.materials.append(mat(color));objects.append(o)
 # Continuous winding road follows the actual defense route, with raised stone edging.
 path=[(-22,-29),(-22,-26),(-12,-15),(-20,-2),(-14,21),(-14,30)]
 for n,((ax,az),(bx,bz)) in enumerate(zip(path,path[1:])):
@@ -110,4 +125,4 @@ vertex=paint.node_tree.nodes.new('ShaderNodeVertexColor');vertex.layer_name='Col
 for face in packed.data.polygons:face.material_index=0
 bpy.ops.export_scene.gltf(filepath=str(O/'frontier-terrain.glb'),export_format='GLB',use_selection=True,export_yup=True,export_animations=False)
 subprocess.run(['ffmpeg','-y','-loglevel','error','-i',str(O/'frontier-terrain.png'),'-c:v','libwebp','-quality','90',str(O/'frontier-terrain.webp')],check=True)
-files=[blend,O/'frontier-terrain.glb',O/'frontier-terrain.png',O/'frontier-terrain.webp',O/'frontier-terrain-crossing.png'];meta={'generator':'tools/blender/build_frontier_terrain.py','generator_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'command':'npm run models:frontier-terrain','editable_objects':len(objects),'runtime_materials':1,'runtime_paint':'linear vertex colors; opaque roughness .85','footprint':[64,64],'highland_height':4.6,'river_x':[3,9],'river_water_y':-2.6,'river_bed_y':-4.5,'crossing_camera':{'location':[20,-17,13],'target':[6,0,-.7],'orthographic_scale':25,'size':[768,512]},'bridge_walkable_z':[-2,2],'camera':{'size':[900,600],'orthographic_scale':98,'location':[0,-68,72]},'files':[{'file':str(p.relative_to(R)),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in files]};(O/'frontier-terrain.json').write_text(json.dumps(meta,indent=2)+'\n');print('FRONTIER_TERRAIN_PASS')
+files=[blend,O/'frontier-terrain.glb',O/'frontier-terrain.png',O/'frontier-terrain.webp',O/'frontier-terrain-crossing.png'];meta={'generator':'tools/blender/build_frontier_terrain.py','generator_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'command':'npm run models:frontier-terrain','editable_objects':len(objects),'runtime_materials':1,'runtime_paint':'linear vertex colors; opaque roughness .85','forest_tree_count':28,'forest_crown_meshes':56,'meadow_palette_colors':4,'forest_outer_verge_x':[32,41],'footprint':[64,64],'highland_height':4.6,'river_x':[3,9],'river_water_y':-2.6,'river_bed_y':-4.5,'crossing_camera':{'location':[20,-17,13],'target':[6,0,-.7],'orthographic_scale':25,'size':[768,512]},'bridge_walkable_z':[-2,2],'camera':{'size':[900,600],'orthographic_scale':98,'location':[0,-68,72]},'files':[{'file':str(p.relative_to(R)),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in files]};(O/'frontier-terrain.json').write_text(json.dumps(meta,indent=2)+'\n');print('FRONTIER_TERRAIN_PASS')

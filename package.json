@@ -128,7 +128,7 @@
     "models:kar-reset": "blender --python-exit-code 1 -b --python tools/blender/build_kar_reset.py --",
     "models:kar-reset:pose-check": "npm run models:kar-reset -- --check",
     "models:kar-reset:check": "node tools/check-kar-reset.mjs",
-    "models:frontier-terrain:check": "node tools/check-frontier-terrain.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_terrain.py",
+    "models:frontier-terrain:check": "node --experimental-strip-types tools/check-frontier-terrain.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_terrain.py",
     "models:frontier-terrain": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_terrain.py",
     "models:kar-stop": "blender --python-exit-code 1 -b --python tools/blender/build_kar_stop.py --",
     "models:kar-stop:pose-check": "npm run models:kar-stop -- --check",
