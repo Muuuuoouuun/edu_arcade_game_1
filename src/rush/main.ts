@@ -12,6 +12,7 @@ import { stageDifficulty } from './stages.ts';
 import { advanceClock, createClock, hitStopFor, tryStop } from './clock.ts';
 import { loadKingdom, saveKingdom, TownScreen } from './town.ts';
 import { TownView } from './townScene.ts';
+import { addHit, POP_LIFE, popKey, type PopSlot } from './pops.ts';
 import { createFrameWatch, nextPref, parsePref, PREF_LABEL, resolveQuality, watchFrame, type QualityPref } from './quality.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -47,24 +48,40 @@ const input = new RushInput({
 
 // ---------- floating numbers ----------
 const fxLayer = $('rush-fx');
-type Pop = { el: HTMLSpanElement; x: number; y: number; z: number; age: number; life: number };
+type Pop = PopSlot<HTMLSpanElement> & { y: number; jitter: number; bumpAge: number };
 let pops: Pop[] = [];
-function pop(text: string, x: number, z: number, cls: string, y = 1.6) {
-  if (pops.length > 40) { pops[0].el.remove(); pops.shift(); }
+function popEl(text: string, cls: string): HTMLSpanElement {
   const el = document.createElement('span');
   el.className = `pop ${cls}`;
   el.textContent = text;
   fxLayer.append(el);
-  pops.push({ el, x: x + (Math.random() - 0.5) * 0.4, y, z, age: 0, life: 0.75 });
+  return el;
+}
+function trimPops() { while (pops.length > 40) { pops[0].view?.remove(); pops.shift(); } }
+/** A floating label that never merges (hero hurt, coins). */
+function pop(text: string, x: number, z: number, cls: string, y = 1.6) {
+  pops.push({ key: '', value: 0, x, z, age: 0, life: POP_LIFE, bumps: 0, lift: 0, view: popEl(text, cls), y, jitter: (Math.random() - 0.5) * 0.4, bumpAge: 0 });
+  trimPops();
+}
+/** Damage on an enemy (cycle 22): one number per enemy and attacker kind that adds up over a short window. */
+function hitPop(owner: string, id: number | undefined, damage: number, x: number, z: number) {
+  const { slot, merged } = addHit(pops as PopSlot<HTMLSpanElement>[], popKey(owner, id), damage, x, z);
+  const p = slot as Pop;
+  if (merged) { p.view!.textContent = String(Math.round(p.value)); p.bumpAge = 0; return; }
+  p.view = popEl(String(Math.round(damage)), owner === 'super' ? 'big' : owner === 'tower' ? 'tower' : '');
+  p.y = 1.6; p.jitter = (Math.random() - 0.5) * 0.4; p.bumpAge = 0;
+  trimPops();
 }
 function updatePops(dt: number) {
   const rect = canvas.getBoundingClientRect();
   pops = pops.filter(p => {
-    p.age += dt;
-    if (p.age >= p.life) { p.el.remove(); return false; }
-    const sp = view.screenPoint(p.x, p.y + p.age * 1.4, p.z, rect);
-    p.el.style.transform = `translate(${sp.x}px, ${sp.y}px) translate(-50%, -50%) scale(${1 + Math.max(0, 0.25 - p.age) * 2})`;
-    p.el.style.opacity = String(1 - Math.max(0, p.age / p.life - 0.6) / 0.4);
+    p.age += dt; p.bumpAge += dt;
+    if (p.age >= p.life) { p.view?.remove(); return false; }
+    const sp = view.screenPoint(p.x + p.jitter, p.y + p.lift + p.age * 1.4, p.z, rect);
+    // Pop-in on appear, and a smaller kick each time more damage is added.
+    const kick = Math.max(Math.max(0, 0.25 - p.age) * 2, Math.max(0, 0.15 - p.bumpAge) * 2.2);
+    p.view!.style.transform = `translate(${sp.x}px, ${sp.y}px) translate(-50%, -50%) scale(${1 + kick})`;
+    p.view!.style.opacity = String(1 - Math.max(0, p.age / p.life - 0.6) / 0.4);
     return true;
   });
 }
@@ -86,7 +103,7 @@ function feedback(events: RushEvent[]) {
   for (const ev of events) {
     const sound = SOUND[ev.type];
     if (sound) playCombatSound(sound);
-    if (ev.type === 'hit') { if (ev.owner !== 'tower') playCombatSound('impact'); pop(String(Math.round(ev.damage)), ev.x, ev.z, ev.owner === 'super' ? 'big' : ev.owner === 'tower' ? 'tower' : ''); }
+    if (ev.type === 'hit') { if (ev.owner !== 'tower') playCombatSound('impact'); hitPop(ev.owner, ev.id, ev.damage, ev.x, ev.z); }
     else if (ev.type === 'heroHit') pop(String(Math.round(ev.damage)), state.hero.x, state.hero.z, 'hurt', 2.2);
     else if (ev.type === 'coin') pop(`+${ev.value}`, state.hero.x, state.hero.z, 'gold', 2.4);
     else if (ev.type === 'burst') playHaptic('skill', true);

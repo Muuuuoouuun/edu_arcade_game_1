@@ -37,7 +37,7 @@ export interface GroupProgress { spawned: number; timer: number }
 export type RushEvent =
   | { type: 'fire'; x: number; z: number; angle: number }
   | { type: 'swing'; x: number; z: number; angle: number; range: number; arc: number; hits: number }
-  | { type: 'hit'; x: number; z: number; owner: ShotOwner; damage: number }
+  | { type: 'hit'; x: number; z: number; owner: ShotOwner; damage: number; id?: number }
   | { type: 'kill'; x: number; z: number; kind: EnemyKind }
   | { type: 'spark'; x: number; z: number }
   | { type: 'crateHit'; id: number; x: number; z: number }
@@ -418,7 +418,7 @@ function hurtEnemy(s: RushState, e: Enemy, damage: number, owner: ShotOwner) {
   if (e.hp <= 0) return;
   e.hp -= damage;
   e.flash = 0.12;
-  s.events.push({ type: 'hit', x: e.x, z: e.z, owner, damage });
+  s.events.push({ type: 'hit', x: e.x, z: e.z, owner, damage, id: e.id });
   if (owner === 'hero') {
     s.stats.hits++;
     const before = s.hero.superCharge;
