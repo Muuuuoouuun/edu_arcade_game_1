@@ -85,6 +85,7 @@
 | `src/rush/input.ts` | 터치 쌍스틱 + 키보드·마우스 → 명령 |
 | `src/rush/main.ts` | 루프·HUD·화면 전환·브라우저 검증용 `window.__rush` |
 | `tools/rush-smoke.cjs` | Playwright 데스크톱·모바일 가로 스모크 (`npm run smoke:rush`) |
+| `tools/rush-bench.ts` | 적 수별 시뮬레이션 스텝 시간·GC 측정 (`node --experimental-strip-types tools/rush-bench.ts [N ...]`, 13회차) |
 
 ## 한계 (정직하게)
 

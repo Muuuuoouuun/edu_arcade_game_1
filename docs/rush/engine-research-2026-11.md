@@ -32,7 +32,7 @@
 | --- | --- |
 | **채택 (지금)** | TypeScript **결정적 시뮬레이션 코어** + **Three.js** 렌더러 + Vite + Capacitor(Android) |
 | 보류 (2026-11-10 PvP 제외) | Colyseus 서버. 협동 PvE 모드를 만들 때 재검토. 같은 `sim.ts`로 서버 판정 가능 |
-| 시험 (루프에서 시간 제한 스파이크) | ~~Three.js `WebGPURenderer` A/B~~ (07회차: 보류, 위 결과), PixiJS 8 / Phaser 4 (2.5D 스프라이트 경로), Babylon.js 9, ECS(Koota·bitECS) |
+| 시험 (루프에서 시간 제한 스파이크) | ~~Three.js `WebGPURenderer` A/B~~ (07회차: 보류, 위 결과), ~~ECS(Koota·bitECS)~~ (13회차: 보류, 병목은 레이아웃이 아니라 O(N²) 쌍 검사 — [기록](cycles/13-spike.md)), PixiJS 8 / Phaser 4 (2.5D 스프라이트 경로), Babylon.js 9 |
 | 보류 (재검토 조건 있음) | Godot 4.6(GDScript), Unity 6(C#), Cocos Creator 3.8, libGDX(Java) |
 
 C#·Java를 지금 들여오는 것은 과합니다. 이유와 재검토 조건은 아래 [C#·Java 판단](#cjava-판단)에 적었습니다.
