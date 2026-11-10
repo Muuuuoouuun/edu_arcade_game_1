@@ -525,7 +525,10 @@ function updateEnemies(s: RushState) {
     for (let j = i + 1; j < list.length; j++) {
       const b = list[j];
       if (b.hp <= 0) continue;
-      const min = ra + ENEMIES[b.kind].radius, dx = b.x - a.x, dz = b.z - a.z, d = len(dx, dz);
+      const min = ra + ENEMIES[b.kind].radius, dx = b.x - a.x, dz = b.z - a.z;
+      // Cheap reject first (cycle 18): most pairs are far apart. Overlapping pairs keep the exact distance below.
+      if (dx * dx + dz * dz >= min * min) continue;
+      const d = len(dx, dz);
       if (d >= min || d < 1e-9) continue;
       const push = (min - d) / 2, nx = dx / d, nz = dz / d;
       const wa = ENEMIES[a.kind].knockTaken, wb = ENEMIES[b.kind].knockTaken, sum = wa + wb;
