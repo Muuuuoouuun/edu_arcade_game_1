@@ -1,6 +1,6 @@
 // Arcana Rush prototype bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
-import { ECONOMY, HEROES, TOWER_LEVELS } from './data.ts';
+import { ECONOMY, ENEMIES, HEROES, TOWER_LEVELS } from './data.ts';
 import { createRush, padCost, padInReach, stepRush, superReady, WAVE_COUNT, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
@@ -124,6 +124,28 @@ const hud = {
 };
 const last: Record<string, string> = {};
 const setText = (key: string, el: HTMLElement, text: string) => { if (last[key] !== text) { el.textContent = text; last[key] = text; } };
+// ---------- see-through HUD (cycle 23) ----------
+// Enemies enter at the top of the screen, right where the HUD sits: a HUD box with an enemy under it fades.
+const hudParts = [...document.querySelectorAll<HTMLElement>('.hud-top > *')];
+const noFade = params.has('nofade'); // matched captures of the old behaviour
+/** Screen points (page CSS px) of each live enemy's body and head. */
+function enemyScreen(): { id: number; pts: { x: number; y: number }[] }[] {
+  const rect = canvas.getBoundingClientRect();
+  return state.enemies.filter(e => e.hp > 0).map(e => {
+    const r = ENEMIES[e.kind].radius;
+    return { id: e.id, pts: [r * 1.2, e.kind === 'boss' ? r * 3.6 : r * 2.6].map(h => { const p = view.screenPoint(e.x, h, e.z, rect); return { x: p.x + rect.left, y: p.y + rect.top }; }) };
+  });
+}
+function seeThroughHud() {
+  const fight = (mode === 'play' || mode === 'demo') && !noFade;
+  const boxes = hudParts.map(el => el.getBoundingClientRect());
+  const under = boxes.map(() => false);
+  if (fight) for (const e of enemyScreen()) for (const p of e.pts) boxes.forEach((b, i) => {
+    if (p.x > b.left - 8 && p.x < b.right + 8 && p.y > b.top - 8 && p.y < b.bottom + 12) under[i] = true;
+  });
+  hudParts.forEach((el, i) => el.classList.toggle('see-through', under[i]));
+}
+
 function updateHud() {
   const s = state;
   setText('wave', hud.wave, `웨이브 ${Math.min(s.wave + 1, WAVE_COUNT)}/${WAVE_COUNT}`);
@@ -286,6 +308,7 @@ function frame(now: number) {
   } else view.render();
   updatePops(dt);
   updateHud();
+  seeThroughHud();
   if (toastTimer > 0 && (toastTimer -= dt) <= 0) $('toast').classList.remove('show');
   fpsFrames++; fpsT += dt;
   if (fpsT >= 0.5) { fps = Math.round(fpsFrames / fpsT); fpsFrames = 0; fpsT = 0; }
@@ -312,4 +335,4 @@ if (params.has('sheet')) {
 else if (params.has('play')) start('play');
 
 // Read-only handle for automated browser checks.
-Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, get quality() { return { pref: qualityPref, tier: view.quality, autoDropped: frameWatch.dropped }; }, info: () => view.info(), towerLevels: TOWER_LEVELS.length } });
+Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, get quality() { return { pref: qualityPref, tier: view.quality, autoDropped: frameWatch.dropped }; }, info: () => view.info(), enemyScreen, towerLevels: TOWER_LEVELS.length } });

@@ -30,6 +30,9 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   display: flex; align-items: center; gap: 10px; pointer-events: none;
 }
 .hud-top > * { pointer-events: auto; background: var(--panel); border: 2px solid var(--outline); border-radius: 14px; box-shadow: inset 0 0 0 1px var(--line), 0 3px 0 rgba(29,20,51,0.55); }
+/* Cycle 23: a HUD box with an enemy under it fades so the enemy stays visible; it still takes taps. */
+.hud-top > * { transition: opacity 0.15s; }
+.hud-top > .see-through { opacity: 0.35; }
 .hud-wave { display: flex; flex-direction: column; padding: 5px 12px; min-width: 104px; }
 .hud-wave b { font-size: 18px; }
 .hud-wave small { color: var(--muted); font-size: 12px; min-height: 15px; }
