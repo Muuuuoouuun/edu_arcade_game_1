@@ -8,7 +8,7 @@ const output = new URL('../../dist-mobile/', import.meta.url);
 test('mobile package retains both 3D battlefields and authored fallbacks', async () => {
   const paths = [
     'index.html', 'frontier.html',
-    'defense/models/frontier-terrain.glb', 'defense/models/frontier-frost-cliffs.glb',
+    'defense/models/frontier-terrain.glb', 'defense/models/frontier-frost-forest.glb', 'defense/models/frontier-frost-cliffs.glb',
     'defense/models/frontier-frost.glb', 'defense/models/forest-gate.glb',
     'defense/models/frontier-frost-gate-impact.glb',
     'defense/models/frontier-forest-doors.glb', 'defense/models/frontier-kar-game.glb',

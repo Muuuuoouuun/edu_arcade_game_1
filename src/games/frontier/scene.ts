@@ -81,11 +81,11 @@ export class FrontierScene {
  private async loadFrostGate(){try{const gltf=await new GLTFLoader().loadAsync('/defense/models/frontier-frost-gate-impact.glb');if(this.disposed){this.track(gltf.scene);this.release();return;}this.frostGate!.setModel(gltf);this.loaded++;this.renderer.shadowMap.needsUpdate=true;}catch{if(!this.disposed)this.onStatus('성문 동작 로딩 실패 · 기본 성문과 피격 반응은 유지됩니다.');}}
  private async loadForestDoors(){try{const gltf=await new GLTFLoader().loadAsync('/defense/models/frontier-forest-doors.glb');if(this.disposed){gltf.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.geometry.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});return;}this.forestDoors!.setModel(gltf);this.loaded++;}catch{if(!this.disposed)this.onStatus('녹음 성문 동작 로딩 실패 · 기본 입체 문과 피격 반응을 사용합니다.');}}
  private async loadTerrain(){
-  const names=this.theme==='frost'?[FRONTIER_THEMES.frost.terrain,'frontier-frost']:[FRONTIER_THEMES.forest.terrain];
+  const names=this.theme==='frost'?[FRONTIER_THEMES.frost.terrain,'frontier-frost-cliffs','frontier-frost']:[FRONTIER_THEMES.forest.terrain];
   for(const [i,name] of names.entries())try{
    const gltf=await new GLTFLoader().loadAsync(`/defense/models/${name}.glb`);this.track(gltf.scene);if(this.disposed){this.release();return;}
    gltf.scene.traverse(o=>{if(o instanceof THREE.Mesh){o.castShadow=true;o.receiveShadow=true;}});this.root.clear();this.root.add(gltf.scene);this.ground.visible=false;this.loaded++;this.renderer.shadowMap.needsUpdate=true;
-   this.renderer.domElement.dataset.terrainModel=name;if(i>0)this.onStatus('절벽 모델 로딩 실패 · 기본 서리 지형으로 계속합니다.');return;
+   this.renderer.domElement.dataset.terrainModel=name;if(i>0)this.onStatus('서리 숲 모델 로딩 실패 · 이전 서리 지형으로 계속합니다.');return;
   }catch{if(this.disposed)return;}
   this.renderer.domElement.dataset.terrainModel='geometry';this.onStatus('지형 원본 로딩 실패 · 기본 입체 지형으로 계속할 수 있습니다.');
  }

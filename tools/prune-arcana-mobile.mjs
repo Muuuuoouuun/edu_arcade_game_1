@@ -10,7 +10,7 @@ const models = new URL('defense/models/', output);
 // The independent 3D training battlefield is linked from the village. Keep its
 // authored models and its documented fallback chain in the offline Android app.
 const frontierModels = new Set([
-  'frontier-terrain.glb', 'frontier-frost-cliffs.glb', 'frontier-frost.glb',
+  'frontier-terrain.glb', 'frontier-frost-forest.glb', 'frontier-frost-cliffs.glb', 'frontier-frost.glb',
   'forest-gate.glb', 'frontier-frost-gate-impact.glb', 'frontier-forest-doors.glb',
   'frontier-kar-game.glb', 'kar-barbarian-walk.glb', 'kar-barbarian.glb',
   'kar-reset.glb', 'kar-stop.glb', 'kar-entry.glb',

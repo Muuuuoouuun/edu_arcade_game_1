@@ -156,6 +156,8 @@
     "models:frontier-gate-impact:check": "node tools/check-frontier-gate-impact.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_gate_impact.py",
     "models:frontier-frost-cliffs": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_frost_cliffs.py",
     "models:frontier-frost-cliffs:check": "node tools/check-frontier-frost-cliffs.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_frost_cliffs.py",
+    "models:frontier-frost-forest": "blender --python-exit-code 1 -b --python tools/blender/build_frontier_frost_forest.py",
+    "models:frontier-frost-forest:check": "node --experimental-strip-types tools/check-frontier-frost-forest.mjs && blender --python-exit-code 1 -b --python tools/blender/check_frontier_frost_forest.py",
     "models:metal-death": "blender --python-exit-code 1 -b --python tools/blender/build_metal_death.py --",
     "models:wood-death": "blender --python-exit-code 1 -b --python tools/blender/build_wood_death.py --",
     "models:ice-walk": "blender --python-exit-code 1 -b --python tools/blender/build_ice_walk.py --",
