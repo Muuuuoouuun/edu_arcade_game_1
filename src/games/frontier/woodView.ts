@@ -1,5 +1,6 @@
-import {AnimationMixer,BufferGeometry,Float32BufferAttribute,BoxGeometry,CircleGeometry,Frustum,Group,InstancedMesh,LoopOnce,LoopRepeat,Matrix4,Mesh,MeshBasicMaterial,MeshStandardMaterial,Quaternion,RingGeometry,Sphere,Vector3,type AnimationAction,type AnimationClip,type Camera,type Object3D} from 'three';
+import {AnimationMixer,BufferGeometry,Float32BufferAttribute,BoxGeometry,CircleGeometry,Frustum,Group,InstancedMesh,LoopOnce,LoopRepeat,Matrix4,Mesh,MeshBasicMaterial,MeshStandardMaterial,Quaternion,Sphere,Vector3,type AnimationAction,type AnimationClip,type Camera,type Object3D} from 'three';
 import {WOOD_ATTACK} from './woodAttack.ts';
+import {createWoodWarningGeometry,projectWoodWarnings} from './woodWarning.ts';
 import {heightAt,type Enemy} from './engine.ts';
 export const WOOD_SCALE=.52,WOOD_STRIDE=1.5,WOOD_SETTLE=.16,WOOD_HIT_DURATION=.24,WOOD_MARK_DURATION=.32;
 // Hard normals duplicate vertex coordinates. Contact testing needs each position only once.
@@ -66,35 +67,42 @@ function hitMarkerGeometry(){
 }
 /** Shared instanced geometry keeps target feedback independent without a renderer per enemy. */
 export class WoodBatch {
- readonly root=new Group();readonly views=new Map<number,WoodView>();meshes:InstancedMesh[]=[];private contacts:InstancedMesh;private health:InstancedMesh;private warnings:InstancedMesh;private hitMarkers:InstancedMesh;private capacity=0;
- private frustum=new Frustum();private projection=new Matrix4();private warningRight=new Vector3();private warningBack=new Vector3();private warningNormal=new Vector3();private sphere=new Sphere(new Vector3(),2.5);private matrix=new Matrix4();private q=new Quaternion();private scale=new Vector3();private point=new Vector3();
+ readonly root=new Group();readonly views=new Map<number,WoodView>();meshes:InstancedMesh[]=[];private contacts:InstancedMesh;private health:InstancedMesh;private warnings:Mesh<BufferGeometry,MeshBasicMaterial>;private hitMarkers:InstancedMesh;private capacity=0;private warningCapacity=1;private warningEnemies:Enemy[]=[];private warningSnapshot:{id:number;x:number;z:number;heading:number}[]=[];
+ private frustum=new Frustum();private projection=new Matrix4();private sphere=new Sphere(new Vector3(),2.5);private matrix=new Matrix4();private q=new Quaternion();private scale=new Vector3();private point=new Vector3();
  readonly template:WoodTemplate;readonly authored:boolean;
  get markerCount(){return this.hitMarkers.count;}
+ get warningCount(){return this.warningEnemies.length;}
  constructor(template:WoodTemplate,authored=true){
   this.template=template;this.authored=authored;
   this.contacts=new InstancedMesh(new CircleGeometry(.8,12),new MeshBasicMaterial({color:'#183d2d',transparent:true,opacity:.25,depthWrite:false}),1);
-  this.warnings=new InstancedMesh(new RingGeometry(.55,WOOD_ATTACK.hitReach,24,1,-Math.PI/2-WOOD_ATTACK.halfArc,WOOD_ATTACK.halfArc*2),new MeshBasicMaterial({color:'#df6449',transparent:true,opacity:.68,depthWrite:false,side:2}),1);
+  this.warnings=new Mesh(createWoodWarningGeometry(1),new MeshBasicMaterial({color:'#df6449',transparent:true,opacity:.68,depthWrite:false,side:2}));this.warnings.name='wood-attack-warning';this.warnings.visible=false;this.warnings.frustumCulled=false;this.warnings.matrixAutoUpdate=false;this.root.add(this.warnings);
   this.health=new InstancedMesh(new BoxGeometry(1,.11,.08),new MeshBasicMaterial({color:'#ffbd9d'}),1);this.health.name='wood-health';this.health.visible=false;this.hitMarkers=new InstancedMesh(hitMarkerGeometry(),new MeshBasicMaterial({vertexColors:true,transparent:true,opacity:1,depthTest:true,depthWrite:false,forceSinglePass:true,side:2}),1);this.hitMarkers.name='wood-hit-marker';this.grow(16);
  }
  private grow(size:number){
   this.capacity=size;for(const mesh of this.meshes){this.root.remove(mesh);mesh.dispose();}this.meshes=[];
   this.template.scene.traverse(o=>{if(o instanceof Mesh){const m=new InstancedMesh(o.geometry,o.material,size);m.name=o.name;m.count=0;m.frustumCulled=false;m.receiveShadow=true;this.meshes.push(m);this.root.add(m);}});
-  for(const name of ['contacts','health','warnings','hitMarkers'] as const){const old=this[name];this.root.remove(old);const next=new InstancedMesh(old.geometry,old.material,size);next.count=0;next.name=old.name;next.visible=old.visible;next.frustumCulled=false;this[name]=next;old.dispose();this.root.add(next);}
+  for(const name of ['contacts','health','hitMarkers'] as const){const old=this[name];this.root.remove(old);const next=new InstancedMesh(old.geometry,old.material,size);next.count=0;next.name=old.name;next.visible=old.visible;next.frustumCulled=false;this[name]=next;old.dispose();this.root.add(next);}
  }
  update(enemies:Enemy[],reduced:boolean,camera:Camera,now=0){
   if(enemies.length>this.capacity)this.grow(2**Math.ceil(Math.log2(enemies.length)));
   const alive=new Set(enemies.map(e=>e.id));for(const [id,view]of this.views)if(!alive.has(id)){view.dispose();this.views.delete(id);}
-  camera.updateMatrixWorld();this.frustum.setFromProjectionMatrix(this.projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));let count=0,healthCount=0,warningCount=0,markerCount=0;
+  camera.updateMatrixWorld();this.frustum.setFromProjectionMatrix(this.projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));let count=0,healthCount=0,markerCount=0;this.warningEnemies.length=0;
   for(const enemy of enemies){let view=this.views.get(enemy.id);if(!view){view=new WoodView(this.template,this.authored);this.views.set(enemy.id,view);}view.update(enemy,reduced,now);
    this.sphere.center.set(enemy.x,heightAt(enemy.x,enemy.z)+1.5,enemy.z);if(!this.frustum.intersectsSphere(this.sphere))continue;
    for(let j=0;j<this.meshes.length;j++)this.meshes[j].setMatrixAt(count,view.surfaces[j].matrixWorld);
    this.matrix.makeRotationX(-Math.PI/2);this.matrix.setPosition(enemy.x,heightAt(enemy.x,enemy.z)+.025,enemy.z);this.contacts.setMatrixAt(count,this.matrix);count++;
-   if(enemy.attack&&!enemy.attack.hit){const h=enemy.attack.heading,base=heightAt(enemy.x,enemy.z),dx=(heightAt(enemy.x+.1,enemy.z)-heightAt(enemy.x-.1,enemy.z))/.2,dz=(heightAt(enemy.x,enemy.z+.1)-heightAt(enemy.x,enemy.z-.1))/.2;this.warningRight.set(Math.cos(h),dx*Math.cos(h)-dz*Math.sin(h),-Math.sin(h));this.warningBack.set(-Math.sin(h),-dx*Math.sin(h)-dz*Math.cos(h),-Math.cos(h));this.warningNormal.crossVectors(this.warningRight,this.warningBack).normalize();this.matrix.makeBasis(this.warningRight,this.warningBack,this.warningNormal);this.matrix.setPosition(enemy.x,base+.06,enemy.z);this.warnings.setMatrixAt(warningCount++,this.matrix);}
+   if(enemy.attack&&!enemy.attack.hit)this.warningEnemies.push(enemy);
    const hitAge=now-(enemy.hitAt??-Infinity);
    if(enemy.hp>0&&hitAge>=0&&hitAge<WOOD_MARK_DURATION){camera.getWorldQuaternion(this.q);this.point.set(enemy.x,heightAt(enemy.x,enemy.z)+4.15,enemy.z);const t=hitAge/WOOD_MARK_DURATION,size=.55*(reduced?1:.8+.2*Math.sin(Math.PI*t));this.scale.setScalar(size);this.matrix.compose(this.point,this.q,this.scale);this.hitMarkers.setMatrixAt(markerCount++,this.matrix);}
    const ratio=enemy.hp/(enemy.maxHp??enemy.hp);if(ratio<1){camera.getWorldQuaternion(this.q);this.point.set(enemy.x,heightAt(enemy.x,enemy.z)+3.5,enemy.z);this.scale.set(Math.max(.02,ratio),1,1);this.matrix.compose(this.point,this.q,this.scale);this.health.setMatrixAt(healthCount++,this.matrix);}
   }
-  for(const mesh of [...this.meshes,this.contacts]){mesh.count=count;mesh.instanceMatrix.needsUpdate=true;}this.health.count=healthCount;this.health.instanceMatrix.needsUpdate=true;this.warnings.count=warningCount;this.warnings.instanceMatrix.needsUpdate=true;this.hitMarkers.count=markerCount;this.hitMarkers.instanceMatrix.needsUpdate=true;
+  const changed=this.warningEnemies.length!==this.warningSnapshot.length||this.warningEnemies.some((e,i)=>{const p=this.warningSnapshot[i];return !p||p.id!==e.id||p.x!==e.x||p.z!==e.z||p.heading!==e.attack!.heading;});
+  if(changed){
+   if(this.warningEnemies.length>this.warningCapacity){this.warningCapacity=2**Math.ceil(Math.log2(this.warningEnemies.length));const old=this.warnings.geometry;this.warnings.geometry=createWoodWarningGeometry(this.warningCapacity);old.dispose();}
+   projectWoodWarnings(this.warnings.geometry,this.warningEnemies);this.warnings.visible=this.warnings.geometry.drawRange.count>0;
+   this.warningSnapshot=this.warningEnemies.map(e=>({id:e.id,x:e.x,z:e.z,heading:e.attack!.heading}));
+  }
+  for(const mesh of [...this.meshes,this.contacts]){mesh.count=count;mesh.instanceMatrix.needsUpdate=true;}this.health.count=healthCount;this.health.instanceMatrix.needsUpdate=true;this.hitMarkers.count=markerCount;this.hitMarkers.instanceMatrix.needsUpdate=true;
  }
- dispose(){for(const v of this.views.values())v.dispose();this.views.clear();for(const m of [...this.meshes,this.contacts,this.health,this.warnings,this.hitMarkers])m.dispose();this.hitMarkers.geometry.dispose();(this.hitMarkers.material as MeshBasicMaterial).dispose();this.warnings.geometry.dispose();(this.warnings.material as MeshBasicMaterial).dispose();this.contacts.geometry.dispose();this.health.geometry.dispose();(this.contacts.material as MeshBasicMaterial).dispose();(this.health.material as MeshBasicMaterial).dispose();}
+ dispose(){for(const v of this.views.values())v.dispose();this.views.clear();this.warningEnemies.length=0;this.warningSnapshot.length=0;for(const m of [...this.meshes,this.contacts,this.health,this.hitMarkers])m.dispose();this.hitMarkers.geometry.dispose();(this.hitMarkers.material as MeshBasicMaterial).dispose();this.warnings.geometry.dispose();this.warnings.material.dispose();this.contacts.geometry.dispose();this.health.geometry.dispose();(this.contacts.material as MeshBasicMaterial).dispose();(this.health.material as MeshBasicMaterial).dispose();}
 }
