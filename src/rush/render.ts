@@ -437,6 +437,19 @@ export class RushView {
         { geo: new CylinderGeometry(r * 0.22, r * 0.22, r * 1.1, 8), color: 0x7a4a24, at: [-r * 0.55, r * 2.0, r * 0.3], rot: [0.3, 0, 0] },
         ...eyes(r * 0.48, r * 2.78, r * 0.2, r * 0.14, 0xffe14d, 0xb06a00),
       ];
+    } else if (kind === 'shield') {
+      // Shield-bearer (cycle 27): slate body behind a tall silver tower shield with a gold rim, facing forward (+x).
+      parts = [
+        { geo: new CylinderGeometry(r * 0.7, r * 0.85, r * 1.9, 12), color: 0x4f5d7e, at: [0, r * 0.95, 0] },
+        { geo: new SphereGeometry(r * 0.62, 12, 10), color: 0x6b7aa0, at: [0, r * 2.2, 0] },
+        { geo: new ConeGeometry(r * 0.66, r * 0.7, 10), color: 0x2f3854, at: [0, r * 2.75, 0] },
+        { geo: new BoxGeometry(r * 0.22, r * 2.7, r * 2.0), color: 0xd8dee9, at: [r * 0.95, r * 1.45, 0] },
+        { geo: new BoxGeometry(r * 0.26, r * 2.9, r * 0.16), color: PAL.gold, at: [r * 0.97, r * 1.45, r * 1.0] },
+        { geo: new BoxGeometry(r * 0.26, r * 2.9, r * 0.16), color: PAL.gold, at: [r * 0.97, r * 1.45, -r * 1.0] },
+        { geo: new BoxGeometry(r * 0.26, r * 0.16, r * 2.1), color: PAL.gold, at: [r * 0.97, r * 2.85, 0] },
+        { geo: new OctahedronGeometry(r * 0.32), color: TEAM.enemy, at: [r * 1.1, r * 1.6, 0] },
+        ...eyes(r * 0.5, r * 2.25, r * 0.2, r * 0.13, 0xffffff, PAL.ink),
+      ];
     } else if (kind === 'brute') {
       parts = [
         { geo: new BoxGeometry(r * 1.6, r * 1.5, r * 2.1), color: 0xe8842a, at: [0, r * 1.2, 0] },
@@ -476,7 +489,7 @@ export class RushView {
   }
 
   private buildBatches() {
-    const kinds: EnemyKind[] = ['grunt', 'skirmisher', 'brute', 'boss'];
+    const kinds: EnemyKind[] = ['grunt', 'skirmisher', 'brute', 'boss', 'shield'];
     const per = <T,>(f: (k: EnemyKind) => T) => Object.fromEntries(kinds.map(k => [k, f(k)])) as Record<EnemyKind, T>;
     const cap = 160;
     this.batches = {
@@ -671,6 +684,9 @@ export class RushView {
         case 'splash': // fire tower
           this.ring(ev.x, ev.z, BRANCH_COLOR.fire, ev.radius, 0.3, 0.85);
           fx.emit({ kind: 'shard', n: 5, color: 0xffb02e, at: [ev.x, 0.7, ev.z], speed: 4.5, up: 4, size: 0.11, life: 0.4 });
+          break;
+        case 'block': // shield-bearer turned a bolt aside
+          fx.emit({ kind: 'spark', n: 4, color: 0xe8eefc, at: [ev.x, 1.0, ev.z], speed: 4, up: 2, size: 0.16, life: 0.2 });
           break;
         case 'chill': // frost tower
           fx.emit({ kind: 'spark', n: 3, color: 0xd8f8ff, at: [ev.x, 0.9, ev.z], speed: 2.5, up: 1.5, size: 0.18, life: 0.3 });
@@ -902,5 +918,5 @@ export class RushView {
 
 const BRANCH_COLOR: Record<TowerBranch, number> = { fire: 0xff7a2f, frost: 0x4fc3ff };
 const ICE = new MeshBasicMaterial({ color: 0xc4f2ff, transparent: true, opacity: 0.4, depthWrite: false });
-const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4 };
+const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4 };
 const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };

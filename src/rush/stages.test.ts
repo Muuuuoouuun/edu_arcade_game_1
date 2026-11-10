@@ -14,7 +14,7 @@ const play = (seed: number, stage: number, mods: RushMods = NO_MODS) => {
 const MAXED: RushMods = { damage: 1.4, towerCost: 0.6, townHp: 1.5, heroHp: 1, forge: 5 }; // castle 5 with every perk at 5, hero Lv1
 
 test('stage 1 is exactly the base game', () => {
-  assert.deepEqual(stageDifficulty(1), { enemyHp: 1, enemyCount: 1, enemyDamage: 1 });
+  assert.deepEqual(stageDifficulty(1), { enemyHp: 1, enemyCount: 1, enemyDamage: 1, stage: 1 });
 });
 
 test('every stage ends (no stalled waves), with and without upgrades', () => {

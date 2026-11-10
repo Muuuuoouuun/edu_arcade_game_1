@@ -54,6 +54,7 @@ export type RushEvent =
   | { type: 'build'; pad: number; level: number; branch?: TowerBranch }
   | { type: 'splash'; x: number; z: number; radius: number }
   | { type: 'chill'; x: number; z: number }
+  | { type: 'block'; x: number; z: number }
   | { type: 'waveStart'; wave: number }
   | { type: 'waveClear'; wave: number; bonus: number }
   | { type: 'won' }
@@ -64,7 +65,8 @@ export type RushEvent =
 export interface RushMods { damage: number; towerCost: number; townHp: number; heroHp: number; forge: number }
 export const NO_MODS: RushMods = { damage: 1, towerCost: 1, townHp: 1, heroHp: 1, forge: 0 };
 /** Stage difficulty: multipliers on enemy health, group sizes (bosses excluded) and damage. All 1 = the base game. */
-export interface Difficulty { enemyHp: number; enemyCount: number; enemyDamage: number }
+/** stage: groups with a minStage above it do not appear (absent = stage 1). */
+export interface Difficulty { enemyHp: number; enemyCount: number; enemyDamage: number; stage?: number }
 export const BASE_DIFFICULTY: Difficulty = { enemyHp: 1, enemyCount: 1, enemyDamage: 1 };
 
 export interface RushState {
@@ -255,8 +257,8 @@ function waveSpawned(s: RushState) {
   return WAVES[s.wave].every((g, i) => (s.groups[i]?.spawned ?? 0) >= groupCount(s, g));
 }
 /** Enemies in a spawn group after stage scaling. The boss stays a single boss. */
-export const groupCount = (s: RushState, g: { kind: EnemyKind; count: number }) =>
-  g.kind === 'boss' ? g.count : Math.max(1, Math.round(g.count * s.diff.enemyCount));
+export const groupCount = (s: RushState, g: { kind: EnemyKind; count: number; minStage?: number }) =>
+  (g.minStage ?? 1) > (s.diff.stage ?? 1) ? 0 : g.kind === 'boss' ? g.count : Math.max(1, Math.round(g.count * s.diff.enemyCount));
 function spawn(s: RushState) {
   WAVES[s.wave].forEach((g, i) => {
     const p = s.groups[i];
@@ -630,7 +632,15 @@ function updateShots(s: RushState) {
     if (shot.owner === 'hero') {
       for (const e of s.enemies) {
         if (e.hp <= 0 || dist(e, shot) > ENEMIES[e.kind].radius + shot.radius) continue;
-        hurtEnemy(s, e, shot.damage, 'hero');
+        // A shield-bearer turns aside bolts that come at its face (cycle 27); swings, supers and towers get through.
+        const def = ENEMIES[e.kind];
+        let damage = shot.damage;
+        if (def.shield !== undefined) {
+          let off = Math.atan2(shot.z - e.z, shot.x - e.x) - e.facing;
+          off = Math.atan2(Math.sin(off), Math.cos(off));
+          if (Math.abs(off) <= (def.shieldArc ?? 1)) { damage *= def.shield; s.events.push({ type: 'block', x: e.x, z: e.z }); }
+        }
+        hurtEnemy(s, e, damage, 'hero');
         hit = true;
         break;
       }

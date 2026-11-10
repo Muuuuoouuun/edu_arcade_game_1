@@ -273,3 +273,44 @@ test('forge levels widen fire splash and lengthen frost slows', async () => {
   };
   assert.ok(Math.abs(slow(0) - TOWER_BRANCH.frost.slowTime) < 1e-9 && Math.abs(slow(5) - (TOWER_BRANCH.frost.slowTime + 5 * FORGE.slowTime)) < 1e-9, `slow ${slow(0)} / ${slow(5)}`);
 });
+
+test('shield-bearers turn aside frontal bolts only, and appear from stage 6', async () => {
+  const { ENEMIES, WAVES } = await import('./data.ts');
+  const { stageDifficulty } = await import('./stages.ts');
+  const { groupCount } = await import('./sim.ts');
+  const hitFrom = (fromFront: boolean) => {
+    // The hero stands south, out of aggro range, so the bearer keeps walking its lane: towards the hero
+    // (waypoint 3, south: shield in front) or away (waypoint 1, north: bolts hit its back).
+    const s = createRush(1);
+    const e = enemy(s, 'shield', 0, -6);
+    e.wp = fromFront ? 3 : 1;
+    Object.assign(s.hero, { x: 0, z: -1.5, facing: -Math.PI / 2 });
+    // Damage of the first bolt that lands (the spread can make one, two or three land).
+    let lost = 0, blocked = false;
+    for (let i = 0; i < 40 && !lost; i++) {
+      stepRush(s, { fire: { x: 0, z: -1 } });
+      const hit = s.events.find(v => v.type === 'hit' && v.owner === 'hero');
+      if (hit && hit.type === 'hit') { lost = hit.damage; blocked = s.events.some(v => v.type === 'block'); }
+    }
+    return { lost, blocked };
+  };
+  const front = hitFrom(true), back = hitFrom(false);
+  assert.ok(front.lost > 0 && back.lost > 0, JSON.stringify({ front, back }));
+  assert.ok(Math.abs(front.lost / back.lost - ENEMIES.shield.shield!) < 0.01 && front.blocked && !back.blocked, `front ${front.lost} vs back ${back.lost}`);
+  // Only from stage 6.
+  const shieldGroups = WAVES.flat().filter(g => g.kind === 'shield');
+  assert.ok(shieldGroups.length > 0);
+  assert.ok(shieldGroups.every(g => groupCount(createRush(1, undefined, stageDifficulty(5)), g) === 0), 'none before stage 6');
+  assert.ok(shieldGroups.every(g => groupCount(createRush(1, undefined, stageDifficulty(6)), g) > 0), 'present from stage 6');
+});
+
+test("the shield does not stop Bron's swing", () => {
+  const s = createRush(1, undefined, undefined, 'bron');
+  const e = enemy(s, 'shield', 0, -2.2);
+  e.facing = Math.PI / 2;
+  Object.assign(s.hero, { x: 0, z: -0.8, facing: -Math.PI / 2 });
+  const before = e.hp;
+  for (let i = 0; i < 30 && e.hp === before; i++) stepRush(s, { fire: { x: 0, z: -1 } });
+  assert.ok(e.hp < before, 'swing landed');
+  assert.ok(!s.events.some(v => v.type === 'block'));
+});

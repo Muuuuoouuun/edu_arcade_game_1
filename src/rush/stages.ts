@@ -9,7 +9,7 @@ const clampStage = (n: number) => Math.min(STAGE_COUNT, Math.max(1, Math.round(n
 /** Stage 1 is the base game; stage 10 has +110% enemy health, +70% enemies and +50% enemy damage. */
 export function stageDifficulty(n: number): Difficulty {
   const t = (clampStage(n) - 1) / (STAGE_COUNT - 1);
-  return { enemyHp: 1 + 1.1 * t, enemyCount: 1 + 0.7 * t, enemyDamage: 1 + 0.5 * t };
+  return { enemyHp: 1 + 1.1 * t, enemyCount: 1 + 0.7 * t, enemyDamage: 1 + 0.5 * t, stage: clampStage(n) };
 }
 /** Battle rewards grow 15% per stage. */
 export const stageRewardMul = (n: number) => 1 + 0.15 * (clampStage(n) - 1);

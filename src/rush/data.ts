@@ -74,15 +74,18 @@ export const HEROES: Record<HeroKind, HeroDef> = {
 /** The default hero (kept for code that predates hero choice). */
 export const HERO = HEROES.ranger;
 
-export type EnemyKind = 'grunt' | 'skirmisher' | 'brute' | 'boss';
+export type EnemyKind = 'grunt' | 'skirmisher' | 'brute' | 'boss' | 'shield';
 export type EnemyDef = {
   hp: number; speed: number; radius: number; damage: number; reach: number; cooldown: number;
   aggro: number; gold: number; knockTaken: number; shotSpeed?: number; windup?: number; slamRadius?: number;
+  /** Shield-bearer (cycle 27): hero bolts from within shieldArc (rad) of its facing deal this share of damage. */
+  shield?: number; shieldArc?: number;
 };
 export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   grunt: { hp: 60, speed: 2.5, radius: 0.42, damage: 9, reach: 0.6, cooldown: 0.8, aggro: 3.2, gold: 6, knockTaken: 1 },
   skirmisher: { hp: 45, speed: 2.2, radius: 0.4, damage: 12, reach: 6, cooldown: 1.7, aggro: 7, gold: 8, knockTaken: 1, shotSpeed: 9 },
   brute: { hp: 260, speed: 1.5, radius: 0.7, damage: 28, reach: 0.7, cooldown: 1.3, aggro: 3, gold: 18, knockTaken: 0.35 },
+  shield: { hp: 90, speed: 1.9, radius: 0.5, damage: 14, reach: 0.6, cooldown: 1, aggro: 3.2, gold: 10, knockTaken: 0.6, shield: 0.25, shieldArc: 1 },
   boss: { hp: 1800, speed: 1.25, radius: 1.15, damage: 70, reach: 2.2, cooldown: 2.6, aggro: 5, gold: 0, knockTaken: 0.1, windup: 0.9, slamRadius: 2.8 },
 };
 
@@ -104,7 +107,8 @@ export const FORGE = { splashShare: 0.05, slowTime: 0.15 } as const;
 
 export const ECONOMY = { startGold: 60, waveBonus: 30, earlyBonusPerSecond: 2, prepTime: 12, coinLife: 14 } as const;
 
-export type SpawnGroup = { kind: EnemyKind; count: number; lane: number; interval: number; delay: number };
+/** minStage: the group only appears from that stage on (shield-bearers from stage 6, cycle 27). */
+export type SpawnGroup = { kind: EnemyKind; count: number; lane: number; interval: number; delay: number; minStage?: number };
 export const WAVES: readonly (readonly SpawnGroup[])[] = [
   [{ kind: 'grunt', count: 8, lane: 0, interval: 1.1, delay: 0 }],
   [
@@ -117,17 +121,21 @@ export const WAVES: readonly (readonly SpawnGroup[])[] = [
     { kind: 'skirmisher', count: 4, lane: 1, interval: 1.6, delay: 2 },
     { kind: 'skirmisher', count: 4, lane: 2, interval: 1.6, delay: 2 },
     { kind: 'brute', count: 2, lane: 0, interval: 4, delay: 8 },
+    { kind: 'shield', count: 1, lane: 0, interval: 3, delay: 4, minStage: 6 },
   ],
   [
     { kind: 'grunt', count: 10, lane: 1, interval: 0.7, delay: 0 },
     { kind: 'grunt', count: 10, lane: 2, interval: 0.7, delay: 0 },
     { kind: 'skirmisher', count: 6, lane: 0, interval: 1.2, delay: 3 },
     { kind: 'brute', count: 3, lane: 0, interval: 3.5, delay: 6 },
+    { kind: 'shield', count: 1, lane: 1, interval: 3, delay: 4, minStage: 6 },
+    { kind: 'shield', count: 1, lane: 2, interval: 3, delay: 5, minStage: 6 },
   ],
   [
     { kind: 'boss', count: 1, lane: 0, interval: 0, delay: 2 },
     { kind: 'grunt', count: 12, lane: 1, interval: 0.9, delay: 0 },
     { kind: 'grunt', count: 12, lane: 2, interval: 0.9, delay: 4 },
     { kind: 'skirmisher', count: 6, lane: 0, interval: 1.4, delay: 6 },
+    { kind: 'shield', count: 2, lane: 0, interval: 2.5, delay: 8, minStage: 6 },
   ],
 ];
