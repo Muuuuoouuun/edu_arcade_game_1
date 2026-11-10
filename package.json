@@ -161,6 +161,8 @@
     "models:golem-walk:check": "node --experimental-strip-types tools/check-golem-walk.mjs && blender --python-exit-code 1 -b --python tools/blender/build_golem_walk.py -- --check",
     "models:golem-death": "blender --python-exit-code 1 -b --python tools/blender/build_golem_death.py --",
     "models:golem-death:check": "node tools/check-golem-death.mjs && blender --python-exit-code 1 -b --python tools/blender/build_golem_death.py -- --check",
+    "models:luna-ultimate": "blender --python-exit-code 1 -b --python tools/blender/build_luna_ultimate.py --",
+    "models:luna-ultimate:check": "node tools/check-luna-ultimate.mjs && blender --python-exit-code 1 -b --python tools/blender/build_luna_ultimate.py -- --check",
     "models:riel-ultimate": "blender --python-exit-code 1 -b --python tools/blender/build_riel_ultimate.py --",
     "models:riel-ultimate:check": "node tools/check-riel-ultimate.mjs && blender --python-exit-code 1 -b --python tools/blender/build_riel_ultimate.py -- --check"
   },
