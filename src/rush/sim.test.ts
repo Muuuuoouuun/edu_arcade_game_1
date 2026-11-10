@@ -314,3 +314,20 @@ test("the shield does not stop Bron's swing", () => {
   assert.ok(e.hp < before, 'swing landed');
   assert.ok(!s.events.some(v => v.type === 'block'));
 });
+
+test('auto-aim skips a raised shield when another target is close, but still shoots a lone shield-bearer', async () => {
+  const { autoTarget, shieldFaces, SHIELD_AIM_PENALTY } = await import('./sim.ts');
+  const s = createRush(1);
+  Object.assign(s.hero, { x: 0, z: 0 });
+  const shield = enemy(s, 'shield', 0, -3), grunt = enemy(s, 'grunt', 2.5, -3.6);
+  shield.facing = Math.PI / 2; // facing the hero (south)
+  assert.ok(shieldFaces(shield, s.hero));
+  assert.equal(autoTarget(s, s.hero, 9.5), grunt, 'the grunt behind the shield line is the better shot');
+  grunt.hp = 0;
+  assert.equal(autoTarget(s, s.hero, 9.5), shield, 'alone, the shield-bearer is still the target');
+  grunt.hp = 60;
+  shield.facing = -Math.PI / 2; // turned away: no penalty, the nearer one wins
+  assert.ok(!shieldFaces(shield, s.hero));
+  assert.equal(autoTarget(s, s.hero, 9.5), shield);
+  assert.ok(SHIELD_AIM_PENALTY > 0);
+});

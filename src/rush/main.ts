@@ -104,7 +104,7 @@ function feedback(events: RushEvent[]) {
     const sound = SOUND[ev.type];
     if (sound) playCombatSound(sound);
     if (ev.type === 'hit') { if (ev.owner !== 'tower') playCombatSound('impact'); hitPop(ev.owner, ev.id, ev.damage, ev.x, ev.z); }
-    else if (ev.type === 'block') pop('막힘', ev.x, ev.z, 'blocked', 2.1);
+    else if (ev.type === 'block') { playCombatSound('cannon'); pop('막힘', ev.x, ev.z, 'blocked', 2.1); } // a heavier clank than a flesh hit
     else if (ev.type === 'heroHit') pop(String(Math.round(ev.damage)), state.hero.x, state.hero.z, 'hurt', 2.2);
     else if (ev.type === 'coin') pop(`+${ev.value}`, state.hero.x, state.hero.z, 'gold', 2.4);
     else if (ev.type === 'burst') playHaptic('skill', true);

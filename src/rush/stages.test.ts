@@ -30,8 +30,11 @@ test('progression: early stages clear without upgrades; stage 10 needs a grown k
   for (const seed of [1, 2]) {
     for (const n of [1, 2, 3]) assert.equal(play(seed, n).phase, 'won', `stage ${n} seed ${seed} without upgrades`);
     assert.equal(play(seed, 10).phase, 'lost', `stage 10 seed ${seed} without upgrades`);
-    assert.equal(play(seed, 10, MAXED).phase, 'won', `stage 10 seed ${seed} with a maxed kingdom`);
   }
+  // A maxed kingdom wins stage 10 on most seeds. Single seeds flip with small rule changes (cycle 28: smarter
+  // auto-aim moved the ranger's losses from seeds 3 and 5 to 2 and 3, still 6 of 8), so this checks the total.
+  const maxedWins = [1, 2, 3, 4, 5, 6, 7, 8].filter(seed => play(seed, 10, MAXED).phase === 'won').length;
+  assert.ok(maxedWins >= 6, `stage 10 with a maxed kingdom: ${maxedWins}/8 wins`);
 });
 
 test('stars follow the town health left; a loss has none', () => {

@@ -184,6 +184,28 @@ export function nearestEnemy(s: RushState, from: Vec, range: number): Enemy | nu
   }
   return best;
 }
+/** Extra distance (m) auto-aim adds to a shield-bearer whose shield faces the shooter (cycle 28). */
+export const SHIELD_AIM_PENALTY = 3;
+/** True when a bolt from `from` would hit this enemy's shield. */
+export function shieldFaces(e: Enemy, from: Vec): boolean {
+  const def = ENEMIES[e.kind];
+  if (def.shield === undefined) return false;
+  let off = Math.atan2(from.z - e.z, from.x - e.x) - e.facing;
+  off = Math.atan2(Math.sin(off), Math.cos(off));
+  return Math.abs(off) <= (def.shieldArc ?? 1);
+}
+/** Auto-aim for bolts: nearest enemy in range, but a raised shield counts as SHIELD_AIM_PENALTY further away. */
+export function autoTarget(s: RushState, from: Vec, range: number): Enemy | null {
+  let best: Enemy | null = null, bestScore = Infinity;
+  for (const e of s.enemies) {
+    if (e.hp <= 0) continue;
+    const d = dist(e, from) - ENEMIES[e.kind].radius;
+    if (d > range) continue;
+    const score = d + (shieldFaces(e, from) ? SHIELD_AIM_PENALTY : 0);
+    if (score < bestScore) { best = e; bestScore = score; }
+  }
+  return best;
+}
 /** Point inside super range that catches the most enemies (ties: nearer). */
 export function bestSuperPoint(s: RushState): Vec | null {
   let best: Vec | null = null, bestCount = 0, bestD = Infinity;
@@ -317,7 +339,8 @@ function fire(s: RushState, aim: Vec | 'auto') {
   const h = s.hero;
   let angle = h.facing;
   if (aim === 'auto') {
-    const target = nearestEnemy(s, h, heroDef(s).attack === 'swing' ? heroDef(s).range + 1.5 : heroDef(s).range);
+    const swing = heroDef(s).attack === 'swing';
+    const target = swing ? nearestEnemy(s, h, heroDef(s).range + 1.5) : autoTarget(s, h, heroDef(s).range);
     if (target) angle = Math.atan2(target.z - h.z, target.x - h.x);
   } else if (aim.x !== 0 || aim.z !== 0) angle = Math.atan2(aim.z, aim.x);
   h.facing = angle;
@@ -635,11 +658,7 @@ function updateShots(s: RushState) {
         // A shield-bearer turns aside bolts that come at its face (cycle 27); swings, supers and towers get through.
         const def = ENEMIES[e.kind];
         let damage = shot.damage;
-        if (def.shield !== undefined) {
-          let off = Math.atan2(shot.z - e.z, shot.x - e.x) - e.facing;
-          off = Math.atan2(Math.sin(off), Math.cos(off));
-          if (Math.abs(off) <= (def.shieldArc ?? 1)) { damage *= def.shield; s.events.push({ type: 'block', x: e.x, z: e.z }); }
-        }
+        if (def.shield !== undefined && shieldFaces(e, shot)) { damage *= def.shield; s.events.push({ type: 'block', x: e.x, z: e.z }); }
         hurtEnemy(s, e, damage, 'hero');
         hit = true;
         break;
