@@ -121,7 +121,7 @@ export function stepFrontier(previous:Frontier,elapsed:number,axis:Point={x:0,z:
    tower.actionTime+=dt;
    if(!tower.released&&tower.actionTime+1e-9>=BALLISTA.release){
     tower.released=true;const target=s.enemies.find(e=>e.id===tower.targetId&&e.hp>0);
-    if(target&&distance(target,p)<12){const muzzle=ballistaMuzzle(p.x,p.z,heightAt(p.x,p.z),tower.heading);s.bolts.push({id:s.serial++,pad:tower.pad,targetId:target.id,position:muzzle,previous:{...muzzle},damage:23*tower.level,life:2});tower.cooldown=BALLISTA.interval-BALLISTA.release;}
+    if(target&&distance(target,p)<12){const muzzle=ballistaMuzzle(p.x,p.z,heightAt(p.x,p.z),tower.heading);s.bolts.push({id:s.serial++,pad:tower.pad,targetId:target.id,position:muzzle,previous:{...muzzle},damage:23*tower.level,life:BALLISTA.boltLifetime});tower.cooldown=BALLISTA.interval-BALLISTA.release;}
    }
    if(tower.actionTime>=BALLISTA.duration){tower.actionTime=null;tower.targetId=null;}
    continue;
