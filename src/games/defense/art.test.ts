@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import type { CombatAttack, Projectile } from './types.ts';
-import { STONE_GOLEM_STRIDE } from './locomotion.ts';
+import { ICE_KNIGHT_STRIDE, STONE_GOLEM_STRIDE } from './locomotion.ts';
 
 type Art = typeof import('./art.ts');
 
@@ -189,6 +189,39 @@ test('stone source, combat crop and articulated features stay consistent across 
   const arm=gltf.nodes.find((node:{name:string})=>node.name==='arm-near');
   assert.ok(arm.children.some((index:number)=>gltf.nodes[index].name==='knuckle-near-0'),'knuckles travel with the arm');
  }
+});
+
+test('ice knight walking uses eight grounded frames and preserves the old hit anchor on failure',async()=>{
+ const {art,requests}=await loadWithImageResults(()=>false,'ice-walk-ready');
+ assert.equal(requests.filter(src=>src.endsWith('/ice-knight-walk-atlas.webp')).length,1);
+ const frames=Array.from({length:8},(_,i)=>art.monsterWalkingSpriteAsset('ice',i*ICE_KNIGHT_STRIDE/8)!);
+ assert.equal(new Set(frames.map(f=>f.viewBox)).size,8);
+ assert.deepEqual(art.monsterWalkingSpriteAsset('ice',ICE_KNIGHT_STRIDE),frames[0]);
+ assert.deepEqual(art.monsterWalkingSpriteAsset('ice',ICE_KNIGHT_STRIDE*1.25/8,85),frames[1]);
+ for(const f of frames){assert.equal(f.displayScale,384/360);assert.equal(f.groundY,339.61*2/3);}
+ assert.ok(Math.abs(frames[0].groundY!*3/2-340)<.4,'delivery preserves the legacy hit/death anchor');
+ for(const missing of ['ice-knight-atlas.webp','ice-knight-walk-atlas.webp']){
+  const {art:failed}=await loadWithImageResults(src=>src.endsWith('/'+missing),'ice-walk-'+missing);
+  assert.equal(failed.monsterWalkingSpriteAsset('ice',12),null);
+  assert.ok(failed.monsterSpriteAsset('ice','hit'),'existing hit or illustrated fallback remains available');
+ }
+});
+
+test('ice gait is an articulated model with a held sword, matching source hashes and grounded poses',()=>{
+ const read=(path:string)=>readFileSync(new URL('../../../'+path,import.meta.url));
+ const m=JSON.parse(read('public/defense/models/ice-knight-walk.json').toString());
+ const hash=(b:Buffer)=>createHash('sha256').update(b).digest('hex');
+ assert.equal(hash(read(m.source)),m.source_sha256);assert.equal(hash(read(m.base_source)),m.base_source_sha256);
+ for(const f of m.files){const b=read('public/defense/models/'+f.file);assert.equal(hash(b),f.sha256);assert.equal(b.length,f.bytes);}
+ for(const f of m.renders)assert.equal(hash(read(f.path)),f.sha256);
+ assert.equal(m.stride_world,ICE_KNIGHT_STRIDE);assert.equal(m.sword_parent,'arm-near');
+ assert.equal(m.frame.delivery_shift_y,22);assert.equal(m.frame.display_anchor_y,339.61);
+ assert.deepEqual(m.delivery_frame,{width:256,height:256,columns:8,source_scale:2/3,ground_y:339.61*2/3});
+ assert.equal(m.samples.length,33);assert.ok(m.samples.every((v:{lowest_vertex:number,feet:{near:number,far:number}})=>v.lowest_vertex>-.005&&Math.min(v.feet.near,v.feet.far)<.002));
+ assert.deepEqual(m.samples[0].bounds,m.samples[32].bounds);
+ const b=read('public/defense/models/ice-knight-walk.glb');const g=JSON.parse(b.subarray(20,20+b.readUInt32LE(12)).toString());
+ const arm=g.nodes.find((n:{name:string})=>n.name==='arm-near');assert.ok(arm.children.some((i:number)=>g.nodes[i].name==='sword'));
+ assert.ok(g.animations.some((a:{name:string,channels:unknown[]})=>a.name==='ice-knight-walk'&&a.channels.length>=12));
 });
 
 test('stone gait follows distance with eight poses and retains the legacy hit anchor',async()=>{
@@ -492,8 +525,8 @@ test('the frost wolf uses its baked poses with one crop band and falls back to t
 
 test('every baked monster atlas is requested by the preloader, and the unbaked ones add no extra request',async()=>{
  const {requests}=await loadWithImageResults(()=>false,'monster-preload');
- for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
- assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-brace-')&&!src.includes('/frost-fall-')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-stop-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,22);
+ for(const id of ['insulator-slime','stone-golem','wood-soldier','wood-soldier-walk','ice-knight','ice-knight-walk','frost-wolf','frost-wolf-trot','metal-soldier'])assert.equal(requests.filter(src=>src===`/defense/models/${id}-atlas.webp`).length,1,`${id} atlas is preloaded exactly once`);
+ assert.equal(requests.filter(src=>src.endsWith('-atlas.webp')&&!src.includes('/frost-brace-')&&!src.includes('/frost-fall-')&&!src.includes('/frost-flinch-')&&!src.includes('/dwarf-attack-')&&!src.includes('/dwarf-entry-')&&!src.includes('/dwarf-return-')&&!src.includes('/dwarf-stop-')&&!src.includes('/dwarf-locomotion-')&&!src.includes('/dwarf-hammer-')&&!src.includes('/water-action-')&&!src.includes('/water-lv3-action-')&&!src.includes('/ballista-')&&!src.includes('/ian-')&&!src.includes('/riel-')&&!src.includes('/cheongun-')&&!src.includes('/luna-')&&!src.includes('/moonlight-')&&!src.includes('/kar-')&&!src.includes('/fire-action-')&&!src.includes('/fire-lv3-action-')&&!src.includes('/lightning-action-')&&!src.includes('/lightning-lv3-action-')&&!src.includes('/rapid-action-')&&!src.includes('/rapid-lv3-action-')&&!src.includes('/crush-action-')&&!src.includes('/crush-lv3-action-')).length,23);
 });
 
 test('every monster and boss crop stays inside its source sheet in each pose, for baked atlases and their illustrated fallbacks',async()=>{

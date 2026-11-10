@@ -69,7 +69,9 @@ export function walkFrame(distance: number): number {
 // The golem's support foot travels 11.0845 board units in each half-cycle
 // at size 68 in the shared orthographic camera. Larger sprites need a longer step.
 export const STONE_GOLEM_STRIDE = 22.16903;
-export const enemyStride = (kind: EnemyKind, size = 68) => kind === 'stone' ? STONE_GOLEM_STRIDE * (Number.isFinite(size) && size > 0 ? size / 68 : 1) : kind === 'frostwolf' ? 40 : kind === 'wood' ? 52 : 48;
+// Ice knight's planted foot travel at the same 68-unit display size.
+export const ICE_KNIGHT_STRIDE = 24.83730;
+export const enemyStride = (kind: EnemyKind, size = 68) => kind === 'stone' || kind === 'ice' ? (kind === 'stone' ? STONE_GOLEM_STRIDE : ICE_KNIGHT_STRIDE) * (Number.isFinite(size) && size > 0 ? size / 68 : 1) : kind === 'frostwolf' ? 40 : kind === 'wood' ? 52 : 48;
 
 /** Impulses slide a body; they must not wind its gait backwards or flip its facing. */
 export function advanceEnemyGait(distance: number, before: number, after: number, dt: number, bracing: boolean): Locomotion {
@@ -79,7 +81,7 @@ export function advanceEnemyGait(distance: number, before: number, after: number
 
 export function enemyWalkFrame(kind: EnemyKind, distance: number, size = 68): number {
   const stride = enemyStride(kind, size), travelled = Math.max(0, distance);
-  return kind === 'stone' ? Math.floor((travelled / stride + 1e-9) * 8) % 8 : Math.floor((travelled % stride) / stride * 8);
+  return kind === 'stone' || kind === 'ice' ? Math.floor((travelled / stride + 1e-9) * 8) % 8 : Math.floor((travelled % stride) / stride * 8);
 }
 
 export const MAGE_STOP_DURATION = .24;

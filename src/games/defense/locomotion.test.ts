@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { actDefense, createDefense, positionOnPath, stepDefense, waveSize } from './engine.ts';
-import { advanceEnemyGait, advanceLocomotion, advanceMageLocomotion, advancePetLocomotion, petStride, petWalkFrame, enemyWalkFrame, enemyStride, STONE_GOLEM_STRIDE, movementFacing, walkFrame } from './locomotion.ts';
+import { advanceEnemyGait, advanceLocomotion, advanceMageLocomotion, advancePetLocomotion, petStride, petWalkFrame, enemyWalkFrame, enemyStride, STONE_GOLEM_STRIDE, ICE_KNIGHT_STRIDE, movementFacing, walkFrame } from './locomotion.ts';
 
 test('walking distance measures actual displacement and stops at the destination without mutating prior frames', () => {
   const initial = createDefense(1, 'dwarf');
@@ -70,6 +70,15 @@ test('stone gait uses projected foot travel and scales with the actual rendered 
  }
  assert.equal(enemyWalkFrame('stone',STONE_GOLEM_STRIDE/8,85),0,'mobile size must not use desktop cadence');
  assert.equal(enemyStride('wood',85),52,'other enemies retain their authored timing');
+});
+
+test('ice gait scales its planted stride with the displayed size without changing other enemies',()=>{
+ for(const size of [68,85]){
+  const stride=enemyStride('ice',size);assert.ok(Math.abs(stride-ICE_KNIGHT_STRIDE*size/68)<1e-9);
+  assert.deepEqual(Array.from({length:8},(_,i)=>enemyWalkFrame('ice',i*stride/8,size)),[0,1,2,3,4,5,6,7]);
+  assert.equal(enemyWalkFrame('ice',stride,size),0);
+ }
+ assert.equal(enemyStride('wood',85),52);
 });
 
 test('enemy feet slow with movement, pause with battle and face the road while knocked backwards', () => {
