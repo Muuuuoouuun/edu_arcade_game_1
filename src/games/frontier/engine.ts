@@ -1,6 +1,7 @@
 import{BEACON_CAPTURE}from'./beacon.ts';
 import{RELIC_PICKUP}from'./relic.ts';
 import{WOOD_DEFEAT}from'./woodDefeat.ts';
+import{DASH_VISUAL,type DashTrace}from'./dash.ts';
 /** Small, isolated 3D training ground. No campaign saves or rewards are written. */
 import {HERO_ATTACK,hammerPoint,inHammerReach,walkContactWeight,type HeroAttack} from './heroAttack.ts';
 import {WOOD_ATTACK,inWoodStrike,type WoodAttack} from './woodAttack.ts';
@@ -12,7 +13,7 @@ export type Point={x:number;z:number};
 export type SquadMember=Point&{cooldown:number;heading?:number;walkDistance?:number;moving?:boolean;restTime?:number;shotAt?:number;shotHeading?:number};
 export type Enemy=Point&{id:number;hp:number;cooldown:number;path:number;maxHp?:number;heading?:number;walkDistance?:number;moving?:boolean;restTime?:number;attack?:WoodAttack;hitAt?:number;hitHeading?:number};
 export type FallenWood={enemy:Enemy;at:number};
-export type Frontier={mode:Mode;phase:'ready'|'playing'|'won'|'lost';paused:boolean;speed:1|2;time:number;wave:number;remaining:number;spawnIn:number;gold:number;coreHp:number;coreHitAt?:number;hero:Point&{hp:number;maxHp:number;target:Point;heading:number;moving:boolean;strike:number;cooldown:number;skill:number;dash:number;walkDistance:number;walkStartDistance?:number;settle?:{time:number;walkTime:number;walkWeight?:number};attack?:HeroAttack};squad:SquadMember[];enemies:Enemy[];towers:Tower[];bolts:Bolt[];beacon:number;crystals:number[];crystalClaimedAt?:Record<number,number>;fallen?:FallenWood[];kills:number;xp:number;level:number;serial:number;effects:{id:number;from:Point;to:Point;kind:'shot'|'skill'|'hit'|'impact'|'club'|'hammer'|'shockwave';life:number}[];message:string};
+export type Frontier={mode:Mode;phase:'ready'|'playing'|'won'|'lost';paused:boolean;speed:1|2;time:number;wave:number;remaining:number;spawnIn:number;gold:number;coreHp:number;coreHitAt?:number;hero:Point&{hp:number;maxHp:number;target:Point;heading:number;moving:boolean;strike:number;cooldown:number;skill:number;dash:number;dashTrace?:DashTrace;walkDistance:number;walkStartDistance?:number;settle?:{time:number;walkTime:number;walkWeight?:number};attack?:HeroAttack};squad:SquadMember[];enemies:Enemy[];towers:Tower[];bolts:Bolt[];beacon:number;crystals:number[];crystalClaimedAt?:Record<number,number>;fallen?:FallenWood[];kills:number;xp:number;level:number;serial:number;effects:{id:number;from:Point;to:Point;kind:'shot'|'skill'|'hit'|'impact'|'club'|'hammer'|'shockwave';life:number}[];message:string};
 export const MODES={defense:{name:'성문 방어',tag:'타워 디펜스',goal:'3개 웨이브를 막고 성문을 지키세요.',control:'빛나는 건설 지점을 눌러 포탑을 배치·강화하세요.',size:40},command:{name:'변경 지휘',tag:'디펜스 + 분대 지휘',goal:'분대로 동쪽 봉화를 점령하고 3개 웨이브를 막으세요.',control:'땅을 눌러 분대 이동 · 가까운 건설 지점에 전초 포탑 배치',size:64},solo:{name:'수정 원정',tag:'영웅 직접 조작',goal:'적 6마리·수정 3개를 확보한 뒤 동쪽 출구로 이동하세요.',control:'WASD / 방향 패드 이동 · 근접 강타 Q · 충격파 E · 돌진 Space (준비 취소)',size:64}} as const;
 export const PADS:Point[]=[{x:-21,z:12},{x:-9,z:8},{x:-24,z:-7},{x:-7,z:-16},{x:15,z:5},{x:19,z:-12}];
 export const CORE={x:-14,z:21},BEACON={x:19,z:-17},EXIT={x:23,z:-23};
@@ -69,7 +70,7 @@ export function actFrontier(previous:Frontier,a:Command):Frontier{
  if(a.type==='move'&&s.mode!=='defense'&&walkable(a.point)){s.hero.target={...a.point};return s;}
  if(a.type==='attack'&&s.mode==='solo')strike(s);
  if(a.type==='skill'&&s.mode!=='defense'&&s.hero.skill<=0&&!s.hero.attack)beginHeroAttack(s,'skill',null,s.hero.heading);
- if(a.type==='dash'&&s.mode==='solo'&&s.hero.dash<=0){cancelHeroAttack(s);s.hero.settle=undefined;s.hero.moving=false;s.hero.dash=3;const target={x:s.hero.x+Math.sin(s.hero.heading)*5,z:s.hero.z+Math.cos(s.hero.heading)*5};for(let i=0;i<20;i++){const p={x:s.hero.x+(target.x-s.hero.x)/(20-i),z:s.hero.z+(target.z-s.hero.z)/(20-i)};if(!walkable(p))break;s.hero.x=p.x;s.hero.z=p.z;}s.hero.target={x:s.hero.x,z:s.hero.z};}
+ if(a.type==='dash'&&s.mode==='solo'&&s.hero.dash<=0){cancelHeroAttack(s);s.hero.settle=undefined;s.hero.moving=false;s.hero.dash=3;const from={x:s.hero.x,z:s.hero.z},target={x:s.hero.x+Math.sin(s.hero.heading)*5,z:s.hero.z+Math.cos(s.hero.heading)*5};for(let i=0;i<20;i++){const p={x:s.hero.x+(target.x-s.hero.x)/(20-i),z:s.hero.z+(target.z-s.hero.z)/(20-i)};if(!walkable(p))break;s.hero.x=p.x;s.hero.z=p.z;}s.hero.target={x:s.hero.x,z:s.hero.z};s.hero.dashTrace=distance(from,s.hero)>1e-6?{from,to:{x:s.hero.x,z:s.hero.z},at:s.time}:undefined;}
  if(a.type==='interact'&&s.mode==='solo'){
   const index=CRYSTALS.findIndex((p,i)=>!s.crystals.includes(i)&&distance(p,s.hero)<RELIC_PICKUP.radius);
   if(index>=0){s.crystals.push(index);s.crystalClaimedAt??={};s.crystalClaimedAt[index]=s.time;s.hero.hp=Math.min(s.hero.maxHp,s.hero.hp+RELIC_PICKUP.heal);s.message=`수정 ${s.crystals.length}/3 · 체력 25 회복`;}
@@ -81,7 +82,7 @@ export function actFrontier(previous:Frontier,a:Command):Frontier{
 export function stepFrontier(previous:Frontier,elapsed:number,axis:Point={x:0,z:0}):Frontier{
  if(previous.phase!=='playing'||previous.paused||!Number.isFinite(elapsed)||elapsed<=0)return previous;
  const s=clone(previous),dt=Math.min(.05,elapsed)*s.speed;s.time+=dt;
- s.effects=s.effects.map(e=>({...e,life:e.life-dt})).filter(e=>e.life>0);if(s.fallen)s.fallen=s.fallen.filter(f=>s.time-f.at<WOOD_DEFEAT.duration);
+ s.effects=s.effects.map(e=>({...e,life:e.life-dt})).filter(e=>e.life>0);if(s.hero.dashTrace&&s.time-s.hero.dashTrace.at>=DASH_VISUAL.duration)s.hero.dashTrace=undefined;if(s.fallen)s.fallen=s.fallen.filter(f=>s.time-f.at<WOOD_DEFEAT.duration);
  for(const k of ['cooldown','skill','dash','strike'] as const)s.hero[k]=Math.max(0,s.hero[k]-dt);
  if(s.mode!=='defense'){
   const wasMoving=s.hero.moving;
