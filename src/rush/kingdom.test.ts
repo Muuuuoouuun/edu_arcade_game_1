@@ -179,3 +179,48 @@ test('saves from before shards get 2 per star already earned', () => {
   assert.equal(parseKingdom(JSON.stringify(old), T0).shards, 12);
   assert.equal(parseKingdom(JSON.stringify({ ...old, shards: 5 }), T0).shards, 5, 'an existing count is kept');
 });
+
+test('daily first win: the first win of each local day pays once more; losses, repeats and a clock set back do not', async () => {
+  const { DAILY_WIN, dayIndex, dailyReady } = await import('./kingdom.ts');
+  // Local day boundaries follow the offset: 23:30 UTC is already the next day in Seoul (UTC+9, offset -540).
+  const t = Date.UTC(2026, 10, 10, 23, 30);
+  assert.equal(dayIndex(t, -540), dayIndex(t, 0) + 1);
+  assert.equal(dayIndex(Date.UTC(2026, 10, 10, 0, 0)), dayIndex(Date.UTC(2026, 10, 10, 23, 59)));
+  const won = createRush(1);
+  won.phase = 'won';
+  won.town.hp = won.town.maxHp;
+  const lost = createRush(1);
+  lost.phase = 'lost';
+  const day = dayIndex(T0);
+  let k = createKingdom(T0);
+  assert.ok(dailyReady(k, day), 'a new kingdom can claim today');
+  // A loss neither pays nor uses up the bonus.
+  const loss = settleBattle(k, 'l1', lost, 1, day);
+  assert.equal(loss.reward.daily, null);
+  assert.ok(dailyReady(loss.kingdom, day));
+  // The first win pays the battle reward plus the bonus.
+  const plain = settleBattle(k, 'w0', won, 1);
+  const first = settleBattle(loss.kingdom, 'w1', won, 1, day);
+  assert.deepEqual(first.reward.daily, DAILY_WIN);
+  assert.equal(first.reward.food, plain.reward.food + DAILY_WIN.food);
+  assert.equal(first.reward.shards, plain.reward.shards + DAILY_WIN.shards);
+  assert.equal(first.kingdom.dailyWin, day);
+  assert.equal(first.kingdom.shards, loss.kingdom.shards + plain.reward.shards + DAILY_WIN.shards);
+  // Same battle id again: nothing; another win the same day: no bonus.
+  assert.equal(settleBattle(first.kingdom, 'w1', won, 1, day).granted, false);
+  k = settleBattle(first.kingdom, 'w2', won, 1, day).kingdom;
+  assert.equal(settleBattle(first.kingdom, 'w2', won, 1, day).reward.daily, null);
+  // Next day pays again; a clock set back to an earlier day does not.
+  assert.deepEqual(settleBattle(k, 'w3', won, 1, day + 1).reward.daily, DAILY_WIN);
+  assert.equal(settleBattle(k, 'w4', won, 1, day - 3).reward.daily, null);
+  // Without a day (tools, bots) settling is unchanged.
+  assert.equal(plain.reward.daily, null);
+});
+
+test('saves from before the daily bonus can claim it today; the claimed day round-trips', () => {
+  const old = JSON.parse(serializeKingdom(createKingdom(T0)));
+  delete old.dailyWin;
+  assert.equal(parseKingdom(JSON.stringify(old), T0).dailyWin, 0);
+  assert.equal(parseKingdom(JSON.stringify({ ...old, dailyWin: 20402 }), T0).dailyWin, 20402);
+  assert.equal(parseKingdom(JSON.stringify({ ...old, dailyWin: 'x' }), T0).dailyWin, 0, 'a broken value resets to claimable');
+});

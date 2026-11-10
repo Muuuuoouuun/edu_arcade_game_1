@@ -3,7 +3,7 @@ import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
 import { FORGE, HEROES, type HeroKind } from './data.ts';
 import {
-  CASTLE_MAX, HERO_LV_PER_CASTLE, canTrain, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
+  CASTLE_MAX, DAILY_WIN, HERO_LV_PER_CASTLE, canTrain, dailyReady, dayIndex, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
   serializeKingdom, storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 
@@ -12,6 +12,8 @@ const KEY = 'arcana-rush:kingdom:v1';
 export function loadKingdom(now = Date.now()): Kingdom {
   try { return parseKingdom(localStorage.getItem(KEY), now); } catch { return createKingdom(now); }
 }
+/** Today's local day number (the daily first-win bonus resets at local midnight). */
+export const today = (now = Date.now()) => dayIndex(now, new Date(now).getTimezoneOffset());
 export function saveKingdom(k: Kingdom): boolean {
   try { localStorage.setItem(KEY, serializeKingdom(k)); return true; } catch { return false; }
 }
@@ -154,7 +156,10 @@ export class TownScreen {
       chip.setAttribute('aria-label', open ? `스테이지 ${n}, 별 ${stars}개` : `스테이지 ${n}, 잠김`);
       chip.querySelector('[data-stars]')!.textContent = open ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '잠김';
     });
-    this.$('btn-battle').textContent = `스테이지 ${this.stage} 출전`;
+    // Daily first win (cycle 32): a small badge on the battle button while today's bonus is waiting.
+    const daily = dailyReady(k, today(now));
+    this.$('btn-battle').innerHTML = `스테이지 ${this.stage} 출전${daily ? `<span class="daily-badge">첫 승리 <i class="res-ico shard"></i>+${DAILY_WIN.shards}</span>` : ''}`;
+    this.$('btn-battle').setAttribute('aria-label', `스테이지 ${this.stage} 출전${daily ? ', 오늘의 첫 승리 보상 대기 중' : ''}`);
     this.$('hero-name').textContent = `${HEROES[k.hero].name} Lv${k.heroLv[k.hero]}`;
     const heroRow = this.root.querySelector<HTMLElement>('[data-id="hero"]')!;
     const lv = k.heroLv[k.hero], g = heroGrowth(lv), tc = trainCost(k, k.hero), trainBtn = heroRow.querySelector<HTMLButtonElement>('[data-train]')!;

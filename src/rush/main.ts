@@ -10,7 +10,7 @@ import { playHaptic } from '../lib/haptic.ts';
 import { collect, kingdomMods, settleBattle } from './kingdom.ts';
 import { stageDifficulty } from './stages.ts';
 import { advanceClock, createClock, hitStopFor, tryStop } from './clock.ts';
-import { loadKingdom, saveKingdom, TownScreen } from './town.ts';
+import { loadKingdom, saveKingdom, today, TownScreen } from './town.ts';
 import { TownView } from './townScene.ts';
 import { addHit, POP_LIFE, popKey, type PopSlot } from './pops.ts';
 import { createFrameWatch, nextPref, parsePref, PREF_LABEL, resolveQuality, watchFrame, type QualityPref } from './quality.ts';
@@ -219,7 +219,7 @@ function showResult() {
   input.enabled = false;
   $('result-title').textContent = won ? `스테이지 ${stage} 방어 성공!` : `스테이지 ${stage} 마을 함락`;
   $('screen-result').classList.toggle('won', won);
-  const { kingdom, granted, reward } = settleBattle(collect(loadKingdom(), Date.now()), battleId, s, stage);
+  const { kingdom, granted, reward } = settleBattle(collect(loadKingdom(), Date.now()), battleId, s, stage, today());
   $('result-stars').innerHTML = won
     ? `<span class="stars">${'<i class="on">★</i>'.repeat(reward.stars)}${'<i>★</i>'.repeat(3 - reward.stars)}</span>${reward.newStars ? `<small>새 별 +${reward.newStars}${reward.newStars === reward.stars && stage < 10 ? ` · 스테이지 ${stage + 1} 열림` : ''}</small>` : ''}`
     : '<small>남은 마을 체력에 따라 별 1~3개를 얻어요</small>';
@@ -227,8 +227,9 @@ function showResult() {
   const rewardEl = $('result-reward');
   rewardEl.hidden = !granted;
   const shardText = reward.shards ? ` <i class="res-ico shard"></i>조각 +${reward.shards}` : '';
-  rewardEl.innerHTML = `<i class="res-ico food"></i>식량 +${reward.food} <i class="res-ico wood"></i>목재 +${reward.wood}${shardText}${saved ? '' : ' <small>(저장 실패: 이 기기에서 저장 공간을 쓸 수 없음)</small>'}`;
-  lastReward = granted ? `방금 전투 보상: 식량 +${reward.food} · 목재 +${reward.wood}${reward.shards ? ` · 영웅 조각 +${reward.shards}` : ''}` : '';
+  const d = reward.daily, dailyText = d ? `<small class="daily-note">오늘의 첫 승리 보너스 포함: 식량 +${d.food} · 목재 +${d.wood} · 조각 +${d.shards}</small>` : '';
+  rewardEl.innerHTML = `<i class="res-ico food"></i>식량 +${reward.food} <i class="res-ico wood"></i>목재 +${reward.wood}${shardText}${dailyText}${saved ? '' : ' <small>(저장 실패: 이 기기에서 저장 공간을 쓸 수 없음)</small>'}`;
+  lastReward = granted ? `방금 전투 보상: 식량 +${reward.food} · 목재 +${reward.wood}${reward.shards ? ` · 영웅 조각 +${reward.shards}` : ''}${d ? ' (첫 승리 보너스 포함)' : ''}` : '';
   const accuracy = s.stats.shots ? Math.min(100, Math.round((s.stats.hits / (s.stats.shots * HEROES[s.hero.kind].bolts)) * 100)) : 0;
   const towers = s.towers.filter(Boolean).map(t => `Lv${t!.level + 1}`).join(' · ') || '없음';
   $('result-stats').innerHTML = [

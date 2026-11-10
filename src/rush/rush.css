@@ -335,3 +335,13 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .hud-build.split-r { transform: translateX(6px); }
 .hud-build.split-l:active { transform: translateX(calc(-100% - 6px)) translateY(2px); }
 .hud-build.split-r:active { transform: translateX(6px) translateY(2px); }
+
+/* Daily first win (cycle 32) */
+#btn-battle { position: relative; }
+.daily-badge {
+  position: absolute; top: -13px; right: -6px; display: inline-flex; align-items: center; gap: 2px; padding: 1px 7px 2px;
+  border-radius: 10px; border: 2px solid var(--outline); background: #ff5a6e; color: #fff; font-size: 12px; line-height: 1.25;
+  white-space: nowrap; box-shadow: 0 2px 0 var(--outline); pointer-events: none;
+}
+.daily-badge .res-ico { width: 10px; height: 10px; margin: 0 1px 0 3px; border-width: 1.5px; vertical-align: 0; }
+.result-reward .daily-note { display: block; margin-top: 3px; font-size: 13px; color: #ffe58a; }

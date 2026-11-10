@@ -85,6 +85,7 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await page.click('#btn-hero');
     check((await page.textContent('#hero-name')).includes('도마뱀') && await page.isVisible('#town-reward'), 'Bron stays locked on a fresh kingdom (hint shown)');
     check((await page.textContent('#btn-battle')).includes('스테이지 1'), 'battle button names the selected stage');
+    check(await page.isVisible('#btn-battle .daily-badge'), 'battle button shows the daily first-win badge on a fresh kingdom');
 
     // 3. Desktop controls: keyboard movement per sim tick, build on a pad, mouse fire.
     await page.click('#btn-battle');

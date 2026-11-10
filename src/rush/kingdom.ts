@@ -27,6 +27,8 @@ export interface Kingdom {
   heroLv: Record<HeroKind, number>;
   /** Hero shards (cycle 26): earned from stage stars and high-stage wins, spent on hero training from Lv3. */
   shards: number;
+  /** Local day number (see `dayIndex`) of the last daily first-win bonus (cycle 32); 0 = never. */
+  dailyWin: number;
   /** Recently rewarded battle ids, so one battle never pays twice. */
   rewarded: string[];
 }
@@ -42,7 +44,7 @@ export const HERO_GROWTH = { hp: 0.1, damage: 0.1 } as const;
 
 export const createKingdom = (now: number): Kingdom => ({
   version: 1, castle: 1, farm: 1, mill: 1, perks: { attack: 0, towerDiscount: 0, townHp: 0, forge: 0 },
-  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), hero: 'ranger', heroLv: { ranger: 1, bron: 1 }, shards: 0, rewarded: [],
+  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), hero: 'ranger', heroLv: { ranger: 1, bron: 1 }, shards: 0, dailyWin: 0, rewarded: [],
 });
 
 const clone = (k: Kingdom): Kingdom => ({ ...k, perks: { ...k.perks }, battles: { ...k.battles }, stars: [...k.stars], heroLv: { ...k.heroLv }, rewarded: [...k.rewarded] });
@@ -169,23 +171,37 @@ export function grantReward(k: Kingdom, battleId: string, reward: Cost & { won: 
   return { kingdom: next, granted: true };
 }
 
-export type Settlement = Cost & { won: boolean; waves: number; stars: number; newStars: number; bonus: Cost; shards: number };
+export type Settlement = Cost & { won: boolean; waves: number; stars: number; newStars: number; bonus: Cost; shards: number; daily: TrainCost | null };
+
+// ---------- daily first win (cycle 32) ----------
+/** Extra reward for the first battle won on each local day: a reason to come back that still needs a battle. */
+export const DAILY_WIN: TrainCost = { food: 100, wood: 100, shards: 3 };
+/** Local day number for `now` (ms); `offsetMin` is Date#getTimezoneOffset() (UTC minus local, in minutes). */
+export const dayIndex = (now: number, offsetMin = 0) => Math.floor((now - offsetMin * 60000) / 86400000);
+/** The bonus waits when today is later than the last day it was paid; a clock set back never pays again. */
+export const dailyReady = (k: Kingdom, day: number) => day > k.dailyWin;
 /** Shards from one battle: 2 per newly earned star, plus floor(stage / 3) for a win from stage 3 up (repeatable). */
 export const shardReward = (stage: number, won: boolean, newStars: number) => 2 * newStars + (won ? Math.floor(stage / 3) : 0);
 /**
  * Settle a finished stage battle once: stage-scaled base reward plus a bonus for each newly earned star.
  * Replaying with fewer stars never lowers the record.
  */
-export function settleBattle(k: Kingdom, battleId: string, s: RushState, stage: number): { kingdom: Kingdom; granted: boolean; reward: Settlement } {
+export function settleBattle(k: Kingdom, battleId: string, s: RushState, stage: number, day?: number): { kingdom: Kingdom; granted: boolean; reward: Settlement } {
   const base = battleReward(s), mul = stageRewardMul(stage), stars = starsFor(s);
   const prev = k.stars[stage - 1] ?? 0, newStars = Math.max(0, stars - prev), b = starBonus(stage);
   const bonus = { food: b.food * newStars, wood: b.wood * newStars };
   const reward: Settlement = {
     food: Math.round(base.food * mul) + bonus.food, wood: Math.round(base.wood * mul) + bonus.wood,
-    won: base.won, waves: base.waves, stars, newStars, bonus, shards: shardReward(stage, base.won, newStars),
+    won: base.won, waves: base.waves, stars, newStars, bonus, shards: shardReward(stage, base.won, newStars), daily: null,
   };
+  // A battle id already paid never claims the daily bonus either (grantReward refuses it below).
+  if (base.won && day !== undefined && dailyReady(k, day) && !k.rewarded.includes(battleId)) {
+    reward.daily = { ...DAILY_WIN };
+    reward.food += DAILY_WIN.food; reward.wood += DAILY_WIN.wood; reward.shards += DAILY_WIN.shards;
+  }
   const result = grantReward(k, battleId, reward);
   if (result.granted && stars > prev) result.kingdom.stars[stage - 1] = stars;
+  if (result.granted && reward.daily) result.kingdom.dailyWin = day!;
   return { ...result, reward };
 }
 
@@ -223,7 +239,9 @@ export function parseKingdom(raw: string | null, now: number): Kingdom {
       // Saves from before hero training start every hero at Lv1; levels above the castle cap are clamped.
       heroLv: { ranger: heroLevel(v.heroLv?.ranger, castle), bron: heroLevel(v.heroLv?.bron, castle) },
       // Saves from before shards (cycle 26) get 2 per star already earned, so past progress still counts.
-      shards: v.shards === undefined ? 2 * starList.reduce((a: number, b: number) => a + b, 0) : count(v.shards, 0, 1e6) ?? 0, rewarded,
+      shards: v.shards === undefined ? 2 * starList.reduce((a: number, b: number) => a + b, 0) : count(v.shards, 0, 1e6) ?? 0,
+      // Saves from before the daily bonus (cycle 32) can claim it today.
+      dailyWin: count(v.dailyWin, 0, 1e7) ?? 0, rewarded,
     };
   } catch {
     return createKingdom(now);
