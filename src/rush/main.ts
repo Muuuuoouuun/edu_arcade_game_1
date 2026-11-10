@@ -251,7 +251,7 @@ function qualityLabel() {
   const auto = qualityPref === 'auto' ? `(${PREF_LABEL[view.quality]})` : '';
   $('btn-quality').textContent = `그래픽: ${PREF_LABEL[qualityPref]}${auto}`;
 }
-function applyQuality() { view.setQuality(resolveQuality(qualityPref, frameWatch.dropped)); qualityLabel(); }
+function applyQuality() { view.setQuality(resolveQuality(qualityPref, frameWatch.dropped)); qualityLabel(); forceDraw = true; }
 $('btn-quality').addEventListener('click', () => {
   qualityPref = nextPref(qualityPref);
   if (!pinnedQuality) try { localStorage.setItem(QUALITY_KEY, qualityPref); } catch { /* private mode: keep it for this session */ }
@@ -264,7 +264,12 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && mod
 window.addEventListener('keydown', e => { if (e.code === 'Escape' && mode === 'play') { paused = !paused; showScreen(paused ? 'pause' : null); } });
 
 // ---------- loop ----------
+// Menus (title, result, pause) sit over a still battlefield: redraw it every MENU_DRAW_EVERY frames (cycle 30).
+// The first menu frame, a resize and a quality change (both clear the canvas) draw at once.
+const MENU_DRAW_EVERY = 4;
+let menuFrames = 0, forceDraw = true, drawnFrames = 0;
 function resize() {
+  forceDraw = true;
   const r = surface.getBoundingClientRect();
   view.resize(Math.max(1, Math.round(r.width)), Math.max(1, Math.round(r.height)));
   townView.resize(Math.max(1, Math.round(r.width)), Math.max(1, Math.round(r.height)));
@@ -307,7 +312,11 @@ function frame(now: number) {
     townView.update(dt);
     view.renderer.render(townView.scene, townView.camera);
     town.layout(canvas.getBoundingClientRect());
-  } else view.render();
+  } else {
+    const menu = mode === 'title' || mode === 'result' || (mode === 'play' && paused);
+    menuFrames = menu ? menuFrames + 1 : 0;
+    if (!menu || forceDraw || menuFrames % MENU_DRAW_EVERY === 1) { view.render(); drawnFrames++; forceDraw = false; }
+  }
   updatePops(dt);
   updateHud();
   seeThroughHud();
@@ -338,4 +347,4 @@ if (params.has('sheet')) {
 else if (params.has('play')) start('play');
 
 // Read-only handle for automated browser checks.
-Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, get quality() { return { pref: qualityPref, tier: view.quality, autoDropped: frameWatch.dropped }; }, info: () => view.info(), enemyScreen, towerLevels: TOWER_LEVELS.length } });
+Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, get quality() { return { pref: qualityPref, tier: view.quality, autoDropped: frameWatch.dropped }; }, get drawnFrames() { return drawnFrames; }, info: () => view.info(), enemyScreen, towerLevels: TOWER_LEVELS.length } });
