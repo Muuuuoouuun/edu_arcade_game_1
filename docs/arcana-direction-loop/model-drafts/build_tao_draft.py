@@ -19,6 +19,16 @@ throwing arm low and forward (64px overlap with idle: windup 0.85 -> 0.66, recov
 WebP q84 = 110,238 B (<= 112 KB).
 Each pose is built from pose parameters in a fresh scene; a production script should key the same values
 on pivots (body, head, ribbon, near-arm, far-arm, talisman, orbit, sleeves).
+Cycle 80 (user request: more detailed modelling): same camera contract and pose values, detail raised in six
+layers — face (brows, lids, nose, smile, blush), hands (two raised fingers, curled fingers, thumb), hair (curved
+fringe/side/back locks, top-knot wrap, five-spike crown with a red gem, hairpin beads, flat silk ribbons with a
+bow), clothes (pleated bell robe, gold hem band, jade under-skirt, ivory inner hem, crossed ivory collar, gold
+cloud curls, panel diamonds, sleeve band/inner sleeve/folded drape with jade hem), props (sash knot, tails and a
+vermilion tassel, talisman border, brush strokes and sparks) and materials (lit jade, bright gold thread).
+Helpers `spline`, `lock` (tapered tube/ribbon along a curve) and `pleated` are reusable for the other heroes.
+Bake: 153 mesh objects / 38,976 triangles (cycle 71: 70 / 12,442). Idle 40.6px on 844x390, 64px gray 80
+(forest 36, snow 76), 64px overlap Ian 0.52, Riel 0.59, Luna 0.35, Bron 0.41. Five poses WebP q85 142,048 B,
+q80 126,312 B (cycle 71: 113,592 / 101,046) — proposed budget 128 KB at q80.
 """
 import argparse, json, math, sys
 from pathlib import Path
@@ -135,11 +145,37 @@ def plate(name,center,right,up,w,h,mat,parent=None,thick=.02):
  faces=[(0,1,2,3),(7,6,5,4),(0,4,5,1),(1,5,6,2),(2,6,7,3),(3,7,4,0)]
  return mesh(name,verts,faces,mat,parent)
 
+# ---------------- cycle 80 detail helpers ----------------
+CAM=Vector((7,10,0)).normalized()                        # cloth strips and talismans face the camera
+def spline(points,n=6):
+ """Catmull-Rom curve through the points."""
+ P=[Vector(p) for p in points];P=[P[0]]+P+[P[-1]];out=[]
+ for i in range(1,len(P)-2):
+  for k in range(n):
+   t=k/n;t2=t*t;t3=t2*t
+   out.append(.5*((2*P[i])+(P[i+1]-P[i-1])*t+(2*P[i-1]-5*P[i]+4*P[i+1]-P[i+2])*t2+(3*P[i]-P[i-1]-3*P[i+1]+P[i+2])*t3))
+ out.append(P[-2]);return out
+def lock(name,points,r0,r1,mat,parent=None,flat=1.0,seg=8,n=6):
+ """Tapered tube along a curve: hair lock, ribbon (flat < 1 faces the camera), tassel strand, trim line."""
+ pts=spline(points,n);m=len(pts);verts=[]
+ for i,p in enumerate(pts):
+  r=r0+(r1-r0)*i/(m-1);d=(pts[min(i+1,m-1)]-pts[max(i-1,0)]).normalized();u=d.cross(CAM)
+  u=u.normalized() if u.length>1e-4 else d.orthogonal().normalized();w=d.cross(u).normalized()
+  for k in range(seg):
+   a=2*math.pi*k/seg;verts.append(tuple(p+u*(r*math.cos(a))+w*(r*flat*math.sin(a))))
+ faces=[(i*seg+k,i*seg+(k+1)%seg,(i+1)*seg+(k+1)%seg,(i+1)*seg+k) for i in range(m-1) for k in range(seg)]
+ faces+=[tuple(range(seg-1,-1,-1)),tuple(range((m-1)*seg,m*seg))]
+ return mesh(name,verts,faces,mat,parent,0,True)
 def talisman(name,center,up,face,size,parent=None,glow=True):
- """Yellow paper charm with a red seal stripe; `face` is the paper normal."""
- u=Vector(up).normalized();f=Vector(face).normalized();r=u.cross(f).normalized()
- plate(name+' / paper',center,r,u,size*.55,size,'paper' if glow else 'paperdim',parent,.015)
- plate(name+' / red seal',Vector(center)+f*.012,r,u,size*.16,size*.7,'seal',parent,.006)
+ """Yellow paper charm with a vermilion border and brush strokes; `face` is the paper normal."""
+ u=Vector(up).normalized();f=Vector(face).normalized();r=u.cross(f).normalized();c=Vector(center);w=size*.55;h=size;e=f*.014
+ plate(name+' / paper',c,r,u,w,h,'paper' if glow else 'paperdim',parent,.015)
+ P=lambda a:c+e+r*(a[0]*w)+u*(a[1]*h)
+ for k,(a,b) in enumerate([((-.42,-.44),(.42,-.44)),((.42,-.44),(.42,.44)),((.42,.44),(-.42,.44)),((-.42,.44),(-.42,-.44))]):
+  rod(name+f' / border {k}',P(a),P(b),size*.012,'seal',parent,6)
+ strokes=[((-.22,.30),(.22,.30)),((0,.34),(0,.06)),((-.24,.10),(.24,.10)),((-.2,-.04),(0,-.26)),((.2,-.04),(0,-.26)),((-.14,-.34),(.14,-.34))]
+ for k,(a,b) in enumerate(strokes if size>.4 else strokes[:3]):
+  rod(name+f' / brush stroke {k}',P(a),P(b),size*.024,'seal',parent,6)
 
 OUTER=(.018,.050,.052)   # 먹청-teal outer robe: keeps the 64px gray low (cycle 62 contrast rule)
 M={
@@ -147,24 +183,31 @@ M={
  'outerlight':material('Cloth / lit robe folds',tuple(c*1.6 for c in OUTER),0,.8),
  'ivory':material('Cloth / ivory inner robe',(.60,.56,.45),0,.8),
  'green':material('Cloth / jade green panels and ribbons',(.02,.22,.11),0,.75),
+ 'greenlight':material('Cloth / lit jade',(.04,.34,.17),0,.72),
  'gold':material('Trim / thin gold',(.82,.52,.13),.6,.36),
+ 'goldlight':material('Trim / bright gold thread',(.95,.70,.25),.5,.3,.15),
  'boot':material('Leather / short boots',(.24,.12,.05),0,.7),
+ 'bootdark':material('Leather / soles',(.10,.05,.02),0,.8),
  'skin':material('Skin / warm',(.86,.58,.42),0,.62),
- 'hair':material('Hair / ink black',(.025,.018,.014),0,.6),
- 'hairlight':material('Hair / sheen',(.08,.06,.05),0,.5),
+ 'skinshade':material('Skin / nose and ear shade',(.72,.42,.30),0,.62),
+ 'blush':material('Skin / cheek blush',(.90,.38,.30),0,.7),
+ 'mouth':material('Face / mouth line',(.35,.08,.06),0,.6),
+ 'hair':material('Hair / ink black',(.025,.018,.014),0,.55),
+ 'hairlight':material('Hair / sheen',(.085,.065,.055),0,.42),
  'eyewhite':material('Eye / white',(.92,.90,.86),0,.4),
  'iris':material('Eye / teal iris',(.08,.30,.30),0,.35),
  'pupil':material('Eye / pupil',(.01,.012,.01),0,.3),
+ 'red':material('Tassel / vermilion silk',(.62,.07,.03),0,.6),
+ 'gem':material('Crown / red gem',(.80,.05,.04),0,.15,.5),
  'paper':material('Talisman / glowing yellow paper',(1.0,.55,.03),0,.5,1.1),
  'paperdim':material('Talisman / small charm',(1.0,.58,.05),0,.5,.7),
- 'seal':material('Talisman / vermilion seal',(.75,.08,.03),0,.5,.4),
+ 'seal':material('Talisman / vermilion brush',(.75,.08,.03),0,.5,.4),
  'bolt':material('Spark / storm light',(1.0,.95,.55),0,.3,3.0),
 }
 
 # ---------------- pose parameters (world units; D = screen-right forward, as in build_elf_draft.py) ----------------
 D=Vector((-.82,.57,0)).normalized();Z=Vector((0,0,1));SIDE=D.cross(Z).normalized()
 SF=Vector((-.40,.04,1.74));SN=Vector((.40,.04,1.74))   # front (screen-right) / back shoulder
-CAM=Vector((7,10,0)).normalized()                        # talismans and cloth strips face the camera
 POSE=opts.pose
 orbit=False;sleeve_lift=0;ribbon=.10;robe_flare=0;tal_tilt=0
 # HF = talisman hand (front), HN = sword-finger hand (back). Painted frames: talisman raised beside the face.
@@ -183,55 +226,140 @@ else: # cast — 뇌운 결계: both arms up, talisman overhead, charms circling
 tal_up=(Z+D*tal_tilt).normalized();tal_face=CAM
 
 ROOT_OBJ=group('taoist-cheongun')
-ROOT_OBJ['asset']='Arcana taoist Cheongun / draft'
-# Short boots peek out under the bell robe.
+ROOT_OBJ['asset']='Arcana taoist Cheongun / detailed draft (cycle 80)'
+# ---- Boots: sole, toe and a turned cuff peek out under the hems.
 for side,x in [('far',-.22),('near',.22)]:
- cube(f'{side} boot / sole',(x,.10,.05),(.28,.46,.10),'boot',ROOT_OBJ,.04)
- ico(f'{side} boot / toe',(x,.20,.16),(.15,.24,.12),'boot',ROOT_OBJ)
-# Bell robe (silhouette cue 2): ink-teal outer layer, ivory front panel, jade under-hem, gold hem.
-rings=[(1.86,.34,.28,0),(1.50,.40,.32,0),(1.10,.46,.38,0),(.62,.62+robe_flare*.5,.52,-.02),(.16,.80+robe_flare,.66+robe_flare*.6,-.05)]
-lathe('Robe / outer bell',rings,'outer',ROOT_OBJ,24,skip=(5,6),thick=.03)
-lathe('Robe / jade under-hem',[(.34,.74+robe_flare,.61+robe_flare*.5,-.04),(.10,.84+robe_flare,.70+robe_flare*.6,-.05)],'green',ROOT_OBJ,24,thick=.02)
-tube('Robe / gold hem',(0,-.05,.18),(0,-.05,.20),.80+robe_flare,.80+robe_flare,'gold',ROOT_OBJ,28)
-mesh('Robe / jade front panel',[(-.13,.34,1.80),(.13,.34,1.80),(.28,.63,.16),(-.28,.63,.16)],[(0,1,2,3)],'green',ROOT_OBJ)
-for s_ in (-1,1):rod('Robe / gold placket',(s_*.14,.345,1.80),(s_*.30,.64,.16),.022,'gold',ROOT_OBJ,6)
-cube('Sash / jade belt',(0,.04,1.22),(.92,.76,.12),'green',ROOT_OBJ,.04)
-uv('Sash / gold knot',(0,.42,1.22),(.10,.05,.08),'gold',ROOT_OBJ)
-for s_ in (-1,1):rod('Sash / hanging tail',(s_*.06,.44,1.18),(s_*.12,.52+robe_flare,.62),.035,'green',ROOT_OBJ,8)
-ico('Torso / ivory collar',(0,.10,1.84),(.40,.32,.14),'ivory',ROOT_OBJ)
-ico('Shoulders / ink-teal mantle',(0,-.02,1.78),(.52,.40,.16),'outer',ROOT_OBJ)
-# Arms in wide sleeves: a flaring tube plus a hanging sleeve flap (silhouette cue 2).
-for name,sh,hand in [('Far',SF,HF),('Near',SN,HN)]:
- wrist=sh.lerp(hand,.78)
- tube(name+' arm / wide sleeve',sh,wrist,.12,.22,'outer',ROOT_OBJ,16)
- cyl(name+' arm / ivory cuff',wrist,.23,.05,'ivory',ROOT_OBJ,16,0).rotation_euler=(hand-sh).to_track_quat('Z','Y').to_euler()
- drop=Vector((0,0,-.74+sleeve_lift))-(hand-sh).normalized()*.10
- mesh(name+' arm / hanging sleeve',[tuple(wrist+D*.24),tuple(wrist-D*.24),tuple(wrist-D*.30+drop),tuple(wrist+D*.12+drop)],[(0,1,2,3)],'outerlight',ROOT_OBJ).modifiers.new('Cloth thickness','SOLIDIFY').thickness=.03
- ico(name+' hand / bare hand',hand,(.09,.09,.10),'skin',ROOT_OBJ)
-# Head: round face, ink-black hair, top-knot with a gold crown and two jade ribbons (silhouette cue 1).
+ cube(f'{side} boot / sole',(x,.12,.045),(.27,.48,.09),'bootdark',ROOT_OBJ,.035)
+ ico(f'{side} boot / toe',(x,.24,.15),(.14,.22,.11),'boot',ROOT_OBJ)
+ rod(f'{side} boot / gold toe stitch',(x-.08,.40,.15),(x+.08,.40,.15),.012,'gold',ROOT_OBJ,6)
+# ---- Robe: pleated ink-teal bell over a jade under-skirt and an ivory inner hem (three layered hems).
+def robe_r(z):
+ t=(1.86-z)/1.56
+ return .34+.14*t+(.34+robe_flare)*max(t,0)**2.2,.28+.12*t+(.28+robe_flare*.6)*max(t,0)**2.2,-.05*t
+def robe_pt(a,z,out=1.0):
+ rx,ry,cy=robe_r(z);return Vector((rx*out*math.cos(a),cy+ry*out*math.sin(a),z))
+def pleated(name,z0,z1,mat,rows=9,seg=64,pleats=14,depth=.06,scale=1.0,thick=.03):
+ verts=[]
+ for r in range(rows+1):
+  z=z0+(z1-z0)*r/rows;rx,ry,cy=robe_r(z);amp=depth*max(0,(1.86-z)/1.56)**1.5
+  for i in range(seg):
+   a=2*math.pi*i/seg;k=scale*(1+amp*math.cos(pleats*a))
+   verts.append((rx*k*math.cos(a),cy+ry*k*math.sin(a),z))
+ faces=[(r*seg+i,r*seg+(i+1)%seg,(r+1)*seg+(i+1)%seg,(r+1)*seg+i) for r in range(rows) for i in range(seg)]
+ o=mesh(name,verts,faces,mat,ROOT_OBJ,0,True);o.modifiers.new('Cloth thickness','SOLIDIFY').thickness=thick;return o
+pleated('Robe / ink-teal outer robe',1.86,.30,'outer')
+pleated('Robe / gold hem band',.36,.30,'gold',rows=1,scale=1.014,thick=.012)
+pleated('Robe / jade under-skirt',.44,.13,'green',rows=3,depth=.07,scale=.97)
+pleated('Robe / jade under-skirt gold line',.17,.13,'goldlight',rows=1,depth=.07,scale=.984,thick=.01)
+pleated('Robe / ivory inner hem',.22,.05,'ivory',rows=2,depth=.05,scale=.90)
+# Gold cloud curls embroidered above the hem (painted robe: gold patterns).
+for k,deg in enumerate((-18,6,30,54,126,150,174,198)):
+ a=math.radians(deg);c=robe_pt(a,.56,1.085);t=Vector((-math.sin(a),math.cos(a),0))
+ lock(f'Robe / gold cloud curl {k}',[c+t*((.016+.012*s)*math.cos(s*.95))+Z*((.016+.012*s)*math.sin(s*.95)) for s in range(9)],.013,.009,'goldlight',ROOT_OBJ,1,6,3)
+# Jade front panel with gold edges and four gold diamonds.
+zs=[1.80,1.50,1.20,.90,.60,.34];PL=[];PR=[]
+for z in zs:
+ w=math.radians(9+5*(1.80-z)/1.46);PL.append(robe_pt(math.pi/2+w,z,1.135));PR.append(robe_pt(math.pi/2-w,z,1.135))
+mesh('Robe / jade front panel',[tuple(p) for p in PL+PR],[(i,i+1,len(zs)+i+1,len(zs)+i) for i in range(len(zs)-1)],'green',ROOT_OBJ,0,True).modifiers.new('Cloth thickness','SOLIDIFY').thickness=.035
+lock('Robe / panel gold edge far',PL,.016,.016,'gold',ROOT_OBJ,1,6,3);lock('Robe / panel gold edge near',PR,.016,.016,'gold',ROOT_OBJ,1,6,3)
+for k,z in enumerate((1.04,.80,.56)):
+ c=robe_pt(math.pi/2,z,1.15)
+ mesh(f'Robe / gold diamond {k}',[tuple(c+Vector((-.05,0,0))),tuple(c+Vector((0,0,-.075))),tuple(c+Vector((.05,0,0))),tuple(c+Vector((0,0,.075)))],[(0,1,2,3)],'goldlight',ROOT_OBJ)
+# Shoulders, neck and the crossed ivory collar (깃) with a gold edge.
+uv('Shoulders / ink-teal mantle',(0,-.02,1.80),(.53,.41,.17),'outer',ROOT_OBJ)
+lock('Shoulders / mantle gold trim',[(.53*math.cos(a),-.02+.41*math.sin(a),1.75) for a in [2*math.pi*k/18 for k in range(19)]],.017,.017,'gold',ROOT_OBJ,1,6,2)
+cyl('Neck / skin',(0,.03,1.98),.115,.16,'skin',ROOT_OBJ,14,0)
+tube('Collar / ivory inner collar',(0,.03,1.89),(0,.03,2.01),.185,.15,'ivory',ROOT_OBJ,18)
+over=[(-.27,.17,1.93),(-.15,.275,1.80),(-.02,.335,1.64),(.07,.36,1.50)];under=[(.27,.17,1.93),(.15,.275,1.80),(.03,.33,1.66)]
+lock('Collar / ivory band over',over,.07,.055,'ivory',ROOT_OBJ,.22,8,5);lock('Collar / ivory band under',under,.07,.055,'ivory',ROOT_OBJ,.22,8,5)
+lock('Collar / gold edge over',[Vector(p)+Vector((.05,.012,-.012)) for p in over],.012,.012,'gold',ROOT_OBJ,1,6,5)
+lock('Collar / gold edge under',[Vector(p)+Vector((-.05,.01,-.012)) for p in under],.012,.012,'gold',ROOT_OBJ,1,6,5)
+# Sash: jade band with gold lines, a knot on the near hip, two tails and a vermilion tassel (노리개).
+sv=[];SEG=40
+for z in (1.29,1.15):
+ rx,ry,cy=robe_r(z)
+ for i in range(SEG):
+  a=2*math.pi*i/SEG;sv.append((rx*1.075*math.cos(a),cy+ry*1.075*math.sin(a),z))
+mesh('Sash / jade band',sv,[(i,(i+1)%SEG,SEG+(i+1)%SEG,SEG+i) for i in range(SEG)],'greenlight',ROOT_OBJ,0,True).modifiers.new('Cloth thickness','SOLIDIFY').thickness=.03
+for z in (1.29,1.15):lock(f'Sash / gold line {z}',[robe_pt(2*math.pi*k/24,z,1.09) for k in range(25)],.012,.012,'gold',ROOT_OBJ,1,6,2)
+K=robe_pt(math.radians(58),1.22,1.17);kt=Vector((-math.sin(math.radians(58)),math.cos(math.radians(58)),0))
+uv('Sash / knot',K,(.075,.06,.07),'greenlight',ROOT_OBJ)
+for s_ in (-1,1):lock('Sash / knot loop',[K,K+kt*(.13*s_)+Z*.09,K+kt*(.17*s_)-Z*.01,K],.03,.03,'green',ROOT_OBJ,.45,8,5)
+for k,s_ in enumerate((-1,1)):
+ lock(f'Sash / hanging tail {k}',[K,K+kt*(.05*s_)-Z*.22+CAM*.03,K+kt*(.09*s_+robe_flare*.4)-Z*.48+CAM*.05,K+kt*(.07*s_+robe_flare*.7)-Z*.70+CAM*.07],.06,.05,'green',ROOT_OBJ,.3,8,5)
+T0=K+kt*(-.02)+CAM*.06-Z*.10
+lock('Tassel / gold cord',[K,T0],.012,.012,'gold',ROOT_OBJ,1,6,2)
+uv('Tassel / jade bead',T0,(.04,.04,.04),'greenlight',ROOT_OBJ);uv('Tassel / gold cap',T0-Z*.07,(.045,.045,.035),'gold',ROOT_OBJ)
+for k in range(9):
+ a=2*math.pi*k/9;off=kt*(.03*math.cos(a))+CAM*(.03*math.sin(a))
+ lock(f'Tassel / vermilion strand {k}',[T0-Z*.09+off*.5,T0-Z*.24+off*1.2+kt*robe_flare*.3,T0-Z*.40+off*1.5+kt*robe_flare*.6],.014,.008,'red',ROOT_OBJ,1,5,3)
+# ---- Arms: wide sleeve, gold band, ivory inner sleeve, a folded hanging drape with a jade hem, and hands with fingers.
+def sleeve(name,sh,hand,fdir):
+ axis=(hand-sh).normalized();wrist=sh.lerp(hand,.80);elbow=sh.lerp(hand,.40);down=Vector((0,0,-1))
+ tube(name+' / wide sleeve',sh,wrist,.13,.25,'outer',ROOT_OBJ,18)
+ tube(name+' / sleeve gold band',wrist-axis*.035,wrist+axis*.005,.255,.26,'gold',ROOT_OBJ,18)
+ tube(name+' / ivory inner sleeve',wrist-axis*.12,wrist+axis*.05,.16,.12,'ivory',ROOT_OBJ,14)
+ nu,nv=8,6;L=.80-sleeve_lift;g=[]
+ for j in range(nv+1):
+  v=j/nv
+  for i in range(nu+1):
+   u=i/nu;top=elbow.lerp(wrist,u)+down*(.09+.13*u)
+   g.append(top+down*(L*v*(.40+.60*u))+axis*(.12*v*u-.07*v*(1-u))+CAM*(.04*math.sin(u*math.pi*3+j*.7)*v))
+ o=mesh(name+' / hanging drape',[tuple(p) for p in g],[(j*(nu+1)+i,j*(nu+1)+i+1,(j+1)*(nu+1)+i+1,(j+1)*(nu+1)+i) for j in range(nv) for i in range(nu)],'outerlight',ROOT_OBJ,0,True)
+ o.modifiers.new('Cloth thickness','SOLIDIFY').thickness=.028
+ edge=[g[nv*(nu+1)+i] for i in range(nu+1)]+[g[j*(nu+1)+nu] for j in range(nv-1,-1,-1)]
+ lock(name+' / drape jade hem',edge,.034,.034,'green',ROOT_OBJ,.45,8,3);lock(name+' / drape gold line',[p-down*.055-axis*.02 for p in edge[:nu+1]],.011,.011,'goldlight',ROOT_OBJ,1,6,3)
+ f=Vector(fdir).normalized();s=f.cross(CAM);s=s.normalized() if s.length>1e-4 else f.orthogonal().normalized()
+ uv(name+' / palm',hand,(.078,.072,.088),'skin',ROOT_OBJ)
+ for k,off in enumerate((-.024,.024)):rod(name+f' / raised finger {k}',hand+s*off,hand+s*off+f*.17,.021,'skin',ROOT_OBJ,8)
+ for k,off in enumerate((-.056,.056)):uv(name+f' / curled finger {k}',hand+s*off+f*.045,(.026,.026,.032),'skin',ROOT_OBJ)
+ rod(name+' / thumb',hand-s*.05-f*.02,hand-s*.075+f*.06,.022,'skin',ROOT_OBJ,8)
+sleeve('Talisman arm',SF,HF,(TAL-HF) if TAL is not None else D+Z*.3)
+sleeve('Mudra arm',SN,HN,D*.5+Z if POSE in('idle','recover') else D+Z*.25)
+# ---- Head: face with brows, lids, nose, mouth and blush.
 uv('Face / round head',(0,.06,2.28),(.40,.36,.38),'skin',ROOT_OBJ)
 for side in (-1,1):
  uv('Face / eye white',(side*.15,.38,2.27),(.09,.04,.10),'eyewhite',ROOT_OBJ)
  uv('Face / teal iris',(side*.14,.41,2.26),(.062,.025,.08),'iris',ROOT_OBJ)
  uv('Face / pupil',(side*.14,.428,2.26),(.03,.012,.042),'pupil',ROOT_OBJ)
- uv('Face / eye shine',(side*.12,.435,2.30),(.02,.01,.02),'eyewhite',ROOT_OBJ)
- uv('Face / ear',(side*.39,.04,2.26),(.06,.08,.10),'skin',ROOT_OBJ)
+ uv('Face / eye shine',(side*.12,.437,2.30),(.022,.01,.022),'eyewhite',ROOT_OBJ)
+ lock('Face / upper lid',[(side*.245,.345,2.315),(side*.16,.412,2.375),(side*.06,.405,2.335)],.013,.011,'hair',ROOT_OBJ,1,6,5)
+ lock('Face / brow',[(side*.26,.33,2.44),(side*.16,.385,2.485),(side*.07,.395,2.455)],.02,.012,'hair',ROOT_OBJ,.7,6,5)
+ uv('Face / blush',(side*.255,.325,2.165),(.065,.012,.04),'blush',ROOT_OBJ)
+ uv('Face / ear',(side*.39,.04,2.26),(.06,.08,.10),'skin',ROOT_OBJ);uv('Face / inner ear',(side*.40,.07,2.26),(.03,.045,.06),'skinshade',ROOT_OBJ)
+uv('Face / nose',(0,.425,2.20),(.028,.022,.026),'skinshade',ROOT_OBJ)
+lock('Face / smile',[(-.055,.405,2.118),(0,.42,2.098),(.055,.405,2.118)],.01,.01,'mouth',ROOT_OBJ,1,6,4)
+# ---- Hair: cap, seven fringe locks, side locks, eleven flowing back locks, top-knot, crown and ribbons.
 uv('Hair / cap',(0,-.04,2.38),(.44,.42,.36),'hair',ROOT_OBJ)
-uv('Hair / straight fringe',(0,.27,2.52),(.36,.12,.13),'hairlight',ROOT_OBJ)
-for side in (-1,1):tube('Hair / straight side lock',(side*.37,.16,2.42),(side*.43,.20,1.86),.09,.04,'hair',ROOT_OBJ,12)
-uv('Hair / top-knot bun',(0,-.06,2.86),(.19,.18,.18),'hair',ROOT_OBJ)
-tube('Crown / gold band',(0,-.06,2.80),(0,-.06,2.90),.21,.21,'gold',ROOT_OBJ,20)
-for k,dx in enumerate((-.12,0,.12)):tube(f'Crown / spike {k}',(dx,.10,2.88),(dx,.13,3.06-abs(dx)*.6),.045,.008,'gold',ROOT_OBJ,8)
-rod('Crown / hairpin',(-.34,-.06,2.86),(.34,-.06,2.86),.025,'gold',ROOT_OBJ,8)
-for s_ in (-1,1):
- pts=[Vector((s_*.05,-.18,2.84))-D*((.21+ribbon*.15)*k)+Vector((0,0,-.09*k+.07*s_*k)) for k in range(8)]  # <= ~1.8 units so the frame keeps 8px
- for k in range(7):mesh('Ribbon / jade streamer',[tuple(pts[k]+Z*.06),tuple(pts[k]-Z*.06),tuple(pts[k+1]-Z*.05),tuple(pts[k+1]+Z*.05)],[(0,1,2,3)],'green',ROOT_OBJ).modifiers.new('Cloth thickness','SOLIDIFY').thickness=.02
+for k in range(-3,4):
+ lock(f'Hair / fringe lock {k}',[(k*.05,.10,2.71),(k*.105,.33,2.64),(k*.135,.405,2.49+abs(k)*.012)],.075,.02,'hairlight' if k%2 else 'hair',ROOT_OBJ,.55,8,5)
+for side in (-1,1):
+ lock('Hair / long side lock',[(side*.33,.20,2.52),(side*.43,.25,2.24),(side*.41,.27,1.96),(side*.37,.30,1.74)],.075,.02,'hair',ROOT_OBJ,.7,8,5)
+ lock('Hair / short side lock',[(side*.37,.12,2.50),(side*.46,.14,2.26),(side*.44,.16,2.08)],.06,.018,'hairlight',ROOT_OBJ,.7,8,5)
+for k in range(3):uv('Hair / back mass',Vector((0,-.36,2.20-.34*k))-D*(.04+(.07+ribbon*.15)*k),(.30-.03*k,.14,.24),'hair',ROOT_OBJ)
 for k in range(9):
- t=k/8;c=Vector((0,-.28,2.30))-D*(.08+.58*t+ribbon*.5*t)+Vector((0,0,-1.0*t));uv('Hair / long flowing sheet',c,(.30-.012*k,.13,.26),'hair' if k%3 else 'hairlight',ROOT_OBJ)
-# Talisman (silhouette cue 3) and the cast orbit.
+ x=(k-4)*.07;sway=.05*math.sin(k*1.9)
+ lock(f'Hair / flowing back lock {k}',[Vector((x,-.30,2.46)),Vector((x*1.15,-.47,2.04))-D*.04,Vector((x*1.3,-.52,1.62))-D*(.12+ribbon*.3),Vector((x*1.45,-.50,1.26))-D*(.26+ribbon*.6+sway),Vector((x*1.5,-.46,1.04+.06*math.cos(k)))-D*(.44+ribbon*.9+sway*1.6)+Vector((0,0,.05))],.13,.028,'hairlight' if k%3==1 else 'hair',ROOT_OBJ,.8,8,5)
+uv('Hair / top-knot bun',(0,-.06,2.86),(.19,.18,.18),'hair',ROOT_OBJ)
+tube('Hair / knot wrap',(0,-.06,2.76),(0,-.06,2.80),.17,.16,'hairlight',ROOT_OBJ,16)
+tube('Crown / gold band',(0,-.06,2.80),(0,-.06,2.90),.215,.215,'gold',ROOT_OBJ,22)
+for k,(dx,hh) in enumerate(((-.17,.10),(-.09,.16),(0,.24),(.09,.16),(.17,.10))):
+ tube(f'Crown / spike {k}',(dx,.10-abs(dx)*.5,2.88),(dx*1.1,.13-abs(dx)*.5,2.88+hh),.045,.008,'gold',ROOT_OBJ,8)
+ico('Crown / red gem',(0,.155,2.86),(.04,.025,.05),'gem',ROOT_OBJ,1)
+rod('Crown / hairpin',(-.36,-.06,2.85),(.36,-.06,2.87),.022,'gold',ROOT_OBJ,8)
+for s_ in (-1,1):ico('Crown / hairpin bead',(s_*.37,-.06,2.86),(.045,.045,.045),'goldlight',ROOT_OBJ,1)
+B=Vector((0,-.22,2.84))
+for s_ in (-1,1):
+ lock('Ribbon / bow loop',[B,B+Vector((s_*.12,-.04,.10)),B+Vector((s_*.17,-.06,-.02)),B],.035,.035,'greenlight',ROOT_OBJ,.2,8,5)
+ lock('Ribbon / jade streamer',[B+Vector((s_*.04,0,0))]+[B-D*((.21+ribbon*.15)*k)+Vector((0,0,-.09*k+.07*s_*k+.09*math.sin(k*1.5+s_*1.2)))for k in range(1,8)],.055,.03,'green',ROOT_OBJ,.12,8,5)  # <= ~1.8 units so the frame keeps 8px
+# ---- Talisman with brush strokes and sparks; cast orbit.
 TIP=None
 if TAL is not None:
  talisman('Talisman / held',TAL,tal_up,tal_face,.58,ROOT_OBJ);TIP=TAL
+ tr=tal_up.cross(tal_face).normalized()
+ for k,(a,b) in enumerate(((.26,.36),(-.27,.30),(.29,-.28),(-.25,-.38))):
+  c=TAL+tr*a+tal_up*b+tal_face*.02
+  mesh(f'Talisman / spark {k}',[tuple(c+tr*.035),tuple(c+tal_up*.06),tuple(c-tr*.035),tuple(c-tal_up*.06)],[(0,1,2,3)],'bolt',ROOT_OBJ)
 if POSE=='strike':
  for k in range(3):rod('Spark / trail',TAL-D*(.18+.16*k)+Vector((0,0,.05*(k%2))),TAL-D*(.30+.16*k),.02,'bolt',ROOT_OBJ,6)
 if orbit:
@@ -262,7 +390,10 @@ ROOT_OBJ.scale=(opts.scale,)*3
 if TIP is not None:TIP=TIP*opts.scale
 bpy.context.view_layer.update()
 px=lambda v:(round(world_to_camera_view(scene,camera,v).x*opts.size,1),round((1-world_to_camera_view(scene,camera,v).y)*opts.size,1))
-info={'pose':POSE,'ground':px(Vector((0,0,0))),'talisman_px':px(TIP) if TIP is not None else None}
+graph=bpy.context.evaluated_depsgraph_get();meshes=[o for o in COL.objects if o.type=='MESH'];tris=0
+for o in meshes:
+ me=o.evaluated_get(graph).to_mesh();me.calc_loop_triangles();tris+=len(me.loop_triangles)
+info={'pose':POSE,'ground':px(Vector((0,0,0))),'talisman_px':px(TIP) if TIP is not None else None,'mesh_objects':len(meshes),'triangles':tris}
 scene.render.filepath=str(OUT/f'tao-{POSE}.png');bpy.ops.render.render(write_still=True)
 (OUT/f'tao-{POSE}.json').write_text(json.dumps(info))
 print('ARCANA_TAO '+json.dumps(info))
