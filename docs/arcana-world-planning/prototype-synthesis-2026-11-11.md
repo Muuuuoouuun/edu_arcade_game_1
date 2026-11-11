@@ -13,6 +13,8 @@
 
 원격 Rush `8d424cf`의 무한 도전 단계와 포포 손의 투척 표현, 방향 기획 `05cb2a1`과 그 별도 기획 루프 중지 인계 `e8798b7`을 통합했다. 과거 연구의 상시 HUD와 수치를 최신 모드에 무조건 적용하지 않는다. 원격은 계속 바뀔 수 있으므로 다음 작업에서 SHA와 동시 작업을 다시 확인한다.
 
+2026-11-12 후속: 원격 Rush `0d5e3b6`의 완료된 배치 포화 계측을 별도 작업 트리에서 병합했다. [녹음 성채 모델](../arcana-rush-town-model.md)은 기존 반경 안에서 실제 석조·목재 구조를 만들고 같은 단일 장면·국소 시야·실패 대체를 연결한다. 지면의 입체화나 건물 성장까지 완료된 것은 아니다.
+
 ## 캐릭터·움직임
 
 OpenAI 연결 이미지 생성 도구로 만든 [정면·측면·후면 시트](../../art-source/defense/concepts/2026-11-11/legion-shield-turnaround.png)와 [보행 시트](../../art-source/defense/concepts/2026-11-11/legion-shield-walk-reference.png)는 제작 **참고 이미지**다. 이미지 자체는 실제 3D 모델이나 애니메이션이 아니다. 기존 창수 컨셉과 게임 모델의 남청 투구·주홍 천·청록/금 방패를 기준으로 삼는다. 파일과 참조 출처·해시는 [메타데이터](../../art-source/defense/concepts/2026-11-11/legion-shield-sheets.json)에 있다. 실제 편집 메시·보행·베이크와 재생성은 [군단 방패병 보행 기록](../arcana-legion/shield-walk.md)을 따른다.

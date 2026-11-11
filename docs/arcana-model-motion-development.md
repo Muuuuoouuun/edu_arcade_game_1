@@ -502,3 +502,7 @@ npm run models:wood
 ## 113회차 · 녹음 다리의 양안 접근로
 
 [녹음 다리 접근로](arcana-frontier-bridge-approach.md)는 기존 강·다리 지형에 42개의 불규칙 석재와 두 바탕을 편집 가능한 실제 메시로 추가하고 서쪽 도로 교차부를 연다. `npm run models:frontier-terrain`으로 Blender 원본·단일 표면 GLB·공통카메라 렌더·WebP·해시를 재생성한다. 실제 3D 훈련에 적용되며 2.5D 캠페인 연결은 없다.
+
+## 2026-11-12 · Rush 녹음 성채
+
+[Rush 성채 구조](arcana-rush-town-model.md)는 넓은 쐐기돌·목재 보강·청록 지붕을 329개 편집 메시로 제작하고, 4,374삼각형의 한 표면 GLB로 기존 단일 장면에 연결한다. 원형 충돌 반경2.6·지면0·높이 한계를 보존하며 성채 전용 국소 시야와 로딩 실패 대체를 지원한다. 원본/렌더/WebP/해시는 `npm run models:rush-town`으로 재생성한다. 정적인 모델로 건축 성장이나 피격 관절 동작을 포함하지 않는다.

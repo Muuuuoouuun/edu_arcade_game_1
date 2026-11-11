@@ -8,6 +8,7 @@ import { createHitClip, hitFlashStrength } from './model-lab-hit';
 import { createBronIdle } from './model-lab-motion';
 
 const models = [
+ {id:'rush-town',glb:new URL('./rush/models/forest-town.glb',import.meta.url).href,name:'Rush · 녹음 성채',kind:'RUSH FOREST TOWN',detail:'석조 아치 · 목재 양문 · 청록 지붕',description:'Rush 전장에서 지키는 성채입니다. 앞문의 쐐기돌과 목재 보강, 뒤쪽 보급문과 지붕을 회전하며 살펴보세요. 현재는 고정된 건물이며 파괴·피격 애니메이션은 포함하지 않습니다.',source:'rush-town.blend',command:'npm run models:rush-town',action:'고정 모형',static:true,fitBounds:true},
  {id:'legion-shield',name:'군단 방패병 · 방패 강타',kind:'LEGION SHIELD SOLDIER',detail:'청록 방패 · 주홍 목도리 · 고정된 발',description:'같은 모델이 군단 전장과 병종 카드에 사용됩니다. 방패가 타격 순간 앞으로 나가고 발을 디딘 채 회복합니다.',source:'legion-shield.blend',command:'blender -b --python tools/blender/build_legion_shield.py',action:'▶ 방패 강타',clip:'legion-shield-bash',hold:true,fitBounds:true},
  {id:'legion-shield-walk',name:'군단 방패병 · 접지 보행',kind:'LEGION SHIELD SOLDIER',detail:'남청 망토 · 교대 지지 발 · 청록 방패',description:'양 발의 지지와 회수를 실제 메시 관절로 재생합니다. 군단에서는 이동 거리에 따라 이 포즈를 사용하고 피해 시 강타가 우선합니다.',source:'legion-shield-walk.blend',command:'blender --background --python-exit-code 1 --python tools/blender/build_legion_shield_walk.py',action:'▶ 보행 재생',clip:'legion-shield-walk',loop:true,fitBounds:true},
  {id:'frontier-relic',name:'변경 전장 · 회복 수정',kind:'FRONTIER RECOVERY CRYSTAL',detail:'석재 받침 · 황동 고정쇠 · 청록 결정',description:'수정 원정의 회복 수정입니다. 전장에서는 가까이 다가가 상호작용하고, 수집한 뒤 수정이 사라져 빈 받침이 남습니다. 작업실에서는 고정된 3D 형태를 살펴봅니다.',source:'frontier-relic.blend',command:'npm run models:frontier-relic',action:'고정 모형',static:true,fitBounds:true},
@@ -217,14 +218,14 @@ async function select(index:number) {
  $('model-source').textContent = model.source; $('model-command').textContent = model.command; shoot.textContent = model.action;
  $('model-format').textContent = 'GLB · 실시간 3D'; $('model-hint').textContent = '드래그하여 회전 · 휠 또는 두 손가락으로 확대';
  fallback.src = `/defense/models/${model.asset??model.id}.png`; fallback.alt = `${model.name}의 정사영 렌더 이미지`; fallback.hidden = true;
- $<HTMLAnchorElement>('download-model').href = `/defense/models/${model.asset??model.id}.glb`;
+ $<HTMLAnchorElement>('download-model').href = model.glb??`/defense/models/${model.asset??model.id}.glb`;
  document.querySelectorAll<HTMLButtonElement>('#model-list button').forEach((button,i) => {button.setAttribute('aria-pressed',String(i===index));if(i===index){const list=$('model-list');list.scrollLeft+=button.getBoundingClientRect().left-list.getBoundingClientRect().left;}});
  clearModel(); stage.dataset.loaded = 'loading';
  delete stage.dataset.renderCalls; delete stage.dataset.renderTriangles;
  for(const id of ['triangle-count','mesh-count','material-count'])$(id).textContent = '—';
  if(!renderer){showFallback('이 환경에서는 3D 화면을 열 수 없어 렌더 이미지를 표시합니다.');return;}
  try {
-  const gltf = await loader.loadAsync(`/defense/models/${model.asset??model.id}.glb`);
+  const gltf = await loader.loadAsync(model.glb??`/defense/models/${model.asset??model.id}.glb`);
   if(ticket!==generation){release(gltf.scene);return;}
   // The Legion model faces the shared Blender camera; turn its scene toward the lab camera.
   if(model.id==='legion-shield'||model.id==='legion-shield-walk')gltf.scene.rotation.y=Math.PI;

@@ -17,6 +17,7 @@ import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, 
 import { Batch } from './batch.ts';
 import { Particles } from './fx.ts';
 import { QUALITY, type Quality } from './quality.ts';
+import { TownView } from './townView.ts';
 
 export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'lob'; offset: Vec } | { kind: 'super'; offset: Vec } | null;
 
@@ -59,6 +60,8 @@ export class RushView {
   readonly camera = new PerspectiveCamera(42, 1, 0.5, 120);
   private focus = new Vector3(0, 0, 4);
   private shake = 0;
+  private townView: TownView | null = null;
+  private townHeroTarget = new Vector3();
   private hero = new Group();
   private heroBody = new Group();
   /** Team-blue cape per hero (cycle 29): the ally colour on the body itself, not only the ring underfoot. */
@@ -333,7 +336,21 @@ export class RushView {
       parts.push({ geo: new CylinderGeometry(0.5, 0.56, 2.3, 10), color: PAL.cream, at: [x, 1.6, z] });
       parts.push({ geo: new ConeGeometry(0.62, 0.85, 10), color: PAL.ally, at: [x, 3.17, z] });
     }
-    this.addBaked(bake(parts), 0.05, TOWN);
+    const town = new TownView(bake(parts));
+    this.townView = town;
+    this.scene.add(town.root);
+    new GLTFLoader().load(new URL('./models/forest-town.glb', import.meta.url).href, gltf => {
+      try { town.accept(gltf.scene); }
+      catch { town.fail(); }
+      finally {
+        gltf.scene.traverse(o => {
+          if (o instanceof Mesh) {
+            o.geometry.dispose();
+            for (const material of Array.isArray(o.material) ? o.material : [o.material]) material.dispose();
+          }
+        });
+      }
+    }, undefined, () => town.fail());
   }
 
   private buildPads() {
@@ -920,6 +937,10 @@ export class RushView {
     this.updateFx(this.fxPaused ? 0 : dt);
     this.particles.update(this.fxPaused ? 0 : dt);
     this.updateCamera(s, dt);
+    this.camera.updateMatrixWorld();
+    this.townHeroTarget.set(h.x, 1, h.z);
+    this.townView?.update(this.camera, alive && !this.sheetMode ? this.townHeroTarget : undefined,
+      this.renderer.domElement.width, this.renderer.domElement.height);
   }
 
   private updateAim(s: RushState, aim: AimPreview) {
@@ -1019,7 +1040,7 @@ export class RushView {
 
   render() { this.renderer.render(this.scene, this.camera); }
   /** Renderer statistics for the debug overlay and performance notes. */
-  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroKind: this.heroKind, heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, dropped: Batch.dropped, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
+  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroKind: this.heroKind, heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, townModel: this.townView?.status, townOccluders: this.townView?.occlusion.count ?? 0, dropped: Batch.dropped, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
 }
 
 /** Cape placement per hero model (shoulder height y, back offset x, height h, width w), tuned on the model sheet. */
