@@ -34,6 +34,7 @@ test('mobile package keeps the Legion terrain and wolf gait and hit fallbacks', 
       `defense/models/frost-flinch-${direction}-atlas.webp`,
     ]),
     'defense/models/legion-shield-atlas.webp',
+    'defense/models/legion-shield-walk-atlas.webp',
     'defense/snow-atlas.png',
   ]) {
     const entry = await stat(new URL(path, output));

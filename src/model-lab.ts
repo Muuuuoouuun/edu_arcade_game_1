@@ -9,6 +9,7 @@ import { createBronIdle } from './model-lab-motion';
 
 const models = [
  {id:'legion-shield',name:'군단 방패병 · 방패 강타',kind:'LEGION SHIELD SOLDIER',detail:'청록 방패 · 주홍 목도리 · 고정된 발',description:'같은 모델이 군단 전장과 병종 카드에 사용됩니다. 방패가 타격 순간 앞으로 나가고 발을 디딘 채 회복합니다.',source:'legion-shield.blend',command:'blender -b --python tools/blender/build_legion_shield.py',action:'▶ 방패 강타',clip:'legion-shield-bash',hold:true,fitBounds:true},
+ {id:'legion-shield-walk',name:'군단 방패병 · 접지 보행',kind:'LEGION SHIELD SOLDIER',detail:'남청 망토 · 교대 지지 발 · 청록 방패',description:'양 발의 지지와 회수를 실제 메시 관절로 재생합니다. 군단에서는 이동 거리에 따라 이 포즈를 사용하고 피해 시 강타가 우선합니다.',source:'legion-shield-walk.blend',command:'blender --background --python-exit-code 1 --python tools/blender/build_legion_shield_walk.py',action:'▶ 보행 재생',clip:'legion-shield-walk',loop:true,fitBounds:true},
  {id:'frontier-relic',name:'변경 전장 · 회복 수정',kind:'FRONTIER RECOVERY CRYSTAL',detail:'석재 받침 · 황동 고정쇠 · 청록 결정',description:'수정 원정의 회복 수정입니다. 전장에서는 가까이 다가가 상호작용하고, 수집한 뒤 수정이 사라져 빈 받침이 남습니다. 작업실에서는 고정된 3D 형태를 살펴봅니다.',source:'frontier-relic.blend',command:'npm run models:frontier-relic',action:'고정 모형',static:true,fitBounds:true},
  {id:'frontier-squad',name:'변경 전장 · 석궁 지원병',kind:'FRONTIER SUPPORT SCOUT',detail:'청록 천 · 금속 투구 · 양손 석궁',description:'작은 지원병이 양손으로 석궁을 잡고 발을 디딥니다. 전장에서는 실제 이동 거리에 따라 다리를 움직이고 표적을 향합니다. 작업실에서는 모델의 고정 자세를 살펴봅니다.',source:'frontier-squad.blend',command:'npm run models:frontier-squad',action:'고정 모형',static:true,fitBounds:true},
  {id:'frontier-forest-doors',name:'녹음 성문 · 목재 양문',kind:'FOREST GATE DOORS',detail:'곡선 널판 · 철띠 · 충격 반동',description:'녹음 성문의 두 목재 문짝이 충격을 받고 경첩을 중심으로 뒤로 밀렸다 돌아옵니다. 3D 미리보기는 문짝을 표시하며 원본 렌더는 석조 아치와 함께 보여 줍니다.',source:'frontier-forest-doors.blend',command:'npm run models:frontier-forest-doors',action:'▶ 성문 충격',clip:'forest-door-impact',fitBounds:true},
@@ -226,7 +227,7 @@ async function select(index:number) {
   const gltf = await loader.loadAsync(`/defense/models/${model.asset??model.id}.glb`);
   if(ticket!==generation){release(gltf.scene);return;}
   // The Legion model faces the shared Blender camera; turn its scene toward the lab camera.
-  if(model.id==='legion-shield')gltf.scene.rotation.y=Math.PI;
+  if(model.id==='legion-shield'||model.id==='legion-shield-walk')gltf.scene.rotation.y=Math.PI;
   // Keep normalization outside the animated scene: clip tracks own their local transforms.
   current = new Group(); current.add(gltf.scene);
   const box = new Box3().setFromObject(current), size = box.getSize(new Vector3()), center = box.getCenter(new Vector3()), scale = model.static?6.5/Math.max(size.x,size.y,size.z,.01):4.6/Math.max(size.y,.01);
