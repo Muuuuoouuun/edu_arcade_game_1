@@ -1,4 +1,4 @@
-import test from'node:test';import assert from'node:assert/strict';import{readFileSync}from'node:fs';import{GLTFLoader}from'three/addons/loaders/GLTFLoader.js';import{AnimationClip,Group,Mesh,Vector3,Box3}from'three';import{HeroView}from'./heroView.ts';import{actFrontier,createFrontier,stepFrontier}from'./engine.ts';import{heroRingMatrix}from'./heroEffects.ts';import{heightAt}from'./engine.ts';import{hammerPoint}from'./heroAttack.ts';import{HERO_MODEL}from'./heroModel.ts';
+import test from'node:test';import assert from'node:assert/strict';import{readFileSync}from'node:fs';import{GLTFLoader}from'three/addons/loaders/GLTFLoader.js';import{AnimationClip,Group,Matrix4,Mesh,Vector3,Box3}from'three';import{HeroView}from'./heroView.ts';import{actFrontier,createFrontier,stepFrontier}from'./engine.ts';import{heroRingMatrix}from'./heroEffects.ts';import{heightAt}from'./engine.ts';import{hammerPoint}from'./heroAttack.ts';import{HERO_MODEL}from'./heroModel.ts';
 const parse=async(name:string)=>{const b=readFileSync(new URL(`../../../public/defense/models/${name}.glb`,import.meta.url));return new GLTFLoader().parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');};
 const walk=await parse('kar-barbarian-walk'),slam=await parse('kar-barbarian'),entry=await parse('kar-entry'),reset=await parse('kar-reset');
 const setup=()=>{const model=walk.scene.clone(true),view=new HeroView(model,walk.animations[0]);view.setSlam(slam.animations[0]);view.setEntries(entry.animations);const root=new Group();root.add(model);let s=actFrontier(createFrontier('solo'),{type:'start'});s=actFrontier(s,{type:'skill'});return{view,root,s};};
@@ -47,6 +47,50 @@ test('stop pose is simulation sampled, reduced motion holds idle, resume and att
 test('missing or incomplete stop clips preserve existing grounded idle',()=>{const a=setup(),b=setup();a.view.setStops(stop.animations.slice(0,7));for(const x of[a,b]){x.s.hero.attack=undefined;x.s.hero.settle={time:.12,walkTime:.2};x.view.update(x.s.hero,false);}assert.ok(error(matrices(a.root),matrices(b.root))<1e-6);a.view.dispose();b.view.dispose();});
 
 const compact=await parse('frontier-kar-game');
+test('planted Kar boot soles follow the ramp across all headings without changing the hammer',()=>{
+ const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!);view.setSlam(compact.animations.find(c=>c.name==='kar-slam')!);const hero=createFrontier('solo').hero;
+ const sole=(name:string)=>{root.updateMatrixWorld(true);const foot=root.getObjectByName(name)!,inverse=new Matrix4().copy(foot.matrixWorld).invert(),points:Vector3[]=[];
+  foot.traverse(o=>{if(!(o instanceof Mesh))return;const p=o.geometry.getAttribute('position'),local=new Matrix4().multiplyMatrices(inverse,o.matrixWorld);for(let i=0;i<p.count;i++)points.push(new Vector3().fromBufferAttribute(p,i).applyMatrix4(local));});
+  const bottom=Math.min(...points.map(p=>p.y));return points.filter(p=>p.y<=bottom+.025).map(p=>p.applyMatrix4(foot.matrixWorld)).map(p=>p.y-heightAt(p.x,p.z));};
+ let previousSpread=0,newSpread=0;
+ for(let d=0;d<8;d++)for(const reduced of [false,true]){
+  Object.assign(hero,{x:-14,z:-7,heading:d*Math.PI/4,moving:false});root.position.set(hero.x,heightAt(hero.x,hero.z),hero.z);root.rotation.y=hero.heading;
+  view.update(hero,reduced);root.updateMatrixWorld(true);const hammer=root.getObjectByName('hammer-contact')!.getWorldPosition(new Vector3());
+  for(const name of ['left-foot','right-foot']){const c=sole(name);previousSpread=Math.max(previousSpread,Math.max(...c)-Math.min(...c));}
+  view.update(hero,reduced,heightAt);root.updateMatrixWorld(true);assert.ok(root.getObjectByName('hammer-contact')!.getWorldPosition(new Vector3()).distanceTo(hammer)<1e-6);
+  for(const name of ['left-foot','right-foot']){const c=sole(name);newSpread=Math.max(newSpread,Math.max(...c)-Math.min(...c));assert.ok(Math.min(...c)>-.0001&&Math.max(...c)<.021,`${name} ${d} ${reduced}: ${Math.min(...c)}, ${Math.max(...c)}`);}
+  const pose=matrices(root);view.update(hero,reduced,heightAt);assert.ok(error(pose,matrices(root))<1e-6,'paused frames must not accumulate ankle rotation');
+ }
+ assert.ok(previousSpread>.23&&newSpread<.021,`${previousSpread} -> ${newSpread}`);view.dispose();
+});
+test('boot tilt joins flat and sloped ground continuously and avoids sudden bridge-step rotation',()=>{
+ const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!);view.setSlam(compact.animations.find(c=>c.name==='kar-slam')!);const hero=createFrontier('solo').hero;
+ for(const [x0,x1,z0,z1] of [[-14,-14,-12.5,-11.5],[-14,-14,-2.5,-1.5],[1.5,2.5,0,0],[9.5,10.5,0,0],[6,6,2.3,3.3]])for(let d=0;d<8;d++){
+  let previous:Vector3|undefined;for(let i=0;i<=100;i++){
+   const x=x0+(x1-x0)*i/100,z=z0+(z1-z0)*i/100;Object.assign(hero,{x,z,heading:d*Math.PI/4,moving:false});root.position.set(x,heightAt(x,z),z);root.rotation.y=hero.heading;view.update(hero,false,heightAt);root.updateMatrixWorld(true);
+   const m=root.getObjectByName('left-foot')!.matrixWorld,normal=new Vector3().setFromMatrixColumn(m,2).cross(new Vector3().setFromMatrixColumn(m,0)).normalize();if(previous)assert.ok(normal.angleTo(previous)<.08,`tilt popped at ${x},${z},${d}`);previous=normal;
+  }
+ }
+ view.dispose();
+});
+test('slope alignment keeps the top of the authored lower leg connected',()=>{
+ const make=()=>{const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!);return{root,view,hero:createFrontier('solo').hero};};const a=make(),b=make();
+ for(let d=0;d<8;d++)for(let phase=0;phase<8;phase++){
+  for(const s of [a,b]){Object.assign(s.hero,{x:-14,z:-7,heading:d*Math.PI/4,moving:true,walkDistance:phase*.2});s.root.position.set(-14,heightAt(-14,-7),-7);s.root.rotation.y=s.hero.heading;}
+  a.view.update(a.hero,false);b.view.update(b.hero,false,heightAt);a.root.updateMatrixWorld(true);b.root.updateMatrixWorld(true);
+  for(const name of ['left-foot','right-foot']){const top=new Vector3(0,1.3,0),before=a.root.getObjectByName(name)!.localToWorld(top.clone()),after=b.root.getObjectByName(name)!.localToWorld(top.clone());assert.ok(Math.hypot(before.x-after.x,before.z-after.z)<1e-5,`${name}, ${d}, ${phase}`);}
+ }
+ a.view.dispose();b.view.dispose();
+});
+test('boots straddling a raised bridge edge do not intersect the deck',()=>{
+ const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!);view.setSlam(compact.animations.find(c=>c.name==='kar-slam')!);const hero=createFrontier('solo').hero,p=new Vector3();
+ for(const edge of ['west','east','side'] as const)for(let i=0;i<=40;i++)for(let d=0;d<8;d++)for(let phase=0;phase<4;phase++){
+  const x=edge==='west'?1+i*.05:edge==='east'?9+i*.05:6,z=edge==='side'?1.8+i*.05:0;
+  Object.assign(hero,{x,z,heading:d*Math.PI/4,moving:true,walkDistance:phase*.2});root.position.set(x,heightAt(x,z),z);root.rotation.y=hero.heading;view.update(hero,false,heightAt);root.updateMatrixWorld(true);
+  for(const name of ['left-foot','right-foot'])root.getObjectByName(name)!.traverse(o=>{if(o instanceof Mesh){const a=o.geometry.getAttribute('position');for(let j=0;j<a.count;j++){p.fromBufferAttribute(a,j).applyMatrix4(o.matrixWorld);assert.ok(p.y-heightAt(p.x,p.z)>-.0001,`${edge}, ${x}, ${z}, ${d}, ${phase}, ${name}`);}}});
+ }
+ view.dispose();
+});
 test('Kar soles clear the actual ramp in every heading and walk phase without moving the hammer or body',()=>{
  const make=()=>{const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!);view.setSlam(compact.animations.find(c=>c.name==='kar-slam')!);return{root,view,hero:createFrontier('solo').hero};};
  const a=make(),b=make(),point=new Vector3();
@@ -86,6 +130,23 @@ test('Kar planted boot stays in world space through both half-strides in all hea
    view.update(hero,false,()=>0);root.updateMatrixWorld(true);
    const p=root.getObjectByName(foot)!.getWorldPosition(new Vector3());anchor??=p.clone();
    assert.ok(Math.hypot(p.x-anchor.x,p.z-anchor.z)<.0001,`${foot}, heading ${direction}, phase ${i}: ${p.distanceTo(anchor)}`);
+  }
+ }
+ view.dispose();
+});
+
+test('the planted sole stays fixed on a ramp through both half-strides',()=>{
+ const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!),hero=createFrontier('solo').hero;hero.moving=true;root.updateMatrixWorld(true);
+ const soles=new Map<string,Vector3>();for(const name of ['left-foot','right-foot']){
+  const foot=root.getObjectByName(name)!,inverse=new Matrix4().copy(foot.matrixWorld).invert(),vertices:Vector3[]=[];
+  foot.traverse(o=>{if(o instanceof Mesh){const a=o.geometry.getAttribute('position'),local=new Matrix4().multiplyMatrices(inverse,o.matrixWorld);for(let i=0;i<a.count;i++)vertices.push(new Vector3().fromBufferAttribute(a,i).applyMatrix4(local));}});
+  const bottom=Math.min(...vertices.map(p=>p.y)),points=vertices.filter(p=>p.y<=bottom+.025);soles.set(name,points.reduce((sum,p)=>sum.add(p),new Vector3()).multiplyScalar(1/points.length));
+ }
+ for(let d=0;d<8;d++)for(const [start,end,name] of [[0,.5,'left-foot'],[.5,1,'right-foot']] as const){let anchor:Vector3|undefined;
+  for(let i=0;i<=16;i++){
+   const distance=(start+(end-start)*i/16)*1.6;hero.heading=d*Math.PI/4;hero.walkDistance=distance;hero.x=-14+Math.sin(hero.heading)*distance;hero.z=-7+Math.cos(hero.heading)*distance;
+   root.position.set(hero.x,heightAt(hero.x,hero.z),hero.z);root.rotation.y=hero.heading;view.update(hero,false,heightAt);root.updateMatrixWorld(true);
+   const p=soles.get(name)!.clone().applyMatrix4(root.getObjectByName(name)!.matrixWorld);anchor??=p.clone();assert.ok(p.distanceTo(anchor)<.0001,`${name}, ${d}, ${i}: ${p.distanceTo(anchor)}`);
   }
  }
  view.dispose();
