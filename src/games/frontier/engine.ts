@@ -18,6 +18,9 @@ export const MODES={defense:{name:'성문 방어',tag:'타워 디펜스',goal:'3
 export const PADS:Point[]=[{x:-21,z:12},{x:-9,z:8},{x:-24,z:-7},{x:-7,z:-16},{x:15,z:5},{x:19,z:-12}];
 export const CORE={x:-14,z:21},BEACON={x:19,z:-17},EXIT={x:23,z:-23};
 export const CRYSTALS:Point[]=[{x:-20,z:-14},{x:17,z:12},{x:20,z:-16}];
+/** Shared by the real interaction and its in-world presentation. */
+export const SOLO_EXIT={crystals:3,kills:6,radius:4} as const;
+export function soloExitReady(s:Pick<Frontier,'crystals'|'kills'>){return s.crystals.length===SOLO_EXIT.crystals&&s.kills>=SOLO_EXIT.kills;}
 const PATH:Point[]=[{x:-22,z:-26},{x:-12,z:-15},{x:-20,z:-2},CORE];
 export const heightAt=(x:number,z:number)=>x>=2&&x<=10&&Math.abs(z)<=2.8?.36:Math.max(0,Math.min(1,(-z-2)/10))*4.6;
 export const walkable=(p:Point)=>Number.isFinite(p.x)&&Number.isFinite(p.z)&&Math.abs(p.x)<28&&Math.abs(p.z)<28&&!(p.x>3&&p.x<9&&Math.abs(p.z)>2);
@@ -82,8 +85,8 @@ export function actFrontier(previous:Frontier,a:Command):Frontier{
  if(a.type==='interact'&&s.mode==='solo'){
   const index=CRYSTALS.findIndex((p,i)=>!s.crystals.includes(i)&&distance(p,s.hero)<RELIC_PICKUP.radius);
   if(index>=0){s.crystals.push(index);s.crystalClaimedAt??={};s.crystalClaimedAt[index]=s.time;s.hero.hp=Math.min(s.hero.maxHp,s.hero.hp+RELIC_PICKUP.heal);s.message=`수정 ${s.crystals.length}/3 · 체력 25 회복`;}
-  else if(distance(s.hero,EXIT)<4&&s.crystals.length===3&&s.kills>=6){s.phase='won';s.message='수정 원정 완료';}
-  else s.message=s.crystals.length===3&&s.kills>=6?'동쪽 출구의 고리 안에서 상호작용하세요.':'수정 가까이에서 상호작용하세요.';
+  else if(distance(s.hero,EXIT)<SOLO_EXIT.radius&&soloExitReady(s)){s.phase='won';s.message='수정 원정 완료';}
+  else s.message=soloExitReady(s)?'동쪽 출구의 고리 안에서 상호작용하세요.':'수정 가까이에서 상호작용하세요.';
  }
  s.enemies=s.enemies.filter(e=>e.hp>0);return s;
 }
