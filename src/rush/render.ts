@@ -20,6 +20,13 @@ const HERO_MODELS: Record<HeroKind, string> = { ranger: '/defense/models/prototy
 const HERO_HEIGHT = 2.0;
 /** Yaw that turns the GLB authored front (-z) toward simulation angle 0 (+x). Verified by east/north close-up renders. */
 const HERO_MODEL_YAW = -Math.PI / 2;
+/** Per-hero tweaks to a shared campaign GLB (cycle 41), applied when baking; the files stay untouched. Names are
+ * GLTFLoader's (spaces → underscores). Popo's polar-bear guardian drops its hammer (handle, iron head, ivory cap)
+ * and holds a snowball on the same animated node, so the attack clip becomes an overhand throw. */
+const HERO_DROP: Partial<Record<HeroKind, string[]>> = { bear: ['Polar_bear_surface_24', 'Polar_bear_surface_25', 'Polar_bear_surface_26'] };
+const HERO_PROPS: Partial<Record<HeroKind, { node: string; parts: { geo: BufferGeometry; color: number; at: [number, number, number] }[] }>> = {
+  bear: { node: 'hammer', parts: [{ geo: new SphereGeometry(0.42, 14, 10), color: 0xf4fbff, at: [0, -0.4, -0.15] }] },
+};
 
 const basic = (color: number, opacity = 1) => new MeshBasicMaterial({ color, transparent: opacity < 1, opacity, depthWrite: opacity >= 1 });
 /** Sim angle a → Three.js yaw for an object whose front is +x. */
@@ -393,7 +400,9 @@ export class RushView {
       model.traverse(node => { if (node instanceof Mesh) meshes.push(node); });
       const groups = new Map<Object3D, { geo: BufferGeometry; color: number; matrix: Matrix4 }[]>();
       const inv = new Matrix4(), ws = new Vector3(), hidden = new MeshBasicMaterial({ visible: false });
+      const drop = new Set(HERO_DROP[kind] ?? []);
       for (const mesh of meshes) {
+        if (drop.has(mesh.name)) { mesh.removeFromParent(); continue; }
         let owner: Object3D = model;
         for (let p: Object3D | null = mesh; p && p !== model; p = p.parent) if (animated.has(p.name)) { owner = p; break; }
         if (owner === mesh) { toonify(mesh); mesh.add(new Mesh(hullGeometry(mesh.geometry), outlineMaterial(+(0.035 / (mesh.getWorldScale(ws).x || 1)).toFixed(3)))); continue; }
@@ -404,6 +413,12 @@ export class RushView {
         list.push({ geo: mesh.geometry, color: mat.color?.getHex() ?? 0xffffff, matrix: new Matrix4().multiplyMatrices(inv, mesh.matrixWorld) });
         // A mesh that parents other nodes stays in the graph but draws nothing.
         if (mesh.children.length) mesh.material = hidden; else mesh.removeFromParent();
+      }
+      const prop = HERO_PROPS[kind], propNode = prop && model.getObjectByName(prop.node);
+      if (prop && propNode) {
+        const list = groups.get(propNode) ?? [];
+        groups.set(propNode, list);
+        for (const p of prop.parts) list.push({ geo: p.geo, color: p.color, matrix: new Matrix4().makeTranslation(...p.at) });
       }
       for (const [owner, parts] of groups) {
         const geo = bakeMatrices(parts), body = new Mesh(geo, this.mats.baked);
@@ -976,6 +991,7 @@ export class RushView {
 }
 
 /** Cape placement per hero model (shoulder height y, back offset x, height h, width w), tuned on the model sheet. */
+// Popo keeps one too (cycle 41): the polar-bear model's own team blue faces forward, its back read only 3.6% blue.
 const CAPE: Record<HeroKind, { x: number; y: number; h: number; w: number }> = {
   ranger: { x: -0.3, y: 1.2, h: 0.85, w: 0.7 },
   bron: { x: -0.4, y: 1.15, h: 0.85, w: 0.95 },
