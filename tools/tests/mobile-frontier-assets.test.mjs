@@ -29,6 +29,10 @@ test('mobile package keeps the Legion terrain and wolf gait and hit fallbacks', 
     'defense/legion/forest-arena.webp',
     'defense/models/frost-wolf-trot-atlas.webp',
     'defense/models/frost-wolf-atlas.webp',
+    ...[0,1,7].flatMap(direction=>[
+      `defense/models/frost-stride-${direction}-atlas.webp`,
+      `defense/models/frost-flinch-${direction}-atlas.webp`,
+    ]),
     'defense/models/legion-shield-atlas.webp',
     'defense/snow-atlas.png',
   ]) {

@@ -4,7 +4,7 @@ import { spriteAsset } from '../games/defense/art';
 import type { SpriteAsset } from '../games/defense/art';
 import { DEPLOY, LANES, UNIT_DEFS, WORLD } from '../games/legion/data';
 import { deploymentIssue } from '../games/legion/engine';
-import { legionWolfAsset, LEGION_WOLF_SIZE, WOLF_BASE, WOLF_ILLUSTRATION, WOLF_WALK } from '../games/legion/wolfMotion';
+import { legionWolfAsset, legionWolfDirectionalAsset, LEGION_WOLF_SIZE, LEGION_WOLF_DIRECTIONS, WOLF_BASE, WOLF_DIRECTIONAL_HIT, WOLF_DIRECTIONAL_WALK, WOLF_ILLUSTRATION, WOLF_WALK } from '../games/legion/wolfMotion';
 import { legionShieldAsset, LEGION_SHIELD_ATLAS } from '../games/legion/shieldMotion';
 import type { LegionEffect, LegionState, Monster, MonsterKind, Point, Soldier, UnitKind } from '../games/legion/types';
 import '../legion-board.css';
@@ -27,7 +27,8 @@ function loadImage(src:string):Promise<void>{
  pendingImages.set(src,promise);return promise;
 }
 const TERRAIN_ART='/defense/legion/forest-arena.webp';
-const sources=[TERRAIN_ART,'/defense/atlas.png','/defense/snow-atlas.png','/defense/boss-models.webp',WOLF_WALK,LEGION_SHIELD_ATLAS,...Object.values(BAKED).map(x=>`/defense/models/${x.file}-atlas.webp`)];
+const directionalWolfWalk=LEGION_WOLF_DIRECTIONS.map(WOLF_DIRECTIONAL_WALK),directionalWolfHit=LEGION_WOLF_DIRECTIONS.map(WOLF_DIRECTIONAL_HIT);
+const sources=[TERRAIN_ART,'/defense/atlas.png','/defense/snow-atlas.png','/defense/boss-models.webp',WOLF_WALK,LEGION_SHIELD_ATLAS,...directionalWolfWalk,...directionalWolfHit,...Object.values(BAKED).map(x=>`/defense/models/${x.file}-atlas.webp`)];
 const clamp=(value:number,min:number,max:number)=>Math.max(min,Math.min(max,value));
 function noise(seed:number){const n=Math.sin(seed*127.1+311.7)*43758.5453;return n-Math.floor(n);}
 function round(ctx:CanvasRenderingContext2D,x:number,y:number,w:number,h:number,r:number,fill:string,stroke?:string){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.stroke();}}
@@ -86,7 +87,7 @@ function renderAsset(ctx:CanvasRenderingContext2D,asset:SpriteAsset,x:number,y:n
  ctx.save();ctx.translate(x,y);if(flip)ctx.scale(-1,1);ctx.drawImage(image,sx,sy,sw,sh,-w/2,asset.groundY===undefined?-h+size*.13:-(asset.groundY-sy)*scale,w,h);ctx.restore();return true;
 }
 function monsterAsset(e:Monster,reduced:boolean,size:number):SpriteAsset{
- if(e.kind==='frostwolf')return legionWolfAsset(e.progress,e.hit,size,reduced,imageCache.has(WOLF_BASE)&&imageCache.has(WOLF_WALK));
+ if(e.kind==='frostwolf')return (e.facing===1?legionWolfDirectionalAsset(e.lane,e.progress,e.hit,size,reduced,directionalWolfWalk.every(src=>imageCache.has(src)),directionalWolfHit.every(src=>imageCache.has(src))):null)??legionWolfAsset(e.progress,e.hit,size,reduced,imageCache.has(WOLF_BASE)&&imageCache.has(WOLF_WALK));
  const model=BAKED[e.kind];if(model){const frame=e.hit>0?2:Math.floor(e.progress/15)%2,[x,y,w,h]=model.crop;return {src:`/defense/models/${model.file}-atlas.webp`,viewBox:`${x+frame*384} ${y} ${w} ${h}`,width:1152,height:384,displayScale:Math.max(w,h)/model.span};}
  if(e.kind==='boss')return {src:'/defense/boss-models.webp',viewBox:e.hit>0?'933 111 393 334':'42 105 349 340',width:1774,height:887};
  return spriteAsset(ENEMY_INDEX[e.kind]);
@@ -111,7 +112,7 @@ function actor(ctx:CanvasRenderingContext2D,unit:Soldier|Monster,friendly:boolea
   const drawn=shieldModel&&renderAsset(ctx,asset,unit.x,unit.y,size,unit.facing===-1);ctx.restore();
   if(!drawn)shieldSoldier(ctx,unit.x,unit.y+gait,unit.hit,unit.facing);
  }
- else{const asset=friendly?spriteAsset(UNIT_DEFS[unit.kind as UnitKind].sprite):monsterAsset(unit as Monster,reduced,size);const fallback=!friendly&&unit.kind==='frostwolf'?WOLF_ILLUSTRATION:spriteAsset(friendly?UNIT_DEFS[unit.kind as UnitKind].sprite:ENEMY_INDEX[unit.kind as MonsterKind]);const scale=friendly?size:unit.kind==='sprout'?38:size;const drawn=renderAsset(ctx,asset,unit.x,unit.y+gait,scale,unit.facing===-1);if(!drawn&&!renderAsset(ctx,fallback,unit.x,unit.y+gait,scale,unit.facing===-1))fallbackActor(ctx,unit.x,unit.y+gait,size,friendly,friendly?'#347a9c':'#768749');}
+ else{const asset=friendly?spriteAsset(UNIT_DEFS[unit.kind as UnitKind].sprite):monsterAsset(unit as Monster,reduced,size);const fallback=!friendly&&unit.kind==='frostwolf'?WOLF_ILLUSTRATION:spriteAsset(friendly?UNIT_DEFS[unit.kind as UnitKind].sprite:ENEMY_INDEX[unit.kind as MonsterKind]);const scale=friendly?size:unit.kind==='sprout'?38:size;const drawn=renderAsset(ctx,asset,unit.x,unit.y+gait,scale,!asset.oriented&&unit.facing===-1);if(!drawn&&!renderAsset(ctx,fallback,unit.x,unit.y+gait,scale,unit.facing===-1))fallbackActor(ctx,unit.x,unit.y+gait,size,friendly,friendly?'#347a9c':'#768749');}
  if(attacking&&!reduced){ctx.strokeStyle=friendly?'#f5e6a4':'#e99366';ctx.lineWidth=2;ctx.beginPath();ctx.arc(unit.x+unit.facing*13,unit.y-20,13,-.7,.7);ctx.stroke();}
  ctx.restore();
 }
