@@ -36,10 +36,16 @@ export class BiteReveal{
   this.root.visible=false;
   if(this.disposed||!camera||!enemy||!view||this.parts.length!==2)return;
   const jaw=view.root.getObjectByName('jaw');if(!jaw)return;
-  jaw.localToWorld(this.mouth.set(.32,0,0));
-  this.dir.copy(this.mouth).sub(camera.position);const distance=this.dir.length();if(distance<.1)return;
-  hero.updateWorldMatrix(true,true);this.ray.set(camera.position,this.dir.multiplyScalar(1/distance));this.ray.far=distance-.03;
-  if(!this.ray.intersectObject(hero,true).length)return;
+  // The lower and upper muzzle can straddle a silhouette edge during a crouch.
+  // The stencil still limits every displayed pixel to the visible hero surface.
+  hero.updateWorldMatrix(true,true);let blocked=false;
+  for(let sample=0;sample<2&&!blocked;sample++){
+   jaw.localToWorld(this.mouth.set(.32,sample?.1:0,0));
+   this.dir.copy(this.mouth).sub(camera.position);const distance=this.dir.length();if(distance<.1)continue;
+   this.ray.set(camera.position,this.dir.multiplyScalar(1/distance));this.ray.far=distance-.03;
+   blocked=this.ray.intersectObject(hero,true).length>0;
+  }
+  if(!blocked)return;
   for(const part of this.parts){
    const surface=view.surfaces.find(mesh=>mesh.name===part.name);if(!surface)return;
    part.mesh.matrix.copy(surface.matrixWorld);part.mesh.matrixWorldNeedsUpdate=true;

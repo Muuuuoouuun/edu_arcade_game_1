@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BoxGeometry,EqualStencilFunc,GreaterDepth,Group,Mesh,MeshBasicMaterial,PerspectiveCamera} from 'three';
+import {BoxGeometry,EqualStencilFunc,GreaterDepth,Group,Mesh,MeshBasicMaterial,PerspectiveCamera,Raycaster,Vector3} from 'three';
 import {BiteReveal,selectBiteThreat} from './biteReveal.ts';
 import {readFileSync} from 'node:fs';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -77,4 +77,12 @@ test('the authored hero and wolf pose reveal the blocked bite at eight headings 
   }
  }
  assert.equal(checked,16);reveal.dispose();visual.dispose();heroView.dispose();
+});
+
+test('a partially obscured upper muzzle remains readable when its lower sample clears the hero',()=>{
+ const {template,view,hero,camera}=setup(),reveal=new BiteReveal(template),target=enemy(1,.14);hero.position.y=1.02;hero.updateMatrixWorld(true);
+ const jaw=view.root.getObjectByName('jaw')!,point=jaw.localToWorld(new Vector3(.32,0,0)),dir=point.clone().sub(camera.position),length=dir.length();
+ assert.equal(new Raycaster(camera.position,dir.normalize(),0,length-.03).intersectObject(hero,true).length,0,'lower muzzle is visible');
+ reveal.update(camera,hero,target,view);assert.equal(reveal.visible,true,'upper muzzle intersects the hero');
+ hero.position.y=2;reveal.update(camera,hero,target,view);assert.equal(reveal.visible,false,'both samples clear the hero');reveal.dispose();
 });
