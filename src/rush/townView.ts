@@ -1,5 +1,6 @@
 import { Group, Mesh, Vector2, type BufferGeometry, type Camera, type Object3D, type Vector3 } from 'three';
 import { GateOcclusion } from '../games/frontier/gateOcclusion.ts';
+import type { DamageVisual } from './townDamage.ts';
 import { TOWN } from './data.ts';
 import { hullGeometry, outlineMaterial, toon } from './look.ts';
 
@@ -53,6 +54,12 @@ export class TownView {
   }
   accept(source: Object3D) { this.replace(townGeometry(source)); this.status = 'ready'; }
   fail() { this.status = 'fallback'; }
+  /** Damage belongs to this landmark's private material, including the loading fallback. */
+  setDamage(damage: DamageVisual) {
+    this.bodyMaterial.color.setHex(damage.tint);
+    this.bodyMaterial.emissive.setHex(damage.emissive);
+    this.bodyMaterial.emissiveIntensity = damage.emissiveIntensity;
+  }
   update(camera: Camera, hero: Vector3 | undefined, width: number, height: number) {
     this.viewport.set(width, height);
     this.occlusion.update(camera, hero, this.viewport);

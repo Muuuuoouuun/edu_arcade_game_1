@@ -32,7 +32,7 @@ export class Particles {
   /** Fewer particles for reduced-motion players. */
   density = 1;
 
-  constructor(scene: Scene, private capacity = 360) {
+  constructor(scene: Scene, private capacity = 360, private groundHeight: (x:number,z:number)=>number = () => 0) {
     const geo = new IcosahedronGeometry(1, 0);
     this.body = new InstancedMesh(geo, new MeshBasicMaterial({ color: 0xffffff }), capacity);
     this.ink = new InstancedMesh(geo, new MeshBasicMaterial({ color: PAL.ink, side: BackSide }), capacity);
@@ -49,6 +49,8 @@ export class Particles {
 
   get active() { return this.list.length; }
 
+  clear() { this.list=[];this.body.count=this.ink.count=0; }
+
   emit(o: Emit) {
     const n = Math.max(1, Math.round(o.n * this.density));
     const speed = o.speed ?? 4, up = o.up ?? 3, size = o.size ?? 0.12, life = o.life ?? 0.5;
@@ -57,7 +59,7 @@ export class Particles {
       const a = o.dir === undefined ? Math.random() * Math.PI * 2 : o.dir + (Math.random() - 0.5) * (o.cone ?? 0.8);
       const v = speed * (0.55 + Math.random() * 0.6);
       this.list.push({
-        kind: o.kind, x: o.at[0], y: o.at[1], z: o.at[2],
+        kind: o.kind, x: o.at[0], y: o.at[1] + this.groundHeight(o.at[0],o.at[2]), z: o.at[2],
         vx: Math.cos(a) * v, vy: up * (0.6 + Math.random() * 0.7), vz: Math.sin(a) * v,
         age: 0, life: life * (0.75 + Math.random() * 0.5), size: size * (0.7 + Math.random() * 0.6),
         spin: (Math.random() - 0.5) * 14, rx: Math.random() * 6, ry: Math.random() * 6, color: new Color(o.color),
@@ -73,7 +75,8 @@ export class Particles {
       if (p.kind === 'shard') {
         p.vy -= 18 * dt;
         p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
-        if (p.y < 0.06) { p.y = 0.06; p.vy *= -0.35; p.vx *= 0.55; p.vz *= 0.55; }
+        const floor = this.groundHeight(p.x,p.z)+.06;
+        if (p.y < floor) { p.y = floor; p.vy *= -0.35; p.vx *= 0.55; p.vz *= 0.55; }
       } else {
         const drag = Math.exp(-(p.kind === 'puff' ? 3 : 7) * dt);
         p.vx *= drag; p.vz *= drag; p.vy *= drag;

@@ -5,7 +5,8 @@ import { createRush, padCost, padInReach, stepRush, superReady, WAVE_COUNT, type
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
 import { RushInput } from './input.ts';
-import { playCombatSound, unlockAudio, type CombatSoundKind } from '../lib/sound.ts';
+import { playCombatSound, setSound, unlockAudio, type CombatSoundKind } from '../lib/sound.ts';
+import { readSaved } from '../lib/storage.ts';
 import { playHaptic } from '../lib/haptic.ts';
 import { NATIVE_BACKGROUND } from '../lib/nativeEvents.ts';
 import { collect, ENDLESS_STAGE, kingdomMods, settleBattle, settleEndless } from './kingdom.ts';
@@ -18,6 +19,14 @@ import { createFrameWatch, nextPref, parsePref, PREF_LABEL, resolveQuality, watc
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const params = new URLSearchParams(location.search);
+// A separate entry page must honour the same settings selected on the mode screen.
+let feedbackEnabled = readSaved().sound;
+setSound(feedbackEnabled);
+window.addEventListener('storage', event => {
+  if (event.key !== 'playground:v1' && event.key !== null) return;
+  feedbackEnabled = readSaved().sound;
+  setSound(feedbackEnabled);
+});
 const speed = Math.min(8, Math.max(0.25, Number(params.get('speed')) || 1));
 const debug = params.has('debug');
 /** ?freeze=N stops the simulation at tick N (rendering continues) for matched before/after screenshots. */
@@ -164,19 +173,19 @@ function feedback(events: RushEvent[]) {
     else if (ev.type === 'block') { playCombatSound('cannon'); pop('막힘', ev.x, ev.z, 'blocked', 2.1); } // a heavier clank than a flesh hit
     else if (ev.type === 'heroHit') pop(String(Math.round(ev.damage)), state.hero.x, state.hero.z, 'hurt', 2.2);
     else if (ev.type === 'coin') pop(`+${ev.value}`, state.hero.x, state.hero.z, 'gold', 2.4);
-    else if (ev.type === 'burst') playHaptic('skill', true);
-    else if (ev.type === 'heroDown') { playHaptic('breach', true); toast(`쓰러졌다! ${HEROES[state.hero.kind].respawn}초 뒤 마을에서 복귀`, 'bad'); }
+    else if (ev.type === 'burst') playHaptic('skill', feedbackEnabled);
+    else if (ev.type === 'heroDown') { playHaptic('breach', feedbackEnabled); toast(`쓰러졌다! ${HEROES[state.hero.kind].respawn}초 뒤 마을에서 복귀`, 'bad'); }
     else if (ev.type === 'superReady') toast('필살기 준비 완료!', 'super');
-    else if (ev.type === 'roar') { playHaptic('surge', true); if (!bossCallout()) toast('보스가 부하를 부른다!', 'bad'); }
+    else if (ev.type === 'roar') { playHaptic('surge', feedbackEnabled); if (!bossCallout()) toast('보스가 부하를 부른다!', 'bad'); }
     else if (ev.type === 'waveStart') {
-      playHaptic('surge', true);
+      playHaptic('surge', feedbackEnabled);
       const boss = ev.wave % WAVE_COUNT === WAVE_COUNT - 1;
       toast(boss ? (state.diff.endless ? `웨이브 ${ev.wave + 1} · 보스 출현!` : `마지막 웨이브 · 보스 출현!`) : `웨이브 ${ev.wave + 1} 시작`, boss ? 'bad' : '');
     }
     else if (ev.type === 'waveClear') toast(`웨이브 ${ev.wave + 1} 방어 성공 · +${ev.bonus}G`, 'good');
     else if (ev.type === 'lap') {
       // Endless lap (cycle 47): comes right after the fifth wave's clear, so this toast replaces that one.
-      playHaptic('surge', true);
+      playHaptic('surge', feedbackEnabled);
       toast(`${ev.lap}바퀴째 · 적이 강해졌다!`, 'bad', 2.6);
       const box = hud.wave.parentElement!;
       box.classList.remove('lap-flash'); void box.offsetWidth; box.classList.add('lap-flash');

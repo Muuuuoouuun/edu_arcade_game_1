@@ -6,6 +6,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { TownView, townGeometry } from './townView.ts';
 import { TOWN } from './data.ts';
 import { outlineMaterial } from './look.ts';
+import { TownDamage } from './townDamage.ts';
 
 function body(width = 2) {
   const g = new BoxGeometry(width, 3, 2).translate(0, 1.5, 0);
@@ -59,4 +60,22 @@ test('only town surfaces in front of the hero are masked, and the mask clears wh
   assert.equal(town.occlusion.count, 0);
   town.update(camera, undefined, 844, 390);
   assert.equal(town.occlusion.count, 0);
+});
+
+test('damage affects only the town material, survives model loading and clears for a new battle', () => {
+  const first = new TownView(body().geometry), second = new TownView(body().geometry);
+  const cue = new TownDamage(), battle = {};
+  const read = (town: TownView) => (town.root.children[0] as Mesh).material as MeshBasicMaterial & { emissiveIntensity: number };
+  cue.update(battle, 0, 1000, 1000);
+  const damage = cue.update(battle, 1, 200, 1000);
+  first.setDamage(damage);
+  assert.notEqual(read(first).color.getHex(), 0xffffff);
+  assert.equal(read(second).color.getHex(), 0xffffff);
+  assert.ok(read(first).emissiveIntensity > 0);
+  first.accept(body());
+  assert.equal(read(first).color.getHex(), damage.tint);
+  first.setDamage(cue.update({}, 0, 1000, 1000));
+  assert.equal(read(first).color.getHex(), 0xffffff);
+  assert.equal(read(first).emissiveIntensity, 0);
+  assert.deepEqual(first.root.position.toArray(), [TOWN.x, 0, TOWN.z]);
 });

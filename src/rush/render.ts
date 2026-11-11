@@ -1,7 +1,7 @@
 // Three.js view of the Arcana Rush simulation. Reads RushState, never writes it.
 import {
-  AnimationMixer, Box3, BufferAttribute, DodecahedronGeometry, BoxGeometry, CanvasTexture, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
-  DirectionalLight, Group, HemisphereLight, LoopOnce, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera, Plane,
+  AnimationMixer, Box3, BufferAttribute, DodecahedronGeometry, BoxGeometry, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
+  DirectionalLight, Group, HemisphereLight, LoopOnce, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera,
   PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
   Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, type AnimationAction, type BufferGeometry, type Material,
 } from 'three';
@@ -11,13 +11,16 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import rangerGlb from './models/gecko-ranger.glb?url';
 import bronGlb from './models/dwarf-guardian.glb?url';
 import bearGlb from './models/polar-bear.glb?url';
-import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
+import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
 import { heroDef, heroHidden, heroMaxHp, lobReach, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, wallParts, type Part } from './look.ts';
 import { Batch } from './batch.ts';
 import { Particles } from './fx.ts';
 import { QUALITY, type Quality } from './quality.ts';
 import { TownView } from './townView.ts';
+import { TownDamage } from './townDamage.ts';
+import { battleFocus } from './battleCamera.ts';
+import { createGroundGeometry, createCliffGeometry, heightAt, raycastTerrain } from './terrainElevation.ts';
 
 export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'lob'; offset: Vec } | { kind: 'super'; offset: Vec } | null;
 
@@ -62,7 +65,13 @@ export class RushView {
   private shake = 0;
   private townView: TownView | null = null;
   private townHeroTarget = new Vector3();
+  private townDamage = new TownDamage();
+  private heroDamage = new TownDamage();
+  private damageBattle: RushState | null = null;
+  private lastSmokeTick = -Infinity;
+  private damageStages = { town: 'healthy', hero: 'healthy' };
   private hero = new Group();
+  private heroFootprints: Mesh[] = [];
   private heroBody = new Group();
   /** Team-blue cape per hero (cycle 29): the ally colour on the body itself, not only the ring underfoot. */
   private capes = new Map<HeroKind, Mesh>();
@@ -103,7 +112,7 @@ export class RushView {
   private sphere = new Sphere();
   /** Per-instance culling for the batches (InstancedMesh cannot cull individual instances itself). */
   private onScreen(x: number, y: number, z: number, r: number) {
-    this.sphere.center.set(x, y, z);
+    this.sphere.center.set(x, y + this.groundHeight(x,z), z);
     this.sphere.radius = r;
     return this.frustum.intersectsSphere(this.sphere);
   }
@@ -114,7 +123,33 @@ export class RushView {
   /** Snowball landing circle (cycle 40): ice blue, unlike the purple super ring. */
   private aimLob: Mesh;
   private raycaster = new Raycaster();
-  private ground = new Plane(new Vector3(0, 1, 0), 0);
+  private decalBases = new WeakMap<Mesh, Float32Array>();
+  private decalPoint = new Vector3();
+  private decalInverse = new Matrix4();
+  private shotOrigins = new Map<number, {x:number;z:number}>();
+  private shotBattle: RushState | null = null;
+  private groundHeight(x: number, z: number) { return this.sheetMode ? 0 : heightAt(x,z); }
+  /** Drape only the translucent ground decal; solid architecture remains rigid. */
+  private conformDecal(mesh: Mesh, lift = .05) {
+    let base=this.decalBases.get(mesh);
+    if (!base) {
+      const original = mesh.geometry;
+      mesh.geometry = original.clone();
+      // Preserve shared primitives, but release one-off aim/swing geometry after cloning.
+      if (!Object.values(this.geo).some(geometry => geometry === original)) original.dispose();
+      base = Float32Array.from(mesh.geometry.getAttribute('position').array);
+      this.decalBases.set(mesh, base);
+      mesh.frustumCulled = false;
+    }
+    mesh.updateWorldMatrix(true,false);this.decalInverse.copy(mesh.matrixWorld).invert();
+    const pos=mesh.geometry.getAttribute('position');
+    for(let i=0;i<pos.count;i++) {
+      this.decalPoint.fromArray(base,i*3).applyMatrix4(mesh.matrixWorld);
+      this.decalPoint.y=this.groundHeight(this.decalPoint.x,this.decalPoint.z)+lift;
+      this.decalPoint.applyMatrix4(this.decalInverse);pos.setXYZ(i,this.decalPoint.x,this.decalPoint.y,this.decalPoint.z);
+    }
+    pos.needsUpdate=true;
+  }
   private portrait = false;
   /** Debug `?freeze`: hold effects too, so a frozen tick can be compared before/after. */
   fxPaused = false;
@@ -130,6 +165,7 @@ export class RushView {
     blob: basic(0x0b1a12, 0.32), allyRing: basic(TEAM.ally, 0.85), enemyRing: basic(TEAM.enemy, 0.8),
     heroBolt: basic(0x8ff7ff), towerBolt: basic(0xffe07a), enemyBolt: basic(0xff7b3a), superOrb: basic(0xc59bff), snowball: basic(0xf4fbff),
     coin: toon(PAL.gold, { emissive: 0x5a3a00, rim: 0.5 }),
+    hero: toon(0xffffff, { vertexColors: true, rim: 0.34 }),
     baked: toon(0xffffff, { vertexColors: true, rim: 0.34 }), flash: basic(0xffffff),
     barBg: basic(0x10161c, 0.8), barAlly: basic(0x52e07c), barEnemy: basic(0xff5160), barTown: basic(0x4fb8ff), ammo: basic(0xffa43a), ammoDim: basic(0x5b3a1a, 0.9),
   };
@@ -145,7 +181,7 @@ export class RushView {
     sun.position.set(-7, 16, 9);
     this.scene.add(sun);
 
-    this.particles = new Particles(this.scene);
+    this.particles = new Particles(this.scene, 360, (x,z) => this.groundHeight(x,z));
     this.buildGround();
     this.buildWalls();
     this.buildCover();
@@ -185,79 +221,26 @@ export class RushView {
 
   // ---------- static scenery ----------
   private buildGround() {
-    const w = ARENA.maxX - ARENA.minX, d = ARENA.maxZ - ARENA.minZ, ppm = 20;
-    const c = document.createElement('canvas');
-    c.width = Math.round(w * ppm); c.height = Math.round(d * ppm);
-    const g = c.getContext('2d')!;
-    const px = (v: Vec) => [(v.x - ARENA.minX) * ppm, (v.z - ARENA.minZ) * ppm] as const;
-    g.fillStyle = PAL.grass; g.fillRect(0, 0, c.width, c.height);
-    // Crisp 2 m tiles: a pitch-like speed reference that stays calmer than anything interactive.
-    g.fillStyle = PAL.grassAlt;
-    for (let x = 0; x < w; x += 2) for (let z = 0; z < d; z += 2) if (((x + z) / 2) % 2 === 0) g.fillRect(x * ppm, z * ppm, 2 * ppm, 2 * ppm);
-    let seed = 7;
-    const r = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-    g.fillStyle = PAL.grassDot;
-    for (let i = 0; i < 160; i++) { const x = r() * c.width, z = r() * c.height; g.beginPath(); g.ellipse(x, z, 4 + r() * 4, 2 + r() * 2, 0, 0, Math.PI * 2); g.fill(); }
-    g.lineCap = 'round'; g.lineJoin = 'round';
-    for (const [width, color] of [[3.2, PAL.pathEdge], [2.6, PAL.path]] as const) {
-      g.strokeStyle = color; g.lineWidth = width * ppm;
-      for (const lane of LANES) { g.beginPath(); lane.forEach((p, i) => (i ? g.lineTo(...px(p)) : g.moveTo(...px(p)))); g.stroke(); }
-    }
-    const [tx, tz] = px(TOWN);
-    g.fillStyle = PAL.pathEdge; g.beginPath(); g.arc(tx, tz, (TOWN.radius + 2.5) * ppm, 0, Math.PI * 2); g.fill();
-    g.fillStyle = PAL.plaza; g.beginPath(); g.arc(tx, tz, (TOWN.radius + 2.2) * ppm, 0, Math.PI * 2); g.fill();
-    const tex = new CanvasTexture(c);
-    tex.colorSpace = SRGBColorSpace;
-    tex.anisotropy = 4;
-    const groundMat = toon(0xffffff, { rim: 0 });
-    groundMat.map = tex;
-    const ground = new Mesh(new PlaneGeometry(w, d), groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.set((ARENA.minX + ARENA.maxX) / 2, 0, (ARENA.minZ + ARENA.maxZ) / 2);
-    // The arena is an island: a sand slab over water reads as a clear play boundary.
-    const cx = (ARENA.minX + ARENA.maxX) / 2, cz = (ARENA.minZ + ARENA.maxZ) / 2;
-    const shore = new Mesh(new BoxGeometry(w + 7.4, 0.6, d + 7.4), toon(0xf0c98a, { rim: 0 }));
-    shore.position.set(cx, -0.31, cz);
-    const water = new Mesh(new PlaneGeometry(240, 240), toon(PAL.water, { rim: 0 }));
-    water.rotation.x = -Math.PI / 2; water.position.set(cx, -0.45, cz);
-    this.scene.add(water, shore, ground);
-    // Hedge border, baked into one mesh with lighter tops.
-    const parts: Part[] = [];
-    const hedge = (x: number, z: number, sx: number, sz: number) => {
-      parts.push({ geo: new BoxGeometry(sx, 1.0, sz), color: PAL.hedge, at: [x, 0.5, z] });
-      parts.push({ geo: new BoxGeometry(sx + 0.1, 0.28, sz + 0.1), color: PAL.hedgeTop, at: [x, 1.08, z] });
+    const cx=(ARENA.minX+ARENA.maxX)/2,cz=(ARENA.minZ+ARENA.maxZ)/2;
+    const ground = new Mesh(createGroundGeometry(), toon(0xffffff,{vertexColors:true,rim:0}));
+    ground.name='rush-walkable-approach';
+    const cliff = new Mesh(createCliffGeometry(), toon(0xffffff,{vertexColors:true,rim:.1}));
+    cliff.name='rush-rock-foundation';
+    const water = new Mesh(new PlaneGeometry(240,240),toon(PAL.water,{rim:0}));
+    water.rotation.x=-Math.PI/2;water.position.set(cx,-1.3,cz);
+    this.scene.add(water,cliff,ground);
+    // Short hedge sections follow the slope without bending stone cover or changing collision bounds.
+    const parts:Part[]=[];
+    const hedge=(x:number,z:number,sx:number,sz:number)=>{
+      const y=heightAt(x,z);
+      parts.push({geo:new BoxGeometry(sx,1,sz),color:PAL.hedge,at:[x,y+.5,z]});
+      parts.push({geo:new BoxGeometry(sx+.1,.28,sz+.1),color:PAL.hedgeTop,at:[x,y+1.08,z]});
     };
-    hedge(ARENA.minX - 0.55, cz, 1.1, d + 2.2); hedge(ARENA.maxX + 0.55, cz, 1.1, d + 2.2);
-    hedge(cx, ARENA.maxZ + 0.55, w, 1.1); hedge(cx, ARENA.minZ - 0.55, w, 1.1);
-    this.addBaked(bake(parts), 0.04, undefined, 'terrain');
-    this.buildShoreDecor();
-  }
-
-  /** Bushes, rocks and crates on the sand outside the hedge: decoration only, never inside the play area. */
-  private buildShoreDecor() {
-    let seed = 11;
-    const r = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-    const parts: Part[] = [];
-    const place = (x: number, z: number) => {
-      const pick = r();
-      if (pick < 0.5) {
-        const k = 0.45 + r() * 0.3;
-        parts.push({ geo: new SphereGeometry(k, 8, 6), color: 0x4fae4a, at: [x, k * 0.7, z] });
-        parts.push({ geo: new SphereGeometry(k * 0.75, 8, 6), color: 0x6cc75a, at: [x + k * 0.6, k * 0.55, z + k * 0.3] });
-        parts.push({ geo: new SphereGeometry(k * 0.6, 8, 6), color: 0x5bbd52, at: [x - k * 0.5, k * 0.5, z - k * 0.4] });
-      } else if (pick < 0.8) {
-        const k = 0.35 + r() * 0.3;
-        parts.push({ geo: new DodecahedronGeometry(k), color: 0xa3adc4, at: [x, k * 0.6, z], rot: [r(), r() * 3, 0] });
-      } else {
-        const k = 0.7 + r() * 0.2;
-        parts.push({ geo: new BoxGeometry(k, k, k), color: 0xc98a4a, at: [x, k / 2, z], rot: [0, r() * 1.5, 0] });
-        parts.push({ geo: new BoxGeometry(k * 1.02, k * 0.16, k * 1.02), color: 0x8a5428, at: [x, k * 0.5, z], rot: [0, 0, 0] });
-      }
-    };
-    // Walk the band between the hedge (1.1 m) and the shore edge (3.7 m) on all four sides.
-    for (let x = ARENA.minX - 2; x <= ARENA.maxX + 2; x += 2.2 + r() * 1.6) { place(x, ARENA.minZ - 1.9 - r() * 1.2); place(x, ARENA.maxZ + 1.9 + r() * 1.2); }
-    for (let z = ARENA.minZ; z <= ARENA.maxZ; z += 2.2 + r() * 1.6) { place(ARENA.minX - 1.9 - r() * 1.2, z); place(ARENA.maxX + 1.9 + r() * 1.2, z); }
-    this.addBaked(bake(parts), 0.04, undefined, 'decor');
+    for(let z=ARENA.minZ;z<ARENA.maxZ;z++) {hedge(ARENA.minX-.55,z+.5,1.1,1.02);hedge(ARENA.maxX+.55,z+.5,1.1,1.02);}
+    hedge(cx,ARENA.maxZ+.55,ARENA.maxX-ARENA.minX+2.2,1.1);
+    hedge(cx,ARENA.minZ-.55,ARENA.maxX-ARENA.minX+2.2,1.1);
+    this.addBaked(bake(parts),.04,undefined,'terrain');
+    // Decorative shore props are omitted: there is now a rock drop, not a flat sandy shelf.
   }
 
   /** Add a baked static mesh with its ink hull. */
@@ -269,7 +252,7 @@ export class RushView {
       if (role === 'terrain') this.terrainHulls.push(hull);
     }
     if (role === 'decor') this.decor.push(mesh);
-    if (at) mesh.position.set(at.x, 0, at.z);
+    if (at) mesh.position.set(at.x, this.groundHeight(at.x,at.z), at.z);
     this.scene.add(mesh);
     return mesh;
   }
@@ -278,7 +261,13 @@ export class RushView {
     // The physical cover remains opaque but stone courses, end posts and teal timber
     // make its volume legible. Every part stays within WALLS' unchanged x/z collider
     // and below the old 1.42m top; all walls still share one baked mesh + hull.
-    const parts: Part[] = WALLS.flatMap(wallParts);
+    const parts: Part[] = WALLS.flatMap(w => {
+      const base=heightAt(w.x,w.z),low=heightAt(w.x,w.z-w.d/2);
+      const raised=wallParts(w).map(p=>({...p,at:[p.at![0],p.at![1]+base,p.at![2]] as [number,number,number]}));
+      // A grounded footing fills the lower end of cover that straddles the ramp.
+      if(base>low)raised.push({geo:new BoxGeometry(w.w,base-low,w.d),color:PAL.stoneFoot,at:[w.x,(base+low)/2,w.z]});
+      return raised;
+    });
     this.addBaked(bake(parts), 0.05, undefined, 'terrain');
   }
 
@@ -301,7 +290,12 @@ export class RushView {
       const hull = new Mesh(hullGeometry(geo), outlineMaterial(0.03));
       mesh.add(hull);
       this.terrainHulls.push(hull);
-      mesh.position.set(b.x, 0, b.z);
+      const position=geo.getAttribute('position');
+      for(let i=0;i<position.count;i++)position.setY(i,position.getY(i)+heightAt(b.x+position.getX(i),b.z+position.getZ(i))-heightAt(b.x,b.z));
+      position.needsUpdate=true;geo.computeVertexNormals();
+      // Rebuild the outline after the grass patch conforms to its ground.
+      hull.geometry.dispose();hull.geometry=hullGeometry(geo);
+      mesh.position.set(b.x, heightAt(b.x,b.z), b.z);
       mesh.renderOrder = 6; // drawn after the hero so the see-through state shows them
       this.scene.add(mesh);
       this.bushMeshes.push(mesh);
@@ -315,7 +309,7 @@ export class RushView {
     CRATES.forEach((c, i) => {
       const mesh = new Mesh(crateGeo, this.mats.baked);
       mesh.add(new Mesh(crateHull, outlineMaterial(0.04)));
-      mesh.position.set(c.x, 0, c.z);
+      mesh.position.set(c.x, heightAt(c.x,c.z), c.z);
       this.scene.add(mesh);
       this.crates.set(1 + i, { mesh, wobble: 0 });
     });
@@ -338,6 +332,7 @@ export class RushView {
     }
     const town = new TownView(bake(parts));
     this.townView = town;
+    town.root.position.y=heightAt(TOWN.x,TOWN.z);
     this.scene.add(town.root);
     new GLTFLoader().load(new URL('./models/forest-town.glb', import.meta.url).href, gltf => {
       try { town.accept(gltf.scene); }
@@ -356,9 +351,9 @@ export class RushView {
   private buildPads() {
     for (const p of PADS) {
       const ring = new Mesh(this.geo.ring, basic(0xffe48a, 0.8));
-      ring.rotation.x = -Math.PI / 2; ring.position.set(p.x, 0.03, p.z); ring.scale.setScalar(1.05);
+      ring.rotation.x = -Math.PI / 2; ring.position.set(p.x, heightAt(p.x,p.z)+0.03, p.z); ring.scale.setScalar(1.05);
       const disc = new Mesh(this.geo.disc, basic(0x143b39, 0.6));
-      disc.rotation.x = -Math.PI / 2; disc.position.set(p.x, 0.02, p.z); disc.scale.setScalar(0.95);
+      disc.rotation.x = -Math.PI / 2; disc.position.set(p.x, heightAt(p.x,p.z)+0.02, p.z); disc.scale.setScalar(0.95);
       this.scene.add(ring, disc);
       this.padRings.push(ring);
     }
@@ -367,14 +362,14 @@ export class RushView {
   private buildHero() {
     const shadow = new Mesh(this.geo.blob, this.mats.blob); shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.02; shadow.scale.setScalar(0.62);
     const ring = new Mesh(this.geo.ring, this.mats.allyRing); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; ring.scale.setScalar(0.72);
-    this.hero.add(shadow, ring, this.heroBody);
+    this.hero.add(shadow, ring, this.heroBody);this.heroFootprints=[shadow,ring];
     // Fallback body, replaced if the GLB loads.
     const placeholderGeo = bake([
       { geo: new CapsuleGeometry(0.36, 0.6, 4, 10), color: 0x3d8f5a, at: [0, 0.75, 0] },
       { geo: new SphereGeometry(0.34, 12, 10), color: 0x9fd36b, at: [0.05, 1.5, 0] },
       { geo: new BoxGeometry(0.7, 0.14, 0.14), color: PAL.wood, at: [0.45, 0.95, 0] },
     ]);
-    const placeholder = new Mesh(placeholderGeo, this.mats.baked);
+    const placeholder = new Mesh(placeholderGeo, this.mats.hero);
     placeholder.add(new Mesh(hullGeometry(placeholderGeo), outlineMaterial(0.05)));
     this.heroBody.add(placeholder);
     this.heroPlaceholder = placeholder;
@@ -386,7 +381,7 @@ export class RushView {
         { geo: new BoxGeometry(0.08, 0.1, c.w * 1.02), color: 0x1f6fd0, at: [c.x - c.h * 0.22, c.y - c.h + 0.04, 0], rot: [0, 0, -0.22] },
         { geo: new BoxGeometry(0.16, 0.08, c.w * 0.9), color: PAL.gold, at: [c.x + 0.05, c.y + 0.02, 0] },
       ]);
-      const cape = new Mesh(geo, this.mats.baked);
+      const cape = new Mesh(geo, this.mats.hero);
       cape.add(new Mesh(hullGeometry(geo), outlineMaterial(0.035)));
       cape.visible = false;
       this.heroBody.add(cape);
@@ -421,7 +416,7 @@ export class RushView {
   private syncFan(def: HeroDef) {
     if (def === this.fanFor) return;
     this.fanFor = def;
-    this.aimFan.geometry.dispose();
+    this.aimFan.geometry.dispose();this.decalBases.delete(this.aimFan);
     this.aimFan.geometry = this.fanGeometry(def);
   }
 
@@ -464,12 +459,12 @@ export class RushView {
       let held: Mesh | null = null;
       if (prop && propNode) {
         const geo = bake(prop.parts.map(p => ({ geo: p.geo, color: p.color, at: p.at })));
-        held = new Mesh(geo, this.mats.baked);
+        held = new Mesh(geo, this.mats.hero);
         held.add(new Mesh(hullGeometry(geo), outlineMaterial(+(0.035 / (propNode.getWorldScale(ws).x || 1)).toFixed(3))));
         propNode.add(held);
       }
       for (const [owner, parts] of groups) {
-        const geo = bakeMatrices(parts), body = new Mesh(geo, this.mats.baked);
+        const geo = bakeMatrices(parts), body = new Mesh(geo, this.mats.hero);
         body.add(new Mesh(hullGeometry(geo), outlineMaterial(+(0.035 / (owner.getWorldScale(ws).x || 1)).toFixed(3))));
         owner.add(body);
       }
@@ -605,7 +600,7 @@ export class RushView {
   private place(x: number, y: number, z: number, rx: number, ry: number, rz: number, sx: number, sy = sx, sz = sx, order: 'XYZ' | 'YXZ' = 'XYZ'): Matrix4 {
     const t = this.tmp;
     t.e.set(rx, ry, rz, order);
-    return t.m.compose(t.p.set(x, y, z), t.q.setFromEuler(t.e), t.s.set(sx, sy, sz));
+    return t.m.compose(t.p.set(x, y + this.groundHeight(x,z), z), t.q.setFromEuler(t.e), t.s.set(sx, sy, sz));
   }
 
   private drawEnemies(s: RushState) {
@@ -633,30 +628,53 @@ export class RushView {
       const ice = e.slowT ?? 0;
       if (ice > 0 && (ice > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.ice[e.kind].push(this.place(e.x, bob - 0.02, e.z, 0, yaw(e.facing), 0, sx * 1.08, sy * 1.06, sx * 1.08));
       if (this.sheetMode) continue;
-      B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2, 0, 0, r * 1.25));
-      B.ring.push(this.place(e.x, 0.03, e.z, -Math.PI / 2, 0, 0, r * 1.15));
-      if ((e.slowT ?? 0) > 0) B.frostRing.push(this.place(e.x, 0.05, e.z, -Math.PI / 2, 0, 0, r * 1.5)); // frost slow
+      B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.25));
+      B.ring.push(this.place(e.x, 0.03, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.15));
+      if ((e.slowT ?? 0) > 0) B.frostRing.push(this.place(e.x, 0.05, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.5)); // frost slow
     }
     all.forEach(b => b.end());
     this.counts.enemies = s.enemies.length;
   }
 
+  /** Straight shots interpolate launch/arrival elevation; lobbed shots add their authored arc.
+   * Damage and cover tests deliberately remain the prototype's deterministic x/z rules. */
+  private shotHeight(s: RushState, shot: Shot): number {
+    if(this.sheetMode)return 0;
+    if(shot.owner==='tower') {
+      let start=this.shotOrigins.get(shot.id);
+      if(!start){start={x:shot.x,z:shot.z};this.shotOrigins.set(shot.id,start);}
+      const traveled=Math.hypot(shot.x-start.x,shot.z-start.z),remaining=Math.hypot(shot.tx-shot.x,shot.tz-shot.z);
+      const p=traveled/Math.max(.001,traveled+remaining);
+      return (heightAt(start.x,start.z)+1.6)*(1-p)+(heightAt(shot.tx,shot.tz)+.7)*p;
+    }
+    const hd=heroDef(s),lob=shot.owner==='lob'||shot.owner==='super';
+    const total=shot.owner==='lob'?(hd.lobTravel??.5):shot.owner==='super'?hd.superTravel:
+      shot.owner==='hero'?hd.range/hd.boltSpeed:(ENEMIES.skirmisher.reach+2)/(ENEMIES.skirmisher.shotSpeed??9);
+    const elapsed=Math.max(0,total-shot.life),p=Math.min(1,elapsed/total);
+    const sx=shot.x-shot.vx*elapsed,sz=shot.z-shot.vz*elapsed;
+    const tx=lob?shot.tx:sx+shot.vx*total,tz=lob?shot.tz:sz+shot.vz*total;
+    return heightAt(sx,sz)*(1-p)+heightAt(tx,tz)*p+(lob?0:.85);
+  }
+
   private drawShotsAndCoins(s: RushState) {
     const B = this.batches;
+    if(this.shotBattle!==s){this.shotBattle=s;this.shotOrigins.clear();}
+    const live=new Set(s.shots.map(shot=>shot.id));for(const id of this.shotOrigins.keys())if(!live.has(id))this.shotOrigins.delete(id);
     [...Object.values(B.shots), ...Object.values(B.branchShots)].forEach(b => b.begin());
     for (const shot of s.shots) {
       if (!this.onScreen(shot.x, 1, shot.z, 3)) continue;
+      const elevation=this.shotHeight(s,shot)-this.groundHeight(shot.x,shot.z);
       if (shot.owner === 'super') {
         // Lobbed: a parabola that lands on the target point.
         const p = 1 - Math.max(0, shot.life) / HEROES[s.hero.kind].superTravel;
-        B.shots.super.push(this.place(shot.x, 0.6 + Math.sin(p * Math.PI) * 2.6, shot.z, 0, 0, 0, 1.8));
+        B.shots.super.push(this.place(shot.x, elevation + 0.6 + Math.sin(p * Math.PI) * 2.6, shot.z, 0, 0, 0, 1.8));
       } else if (shot.owner === 'lob') {
         // Snowball (cycle 39): a lower arc than the super.
         const p = 1 - Math.max(0, shot.life) / (HEROES[s.hero.kind].lobTravel ?? 0.5);
-        B.shots.lob.push(this.place(shot.x, 0.7 + Math.sin(p * Math.PI) * 1.8, shot.z, 0, 0, 0, 1.15));
-      } else if (shot.owner === 'enemy') B.shots.enemy.push(this.place(shot.x, 0.85, shot.z, 0, 0, 0, 1));
+        B.shots.lob.push(this.place(shot.x, elevation + 0.7 + Math.sin(p * Math.PI) * 1.8, shot.z, 0, 0, 0, 1.15));
+      } else if (shot.owner === 'enemy') B.shots.enemy.push(this.place(shot.x, elevation, shot.z, 0, 0, 0, 1));
       // Capsules point along +y; lay them flat along the velocity.
-      else (shot.branch ? B.branchShots[shot.branch] : B.shots[shot.owner]).push(this.place(shot.x, shot.owner === 'tower' ? 1.6 : 0.85, shot.z, -Math.PI / 2, Math.atan2(-shot.vx, -shot.vz), 0, 1, 1, 1, 'YXZ'));
+      else (shot.branch ? B.branchShots[shot.branch] : B.shots[shot.owner]).push(this.place(shot.x, elevation, shot.z, -Math.PI / 2, Math.atan2(-shot.vx, -shot.vz), 0, 1, 1, 1, 'YXZ'));
     }
     [...Object.values(B.shots), ...Object.values(B.branchShots)].forEach(b => b.end());
     this.counts.shots = s.shots.length;
@@ -886,7 +904,8 @@ export class RushView {
     if (paw) paw.visible = h.ammo >= 1 && h.fireCd <= 0;
     // Hero
     this.hero.visible = alive;
-    this.hero.position.set(h.x, 0, h.z);
+    this.hero.position.set(h.x, this.groundHeight(h.x,h.z), h.z);
+    this.heroFootprints.forEach((m,i)=>this.conformDecal(m,.02+i*.01));
     this.heroBody.rotation.y = yaw(h.facing);
     this.heroMixer?.update(worldDt);
     this.setBar(this.heroBar, h.hp / heroMaxHp(s));
@@ -921,7 +940,7 @@ export class RushView {
       if (key !== this.towerLevels[i]) {
         if (this.towers[i]) this.scene.remove(this.towers[i]!);
         this.towers[i] = t ? this.makeTower(t.level, t.branch) : null;
-        if (this.towers[i]) { this.towers[i]!.position.set(PADS[i].x, 0, PADS[i].z); this.scene.add(this.towers[i]!); }
+        if (this.towers[i]) { this.towers[i]!.position.set(PADS[i].x, this.groundHeight(PADS[i].x,PADS[i].z), PADS[i].z); this.scene.add(this.towers[i]!); }
         this.towerLevels[i] = key;
       }
       if (t && this.towers[i]) this.towers[i]!.getObjectByName('head')!.rotation.y = yaw(t.facing);
@@ -933,12 +952,13 @@ export class RushView {
       ring.visible = !towerMaxed(s, i) || i === reach;
     });
     this.setBar(this.townBar, s.town.hp / s.town.maxHp);
+    this.syncDamage(s, reduced);
     this.updateAim(s, aim);
     this.updateFx(this.fxPaused ? 0 : dt);
     this.particles.update(this.fxPaused ? 0 : dt);
     this.updateCamera(s, dt);
     this.camera.updateMatrixWorld();
-    this.townHeroTarget.set(h.x, 1, h.z);
+    this.townHeroTarget.set(h.x, this.groundHeight(h.x,h.z)+1, h.z);
     this.townView?.update(this.camera, alive && !this.sheetMode ? this.townHeroTarget : undefined,
       this.renderer.domElement.width, this.renderer.domElement.height);
   }
@@ -958,6 +978,7 @@ export class RushView {
       this.aimLine.position.set((tx + h.x) / 2, 0.055, (tz + h.z) / 2);
       this.aimLine.scale.x = Math.max(0.01, reach);
       this.aimLine.rotation.set(-Math.PI / 2, 0, -a);
+      this.conformDecal(this.aimLob,.06);this.conformDecal(this.aimLine,.055);
       return;
     }
     if (aim.kind === 'fire') {
@@ -968,7 +989,7 @@ export class RushView {
       (this.aimFan.material as MeshBasicMaterial).opacity = h.ammo >= 1 ? 0.24 : 0.1;
     } else {
       const hd = HEROES[h.kind];
-      if (hd.superSelf) { this.aimRing.visible = true; this.aimRing.position.set(h.x, 0.06, h.z); this.aimRing.scale.setScalar(hd.superRadius); return; }
+      if (hd.superSelf) { this.aimRing.visible = true; this.aimRing.position.set(h.x, 0.06, h.z); this.aimRing.scale.setScalar(hd.superRadius); this.conformDecal(this.aimRing,.06);return; }
       const l = Math.hypot(aim.offset.x, aim.offset.z), k = l > hd.superRange ? hd.superRange / l : 1;
       const tx = h.x + aim.offset.x * k, tz = h.z + aim.offset.z * k;
       this.aimRing.visible = this.aimLine.visible = true;
@@ -978,35 +999,60 @@ export class RushView {
       this.aimLine.scale.x = Math.max(0.01, d);
       this.aimLine.rotation.set(-Math.PI / 2, 0, -Math.atan2(tz - h.z, tx - h.x));
     }
+    for(const mesh of [this.aimFan,this.aimRing,this.aimLine])if(mesh.visible)this.conformDecal(mesh,.06);
   }
 
   private updateFx(dt: number) {
     this.fx = this.fx.filter(f => {
       f.age += dt;
       const p = f.age / f.life;
-      if (p >= 1) { this.scene.remove(f.mesh); (f.mesh.material as Material).dispose(); return false; }
+      if (p >= 1) { this.scene.remove(f.mesh); (f.mesh.material as Material).dispose();if(this.decalBases.has(f.mesh))f.mesh.geometry.dispose(); return false; }
       f.mesh.scale.setScalar(f.grow * (0.3 + 0.7 * Math.sqrt(p)));
+      this.conformDecal(f.mesh,.07);
       (f.mesh.material as MeshBasicMaterial).opacity = f.fade * (1 - p);
       return true;
     });
     this.telegraphs = this.telegraphs.filter(t => {
       t.age += dt;
       const p = Math.min(1, t.age / t.life);
-      t.fill.scale.setScalar(t.mesh.scale.x * p);
-      if (t.age >= t.life) { this.scene.remove(t.mesh, t.fill); (t.mesh.material as Material).dispose(); (t.fill.material as Material).dispose(); return false; }
+      t.fill.scale.setScalar(Math.max(.001,t.mesh.scale.x * p));
+      this.conformDecal(t.mesh,.05);this.conformDecal(t.fill,.052);
+      if (t.age >= t.life) { this.scene.remove(t.mesh, t.fill); (t.mesh.material as Material).dispose(); (t.fill.material as Material).dispose();if(this.decalBases.has(t.mesh))t.mesh.geometry.dispose();if(this.decalBases.has(t.fill))t.fill.geometry.dispose(); return false; }
       return true;
     });
   }
 
+  /** Read-only world cues: materials/posture survive pause without adding a health HUD. */
+  private syncDamage(s: RushState, reduced: boolean) {
+    const town = this.townDamage.update(s, s.tick, s.town.hp, s.town.maxHp, reduced);
+    const hero = this.heroDamage.update(s, s.tick, s.hero.hp, heroMaxHp(s), reduced);
+    this.damageStages = { town: town.stage, hero: hero.stage };
+    this.townView?.setDamage(town);
+    this.mats.hero.color.setHex(hero.tint);
+    this.mats.hero.emissive.setHex(hero.emissive);
+    this.mats.hero.emissiveIntensity = hero.emissiveIntensity;
+    // Compress from the grounded origin: feet stay at y=0 and the collision radius never changes.
+    this.heroBody.scale.y = hero.stage === 'critical' ? .9 : hero.stage === 'damaged' ? .96 : 1;
+    if (s !== this.damageBattle || s.tick < this.lastSmokeTick) {
+      this.damageBattle = s; this.lastSmokeTick = s.tick;this.particles.clear();
+    }
+    if (!this.sheetMode && !reduced && s.town.hp > 0 && town.stage !== 'healthy'
+        && s.phase === 'wave' && s.tick - this.lastSmokeTick >= 30) {
+      this.lastSmokeTick = s.tick;
+      const critical = town.stage === 'critical';
+      for (const side of critical ? [-1, 1] : [1]) this.particles.emit({ kind: 'puff', n: 3,
+        color: critical ? 0x958c7b : 0xaca28b, at: [TOWN.x + side * .8, 4.25, TOWN.z - .65],
+        speed: .18, up: 1.8, size: critical ? .23 : .17, life: 1.1 });
+      if(critical)this.particles.emit({kind:'spark',n:1,color:0xd99046,at:[TOWN.x,3.8,TOWN.z-.6],speed:.2,up:1,size:.08,life:.45});
+    }
+  }
+
   private updateCamera(s: RushState, dt: number) {
-    const h = s.hero, target = h.downT > 0 ? new Vector3(TOWN.x, 0, TOWN.z - 4) : new Vector3(h.x, 0, h.z);
-    // Look ahead toward the enemy side (hero sits in the lower half, enemies clear the top HUD); stay inside the arena.
-    target.z -= this.portrait ? 2.5 : 3.5;
-    target.x = Math.max(ARENA.minX + 6, Math.min(ARENA.maxX - 6, target.x));
-    target.z = Math.max(ARENA.minZ + 6, Math.min(ARENA.maxZ - 6, target.z));
+    const h = s.hero, target = battleFocus(h, h.downT > 0, this.portrait);
+    if (this.sheetMode) target.y = 0;
     this.focus.lerp(target, 1 - Math.exp(-6 * dt));
     const height = (this.portrait ? 30 : 23) * this.zoom, back = (this.portrait ? 14 : 12.5) * this.zoom;
-    this.camera.position.set(this.focus.x, height, this.focus.z + back);
+    this.camera.position.set(this.focus.x, this.focus.y + height, this.focus.z + back);
     if (this.shake > 0) {
       this.shake = Math.max(0, this.shake - dt * 1.8);
       const k = this.shake * this.shake;
@@ -1030,17 +1076,17 @@ export class RushView {
     const ndc = new Vector2(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(ndc, this.camera);
     const p = new Vector3();
-    return this.raycaster.ray.intersectPlane(this.ground, p) ? { x: p.x, z: p.z } : null;
+    return raycastTerrain(this.raycaster.ray, p) ? { x: p.x, z: p.z } : null;
   }
   /** World point → CSS pixels relative to the canvas. */
   screenPoint(x: number, y: number, z: number, rect: DOMRect): { x: number; y: number; visible: boolean } {
-    const v = new Vector3(x, y, z).project(this.camera);
+    const v = new Vector3(x, y + this.groundHeight(x,z), z).project(this.camera);
     return { x: (v.x + 1) / 2 * rect.width, y: (1 - v.y) / 2 * rect.height, visible: v.z < 1 && Math.abs(v.x) < 1.2 && Math.abs(v.y) < 1.2 };
   }
 
   render() { this.renderer.render(this.scene, this.camera); }
   /** Renderer statistics for the debug overlay and performance notes. */
-  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroKind: this.heroKind, heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, townModel: this.townView?.status, townOccluders: this.townView?.occlusion.count ?? 0, dropped: Batch.dropped, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
+  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroKind: this.heroKind, heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, townModel: this.townView?.status, townOccluders: this.townView?.occlusion.count ?? 0, damage: { ...this.damageStages }, heroTint: this.mats.hero.color.getHex(), heroPosture: this.heroBody.scale.y, terrain: {heroY:this.hero.position.y,townY:this.townView?.root.position.y,focusY:this.focus.y}, dropped: Batch.dropped, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
 }
 
 /** Cape placement per hero model (shoulder height y, back offset x, height h, width w), tuned on the model sheet. */

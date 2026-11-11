@@ -7,6 +7,7 @@ import {
 import { bake, hullGeometry, outlineMaterial, PAL, toon, type Part } from './look.ts';
 import type { Kingdom, Upgrade } from './kingdom.ts';
 import { level } from './kingdom.ts';
+import { castleScale, loadTownCastle, townCastleGeometry, type TownCastleLoader } from './townCastle.ts';
 
 /** Visual stage for a level: -1 empty lot (perk not started), 0 = Lv1, 1 = Lv2-3, 2 = Lv4-5. */
 export const stageOf = (lv: number) => (lv <= 0 ? -1 : lv <= 1 ? 0 : lv <= 3 ? 1 : 2);
@@ -171,8 +172,11 @@ export class TownView {
   private cache = new Map<string, { body: BufferGeometry; hull: BufferGeometry }>();
   private nodes = new Map<Upgrade, { group: Group; stage: number; pop: number }>();
   private anchor = new Vector3();
+  private castleGeometry: BufferGeometry | null = null;
+  private kingdom: Kingdom | null = null;
+  castleModel: 'loading' | 'ready' | 'fallback' = 'loading';
 
-  constructor() {
+  constructor(loadCastle: TownCastleLoader = loadTownCastle) {
     this.scene.background = new Color(PAL.water);
     this.scene.add(new HemisphereLight(0xe6f6ff, 0x9c8a62, 1.15));
     const sun = new DirectionalLight(0xfff3dc, 2.2);
@@ -205,10 +209,18 @@ export class TownView {
     this.scene.add(decoMesh);
     for (const s of SPOTS) {
       const group = new Group();
+      group.name = `town-${s.id}`;
       group.position.set(s.x, 0, s.z);
       this.scene.add(group);
       this.nodes.set(s.id, { group, stage: -2, pop: 0 });
     }
+    loadCastle(geometry => {
+      this.castleGeometry = geometry;
+      this.castleModel = 'ready';
+      this.nodes.get('castle')!.stage = -2;
+      // A completed request must replace the fallback even if no upgrade/menu action calls sync again.
+      if (this.kingdom) this.sync(this.kingdom);
+    }, () => { this.castleModel = 'fallback'; });
   }
 
   resize(width: number, height: number) {
@@ -223,10 +235,11 @@ export class TownView {
   }
 
   private kit(id: Upgrade, stage: number) {
-    const key = `${id}:${stage}`;
+    const authored = id === 'castle' && this.castleGeometry;
+    const key = `${id}:${stage}${authored ? ':authored' : ''}`;
     let kit = this.cache.get(key);
     if (!kit) {
-      const body = bake(buildingParts(id, stage));
+      const body = authored ? townCastleGeometry(authored, stage) : bake(buildingParts(id, stage));
       kit = { body, hull: hullGeometry(body) };
       this.cache.set(key, kit);
     }
@@ -235,6 +248,7 @@ export class TownView {
 
   /** Rebuild buildings whose visual stage changed. */
   sync(k: Kingdom) {
+    this.kingdom = k;
     for (const s of SPOTS) {
       const node = this.nodes.get(s.id)!, stage = stageOf(level(k, s.id));
       if (stage === node.stage) continue;
@@ -262,7 +276,11 @@ export class TownView {
   /** Screen position (CSS px) for a building's name tag. */
   labelAt(id: Upgrade, rect: { width: number; height: number }) {
     const s = SPOTS.find(p => p.id === id)!;
-    const v = this.anchor.set(s.x, s.label, s.z).project(this.camera);
-    return { x: (v.x + 1) / 2 * rect.width, y: (1 - v.y) / 2 * rect.height };
+    const label = id === 'castle' && this.castleGeometry && this.kingdom
+      ? 5.52 * castleScale(stageOf(this.kingdom.castle)) + .35 : s.label;
+    const v = this.anchor.set(s.x, label, s.z).project(this.camera);
+    const y = (1 - v.y) / 2 * rect.height;
+    // The 44px castle tag must remain below the town header even at its tallest growth stage.
+    return { x: (v.x + 1) / 2 * rect.width, y: id === 'castle' ? Math.max(110, y) : y };
   }
 }
