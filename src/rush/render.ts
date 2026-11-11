@@ -1,11 +1,16 @@
 // Three.js view of the Arcana Rush simulation. Reads RushState, never writes it.
 import {
-  AnimationMixer, Box3, DodecahedronGeometry, BoxGeometry, CanvasTexture, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
+  AnimationMixer, Box3, BufferAttribute, DodecahedronGeometry, BoxGeometry, CanvasTexture, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
   DirectionalLight, Group, HemisphereLight, LoopOnce, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera, Plane,
   PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
   Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, type AnimationAction, type BufferGeometry, type Material,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+// Rush-only meshopt copies of the shared campaign models (decision 2026-11-11, cycle 43; made by tools/rush-glb.sh).
+import rangerGlb from './models/gecko-ranger.glb?url';
+import bronGlb from './models/dwarf-guardian.glb?url';
+import bearGlb from './models/polar-bear.glb?url';
 import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroKind, type TowerBranch, type Vec } from './data.ts';
 import { heroHidden, heroMaxHp, lobReach, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, type Part } from './look.ts';
@@ -16,7 +21,20 @@ import { QUALITY, type Quality } from './quality.ts';
 export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'lob'; offset: Vec } | { kind: 'super'; offset: Vec } | null;
 
 const TEAM = { ally: PAL.ally, enemy: PAL.enemy };
-const HERO_MODELS: Record<HeroKind, string> = { ranger: '/defense/models/prototypes/gecko-ranger.glb', bron: '/defense/models/dwarf-guardian.glb', bear: '/defense/models/prototypes/polar-bear.glb' };
+const HERO_MODELS: Record<HeroKind, string> = { ranger: rangerGlb, bron: bronGlb, bear: bearGlb };
+const heroLoader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+/** The meshopt copies carry quantized positions and normals (normalized Int16/Int8, often interleaved). Baking writes
+ * transformed values back into the same array type, which would clip them (cycle 31: broken parts), so the hero's
+ * meshes go back to plain float32 before anything else touches them. */
+function toFloat32(mesh: Mesh) {
+  for (const name of ['position', 'normal'] as const) {
+    const a = mesh.geometry.getAttribute(name);
+    if (!a || (a.array instanceof Float32Array && !('isInterleavedBufferAttribute' in a))) continue;
+    const f = new Float32Array(a.count * 3);
+    for (let i = 0; i < a.count; i++) { f[i * 3] = a.getX(i); f[i * 3 + 1] = a.getY(i); f[i * 3 + 2] = a.getZ(i); }
+    mesh.geometry.setAttribute(name, new BufferAttribute(f, 3));
+  }
+}
 const HERO_HEIGHT = 2.0;
 /** Yaw that turns the GLB authored front (-z) toward simulation angle 0 (+x). Verified by east/north close-up renders. */
 const HERO_MODEL_YAW = -Math.PI / 2;
@@ -387,7 +405,8 @@ export class RushView {
 
   private loadHeroModel(kind: HeroKind) {
     this.heroRigs.set(kind, 'loading');
-    new GLTFLoader().load(HERO_MODELS[kind], gltf => {
+    heroLoader.load(HERO_MODELS[kind], gltf => {
+      gltf.scene.traverse(node => { if (node instanceof Mesh) toFloat32(node); });
       const model = gltf.scene, box = new Box3().setFromObject(model), size = box.getSize(new Vector3()), center = box.getCenter(new Vector3());
       const k = HERO_HEIGHT / Math.max(size.y, 0.01);
       model.scale.setScalar(k);
