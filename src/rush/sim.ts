@@ -62,6 +62,7 @@ export type RushEvent =
   | { type: 'block'; x: number; z: number }
   | { type: 'waveStart'; wave: number }
   | { type: 'waveClear'; wave: number; bonus: number }
+  | { type: 'lap'; lap: number }
   | { type: 'won' }
   | { type: 'lost' };
 
@@ -279,6 +280,7 @@ export function stepRush(s: RushState, cmd: Command = {}): RushState {
       if (s.diff.endless && s.wave % WAVE_COUNT === 0) {
         const d = s.diff;
         s.diff = { ...d, enemyHp: d.enemyHp * ENDLESS_LAP.enemyHp, enemyCount: d.enemyCount * ENDLESS_LAP.enemyCount, enemyDamage: d.enemyDamage * ENDLESS_LAP.enemyDamage };
+        s.events.push({ type: 'lap', lap: s.wave / WAVE_COUNT + 1 }); // cycle 47: the player must see the step up
       }
       s.phase = 'prep';
       s.prepT = ECONOMY.prepTime;

@@ -796,6 +796,10 @@ export class RushView {
         case 'telegraph': this.telegraph(ev.x, ev.z, ev.radius, ev.time); break;
         // Boss rally (cycle 33): amber, not the red of a slam, because the roar itself does no damage.
         case 'roar': this.telegraph(ev.x, ev.z, ev.radius, ev.time, 0xffb02e); break;
+        case 'lap': // endless lap (cycle 47): a wide red ink ring around the town and a shake
+          this.ring(TOWN.x, TOWN.z, 0xff4d5e, 7, 0.7, 0.95, true);
+          if (!reducedMotion) this.shake = Math.max(this.shake, 0.5);
+          break;
         case 'summon':
           this.ring(ev.x, ev.z, 0xffb02e, 3, 0.4, 0.95, true);
           fx.emit({ kind: 'puff', n: 12, color: 0xe8c99a, at: [ev.x, 0.4, ev.z], speed: 4, up: 1, size: 0.3, life: 0.5 });
