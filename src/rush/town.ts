@@ -3,7 +3,7 @@ import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
 import { FORGE, HEROES, TALENT_MAX, TALENTS, type HeroKind } from './data.ts';
 import {
-  CASTLE_MAX, DAILY_WIN, ENDLESS_STAGE, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canLearnTalent, canTrain, learnTalent, talentCost, dailyReady, dayIndex, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
+  CASTLE_MAX, DAILY_WIN, ENDLESS_STAGE, nextMilestone, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canLearnTalent, canTrain, learnTalent, talentCost, dailyReady, dayIndex, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
   serializeKingdom, storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 
@@ -185,10 +185,13 @@ export class TownScreen {
       chip.querySelector('[data-stars]')!.textContent = open ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '잠김';
     });
     // Daily first win (cycle 32): a small badge on the battle button while today's bonus is waiting.
-    const daily = dailyReady(k, today(now));
-    const label = this.stage === ENDLESS_STAGE ? '끝없는 도전' : `스테이지 ${this.stage}`;
-    this.$('btn-battle').innerHTML = `${label} 출전${daily ? `<span class="daily-badge">첫 승리 <i class="res-ico shard"></i>+${DAILY_WIN.shards}</span>` : ''}`;
-    this.$('btn-battle').setAttribute('aria-label', `${label} 출전${daily ? ', 오늘의 첫 승리 보상 대기 중' : ''}`);
+    // Endless never ends in a win, so it shows the next record milestone (cycle 51) instead of the daily first-win badge.
+    const endless = this.stage === ENDLESS_STAGE, daily = !endless && dailyReady(k, today(now)), goal = endless ? nextMilestone(k.endlessBest) : null;
+    const label = endless ? '끝없는 도전' : `스테이지 ${this.stage}`;
+    const badge = daily ? `<span class="daily-badge">첫 승리 <i class="res-ico shard"></i>+${DAILY_WIN.shards}</span>`
+      : goal ? `<span class="daily-badge goal">목표 ${goal.waves} <i class="res-ico shard"></i>+${goal.shards}</span>` : '';
+    this.$('btn-battle').innerHTML = `${label} 출전${badge}`;
+    this.$('btn-battle').setAttribute('aria-label', `${label} 출전${daily ? ', 오늘의 첫 승리 보상 대기 중' : goal ? `, 다음 목표 ${goal.waves}웨이브, 조각 ${goal.shards}개` : ''}`);
     this.$('hero-name').textContent = `${HEROES[k.hero].name} Lv${k.heroLv[k.hero]}`;
     const heroRow = this.root.querySelector<HTMLElement>('[data-id="hero"]')!;
     const lv = k.heroLv[k.hero], g = heroGrowth(lv), tc = trainCost(k, k.hero), trainBtn = heroRow.querySelector<HTMLButtonElement>('[data-train]')!;

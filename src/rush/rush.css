@@ -373,3 +373,8 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   100% { transform: scale(1); }
 }
 @media (prefers-reduced-motion: reduce) { .hud-wave.lap-flash { animation: none; } }
+
+/* Endless record milestones (cycle 51) */
+.daily-badge.goal { background: #8a5cf0; }
+.result-stars .milestone { display: block; margin-top: 2px; color: #d9c6ff; }
+.result-stars .milestone .res-ico { width: 11px; height: 11px; }

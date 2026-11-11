@@ -298,7 +298,9 @@ function showEndlessResult() {
   const s = state, { kingdom, granted, reward } = settleEndless(collect(loadKingdom(), Date.now()), battleId, s);
   $('result-title').textContent = `끝없는 도전 · 웨이브 ${reward.waves}`;
   $('screen-result').classList.remove('won');
-  $('result-stars').innerHTML = reward.newBest ? `<small class="best">새 최고 기록! ${reward.waves}웨이브</small>` : `<small>최고 기록 ${reward.best}웨이브</small>`;
+  const passed = reward.milestones.map(m => `${m.waves}웨이브 돌파 <i class="res-ico shard"></i>+${m.shards}`).join(' · ');
+  $('result-stars').innerHTML = (reward.newBest ? `<small class="best">새 최고 기록! ${reward.waves}웨이브</small>` : `<small>최고 기록 ${reward.best}웨이브</small>`)
+    + (passed ? `<small class="milestone">기록 보상: ${passed}</small>` : '');
   const saved = granted && saveKingdom(kingdom), rewardEl = $('result-reward');
   rewardEl.hidden = !granted;
   rewardEl.innerHTML = `<i class="res-ico food"></i>식량 +${reward.food} <i class="res-ico wood"></i>목재 +${reward.wood}${reward.shards ? ` <i class="res-ico shard"></i>조각 +${reward.shards}` : ''}${saved ? '' : ' <small>(저장 실패: 이 기기에서 저장 공간을 쓸 수 없음)</small>'}`;

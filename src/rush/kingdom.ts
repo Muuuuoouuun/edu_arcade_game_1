@@ -238,15 +238,24 @@ export function settleBattle(k: Kingdom, battleId: string, s: RushState, stage: 
 }
 
 // ---------- endless challenge (cycle 46) ----------
-export type EndlessResult = Cost & { waves: number; shards: number; best: number; newBest: boolean };
+export type EndlessResult = Cost & { waves: number; shards: number; best: number; newBest: boolean; milestones: EndlessMilestone[] };
+/** Record milestones (cycle 51): shards the first time a run holds this many waves. Derived from the best record. */
+export type EndlessMilestone = { waves: number; shards: number };
+export const ENDLESS_MILESTONES: readonly EndlessMilestone[] = [{ waves: 5, shards: 3 }, { waves: 10, shards: 6 }, { waves: 15, shards: 10 }, { waves: 20, shards: 15 }];
+/** Milestones a run of `waves` passes for the first time, given the record before it. */
+export const milestonesPassed = (best: number, waves: number) => ENDLESS_MILESTONES.filter(m => m.waves > best && m.waves <= waves);
+/** The next milestone above the record, if any. */
+export const nextMilestone = (best: number) => ENDLESS_MILESTONES.find(m => m.waves > best) ?? null;
 /** Settle an endless run once: resources grow with the waves held (stage-10 rate), 1 shard per 5 waves, best record kept. */
 export function settleEndless(k: Kingdom, battleId: string, s: RushState): { kingdom: Kingdom; granted: boolean; reward: EndlessResult } {
   const waves = s.wave, mul = stageRewardMul(STAGE_COUNT);
-  const food = Math.round((10 + 15 * waves) * mul), wood = Math.round((8 + 12 * waves) * mul), shards = Math.floor(waves / 5);
+  const milestones = k.rewarded.includes(battleId) ? [] : milestonesPassed(k.endlessBest, waves);
+  const food = Math.round((10 + 15 * waves) * mul), wood = Math.round((8 + 12 * waves) * mul);
+  const shards = Math.floor(waves / 5) + milestones.reduce((a, m) => a + m.shards, 0);
   const result = grantReward(k, battleId, { food, wood, won: false, shards });
   const newBest = result.granted && waves > k.endlessBest;
   if (newBest) result.kingdom.endlessBest = waves;
-  return { ...result, reward: { food, wood, waves, shards, best: Math.max(k.endlessBest, result.granted ? waves : 0), newBest } };
+  return { ...result, reward: { food, wood, waves, shards, best: Math.max(k.endlessBest, result.granted ? waves : 0), newBest, milestones: result.granted ? milestones : [] } };
 }
 
 // ---------- save format ----------
