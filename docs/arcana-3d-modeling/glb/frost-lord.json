@@ -1,0 +1,46 @@
+{
+ "id": "frost-lord",
+ "height": 5.0,
+ "blender": "5.2.3 LTS",
+ "joints": [
+  "armL",
+  "armR",
+  "body",
+  "foreL",
+  "foreR",
+  "fx:rune",
+  "head",
+  "root",
+  "sword"
+ ],
+ "poses": {
+  "march": {
+   "top_z": 4.944,
+   "min_z": -0.002
+  },
+  "channel": {
+   "top_z": 7.567,
+   "min_z": -0.04
+  },
+  "interrupt": {
+   "top_z": 5.095,
+   "min_z": -0.181
+  }
+ },
+ "stats": {
+  "objects": 9,
+  "meshes": 9,
+  "triangles": 15158
+ },
+ "sprite_camera": {
+  "elevation_deg": 23.5,
+  "yaw_deg": -35,
+  "ortho_scale": 8.529,
+  "frame": 640,
+  "ground_px": [
+   320,
+   550
+  ]
+ },
+ "glb_bytes": 427572
+}

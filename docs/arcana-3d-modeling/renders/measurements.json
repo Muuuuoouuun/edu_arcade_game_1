@@ -1,0 +1,194 @@
+{
+ "units": {
+  "bark-king": {
+   "march": {
+    "frame_bbox": [
+     159,
+     200,
+     578,
+     621
+    ],
+    "frame_margin_px": 19,
+    "board_px": [
+     143,
+     144
+    ],
+    "phone_px_h": 77,
+    "luminance_unit": 83,
+    "luminance_map": 159,
+    "contrast": 75
+   },
+   "rage": {
+    "frame_bbox": [
+     151,
+     138,
+     497,
+     588
+    ],
+    "frame_margin_px": 52,
+    "board_px": [
+     118,
+     154
+    ],
+    "phone_px_h": 82,
+    "luminance_unit": 77,
+    "luminance_map": 166,
+    "contrast": 89
+   },
+   "rush": {
+    "frame_bbox": [
+     187,
+     242,
+     625,
+     596
+    ],
+    "frame_margin_px": 15,
+    "board_px": [
+     150,
+     121
+    ],
+    "phone_px_h": 65,
+    "luminance_unit": 84,
+    "luminance_map": 161,
+    "contrast": 77
+   },
+   "battle_flank_height_ratio": 1.02,
+   "triangles": 17914,
+   "objects": 7,
+   "glb_bytes": 374528,
+   "pose_top_z": {
+    "march": 5.204,
+    "rage": 5.8,
+    "rush": 4.819
+   }
+  },
+  "frost-lord": {
+   "march": {
+    "frame_bbox": [
+     178,
+     226,
+     507,
+     576
+    ],
+    "frame_margin_px": 64,
+    "board_px": [
+     132,
+     140
+    ],
+    "phone_px_h": 75,
+    "luminance_unit": 101,
+    "luminance_map": 183,
+    "contrast": 82
+   },
+   "channel": {
+    "frame_bbox": [
+     156,
+     40,
+     471,
+     608
+    ],
+    "frame_margin_px": 32,
+    "board_px": [
+     126,
+     228
+    ],
+    "phone_px_h": 122,
+    "luminance_unit": 126,
+    "luminance_map": 195,
+    "contrast": 69
+   },
+   "interrupt": {
+    "frame_bbox": [
+     149,
+     203,
+     456,
+     576
+    ],
+    "frame_margin_px": 64,
+    "board_px": [
+     123,
+     149
+    ],
+    "phone_px_h": 80,
+    "luminance_unit": 103,
+    "luminance_map": 217,
+    "contrast": 114
+   },
+   "battle_flank_height_ratio": 1.03,
+   "triangles": 15158,
+   "objects": 9,
+   "glb_bytes": 427572,
+   "pose_top_z": {
+    "march": 4.944,
+    "channel": 7.567,
+    "interrupt": 5.095
+   }
+  }
+ },
+ "maps": {
+  "forest-s1": {
+   "theme": "forest",
+   "stage": 1,
+   "expanded": false,
+   "slots": 6,
+   "paths": 1,
+   "trees": 392,
+   "rocks": 46,
+   "tufts": 3200,
+   "flowers": 273,
+   "stats": {
+    "objects": 4272,
+    "meshes": 45,
+    "triangles": 648643
+   }
+  },
+  "forest-s4-gate": {
+   "theme": "forest",
+   "stage": 4,
+   "expanded": true,
+   "slots": 8,
+   "paths": 2,
+   "trees": 352,
+   "rocks": 46,
+   "tufts": 3200,
+   "flowers": 258,
+   "stats": {
+    "objects": 4213,
+    "meshes": 50,
+    "triangles": 661618
+   }
+  },
+  "snow-s5": {
+   "theme": "snow",
+   "stage": 5,
+   "expanded": false,
+   "slots": 6,
+   "paths": 1,
+   "trees": 355,
+   "rocks": 46,
+   "tufts": 700,
+   "flowers": 0,
+   "stats": {
+    "objects": 1269,
+    "meshes": 37,
+    "triangles": 405434
+   }
+  },
+  "snow-s8-gate": {
+   "theme": "snow",
+   "stage": 8,
+   "expanded": true,
+   "slots": 8,
+   "paths": 2,
+   "trees": 321,
+   "rocks": 46,
+   "tufts": 700,
+   "flowers": 0,
+   "stats": {
+    "objects": 1262,
+    "meshes": 41,
+    "triangles": 389290
+   }
+  }
+ }
+}

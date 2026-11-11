@@ -1,0 +1,44 @@
+{
+ "id": "bark-king",
+ "height": 5.0,
+ "blender": "5.2.3 LTS",
+ "joints": [
+  "armL",
+  "armR",
+  "body",
+  "foreL",
+  "foreR",
+  "head",
+  "root"
+ ],
+ "poses": {
+  "march": {
+   "top_z": 5.204,
+   "min_z": -0.129
+  },
+  "rage": {
+   "top_z": 5.8,
+   "min_z": -0.004
+  },
+  "rush": {
+   "top_z": 4.819,
+   "min_z": -0.022
+  }
+ },
+ "stats": {
+  "objects": 7,
+  "meshes": 7,
+  "triangles": 17914
+ },
+ "sprite_camera": {
+  "elevation_deg": 23.5,
+  "yaw_deg": -35,
+  "ortho_scale": 8.529,
+  "frame": 640,
+  "ground_px": [
+   320,
+   550
+  ]
+ },
+ "glb_bytes": 374528
+}
