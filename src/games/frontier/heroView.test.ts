@@ -1,4 +1,4 @@
-import test from'node:test';import assert from'node:assert/strict';import{readFileSync}from'node:fs';import{GLTFLoader}from'three/addons/loaders/GLTFLoader.js';import{AnimationClip,Group,Mesh,Vector3,Box3}from'three';import{HeroView}from'./heroView.ts';import{actFrontier,createFrontier}from'./engine.ts';import{heroRingMatrix}from'./heroEffects.ts';import{heightAt}from'./engine.ts';import{hammerPoint}from'./heroAttack.ts';import{HERO_MODEL}from'./heroModel.ts';
+import test from'node:test';import assert from'node:assert/strict';import{readFileSync}from'node:fs';import{GLTFLoader}from'three/addons/loaders/GLTFLoader.js';import{AnimationClip,Group,Mesh,Vector3,Box3}from'three';import{HeroView}from'./heroView.ts';import{actFrontier,createFrontier,stepFrontier}from'./engine.ts';import{heroRingMatrix}from'./heroEffects.ts';import{heightAt}from'./engine.ts';import{hammerPoint}from'./heroAttack.ts';import{HERO_MODEL}from'./heroModel.ts';
 const parse=async(name:string)=>{const b=readFileSync(new URL(`../../../public/defense/models/${name}.glb`,import.meta.url));return new GLTFLoader().parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');};
 const walk=await parse('kar-barbarian-walk'),slam=await parse('kar-barbarian'),entry=await parse('kar-entry'),reset=await parse('kar-reset');
 const setup=()=>{const model=walk.scene.clone(true),view=new HeroView(model,walk.animations[0]);view.setSlam(slam.animations[0]);view.setEntries(entry.animations);const root=new Group();root.add(model);let s=actFrontier(createFrontier('solo'),{type:'start'});s=actFrontier(s,{type:'skill'});return{view,root,s};};
@@ -126,6 +126,40 @@ test('leaning dash preserves boot clearance on flat ground, a ramp and the bridg
  for(const [x,z] of [[-14,14],[-14,-7],[6,0]])for(let d=0;d<8;d++)for(const progress of [.25,.5,.75]){hero.x=x;hero.z=z;hero.heading=d*Math.PI/4;hero.walkDistance=progress*5;hero.dashMotion={from:{x,z},to:{x:x+1,z},at:0,progress,duration:.2};root.position.set(x,heightAt(x,z),z);root.rotation.set(.16*Math.sin(Math.PI*progress),hero.heading,0,'YXZ');view.update(hero,false,heightAt);root.updateMatrixWorld(true);
   for(const name of ['left-foot','right-foot'])root.getObjectByName(name)!.traverse(o=>{if(o instanceof Mesh){const v=o.geometry.getAttribute('position');for(let i=0;i<v.count;i++){p.fromBufferAttribute(v,i).applyMatrix4(o.matrixWorld);assert.ok(p.y-heightAt(p.x,p.z)>-.0001,`${name} penetrates terrain`);}}});
   const once=matrices(root);view.update(hero,false,heightAt);assert.ok(error(once,matrices(root))<1e-6,'paused sample does not accumulate');
+ }
+ view.dispose();
+});
+
+test('dash brace is bounded, reversible, deterministic and keeps both hands on the hammer',()=>{
+ const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!);view.setSlam(compact.animations.find(c=>c.name==='kar-slam')!);const hero=createFrontier('solo').hero;hero.moving=true;hero.walkDistance=.35;
+ for(let direction=0;direction<8;direction++)for(let phase=0;phase<16;phase++){
+  hero.walkDistance=phase*.1;root.rotation.y=direction*Math.PI/4;hero.dashMotion=undefined;view.update(hero,false,()=>0);const walking=matrices(root);
+  for(const progress of [0,.1,.25,.5,.75,.9,1]){hero.dashMotion={from:{x:0,z:0},to:{x:0,z:5},at:0,progress,duration:.2};view.update(hero,false,()=>0);root.updateMatrixWorld(true);const pose=matrices(root);view.update(hero,false,()=>0);assert.ok(error(pose,matrices(root))<1e-6,'paused frame is deterministic');
+   if(progress===0||progress===1)assert.ok(error(walking,pose)<1e-6,'brace joins continuous walking at both ends');
+   for(const [i,side] of ['left','right'].entries()){const arm=root.getObjectByName(side+'-forearm')!,grip=root.getObjectByName(i===0?'upper-grip':'lower-grip')!;const drift=new Vector3(0,1,0).applyMatrix4(arm.matrixWorld).distanceTo(grip.getWorldPosition(new Vector3()));assert.ok(drift<.02,`grip drift ${side} ${progress}: ${drift}`);}
+  }
+  hero.dashMotion={from:{x:0,z:0},to:{x:0,z:5},at:0,progress:.5,duration:.2};view.update(hero,true,()=>0);const reduced=matrices(root);hero.dashMotion=undefined;view.update(hero,true,()=>0);assert.ok(error(reduced,matrices(root))<1e-6,'reduced motion uses the unchanged pose');
+ }
+ view.dispose();
+});
+
+
+test('actual dash command starts at the prior walking or standing pose',()=>{
+ for(const moving of [false,true]){
+  const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!);view.setSlam(compact.animations.find(c=>c.name==='kar-slam')!);let s=actFrontier(createFrontier('solo'),{type:'start'});
+  if(moving)for(let i=0;i<6;i++)s=stepFrontier(s,.05,{x:1,z:0});
+  root.position.set(s.hero.x,0,s.hero.z);root.rotation.y=s.hero.heading;view.update(s.hero,false,()=>0);const before=matrices(root);
+  s=actFrontier(s,{type:'dash'});assert.equal(s.hero.dashMotion?.fromMoving,moving);view.update(s.hero,false,()=>0);assert.ok(error(before,matrices(root))<1e-6,`dash start from ${moving?'walk':'idle'} must not pop`);view.dispose();
+ }
+});
+
+test('blended dash brace keeps both boots above the actual terrain in every heading',()=>{
+ const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!);view.setSlam(compact.animations.find(c=>c.name==='kar-slam')!);const hero=createFrontier('solo').hero,p=new Vector3();hero.moving=true;
+ for(const [x,z] of [[-14,14],[-14,-7],[6,0]])for(let d=0;d<8;d++)for(let phase=0;phase<4;phase++)for(const progress of [.1,.25,.5,.75,.9]){
+  Object.assign(hero,{x,z,heading:d*Math.PI/4,walkDistance:phase*.4,dashMotion:{from:{x,z},to:{x:x+1,z},at:0,progress,duration:.2,fromMoving:true}});root.position.set(x,heightAt(x,z),z);root.rotation.set(.16*Math.sin(Math.PI*progress),hero.heading,0,'YXZ');view.update(hero,false,heightAt);root.updateMatrixWorld(true);
+  let lowest=Infinity;for(const name of ['left-foot','right-foot'])root.getObjectByName(name)!.traverse(o=>{if(o instanceof Mesh){const v=o.geometry.getAttribute('position');for(let i=0;i<v.count;i++){p.fromBufferAttribute(v,i).applyMatrix4(o.matrixWorld);const clearance=p.y-heightAt(p.x,p.z);lowest=Math.min(lowest,clearance);assert.ok(clearance>-.0001,`${name}, heading ${d}, phase ${phase}, progress ${progress}`);}}});
+  assert.ok(lowest<.0001,'at least one boot touches the ground during the brace');
+  for(const [i,side] of ['left','right'].entries()){const arm=root.getObjectByName(side+'-forearm')!,grip=root.getObjectByName(i===0?'upper-grip':'lower-grip')!;assert.ok(new Vector3(0,1,0).applyMatrix4(arm.matrixWorld).distanceTo(grip.getWorldPosition(new Vector3()))<.02);}
  }
  view.dispose();
 });
