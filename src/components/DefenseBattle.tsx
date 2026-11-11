@@ -102,8 +102,8 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
 
   return <main className={`battle-page battle-${stage.region} ${aimingDash ? 'battle-aiming' : ''} ${surging ? 'battle-surge' : ''} ${nudge ? `battle-nudge-${nudge}` : ''} ${largeText ? 'battle-large-text' : ''}`} id="main" aria-label="아르카나 수비대 전투" data-phase={state.phase} data-paused={state.paused} data-aiming={aimingDash} data-dash-cooldown={state.dashCooldown.toFixed(2)} data-hero-x={state.heroPosition.x.toFixed(1)} data-hero-y={state.heroPosition.y.toFixed(1)}>
     <span className="battle-font-probe" ref={fontProbe} aria-hidden="true"/>
+    <div className="battle-accessible-status" role="status" aria-live="polite" aria-atomic="true">{stageLabel(state.stage)} · 마을 체력 {state.hp}{stage.expanded ? ` · 외곽 마을 체력 ${state.outpostHp}` : ''} · 전투 코인 {state.coins} · 웨이브 {state.wave} / 4</div>
     <header className="battle-hud">
-      <button className="battle-stage" onClick={() => onPanel({ kind: 'party' })} disabled={terminal || state.paused || state.phase === 'promotion'} aria-label="원정 정보와 전술 메뉴">{stageLabel(state.stage)}</button>
       <span key={`m${hitTown.main}`} className={`battle-health ${state.hp <= 5 ? 'danger' : ''} ${hitTown.main ? 'is-hit' : ''}`} aria-label={`마을 체력 ${state.hp}`}><small>마을</small><Heart/><b>{state.hp}</b></span>
       {stage.expanded ? <span key={`o${hitTown.outpost}`} className={`battle-health ${state.outpostHp <= 4 ? 'danger' : ''} ${hitTown.outpost ? 'is-hit' : ''}`} aria-label={`외곽 마을 체력 ${state.outpostHp}`}><small>외곽</small><Heart/><b>{state.outpostHp}</b></span> : null}
       <span className="battle-coins" aria-label={`전투 코인 ${state.coins}`}><Coin/><b>{state.coins}</b></span>
