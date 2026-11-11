@@ -1,5 +1,5 @@
-import test from 'node:test';import assert from 'node:assert/strict';import{readFileSync}from'node:fs';import{GLTFLoader}from'three/addons/loaders/GLTFLoader.js';import{Box3,InstancedMesh,Matrix4,Mesh,PerspectiveCamera,Vector3}from'three';
-import{compactWolf,WolfView,WOLF_STRIDE}from'./wolfView.ts';import{WoodBatch}from'./woodView.ts';import{heightAt,type Enemy}from'./engine.ts';import{WOOD_ATTACK}from'./woodAttack.ts';import{shockwaveSurface}from'./effectsView.ts';
+import test from 'node:test';import assert from 'node:assert/strict';import{readFileSync}from'node:fs';import{GLTFLoader}from'three/addons/loaders/GLTFLoader.js';import{Box3,InstancedMesh,Matrix4,Mesh,PerspectiveCamera,Quaternion,Vector3}from'three';
+import{compactWolf,WolfView,WOLF_STRIDE,wolfBitePose}from'./wolfView.ts';import{WoodBatch}from'./woodView.ts';import{actFrontier,createFrontier,heightAt,stepFrontier,type Enemy}from'./engine.ts';import{WOOD_ATTACK}from'./woodAttack.ts';import{shockwaveSurface}from'./effectsView.ts';
 const read=async()=>{const b=readFileSync(new URL('../../../public/defense/models/frost-wolf-stride.glb',import.meta.url));return new GLTFLoader().parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');};
 const enemy=(i=0):Enemy=>({id:i,x:-14,z:-7,hp:40,maxHp:40,cooldown:0,path:0,heading:0,moving:true,walkDistance:0});
 const matrices=(v:WolfView)=>v.surfaces.map(m=>m.matrixWorld.clone());
@@ -19,7 +19,43 @@ test('wolf four paws follow travel and ground on flat land, ramp and bridge with
 test('wolves have independent distance-sampled gait, stable reduced motion and contact-timed bite',async()=>{
  const g=compactWolf(await read()),v=new WolfView(g),e=enemy();v.update(e,false);const start=matrices(v);v.update({...e,walkDistance:WOLF_STRIDE*.25},false);assert.ok(v.surfaces.some((m,i)=>m.matrixWorld.elements.some((x,j)=>Math.abs(x-start[i].elements[j])>.01)),'walk phase must change');
  v.update(e,true);const reduced=matrices(v);v.update({...e,walkDistance:123},true);assert.ok(v.surfaces.every((m,i)=>m.matrixWorld.elements.every((x,j)=>Math.abs(x-reduced[i].elements[j])<1e-6)));
- const attack={target:'hero' as const,heading:0,hit:false,entryDistance:0,time:0};v.update({...e,attack},false);const before=v.model.position.z;v.update({...e,attack:{...attack,time:WOOD_ATTACK.contact,hit:true}},false);assert.ok(v.model.position.z>before+.4);v.update({...e,attack:{...attack,time:WOOD_ATTACK.duration,hit:true}},false);assert.ok(Math.abs(v.model.position.z-before)<1e-6);v.update({...e,attack:{...attack,time:WOOD_ATTACK.contact,hit:true}},true);assert.equal(v.model.position.z,0);v.dispose();
+ const attack={target:'hero' as const,heading:0,hit:false,entryDistance:0,time:0};v.update({...e,attack:{...attack,time:WOOD_ATTACK.contact,hit:true}},false);const contact=v.model.getObjectByName('head')!.getWorldPosition(new Vector3());v.update({...e,attack:{...attack,time:WOOD_ATTACK.duration,hit:true}},false);const recovered=v.model.getObjectByName('head')!.getWorldPosition(new Vector3());assert.ok(contact.z>recovered.z+.30);v.update({...e,attack:{...attack,time:WOOD_ATTACK.contact,hit:true}},true);assert.equal(v.model.position.z,0);v.dispose();
+});
+test('bite opens before contact, closes at impact and returns to the starting pose',async()=>{
+ const g=compactWolf(await read()),v=new WolfView(g),e=enemy(),attack={target:'hero' as const,heading:0,hit:false,entryDistance:0,time:0};
+ assert.ok(Object.values(wolfBitePose(0)).every(x=>x===0));assert.deepEqual(wolfBitePose(WOOD_ATTACK.duration),wolfBitePose(0));
+ v.update({...e,moving:false,attack},false);const neutral=v.model.getObjectByName('jaw')!.rotation.z;
+ v.update({...e,moving:false,attack:{...attack,time:.14}},false);const open=v.model.getObjectByName('jaw')!.rotation.z;
+ v.update({...e,moving:false,attack:{...attack,time:WOOD_ATTACK.contact,hit:true}},false);const closed=v.model.getObjectByName('jaw')!.rotation.z;
+ assert.ok(open<neutral-.3,'jaw visibly opens during the windup');assert.ok(closed>open+.3,'jaw closes at actual damage contact');v.dispose();
+});
+test('bite keeps the sampled stance connected and paws on visible terrain at eight headings',async()=>{
+ const g=compactWolf(await read()),a=new WolfView(g),b=new WolfView(g),p=new Vector3(),names=['foot-near-front','foot-far-front','foot-near-back','foot-far-back'];let maxDrift=0;
+ for(const [x,z] of [[-14,14],[-14,-7],[6,0],[6,2.7]])for(let d=0;d<8;d++)for(let phase=0;phase<8;phase++){
+  const e={...enemy(),x,z,heading:d*Math.PI/4,walkDistance:WOLF_STRIDE*phase/8},attack={target:'hero' as const,heading:e.heading,hit:false,entryDistance:e.walkDistance,time:0};
+  a.update(e,false);b.update({...e,moving:false,attack},false);for(let i=0;i<a.surfaces.length;i++)assert.ok(a.surfaces[i].matrixWorld.elements.every((x,j)=>Math.abs(x-b.surfaces[i].matrixWorld.elements[j])<1e-5),'walking-to-bite entry popped');
+  let anchor:Vector3[]=[];for(let i=0;i<=30;i++){
+   const time=i*.02;b.update({...e,moving:false,attack:{...attack,time,hit:time>=WOOD_ATTACK.contact}},false);const points=names.map(n=>b.model.getObjectByName(n)!.getWorldPosition(new Vector3()));if(i===9)anchor=points;
+   if(i>=9)for(let j=0;j<4;j++)maxDrift=Math.max(maxDrift,points[j].distanceTo(anchor[j]));
+   for(const m of b.surfaces.filter(m=>m.name.startsWith('wolf-surface-foot-'))){const vertices=m.geometry.attributes.position;for(let j=0;j<vertices.count;j++){p.fromBufferAttribute(vertices,j).applyMatrix4(m.matrixWorld);assert.ok(p.y-shockwaveSurface(p.x,p.z)>-.0001,'paw crossed the visible surface');}}
+  }
+ }
+ assert.ok(maxDrift<.04,`planted paw drift ${maxDrift}`);a.dispose();b.dispose();
+});
+test('bite has no knee flip at 5ms intervals across terrain, direction and gait phase',async()=>{
+ const g=compactWolf(await read()),v=new WolfView(g),names=['leg-near-front','leg-far-front','leg-near-back','leg-far-back','knee-near-front','knee-far-front','knee-near-back','knee-far-back'];let largest=0;
+ for(const [x,z] of [[-14,14],[-14,-7],[6,0],[6,2.7]])for(let d=0;d<8;d++)for(let phase=0;phase<8;phase++){
+  const e={...enemy(),x,z,heading:d*Math.PI/4,walkDistance:WOLF_STRIDE*phase/8},attack={target:'hero' as const,heading:e.heading,hit:false,entryDistance:e.walkDistance,time:0};let previous:Quaternion[]|undefined;
+  for(let i=0;i<=120;i++){const time=i*.005;v.update({...e,moving:false,attack:{...attack,time,hit:time>=WOOD_ATTACK.contact}},false);const q=names.map(n=>v.model.getObjectByName(n)!.getWorldQuaternion(new Quaternion()));if(previous)for(let j=0;j<q.length;j++)largest=Math.max(largest,q[j].angleTo(previous[j]));previous=q;}
+ }
+ assert.ok(largest<.05,`knee changed ${largest} radians in 5ms`);v.dispose();
+});
+test('bite follows simulation pause and speed without moving damage contact',async()=>{
+ const g=compactWolf(await read()),v=new WolfView(g);let s=actFrontier(createFrontier('solo'),{type:'start'});s.enemies=[{...enemy(1),x:s.hero.x,z:s.hero.z-1.6,moving:false}];
+ s=stepFrontier(s,.001);assert.ok(s.enemies[0].attack);for(let i=0;i<3;i++)s=stepFrontier(s,.04);assert.equal(s.hero.hp,100);
+ const paused=actFrontier(s,{type:'pause'});v.update(paused.enemies[0],false,paused.time);const snapshot=matrices(v);const still=stepFrontier(paused,.05);assert.equal(still,paused);v.update(still.enemies[0],false,still.time);assert.ok(v.surfaces.every((m,i)=>m.matrixWorld.elements.every((x,j)=>Math.abs(x-snapshot[i].elements[j])<1e-6)));
+ const normal=stepFrontier(stepFrontier(s,.04),.04),fast=stepFrontier(actFrontier(s,{type:'speed'}),.04);v.update(normal.enemies[0],false,normal.time);const reference=matrices(v);v.update(fast.enemies[0],false,fast.time);assert.ok(v.surfaces.every((m,i)=>m.matrixWorld.elements.every((x,j)=>Math.abs(x-reference[i].elements[j])<1e-5)));assert.equal(normal.hero.hp,fast.hero.hp);
+ while(!s.enemies[0].attack!.hit)s=stepFrontier(s,.04);assert.equal(s.hero.hp,92);v.dispose();
 });
 test('stopped wolves settle every gait phase before the attack and never accumulate corrections',async()=>{
  const g=compactWolf(await read()),v=new WolfView(g),e=enemy();let settled:ReturnType<typeof matrices>|undefined;
