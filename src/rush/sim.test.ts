@@ -413,3 +413,19 @@ test('aim offsets (cycle 40): a hand-thrown snowball lands as far as aimed, with
   const bolts = (offset: { x: number; z: number }) => { const s = createRush(1); stepRush(s, { fire: offset }); return s.shots.filter(x => x.owner === 'hero').map(x => [x.vx.toFixed(6), x.vz.toFixed(6)].join()); };
   assert.deepEqual(bolts({ x: 0, z: -1 }), bolts({ x: 0, z: -7.5 }));
 });
+
+test('endless challenge (cycle 46): the five waves loop, each lap is harder, and it never ends in a win', async () => {
+  const { stageDifficulty } = await import('./stages.ts');
+  const { ENDLESS_LAP, WAVE_COUNT } = await import('./sim.ts');
+  const s = createRush(1, NO_MODS, { ...stageDifficulty(10), endless: true });
+  s.town.hp = s.town.maxHp = 1e9; // hold forever: only the wave loop is under test
+  const hp0 = s.diff.enemyHp, n0 = s.diff.enemyCount;
+  while (s.wave < WAVE_COUNT + 1 && s.tick < 60 * 60 * 30) stepRush(s, guardBot(s));
+  assert.ok(s.wave >= WAVE_COUNT + 1, `past the fifth wave (wave index ${s.wave})`);
+  assert.notEqual(s.phase, 'won');
+  assert.ok(Math.abs(s.diff.enemyHp - hp0 * ENDLESS_LAP.enemyHp) < 1e-9 && Math.abs(s.diff.enemyCount - n0 * ENDLESS_LAP.enemyCount) < 1e-9, 'one lap harder');
+  // A stage battle still ends in a win after five waves.
+  const t = playOut(1, guardBot);
+  assert.equal(t.phase, 'won');
+  assert.equal(t.wave, WAVE_COUNT - 1);
+});

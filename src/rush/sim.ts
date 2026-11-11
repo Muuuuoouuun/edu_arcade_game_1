@@ -77,7 +77,15 @@ export interface RushMods {
 export const NO_MODS: RushMods = { damage: 1, towerCost: 1, townHp: 1, heroHp: 1, forge: 0 };
 /** Stage difficulty: multipliers on enemy health, group sizes (bosses excluded) and damage. All 1 = the base game. */
 /** stage: groups with a minStage above it do not appear (absent = stage 1). */
-export interface Difficulty { enemyHp: number; enemyCount: number; enemyDamage: number; stage?: number }
+export interface Difficulty {
+  enemyHp: number; enemyCount: number; enemyDamage: number; stage?: number;
+  /** Endless challenge (cycle 46): the five waves repeat with no victory, harder every lap. */
+  endless?: boolean;
+}
+/** Endless: each completed lap of five waves multiplies enemy health, numbers and damage by these. */
+export const ENDLESS_LAP = { enemyHp: 1.35, enemyCount: 1.2, enemyDamage: 1.15 } as const;
+/** The wave plan for the current wave (endless runs reuse the five in a loop). */
+const waveDef = (s: RushState) => WAVES[s.wave % WAVE_COUNT];
 export const BASE_DIFFICULTY: Difficulty = { enemyHp: 1, enemyCount: 1, enemyDamage: 1 };
 
 export interface RushState {
@@ -260,13 +268,18 @@ export function stepRush(s: RushState, cmd: Command = {}): RushState {
     s.phase = 'lost';
     s.events.push({ type: 'lost' });
   } else if (s.phase === 'wave' && waveSpawned(s) && s.enemies.length === 0) {
-    if (s.wave >= WAVE_COUNT - 1) {
+    if (s.wave >= WAVE_COUNT - 1 && !s.diff.endless) {
       s.phase = 'won';
       s.events.push({ type: 'won' });
     } else {
       addGold(s, ECONOMY.waveBonus);
       s.events.push({ type: 'waveClear', wave: s.wave, bonus: ECONOMY.waveBonus });
       s.wave++;
+      // Endless: a new lap of the five waves starts harder.
+      if (s.diff.endless && s.wave % WAVE_COUNT === 0) {
+        const d = s.diff;
+        s.diff = { ...d, enemyHp: d.enemyHp * ENDLESS_LAP.enemyHp, enemyCount: d.enemyCount * ENDLESS_LAP.enemyCount, enemyDamage: d.enemyDamage * ENDLESS_LAP.enemyDamage };
+      }
       s.phase = 'prep';
       s.prepT = ECONOMY.prepTime;
     }
@@ -283,17 +296,17 @@ function addGold(s: RushState, value: number) {
 function beginWave(s: RushState) {
   s.phase = 'wave';
   s.prepT = 0;
-  s.groups = WAVES[s.wave].map(g => ({ spawned: 0, timer: g.delay }));
+  s.groups = waveDef(s).map(g => ({ spawned: 0, timer: g.delay }));
   s.events.push({ type: 'waveStart', wave: s.wave });
 }
 function waveSpawned(s: RushState) {
-  return WAVES[s.wave].every((g, i) => (s.groups[i]?.spawned ?? 0) >= groupCount(s, g));
+  return waveDef(s).every((g, i) => (s.groups[i]?.spawned ?? 0) >= groupCount(s, g));
 }
 /** Enemies in a spawn group after stage scaling. The boss stays a single boss. */
 export const groupCount = (s: RushState, g: { kind: EnemyKind; count: number; minStage?: number }) =>
   (g.minStage ?? 1) > (s.diff.stage ?? 1) ? 0 : g.kind === 'boss' ? g.count : Math.max(1, Math.round(g.count * s.diff.enemyCount));
 function spawn(s: RushState) {
-  WAVES[s.wave].forEach((g, i) => {
+  waveDef(s).forEach((g, i) => {
     const p = s.groups[i];
     const total = groupCount(s, g);
     if (!p || p.spawned >= total) return;

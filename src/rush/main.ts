@@ -7,7 +7,7 @@ import { RushView } from './render.ts';
 import { RushInput } from './input.ts';
 import { playCombatSound, unlockAudio, type CombatSoundKind } from '../lib/sound.ts';
 import { playHaptic } from '../lib/haptic.ts';
-import { collect, kingdomMods, settleBattle } from './kingdom.ts';
+import { collect, ENDLESS_STAGE, kingdomMods, settleBattle, settleEndless } from './kingdom.ts';
 import { stageDifficulty } from './stages.ts';
 import { advanceClock, createClock, hitStopFor, tryStop } from './clock.ts';
 import { loadKingdom, saveKingdom, today, TownScreen } from './town.ts';
@@ -130,7 +130,11 @@ function feedback(events: RushEvent[]) {
     else if (ev.type === 'heroDown') { playHaptic('breach', true); toast(`쓰러졌다! ${HEROES[state.hero.kind].respawn}초 뒤 마을에서 복귀`, 'bad'); }
     else if (ev.type === 'superReady') toast('필살기 준비 완료!', 'super');
     else if (ev.type === 'roar') { playHaptic('surge', true); if (!bossCallout()) toast('보스가 부하를 부른다!', 'bad'); }
-    else if (ev.type === 'waveStart') { playHaptic('surge', true); toast(ev.wave === WAVE_COUNT - 1 ? `마지막 웨이브 · 보스 출현!` : `웨이브 ${ev.wave + 1} 시작`, ev.wave === WAVE_COUNT - 1 ? 'bad' : ''); }
+    else if (ev.type === 'waveStart') {
+      playHaptic('surge', true);
+      const boss = ev.wave % WAVE_COUNT === WAVE_COUNT - 1;
+      toast(boss ? (state.diff.endless ? `웨이브 ${ev.wave + 1} · 보스 출현!` : `마지막 웨이브 · 보스 출현!`) : `웨이브 ${ev.wave + 1} 시작`, boss ? 'bad' : '');
+    }
     else if (ev.type === 'waveClear') toast(`웨이브 ${ev.wave + 1} 방어 성공 · +${ev.bonus}G`, 'good');
     else if (ev.type === 'build') toast(ev.level === 0 ? '궁수탑 건설!' : `${ev.branch ? BRANCH_NAME[ev.branch] : '궁수'}탑 Lv${ev.level + 1}`, 'good');
     else if (ev.type === 'won' || ev.type === 'lost') showResult();
@@ -187,8 +191,8 @@ function seeThroughHud() {
 
 function updateHud() {
   const s = state;
-  setText('wave', hud.wave, `웨이브 ${Math.min(s.wave + 1, WAVE_COUNT)}/${WAVE_COUNT}`);
-  const where = mode === 'demo' ? '시연' : `스테이지 ${stage}`;
+  setText('wave', hud.wave, s.diff.endless ? `웨이브 ${s.wave + 1}` : `웨이브 ${Math.min(s.wave + 1, WAVE_COUNT)}/${WAVE_COUNT}`);
+  const where = mode === 'demo' ? '시연' : s.diff.endless ? '끝없는 도전' : `스테이지 ${stage}`;
   setText('waveSub', hud.waveSub, s.phase === 'prep' ? `${where} · 준비 ${Math.ceil(s.prepT)}초` : s.phase === 'wave' ? `${where} · 남은 적 ${s.enemies.length}` : where);
   setStyle('townFill', hud.townFill, 'transform', `scaleX(${s.town.hp / s.town.maxHp})`);
   setText('townHp', hud.townHp, String(Math.ceil(s.town.hp)));
@@ -241,7 +245,9 @@ function start(nextMode: 'play' | 'demo') {
   // Permanent kingdom upgrades shape real battles; the demo always shows the base game.
   stage = nextMode === 'play' ? town.stage : 1;
   const kingdom = loadKingdom();
-  state = createRush(seed, nextMode === 'play' ? kingdomMods(kingdom) : undefined, stageDifficulty(stage), nextMode === 'play' ? kingdom.hero : 'ranger');
+  // Endless challenge (cycle 46): stage-10 difficulty, the five waves on a loop.
+  const diff = stage === ENDLESS_STAGE ? { ...stageDifficulty(10), endless: true } : stageDifficulty(stage);
+  state = createRush(seed, nextMode === 'play' ? kingdomMods(kingdom) : undefined, diff, nextMode === 'play' ? kingdom.hero : 'ranger');
   battleId = `${Date.now().toString(36)}-${seed}`;
   mode = nextMode;
   paused = false;
@@ -256,6 +262,7 @@ function showResult() {
   if (mode === 'demo') { window.setTimeout(() => { if (mode === 'demo') start('demo'); }, 2500); return; }
   mode = 'result';
   input.enabled = false;
+  if (s.diff.endless) { showEndlessResult(); return; }
   $('result-title').textContent = won ? `스테이지 ${stage} 방어 성공!` : `스테이지 ${stage} 마을 함락`;
   $('screen-result').classList.toggle('won', won);
   const { kingdom, granted, reward } = settleBattle(collect(loadKingdom(), Date.now()), battleId, s, stage, today());
@@ -275,6 +282,22 @@ function showResult() {
     ['도달 웨이브', `${s.wave + 1}/${WAVE_COUNT}`], ['전투 시간', `${Math.floor(s.t / 60)}:${String(Math.floor(s.t % 60)).padStart(2, '0')}`],
     ['처치', `${s.stats.kills}`], ['명중률', `${accuracy}%`], ['필살기', `${s.stats.supers}회`], ['마을 체력', `${Math.ceil(s.town.hp)}`],
     ['획득 골드', `${s.stats.goldEarned}G`], ['궁수탑', towers],
+  ].map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  window.setTimeout(() => showScreen('result'), 700);
+}
+/** Endless challenge result (cycle 46): waves held, best record, rewards. */
+function showEndlessResult() {
+  const s = state, { kingdom, granted, reward } = settleEndless(collect(loadKingdom(), Date.now()), battleId, s);
+  $('result-title').textContent = `끝없는 도전 · 웨이브 ${reward.waves}`;
+  $('screen-result').classList.remove('won');
+  $('result-stars').innerHTML = reward.newBest ? `<small class="best">새 최고 기록! ${reward.waves}웨이브</small>` : `<small>최고 기록 ${reward.best}웨이브</small>`;
+  const saved = granted && saveKingdom(kingdom), rewardEl = $('result-reward');
+  rewardEl.hidden = !granted;
+  rewardEl.innerHTML = `<i class="res-ico food"></i>식량 +${reward.food} <i class="res-ico wood"></i>목재 +${reward.wood}${reward.shards ? ` <i class="res-ico shard"></i>조각 +${reward.shards}` : ''}${saved ? '' : ' <small>(저장 실패: 이 기기에서 저장 공간을 쓸 수 없음)</small>'}`;
+  lastReward = granted ? `끝없는 도전 ${reward.waves}웨이브: 식량 +${reward.food} · 목재 +${reward.wood}${reward.shards ? ` · 영웅 조각 +${reward.shards}` : ''}` : '';
+  $('result-stats').innerHTML = [
+    ['막아 낸 웨이브', `${reward.waves}`], ['전투 시간', `${Math.floor(s.t / 60)}:${String(Math.floor(s.t % 60)).padStart(2, '0')}`],
+    ['처치', `${s.stats.kills}`], ['필살기', `${s.stats.supers}회`], ['획득 골드', `${s.stats.goldEarned}G`], ['최고 기록', `${reward.best}웨이브`],
   ].map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   window.setTimeout(() => showScreen('result'), 700);
 }

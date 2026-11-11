@@ -359,3 +359,8 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .hero-ups .town-up { grid-column: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .town-up.talent:not(:disabled) { background: linear-gradient(#e2ccff 0 50%, #a879ff 50%); }
 .town-info .talent-line { display: block; color: #d9c6ff; }
+
+/* Endless challenge (cycle 46) */
+.stage-chip.endless b { font-size: 18px; line-height: 1; }
+.stage-chip.endless:not(:disabled) { background: linear-gradient(#e2ccff, #a879ff); }
+.result-stars .best { color: #ffe58a; font-size: 15px; }

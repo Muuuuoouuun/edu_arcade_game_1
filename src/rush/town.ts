@@ -3,7 +3,7 @@ import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
 import { FORGE, HEROES, TALENT_MAX, TALENTS, type HeroKind } from './data.ts';
 import {
-  CASTLE_MAX, DAILY_WIN, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canLearnTalent, canTrain, learnTalent, talentCost, dailyReady, dayIndex, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
+  CASTLE_MAX, DAILY_WIN, ENDLESS_STAGE, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canLearnTalent, canTrain, learnTalent, talentCost, dailyReady, dayIndex, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
   serializeKingdom, storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 
@@ -112,7 +112,9 @@ export class TownScreen {
     });
     const strip = this.$('stage-strip');
     strip.innerHTML = Array.from({ length: STAGE_COUNT }, (_, i) =>
-      `<button class="stage-chip" role="radio" data-stage="${i + 1}"><b>${i + 1}</b><span data-stars></span></button>`).join('');
+      `<button class="stage-chip" role="radio" data-stage="${i + 1}"><b>${i + 1}</b><span data-stars></span></button>`).join('') +
+      // Endless challenge (cycle 46): opens with a star on the last stage; shows the best record instead of stars.
+      `<button class="stage-chip endless" role="radio" data-stage="${ENDLESS_STAGE}"><b>∞</b><span data-stars></span></button>`;
     strip.addEventListener('click', e => {
       const n = Number((e.target as HTMLElement).closest<HTMLElement>('[data-stage]')?.dataset.stage);
       if (n && stageUnlocked(this.kingdom, n)) { this.stage = n; this.render(); }
@@ -174,13 +176,19 @@ export class TownScreen {
       const n = Number(chip.dataset.stage), open = stageUnlocked(k, n), stars = k.stars[n - 1];
       chip.disabled = !open;
       chip.setAttribute('aria-checked', String(n === this.stage));
+      if (n === ENDLESS_STAGE) {
+        chip.setAttribute('aria-label', open ? `끝없는 도전, 최고 ${k.endlessBest}웨이브` : '끝없는 도전, 스테이지 10에서 별을 얻으면 열림');
+        chip.querySelector('[data-stars]')!.textContent = open ? `최고 ${k.endlessBest}` : '잠김';
+        return;
+      }
       chip.setAttribute('aria-label', open ? `스테이지 ${n}, 별 ${stars}개` : `스테이지 ${n}, 잠김`);
       chip.querySelector('[data-stars]')!.textContent = open ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '잠김';
     });
     // Daily first win (cycle 32): a small badge on the battle button while today's bonus is waiting.
     const daily = dailyReady(k, today(now));
-    this.$('btn-battle').innerHTML = `스테이지 ${this.stage} 출전${daily ? `<span class="daily-badge">첫 승리 <i class="res-ico shard"></i>+${DAILY_WIN.shards}</span>` : ''}`;
-    this.$('btn-battle').setAttribute('aria-label', `스테이지 ${this.stage} 출전${daily ? ', 오늘의 첫 승리 보상 대기 중' : ''}`);
+    const label = this.stage === ENDLESS_STAGE ? '끝없는 도전' : `스테이지 ${this.stage}`;
+    this.$('btn-battle').innerHTML = `${label} 출전${daily ? `<span class="daily-badge">첫 승리 <i class="res-ico shard"></i>+${DAILY_WIN.shards}</span>` : ''}`;
+    this.$('btn-battle').setAttribute('aria-label', `${label} 출전${daily ? ', 오늘의 첫 승리 보상 대기 중' : ''}`);
     this.$('hero-name').textContent = `${HEROES[k.hero].name} Lv${k.heroLv[k.hero]}`;
     const heroRow = this.root.querySelector<HTMLElement>('[data-id="hero"]')!;
     const lv = k.heroLv[k.hero], g = heroGrowth(lv), tc = trainCost(k, k.hero), trainBtn = heroRow.querySelector<HTMLButtonElement>('[data-train]')!;

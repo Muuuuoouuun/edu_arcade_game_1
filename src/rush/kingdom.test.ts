@@ -279,3 +279,21 @@ test('hero talents (cycle 45): 3n shards, need hero Lv 2n+1, max 3, battle stats
   assert.deepEqual(parseKingdom(JSON.stringify(old), T0).talent, { ranger: 0, bron: 0, bear: 0 });
   assert.deepEqual(parseKingdom(JSON.stringify({ ...old, talent: { ranger: 9, bron: -2, bear: 'x' } }), T0).talent, { ranger: 3, bron: 0, bear: 0 });
 });
+
+test('endless settlement (cycle 46): rewards grow with waves held, 1 shard per 5, best record kept, paid once', async () => {
+  const { settleEndless, stageUnlocked, ENDLESS_STAGE } = await import('./kingdom.ts');
+  let k = createKingdom(T0);
+  assert.ok(!stageUnlocked(k, ENDLESS_STAGE), 'locked until stage 10 has a star');
+  k = { ...k, stars: [3, 3, 3, 3, 3, 3, 3, 3, 3, 1] };
+  assert.ok(stageUnlocked(k, ENDLESS_STAGE));
+  const run = (waves: number) => { const s = createRush(1); s.wave = waves; s.phase = 'lost'; return s; };
+  const a = settleEndless(k, 'e1', run(7));
+  assert.deepEqual([a.reward.waves, a.reward.shards, a.reward.newBest, a.kingdom.endlessBest], [7, 1, true, 7]);
+  assert.equal(settleEndless(a.kingdom, 'e1', run(7)).granted, false, 'same run pays once');
+  const b = settleEndless(a.kingdom, 'e2', run(4));
+  assert.deepEqual([b.reward.newBest, b.kingdom.endlessBest, b.reward.best], [false, 7, 7]);
+  assert.ok(b.reward.food < a.reward.food, 'fewer waves, less food');
+  const old = JSON.parse(serializeKingdom(createKingdom(T0)));
+  delete old.endlessBest;
+  assert.equal(parseKingdom(JSON.stringify(old), T0).endlessBest, 0);
+});
