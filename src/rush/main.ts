@@ -40,6 +40,12 @@ function showRendererFailure(lost:boolean) {
   const dialog=$('rush-render-error');dialog.hidden=false;dialog.focus();
 }
 $('rush-render-retry').addEventListener('click',()=>location.reload());
+$('rush-render-error').addEventListener('keydown',event=>{
+  if(event.key!=='Tab')return;
+  const first=$('rush-render-retry'),last=$<HTMLAnchorElement>('rush-render-back'),active=document.activeElement;
+  if(event.shiftKey&&(active===first||active===$('rush-render-error'))){event.preventDefault();last.focus();}
+  else if(!event.shiftKey&&active===last){event.preventDefault();first.focus();}
+});
 const candidateView = (() => { try { return new RushView(canvas); } catch { showRendererFailure(false); return null; } })();
 if (candidateView) {
 const view: RushView = candidateView;
@@ -268,6 +274,7 @@ function updateHud() {
 
 // ---------- screens ----------
 function showScreen(id: 'title' | 'town' | 'result' | 'pause' | null) {
+  if(rendererLost)return;
   for (const s of ['title', 'town', 'result', 'pause']) $(`screen-${s}`).hidden = s !== id;
   surface.classList.toggle('in-menu', id !== null);
   surface.classList.toggle('in-town', id === 'town');
@@ -280,6 +287,7 @@ function openTown(rewardText = '') {
   town.show(rewardText);
 }
 function start(nextMode: 'play' | 'demo') {
+  if(rendererLost)return;
   unlockAudio();
   const seed = Number(params.get('seed')) || (Math.floor(Math.random() * 1e9) | 1);
   // Permanent kingdom upgrades shape real battles; the demo always shows the base game.
