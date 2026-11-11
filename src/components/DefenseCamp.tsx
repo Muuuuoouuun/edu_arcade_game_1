@@ -16,9 +16,11 @@ import '../defense-themes.css';
 import '../camp-art.css';
 import '../camp-redesign.css';
 import '../arcana-selection.css';
+import '../legion.css';
 
 type Props = {
   campaign: Campaign;
+  onLegion: () => void;
   onDepart: (stage: number) => void;
   onChooseHero: (hero: HeroId) => void;
   onSelectDifficulty: (difficulty: Difficulty) => void;
@@ -36,7 +38,7 @@ const regionNames = {forest:'청록의 숲',snow:'서리산맥'};
 const regionArt = {forest:'/defense/forest.png',snow:'/defense/snow.png'};
 const regionSummary = {forest:'숲길과 물길을 따라, 이웃 마을을 지켜요.',snow:'빙판을 달리는 적들과 서리군주가 기다려요.'};
 
-export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDifficulty,onTrain,onExit,storageFailed,themeId,onSelectTheme,themeStorageFailed}:Props) {
+export default function DefenseCamp({onLegion,campaign,onDepart,onChooseHero,onSelectDifficulty,onTrain,onExit,storageFailed,themeId,onSelectTheme,themeStorageFailed}:Props) {
   const menuRef = useRef<HTMLElement>(null);
   const [section,setSection] = useState<'expedition'|'companions'|'home'|'growth'>('home');
   const [confirmUpgrade,setConfirmUpgrade] = useState(false);
@@ -89,6 +91,7 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
     </div>
     {storageFailed ? <p className="camp-save-warning" role="status">진행을 저장할 수 없어요. 현재 원정은 계속할 수 있지만, 창을 닫으면 기록이 사라질 수 있어요.</p> : null}
     <a className="camp-frontier-entry" href="/frontier.html"><span><b>변경 전장 · 입체 공간에서 다른 방식으로 싸워요</b><small>성문 방어 / 분대 지휘 / 영웅 직접 조작 · 독립 훈련</small></span><strong>입장 ↗</strong></a>
+    <button className="camp-legion-entry" onClick={onLegion}><span className="legion-entry-mark" aria-hidden="true">⚑</span><span><strong>군단 방어</strong><small>배치·소환만으로 싸우는 자동 전투 · 3개 진입로 · 4번의 습격</small></span><b aria-hidden="true">↗</b></button>
     <section className="camp-panorama" aria-labelledby="camp-panorama-title">
       <picture key={themeId}>
         <img src={theme.image} width="1200" height="800" alt={`${theme.name}, 원정을 준비하는 수비대의 거점`} fetchPriority="high" decoding="async"/>

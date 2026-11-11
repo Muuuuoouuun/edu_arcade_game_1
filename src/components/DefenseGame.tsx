@@ -1,5 +1,5 @@
 import {LandscapeGate,usePortrait} from './LandscapeGate';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { NATIVE_BACKGROUND } from '../lib/nativeEvents';
 import { DefenseSprite } from './DefenseBoard';
 import DefenseCamp from './DefenseCamp';
@@ -28,6 +28,8 @@ import type { DefenseThemeId } from '../games/defense/themes';
 import '../defense.css';
 import '../defense-combat.css';
 
+const LegionGame = lazy(() => import('./LegionGame'));
+
 type Reward = ReturnType<typeof completeRun>;
 const towerOrder: TowerKind[] = ['crossbow', 'magic', 'cannon'];
 const greeting: Record<HeroId, string> = {
@@ -49,8 +51,9 @@ function combatFeedback(before: DefenseState, next: DefenseState, haptics: boole
 
 export default function DefenseGame({ blocked: externalBlocked, onExit, onFinish, sound, onToggleSound }: { blocked: boolean; onExit: () => void; onFinish: (record: RoundRecord) => void; sound: boolean; onToggleSound: () => void }) {
   const [mode, setMode] = useState<'camp' | 'battle'>('camp');
+  const [legionOpen, setLegionOpen] = useState(false);
   const modeRef = useRef<'camp' | 'battle'>('camp');
-  const portrait=usePortrait(),rotate=mode==='battle'&&portrait,blocked=externalBlocked||rotate;
+  const portrait=usePortrait(),rotate=(mode==='battle'||legionOpen)&&portrait,blocked=externalBlocked||rotate;
   const hapticsRef = useRef(sound);
   hapticsRef.current = sound;
   const [campaign, setCampaign] = useState(readCampaign);
@@ -296,7 +299,8 @@ export default function DefenseGame({ blocked: externalBlocked, onExit, onFinish
     : state.hero === 'tao'
       ? '영웅 기본 공격 사거리 +65 · 필살기 둔화 4초 → 6초'
       : '영웅 기본 공격 사거리 +65 · 필살기에 4초 둔화 추가';
-  return <div className="defense-root" data-theme={themeId}><div className="landscape-content" inert={rotate||undefined}>{mode === 'camp' ? <DefenseCamp themeId={themeId} onSelectTheme={chooseTheme} themeStorageFailed={themeStorageFailed} campaign={campaign} onDepart={begin} onChooseHero={chooseHero} onSelectDifficulty={difficulty => { if (!blockedRef.current) persist(selectDifficulty(campaignRef.current, difficulty)); }} onTrain={train} onExit={() => { if (!blockedRef.current) onExit(); }} storageFailed={storageFailed}/> : <>
+  if (legionOpen) return <div className="defense-root"><div className="landscape-content" inert={rotate||undefined}><Suspense fallback={<main id="main" className="arcana-loading">군단을 모으는 중…</main>}><LegionGame blocked={blocked} sound={sound} onExit={() => setLegionOpen(false)}/></Suspense></div><LandscapeGate active={rotate}/></div>;
+  return <div className="defense-root" data-theme={themeId}><div className="landscape-content" inert={rotate||undefined}>{mode === 'camp' ? <DefenseCamp onLegion={() => { if (!blockedRef.current) setLegionOpen(true); }} themeId={themeId} onSelectTheme={chooseTheme} themeStorageFailed={themeStorageFailed} campaign={campaign} onDepart={begin} onChooseHero={chooseHero} onSelectDifficulty={difficulty => { if (!blockedRef.current) persist(selectDifficulty(campaignRef.current, difficulty)); }} onTrain={train} onExit={() => { if (!blockedRef.current) onExit(); }} storageFailed={storageFailed}/> : <>
     <div inert={state.paused || blocked || !!arriving || terminal || state.phase === 'promotion' || undefined}>
       <DefenseBattle themeId={themeId} state={state} campaign={campaign} aimingDash={aimingDash} selectedSlot={tactical?.view.kind === 'build' ? tactical.view.slot : null} onPanel={openPanel} onCandidates={slots => openPanel({ kind: 'candidates', slots })} onMove={moveHero} onCancelAim={cancelAim} onDash={toggleDash} onSkill={() => { cancelAim(); dispatch({ type: 'skill' }); }} onStart={() => dispatch({ type: 'start-wave' })} onSpeed={() => dispatch({ type: 'speed' })} onPause={() => pause('manual')} storageFailed={storageFailed}/>
     </div>

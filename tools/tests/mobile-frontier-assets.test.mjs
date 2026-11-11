@@ -23,3 +23,15 @@ test('mobile package retains both 3D battlefields and authored fallbacks', async
   }
   await assert.rejects(stat(new URL('model-lab.html', output)), { code: 'ENOENT' });
 });
+
+test('mobile package keeps the Legion terrain and wolf gait and hit fallbacks', async () => {
+  for (const path of [
+    'defense/legion/forest-arena.webp',
+    'defense/models/frost-wolf-trot-atlas.webp',
+    'defense/models/frost-wolf-atlas.webp',
+    'defense/snow-atlas.png',
+  ]) {
+    const entry = await stat(new URL(path, output));
+    assert.ok(entry.isFile() && entry.size > 0, `missing mobile asset: ${path}`);
+  }
+});
