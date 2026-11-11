@@ -319,3 +319,15 @@ test('endless milestones (cycle 51): shards the first time a record passes 5/10/
   k = d.kingdom;
   assert.equal(settleEndless(k, 'm5', run(7)).reward.milestones.length, 0, 'a lower run pays no milestone');
 });
+
+test('the town record flag (cycle 57) appears once endless opens and gains a stage per record milestone', async () => {
+  const { flagStage } = await import('./townScene.ts'), { ENDLESS_MILESTONES } = await import('./kingdom.ts');
+  const k = createKingdom(0);
+  assert.equal(flagStage(k), -1, 'no flag while endless is locked');
+  const open = { ...k, stars: k.stars.map(() => 1) };
+  assert.equal(flagStage({ ...open, endlessBest: 0 }), 0);
+  assert.equal(flagStage({ ...open, endlessBest: 4 }), 0);
+  assert.equal(flagStage({ ...open, endlessBest: 5 }), 1);
+  assert.equal(flagStage({ ...open, endlessBest: 14 }), 2);
+  assert.equal(flagStage({ ...open, endlessBest: 40 }), ENDLESS_MILESTONES.length);
+});

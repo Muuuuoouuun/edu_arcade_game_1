@@ -378,3 +378,13 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .daily-badge.goal { background: #8a5cf0; }
 .result-stars .milestone { display: block; margin-top: 2px; color: #d9c6ff; }
 .result-stars .milestone .res-ico { width: 11px; height: 11px; }
+
+/* Endless record flag tag (cycle 57): the ∞ chip's purple, best record in the pill, next milestone in a gold corner pill. */
+.tone-endless { background: linear-gradient(#e2ccff, #a879ff); }
+.town-tag.tone-endless .tag-ico { font-size: 18px; }
+.town-tag .goal {
+  position: absolute; right: -14px; top: -6px; height: 15px; padding: 0 3px; border-radius: 8px; border: 2px solid var(--outline);
+  background: var(--gold); color: #3a2400; font-style: normal; font-size: 9px; font-weight: 800; line-height: 11px; white-space: nowrap;
+}
+.town-tag .goal:empty { display: none; }
+.town-tag[hidden] { display: none; }

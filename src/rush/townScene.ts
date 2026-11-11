@@ -6,7 +6,7 @@ import {
 } from 'three';
 import { bake, hullGeometry, outlineMaterial, PAL, toon, type Part } from './look.ts';
 import type { Kingdom, Upgrade } from './kingdom.ts';
-import { level } from './kingdom.ts';
+import { ENDLESS_MILESTONES, ENDLESS_STAGE, level, stageUnlocked } from './kingdom.ts';
 
 /** Visual stage for a level: -1 empty lot (perk not started), 0 = Lv1, 1 = Lv2-3, 2 = Lv4-5. */
 export const stageOf = (lv: number) => (lv <= 0 ? -1 : lv <= 1 ? 0 : lv <= 3 ? 1 : 2);
@@ -24,6 +24,12 @@ export const SPOTS: readonly Spot[] = [
   // Behind the castle, right (cycle 38): mirrors the forge.
   { id: 'vault', x: 4.3, z: -7.2, label: 2.7 },
 ];
+
+/** Endless record flag (cycle 57): front right of the castle on the open lawn, between the mill path and the wall arc. */
+export const FLAG = { x: 2.7, z: 1.5 } as const;
+/** Flag look for a kingdom: -1 none (endless still locked), else the record milestones reached (0-4). */
+export const flagStage = (k: Kingdom) => !stageUnlocked(k, ENDLESS_STAGE) ? -1 : ENDLESS_MILESTONES.filter(m => k.endlessBest >= m.waves).length;
+const flagHeight = (stage: number) => 2.5 + 0.35 * stage;
 
 const C = { cream: PAL.cream, roof: PAL.ally, wood: PAL.wood, dark: PAL.woodDark, gold: PAL.gold, stone: PAL.stone, stoneTop: PAL.stoneTop, red: 0xd9473f, hay: 0xf2c94c, crop: 0x9bd35a, purple: PAL.super, leaf: 0x4fae4a };
 
@@ -164,6 +170,20 @@ function buildingParts(id: Upgrade, stage: number): Part[] {
   return parts;
 }
 
+/** A purple banner on a pole; the pole grows and a gold star joins the banner for every record milestone. */
+function flagParts(stage: number): Part[] {
+  const h = flagHeight(stage), parts: Part[] = [
+    { geo: new BoxGeometry(0.9, 0.28, 0.9), color: C.stone, at: [0, 0.14, 0] },
+    { geo: new BoxGeometry(0.66, 0.14, 0.66), color: C.stoneTop, at: [0, 0.35, 0] },
+    { geo: new CylinderGeometry(0.09, 0.11, h, 6), color: C.dark, at: [0, h / 2, 0] },
+    { geo: new SphereGeometry(0.2, 8, 6), color: C.gold, at: [0, h + 0.1, 0] },
+    { geo: new BoxGeometry(1.4, 0.86, 0.08), color: C.purple, at: [0.76, h - 0.5, 0], rot: [0, -0.15, 0.03] },
+    { geo: new BoxGeometry(0.26, 0.86, 0.09), color: 0x7a45d6, at: [1.36, h - 0.5, -0.09], rot: [0, -0.15, 0.03] },
+  ];
+  for (let i = 0; i < stage; i++) parts.push({ geo: new OctahedronGeometry(0.15), color: C.gold, at: [0.36 + i * 0.27, h - 0.5, 0.12], rot: [0, -0.15, 0] });
+  return parts;
+}
+
 export class TownView {
   readonly scene = new Scene();
   readonly camera = new PerspectiveCamera(40, 1, 0.5, 120);
@@ -171,6 +191,7 @@ export class TownView {
   private cache = new Map<string, { body: BufferGeometry; hull: BufferGeometry }>();
   private nodes = new Map<Upgrade, { group: Group; stage: number; pop: number }>();
   private anchor = new Vector3();
+  private flag = { group: new Group(), stage: -2 };
 
   constructor() {
     this.scene.background = new Color(PAL.water);
@@ -209,6 +230,8 @@ export class TownView {
       this.scene.add(group);
       this.nodes.set(s.id, { group, stage: -2, pop: 0 });
     }
+    this.flag.group.position.set(FLAG.x, 0, FLAG.z);
+    this.scene.add(this.flag.group);
   }
 
   resize(width: number, height: number) {
@@ -245,6 +268,15 @@ export class TownView {
       }
       node.stage = stage;
     }
+    const fs = flagStage(k);
+    if (fs !== this.flag.stage) {
+      this.flag.group.clear();
+      if (fs >= 0) {
+        const body = bake(flagParts(fs));
+        this.flag.group.add(new Mesh(body, this.baked), new Mesh(hullGeometry(body), outlineMaterial(0.05)));
+      }
+      this.flag.stage = fs;
+    }
   }
 
   /** Squash-and-stretch pop on a building that just levelled up. */
@@ -257,6 +289,12 @@ export class TownView {
       const t = 1 - n.pop / 0.45, k = Math.sin(t * Math.PI) * 0.18;
       n.group.scale.set(1 + k * 0.6, 1 + k, 1 + k * 0.6);
     }
+  }
+
+  /** Screen position (CSS px) for the record flag's tag, just above the finial. */
+  flagLabelAt(rect: { width: number; height: number }) {
+    const v = this.anchor.set(FLAG.x, flagHeight(Math.max(0, this.flag.stage)) + 0.8, FLAG.z).project(this.camera);
+    return { x: (v.x + 1) / 2 * rect.width, y: (1 - v.y) / 2 * rect.height };
   }
 
   /** Screen position (CSS px) for a building's name tag. */

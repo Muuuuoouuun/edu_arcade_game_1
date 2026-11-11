@@ -53,8 +53,14 @@ export class TownScreen {
       const row = ROWS.find(r => r.id === p.id)!;
       // Icon badge (cycle 17): the card below names the building, so the tag keeps only its icon, level and upgrade dot.
       return `<button class="town-tag tone-${row.tone}" data-select="${p.id}" aria-label="${row.name}"><span class="tag-ico" aria-hidden="true">${row.badge}</span><em data-tag-level></em><i class="up" aria-hidden="true">▲</i></button>`;
-    }).join('');
+    }).join('') +
+      // Endless record flag (cycle 57): best waves in the pill, the next milestone in the corner; a tap picks ∞.
+      `<button class="town-tag tone-endless" data-endless hidden><span class="tag-ico" aria-hidden="true">∞</span><em data-tag-level></em><i class="goal" aria-hidden="true"></i></button>`;
     tags.addEventListener('click', e => {
+      if ((e.target as HTMLElement).closest('[data-endless]')) {
+        if (stageUnlocked(this.kingdom, ENDLESS_STAGE)) { this.stage = ENDLESS_STAGE; this.render(); }
+        return;
+      }
       const id = (e.target as HTMLElement).closest<HTMLElement>('[data-select]')?.dataset.select as Upgrade | undefined;
       if (id) { this.selected = id; this.render(); }
     });
@@ -153,6 +159,11 @@ export class TownScreen {
       const at = this.view.labelAt(p.id, rect);
       tag.style.transform = `translate(${Math.round(at.x)}px, ${Math.round(at.y)}px) translate(-50%, -100%)`;
     }
+    const flag = this.root.querySelector<HTMLElement>('[data-endless]');
+    if (flag && !flag.hidden) {
+      const at = this.view.flagLabelAt(rect);
+      flag.style.transform = `translate(${Math.round(at.x)}px, ${Math.round(at.y)}px) translate(-50%, -100%)`;
+    }
   }
   /** Replace the kingdom (e.g. after a battle reward) and persist it. */
   set(k: Kingdom) { this.kingdom = k; saveKingdom(k); this.render(); }
@@ -223,6 +234,12 @@ export class TownScreen {
       tag.classList.toggle('on', r.id === this.selected);
       this.root.querySelector<HTMLElement>(`[data-id="${r.id}"]`)!.classList.toggle('selected', r.id === this.selected);
     }
+    const flag = this.root.querySelector<HTMLElement>('[data-endless]')!, open = stageUnlocked(k, ENDLESS_STAGE), next = nextMilestone(k.endlessBest);
+    flag.hidden = !open;
+    flag.querySelector('[data-tag-level]')!.textContent = String(k.endlessBest);
+    flag.querySelector('.goal')!.textContent = next ? `→${next.waves}` : '';
+    flag.classList.toggle('on', this.stage === ENDLESS_STAGE);
+    flag.setAttribute('aria-label', `끝없는 도전 기록 ${k.endlessBest}웨이브${next ? `, 다음 목표 ${next.waves}웨이브` : ''}. 누르면 끝없는 도전을 골라요`);
     this.$('res-food').textContent = String(k.food);
     this.$('res-wood').textContent = String(k.wood);
     this.$('res-shard').textContent = String(k.shards);

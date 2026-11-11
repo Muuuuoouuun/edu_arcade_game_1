@@ -76,6 +76,7 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await page.waitForTimeout(200);
     check(await page.evaluate(() => __rush.kingdom.perks.attack === 1), 'kingdom persists across reload');
     check(await page.isDisabled('[data-stage="2"]'), 'stage 2 locked on a fresh kingdom');
+    check(await page.isHidden('[data-endless]'), 'endless record flag tag hidden until endless opens');
     await page.click('#btn-hero');
     check(await page.isVisible('[data-train]'), 'hero button opens the hero card');
     await page.click('[data-train]');
