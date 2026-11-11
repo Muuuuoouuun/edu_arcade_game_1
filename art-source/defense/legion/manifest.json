@@ -1,0 +1,9 @@
+{
+  "date": "2026-11-11",
+  "generator": "OpenAI image_gen",
+  "kind": "empty-production-terrain",
+  "source": "art-source/defense/legion/forest-arena-source.png",
+  "sha256": "0e899b36090489c5893491aabb9906964e8f2a1c09e2afe182fac99804e5b1fb",
+  "runtime": "public/defense/legion/forest-arena.webp",
+  "review": "Generated from engine lane layout and approved high-angle reference. No baked combat, UI, units or projectiles. Actor positions, attacks and deployment are rendered live; terrain is decorative, not a collision mesh."
+}
