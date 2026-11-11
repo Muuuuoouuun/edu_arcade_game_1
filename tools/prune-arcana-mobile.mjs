@@ -14,7 +14,7 @@ const frontierModels = new Set([
   'forest-gate.glb', 'frontier-frost-gate-impact.glb', 'frontier-forest-doors.glb',
   'frontier-kar-game.glb', 'kar-barbarian-walk.glb', 'kar-barbarian.glb',
   'kar-reset.glb', 'kar-stop.glb', 'kar-entry.glb',
-  'frontier-wood-game.glb', 'frontier-wood-strike-game.glb',
+  'frontier-wood-game.glb', 'frontier-wood-strike-game.glb', 'frost-wolf-stride.glb',
   'frontier-ballista-game.glb', 'frontier-beacon.glb', 'frontier-squad.glb', 'frontier-relic.glb',
 ]);
 await stat(new URL('frontier.html', output));

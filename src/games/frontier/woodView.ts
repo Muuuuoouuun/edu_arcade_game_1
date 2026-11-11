@@ -9,6 +9,7 @@ export const WOOD_SCALE=.52,WOOD_STRIDE=1.5,WOOD_SETTLE=.16,WOOD_HIT_DURATION=.2
 const contactCache=new WeakMap<BufferGeometry,Vector3[]>();
 function contactPoints(mesh:Mesh){let points=contactCache.get(mesh.geometry);if(!points){const unique=new Map<string,Vector3>(),a=mesh.geometry.attributes.position;for(let i=0;i<a.count;i++){const p=new Vector3().fromBufferAttribute(a,i);unique.set(`${p.x},${p.y},${p.z}`,p);}points=[...unique.values()];contactCache.set(mesh.geometry,points);}return points;}
 export type WoodTemplate={scene:Group;animations:AnimationClip[]};
+export type EnemyVisual={root:Group;surfaces:Mesh[];update(enemy:Enemy,reduced:boolean,now?:number,fallenAge?:number):void;dispose():void};
 /** Rigid-joint geometry is shared; only transforms and clip clocks belong to each enemy. */
 export class WoodView {
  readonly root=new Group();readonly model:Group;readonly surfaces:Mesh[]=[];private soles:{mesh:Mesh;points:Vector3[]}[]=[];private mixer?:AnimationMixer;private walk?:AnimationAction;private strike?:AnimationAction;
@@ -82,14 +83,15 @@ function hitMarkerGeometry(){
 }
 /** Shared instanced geometry keeps target feedback independent without a renderer per enemy. */
 export class WoodBatch {
- readonly root=new Group();readonly views=new Map<number,WoodView>();meshes:InstancedMesh[]=[];private contacts:InstancedMesh;private health:InstancedMesh;private warnings:Mesh<BufferGeometry,MeshBasicMaterial>;private hitMarkers:InstancedMesh;private capacity=0;private warningCapacity=1;private warningEnemies:Enemy[]=[];private warningSnapshot:{id:number;x:number;z:number;heading:number}[]=[];
+ readonly root=new Group();readonly views=new Map<number,EnemyVisual>();meshes:InstancedMesh[]=[];private contacts:InstancedMesh;private health:InstancedMesh;private warnings:Mesh<BufferGeometry,MeshBasicMaterial>;private hitMarkers:InstancedMesh;private capacity=0;private warningCapacity=1;private warningEnemies:Enemy[]=[];private warningSnapshot:{id:number;x:number;z:number;heading:number}[]=[];
  private frustum=new Frustum();private projection=new Matrix4();private sphere=new Sphere(new Vector3(),2.5);private matrix=new Matrix4();private q=new Quaternion();private scale=new Vector3();private point=new Vector3();
  readonly template:WoodTemplate;readonly authored:boolean;private fallenVisible=0;
+ private makeView:(template:WoodTemplate,authored:boolean)=>EnemyVisual;private markerHeight:number;
  get fallenCount(){return this.fallenVisible;}
  get markerCount(){return this.hitMarkers.count;}
  get warningCount(){return this.warningEnemies.length;}
- constructor(template:WoodTemplate,authored=true){
-  this.template=template;this.authored=authored;
+ constructor(template:WoodTemplate,authored=true,makeView:(template:WoodTemplate,authored:boolean)=>EnemyVisual=(t,a)=>new WoodView(t,a),markerHeight=4.15){
+  this.template=template;this.authored=authored;this.makeView=makeView;this.markerHeight=markerHeight;
   this.contacts=new InstancedMesh(new CircleGeometry(.8,12),new MeshBasicMaterial({color:'#183d2d',transparent:true,opacity:.25,depthWrite:false}),1);
   this.warnings=new Mesh(createWoodWarningGeometry(1),new MeshBasicMaterial({color:'#df6449',transparent:true,opacity:.68,depthWrite:false,side:2}));this.warnings.name='wood-attack-warning';this.warnings.visible=false;this.warnings.frustumCulled=false;this.warnings.matrixAutoUpdate=false;this.root.add(this.warnings);
   this.health=new InstancedMesh(new BoxGeometry(1,.11,.08),new MeshBasicMaterial({color:'#ffbd9d'}),1);this.health.name='wood-health';this.health.visible=false;this.hitMarkers=new InstancedMesh(hitMarkerGeometry(),new MeshBasicMaterial({vertexColors:true,transparent:true,opacity:1,depthTest:true,depthWrite:false,forceSinglePass:true,side:2}),1);this.hitMarkers.name='wood-hit-marker';this.grow(16);
@@ -104,18 +106,18 @@ export class WoodBatch {
   if(enemies.length+dying.length>this.capacity)this.grow(2**Math.ceil(Math.log2(enemies.length+dying.length)));
   const alive=new Set([...enemies.map(e=>e.id),...dying.map(f=>f.enemy.id)]);for(const [id,view]of this.views)if(!alive.has(id)){view.dispose();this.views.delete(id);}
   camera.updateMatrixWorld();this.frustum.setFromProjectionMatrix(this.projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));let count=0,healthCount=0,markerCount=0;this.warningEnemies.length=0;
-  for(const enemy of enemies){let view=this.views.get(enemy.id);if(!view){view=new WoodView(this.template,this.authored);this.views.set(enemy.id,view);}view.update(enemy,reduced,now);
+  for(const enemy of enemies){let view=this.views.get(enemy.id);if(!view){view=this.makeView(this.template,this.authored);this.views.set(enemy.id,view);}view.update(enemy,reduced,now);
    this.sphere.center.set(enemy.x,heightAt(enemy.x,enemy.z)+1.5,enemy.z);if(!this.frustum.intersectsSphere(this.sphere))continue;
    for(let j=0;j<this.meshes.length;j++)this.meshes[j].setMatrixAt(count,view.surfaces[j].matrixWorld);
    this.matrix.makeRotationX(-Math.PI/2);this.matrix.setPosition(enemy.x,heightAt(enemy.x,enemy.z)+.025,enemy.z);this.contacts.setMatrixAt(count,this.matrix);count++;
    if(enemy.attack&&!enemy.attack.hit)this.warningEnemies.push(enemy);
    const hitAge=now-(enemy.hitAt??-Infinity);
-   if(enemy.hp>0&&hitAge>=0&&hitAge<WOOD_MARK_DURATION){camera.getWorldQuaternion(this.q);this.point.set(enemy.x,heightAt(enemy.x,enemy.z)+4.15,enemy.z);const t=hitAge/WOOD_MARK_DURATION,size=.55*(reduced?1:.8+.2*Math.sin(Math.PI*t));this.scale.setScalar(size);this.matrix.compose(this.point,this.q,this.scale);this.hitMarkers.setMatrixAt(markerCount++,this.matrix);}
+   if(enemy.hp>0&&hitAge>=0&&hitAge<WOOD_MARK_DURATION){camera.getWorldQuaternion(this.q);this.point.set(enemy.x,heightAt(enemy.x,enemy.z)+this.markerHeight,enemy.z);const t=hitAge/WOOD_MARK_DURATION,size=.55*(reduced?1:.8+.2*Math.sin(Math.PI*t));this.scale.setScalar(size);this.matrix.compose(this.point,this.q,this.scale);this.hitMarkers.setMatrixAt(markerCount++,this.matrix);}
    const ratio=enemy.hp/(enemy.maxHp??enemy.hp);if(ratio<1){camera.getWorldQuaternion(this.q);this.point.set(enemy.x,heightAt(enemy.x,enemy.z)+3.5,enemy.z);this.scale.set(Math.max(.02,ratio),1,1);this.matrix.compose(this.point,this.q,this.scale);this.health.setMatrixAt(healthCount++,this.matrix);}
   }
   this.fallenVisible=0;
   for(const f of dying){const enemy=f.enemy;this.sphere.center.set(enemy.x,heightAt(enemy.x,enemy.z)+1.5,enemy.z);if(!this.frustum.intersectsSphere(this.sphere))continue;
-   let view=this.views.get(enemy.id);if(!view){view=new WoodView(this.template,this.authored);this.views.set(enemy.id,view);}view.update(enemy,false,now,now-f.at);
+   let view=this.views.get(enemy.id);if(!view){view=this.makeView(this.template,this.authored);this.views.set(enemy.id,view);}view.update(enemy,false,now,now-f.at);
    for(let j=0;j<this.meshes.length;j++)this.meshes[j].setMatrixAt(count,view.surfaces[j].matrixWorld);
    this.matrix.makeRotationX(-Math.PI/2);this.matrix.setPosition(enemy.x,heightAt(enemy.x,enemy.z)+.025,enemy.z);this.contacts.setMatrixAt(count,this.matrix);count++;this.fallenVisible++;
   }

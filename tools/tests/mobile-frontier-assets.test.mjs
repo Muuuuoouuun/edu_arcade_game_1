@@ -14,7 +14,7 @@ test('mobile package retains both 3D battlefields and authored fallbacks', async
     'defense/models/frontier-forest-doors.glb', 'defense/models/frontier-kar-game.glb',
     'defense/models/kar-barbarian-walk.glb', 'defense/models/kar-barbarian.glb',
     'defense/models/kar-reset.glb', 'defense/models/kar-stop.glb', 'defense/models/kar-entry.glb',
-    'defense/models/frontier-wood-game.glb', 'defense/models/frontier-wood-strike-game.glb',
+    'defense/models/frontier-wood-game.glb', 'defense/models/frontier-wood-strike-game.glb', 'defense/models/frost-wolf-stride.glb',
     'defense/models/frontier-ballista-game.glb', 'defense/models/frontier-beacon.glb', 'defense/models/frontier-squad.glb', 'defense/models/frontier-relic.glb',
   ];
   for (const path of paths) {
