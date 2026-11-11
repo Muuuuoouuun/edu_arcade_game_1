@@ -83,6 +83,24 @@ export const HEROES: Record<HeroKind, HeroDef> = {
     ...COMMON,
   },
 };
+/** Hero talents (cycle 45): one per hero, Lv0-3, bought with shards. Each level adds `per` to one HeroDef stat.
+ * Tuned with the bot: a longer bolt range or a wider swing gained nothing there, so the ranger narrows its fan
+ * (more of the three bolts land on one target) and Bron reaches further. */
+export const TALENTS: Record<HeroKind, { name: string; stat: 'spread' | 'range' | 'boltRadius'; per: number; label: string }> = {
+  ranger: { name: '매의 눈', stat: 'spread', per: -0.03, label: '화살 부채 폭' },
+  bron: { name: '긴 망치', stat: 'range', per: 0.25, label: '휘두르기 거리' },
+  bear: { name: '눈사태', stat: 'boltRadius', per: 0.15, label: '눈덩이 범위' },
+};
+export const TALENT_MAX = 3;
+/** The hero's stats with its talent level applied (cached: one object per hero and level). */
+const talented = new Map<string, HeroDef>();
+export function heroStats(kind: HeroKind, talent = 0): HeroDef {
+  if (!talent) return HEROES[kind];
+  const key = `${kind}:${talent}`;
+  let d = talented.get(key);
+  if (!d) { const t = TALENTS[kind]; d = { ...HEROES[kind], [t.stat]: HEROES[kind][t.stat] + t.per * talent }; talented.set(key, d); }
+  return d;
+}
 /** The default hero (kept for code that predates hero choice). */
 export const HERO = HEROES.ranger;
 

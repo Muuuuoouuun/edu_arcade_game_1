@@ -1,9 +1,9 @@
 // Town (kingdom) screen: storage + DOM. Rules live in kingdom.ts.
 import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
-import { FORGE, HEROES, type HeroKind } from './data.ts';
+import { FORGE, HEROES, TALENT_MAX, TALENTS, type HeroKind } from './data.ts';
 import {
-  CASTLE_MAX, DAILY_WIN, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canTrain, dailyReady, dayIndex, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
+  CASTLE_MAX, DAILY_WIN, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canLearnTalent, canTrain, learnTalent, talentCost, dailyReady, dayIndex, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
   serializeKingdom, storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 
@@ -67,10 +67,25 @@ export class TownScreen {
       </li>`).join('') + `
       <li class="town-row" data-id="hero">
         <span class="town-icon tone-hero" aria-hidden="true">영</span>
-        <div class="town-info"><b><span data-hero-name></span> <em data-level></em></b><small data-effect></small></div>
-        <button class="town-up" data-train aria-label="영웅 훈련"><span data-cost></span></button>
+        <div class="town-info"><b><span data-hero-name></span> <em data-level></em></b><small data-effect></small><small class="talent-line" data-talent-effect></small></div>
+        <div class="hero-ups">
+          <button class="town-up" data-train aria-label="영웅 훈련"><span data-cost></span></button>
+          <button class="town-up talent" data-talent aria-label="영웅 특기"><span data-talent-cost></span></button>
+        </div>
       </li>`;
     list.addEventListener('click', e => {
+      if ((e.target as HTMLElement).closest('[data-talent]')) {
+        // Hero talent (cycle 45): shards into the chosen hero's own stat.
+        const before = this.kingdom, hero = before.hero;
+        this.kingdom = learnTalent(before, hero);
+        saveKingdom(this.kingdom);
+        if (this.kingdom.talent[hero] > before.talent[hero]) {
+          const row = list.querySelector<HTMLElement>('[data-id="hero"]');
+          row?.classList.remove('bump'); void row?.offsetWidth; row?.classList.add('bump');
+        }
+        this.render();
+        return;
+      }
       if ((e.target as HTMLElement).closest('[data-train]')) {
         // Hero training (cycle 14): levels the hero taken into battle; the castle caps it.
         const before = this.kingdom, hero = before.hero;
@@ -179,6 +194,13 @@ export class TownScreen {
       ? `훈련 <i class="res-ico food"></i>${tc.food} <i class="res-ico wood"></i>${tc.wood}${tc.shards ? ` <i class="res-ico shard"></i>${tc.shards}` : ''}`
       : k.heroLv[k.hero] >= CASTLE_MAX * HERO_LV_PER_CASTLE ? '최대' : '성 Lv 필요';
     trainBtn.classList.toggle('capped', !tc);
+    // Talent (cycle 45): effect now → next, and a button with its shard cost or what it still needs.
+    const t = TALENTS[k.hero], tl = k.talent[k.hero], tcost = talentCost(k, k.hero), talentBtn = heroRow.querySelector<HTMLButtonElement>('[data-talent]')!;
+    const tval = (n: number) => t.stat === 'spread' ? `−${Math.abs(t.per * n * 180 / Math.PI).toFixed(1)}°` : `+${(t.per * n).toFixed(2)}m`;
+    heroRow.querySelector('[data-talent-effect]')!.textContent = `${t.name} ${tl}/${TALENT_MAX} · ${t.label} ${tval(tl)}${tcost ? ` → ${tval(tl + 1)}` : ''}`;
+    talentBtn.disabled = !canLearnTalent(k, k.hero);
+    talentBtn.querySelector('[data-talent-cost]')!.innerHTML = !tcost ? '특기 최대' : !tcost.ready ? `특기 Lv${tcost.needLv}↑` : `특기 <i class="res-ico shard"></i>${tcost.shards}`;
+    talentBtn.classList.toggle('capped', !tcost || !tcost.ready);
     this.$('btn-hero').classList.toggle('can', canTrain(k, k.hero));
     this.$('btn-hero').classList.toggle('has-more', heroUnlocked(k, 'bron') || heroUnlocked(k, 'bear'));
     this.view.sync(k);

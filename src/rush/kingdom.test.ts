@@ -59,7 +59,7 @@ test('perks change the next battle: town HP, tower cost and arrow damage', () =>
   stepRush(s, { fire: { x: 0, z: -1 } });
   assert.ok(Math.abs(s.shots[0].damage - HERO.boltDamage * 1.24) < 1e-9);
   assert.deepEqual(createRush(1).mods, { damage: 1, towerCost: 1, townHp: 1, heroHp: 1, forge: 0 }, 'a fresh kingdom changes nothing');
-  assert.deepEqual(kingdomMods(createKingdom(T0)), { damage: 1, towerCost: 1, townHp: 1, heroHp: 1, forge: 0, startGold: 0 });
+  assert.deepEqual(kingdomMods(createKingdom(T0)), { damage: 1, towerCost: 1, townHp: 1, heroHp: 1, forge: 0, startGold: 0, talent: 0 });
 });
 
 test('a battle pays once, scaled by waves defended, with a victory bonus', () => {
@@ -246,4 +246,36 @@ test('vault: castle caps it, costs grow, each level adds starting gold, old save
   assert.equal(loaded.perks.vault, 0, 'missing vault → 0');
   assert.deepEqual([loaded.castle, loaded.perks.attack], [3, 2], 'the rest of an old save is kept');
   assert.equal(parseKingdom(JSON.stringify({ ...old, perks: { ...old.perks, vault: 9 } }), T0).castle, 1, 'a vault above the castle cap is a broken save');
+});
+
+test('hero talents (cycle 45): 3n shards, need hero Lv 2n+1, max 3, battle stats change for the chosen hero only', async () => {
+  const { learnTalent, canLearnTalent, talentCost } = await import('./kingdom.ts');
+  const { HEROES, TALENTS, heroStats } = await import('./data.ts');
+  let k = { ...createKingdom(T0), castle: 5, shards: 100 };
+  assert.deepEqual(talentCost(k, 'ranger'), { shards: 3, needLv: 3, ready: false });
+  assert.ok(!canLearnTalent(k, 'ranger'), 'hero Lv1 cannot learn Lv1 talent');
+  assert.equal(learnTalent(k, 'ranger'), k, 'refused: unchanged');
+  k = { ...k, heroLv: { ranger: 7, bron: 3, bear: 1 } };
+  for (let i = 0; i < 3; i++) k = learnTalent(k, 'ranger');
+  assert.deepEqual([k.talent.ranger, k.shards], [3, 100 - 3 - 6 - 9]);
+  assert.equal(talentCost(k, 'ranger'), null, 'max 3');
+  const b = learnTalent(k, 'bron');
+  assert.equal(b.talent.bron, 1);
+  assert.ok(!canLearnTalent(b, 'bron'), 'Bron Lv3 cannot learn talent Lv2 (needs Lv5)');
+  assert.equal(k.talent.bron, 0, 'the old kingdom object is untouched');
+  // Battle: the chosen hero's talent changes its stat; talent 0 is the plain hero.
+  assert.equal(kingdomMods(k).talent, 3);
+  const s = createRush(1, kingdomMods(k));
+  assert.ok(Math.abs(s.mods.talent! - 3) < 1e-9);
+  for (const [h, n] of [['ranger', 3], ['bron', 2], ['bear', 1]] as const) {
+    const stat = TALENTS[h].stat;
+    assert.ok(Math.abs(heroStats(h, n)[stat] - (HEROES[h][stat] + n * TALENTS[h].per)) < 1e-9, `${h} talent ${n} changes ${stat}`);
+  }
+  assert.equal(heroStats('ranger', 0), HEROES.ranger, 'no talent: the same object');
+  assert.equal(kingdomMods({ ...k, hero: 'bron' }).talent, 0, 'Bron has none yet');
+  // Old saves: no talents → all 0; out-of-range values clamp.
+  const old = JSON.parse(serializeKingdom(createKingdom(T0)));
+  delete old.talent;
+  assert.deepEqual(parseKingdom(JSON.stringify(old), T0).talent, { ranger: 0, bron: 0, bear: 0 });
+  assert.deepEqual(parseKingdom(JSON.stringify({ ...old, talent: { ranger: 9, bron: -2, bear: 'x' } }), T0).talent, { ranger: 3, bron: 0, bear: 0 });
 });

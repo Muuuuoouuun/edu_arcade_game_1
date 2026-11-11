@@ -3,7 +3,7 @@
 // so this module can run in tests, in the browser and later on an authoritative server.
 import {
   ARENA, BUSH, BUSHES, CRATE, CRATES, ECONOMY, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WALLS, WAVES,
-  type Block, type EnemyDef, type EnemyKind, type HeroDef, type HeroKind, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
+  type Block, heroStats, type EnemyDef, type EnemyKind, type HeroDef, type HeroKind, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
 
 export type Phase = 'prep' | 'wave' | 'won' | 'lost';
 
@@ -71,6 +71,8 @@ export interface RushMods {
   damage: number; towerCost: number; townHp: number; heroHp: number; forge: number;
   /** Extra gold at the start of the battle (cycle 38, kingdom vault). */
   startGold?: number;
+  /** Talent level of the hero taken into battle (cycle 45). */
+  talent?: number;
 }
 export const NO_MODS: RushMods = { damage: 1, towerCost: 1, townHp: 1, heroHp: 1, forge: 0 };
 /** Stage difficulty: multipliers on enemy health, group sizes (bosses excluded) and damage. All 1 = the base game. */
@@ -161,7 +163,7 @@ export function createRush(seed = 1, mods: RushMods = NO_MODS, diff: Difficulty 
 
 // ---------- queries used by the UI and bots ----------
 /** The current hero's numbers. */
-export const heroDef = (s: RushState): HeroDef => HEROES[s.hero.kind];
+export const heroDef = (s: RushState): HeroDef => heroStats(s.hero.kind, s.mods.talent ?? 0);
 export const heroAlive = (s: RushState) => s.hero.downT <= 0;
 /** The hero's max health with the kingdom's hero-level bonus. */
 export const heroMaxHp = (s: RushState) => Math.round(heroDef(s).hp * s.mods.heroHp);

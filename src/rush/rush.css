@@ -352,3 +352,10 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   padding: 3px 12px 4px; border-radius: 999px; border: 3px solid #ffb02e; background: rgba(29, 20, 51, 0.9);
   color: #ffd27a; font-size: 18px; -webkit-text-stroke: 0; text-shadow: none; box-shadow: 0 3px 0 var(--outline);
 }
+
+/* Hero talent (cycle 45): train and talent side by side under the hero card */
+/* Training's cost line is the longer one (food, wood, shards): it gets two thirds. */
+.hero-ups { grid-column: 1 / -1; display: grid; grid-template-columns: 2fr 1fr; gap: 6px; }
+.hero-ups .town-up { grid-column: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.town-up.talent:not(:disabled) { background: linear-gradient(#e2ccff 0 50%, #a879ff 50%); }
+.town-info .talent-line { display: block; color: #d9c6ff; }

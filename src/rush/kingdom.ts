@@ -2,7 +2,7 @@
 // Principles taken from kingdom-builder games: the castle is the hub and caps everything else, resource
 // buildings produce over (offline) time, and permanent upgrades change the next battle.
 import { WAVE_COUNT, type RushMods, type RushState } from './sim.ts';
-import type { HeroKind } from './data.ts';
+import { TALENT_MAX, type HeroKind } from './data.ts';
 import { STAGE_COUNT, starBonus, starsFor, stageRewardMul } from './stages.ts';
 
 export type Resource = 'food' | 'wood';
@@ -25,6 +25,8 @@ export interface Kingdom {
   hero: HeroKind;
   /** Level per hero (cycle 14); only the hero taken into battle gets its bonus. */
   heroLv: Record<HeroKind, number>;
+  /** Talent level per hero (cycle 45), 0..TALENT_MAX. */
+  talent: Record<HeroKind, number>;
   /** Hero shards (cycle 26): earned from stage stars and high-stage wins, spent on hero training from Lv3. */
   shards: number;
   /** Local day number (see `dayIndex`) of the last daily first-win bonus (cycle 32); 0 = never. */
@@ -46,10 +48,10 @@ export const HERO_GROWTH = { hp: 0.1, damage: 0.1 } as const;
 
 export const createKingdom = (now: number): Kingdom => ({
   version: 1, castle: 1, farm: 1, mill: 1, perks: { attack: 0, towerDiscount: 0, townHp: 0, forge: 0, vault: 0 },
-  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), hero: 'ranger', heroLv: { ranger: 1, bron: 1, bear: 1 }, shards: 0, dailyWin: 0, rewarded: [],
+  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), hero: 'ranger', heroLv: { ranger: 1, bron: 1, bear: 1 }, talent: { ranger: 0, bron: 0, bear: 0 }, shards: 0, dailyWin: 0, rewarded: [],
 });
 
-const clone = (k: Kingdom): Kingdom => ({ ...k, perks: { ...k.perks }, battles: { ...k.battles }, stars: [...k.stars], heroLv: { ...k.heroLv }, rewarded: [...k.rewarded] });
+const clone = (k: Kingdom): Kingdom => ({ ...k, perks: { ...k.perks }, battles: { ...k.battles }, stars: [...k.stars], heroLv: { ...k.heroLv }, talent: { ...k.talent }, rewarded: [...k.rewarded] });
 
 export const stageUnlocked = (k: Kingdom, n: number) => n >= 1 && n <= STAGE_COUNT && (n === 1 || k.stars[n - 2] > 0);
 /** Heroes join through progress: Bron once stage 2 has a star, Popo (cycle 39) once stage 4 has one. */
@@ -146,6 +148,26 @@ export function train(k: Kingdom, hero: HeroKind, now: number): Kingdom {
   return next;
 }
 
+// ---------- hero talents (cycle 45) ----------
+/** Talent level n costs 3n shards and needs the hero trained to Lv 2n+1 (3, 5, 7). */
+export const talentNeedsLv = (n: number) => 2 * n + 1;
+export function talentCost(k: Kingdom, hero: HeroKind): { shards: number; needLv: number; ready: boolean } | null {
+  const n = k.talent[hero] + 1;
+  if (n > TALENT_MAX) return null;
+  return { shards: 3 * n, needLv: talentNeedsLv(n), ready: k.heroLv[hero] >= talentNeedsLv(n) };
+}
+export function canLearnTalent(k: Kingdom, hero: HeroKind): boolean {
+  const c = talentCost(k, hero);
+  return !!c && c.ready && k.shards >= c.shards;
+}
+export function learnTalent(k: Kingdom, hero: HeroKind): Kingdom {
+  if (!canLearnTalent(k, hero)) return k;
+  const next = clone(k);
+  next.shards -= talentCost(k, hero)!.shards;
+  next.talent[hero]++;
+  return next;
+}
+
 /** Battle modifiers from permanent upgrades and the chosen hero's level. */
 export const kingdomMods = (k: Kingdom): RushMods => {
   const g = heroGrowth(k.heroLv[k.hero]);
@@ -156,6 +178,7 @@ export const kingdomMods = (k: Kingdom): RushMods => {
     heroHp: g.hp,
     forge: k.perks.forge,
     startGold: VAULT_GOLD * k.perks.vault,
+    talent: k.talent[k.hero],
   };
 };
 
@@ -214,6 +237,7 @@ export function settleBattle(k: Kingdom, battleId: string, s: RushState, stage: 
 const count = (v: unknown, lo: number, hi: number): number | null =>
   typeof v === 'number' && Number.isInteger(v) && v >= lo && v <= hi ? v : null;
 
+const talentLevel = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) ? Math.min(Math.max(0, v), TALENT_MAX) : 0);
 const heroLevel = (v: unknown, castle: number) => (typeof v === 'number' && Number.isInteger(v) ? Math.min(Math.max(1, v), castle * HERO_LV_PER_CASTLE) : 1);
 
 /** Parse a saved kingdom; anything malformed falls back to a fresh kingdom rather than crashing the game. */
@@ -245,6 +269,8 @@ export function parseKingdom(raw: string | null, now: number): Kingdom {
       hero: (v.hero === 'bron' && starList[1] > 0) || (v.hero === 'bear' && starList[3] > 0) ? v.hero : 'ranger',
       // Saves from before hero training start every hero at Lv1; levels above the castle cap are clamped.
       heroLv: { ranger: heroLevel(v.heroLv?.ranger, castle), bron: heroLevel(v.heroLv?.bron, castle), bear: heroLevel(v.heroLv?.bear, castle) },
+      // Saves from before talents (cycle 45) start every talent at 0; out-of-range values clamp.
+      talent: { ranger: talentLevel(v.talent?.ranger), bron: talentLevel(v.talent?.bron), bear: talentLevel(v.talent?.bear) },
       // Saves from before shards (cycle 26) get 2 per star already earned, so past progress still counts.
       shards: v.shards === undefined ? 2 * starList.reduce((a: number, b: number) => a + b, 0) : count(v.shards, 0, 1e6) ?? 0,
       // Saves from before the daily bonus (cycle 32) can claim it today.

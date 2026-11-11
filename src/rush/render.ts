@@ -11,8 +11,8 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import rangerGlb from './models/gecko-ranger.glb?url';
 import bronGlb from './models/dwarf-guardian.glb?url';
 import bearGlb from './models/polar-bear.glb?url';
-import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroKind, type TowerBranch, type Vec } from './data.ts';
-import { heroHidden, heroMaxHp, lobReach, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
+import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
+import { heroDef, heroHidden, heroMaxHp, lobReach, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, type Part } from './look.ts';
 import { Batch } from './batch.ts';
 import { Particles } from './fx.ts';
@@ -165,7 +165,7 @@ export class RushView {
     }
     this.scene.add(this.hero);
 
-    this.aimFan = new Mesh(this.fanGeometry('ranger'), basic(0xffffff, 0.22));
+    this.aimFan = new Mesh(this.fanGeometry(HEROES.ranger), basic(0xffffff, 0.22));
     this.aimFan.rotation.x = -Math.PI / 2;
     this.aimRing = new Mesh(this.geo.ring, basic(0xc59bff, 0.7));
     this.aimRing.rotation.x = -Math.PI / 2;
@@ -378,8 +378,7 @@ export class RushView {
   }
 
   /** Aim preview shape: a long narrow fan for bolts, a short wide fan for a melee swing. */
-  private fanGeometry(kind: HeroKind) {
-    const d = HEROES[kind];
+  private fanGeometry(d: HeroDef) {
     if (d.attack === 'swing') return new CircleGeometry(d.range, 20, -d.swingArc, d.swingArc * 2);
     // A lob shows its landing circle instead (aimLob, cycle 40); the fan stays empty.
     return new CircleGeometry(d.range, 24, -d.spread * 1.6, d.spread * 3.2);
@@ -397,10 +396,16 @@ export class RushView {
     for (const [k, cape] of this.capes) cape.visible = k === kind;
     const rig = this.heroRigs.get(kind);
     if (this.heroPlaceholder) this.heroPlaceholder.visible = !rig || rig === 'loading';
-    this.aimFan.geometry.dispose();
-    this.aimFan.geometry = this.fanGeometry(kind);
     if (!HEROES[kind].superSelf) this.aimRing.scale.setScalar(HEROES[kind].superRadius);
     if (!rig) this.loadHeroModel(kind);
+  }
+  /** The aim fan follows the hero's stats, talent included (cycle 45): rebuilt when they change. */
+  private fanFor: HeroDef | null = null;
+  private syncFan(def: HeroDef) {
+    if (def === this.fanFor) return;
+    this.fanFor = def;
+    this.aimFan.geometry.dispose();
+    this.aimFan.geometry = this.fanGeometry(def);
   }
 
   private loadHeroModel(kind: HeroKind) {
@@ -856,8 +861,9 @@ export class RushView {
   sync(s: RushState, dt: number, aim: AimPreview, held = false) {
     const worldDt = held ? 0 : dt;
     this.time += worldDt;
-    const h = s.hero, alive = h.downT <= 0, def = HEROES[h.kind];
+    const h = s.hero, alive = h.downT <= 0, def = heroDef(s);
     this.showHero(h.kind);
+    this.syncFan(def);
     // Hero
     this.hero.visible = alive;
     this.hero.position.set(h.x, 0, h.z);
@@ -919,7 +925,7 @@ export class RushView {
     if (!aim || !alive) return;
     if (aim.kind === 'lob') {
       // Where the snowball will land (same reach rule as the sim), its splash, and a line from the hero.
-      const hd = HEROES[h.kind], l = Math.hypot(aim.offset.x, aim.offset.z), reach = lobReach(hd, l);
+      const hd = heroDef(s), l = Math.hypot(aim.offset.x, aim.offset.z), reach = lobReach(hd, l);
       const a = l > 1e-6 ? Math.atan2(aim.offset.z, aim.offset.x) : h.facing, tx = h.x + Math.cos(a) * reach, tz = h.z + Math.sin(a) * reach;
       this.aimLob.visible = this.aimLine.visible = true;
       this.aimLob.position.set(tx, 0.06, tz);
