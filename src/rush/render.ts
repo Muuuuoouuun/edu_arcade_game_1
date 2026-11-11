@@ -367,6 +367,10 @@ export class RushView {
     return new CircleGeometry(d.range, 24, -d.spread * 1.6, d.spread * 3.2);
   }
 
+  /** Start loading a hero's model ahead of its battle (cycle 42: the town calls this for the chosen hero). No-op once
+   * loaded or loading; the model stays hidden until that hero is shown. */
+  preloadHero(kind: HeroKind) { if (!this.heroRigs.has(kind)) this.loadHeroModel(kind); }
+
   /** Show the given hero, loading its model the first time (the placeholder stands in meanwhile). */
   private showHero(kind: HeroKind) {
     if (kind === this.heroKind) return;
@@ -987,7 +991,7 @@ export class RushView {
 
   render() { this.renderer.render(this.scene, this.camera); }
   /** Renderer statistics for the debug overlay and performance notes. */
-  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
+  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroKind: this.heroKind, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
 }
 
 /** Cape placement per hero model (shoulder height y, back offset x, height h, width w), tuned on the model sheet. */

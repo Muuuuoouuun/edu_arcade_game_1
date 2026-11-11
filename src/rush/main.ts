@@ -1,6 +1,6 @@
 // Arcana Rush prototype bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
-import { ECONOMY, ENEMIES, HEROES, TOWER_LEVELS } from './data.ts';
+import { ECONOMY, ENEMIES, HEROES, TOWER_LEVELS, type HeroKind } from './data.ts';
 import { createRush, padCost, padInReach, stepRush, superReady, WAVE_COUNT, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
@@ -319,6 +319,8 @@ new ResizeObserver(resize).observe(surface);
 resize();
 
 let prev = performance.now(), fpsFrames = 0, fpsT = 0, fps = 0, hitStops = 0;
+const PRELOAD_AFTER = 0.5;
+let townPick: HeroKind | null = null, townPickAt = 0;
 let clock = createClock(prev / 1000);
 function frame(now: number) {
   readLayout((mode === 'play' || mode === 'demo') && !noFade);
@@ -350,6 +352,11 @@ function frame(now: number) {
   view.fxPaused = state.tick >= freezeAt;
   view.sync(state, running ? dt : 0, mode === 'play' ? input.aim : null, stopped);
   if (mode === 'town') {
+    // The chosen hero's model downloads while the player is still in town (cycle 42), not at the start of the battle.
+    // Only once the choice has held for PRELOAD_AFTER s: cycling past Bron must not start his 1.3 MB download.
+    const pick = town.current.hero;
+    if (pick !== townPick) { townPick = pick; townPickAt = seconds; }
+    else if (seconds - townPickAt >= PRELOAD_AFTER) view.preloadHero(pick);
     // The kingdom has its own island scene; the battle scene is not drawn behind it.
     townView.update(dt);
     view.renderer.render(townView.scene, townView.camera);
