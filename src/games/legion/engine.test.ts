@@ -67,6 +67,65 @@ test('soldiers attack and monsters retaliate automatically with no control actio
   assert.equal(initial.enemies[0].hp,2000);
 });
 
+test('a shield absorbs only frontal hits, including bosses, once per enemy cooldown',()=>{
+  for(const kind of Object.keys(MONSTER_DEFS) as Monster['kind'][]){
+    const ready=deploy(createLegion(),'shield');
+    const shield={...ready.units[1],cooldown:99,skillCooldown:99};
+    const foe=monster(1000,{kind,x:shield.x-30,y:shield.y,hp:10000,maxHp:10000});
+    const initial=combat({...ready,units:[shield]},[foe]);
+    const snapshot=structuredClone(initial);
+    assert.equal(stepLegion(initial,0),initial,'pause cannot deal a hit');
+    const after=stepLegion(initial,1/60);
+    assert.ok(Math.abs(after.units[0].hp-(shield.hp-MONSTER_DEFS[kind].damage*.3))<1e-8,`${kind} frontal damage`);
+    assert.equal(after.effects.filter(e=>e.kind==='slash'&&e.color==='#9deae1').length,1,`${kind} guard cue`);
+    assert.equal(stepLegion(after,1/60).units[0].hp,after.units[0].hp,`${kind} must not hit twice during cooldown`);
+    assert.deepEqual(initial,snapshot,'stepping must not mutate the earlier state');
+  }
+});
+
+test('an attack behind the shield is not guarded while it faces a nearer enemy',()=>{
+  const ready=deploy(createLegion(),'shield'),shield={...ready.units[1],cooldown:99,skillCooldown:99};
+  const front=monster(1000,{x:shield.x-20,y:shield.y,hp:1000,maxHp:1000});
+  const rear=monster(1001,{x:shield.x+35,y:shield.y,hp:1000,maxHp:1000});
+  const next=stepLegion(combat({...ready,units:[shield]},[front,rear]),1/60);
+  assert.equal(next.units[0].facing,-1);
+  assert.ok(Math.abs(next.units[0].hp-(shield.hp-MONSTER_DEFS.sprout.damage*1.3))<1e-8);
+  assert.equal(next.effects.filter(e=>e.kind==='slash'&&e.color==='#9deae1').length,1);
+  assert.equal(next.effects.filter(e=>e.kind==='slash'&&e.color==='#ff8875').length,1);
+});
+
+test('the same-x boundary guards the shield but never protects other unit kinds',()=>{
+  for(const kind of ['shield','archer','mage','beast'] as const){
+    const ready=deploy(createLegion(),kind),unit={...ready.units[0],cooldown:99,skillCooldown:99};
+    const foe=monster(1000,{x:unit.x,y:unit.y,hp:1000,maxHp:1000});
+    const next=stepLegion(combat({...ready,units:[unit]},[foe]),1/60);
+    const expected=kind==='shield'?MONSTER_DEFS.sprout.damage*.3:MONSTER_DEFS.sprout.damage;
+    assert.ok(Math.abs(next.units[0].hp-(unit.hp-expected))<1e-8,`${kind} same-x damage`);
+  }
+});
+
+test('frontal guard composes with late-wave damage and the boss same-x boundary',()=>{
+  const ready=deploy(createLegion(),'shield'),shield={...ready.units[1],cooldown:99,skillCooldown:99};
+  const foe=monster(1000,{kind:'boss',x:shield.x,y:shield.y+60,hp:10000,maxHp:10000});
+  const initial={...combat({...ready,units:[shield]},[foe]),wave:4,spawned:WAVE_TOTALS[3]};
+  const next=stepLegion(initial,1/60);
+  assert.ok(Math.abs(next.units[0].hp-(shield.hp-MONSTER_DEFS.boss.damage*1.3*.3))<1e-8);
+  assert.equal(next.effects.filter(e=>e.kind==='slash'&&e.color==='#9deae1').length,1);
+});
+
+test('a rear hit is not blocked if a nearer front threat dies after facing was selected',()=>{
+  const ready=deploy(createLegion(),'shield'),shield={...ready.units[1],cooldown:99,skillCooldown:99};
+  const archers=deploy(createLegion(),'archer',shield.x-60,shield.y);
+  const archer={...archers.units[1],cooldown:0,skillCooldown:99};
+  const front=monster(1000,{x:shield.x-20,y:shield.y,hp:1});
+  const rear=monster(1001,{x:shield.x+35,y:shield.y,hp:1000,maxHp:1000});
+  const next=stepLegion(combat({...ready,units:[shield,archer]},[front,rear]),1/60);
+  assert.equal(next.kills,1);
+  assert.equal(next.units[0].facing,-1,'the selected facing remains for this tick');
+  assert.equal(next.units[0].hp,shield.hp-MONSTER_DEFS.sprout.damage);
+  assert.equal(next.effects.filter(e=>e.kind==='slash'&&e.color==='#ff8875').length,1);
+});
+
 test('wolf stops its distance-driven gait while striking, without delaying combat damage',()=>{
   const ready=deploy(createLegion(),'beast');
   const initial=combat(ready,[monster(1000,{kind:'frostwolf',hp:1000,maxHp:1000})]);

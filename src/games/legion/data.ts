@@ -14,7 +14,7 @@ export const LANES: Point[][] = [
 export const UNIT_DEFS: Record<UnitKind, {
   name:string;cost:number;count:number;hp:number;damage:number;range:number;speed:number;cooldown:number;description:string;sprite:number;
 }> = {
-  shield:{name:'방패병',cost:100,count:3,hp:420,damage:20,range:48,speed:82,cooldown:.85,description:'3인 전열 · 가까운 적을 막고 자동 방패 강타',sprite:2},
+  shield:{name:'방패병',cost:100,count:3,hp:420,damage:20,range:48,speed:82,cooldown:.85,description:'3인 전열 · 정면 피해 70% 차단과 자동 방패 강타',sprite:2},
   archer:{name:'궁수',cost:90,count:3,hp:140,damage:24,range:325,speed:68,cooldown:.8,description:'3인 후열 · 긴 사거리와 자동 연속 사격',sprite:1},
   mage:{name:'마법사',cost:120,count:2,hp:150,damage:34,range:285,speed:62,cooldown:1.15,description:'2인 후열 · 밀집한 적에게 자동 화염 폭발',sprite:0},
   beast:{name:'영물',cost:140,count:1,hp:850,damage:58,range:64,speed:88,cooldown:1.05,description:'1체 전열 · 넓은 충격파로 적을 둔화',sprite:18},
