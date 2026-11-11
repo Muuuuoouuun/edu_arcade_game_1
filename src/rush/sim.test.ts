@@ -429,3 +429,20 @@ test('endless challenge (cycle 46): the five waves loop, each lap is harder, and
   assert.equal(t.phase, 'won');
   assert.equal(t.wave, WAVE_COUNT - 1);
 });
+
+test('endless lap event (cycle 47): one per new lap, numbered from 2; none in a stage battle', async () => {
+  const { stageDifficulty } = await import('./stages.ts');
+  const { WAVE_COUNT } = await import('./sim.ts');
+  const s = createRush(1, NO_MODS, { ...stageDifficulty(10), endless: true });
+  s.town.hp = s.town.maxHp = 1e9;
+  const laps: { lap: number; wave: number }[] = [];
+  while (s.wave < 2 * WAVE_COUNT + 1 && s.tick < 60 * 60 * 60) {
+    stepRush(s, guardBot(s));
+    for (const e of s.events) if (e.type === 'lap') laps.push({ lap: e.lap, wave: s.wave });
+  }
+  assert.deepEqual(laps, [{ lap: 2, wave: WAVE_COUNT }, { lap: 3, wave: 2 * WAVE_COUNT }]);
+  const t = createRush(1);
+  let seen = 0;
+  while (t.phase !== 'won' && t.phase !== 'lost' && t.tick < 60 * 60 * 6) { stepRush(t, guardBot(t)); seen += t.events.filter(e => e.type === 'lap').length; }
+  assert.equal(seen, 0);
+});

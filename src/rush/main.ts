@@ -126,14 +126,14 @@ function updateCallout() {
 // ---------- events → feedback ----------
 // A melee swing sounds like an impact rather than a bowstring.
 const SOUND: Partial<Record<RushEvent['type'], CombatSoundKind>> = {
-  fire: 'arrow', swing: 'slash', burst: 'skill', slam: 'cannon', roar: 'surge', summon: 'cast', townHit: 'breach', heroDown: 'breach', build: 'cast', waveStart: 'surge', superReady: 'freeze',
+  fire: 'arrow', swing: 'slash', burst: 'skill', slam: 'cannon', roar: 'surge', lap: 'surge', summon: 'cast', townHit: 'breach', heroDown: 'breach', build: 'cast', waveStart: 'surge', superReady: 'freeze',
 };
 let toastTimer = 0;
-function toast(text: string, cls = '') {
+function toast(text: string, cls = '', seconds = 1.6) {
   const el = $('toast');
   el.textContent = text;
   el.className = `toast show ${cls}`;
-  toastTimer = 1.6;
+  toastTimer = seconds;
 }
 function feedback(events: RushEvent[]) {
   view.applyEvents(events, reducedMotion);
@@ -154,6 +154,13 @@ function feedback(events: RushEvent[]) {
       toast(boss ? (state.diff.endless ? `웨이브 ${ev.wave + 1} · 보스 출현!` : `마지막 웨이브 · 보스 출현!`) : `웨이브 ${ev.wave + 1} 시작`, boss ? 'bad' : '');
     }
     else if (ev.type === 'waveClear') toast(`웨이브 ${ev.wave + 1} 방어 성공 · +${ev.bonus}G`, 'good');
+    else if (ev.type === 'lap') {
+      // Endless lap (cycle 47): comes right after the fifth wave's clear, so this toast replaces that one.
+      playHaptic('surge', true);
+      toast(`${ev.lap}바퀴째 · 적이 강해졌다!`, 'bad', 2.6);
+      const box = hud.wave.parentElement!;
+      box.classList.remove('lap-flash'); void box.offsetWidth; box.classList.add('lap-flash');
+    }
     else if (ev.type === 'build') toast(ev.level === 0 ? '궁수탑 건설!' : `${ev.branch ? BRANCH_NAME[ev.branch] : '궁수'}탑 Lv${ev.level + 1}`, 'good');
     else if (ev.type === 'won' || ev.type === 'lost') showResult();
   }
@@ -210,7 +217,8 @@ function seeThroughHud() {
 function updateHud() {
   const s = state;
   setText('wave', hud.wave, s.diff.endless ? `웨이브 ${s.wave + 1}` : `웨이브 ${Math.min(s.wave + 1, WAVE_COUNT)}/${WAVE_COUNT}`);
-  const where = mode === 'demo' ? '시연' : s.diff.endless ? '끝없는 도전' : `스테이지 ${stage}`;
+  const lap = Math.floor(s.wave / WAVE_COUNT) + 1;
+  const where = mode === 'demo' ? '시연' : s.diff.endless ? `끝없는 도전${lap > 1 ? ` ${lap}바퀴` : ''}` : `스테이지 ${stage}`;
   setText('waveSub', hud.waveSub, s.phase === 'prep' ? `${where} · 준비 ${Math.ceil(s.prepT)}초` : s.phase === 'wave' ? `${where} · 남은 적 ${s.enemies.length}` : where);
   setStyle('townFill', hud.townFill, 'transform', `scaleX(${s.town.hp / s.town.maxHp})`);
   setText('townHp', hud.townHp, String(Math.ceil(s.town.hp)));
