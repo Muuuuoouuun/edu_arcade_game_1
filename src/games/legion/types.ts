@@ -4,6 +4,6 @@ export type MonsterKind = 'sprout'|'wood'|'stone'|'metal'|'frostwolf'|'boss';
 export type LegionPhase = 'prep'|'wave'|'intermission'|'won'|'lost';
 export type Soldier = Point & {id:number;kind:UnitKind;hp:number;maxHp:number;home:Point;cooldown:number;skillCooldown:number;hit:number;facing:-1|1};
 export type Monster = Point & {id:number;kind:MonsterKind;hp:number;maxHp:number;lane:number;progress:number;cooldown:number;hit:number;slow:number;facing:-1|1;lastHit?:'fire'|'impact'|'physical'};
-export type LegionEffect = {id:number;kind:'shot'|'slash'|'burst'|'chain'|'death'|'breach'|'summon';from:Point;to:Point;age:number;duration:number;color:string;material?:'wood'|'stone'|'metal'|'frost'|'magic';sourceId?:number};
+export type LegionEffect = {id:number;kind:'shot'|'slash'|'burst'|'chain'|'death'|'breach'|'summon';from:Point;to:Point;age:number;duration:number;color:string;material?:'wood'|'stone'|'metal'|'frost'|'magic'|'guard';sourceId?:number};
 export type LegionState = {phase:LegionPhase;time:number;wave:number;coins:number;hp:number;kills:number;spawned:number;spawnClock:number;nextId:number;units:Soldier[];enemies:Monster[];effects:LegionEffect[];notice:string};
 export type LegionAction = {type:'deploy';kind:UnitKind;point:Point}|{type:'remove';id:number}|{type:'start'};

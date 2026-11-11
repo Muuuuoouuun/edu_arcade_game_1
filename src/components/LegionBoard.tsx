@@ -128,6 +128,13 @@ function effects(ctx:CanvasRenderingContext2D,list:LegionEffect[],reduced:boolea
    if(!reduced){const colors=e.material==='wood'?(e.color==='#f2ab57'?['#9f642f','#ffb957','#eec76a']:['#99704a','#c7a067','#694e36']):e.material==='stone'?['#c6c4ab','#858f81','#ddd5b7']:e.material==='metal'?['#97b4b8','#e7d6a0','#657d86']:e.material==='frost'?['#b9efff','#76c5ed','#eefcff']:['#71d5d1','#d0f4e3','#f6dc8a'];for(let j=0;j<5&&debris<64;j++,debris++){const a=j*TAU/5+e.id,speed=18+noise(e.id+j)*25,dx=Math.cos(a)*speed*t,dy=Math.sin(a)*speed*t*.6-18*Math.sin(t*Math.PI);ctx.save();ctx.translate(e.to.x+dx,e.to.y+dy);ctx.rotate(a+t*2);ctx.fillStyle=colors[j%3];ctx.fillRect(-3,-3,5+(j%2)*3,4);ctx.restore();}}}
   else if(e.kind==='summon'){ctx.beginPath();ctx.ellipse(e.to.x,e.to.y,18+t*18,10+t*9,0,0,TAU);ctx.lineWidth=3;ctx.stroke();}
   else if(e.kind==='breach'){ctx.beginPath();ctx.ellipse(e.to.x,e.to.y,22+t*45,16+t*30,0,0,TAU);ctx.lineWidth=4;ctx.stroke();}
+  else if(e.kind==='slash'&&e.material==='guard'){
+   // A stationary, outlined shield arc points toward the actual attacker.  Its
+   // size remains readable at mobile battle scale, including reduced motion.
+   ctx.save();ctx.translate(e.to.x,e.to.y-19);ctx.rotate(Math.atan2(e.from.y-e.to.y,e.from.x-e.to.x));
+   if(reduced)ctx.globalAlpha=.9;
+   ctx.beginPath();ctx.ellipse(0,0,26,21,0,-1.05,1.05);ctx.strokeStyle='#183b40';ctx.lineWidth=8;ctx.stroke();ctx.strokeStyle=e.color;ctx.lineWidth=4;ctx.stroke();ctx.restore();
+  }
   else if(e.kind==='slash'){ctx.beginPath();ctx.arc(e.to.x,e.to.y-15,15+t*12,-1.5,.8);ctx.lineWidth=4*(1-t)+1;ctx.stroke();}
   else{const r=reduced?20:10+t*48;ctx.beginPath();ctx.ellipse(e.to.x,e.to.y,r,r*.58,0,0,TAU);ctx.lineWidth=4*(1-t)+1;ctx.stroke();oval(ctx,e.to.x,e.to.y,6*(1-t)+2,4*(1-t)+1,'#fff4d0');}
   ctx.restore();

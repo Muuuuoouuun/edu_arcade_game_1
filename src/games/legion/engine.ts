@@ -142,7 +142,7 @@ export function stepLegion(s:LegionState,deltaSeconds:number):LegionState {
       const guarded=target.kind==='shield'&&(e.x-target.x)*target.facing>=0;
       const damage=def.damage*(1+(next.wave-1)*.1)*(guarded?SHIELD_FRONT_DAMAGE_FACTOR:1);
       target.hp=Math.max(0,target.hp-damage);target.hit=.12;
-      effect(next,'slash',e,target,guarded?'#9deae1':'#ff8875');
+      effect(next,'slash',e,target,guarded?'#9deae1':'#ff8875',guarded?'guard':undefined);
     }}
     else{const boost=e.kind==='boss'&&e.hp<e.maxHp/2?1.4:1;e.progress+=def.speed*dt*(e.slow>0?.6:1)*boost;Object.assign(e,along(e.lane,e.progress));e.facing=1;}
     if(e.progress>=laneLengths[e.lane]){next.hp=Math.max(0,next.hp-(e.kind==='boss'?20:1));effect(next,'breach',e,e,'#ffb46d');e.progress=Infinity;}

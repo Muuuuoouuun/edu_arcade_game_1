@@ -78,6 +78,7 @@ test('a shield absorbs only frontal hits, including bosses, once per enemy coold
     const after=stepLegion(initial,1/60);
     assert.ok(Math.abs(after.units[0].hp-(shield.hp-MONSTER_DEFS[kind].damage*.3))<1e-8,`${kind} frontal damage`);
     assert.equal(after.effects.filter(e=>e.kind==='slash'&&e.color==='#9deae1').length,1,`${kind} guard cue`);
+    assert.equal(after.effects.find(e=>e.kind==='slash'&&e.color==='#9deae1')?.material,'guard','the visual shield cue follows only a guarded hit');
     assert.equal(stepLegion(after,1/60).units[0].hp,after.units[0].hp,`${kind} must not hit twice during cooldown`);
     assert.deepEqual(initial,snapshot,'stepping must not mutate the earlier state');
   }
@@ -92,6 +93,7 @@ test('an attack behind the shield is not guarded while it faces a nearer enemy',
   assert.ok(Math.abs(next.units[0].hp-(shield.hp-MONSTER_DEFS.sprout.damage*1.3))<1e-8);
   assert.equal(next.effects.filter(e=>e.kind==='slash'&&e.color==='#9deae1').length,1);
   assert.equal(next.effects.filter(e=>e.kind==='slash'&&e.color==='#ff8875').length,1);
+  assert.equal(next.effects.find(e=>e.color==='#ff8875')?.material,undefined,'rear hits do not show the shield cue');
 });
 
 test('the same-x boundary guards the shield but never protects other unit kinds',()=>{
