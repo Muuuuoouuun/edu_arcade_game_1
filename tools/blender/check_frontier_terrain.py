@@ -5,7 +5,7 @@ R=Path(__file__).resolve().parents[2];bpy.ops.wm.open_mainfile(filepath=str(R/'a
 objects=[o for o in bpy.data.objects if o.type=='MESH'];assert len(objects)==json.loads((R/'public/defense/models/frontier-terrain.json').read_text())['editable_objects']
 for prefix,count in [('West river cliff',32),('East river cliff',32),('Bridge masonry support',6),('Bridge diagonal brace',4),('Bridge deck plank',16)]:assert sum(o.name.startswith(prefix)for o in objects)==count,(prefix,count)
 for prefix,count in [('Verdant trunk',28),('Verdant branch',28),('Verdant crown',56)]:assert sum(o.name.startswith(prefix)for o in objects)==count,(prefix,count)
-for side,start,end,count in [('West',-20,2,28),('East',10,21,14)]:
+for side,start,end,count in [('West',-17,2,28),('East',10,21,14)]:
  stones=[o for o in objects if o.name.startswith('Bridge approach '+side+' stone')];assert len(stones)==count,(side,len(stones))
  for stone in stones:
   points=[stone.matrix_world @ Vector(v) for v in stone.bound_box]
@@ -19,9 +19,21 @@ for tree in (o for o in objects if o.name.startswith('Verdant')):
   assert abs(x)>28,(tree.name,x)
 grass=next(o for o in objects if o.name=='Grass slopes / river trench')
 assert len(grass.data.materials)==4 and len({p.material_index for p in grass.data.polygons})==4
+# Sampling triangles, not only vertices, catches a road polygon bridging a
+# piecewise-linear slope boundary and hovering above the gameplay ground.
+roads=[o for o in objects if o.name.startswith(('Winding road ','Rounded road junction'))];assert len(roads)==9
+samples=0;max_error=0
+for road in roads:
+ road.data.calc_loop_triangles();offset=.014 if road.name.startswith('Winding road ') else .016
+ for tri in road.data.loop_triangles:
+  p=[road.matrix_world @ road.data.vertices[i].co for i in tri.vertices]
+  for weights in [(1/3,1/3,1/3),(.5,.5,0),(.2,.3,.5)]:
+   v=sum((q*w for q,w in zip(p,weights)),Vector((0,0,0)));expected=max(0,min(1,(-(-v.y)-2)/10))*4.6+offset
+   error=abs(v.z-expected);max_error=max(max_error,error);samples+=1;assert error<.0001,(road.name,tuple(v),error)
+assert samples>100
 assert bpy.context.scene['river_water_y']==-2.6;assert bpy.context.scene['river_bed_y']==-4.5
 assert bpy.context.scene.camera.data.ortho_scale==98
-print('PASS editable terrain',len(objects),'objects; 42 embedded approach stones, 64 cliff segments, 6 supports, 4 braces, 16 planks, original common camera')
+print('PASS editable terrain',len(objects),'objects;',samples,'road samples max error',max_error,'; 42 approach stones, original common camera')
 # Runtime paint must preserve every authored terrain material's linear base color.
 palette={tuple(m.diffuse_color) for o in objects for m in o.data.materials}
 before=set(bpy.data.objects)

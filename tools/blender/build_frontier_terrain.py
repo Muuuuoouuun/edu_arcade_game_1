@@ -66,11 +66,15 @@ for z in [-2.8,2.8]:
 # ground and outside x=2..10, leaving the simulation's deck and bounds intact.
 approaches=[('West',-20,2,14),('East',10,21,7)]
 for side,start,end,count in approaches:
- length=end-start;step=length/count
+ length=end-start
  box('Bridge approach '+side+' bedding',(start+end)/2,-.027,0,length,.06,3.2,'#777e69')
+ # At the west junction, the road already covers the first stretch of soil.
+ # Start the stones beyond its footprint so the two nearly coplanar surfaces
+ # cannot compete in the depth buffer. Keep the bedding as a continuous link.
+ stone_start=-17 if side=='West' else start;step=(end-stone_start)/count
  for i in range(count):
   for lane in [-1,1]:
-   shift=lane*.18*step;lo=max(start,start+i*step+shift)+.035;hi=min(end,start+(i+1)*step+shift)-.035
+   shift=lane*.18*step;lo=max(stone_start,stone_start+i*step+shift)+.035;hi=min(end,stone_start+(i+1)*step+shift)-.035
    z=lane*.79+.035*math.sin(i*2.4+lane);width=.68+.025*math.sin(i*1.7+lane)
    # Six-sided, shallow stones use staggered joints and asymmetric shoulders;
    # the retained soil beneath makes the crossing a path rather than a grid.
@@ -95,6 +99,36 @@ for i in range(32):
  for j,(offset,depth,radii,color) in enumerate([(.55,-.9,(1.95,2.05,1.25),'#396e4d'),(-.55,.9,(1.5,1.8,1.08),'#6b9653')]):
   bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1,radius=1,location=(x+side*offset*s,-(z+depth*s),base+(4.35+j*.38)*s))
   o=bpy.context.object;o.name='Verdant crown';o.scale=tuple(v*s for v in radii);bpy.ops.object.transform_apply(location=False,rotation=False,scale=True);o.data.materials.append(mat(color));objects.append(o)
+# Split road polygons at the two changes in the height field. Interpolating a
+# wide quad across a change in slope leaves a false ramp above the ground.
+# Within each band height(x,z) is planar, so interpolation matches it exactly.
+def clip_road(poly,edge,above):
+ result=[]
+ for a,b in zip(poly,poly[1:]+poly[:1]):
+  ina=a[1]>=edge if above else a[1]<=edge;inb=b[1]>=edge if above else b[1]<=edge
+  if ina!=inb:
+   t=(edge-a[1])/(b[1]-a[1]);result.append((a[0]+(b[0]-a[0])*t,edge))
+  if inb:result.append(b)
+ return result
+def area(poly):return abs(sum(a[0]*b[1]-a[1]*b[0] for a,b in zip(poly,poly[1:]+poly[:1])))/2
+def grounded_road(name,vertices,faces,offset):
+ out=[];polys=[]
+ for face in faces:
+  source=[(vertices[i][0],-vertices[i][1]) for i in face];original=area(source);covered=0
+  for low,high in [(None,-12),(-12,-2),(-2,None)]:
+   part=source
+   if low is not None:part=clip_road(part,low,True)
+   if high is not None:part=clip_road(part,high,False)
+   if len(part)<3 or area(part)<1e-8:continue
+   covered+=area(part);indices=[]
+   for x,z in part:indices.append(len(out));out.append((x,-z,height(x,z)+offset))
+   polys.append(indices)
+  assert abs(original-covered)<1e-6,(name,original,covered)
+ m=bpy.data.meshes.new(name+' surface');m.from_pydata(out,[],polys);m.update()
+ # Adjacent clipped polygons share physical edges; welding removes duplicate
+ # seam vertices so rasterization cannot expose hairline cracks between them.
+ bm=bmesh.new();bm.from_mesh(m);bmesh.ops.remove_doubles(bm,verts=bm.verts,dist=1e-6);bm.to_mesh(m);bm.free();m.update();m.materials.append(mat('#bda174'))
+ o=bpy.data.objects.new(name,m);bpy.context.collection.objects.link(o);objects.append(o)
 # Continuous winding road follows the actual defense route, with raised stone edging.
 path=[(-22,-29),(-22,-26),(-12,-15),(-20,-2),(-14,21),(-14,30)]
 for n,((ax,az),(bx,bz)) in enumerate(zip(path,path[1:])):
@@ -102,8 +136,8 @@ for n,((ax,az),(bx,bz)) in enumerate(zip(path,path[1:])):
  steps=max(2,int(l*2))
  for i in range(steps+1):
   q=i/steps;x=ax+dx*q;z=az+dz*q
-  for w in [-1.65,1.65]:vs.append((x+nx*w,-(z+nz*w),height(x+nx*w,z+nz*w)+.045))
- fs=[(i*2,i*2+1,i*2+3,i*2+2) for i in range(steps)];m=bpy.data.meshes.new('Road strip');m.from_pydata(vs,[],fs);m.materials.append(mat('#bda174'));o=bpy.data.objects.new('Winding road '+str(n),m);bpy.context.collection.objects.link(o);objects.append(o)
+  for w in [-1.65,1.65]:vs.append((x+nx*w,-(z+nz*w),0))
+ fs=[(i*2,i*2+1,i*2+3,i*2+2) for i in range(steps)];grounded_road('Winding road '+str(n),vs,fs,.014)
  for i in range(0,steps,3):
   q=i/steps;x=ax+dx*q;z=az+dz*q
   for sign in [-1,1]:
@@ -113,8 +147,8 @@ for n,((ax,az),(bx,bz)) in enumerate(zip(path,path[1:])):
    box('Road border stone',sx,height(x,z)+.12,sz,.48,.24,.65,'#a4a58b')
 # Round the road joints so sharp bends have no gaps.
 for x,z in path[1:-1]:
- vs=[(x,-z,height(x,z)+.07)]+[(x+1.7*math.cos(i*math.tau/20),-(z+1.7*math.sin(i*math.tau/20)),height(x+1.7*math.cos(i*math.tau/20),z+1.7*math.sin(i*math.tau/20))+.07) for i in range(20)]
- fs=[(0,1+(i+1)%20,1+i) for i in range(20)];m=bpy.data.meshes.new('Road bend');m.from_pydata(vs,[],fs);m.materials.append(mat('#bda174'));o=bpy.data.objects.new('Rounded road junction',m);bpy.context.collection.objects.link(o);objects.append(o)
+ vs=[(x,-z,0)]+[(x+1.7*math.cos(i*math.tau/20),-(z+1.7*math.sin(i*math.tau/20)),0) for i in range(20)]
+ fs=[(0,1+(i+1)%20,1+i) for i in range(20)];grounded_road('Rounded road junction',vs,fs,.016)
 # Rock shelves mark the highland and expose its vertical side faces.
 for x in [-24,-19,-7,-2,13,20,25]:
  z=-31;box('Highland rock',x,height(x,z)+.5,z,2.7,1.2,2,'#8a927a')
@@ -150,4 +184,4 @@ vertex=paint.node_tree.nodes.new('ShaderNodeVertexColor');vertex.layer_name='Col
 for face in packed.data.polygons:face.material_index=0
 bpy.ops.export_scene.gltf(filepath=str(O/'frontier-terrain.glb'),export_format='GLB',use_selection=True,export_yup=True,export_animations=False)
 subprocess.run(['ffmpeg','-y','-loglevel','error','-i',str(O/'frontier-terrain.png'),'-c:v','libwebp','-quality','90',str(O/'frontier-terrain.webp')],check=True)
-files=[blend,O/'frontier-terrain.glb',O/'frontier-terrain.png',O/'frontier-terrain.webp',O/'frontier-terrain-crossing.png'];meta={'generator':'tools/blender/build_frontier_terrain.py','generator_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'command':'npm run models:frontier-terrain','editable_objects':len(objects),'runtime_materials':1,'runtime_paint':'linear vertex colors; opaque roughness .85','forest_tree_count':28,'forest_crown_meshes':56,'meadow_palette_colors':4,'forest_outer_verge_x':[32,41],'footprint':[64,64],'highland_height':4.6,'river_x':[3,9],'river_water_y':-2.6,'river_bed_y':-4.5,'crossing_camera':{'location':[20,-17,13],'target':[6,0,-.7],'orthographic_scale':25,'size':[768,512]},'bridge_walkable_z':[-2,2],'bridge_approaches':{'west_x':[-20,2],'east_x':[10,21],'width':3.2,'stone_count':42,'maximum_top':.012},'camera':{'size':[900,600],'orthographic_scale':98,'location':[0,-68,72]},'files':[{'file':str(p.relative_to(R)),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in files]};(O/'frontier-terrain.json').write_text(json.dumps(meta,indent=2)+'\n');print('FRONTIER_TERRAIN_PASS')
+files=[blend,O/'frontier-terrain.glb',O/'frontier-terrain.png',O/'frontier-terrain.webp',O/'frontier-terrain-crossing.png'];meta={'generator':'tools/blender/build_frontier_terrain.py','generator_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'command':'npm run models:frontier-terrain','editable_objects':len(objects),'runtime_materials':1,'runtime_paint':'linear vertex colors; opaque roughness .85','forest_tree_count':28,'forest_crown_meshes':56,'meadow_palette_colors':4,'forest_outer_verge_x':[32,41],'footprint':[64,64],'highland_height':4.6,'river_x':[3,9],'river_water_y':-2.6,'river_bed_y':-4.5,'crossing_camera':{'location':[20,-17,13],'target':[6,0,-.7],'orthographic_scale':25,'size':[768,512]},'bridge_walkable_z':[-2,2],'bridge_approaches':{'west_x':[-20,2],'west_stone_x':[-17,2],'east_x':[10,21],'width':3.2,'stone_count':42,'maximum_top':.012},'road_surface':{'slope_breaks_z':[-12,-2],'strip_offset':.014,'junction_offset':.016},'camera':{'size':[900,600],'orthographic_scale':98,'location':[0,-68,72]},'files':[{'file':str(p.relative_to(R)),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in files]};(O/'frontier-terrain.json').write_text(json.dumps(meta,indent=2)+'\n');print('FRONTIER_TERRAIN_PASS')
