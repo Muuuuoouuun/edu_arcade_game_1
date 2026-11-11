@@ -24,3 +24,11 @@ test('lethal contact removes attackers immediately and creates bounded visual-on
 });
 
 test('simultaneous defeats retain at most 32 visual bodies without losing rewards',()=>{let s=setup();s.enemies=Array.from({length:40},(_,i)=>({id:100+i,x:-15+(i%5)*.1,z:1.2,hp:20,maxHp:60,cooldown:999,path:0}));s=run(actFrontier(s,{type:'skill'}),.28);assert.equal(s.enemies.length,0);assert.equal(s.kills,40);assert.equal(s.fallen?.length,32);assert.equal(s.gold,180+14*40);});
+
+test('cancelled attack snapshot is visual only and freezes through pause without another hit',()=>{
+ for(const type of ['attack','skill'] as const){
+  let s=run(actFrontier(setup(),{type}),.27);s=actFrontier(s,{type:'dash'});assert.equal(s.hero.attack,undefined);assert.ok(s.hero.dashMotion?.fromAttack);assert.ok(Math.abs(s.hero.dashMotion!.fromAttack!.time-.27)<1e-7);assert.deepEqual(Object.keys(s.hero.dashMotion!.fromAttack!).sort(),['fromMoving','time','walkTime','walkWeight']);
+  const paused=actFrontier(s,{type:'pause'});assert.equal(stepFrontier(paused,.05),paused);const fast=stepFrontier(actFrontier(s,{type:'speed'}),.05),normal=stepFrontier(stepFrontier(s,.05),.05);assert.equal(fast.hero.dashMotion?.fromAttack?.time,s.hero.dashMotion?.fromAttack?.time);assert.equal(normal.hero.dashMotion?.fromAttack?.time,s.hero.dashMotion?.fromAttack?.time);assert.equal(fast.enemies[0].hp,100);assert.equal(normal.enemies[0].hp,100);assert.equal(run(normal,.2).hero.dashMotion,undefined);
+ }
+ let hit=run(actFrontier(setup(),{type:'skill'}),.28);assert.equal(hit.enemies[0].hp,50);hit=actFrontier(hit,{type:'dash'});assert.equal(run(hit,.25).enemies[0].hp,50);
+});

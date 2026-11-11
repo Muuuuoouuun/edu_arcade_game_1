@@ -163,3 +163,40 @@ test('blended dash brace keeps both boots above the actual terrain in every head
  }
  view.dispose();
 });
+
+test('dash cancelling an attack starts at its actual hammer and foot pose',()=>{
+ const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!);view.setSlam(compact.animations.find(c=>c.name==='kar-slam')!);view.setReset(compact.animations.find(c=>c.name==='kar-reset-0')!);view.setEntries(compact.animations.filter(c=>c.name.startsWith('kar-entry-')));
+ for(const [x,z] of [[-14,14],[-14,-7],[6,0]])for(const moving of [false,true])for(let phase=0;phase<8;phase++)for(const time of [0,.02,.12,.19,.27,.28,.34,.43,.49,.55]){
+  const s=actFrontier(createFrontier('solo'),{type:'start'}),h=s.hero;h.x=x;h.z=z;h.walkDistance=phase*.2;h.heading=phase*Math.PI/4;h.attack={kind:'skill',time,heading:h.heading,hit:time>=.28,targetId:null,damage:50,walkTime:phase*.1,fromMoving:moving,walkWeight:1};h.moving=false;root.position.set(x,heightAt(x,z),z);root.rotation.y=h.heading;
+  view.update(h,false,heightAt);const before=matrices(root);const after=actFrontier(s,{type:'dash'});view.update(after.hero,false,heightAt);assert.ok(error(before,matrices(root))<1e-5,`pose snapped: ${x},${z}, moving=${moving}, phase=${phase}, time=${time}`);
+ }
+ view.dispose();
+});
+
+test('cancelled attack blends to the dash brace without losing grips or penetrating slopes',()=>{
+ const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!);view.setSlam(compact.animations.find(c=>c.name==='kar-slam')!);view.setReset(compact.animations.find(c=>c.name==='kar-reset-0')!);view.setEntries(compact.animations.filter(c=>c.name.startsWith('kar-entry-')));const p=new Vector3();
+ for(const [x,z] of [[-14,14],[-14,-7],[6,0]])for(const moving of [false,true])for(let d=0;d<8;d++)for(const time of [.02,.12,.19,.27,.28,.34,.43,.49,.55])for(const progress of [0,.05,.1,.15,.2,.25]){
+  const s=actFrontier(createFrontier('solo'),{type:'start'}),h=s.hero;Object.assign(h,{x,z,heading:d*Math.PI/4,walkDistance:d*.2,moving:false,attack:{kind:'skill',time,heading:d*Math.PI/4,hit:time>=.28,targetId:null,damage:50,walkTime:d*.1,fromMoving:moving,walkWeight:1}});let dashed=actFrontier(s,{type:'dash'});if(!dashed.hero.dashMotion)continue;dashed.hero.dashMotion.progress=progress;root.position.set(x,heightAt(x,z),z);root.rotation.set(.16*Math.sin(Math.PI*progress),h.heading,0,'YXZ');view.update(dashed.hero,false,heightAt);root.updateMatrixWorld(true);
+  for(const name of ['left-foot','right-foot'])root.getObjectByName(name)!.traverse(o=>{if(o instanceof Mesh){const v=o.geometry.getAttribute('position');for(let i=0;i<v.count;i++){p.fromBufferAttribute(v,i).applyMatrix4(o.matrixWorld);assert.ok(p.y-heightAt(p.x,p.z)>-.0001,`${name} penetrates, ${d} ${time} ${progress}`);}}});
+  for(const [i,side] of ['left','right'].entries()){const upper=root.getObjectByName(side+'-upper')!,arm=root.getObjectByName(side+'-forearm')!,grip=root.getObjectByName(i===0?'upper-grip':'lower-grip')!,drift=new Vector3(0,1,0).applyMatrix4(arm.matrixWorld).distanceTo(grip.getWorldPosition(new Vector3()));assert.ok(drift<.01,`${side} grip drift ${drift}, ${d} ${time} ${progress}`);assert.ok(new Vector3(0,1,0).applyMatrix4(upper.matrixWorld).distanceTo(arm.getWorldPosition(new Vector3()))<.01,`${side} elbow disconnected`);}
+  const pose=matrices(root);view.update(dashed.hero,false,heightAt);assert.ok(error(pose,matrices(root))<1e-6,'paused sample must not accumulate');
+ }
+ view.dispose();
+});
+
+test('cancel pose completes within a quarter dash and reduced motion or missing clips remain safe',()=>{
+ const make=(full:boolean)=>{const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!);if(full){view.setSlam(compact.animations.find(c=>c.name==='kar-slam')!);view.setReset(compact.animations.find(c=>c.name==='kar-reset-0')!);view.setEntries(compact.animations.filter(c=>c.name.startsWith('kar-entry-')));}return{root,view};};
+ for(const full of [false,true])for(const reduced of [false,true])for(const progress of [.1,.25,.5]){
+  const a=make(full),b=make(full),s=actFrontier(createFrontier('solo'),{type:'start'});s.hero.attack={kind:'skill',time:.19,heading:0,hit:false,targetId:null,damage:50,walkTime:.2,fromMoving:true};s.hero.moving=false;const cancelled=actFrontier(s,{type:'dash'}).hero;cancelled.dashMotion!.progress=progress;const plain={...cancelled,dashMotion:{...cancelled.dashMotion!,fromAttack:undefined}};
+  a.view.update(cancelled,reduced,()=>0);b.view.update(plain,reduced,()=>0);if(reduced||!full||progress>=.25)assert.ok(error(matrices(a.root),matrices(b.root))<1e-6,`cancel transition should be complete or disabled: ${full} ${reduced} ${progress}`);else assert.ok(error(matrices(a.root),matrices(b.root))>.001,'transition retains the cancelled pose');a.view.dispose();b.view.dispose();
+ }
+});
+
+test('cancel transition has no endpoint jump when arm correction turns on or off',()=>{
+ const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!);view.setSlam(compact.animations.find(c=>c.name==='kar-slam')!);view.setReset(compact.animations.find(c=>c.name==='kar-reset-0')!);view.setEntries(compact.animations.filter(c=>c.name.startsWith('kar-entry-')));
+ for(const moving of [false,true])for(let phase=0;phase<8;phase++)for(const time of [.02,.12,.19,.27,.28,.34,.43,.49,.55]){
+  const s=actFrontier(createFrontier('solo'),{type:'start'});s.hero.attack={kind:'skill',time,heading:0,hit:time>=.28,targetId:null,damage:50,walkTime:phase*.1,fromMoving:moving,walkWeight:1};const h=actFrontier(s,{type:'dash'}).hero;h.moving=true;
+  for(const endpoint of [0,.25]){h.dashMotion!.progress=endpoint;view.update(h,false,()=>0);const a=matrices(root);h.dashMotion!.progress=endpoint===0?.000001:.249999;view.update(h,false,()=>0);assert.ok(error(a,matrices(root))<.01,`transition jumped near ${endpoint}: ${moving}, ${phase}, ${time}`);}
+ }
+ view.dispose();
+});
