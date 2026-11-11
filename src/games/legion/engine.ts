@@ -2,6 +2,8 @@ import { DEPLOY, LANES, MAX_ENEMIES, MONSTER_DEFS, POPULATION_CAP, UNIT_DEFS, WA
 import type { LegionAction, LegionEffect, LegionState, Monster, MonsterKind, Point, Soldier, UnitKind } from './types.ts';
 
 const dist = (a:Point,b:Point) => Math.hypot(a.x-b.x,a.y-b.y);
+/** A facing shield absorbs 70% of the damage from each frontal attack. */
+const SHIELD_FRONT_DAMAGE_FACTOR = .3;
 const copy = (s:LegionState):LegionState => ({...s,units:s.units.map(u=>({...u,home:{...u.home}})),enemies:s.enemies.map(e=>({...e})),effects:s.effects.map(e=>({...e,from:{...e.from},to:{...e.to}}))});
 const pathLengths=LANES.map(points=>points.slice(1).map((p,i)=>dist(points[i],p)));
 const laneLengths=pathLengths.map(parts=>parts.reduce((a,b)=>a+b,0));
@@ -133,7 +135,15 @@ export function stepLegion(s:LegionState,deltaSeconds:number):LegionState {
   for(const e of next.enemies){
     e.cooldown=Math.max(0,e.cooldown-dt);e.hit=Math.max(0,e.hit-dt);e.slow=Math.max(0,e.slow-dt);
     const target=nearest(e,next.units,e.kind==='boss'?76:48),def=MONSTER_DEFS[e.kind];
-    if(target){e.facing=target.x<e.x?-1:1;if(e.cooldown===0){e.cooldown=def.cooldown;target.hp=Math.max(0,target.hp-def.damage*(1+(next.wave-1)*.1));target.hit=.12;effect(next,'slash',e,target,'#ff8875');}}
+    if(target){e.facing=target.x<e.x?-1:1;if(e.cooldown===0){
+      e.cooldown=def.cooldown;
+      // The same horizontal facing used by the sprite and targeting determines the front.
+      // A strike at exactly the same x is treated as frontal; attacks behind bypass the guard.
+      const guarded=target.kind==='shield'&&(e.x-target.x)*target.facing>=0;
+      const damage=def.damage*(1+(next.wave-1)*.1)*(guarded?SHIELD_FRONT_DAMAGE_FACTOR:1);
+      target.hp=Math.max(0,target.hp-damage);target.hit=.12;
+      effect(next,'slash',e,target,guarded?'#9deae1':'#ff8875');
+    }}
     else{const boost=e.kind==='boss'&&e.hp<e.maxHp/2?1.4:1;e.progress+=def.speed*dt*(e.slow>0?.6:1)*boost;Object.assign(e,along(e.lane,e.progress));e.facing=1;}
     if(e.progress>=laneLengths[e.lane]){next.hp=Math.max(0,next.hp-(e.kind==='boss'?20:1));effect(next,'breach',e,e,'#ffb46d');e.progress=Infinity;}
   }
