@@ -7,7 +7,7 @@ import { STAGE_COUNT, starBonus, starsFor, stageRewardMul } from './stages.ts';
 
 export type Resource = 'food' | 'wood';
 export type Building = 'castle' | 'farm' | 'mill';
-export type Perk = 'attack' | 'towerDiscount' | 'townHp' | 'forge';
+export type Perk = 'attack' | 'towerDiscount' | 'townHp' | 'forge' | 'vault';
 export type Upgrade = Building | Perk;
 export type Cost = Record<Resource, number>;
 
@@ -38,12 +38,14 @@ export const CASTLE_MAX = 5;
 export const RATE_PER_LEVEL = 8;
 export const STORAGE_MINUTES = 120;
 export const PERK_EFFECT = { attack: 0.08, towerDiscount: 0.08, townHp: 0.1 } as const;
+/** Vault (cycle 38): battle starting gold per level. */
+export const VAULT_GOLD = 12;
 /** Hero training: the castle allows two hero levels per castle level; each level adds health and attack. */
 export const HERO_LV_PER_CASTLE = 2;
 export const HERO_GROWTH = { hp: 0.1, damage: 0.1 } as const;
 
 export const createKingdom = (now: number): Kingdom => ({
-  version: 1, castle: 1, farm: 1, mill: 1, perks: { attack: 0, towerDiscount: 0, townHp: 0, forge: 0 },
+  version: 1, castle: 1, farm: 1, mill: 1, perks: { attack: 0, towerDiscount: 0, townHp: 0, forge: 0, vault: 0 },
   food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), hero: 'ranger', heroLv: { ranger: 1, bron: 1 }, shards: 0, dailyWin: 0, rewarded: [],
 });
 
@@ -97,6 +99,7 @@ export function upgradeCost(k: Kingdom, u: Upgrade): Cost | null {
     case 'towerDiscount': return { food: 40 * n, wood: 70 * n };
     case 'townHp': return { food: 55 * n, wood: 55 * n };
     case 'forge': return { food: 50 * n, wood: 60 * n };
+    case 'vault': return { food: 60 * n, wood: 50 * n };
   }
 }
 export function canUpgrade(k: Kingdom, u: Upgrade): boolean {
@@ -151,6 +154,7 @@ export const kingdomMods = (k: Kingdom): RushMods => {
     townHp: 1 + PERK_EFFECT.townHp * k.perks.townHp,
     heroHp: g.hp,
     forge: k.perks.forge,
+    startGold: VAULT_GOLD * k.perks.vault,
   };
 };
 
@@ -221,10 +225,12 @@ export function parseKingdom(raw: string | null, now: number): Kingdom {
     const farm = count(v.farm, 1, castle), mill = count(v.mill, 1, castle);
     const p = v.perks ?? ({} as Kingdom['perks']);
     // Saves from before the forge (cycle 20) have no forge level: start it at 0, keep everything else.
-    const perks = { attack: count(p.attack, 0, castle), towerDiscount: count(p.towerDiscount, 0, castle), townHp: count(p.townHp, 0, castle), forge: p.forge === undefined ? 0 : count(p.forge, 0, castle) };
+    const perks = { attack: count(p.attack, 0, castle), towerDiscount: count(p.towerDiscount, 0, castle), townHp: count(p.townHp, 0, castle), forge: p.forge === undefined ? 0 : count(p.forge, 0, castle),
+      // Saves from before the vault (cycle 38) start it at 0, like the forge.
+      vault: p.vault === undefined ? 0 : count(p.vault, 0, castle) };
     const food = count(v.food, 0, 1e9), wood = count(v.wood, 0, 1e9);
     const won = count(v.battles?.won, 0, 1e9), lost = count(v.battles?.lost, 0, 1e9);
-    if ([farm, mill, perks.attack, perks.towerDiscount, perks.townHp, perks.forge, food, wood, won, lost].some(x => x === null)) return createKingdom(now);
+    if ([farm, mill, perks.attack, perks.towerDiscount, perks.townHp, perks.forge, perks.vault, food, wood, won, lost].some(x => x === null)) return createKingdom(now);
     const last = typeof v.lastCollect === 'number' && Number.isFinite(v.lastCollect) ? Math.min(v.lastCollect, now) : now;
     const rewarded = Array.isArray(v.rewarded) ? v.rewarded.filter((x): x is string => typeof x === 'string').slice(-20) : [];
     // Saves from before stages existed have no star record: start the ladder fresh, keep everything else.
@@ -232,7 +238,7 @@ export function parseKingdom(raw: string | null, now: number): Kingdom {
       ? [...v.stars] : Array(STAGE_COUNT).fill(0);
     return {
       version: 1, castle, farm: farm!, mill: mill!,
-      perks: { attack: perks.attack!, towerDiscount: perks.towerDiscount!, townHp: perks.townHp!, forge: perks.forge! },
+      perks: { attack: perks.attack!, towerDiscount: perks.towerDiscount!, townHp: perks.townHp!, forge: perks.forge!, vault: perks.vault! },
       food: food!, wood: wood!, lastCollect: last, battles: { won: won!, lost: lost! }, stars: starList,
       // Saves from before hero choice (or naming an unknown or still-locked hero) take the ranger.
       hero: v.hero === 'bron' && starList[1] > 0 ? 'bron' : 'ranger',

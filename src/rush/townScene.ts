@@ -21,6 +21,8 @@ export const SPOTS: readonly Spot[] = [
   { id: 'townHp', x: 0, z: 1.6, label: 0.9 },
   // Behind the castle, left (cycle 20): the camera-side front of the island is under the HUD on phones.
   { id: 'forge', x: -4.3, z: -7.2, label: 2.9 },
+  // Behind the castle, right (cycle 38): mirrors the forge.
+  { id: 'vault', x: 4.3, z: -7.2, label: 2.7 },
 ];
 
 const C = { cream: PAL.cream, roof: PAL.ally, wood: PAL.wood, dark: PAL.woodDark, gold: PAL.gold, stone: PAL.stone, stoneTop: PAL.stoneTop, red: 0xd9473f, hay: 0xf2c94c, crop: 0x9bd35a, purple: PAL.super, leaf: 0x4fae4a };
@@ -126,6 +128,26 @@ function buildingParts(id: Upgrade, stage: number): Part[] {
       parts.push({ geo: new ConeGeometry(0.3, 0.8, 6), color: 0xff7a2f, at: [-1.25, 0.4, 0.7] }, { geo: new ConeGeometry(0.17, 0.45, 6), color: 0xffd04a, at: [-1.25, 0.35, 0.72] });
       parts.push({ geo: new OctahedronGeometry(0.34), color: 0x8fe6ff, at: [1.25, 0.45, 0.7], scale: [0.8, 1.4, 0.8] });
     }
+    return parts;
+  }
+  if (id === 'vault') {
+    // Squat stone treasury with a gold roof and an iron-banded door; coin piles and chests grow with the stage.
+    const k = 1 + 0.12 * s, roofY = 1.0 * k + 0.4 * k, parts: Part[] = [
+      { geo: new BoxGeometry(1.6 * k, 1.0 * k, 1.3 * k), color: C.stone, at: [0, 0.5 * k, -0.2] },
+      { geo: new ConeGeometry(1.25 * k, 0.8 * k, 4), color: C.gold, at: [0, roofY, -0.2], rot: [0, Math.PI / 4, 0] },
+      { geo: new BoxGeometry(0.6, 0.75, 0.12), color: C.dark, at: [0, 0.38, -0.2 + 0.65 * k] },
+      { geo: new BoxGeometry(0.66, 0.08, 0.14), color: 0x4a4f63, at: [0, 0.55, -0.2 + 0.66 * k] },
+      { geo: new CylinderGeometry(0.3 + 0.08 * s, 0.38 + 0.1 * s, 0.2 + 0.1 * s, 10), color: C.gold, at: [-1.05, 0.1 + 0.05 * s, 0.7] },
+    ];
+    if (s >= 1) parts.push(
+      { geo: new BoxGeometry(0.6, 0.4, 0.4), color: C.wood, at: [1.05, 0.2, 0.65] },
+      { geo: new BoxGeometry(0.64, 0.08, 0.44), color: C.gold, at: [1.05, 0.42, 0.65] },
+    );
+    if (s >= 2) parts.push(
+      { geo: new OctahedronGeometry(0.28), color: C.gold, at: [0, roofY + 0.4 * k + 0.25, -0.2] },
+      { geo: new CylinderGeometry(0.22, 0.3, 0.2, 10), color: C.gold, at: [-0.55, 0.1, 1.0] },
+      { geo: new BoxGeometry(0.5, 0.34, 0.34), color: C.wood, at: [1.55, 0.17, -0.1], rot: [0, 0.5, 0] },
+    );
     return parts;
   }
   // townHp: an arc of wall segments in front of the castle; height and count grow with the stage.

@@ -3,7 +3,7 @@ import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
 import { FORGE, HEROES, type HeroKind } from './data.ts';
 import {
-  CASTLE_MAX, DAILY_WIN, HERO_LV_PER_CASTLE, canTrain, dailyReady, dayIndex, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
+  CASTLE_MAX, DAILY_WIN, VAULT_GOLD, HERO_LV_PER_CASTLE, canTrain, dailyReady, dayIndex, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
   serializeKingdom, storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 
@@ -29,6 +29,7 @@ const ROWS: Row[] = [
   { id: 'towerDiscount', name: '탑 설계도', badge: '탑', tone: 'tower', label: '탑 비용', value: k => `−${pct(PERK_EFFECT.towerDiscount * k.perks.towerDiscount)}` },
   { id: 'townHp', name: '성벽 보강', badge: '벽', tone: 'wall', label: '마을 체력', value: k => `+${pct(PERK_EFFECT.townHp * k.perks.townHp)}` },
   { id: 'forge', name: '대장간', badge: '철', tone: 'forge', label: '화염 범위·냉기 시간', value: k => `+${pct(FORGE.splashShare * k.perks.forge)}·+${(FORGE.slowTime * k.perks.forge).toFixed(2)}초` },
+  { id: 'vault', name: '금고', badge: '금', tone: 'vault', label: '전투 시작 골드', value: k => `+${VAULT_GOLD * k.perks.vault}G` },
 ];
 /** The same kingdom one level higher in `u` (for the "now → next" preview only). */
 function bumped(k: Kingdom, u: Upgrade): Kingdom {

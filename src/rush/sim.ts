@@ -66,7 +66,11 @@ export type RushEvent =
 
 /** Battle modifiers from permanent (between-battle) upgrades. All 1 = the base game. */
 /** Battle modifiers from the kingdom. heroHp scales the hero's max health (hero level, cycle 14). */
-export interface RushMods { damage: number; towerCost: number; townHp: number; heroHp: number; forge: number }
+export interface RushMods {
+  damage: number; towerCost: number; townHp: number; heroHp: number; forge: number;
+  /** Extra gold at the start of the battle (cycle 38, kingdom vault). */
+  startGold?: number;
+}
 export const NO_MODS: RushMods = { damage: 1, towerCost: 1, townHp: 1, heroHp: 1, forge: 0 };
 /** Stage difficulty: multipliers on enemy health, group sizes (bosses excluded) and damage. All 1 = the base game. */
 /** stage: groups with a minStage above it do not appear (absent = stage 1). */
@@ -145,7 +149,7 @@ export function createRush(seed = 1, mods: RushMods = NO_MODS, diff: Difficulty 
   const townHp = Math.round(TOWN.hp * mods.townHp);
   return {
     seed, rng: seed | 0, tick: 0, t: 0, phase: 'prep', mods: { ...mods }, diff: { ...diff }, wave: 0, prepT: ECONOMY.prepTime, groups: [],
-    town: { hp: townHp, maxHp: townHp }, gold: ECONOMY.startGold,
+    town: { hp: townHp, maxHp: townHp }, gold: ECONOMY.startGold + (mods.startGold ?? 0),
     hero: { kind: heroKind, x: HERO_SPAWN.x, z: HERO_SPAWN.z, hp: Math.round(HEROES[heroKind].hp * mods.heroHp), facing: -Math.PI / 2, ammo: HEROES[heroKind].ammoMax, reloadT: 0, fireCd: 0, superCharge: 0, downT: 0, calmT: 0, exposedUntil: 0 },
     enemies: [], shots: [], towers: PADS.map(() => null), coins: [], nextId: 1 + CRATES.length,
     crates: CRATES.map((c, i) => ({ id: 1 + i, x: c.x, z: c.z, hp: CRATE.hp })),
