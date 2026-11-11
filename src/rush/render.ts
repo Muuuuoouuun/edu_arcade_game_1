@@ -38,6 +38,16 @@ function toFloat32(mesh: Mesh) {
 const HERO_HEIGHT = 2.0;
 /** Yaw that turns the GLB authored front (-z) toward simulation angle 0 (+x). Verified by east/north close-up renders. */
 const HERO_MODEL_YAW = -Math.PI / 2;
+/** The same sphere, cone or cylinder with half its round segments (min 6 around, 4 down); other shapes as they are. */
+function fewerSegments(geo: BufferGeometry): BufferGeometry {
+  const g = geo as BufferGeometry & { type: string; parameters?: Record<string, number> }, q = g.parameters;
+  if (!q) return geo;
+  const half = (n: number, min: number) => Math.max(min, Math.round(n / 2));
+  if (g.type === 'SphereGeometry') return new SphereGeometry(q.radius, half(q.widthSegments, 6), half(q.heightSegments, 4));
+  if (g.type === 'ConeGeometry') return new ConeGeometry(q.radius, q.height, half(q.radialSegments, 6));
+  if (g.type === 'CylinderGeometry') return new CylinderGeometry(q.radiusTop, q.radiusBottom, q.height, half(q.radialSegments, 6));
+  return geo;
+}
 /** Per-hero tweaks to a shared campaign GLB (cycle 41), applied when baking; the files stay untouched. Names are
  * GLTFLoader's (spaces → underscores). Popo's polar-bear guardian drops its hammer (handle, iron head, ivory cap)
  * and holds a snowball on the same animated node, so the attack clip becomes an overhand throw. */
@@ -557,7 +567,9 @@ export class RushView {
         parts.push({ geo: new ConeGeometry(r * 0.12, r * 0.55, 6), color: PAL.gold, at: [r * 0.2 + Math.cos(a) * r * 0.42, r * 3.9, Math.sin(a) * r * 0.42] });
       }
     }
-    const body = bake(parts);
+    // Cycle 54 (measured in cycle 50): small enemies seen from the top-down camera look the same with half the round
+    // segments, at 52-64% fewer triangles each. The boss keeps its full segments; its arms read faceted otherwise.
+    const body = bake(kind === 'boss' ? parts : parts.map(p => ({ ...p, geo: fewerSegments(p.geo) })));
     kit = { body, hull: hullGeometry(body) };
     this.enemyKits.set(kind, kit);
     return kit;
@@ -1035,7 +1047,7 @@ export class RushView {
 
   render() { this.renderer.render(this.scene, this.camera); }
   /** Renderer statistics for the debug overlay and performance notes. */
-  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroKind: this.heroKind, heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, dropped: Batch.dropped, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
+  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroKind: this.heroKind, heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, dropped: Batch.dropped, enemyTris: Object.fromEntries([...this.enemyKits].map(([k, v]) => [k, (v.body.index ? v.body.index.count : v.body.attributes.position.count) / 3])), quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
 }
 
 /** Cape placement per hero model (shoulder height y, back offset x, height h, width w), tuned on the model sheet. */
