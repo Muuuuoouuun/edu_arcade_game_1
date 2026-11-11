@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BoxGeometry,GreaterDepth,Group,Mesh,MeshBasicMaterial,PerspectiveCamera} from 'three';
+import {BoxGeometry,EqualStencilFunc,GreaterDepth,Group,Mesh,MeshBasicMaterial,PerspectiveCamera} from 'three';
 import {BiteReveal,selectBiteThreat} from './biteReveal.ts';
 import {readFileSync} from 'node:fs';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -39,7 +39,7 @@ test('only occluded animated geometry is revealed, without modifying the hero or
  reveal.update(camera,hero,target,view);assert.equal(reveal.visible,true);assert.equal(reveal.root.children.length,2);
  for(const part of reveal.root.children){
   assert.ok(part instanceof Mesh);const material=part.material as MeshBasicMaterial;
-  assert.equal(material.depthFunc,GreaterDepth);assert.equal(material.depthWrite,false);assert.ok(material.transparent&&material.opacity<1);
+  assert.equal(material.depthFunc,GreaterDepth);assert.equal(material.depthWrite,false);assert.equal(material.stencilWrite,true);assert.equal(material.stencilWriteMask,0);assert.equal(material.stencilFunc,EqualStencilFunc);assert.equal(material.stencilRef,1);assert.ok(material.transparent&&material.opacity<1);
   const source=view.surfaces.find(mesh=>mesh.name===part.name)!;
   assert.equal(part.geometry,source.geometry);assert.deepEqual(part.matrix.elements,source.matrixWorld.elements);
  }

@@ -1,6 +1,7 @@
-import {Camera,GreaterDepth,Group,Mesh,MeshBasicMaterial,Object3D,Raycaster,Vector3} from 'three';
+import {Camera,EqualStencilFunc,GreaterDepth,Group,KeepStencilOp,Mesh,MeshBasicMaterial,Object3D,Raycaster,Vector3} from 'three';
 import type {Enemy} from './engine.ts';
 import type {EnemyVisual} from './woodView.ts';
+import {HERO_STENCIL_BIT} from './heroStencil.ts';
 
 /** The earliest uncommitted bite takes priority; a recovery never hides a new warning. */
 export function selectBiteThreat(enemies:readonly Enemy[]){
@@ -16,7 +17,7 @@ export function selectBiteThreat(enemies:readonly Enemy[]){
 /** Reveal occluded fragments of the animated wolf head in the existing battlefield. */
 export class BiteReveal{
  readonly root=new Group();
- private material=new MeshBasicMaterial({color:'#a7e7f0',transparent:true,opacity:.72,depthTest:true,depthWrite:false,depthFunc:GreaterDepth,fog:false});
+ private material=new MeshBasicMaterial({color:'#a7e7f0',transparent:true,opacity:.72,depthTest:true,depthWrite:false,depthFunc:GreaterDepth,fog:false,stencilWrite:true,stencilWriteMask:0,stencilFunc:EqualStencilFunc,stencilRef:HERO_STENCIL_BIT,stencilFuncMask:HERO_STENCIL_BIT,stencilFail:KeepStencilOp,stencilZFail:KeepStencilOp,stencilZPass:KeepStencilOp});
  private parts:{name:string;mesh:Mesh}[]=[];
  private ray=new Raycaster();private mouth=new Vector3();private dir=new Vector3();private disposed=false;
  constructor(template:Object3D){
