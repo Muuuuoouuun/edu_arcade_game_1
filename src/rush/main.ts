@@ -88,21 +88,28 @@ function updatePops(dt: number) {
 
 // Boss rally warning (cycle 35): a callout pinned just under the roaring boss (its camera side), so the warning reads
 // where the eye already is and never covers the boss it warns about. Off screen, the toast strip says it instead.
-let callout: { el: HTMLSpanElement; id: number } | null = null;
-function bossCallout(): boolean {
-  const boss = state.enemies.find(e => e.kind === 'boss' && (e.roarT ?? 0) > 0);
+// One callout per roaring boss (cycle 53: twin-boss laps can have two roaring at once).
+const callouts = new Map<number, HTMLSpanElement>();
+/** Pin a callout on the boss that just roared (the roaring boss nearest the event); false = off screen, use the toast. */
+function bossCallout(at: { x: number; z: number }): boolean {
+  let boss: (typeof state.enemies)[number] | null = null, best = Infinity;
+  for (const e of state.enemies) {
+    if (e.kind !== 'boss' || !((e.roarT ?? 0) > 0)) continue;
+    const d = Math.hypot(e.x - at.x, e.z - at.z);
+    if (d < best) { best = d; boss = e; }
+  }
   if (!boss || !view.screenPoint(boss.x, 1, boss.z, canvasRect).visible) return false;
-  callout?.el.remove();
-  callout = { el: popEl('부하를 부른다!', 'callout'), id: boss.id };
+  if (!callouts.has(boss.id)) callouts.set(boss.id, popEl('부하를 부른다!', 'callout'));
   updateCallout();
   return true;
 }
 function updateCallout() {
-  if (!callout) return;
-  const boss = state.enemies.find(e => e.id === callout!.id);
-  if (!boss || boss.hp <= 0 || !((boss.roarT ?? 0) > 0)) { callout.el.remove(); callout = null; return; }
-  const sp = view.screenPoint(boss.x, 0, boss.z + ENEMIES.boss.radius + 0.4, canvasRect);
-  callout.el.style.transform = `translate(${sp.x}px, ${sp.y}px) translate(-50%, 0)`;
+  for (const [id, el] of callouts) {
+    const boss = state.enemies.find(e => e.id === id);
+    if (!boss || boss.hp <= 0 || !((boss.roarT ?? 0) > 0)) { el.remove(); callouts.delete(id); continue; }
+    const sp = view.screenPoint(boss.x, 0, boss.z + ENEMIES.boss.radius + 0.4, canvasRect);
+    el.style.transform = `translate(${sp.x}px, ${sp.y}px) translate(-50%, 0)`;
+  }
 }
 
 // ---------- events → feedback ----------
@@ -131,7 +138,7 @@ function feedback(events: RushEvent[]) {
     else if (ev.type === 'burst') playHaptic('skill', true);
     else if (ev.type === 'heroDown') { playHaptic('breach', true); toast(`쓰러졌다! ${HEROES[state.hero.kind].respawn}초 뒤 마을에서 복귀`, 'bad'); }
     else if (ev.type === 'superReady') toast('필살기 준비 완료!', 'super');
-    else if (ev.type === 'roar') { playHaptic('surge', true); if (!bossCallout()) toast('보스가 부하를 부른다!', 'bad'); }
+    else if (ev.type === 'roar') { playHaptic('surge', true); if (!bossCallout(ev)) toast('보스가 부하를 부른다!', 'bad'); }
     else if (ev.type === 'waveStart') {
       playHaptic('surge', true);
       const boss = ev.wave % WAVE_COUNT === WAVE_COUNT - 1;
