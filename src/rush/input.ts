@@ -1,7 +1,7 @@
 // Touch twin-stick + keyboard/mouse input. Produces one sim Command per fixed step.
 // Touch: drag on the left half to move; on the attack/super buttons, tap = auto-aim, drag = aim, release = fire,
 // drag back to the centre before releasing = cancel.
-import { HERO, type Vec } from './data.ts';
+import { HERO, HEROES, type HeroKind, type Vec } from './data.ts';
 import type { Command } from './sim.ts';
 import type { AimPreview } from './render.ts';
 
@@ -29,7 +29,7 @@ export class RushInput {
   private pending: Command = {};
   private cleanups: (() => void)[] = [];
 
-  constructor(private el: Elements, private groundPoint: (x: number, y: number) => Vec | null, private heroPos: () => Vec) {
+  constructor(private el: Elements, private groundPoint: (x: number, y: number) => Vec | null, private heroPos: () => Vec & { kind: HeroKind }) {
     const on = <K extends keyof HTMLElementEventMap>(t: HTMLElement | Window, type: K, fn: (e: HTMLElementEventMap[K]) => void, opts?: AddEventListenerOptions) => {
       t.addEventListener(type, fn as EventListener, opts);
       this.cleanups.push(() => t.removeEventListener(type, fn as EventListener, opts));
@@ -120,12 +120,20 @@ export class RushInput {
       const len = Math.hypot(d.v.x, d.v.z);
       if (!d.aimed) { if (kind === 'fire') this.pending.fire = 'auto'; else this.pending.super = 'auto'; return; }
       if (len <= DEADZONE) return; // dragged back to the centre: cancel
-      if (kind === 'fire') this.pending.fire = { x: d.v.x / len, z: d.v.z / len };
+      // The fire command is an offset (cycle 40): drag length sets the distance (only a lob uses it).
+      if (kind === 'fire') this.pending.fire = this.fireOffset(d.v, len);
       else { const k = Math.min(1, len / AIM_RADIUS) * HERO.superRange / len; this.pending.super = { x: d.v.x * k, z: d.v.z * k }; }
     };
     on(button, 'pointerup', e => release(e, false));
     on(button, 'pointercancel', e => release(e, true));
   }
+
+  /** Drag → offset from the hero: the direction, and the drag length as a share of the hero's range. */
+  private fireOffset(v: Vec, len: number): Vec {
+    const k = Math.min(1, len / AIM_RADIUS) * HEROES[this.heroPos().kind].range / len;
+    return { x: v.x * k, z: v.z * k };
+  }
+  private lobber() { return HEROES[this.heroPos().kind].attack === 'lob'; }
 
   private setKnob(x: number, y: number) { this.el.knob.style.transform = `translate(${x}px, ${y}px)`; }
   private updateMouse(e: PointerEvent) { this.mouse = this.groundPoint(e.clientX, e.clientY); }
@@ -133,7 +141,7 @@ export class RushInput {
     const h = this.heroPos();
     if (!this.mouse) { this.pending.fire = 'auto'; return; }
     const dx = this.mouse.x - h.x, dz = this.mouse.z - h.z, l = Math.hypot(dx, dz);
-    this.pending.fire = l > 0.01 ? { x: dx / l, z: dz / l } : 'auto';
+    this.pending.fire = l > 0.01 ? { x: dx, z: dz } : 'auto'; // the cursor point itself (a lob lands there)
   }
   private queueSuperAtMouse() {
     const h = this.heroPos();
@@ -165,10 +173,10 @@ export class RushInput {
       const len = Math.hypot(drag.v.x, drag.v.z);
       this.aim = drag === this.superDrag
         ? { kind: 'super', offset: { x: (drag.v.x / len) * Math.min(1, len / AIM_RADIUS) * HERO.superRange, z: (drag.v.z / len) * Math.min(1, len / AIM_RADIUS) * HERO.superRange } }
-        : { kind: 'fire', dir: { x: drag.v.x / len, z: drag.v.z / len } };
+        : this.lobber() ? { kind: 'lob', offset: this.fireOffset(drag.v, len) } : { kind: 'fire', dir: { x: drag.v.x / len, z: drag.v.z / len } };
     } else if (this.mouseActive && this.mouse) {
       const dx = this.mouse.x - h.x, dz = this.mouse.z - h.z, l = Math.hypot(dx, dz);
-      this.aim = l > 0.3 ? { kind: 'fire', dir: { x: dx / l, z: dz / l } } : null;
+      this.aim = l > 0.3 ? (this.lobber() ? { kind: 'lob', offset: { x: dx, z: dz } } : { kind: 'fire', dir: { x: dx / l, z: dz / l } }) : null;
     } else this.aim = null;
   }
 

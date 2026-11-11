@@ -395,3 +395,21 @@ test('Popo (cycle 39): a snowball lands where thrown, hurts and slows everything
   assert.ok((sh.slowT ?? 0) > 0 && (g.slowT ?? 0) > 0 && !(far.slowT ?? 0), 'both in the splash are slowed');
   assert.equal(s.hero.superCharge, 2, 'each enemy hit charges the super');
 });
+
+test('aim offsets (cycle 40): a hand-thrown snowball lands as far as aimed, within 1.5 m and its range; bolts use only the direction', async () => {
+  const { HEROES } = await import('./data.ts');
+  const { LOB_MIN } = await import('./sim.ts');
+  const landing = (offset: { x: number; z: number }) => {
+    const s = createRush(1, NO_MODS, undefined, 'bear');
+    Object.assign(s.hero, { x: 0, z: 0 });
+    stepRush(s, { fire: offset });
+    const shot = s.shots.find(x => x.owner === 'lob')!;
+    return Math.hypot(shot.tx, shot.tz);
+  };
+  assert.ok(Math.abs(landing({ x: 0, z: -4 }) - 4) < 1e-9, 'aimed 4 m → lands 4 m out');
+  assert.ok(Math.abs(landing({ x: 3, z: -20 }) - HEROES.bear.range) < 1e-9, 'beyond range → at range');
+  assert.ok(Math.abs(landing({ x: 0, z: -0.5 }) - LOB_MIN) < 1e-9, 'too close → the minimum');
+  // The ranger's bolts fly the same whatever the offset's length.
+  const bolts = (offset: { x: number; z: number }) => { const s = createRush(1); stepRush(s, { fire: offset }); return s.shots.filter(x => x.owner === 'hero').map(x => [x.vx.toFixed(6), x.vz.toFixed(6)].join()); };
+  assert.deepEqual(bolts({ x: 0, z: -1 }), bolts({ x: 0, z: -7.5 }));
+});

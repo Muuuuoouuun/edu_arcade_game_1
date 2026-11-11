@@ -7,13 +7,13 @@ import {
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroKind, type TowerBranch, type Vec } from './data.ts';
-import { heroHidden, heroMaxHp, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
+import { heroHidden, heroMaxHp, lobReach, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, type Part } from './look.ts';
 import { Batch } from './batch.ts';
 import { Particles } from './fx.ts';
 import { QUALITY, type Quality } from './quality.ts';
 
-export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'super'; offset: Vec } | null;
+export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'lob'; offset: Vec } | { kind: 'super'; offset: Vec } | null;
 
 const TEAM = { ally: PAL.ally, enemy: PAL.enemy };
 const HERO_MODELS: Record<HeroKind, string> = { ranger: '/defense/models/prototypes/gecko-ranger.glb', bron: '/defense/models/dwarf-guardian.glb', bear: '/defense/models/prototypes/polar-bear.glb' };
@@ -83,6 +83,8 @@ export class RushView {
   private aimFan: Mesh;
   private aimRing: Mesh;
   private aimLine: Mesh;
+  /** Snowball landing circle (cycle 40): ice blue, unlike the purple super ring. */
+  private aimLob: Mesh;
   private raycaster = new Raycaster();
   private ground = new Plane(new Vector3(0, 1, 0), 0);
   private portrait = false;
@@ -145,7 +147,9 @@ export class RushView {
     this.aimRing.scale.setScalar(HEROES.ranger.superRadius);
     this.aimLine = new Mesh(new PlaneGeometry(1, 0.12), basic(0xc59bff, 0.45));
     this.aimLine.rotation.x = -Math.PI / 2;
-    for (const m of [this.aimFan, this.aimRing, this.aimLine]) { m.visible = false; m.renderOrder = 2; this.scene.add(m); }
+    this.aimLob = new Mesh(this.geo.ring, basic(0xc4f2ff, 0.85));
+    this.aimLob.rotation.x = -Math.PI / 2;
+    for (const m of [this.aimFan, this.aimRing, this.aimLine, this.aimLob]) { m.visible = false; m.renderOrder = 2; this.scene.add(m); }
   }
 
   // ---------- static scenery ----------
@@ -352,8 +356,7 @@ export class RushView {
   private fanGeometry(kind: HeroKind) {
     const d = HEROES[kind];
     if (d.attack === 'swing') return new CircleGeometry(d.range, 20, -d.swingArc, d.swingArc * 2);
-    // A lob lands three quarters out when aimed by hand: a thin wedge to that point.
-    if (d.attack === 'lob') return new CircleGeometry(d.range * 0.75, 12, -0.07, 0.14);
+    // A lob shows its landing circle instead (aimLob, cycle 40); the fan stays empty.
     return new CircleGeometry(d.range, 24, -d.spread * 1.6, d.spread * 3.2);
   }
 
@@ -874,8 +877,21 @@ export class RushView {
 
   private updateAim(s: RushState, aim: AimPreview) {
     const h = s.hero, alive = h.downT <= 0;
-    this.aimFan.visible = this.aimRing.visible = this.aimLine.visible = false;
+    this.aimFan.visible = this.aimRing.visible = this.aimLine.visible = this.aimLob.visible = false;
     if (!aim || !alive) return;
+    if (aim.kind === 'lob') {
+      // Where the snowball will land (same reach rule as the sim), its splash, and a line from the hero.
+      const hd = HEROES[h.kind], l = Math.hypot(aim.offset.x, aim.offset.z), reach = lobReach(hd, l);
+      const a = l > 1e-6 ? Math.atan2(aim.offset.z, aim.offset.x) : h.facing, tx = h.x + Math.cos(a) * reach, tz = h.z + Math.sin(a) * reach;
+      this.aimLob.visible = this.aimLine.visible = true;
+      this.aimLob.position.set(tx, 0.06, tz);
+      this.aimLob.scale.setScalar(hd.boltRadius);
+      (this.aimLob.material as MeshBasicMaterial).opacity = h.ammo >= 1 ? 0.85 : 0.35;
+      this.aimLine.position.set((tx + h.x) / 2, 0.055, (tz + h.z) / 2);
+      this.aimLine.scale.x = Math.max(0.01, reach);
+      this.aimLine.rotation.set(-Math.PI / 2, 0, -a);
+      return;
+    }
     if (aim.kind === 'fire') {
       const a = Math.atan2(aim.dir.z, aim.dir.x);
       this.aimFan.visible = true;

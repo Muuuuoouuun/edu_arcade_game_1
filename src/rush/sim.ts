@@ -344,6 +344,11 @@ function updateHero(s: RushState, cmd: Command) {
   if (cmd.build) build(s, cmd.build);
 }
 
+/** Lob reach (cycle 40): a hand-aimed snowball lands as far out as aimed, between LOB_MIN and the hero's range. */
+export const LOB_MIN = 1.5;
+export const lobReach = (def: HeroDef, aimed: number) => Math.min(def.range, Math.max(LOB_MIN, aimed));
+
+/** `aim` is an offset from the hero (m): bolts and swings use only its direction, a lob also its length. */
 function fire(s: RushState, aim: Vec | 'auto') {
   const h = s.hero;
   let angle = h.facing, lobAt: Vec | null = null;
@@ -386,8 +391,9 @@ function fire(s: RushState, aim: Vec | 'auto') {
     return;
   }
   if (def.attack === 'lob') {
-    // Aimed by hand: lands three quarters of the way out; auto-aim: on the target.
-    const point = lobAt ?? { x: h.x + Math.cos(angle) * def.range * 0.75, z: h.z + Math.sin(angle) * def.range * 0.75 };
+    // Auto-aim: on the target (or three quarters out with none); by hand: as far as aimed (cycle 40).
+    const reach = aim === 'auto' ? def.range * 0.75 : lobReach(def, len(aim.x, aim.z));
+    const point = lobAt ?? { x: h.x + Math.cos(angle) * reach, z: h.z + Math.sin(angle) * reach };
     const t = def.lobTravel ?? 0.5;
     s.shots.push({
       id: s.nextId++, owner: 'lob', x: h.x, z: h.z, vx: (point.x - h.x) / t, vz: (point.z - h.z) / t,
