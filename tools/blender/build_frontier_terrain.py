@@ -60,6 +60,27 @@ for z in [-2.3,2.3]:
 for z in [-2.8,2.8]:
  box('Bridge hand rail',6,1.25,z,8,.22,.2,'#c5a67c')
  for x in [2.4,5,8,9.6]:box('Bridge post',x,.65,z,.22,1.4,.22,'#715a42')
+# The crossing is the only walkable way over the river.  Give each bank a
+# low, physical stone approach so the bridge reads as a connected route from
+# the playing camera.  Stones stay embedded within 0.012 of the existing
+# ground and outside x=2..10, leaving the simulation's deck and bounds intact.
+approaches=[('West',-20,2,14),('East',10,21,7)]
+for side,start,end,count in approaches:
+ length=end-start;step=length/count
+ box('Bridge approach '+side+' bedding',(start+end)/2,-.027,0,length,.06,3.2,'#777e69')
+ for i in range(count):
+  for lane in [-1,1]:
+   shift=lane*.18*step;lo=max(start,start+i*step+shift)+.035;hi=min(end,start+(i+1)*step+shift)-.035
+   z=lane*.79+.035*math.sin(i*2.4+lane);width=.68+.025*math.sin(i*1.7+lane)
+   # Six-sided, shallow stones use staggered joints and asymmetric shoulders;
+   # the retained soil beneath makes the crossing a path rather than a grid.
+   points=[(lo,z-width*.65),(lo+.24*(hi-lo),z-width),(hi-.19*(hi-lo),z-width),
+           (hi,z+width*.5),(hi-.22*(hi-lo),z+width),(lo+.17*(hi-lo),z+width)]
+   vertices=[(x,-zz,y) for y in [.012,-.068] for x,zz in points]
+   faces=[tuple(reversed(range(6))),tuple(range(6,12))]+[(j,j+6,(j+1)%6+6,(j+1)%6) for j in range(6)]
+   m=bpy.data.meshes.new('Embedded irregular crossing stone');m.from_pydata(vertices,[],faces);m.update()
+   color=['#afa98e','#bcb69b','#a49f87'][(i+(lane==1))%3]
+   m.materials.append(mat(color));o=bpy.data.objects.new('Bridge approach '+side+' stone',m);bpy.context.collection.objects.link(o);objects.append(o)
 for x in range(-32,33,4):
  for z in [-32,32]:box('Stratified edge',x,height(x,z)-1.5,z,4,3.5,2,'#7b806a')
 for z in range(-28,32,4):
@@ -85,7 +106,11 @@ for n,((ax,az),(bx,bz)) in enumerate(zip(path,path[1:])):
  fs=[(i*2,i*2+1,i*2+3,i*2+2) for i in range(steps)];m=bpy.data.meshes.new('Road strip');m.from_pydata(vs,[],fs);m.materials.append(mat('#bda174'));o=bpy.data.objects.new('Winding road '+str(n),m);bpy.context.collection.objects.link(o);objects.append(o)
  for i in range(0,steps,3):
   q=i/steps;x=ax+dx*q;z=az+dz*q
-  for sign in [-1,1]:box('Road border stone',x+nx*1.85*sign,height(x,z)+.12,z+nz*1.85*sign,.48,.24,.65,'#a4a58b')
+  for sign in [-1,1]:
+   sx,sz=x+nx*1.85*sign,z+nz*1.85*sign
+   # Leave a clear junction where the walking approach meets the older road.
+   if -20<=sx<=2 and abs(sz)<2.3:continue
+   box('Road border stone',sx,height(x,z)+.12,sz,.48,.24,.65,'#a4a58b')
 # Round the road joints so sharp bends have no gaps.
 for x,z in path[1:-1]:
  vs=[(x,-z,height(x,z)+.07)]+[(x+1.7*math.cos(i*math.tau/20),-(z+1.7*math.sin(i*math.tau/20)),height(x+1.7*math.cos(i*math.tau/20),z+1.7*math.sin(i*math.tau/20))+.07) for i in range(20)]
@@ -125,4 +150,4 @@ vertex=paint.node_tree.nodes.new('ShaderNodeVertexColor');vertex.layer_name='Col
 for face in packed.data.polygons:face.material_index=0
 bpy.ops.export_scene.gltf(filepath=str(O/'frontier-terrain.glb'),export_format='GLB',use_selection=True,export_yup=True,export_animations=False)
 subprocess.run(['ffmpeg','-y','-loglevel','error','-i',str(O/'frontier-terrain.png'),'-c:v','libwebp','-quality','90',str(O/'frontier-terrain.webp')],check=True)
-files=[blend,O/'frontier-terrain.glb',O/'frontier-terrain.png',O/'frontier-terrain.webp',O/'frontier-terrain-crossing.png'];meta={'generator':'tools/blender/build_frontier_terrain.py','generator_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'command':'npm run models:frontier-terrain','editable_objects':len(objects),'runtime_materials':1,'runtime_paint':'linear vertex colors; opaque roughness .85','forest_tree_count':28,'forest_crown_meshes':56,'meadow_palette_colors':4,'forest_outer_verge_x':[32,41],'footprint':[64,64],'highland_height':4.6,'river_x':[3,9],'river_water_y':-2.6,'river_bed_y':-4.5,'crossing_camera':{'location':[20,-17,13],'target':[6,0,-.7],'orthographic_scale':25,'size':[768,512]},'bridge_walkable_z':[-2,2],'camera':{'size':[900,600],'orthographic_scale':98,'location':[0,-68,72]},'files':[{'file':str(p.relative_to(R)),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in files]};(O/'frontier-terrain.json').write_text(json.dumps(meta,indent=2)+'\n');print('FRONTIER_TERRAIN_PASS')
+files=[blend,O/'frontier-terrain.glb',O/'frontier-terrain.png',O/'frontier-terrain.webp',O/'frontier-terrain-crossing.png'];meta={'generator':'tools/blender/build_frontier_terrain.py','generator_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),'command':'npm run models:frontier-terrain','editable_objects':len(objects),'runtime_materials':1,'runtime_paint':'linear vertex colors; opaque roughness .85','forest_tree_count':28,'forest_crown_meshes':56,'meadow_palette_colors':4,'forest_outer_verge_x':[32,41],'footprint':[64,64],'highland_height':4.6,'river_x':[3,9],'river_water_y':-2.6,'river_bed_y':-4.5,'crossing_camera':{'location':[20,-17,13],'target':[6,0,-.7],'orthographic_scale':25,'size':[768,512]},'bridge_walkable_z':[-2,2],'bridge_approaches':{'west_x':[-20,2],'east_x':[10,21],'width':3.2,'stone_count':42,'maximum_top':.012},'camera':{'size':[900,600],'orthographic_scale':98,'location':[0,-68,72]},'files':[{'file':str(p.relative_to(R)),'bytes':p.stat().st_size,'sha256':hashlib.sha256(p.read_bytes()).hexdigest()} for p in files]};(O/'frontier-terrain.json').write_text(json.dumps(meta,indent=2)+'\n');print('FRONTIER_TERRAIN_PASS')

@@ -1,8 +1,8 @@
 {
   "generator": "tools/blender/build_frontier_terrain.py",
-  "generator_sha256": "27b116468b549b52e4697bc63e8af34f67991eb10ba647831d0fce4129de17db",
+  "generator_sha256": "43d2666be2b4d4954541a8ba5573a282daaebe12668f8381b51b3949725b08b6",
   "command": "npm run models:frontier-terrain",
-  "editable_objects": 389,
+  "editable_objects": 430,
   "runtime_materials": 1,
   "runtime_paint": "linear vertex colors; opaque roughness .85",
   "forest_tree_count": 28,
@@ -44,6 +44,19 @@
     -2,
     2
   ],
+  "bridge_approaches": {
+    "west_x": [
+      -20,
+      2
+    ],
+    "east_x": [
+      10,
+      21
+    ],
+    "width": 3.2,
+    "stone_count": 42,
+    "maximum_top": 0.012
+  },
   "camera": {
     "size": [
       900,
@@ -59,28 +72,28 @@
   "files": [
     {
       "file": "art-source/defense/frontier-terrain.blend",
-      "bytes": 3230108,
-      "sha256": "b6edd6161570658ac755eda6930d77bb53cafe020f4c2a8d73e885f1b34d9841"
+      "bytes": 3530608,
+      "sha256": "81c2cbbfbc3f10bb74258faa2d3042530dc6ddfe1f3d387ee656c8d93feab843"
     },
     {
       "file": "public/defense/models/frontier-terrain.glb",
-      "bytes": 795640,
-      "sha256": "2def90c31ff81edd3c37afb4d11cba97c34126c511a3604d35fb328a5f59a486"
+      "bytes": 866080,
+      "sha256": "0f93dc9852cd108b9eb7c8d5e002f498eea28cb0e74f9601e1194f337bb34683"
     },
     {
       "file": "public/defense/models/frontier-terrain.png",
-      "bytes": 634829,
-      "sha256": "b5cd83d1eedc0ea17160c0e8dad1f3694d7f6d18486591a249ec38eae5d67128"
+      "bytes": 637242,
+      "sha256": "739d92b06ad591998c0c6d9455b4e2e4e410ee92e8e53bee6a1ee40cea90351d"
     },
     {
       "file": "public/defense/models/frontier-terrain.webp",
-      "bytes": 25260,
-      "sha256": "7fca0a2bd3c819d2a9d66d73c2149d396a9b70026e2d1fe4ddc0cabf964b62b9"
+      "bytes": 26492,
+      "sha256": "189a20642420d71fc692fbe4cb67ab70ea81db5c176e2cdcfc1849954b42d500"
     },
     {
       "file": "public/defense/models/frontier-terrain-crossing.png",
-      "bytes": 579022,
-      "sha256": "ad247a38418b2ce6825fd669f5b46c6e677d268f664a413e9f13a9072bd4ae8b"
+      "bytes": 590440,
+      "sha256": "68ecd8873c1fbe2d37f7d1191863a30dea3fd37ce5f4fd07284cd4061cfe4215"
     }
   ]
 }

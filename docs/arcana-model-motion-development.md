@@ -498,3 +498,7 @@ npm run models:wood
 ## 112회차 · 카르의 공격 취소와 돌진 연결
 
 [공격 취소 연결](arcana-frontier-cancel-pose.md)은 기존 카르 공격·회수 관절 포즈를 돌진 버팀으로 최대 0.05초에 혼합하고 어깨·팔꿈치·그립과 발을 재연결한다. 실제 판정은 즉시 취소되며, 새 Blender 모델이나 관절 클립을 제작하지 않았다.
+
+## 113회차 · 녹음 다리의 양안 접근로
+
+[녹음 다리 접근로](arcana-frontier-bridge-approach.md)는 기존 강·다리 지형에 42개의 불규칙 석재와 두 바탕을 편집 가능한 실제 메시로 추가하고 서쪽 도로 교차부를 연다. `npm run models:frontier-terrain`으로 Blender 원본·단일 표면 GLB·공통카메라 렌더·WebP·해시를 재생성한다. 실제 3D 훈련에 적용되며 2.5D 캠페인 연결은 없다.
