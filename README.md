@@ -11,7 +11,9 @@ Node.js 22.12 이상에서 `npm ci`, `npm run dev`로 실행합니다. 기본 �
 | `/` | 아르카나 전용 타이틀 → 마을 → 동료/성장/원정 → 전투 |
 | `/arcade.html` | 보존한 기존 교육 미니게임 허브 |
 | `/model-lab.html` | 개발용 3D 모델·동작 검토 작업실 |
+| `/rush.html` | **아르카나 러시** 시제품: 영웅 직접 조작 + 탑 건설 웨이브 방어 ([설명](docs/rush/README.md) · [엔진 조사](docs/rush/engine-research-2026-11.md) · [1시간 루프](docs/rush/loop.md)) |
 | `npm test` | 게임 규칙·캠페인·저장·모바일 입력 등 검증 |
+| `npm run smoke:rush` | 러시 시제품 브라우저 점검(데스크톱·모바일 가로 터치) |
 | `npm run build` | `dist/` 웹 빌드: 아르카나와 별도 기존 허브·작업실 |
 | `npm run build:mobile` | `dist-mobile/` 아르카나 전용 빌드 |
 | `npm run android:debug` | 아르카나 전용 웹 동기화 후 Android 디버그 APK |
