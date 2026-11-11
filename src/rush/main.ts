@@ -73,7 +73,7 @@ function hitPop(owner: string, id: number | undefined, damage: number, x: number
   trimPops();
 }
 function updatePops(dt: number) {
-  const rect = canvas.getBoundingClientRect();
+  const rect = canvasRect;
   pops = pops.filter(p => {
     p.age += dt; p.bumpAge += dt;
     if (p.age >= p.life) { p.view?.remove(); return false; }
@@ -91,7 +91,7 @@ function updatePops(dt: number) {
 let callout: { el: HTMLSpanElement; id: number } | null = null;
 function bossCallout(): boolean {
   const boss = state.enemies.find(e => e.kind === 'boss' && (e.roarT ?? 0) > 0);
-  if (!boss || !view.screenPoint(boss.x, 1, boss.z, canvas.getBoundingClientRect()).visible) return false;
+  if (!boss || !view.screenPoint(boss.x, 1, boss.z, canvasRect).visible) return false;
   callout?.el.remove();
   callout = { el: popEl('부하를 부른다!', 'callout'), id: boss.id };
   updateCallout();
@@ -101,7 +101,7 @@ function updateCallout() {
   if (!callout) return;
   const boss = state.enemies.find(e => e.id === callout!.id);
   if (!boss || boss.hp <= 0 || !((boss.roarT ?? 0) > 0)) { callout.el.remove(); callout = null; return; }
-  const sp = view.screenPoint(boss.x, 0, boss.z + ENEMIES.boss.radius + 0.4, canvas.getBoundingClientRect());
+  const sp = view.screenPoint(boss.x, 0, boss.z + ENEMIES.boss.radius + 0.4, canvasRect);
   callout.el.style.transform = `translate(${sp.x}px, ${sp.y}px) translate(-50%, 0)`;
 }
 
@@ -145,23 +145,41 @@ const hud = {
 };
 const last: Record<string, string> = {};
 const setText = (key: string, el: HTMLElement, text: string) => { if (last[key] !== text) { el.textContent = text; last[key] = text; } };
+/** Inline style and flags are written only when they change (cycle 36): an unchanged write still costs a style pass. */
+const setStyle = (key: string, el: HTMLElement, prop: string, value: string) => { if (last[key] !== value) { el.style.setProperty(prop, value); last[key] = value; } };
+const setFlag = (key: string, el: HTMLButtonElement | HTMLElement, flag: 'hidden' | 'disabled', on: boolean) => {
+  const v = on ? '1' : '0';
+  if (last[key] !== v) { (el as HTMLButtonElement)[flag] = on; last[key] = v; }
+};
 // ---------- see-through HUD (cycle 23) ----------
 // Enemies enter at the top of the screen, right where the HUD sits: a HUD box with an enemy under it fades.
 const hudParts = [...document.querySelectorAll<HTMLElement>('.hud-top > *')];
 const noFade = params.has('nofade'); // matched captures of the old behaviour
+// ---------- layout reads (cycle 36) ----------
+// DOM geometry is read at the start of a frame, before anything is written (no forced layout), and only every
+// READ_EVERY frames or after a resize: the canvas and the HUD boxes rarely move, and a fade a few frames late is fine.
+const READ_EVERY = 12;
+let canvasRect = canvas.getBoundingClientRect(), hudBoxes: DOMRect[] = [], readAge = READ_EVERY, layoutStale = true;
+function readLayout(fight: boolean) {
+  // Entering a battle (HUD boxes still empty or measured while hidden) reads at once.
+  const unmeasured = fight && (hudBoxes.length !== hudParts.length || hudBoxes.some(b => b.width === 0));
+  if (!layoutStale && !unmeasured && ++readAge < READ_EVERY) return;
+  readAge = 0; layoutStale = false;
+  canvasRect = canvas.getBoundingClientRect();
+  hudBoxes = fight ? hudParts.map(el => el.getBoundingClientRect()) : [];
+}
 /** Screen points (page CSS px) of each live enemy's body and head. */
-function enemyScreen(): { id: number; pts: { x: number; y: number }[] }[] {
-  const rect = canvas.getBoundingClientRect();
+function enemyScreen(rect: DOMRect = canvas.getBoundingClientRect()): { id: number; pts: { x: number; y: number }[] }[] {
   return state.enemies.filter(e => e.hp > 0).map(e => {
     const r = ENEMIES[e.kind].radius;
     return { id: e.id, pts: [r * 1.2, e.kind === 'boss' ? r * 3.6 : r * 2.6].map(h => { const p = view.screenPoint(e.x, h, e.z, rect); return { x: p.x + rect.left, y: p.y + rect.top }; }) };
   });
 }
 function seeThroughHud() {
-  const fight = (mode === 'play' || mode === 'demo') && !noFade;
-  const boxes = hudParts.map(el => el.getBoundingClientRect());
-  const under = boxes.map(() => false);
-  if (fight) for (const e of enemyScreen()) for (const p of e.pts) boxes.forEach((b, i) => {
+  const fight = (mode === 'play' || mode === 'demo') && !noFade && hudBoxes.length === hudParts.length;
+  const boxes = hudBoxes;
+  const under = hudParts.map(() => false);
+  if (fight) for (const e of enemyScreen(canvasRect)) for (const p of e.pts) boxes.forEach((b, i) => {
     if (p.x > b.left - 8 && p.x < b.right + 8 && p.y > b.top - 8 && p.y < b.bottom + 12) under[i] = true;
   });
   hudParts.forEach((el, i) => el.classList.toggle('see-through', under[i]));
@@ -172,33 +190,34 @@ function updateHud() {
   setText('wave', hud.wave, `웨이브 ${Math.min(s.wave + 1, WAVE_COUNT)}/${WAVE_COUNT}`);
   const where = mode === 'demo' ? '시연' : `스테이지 ${stage}`;
   setText('waveSub', hud.waveSub, s.phase === 'prep' ? `${where} · 준비 ${Math.ceil(s.prepT)}초` : s.phase === 'wave' ? `${where} · 남은 적 ${s.enemies.length}` : where);
-  hud.townFill.style.transform = `scaleX(${s.town.hp / s.town.maxHp})`;
+  setStyle('townFill', hud.townFill, 'transform', `scaleX(${s.town.hp / s.town.maxHp})`);
   setText('townHp', hud.townHp, String(Math.ceil(s.town.hp)));
   setText('gold', hud.gold, String(s.gold));
   const bonus = Math.floor(s.prepT) * ECONOMY.earlyBonusPerSecond;
-  hud.startWave.hidden = s.phase !== 'prep' || mode !== 'play';
+  setFlag('startWaveHidden', hud.startWave, 'hidden', s.phase !== 'prep' || mode !== 'play');
   setText('startWave', hud.startWave, `웨이브 시작 +${bonus}G`);
   const pad = s.hero.downT > 0 ? -1 : padInReach(s);
   const cost = pad >= 0 ? padCost(s, pad) : null;
-  hud.build.hidden = pad < 0 || mode !== 'play';
+  const buildHidden = pad < 0 || mode !== 'play';
+  setFlag('buildHidden', hud.build, 'hidden', buildHidden);
   // Lv1 → Lv2 is a choice (cycle 15): the build button splits into fire and frost.
   const tower = pad >= 0 ? s.towers[pad] : null, choose = !!tower && tower.level === 0 && cost !== null;
-  hud.buildFrost.hidden = hud.build.hidden || !choose;
+  setFlag('buildFrostHidden', hud.buildFrost, 'hidden', buildHidden || !choose);
   hud.build.classList.toggle('fire', choose);
   hud.build.classList.toggle('split-l', choose);
   if (pad >= 0) {
     const level = tower ? tower.level + 1 : 0, branch = tower?.branch ? BRANCH_NAME[tower.branch] : '';
     setText('build', hud.build, cost === null ? '최대 강화' : level === 0 ? `궁수탑 건설 ${cost}G` : choose ? `화염 Lv2 · ${cost}G` : `${branch} Lv${level + 1} · ${cost}G`);
-    hud.build.disabled = cost === null || s.gold < cost;
-    if (choose) { setText('buildFrost', hud.buildFrost, `냉기 Lv2 · ${cost}G`); hud.buildFrost.disabled = s.gold < cost!; }
+    setFlag('buildDisabled', hud.build, 'disabled', cost === null || s.gold < cost);
+    if (choose) { setText('buildFrost', hud.buildFrost, `냉기 Lv2 · ${cost}G`); setFlag('buildFrostDisabled', hud.buildFrost, 'disabled', s.gold < cost!); }
   }
   hud.ammo.forEach((el, i) => {
     const fill = s.hero.ammo > i ? 1 : s.hero.ammo === i ? s.hero.reloadT / HEROES[s.hero.kind].reload : 0;
-    el.style.setProperty('--fill', String(fill));
+    setStyle(`ammo${i}`, el, '--fill', fill.toFixed(3));
   });
   hud.fire.classList.toggle('empty', s.hero.ammo < 1);
   const charge = s.hero.superCharge / HEROES[s.hero.kind].superHits;
-  hud.superRing.style.setProperty('--charge', String(charge));
+  setStyle('charge', hud.superRing, '--charge', charge.toFixed(3));
   hud.superBtn.classList.toggle('ready', superReady(s));
   surface.classList.toggle('hero-down', s.hero.downT > 0);
 }
@@ -291,6 +310,7 @@ const MENU_DRAW_EVERY = 4;
 let menuFrames = 0, forceDraw = true, drawnFrames = 0;
 function resize() {
   forceDraw = true;
+  layoutStale = true;
   const r = surface.getBoundingClientRect();
   view.resize(Math.max(1, Math.round(r.width)), Math.max(1, Math.round(r.height)));
   townView.resize(Math.max(1, Math.round(r.width)), Math.max(1, Math.round(r.height)));
@@ -301,6 +321,7 @@ resize();
 let prev = performance.now(), fpsFrames = 0, fpsT = 0, fps = 0, hitStops = 0;
 let clock = createClock(prev / 1000);
 function frame(now: number) {
+  readLayout((mode === 'play' || mode === 'demo') && !noFade);
   const rawDt = (now - prev) / 1000;
   const dt = Math.min(0.1, rawDt);
   prev = now;
@@ -332,7 +353,7 @@ function frame(now: number) {
     // The kingdom has its own island scene; the battle scene is not drawn behind it.
     townView.update(dt);
     view.renderer.render(townView.scene, townView.camera);
-    town.layout(canvas.getBoundingClientRect());
+    town.layout(canvasRect);
   } else {
     const menu = mode === 'title' || mode === 'result' || (mode === 'play' && paused);
     menuFrames = menu ? menuFrames + 1 : 0;
