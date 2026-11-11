@@ -86,6 +86,25 @@ function updatePops(dt: number) {
   });
 }
 
+// Boss rally warning (cycle 35): a callout pinned just under the roaring boss (its camera side), so the warning reads
+// where the eye already is and never covers the boss it warns about. Off screen, the toast strip says it instead.
+let callout: { el: HTMLSpanElement; id: number } | null = null;
+function bossCallout(): boolean {
+  const boss = state.enemies.find(e => e.kind === 'boss' && (e.roarT ?? 0) > 0);
+  if (!boss || !view.screenPoint(boss.x, 1, boss.z, canvas.getBoundingClientRect()).visible) return false;
+  callout?.el.remove();
+  callout = { el: popEl('부하를 부른다!', 'callout'), id: boss.id };
+  updateCallout();
+  return true;
+}
+function updateCallout() {
+  if (!callout) return;
+  const boss = state.enemies.find(e => e.id === callout!.id);
+  if (!boss || boss.hp <= 0 || !((boss.roarT ?? 0) > 0)) { callout.el.remove(); callout = null; return; }
+  const sp = view.screenPoint(boss.x, 0, boss.z + ENEMIES.boss.radius + 0.4, canvas.getBoundingClientRect());
+  callout.el.style.transform = `translate(${sp.x}px, ${sp.y}px) translate(-50%, 0)`;
+}
+
 // ---------- events → feedback ----------
 // A melee swing sounds like an impact rather than a bowstring.
 const SOUND: Partial<Record<RushEvent['type'], CombatSoundKind>> = {
@@ -110,7 +129,7 @@ function feedback(events: RushEvent[]) {
     else if (ev.type === 'burst') playHaptic('skill', true);
     else if (ev.type === 'heroDown') { playHaptic('breach', true); toast(`쓰러졌다! ${HEROES[state.hero.kind].respawn}초 뒤 마을에서 복귀`, 'bad'); }
     else if (ev.type === 'superReady') toast('필살기 준비 완료!', 'super');
-    else if (ev.type === 'roar') { playHaptic('surge', true); toast('보스가 부하를 부른다!', 'bad'); }
+    else if (ev.type === 'roar') { playHaptic('surge', true); if (!bossCallout()) toast('보스가 부하를 부른다!', 'bad'); }
     else if (ev.type === 'waveStart') { playHaptic('surge', true); toast(ev.wave === WAVE_COUNT - 1 ? `마지막 웨이브 · 보스 출현!` : `웨이브 ${ev.wave + 1} 시작`, ev.wave === WAVE_COUNT - 1 ? 'bad' : ''); }
     else if (ev.type === 'waveClear') toast(`웨이브 ${ev.wave + 1} 방어 성공 · +${ev.bonus}G`, 'good');
     else if (ev.type === 'build') toast(ev.level === 0 ? '궁수탑 건설!' : `${ev.branch ? BRANCH_NAME[ev.branch] : '궁수'}탑 Lv${ev.level + 1}`, 'good');
@@ -320,6 +339,7 @@ function frame(now: number) {
     if (!menu || forceDraw || menuFrames % MENU_DRAW_EVERY === 1) { view.render(); drawnFrames++; forceDraw = false; }
   }
   updatePops(dt);
+  updateCallout();
   updateHud();
   seeThroughHud();
   if (toastTimer > 0 && (toastTimer -= dt) <= 0) $('toast').classList.remove('show');
