@@ -3,7 +3,7 @@ import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
 import { FORGE, HEROES, type HeroKind } from './data.ts';
 import {
-  CASTLE_MAX, DAILY_WIN, VAULT_GOLD, HERO_LV_PER_CASTLE, canTrain, dailyReady, dayIndex, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
+  CASTLE_MAX, DAILY_WIN, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canTrain, dailyReady, dayIndex, canUpgrade, chooseHero, collect, createKingdom, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, parseKingdom, pending, PERK_EFFECT, rate,
   serializeKingdom, storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 
@@ -106,9 +106,14 @@ export class TownScreen {
     this.$('btn-hero').addEventListener('click', () => {
       // The hero card opens on the first tap; later taps also switch heroes.
       if (this.selected !== 'hero') { this.selected = 'hero'; this.render(); return; }
-      const order: HeroKind[] = ['ranger', 'bron'];
-      const next = order[(order.indexOf(this.kingdom.hero) + 1) % order.length];
-      if (!heroUnlocked(this.kingdom, next)) { this.note(`${HEROES[next].name}: 스테이지 2에서 별을 얻으면 합류해요`); return; }
+      const order: HeroKind[] = ['ranger', 'bron', 'bear'];
+      // The next unlocked hero after the current one; if none, explain how the next locked one joins.
+      const after = [1, 2].map(i => order[(order.indexOf(this.kingdom.hero) + i) % order.length]);
+      const next = after.find(h => heroUnlocked(this.kingdom, h)), skipped = after.find(h => !heroUnlocked(this.kingdom, h));
+      const hint = (h: HeroKind) => this.note(`${HEROES[h].name}: 스테이지 ${HERO_JOINS[h]}에서 별을 얻으면 합류해요`);
+      if (!next) { hint(after[0]); return; }
+      // Passing over a hero who has not joined yet still says how they join.
+      if (skipped && after.indexOf(skipped) < after.indexOf(next)) hint(skipped);
       this.kingdom = chooseHero(this.kingdom, next);
       saveKingdom(this.kingdom);
       this.render();
@@ -175,7 +180,7 @@ export class TownScreen {
       : k.heroLv[k.hero] >= CASTLE_MAX * HERO_LV_PER_CASTLE ? '최대' : '성 Lv 필요';
     trainBtn.classList.toggle('capped', !tc);
     this.$('btn-hero').classList.toggle('can', canTrain(k, k.hero));
-    this.$('btn-hero').classList.toggle('has-more', heroUnlocked(k, 'bron'));
+    this.$('btn-hero').classList.toggle('has-more', heroUnlocked(k, 'bron') || heroUnlocked(k, 'bear'));
     this.view.sync(k);
     for (const r of ROWS) {
       const tag = this.root.querySelector<HTMLElement>(`[data-select="${r.id}"]`)!;

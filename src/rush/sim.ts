@@ -24,7 +24,7 @@ export interface Enemy {
   /** Boss rally (cycle 33): seconds of roar left, and whether it has already called its minions. */
   roarT?: number; rallied?: boolean;
 }
-export type ShotOwner = 'hero' | 'super' | 'tower' | 'enemy';
+export type ShotOwner = 'hero' | 'super' | 'tower' | 'enemy' | 'lob';
 export interface Shot {
   id: number; owner: ShotOwner; x: number; z: number; vx: number; vz: number;
   damage: number; life: number; radius: number; target: number; tx: number; tz: number;
@@ -58,6 +58,7 @@ export type RushEvent =
   | { type: 'build'; pad: number; level: number; branch?: TowerBranch }
   | { type: 'splash'; x: number; z: number; radius: number }
   | { type: 'chill'; x: number; z: number }
+  | { type: 'snow'; x: number; z: number; radius: number }
   | { type: 'block'; x: number; z: number }
   | { type: 'waveStart'; wave: number }
   | { type: 'waveClear'; wave: number; bonus: number }
@@ -345,10 +346,12 @@ function updateHero(s: RushState, cmd: Command) {
 
 function fire(s: RushState, aim: Vec | 'auto') {
   const h = s.hero;
-  let angle = h.facing;
+  let angle = h.facing, lobAt: Vec | null = null;
   if (aim === 'auto') {
-    const swing = heroDef(s).attack === 'swing';
-    const target = swing ? nearestEnemy(s, h, heroDef(s).range + 1.5) : autoTarget(s, h, heroDef(s).range);
+    const swing = heroDef(s).attack === 'swing', lob = heroDef(s).attack === 'lob';
+    // A lob drops from above (shields do not matter), so it simply takes the nearest enemy in range.
+    const target = swing ? nearestEnemy(s, h, heroDef(s).range + 1.5) : lob ? nearestEnemy(s, h, heroDef(s).range) : autoTarget(s, h, heroDef(s).range);
+    if (target && lob) lobAt = { x: target.x, z: target.z };
     if (target) angle = Math.atan2(target.z - h.z, target.x - h.x);
   } else if (aim.x !== 0 || aim.z !== 0) angle = Math.atan2(aim.z, aim.x);
   h.facing = angle;
@@ -380,6 +383,18 @@ function fire(s: RushState, aim: Vec | 'auto') {
     }
     s.stats.shots++;
     s.events.push({ type: 'swing', x: h.x, z: h.z, angle, range: def.range, arc: def.swingArc, hits });
+    return;
+  }
+  if (def.attack === 'lob') {
+    // Aimed by hand: lands three quarters of the way out; auto-aim: on the target.
+    const point = lobAt ?? { x: h.x + Math.cos(angle) * def.range * 0.75, z: h.z + Math.sin(angle) * def.range * 0.75 };
+    const t = def.lobTravel ?? 0.5;
+    s.shots.push({
+      id: s.nextId++, owner: 'lob', x: h.x, z: h.z, vx: (point.x - h.x) / t, vz: (point.z - h.z) / t,
+      damage: def.boltDamage * s.mods.damage, life: t, radius: def.boltRadius, target: 0, tx: point.x, tz: point.z,
+    });
+    s.stats.shots++;
+    s.events.push({ type: 'fire', x: h.x, z: h.z, angle });
     return;
   }
   const half = (heroDef(s).bolts - 1) / 2;
@@ -650,14 +665,30 @@ function updateTowers(s: RushState) {
 function updateShots(s: RushState) {
   const keep: Shot[] = [];
   for (const shot of s.shots) {
+    if (shot.owner === 'lob') {
+      // Snowball (cycle 39): lands where it was thrown, hurts and slows everything in the splash. Counts as a hero hit.
+      shot.x += shot.vx * STEP; shot.z += shot.vz * STEP; shot.life -= STEP;
+      if (shot.life > 0) { keep.push(shot); continue; }
+      const slow = heroDef(s).lobSlow ?? 0;
+      for (const e of s.enemies) {
+        if (e.hp <= 0 || len(e.x - shot.tx, e.z - shot.tz) > shot.radius + ENEMIES[e.kind].radius) continue;
+        hurtEnemy(s, e, shot.damage, 'hero');
+        if (e.hp > 0 && slow > 0) e.slowT = Math.max(e.slowT ?? 0, slow);
+      }
+      for (const c of [...s.crates]) if (len(c.x - shot.tx, c.z - shot.tz) <= shot.radius + CRATE.size / 2) hurtCrate(s, c, shot.damage);
+      s.events.push({ type: 'snow', x: shot.tx, z: shot.tz, radius: shot.radius });
+      continue;
+    }
     if (shot.owner === 'super') {
       shot.x += shot.vx * STEP; shot.z += shot.vz * STEP; shot.life -= STEP;
       if (shot.life > 0) { keep.push(shot); continue; }
+      const superSlow = heroDef(s).superSlow ?? 0;
       for (const e of s.enemies) {
         if (e.hp <= 0) continue;
         const dx = e.x - shot.tx, dz = e.z - shot.tz, d = len(dx, dz);
         if (d > shot.radius + ENEMIES[e.kind].radius) continue;
         hurtEnemy(s, e, shot.damage, 'super');
+        if (e.hp > 0 && superSlow > 0) e.slowT = Math.max(e.slowT ?? 0, superSlow);
         const k = heroDef(s).superKnock * ENEMIES[e.kind].knockTaken;
         if (d > 1e-6) { e.kx += (dx / d) * k; e.kz += (dz / d) * k; } else e.kz -= k;
       }

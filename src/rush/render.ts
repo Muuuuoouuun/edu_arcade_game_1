@@ -16,7 +16,7 @@ import { QUALITY, type Quality } from './quality.ts';
 export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'super'; offset: Vec } | null;
 
 const TEAM = { ally: PAL.ally, enemy: PAL.enemy };
-const HERO_MODELS: Record<HeroKind, string> = { ranger: '/defense/models/prototypes/gecko-ranger.glb', bron: '/defense/models/dwarf-guardian.glb' };
+const HERO_MODELS: Record<HeroKind, string> = { ranger: '/defense/models/prototypes/gecko-ranger.glb', bron: '/defense/models/dwarf-guardian.glb', bear: '/defense/models/prototypes/polar-bear.glb' };
 const HERO_HEIGHT = 2.0;
 /** Yaw that turns the GLB authored front (-z) toward simulation angle 0 (+x). Verified by east/north close-up renders. */
 const HERO_MODEL_YAW = -Math.PI / 2;
@@ -98,7 +98,7 @@ export class RushView {
   };
   private mats = {
     blob: basic(0x0b1a12, 0.32), allyRing: basic(TEAM.ally, 0.85), enemyRing: basic(TEAM.enemy, 0.8),
-    heroBolt: basic(0x8ff7ff), towerBolt: basic(0xffe07a), enemyBolt: basic(0xff7b3a), superOrb: basic(0xc59bff),
+    heroBolt: basic(0x8ff7ff), towerBolt: basic(0xffe07a), enemyBolt: basic(0xff7b3a), superOrb: basic(0xc59bff), snowball: basic(0xf4fbff),
     coin: toon(PAL.gold, { emissive: 0x5a3a00, rim: 0.5 }),
     baked: toon(0xffffff, { vertexColors: true, rim: 0.34 }), flash: basic(0xffffff),
     barBg: basic(0x10161c, 0.8), barAlly: basic(0x52e07c), barEnemy: basic(0xff5160), barTown: basic(0x4fb8ff), ammo: basic(0xffa43a), ammoDim: basic(0x5b3a1a, 0.9),
@@ -351,7 +351,10 @@ export class RushView {
   /** Aim preview shape: a long narrow fan for bolts, a short wide fan for a melee swing. */
   private fanGeometry(kind: HeroKind) {
     const d = HEROES[kind];
-    return d.attack === 'swing' ? new CircleGeometry(d.range, 20, -d.swingArc, d.swingArc * 2) : new CircleGeometry(d.range, 24, -d.spread * 1.6, d.spread * 3.2);
+    if (d.attack === 'swing') return new CircleGeometry(d.range, 20, -d.swingArc, d.swingArc * 2);
+    // A lob lands three quarters out when aimed by hand: a thin wedge to that point.
+    if (d.attack === 'lob') return new CircleGeometry(d.range * 0.75, 12, -0.07, 0.14);
+    return new CircleGeometry(d.range, 24, -d.spread * 1.6, d.spread * 3.2);
   }
 
   /** Show the given hero, loading its model the first time (the placeholder stands in meanwhile). */
@@ -525,6 +528,7 @@ export class RushView {
         tower: new Batch(this.scene, this.geo.bolt, this.mats.towerBolt, 120),
         enemy: new Batch(this.scene, this.geo.orb, this.mats.enemyBolt, 120),
         super: new Batch(this.scene, this.geo.orb, this.mats.superOrb, 8),
+        lob: new Batch(this.scene, this.geo.orb, this.mats.snowball, 16),
       },
       branchShots: { fire: new Batch(this.scene, this.geo.bolt, basic(BRANCH_COLOR.fire), 120), frost: new Batch(this.scene, this.geo.bolt, basic(0xbff3ff), 120) },
       coins: new Batch(this.scene, this.geo.coin, this.mats.coin, 160),
@@ -587,6 +591,10 @@ export class RushView {
         // Lobbed: a parabola that lands on the target point.
         const p = 1 - Math.max(0, shot.life) / HEROES[s.hero.kind].superTravel;
         B.shots.super.push(this.place(shot.x, 0.6 + Math.sin(p * Math.PI) * 2.6, shot.z, 0, 0, 0, 1.8));
+      } else if (shot.owner === 'lob') {
+        // Snowball (cycle 39): a lower arc than the super.
+        const p = 1 - Math.max(0, shot.life) / (HEROES[s.hero.kind].lobTravel ?? 0.5);
+        B.shots.lob.push(this.place(shot.x, 0.7 + Math.sin(p * Math.PI) * 1.8, shot.z, 0, 0, 0, 1.15));
       } else if (shot.owner === 'enemy') B.shots.enemy.push(this.place(shot.x, 0.85, shot.z, 0, 0, 0, 1));
       // Capsules point along +y; lay them flat along the velocity.
       else (shot.branch ? B.branchShots[shot.branch] : B.shots[shot.owner]).push(this.place(shot.x, shot.owner === 'tower' ? 1.6 : 0.85, shot.z, -Math.PI / 2, Math.atan2(-shot.vx, -shot.vz), 0, 1, 1, 1, 'YXZ'));
@@ -705,6 +713,10 @@ export class RushView {
           if (boss) { this.ring(ev.x, ev.z, PAL.gold, 4.2, 0.6, 0.95, true); if (!reducedMotion) this.shake = Math.max(this.shake, 0.7); }
           break;
         }
+        case 'snow': // snowball landing (cycle 39): a pale ring and a puff of snow
+          this.ring(ev.x, ev.z, 0xc4f2ff, ev.radius, 0.3, 0.85);
+          fx.emit({ kind: 'puff', n: 6, color: 0xf4fbff, at: [ev.x, 0.4, ev.z], speed: 3, up: 1.5, size: 0.22, life: 0.4 });
+          break;
         case 'splash': // fire tower
           this.ring(ev.x, ev.z, BRANCH_COLOR.fire, ev.radius, 0.3, 0.85);
           fx.emit({ kind: 'shard', n: 5, color: 0xffb02e, at: [ev.x, 0.7, ev.z], speed: 4.5, up: 4, size: 0.11, life: 0.4 });
@@ -951,6 +963,7 @@ export class RushView {
 const CAPE: Record<HeroKind, { x: number; y: number; h: number; w: number }> = {
   ranger: { x: -0.3, y: 1.2, h: 0.85, w: 0.7 },
   bron: { x: -0.4, y: 1.15, h: 0.85, w: 0.95 },
+  bear: { x: -0.4, y: 1.2, h: 0.85, w: 0.95 },
 };
 const BRANCH_COLOR: Record<TowerBranch, number> = { fire: 0xff7a2f, frost: 0x4fc3ff };
 const ICE = new MeshBasicMaterial({ color: 0xc4f2ff, transparent: true, opacity: 0.4, depthWrite: false });

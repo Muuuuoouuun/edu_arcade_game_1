@@ -125,7 +125,7 @@ test('Bron joins after a star on stage 2; the choice is saved and old saves take
   assert.equal(parseKingdom(JSON.stringify({ ...k, stars: Array(10).fill(0) }), 0).hero, 'ranger', 'a tampered save cannot skip the unlock');
 });
 
-function playHero(seed: number, stage: number, hero: 'ranger' | 'bron', mods: RushMods = NO_MODS) {
+function playHero(seed: number, stage: number, hero: 'ranger' | 'bron' | 'bear', mods: RushMods = NO_MODS) {
   const s = createRush(seed, mods, stageDifficulty(stage), hero);
   while (s.phase !== 'won' && s.phase !== 'lost' && s.tick < LIMIT) stepRush(s, guardBot(s));
   return s;
@@ -134,7 +134,7 @@ function playHero(seed: number, stage: number, hero: 'ranger' | 'bron', mods: Ru
 test('hero training pays off: Lv10 wins clearly more of stages 7-8, but stage 10 still needs the kingdom', () => {
   // The bot run is chaotic seed to seed, so the claim is about totals, not every single seed.
   const lv = (n: number): RushMods => { const g = heroGrowth(n); return { ...NO_MODS, damage: g.damage, heroHp: g.hp }; };
-  for (const hero of ['ranger', 'bron'] as const) {
+  for (const hero of ['ranger', 'bron', 'bear'] as const) {
     const wins = (n: number) => [7, 8].reduce((sum, stage) => sum + [1, 2, 3, 4, 5, 6].filter(seed => playHero(seed, stage, hero, lv(n)).phase === 'won').length, 0);
     const low = wins(1), high = wins(10);
     assert.ok(high >= low + 3, `${hero}: stage 7-8 wins Lv1 ${low} → Lv10 ${high}`);

@@ -46,14 +46,15 @@ export const HERO_GROWTH = { hp: 0.1, damage: 0.1 } as const;
 
 export const createKingdom = (now: number): Kingdom => ({
   version: 1, castle: 1, farm: 1, mill: 1, perks: { attack: 0, towerDiscount: 0, townHp: 0, forge: 0, vault: 0 },
-  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), hero: 'ranger', heroLv: { ranger: 1, bron: 1 }, shards: 0, dailyWin: 0, rewarded: [],
+  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), hero: 'ranger', heroLv: { ranger: 1, bron: 1, bear: 1 }, shards: 0, dailyWin: 0, rewarded: [],
 });
 
 const clone = (k: Kingdom): Kingdom => ({ ...k, perks: { ...k.perks }, battles: { ...k.battles }, stars: [...k.stars], heroLv: { ...k.heroLv }, rewarded: [...k.rewarded] });
 
 export const stageUnlocked = (k: Kingdom, n: number) => n >= 1 && n <= STAGE_COUNT && (n === 1 || k.stars[n - 2] > 0);
-/** Heroes join through progress: Bron arrives once stage 2 has a star. */
-export const heroUnlocked = (k: Kingdom, hero: HeroKind) => hero === 'ranger' || (hero === 'bron' && k.stars[1] > 0);
+/** Heroes join through progress: Bron once stage 2 has a star, Popo (cycle 39) once stage 4 has one. */
+export const HERO_JOINS: Record<HeroKind, number> = { ranger: 0, bron: 2, bear: 4 };
+export const heroUnlocked = (k: Kingdom, hero: HeroKind) => HERO_JOINS[hero] === 0 || (k.stars[HERO_JOINS[hero] - 1] ?? 0) > 0;
 export function chooseHero(k: Kingdom, hero: HeroKind): Kingdom {
   if (!heroUnlocked(k, hero) || k.hero === hero) return k;
   return { ...clone(k), hero };
@@ -241,9 +242,9 @@ export function parseKingdom(raw: string | null, now: number): Kingdom {
       perks: { attack: perks.attack!, towerDiscount: perks.towerDiscount!, townHp: perks.townHp!, forge: perks.forge!, vault: perks.vault! },
       food: food!, wood: wood!, lastCollect: last, battles: { won: won!, lost: lost! }, stars: starList,
       // Saves from before hero choice (or naming an unknown or still-locked hero) take the ranger.
-      hero: v.hero === 'bron' && starList[1] > 0 ? 'bron' : 'ranger',
+      hero: (v.hero === 'bron' && starList[1] > 0) || (v.hero === 'bear' && starList[3] > 0) ? v.hero : 'ranger',
       // Saves from before hero training start every hero at Lv1; levels above the castle cap are clamped.
-      heroLv: { ranger: heroLevel(v.heroLv?.ranger, castle), bron: heroLevel(v.heroLv?.bron, castle) },
+      heroLv: { ranger: heroLevel(v.heroLv?.ranger, castle), bron: heroLevel(v.heroLv?.bron, castle), bear: heroLevel(v.heroLv?.bear, castle) },
       // Saves from before shards (cycle 26) get 2 per star already earned, so past progress still counts.
       shards: v.shards === undefined ? 2 * starList.reduce((a: number, b: number) => a + b, 0) : count(v.shards, 0, 1e6) ?? 0,
       // Saves from before the daily bonus (cycle 32) can claim it today.

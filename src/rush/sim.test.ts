@@ -372,3 +372,26 @@ test('boss rally: from stage 6, below half health it roars in place for a second
   cut.b.hp = 0;
   assert.ok(!run(cut.s, roarTicks + 5).includes('summon'), 'killed during the roar: no minions');
 });
+
+test('Popo (cycle 39): a snowball lands where thrown, hurts and slows everything in the splash, ignores shields, charges the super', async () => {
+  const { HEROES } = await import('./data.ts');
+  const def = HEROES.bear;
+  const s = createRush(1, NO_MODS, undefined, 'bear');
+  Object.assign(s.hero, { x: 0, z: 0, facing: -Math.PI / 2 });
+  // A shield-bearer facing the hero and a grunt beside it, both 4 m north; a third grunt far outside the splash.
+  const sh = enemy(s, 'shield', 0, -4); sh.facing = Math.PI / 2;
+  const g = enemy(s, 'grunt', 0.9, -4);
+  const far = enemy(s, 'grunt', 6, -4);
+  for (const e of [sh, g, far]) e.wp = 99; // past the lane's end: they only edge towards the town during the throw
+  stepRush(s, { fire: 'auto' });
+  assert.equal(s.shots.filter(x => x.owner === 'lob').length, 1, 'one snowball in the air');
+  const seen: string[] = [];
+  for (let i = 0; i < Math.round((def.lobTravel ?? 0.5) / STEP) + 2; i++) { stepRush(s, {}); seen.push(...s.events.map(e => e.type)); }
+  assert.ok(seen.includes('snow') && !seen.includes('block'), 'lands with a splash; no shield block');
+  const dmg = def.boltDamage;
+  assert.ok(Math.abs(sh.maxHp - sh.hp - dmg) < 1e-6, `shield-bearer takes full damage (${sh.maxHp - sh.hp})`);
+  assert.ok(Math.abs(g.maxHp - g.hp - dmg) < 1e-6, 'the grunt beside it too');
+  assert.equal(far.hp, far.maxHp, 'outside the splash: untouched');
+  assert.ok((sh.slowT ?? 0) > 0 && (g.slowT ?? 0) > 0 && !(far.slowT ?? 0), 'both in the splash are slowed');
+  assert.equal(s.hero.superCharge, 2, 'each enemy hit charges the super');
+});

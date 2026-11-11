@@ -93,7 +93,7 @@ test('saves round-trip; broken or tampered saves fall back to a fresh kingdom', 
 
 test('hero training: castle caps the level, costs grow, collect first, only unlocked heroes', () => {
   let k = createKingdom(T0);
-  assert.deepEqual(k.heroLv, { ranger: 1, bron: 1 });
+  assert.deepEqual(k.heroLv, { ranger: 1, bron: 1, bear: 1 });
   assert.equal(heroMaxLevel(k), 2, 'castle 1 allows hero Lv2');
   assert.deepEqual(trainCost(k, 'ranger'), { food: 45, wood: 25, shards: 0 });
   assert.equal(trainCost(k, 'bron'), null, 'locked hero cannot train');
@@ -111,7 +111,7 @@ test('hero training: castle caps the level, costs grow, collect first, only unlo
 });
 
 test('hero level feeds battle modifiers for the chosen hero only', () => {
-  const k = { ...createKingdom(T0), castle: 5, heroLv: { ranger: 6, bron: 1 }, perks: { attack: 2, towerDiscount: 0, townHp: 0, forge: 0, vault: 0 } };
+  const k = { ...createKingdom(T0), castle: 5, heroLv: { ranger: 6, bron: 1, bear: 1 }, perks: { attack: 2, towerDiscount: 0, townHp: 0, forge: 0, vault: 0 } };
   const m = kingdomMods(k);
   assert.ok(Math.abs(m.heroHp - 1.5) < 1e-9 && Math.abs(m.damage - 1.16 * 1.5) < 1e-9, JSON.stringify(m));
   assert.equal(kingdomMods({ ...k, hero: 'bron' }).heroHp, 1, 'bron keeps his own level');
@@ -123,9 +123,9 @@ test('hero level feeds battle modifiers for the chosen hero only', () => {
 test('hero levels load from old saves and clamp to the castle cap', () => {
   const old = JSON.parse(serializeKingdom(createKingdom(T0)));
   delete old.heroLv;
-  assert.deepEqual(parseKingdom(JSON.stringify(old), T0).heroLv, { ranger: 1, bron: 1 });
+  assert.deepEqual(parseKingdom(JSON.stringify(old), T0).heroLv, { ranger: 1, bron: 1, bear: 1 });
   const tampered = { ...old, castle: 2, heroLv: { ranger: 9, bron: 'x' } };
-  assert.deepEqual(parseKingdom(JSON.stringify(tampered), T0).heroLv, { ranger: 4, bron: 1 });
+  assert.deepEqual(parseKingdom(JSON.stringify(tampered), T0).heroLv, { ranger: 4, bron: 1, bear: 1 });
 });
 
 test('forge: castle caps it, costs grow, old saves start it at 0, battles get its level', () => {

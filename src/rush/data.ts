@@ -41,9 +41,9 @@ export const PADS: readonly Vec[] = [
 ];
 export const PAD_REACH = 1.8;
 
-export type HeroKind = 'ranger' | 'bron';
+export type HeroKind = 'ranger' | 'bron' | 'bear';
 export type HeroDef = {
-  name: string; attack: 'bolts' | 'swing';
+  name: string; attack: 'bolts' | 'swing' | 'lob';
   speed: number; hp: number; radius: number;
   ammoMax: number; reload: number; fireGap: number;
   /** bolts: projectile fan · swing: instant melee cone (range = reach, swingArc = half angle). */
@@ -53,6 +53,9 @@ export type HeroDef = {
   superHits: number; superRange: number; superRadius: number; superDamage: number; superKnock: number; superTravel: number; superSelf: boolean;
   regenDelay: number; regenRate: number; respawn: number;
   pickup: number; magnet: number; magnetSpeed: number;
+  /** lob (cycle 39): a snowball arcs to a point in lobTravel s and hits everything within boltRadius, slowing it for
+   * lobSlow s. It drops from above, so a shield-bearer cannot turn it aside. superSlow: the super slows what it hits. */
+  lobTravel?: number; lobSlow?: number; superSlow?: number;
 };
 const COMMON = { regenDelay: 3, regenRate: 0.12, respawn: 4, pickup: 1.3, magnet: 2.8, magnetSpeed: 9 } as const;
 export const HEROES: Record<HeroKind, HeroDef> = {
@@ -68,6 +71,15 @@ export const HEROES: Record<HeroKind, HeroDef> = {
     ammoMax: 3, reload: 0.85, fireGap: 0.36,
     bolts: 1, spread: 0, boltDamage: 58, boltSpeed: 0, range: 2.8, boltRadius: 0, swingArc: 0.96, swingKnock: 4,
     superHits: 8, superRange: 0, superRadius: 4, superDamage: 130, superKnock: 10, superTravel: 0.12, superSelf: true,
+    ...COMMON,
+  },
+  // Third hero (cycle 39): crowd control. Lobbed snowballs splash and slow; the super is a blizzard that slows longer.
+  bear: {
+    name: '눈곰 포포', attack: 'lob', speed: 4.9, hp: 620, radius: 0.55,
+    ammoMax: 2, reload: 1.3, fireGap: 0.45,
+    bolts: 1, spread: 0, boltDamage: 44, boltSpeed: 0, range: 8, boltRadius: 1.6, swingArc: 0, swingKnock: 0,
+    superHits: 10, superRange: 8, superRadius: 3.6, superDamage: 110, superKnock: 3, superTravel: 0.45, superSelf: false,
+    lobTravel: 0.55, lobSlow: 1.2, superSlow: 3,
     ...COMMON,
   },
 };
