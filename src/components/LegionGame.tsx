@@ -4,6 +4,7 @@ import { POPULATION_CAP, UNIT_DEFS, WAVE_COUNT, WAVE_TOTALS } from '../games/leg
 import type { LegionAction, LegionState, Point, UnitKind } from '../games/legion/types';
 import { DefenseSprite } from './DefenseBoard';
 import { spriteAsset } from '../games/defense/art';
+import { legionShieldAsset } from '../games/legion/shieldMotion';
 import LegionBoard from './LegionBoard';
 import { Dialog } from './Dialog';
 import { Icon } from './Icon';
@@ -139,10 +140,11 @@ export default function LegionGame({blocked,onExit,sound}:{blocked:boolean;onExi
 }
 
 function LegionPortrait({kind,index}:{kind:UnitKind;index:number}) {
-  const art=kind==='shield'?null:spriteAsset(index);
+  const art=kind==='shield'?legionShieldAsset():spriteAsset(index);
   const [failedSource,setFailedSource]=useState('');
   useEffect(()=>{if(!art)return;let active=true;const image=new Image();image.onload=()=>{if(active)setFailedSource('');};image.onerror=()=>{if(active)setFailedSource(art.src);};image.src=art.src;return()=>{active=false;};},[art?.src]);
-  if(kind!=='shield') return failedSource===art?.src
+  if(kind==='shield'&&failedSource!==art.src)return <DefenseSprite index={index} art={art}/>;
+  if(kind!=='shield') return failedSource===art.src
     ? <svg className="def-sprite legion-portrait-fallback" viewBox="0 0 48 56" aria-hidden="true">{kind==='beast'?<><path d="M9 29 13 11l10 8 11-8 5 18-5 15-11 5-10-5z" fill="#7fa9a2" stroke="#d5eee1" strokeWidth="2"/><circle cx="18" cy="29" r="2" fill="#183a3b"/><circle cx="30" cy="29" r="2" fill="#183a3b"/><path d="M20 38h8" stroke="#183a3b" strokeWidth="3" strokeLinecap="round"/></>:<><circle cx="24" cy="28" r="19" fill="#315e60" stroke="#d5eee1" strokeWidth="2"/><text x="24" y="36" textAnchor="middle" fontSize="26" fill="#f1d58d">{kind==='archer'?'↗':'✦'}</text></>}</svg>
     : <DefenseSprite index={index} art={art}/>;
   return <svg className="def-sprite" viewBox="0 0 48 56" aria-hidden="true"><ellipse cx="24" cy="51" rx="18" ry="4" fill="#06252b"/><path d="M13 30h22v16H13z" fill="#367b8b"/><path d="M15 44h7v9h-9zm13 0h7l2 9h-9z" fill="#bfc7bd"/><rect x="13" y="12" width="23" height="20" rx="9" fill="#e6d0a3"/><path d="M11 22Q10 5 24 5t14 17H11" fill="#c4d3ce" stroke="#607c82" strokeWidth="2"/><path d="M21 5h6v17h-6z" fill="#f4c568"/><path d="M15 24h18v6H15z" fill="#253c42"/><path d="m26 31 15 2v12l-7 8-8-8z" fill="#2b8fa1" stroke="#efcd81" strokeWidth="2"/><path d="M33 35v10m-4-6h8" stroke="#f9da8e" strokeWidth="2"/><path d="M7 19v22" stroke="#dfeae6" strokeWidth="4"/><path d="M3 38h9" stroke="#e5bd68" strokeWidth="3"/></svg>;

@@ -1,0 +1,20 @@
+// Vite: npm run dev -- --port 3147. Optional BASE, CHROMIUM_PATH and ARTIFACT_DIR.
+const {chromium}=require('playwright');const assert=require('node:assert/strict');
+const base=process.env.BASE||'http://127.0.0.1:3147/';const artifacts=process.env.ARTIFACT_DIR;
+(async()=>{const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox','--enable-unsafe-swiftshader']});
+for(const mode of [{name:'pc',w:1280,h:720},{name:'mobile',w:844,h:390,touch:true},{name:'reduced',w:844,h:390,touch:true,reduced:true},{name:'fallback',w:844,h:390,touch:true,fail:true}].filter(mode=>!process.env.PROFILE||mode.name===process.env.PROFILE)){
+ const context=await browser.newContext({viewport:{width:mode.w,height:mode.h},hasTouch:!!mode.touch,reducedMotion:mode.reduced?'reduce':'no-preference'});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.addInitScript(()=>{window.__shieldFrames=[];const original=CanvasRenderingContext2D.prototype.drawImage;CanvasRenderingContext2D.prototype.drawImage=function(image,...args){if((image?.currentSrc||'').endsWith('legion-shield-atlas.webp')){window.__shieldFrames.push(args[0]);if(window.__shieldFrames.length>12000)window.__shieldFrames.shift();}return original.call(this,image,...args);};});
+ if(mode.fail)await page.route('**/legion-shield-atlas.webp',r=>r.abort());
+ await page.goto(base,{waitUntil:'networkidle'});await page.getByRole('button',{name:/수비대 결성하기|모험 이어가기/}).click();await page.getByRole('button',{name:/군단 방어/}).click();const game=page.locator('[data-screen=legion]');await game.waitFor();const card=page.getByRole('button',{name:/방패병 3명/});
+ if(mode.fail)await page.waitForFunction(()=>document.querySelector('.legion-card[aria-label^="방패병"] svg[viewBox="0 0 48 56"]'));
+ else await page.waitForFunction(()=>document.querySelector('.legion-card[aria-label^="방패병"] image')?.getAttribute('href')?.endsWith('legion-shield-atlas.webp'));
+ const board=page.locator('canvas.legion-board'),rect=await board.boundingBox();await board.click({position:{x:rect.width*.72,y:rect.height*.5}});if(artifacts)await page.screenshot({path:`${artifacts}/shield-${mode.name}-prep.png`});
+ await page.getByRole('button',{name:/전투 시작/}).click();await page.getByRole('button',{name:/전투 속도 1배/}).click();
+ if(!mode.fail&&!mode.reduced)await page.waitForFunction(()=>window.__shieldFrames.includes(519)&&window.__shieldFrames.includes(903),null,{timeout:25000});else await page.waitForTimeout(6000);
+ const frames=await page.evaluate(()=>[...new Set(window.__shieldFrames)]);if(mode.fail)assert.deepEqual(frames,[]);else if(mode.reduced)assert.deepEqual(frames,[135]);else assert.ok(frames.includes(135)&&frames.includes(519)&&frames.includes(903));
+ if(artifacts)await page.screenshot({path:`${artifacts}/shield-${mode.name}-battle.png`});
+ await page.getByRole('button',{name:'군단 전투 일시정지'}).click();const paused=await game.getAttribute('data-time');await page.waitForTimeout(400);assert.equal(await game.getAttribute('data-time'),paused);await page.getByRole('button',{name:'계속하기'}).click();assert.equal(await card.isVisible(),true);
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({mode:mode.name,frames,paused,errors}));await context.close();
+}
+if(!process.env.SKIP_MODEL_LAB){const p=await browser.newPage({viewport:{width:1280,height:720}});const errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(new URL('model-lab.html?model=legion-shield',base).toString());await p.waitForFunction(()=>document.querySelector('#model-stage')?.dataset.loaded==='legion-shield',null,{timeout:60000});await p.locator('#attack-preview').click();await p.waitForFunction(()=>document.querySelector('#model-stage')?.dataset.action==='settled',null,{timeout:15000});assert.deepEqual(errors,[]);if(artifacts)await p.screenshot({path:`${artifacts}/shield-model-lab.png`});console.log('model lab GLB loads and plays: PASS');}await browser.close();})().catch(error=>{console.error(error);process.exit(1)});

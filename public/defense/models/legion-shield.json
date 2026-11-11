@@ -1,0 +1,105 @@
+{
+  "id": "legion-shield",
+  "kind": "articulated 3D model and baked 2.5D atlas",
+  "source": "art-source/defense/legion-shield.blend",
+  "generator": "tools/blender/build_legion_shield.py",
+  "reference": "art-source/defense/concepts/2026-10-29/heroes/spear-guardian.png; direction loop cycle 92 shield draft",
+  "provenance": "Derived from origin/claude/wizardly-shannon-zqnwg0 cycle 92 draft, revised into animated model and production bake",
+  "blender": "4.3.2",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192.0,
+      330.0
+    ],
+    "crop": [
+      135,
+      154,
+      164,
+      191
+    ],
+    "body_span": 176.12,
+    "display_scale": 1.32311
+  },
+  "atlas": {
+    "file": "legion-shield-atlas.webp",
+    "frames": [
+      "idle",
+      "strike",
+      "recoil"
+    ],
+    "width": 1152,
+    "height": 384
+  },
+  "animation": {
+    "clip": "legion-shield-bash",
+    "fps": 30,
+    "contact_frame": 1,
+    "recoil_frame": 4,
+    "idle_frame": 10,
+    "duration_seconds": 0.3,
+    "timing": "contact starts at damage event; recovery follows simulation effect age"
+  },
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 32,
+    "transparent": true
+  },
+  "mesh_objects": 58,
+  "triangles": 11488,
+  "bounds": [
+    {
+      "pose": "idle",
+      "frame": 10,
+      "bbox": [
+        143.84,
+        157.65,
+        279.93,
+        341.49
+      ],
+      "ground_z_min": 0.0
+    },
+    {
+      "pose": "strike",
+      "frame": 1,
+      "bbox": [
+        138.85,
+        158.82,
+        295.84,
+        341.49
+      ],
+      "ground_z_min": 0.0
+    },
+    {
+      "pose": "recoil",
+      "frame": 4,
+      "bbox": [
+        142.32,
+        157.95,
+        286.41,
+        341.49
+      ],
+      "ground_z_min": 0.0
+    }
+  ],
+  "regeneration_command": "blender -b --python tools/blender/build_legion_shield.py",
+  "source_sha256": "305b188d5a8ba7b8bbabbdbb6355484275f77cd5c3900826c3d5435c4d57d07a",
+  "files": [
+    {
+      "file": "legion-shield-atlas.webp",
+      "bytes": 24784,
+      "sha256": "12f72a028c97bed3c8cbc3cef131f03c0cf7235a1dfc81da6ee76e13dde580ad"
+    },
+    {
+      "file": "legion-shield.png",
+      "bytes": 113626,
+      "sha256": "6923dc1cb6de0713173d01e62c8d40c893eb06fed4acdb1823bce5b463c3ed1f"
+    },
+    {
+      "file": "legion-shield.glb",
+      "bytes": 295584,
+      "sha256": "f7c4679195900b1db5f0efaf459776d5493638a1ea0c078a82e7c07da127a5a1"
+    }
+  ]
+}

@@ -29,9 +29,11 @@ test('mobile package keeps the Legion terrain and wolf gait and hit fallbacks', 
     'defense/legion/forest-arena.webp',
     'defense/models/frost-wolf-trot-atlas.webp',
     'defense/models/frost-wolf-atlas.webp',
+    'defense/models/legion-shield-atlas.webp',
     'defense/snow-atlas.png',
   ]) {
     const entry = await stat(new URL(path, output));
     assert.ok(entry.isFile() && entry.size > 0, `missing mobile asset: ${path}`);
   }
+  await assert.rejects(stat(new URL('defense/models/legion-shield.glb', output)), { code: 'ENOENT' });
 });
