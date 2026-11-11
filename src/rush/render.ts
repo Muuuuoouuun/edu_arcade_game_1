@@ -251,10 +251,12 @@ export class RushView {
     const place = (x: number, z: number) => {
       const pick = r();
       if (pick < 0.5) {
+        // 8x4 segments (cycle 55): these bushes were a quarter of a battle frame's triangles. The steep camera sees
+        // the 8-sided outline, so fewer rings look the same as the old 8x6; 6 sides read as hexagons.
         const k = 0.45 + r() * 0.3;
-        parts.push({ geo: new SphereGeometry(k, 8, 6), color: 0x4fae4a, at: [x, k * 0.7, z] });
-        parts.push({ geo: new SphereGeometry(k * 0.75, 8, 6), color: 0x6cc75a, at: [x + k * 0.6, k * 0.55, z + k * 0.3] });
-        parts.push({ geo: new SphereGeometry(k * 0.6, 8, 6), color: 0x5bbd52, at: [x - k * 0.5, k * 0.5, z - k * 0.4] });
+        parts.push({ geo: new SphereGeometry(k, 8, 4), color: 0x4fae4a, at: [x, k * 0.7, z] });
+        parts.push({ geo: new SphereGeometry(k * 0.75, 8, 4), color: 0x6cc75a, at: [x + k * 0.6, k * 0.55, z + k * 0.3] });
+        parts.push({ geo: new SphereGeometry(k * 0.6, 8, 4), color: 0x5bbd52, at: [x - k * 0.5, k * 0.5, z - k * 0.4] });
       } else if (pick < 0.8) {
         const k = 0.35 + r() * 0.3;
         parts.push({ geo: new DodecahedronGeometry(k), color: 0xa3adc4, at: [x, k * 0.6, z], rot: [r(), r() * 3, 0] });
