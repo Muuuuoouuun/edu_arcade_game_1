@@ -28,3 +28,8 @@
 .frontier[data-menu=false] .frontier-controls button{pointer-events:auto}
 .frontier[data-menu=false] .frontier-solo{width:100%;justify-content:space-between}
 .frontier[data-menu=false] .frontier-actions{margin-left:auto}
+/* The active battle keeps only input controls; view and mode options live in the pause panel. */
+.frontier-overlay>div{max-height:calc(100% - 8px);overflow:auto}
+.frontier-pause-options{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:12px}
+.frontier-overlay .frontier-pause-options button{min-width:0;min-height:44px;padding:6px 10px;background:#254c46;color:#f4edda;font-size:12px}
+@media (orientation:landscape) and (max-height:500px){.frontier-pause-options{margin-top:6px}}
