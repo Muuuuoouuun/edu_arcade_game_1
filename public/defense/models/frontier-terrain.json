@@ -1,6 +1,6 @@
 {
   "generator": "tools/blender/build_frontier_terrain.py",
-  "generator_sha256": "37e5c53178c34854d1750b94f00015dac46f33240b3b12b770bd37218380fdf6",
+  "generator_sha256": "58282d72aa17f70d999395b43d92b6c0f473c46e483f3de372ed6990660b1601",
   "command": "npm run models:frontier-terrain",
   "editable_objects": 430,
   "runtime_materials": 1,
@@ -10,7 +10,7 @@
   "meadow_palette_colors": 4,
   "forest_outer_verge_x": [
     32,
-    41
+    46
   ],
   "footprint": [
     64,
@@ -85,27 +85,27 @@
     {
       "file": "art-source/defense/frontier-terrain.blend",
       "bytes": 3531064,
-      "sha256": "27aca292bd7838036cda82f9ad1b388e40b4dac4ee7d175b7048cdedc684ca9d"
+      "sha256": "6be384c5526b7096be010debbc8e60695e8eaf2b588e77bf96e15a2829ae0edf"
     },
     {
       "file": "public/defense/models/frontier-terrain.glb",
       "bytes": 866352,
-      "sha256": "06667763a83ce083e2fe7553cb0a81d7b610bfb94b86fa5a11c2cd71fc8f6898"
+      "sha256": "7dbf9b748f76c94dc8ad8392a0ef0176bedc70404e7d843c15835bd3ea94c078"
     },
     {
       "file": "public/defense/models/frontier-terrain.png",
-      "bytes": 636767,
-      "sha256": "f8033bf83ae074f2bf9449db5b21dcedf21a6e8ab9c4d54fdcf666c5c4d5a20a"
+      "bytes": 651017,
+      "sha256": "2016a9ea4d0314f255799e10584ac85b5c60e52ce229b9bfbd78c9d78542ab1c"
     },
     {
       "file": "public/defense/models/frontier-terrain.webp",
-      "bytes": 26428,
-      "sha256": "6716710a9f185c8c81fdf30cb2c95e8071cfb28de946e802ef0df23c93291ec8"
+      "bytes": 26348,
+      "sha256": "4866f817f8d90059abb4f8d90b9613100c346a5250b96ed4533d029520fb649b"
     },
     {
       "file": "public/defense/models/frontier-terrain-crossing.png",
-      "bytes": 591707,
-      "sha256": "8c4d29a3ea8db0d313f21e25ff3c962b8cbc35163871e1383ffaa8b54bf98683"
+      "bytes": 590679,
+      "sha256": "b4026418e5828017c144ad2260c611eec936cde31ab5dd313f95516f344f8ad4"
     }
   ]
 }

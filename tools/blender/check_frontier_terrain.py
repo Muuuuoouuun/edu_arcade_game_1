@@ -5,6 +5,15 @@ R=Path(__file__).resolve().parents[2];bpy.ops.wm.open_mainfile(filepath=str(R/'a
 objects=[o for o in bpy.data.objects if o.type=='MESH'];assert len(objects)==json.loads((R/'public/defense/models/frontier-terrain.json').read_text())['editable_objects']
 for prefix,count in [('West river cliff',32),('East river cliff',32),('Bridge masonry support',6),('Bridge diagonal brace',4),('Bridge deck plank',16)]:assert sum(o.name.startswith(prefix)for o in objects)==count,(prefix,count)
 for prefix,count in [('Verdant trunk',28),('Verdant branch',28),('Verdant crown',56)]:assert sum(o.name.startswith(prefix)for o in objects)==count,(prefix,count)
+trunks=[o for o in objects if o.name.startswith('Verdant trunk')]
+assert sum(o.location.x>0 for o in trunks)==14
+for tree in trunks:
+ assert abs(tree.location.x-(43 if tree.location.x>0 else -31))<.0001
+ bottom=min((tree.matrix_world @ Vector(v)).z for v in tree.bound_box)
+ ground=max(0,min(1,(tree.location.y-2)/10))*4.6
+ assert abs(bottom-ground)<.0001,(tree.name,bottom,ground)
+verge=next(o for o in objects if o.name=='Forest outer verge')
+assert min(v.co.x for v in verge.data.vertices)==32 and max(v.co.x for v in verge.data.vertices)==46
 for side,start,end,count in [('West',-17,2,28),('East',10,21,14)]:
  stones=[o for o in objects if o.name.startswith('Bridge approach '+side+' stone')];assert len(stones)==count,(side,len(stones))
  for stone in stones:

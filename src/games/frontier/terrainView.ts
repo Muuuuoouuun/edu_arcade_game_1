@@ -1,4 +1,5 @@
-import{BoxGeometry,BufferGeometry,Float32BufferAttribute,Color,Mesh,MeshStandardMaterial}from'three';
+import{BoxGeometry,BufferGeometry,Float32BufferAttribute,Color,Mesh,MeshStandardMaterial,PlaneGeometry}from'three';
+import{heightAt}from'./engine.ts';
 /** Visual gorge remains inside the blocked river; the gameplay surface is unchanged. */
 export const CROSSING={left:3,right:9,water:-2.6,bed:-4.5,deck:.36} as const;
 /** Input retains the deck when the visual root is replaced by a loaded GLB. */
@@ -7,6 +8,12 @@ export function bridgePickSurface(){
  mesh.position.set(6,.16,0);mesh.castShadow=mesh.receiveShadow=true;
  // The GLB can arrive before the first render: the detached pick mesh must already be in world space.
  mesh.updateMatrixWorld(true);return mesh;
+}
+/** Visual support under the fallback's eastern forest, outside the playable map. */
+export function forestFallbackVerge(){
+ const geometry=new PlaneGeometry(14,64,1,64);geometry.rotateX(-Math.PI/2);geometry.translate(39,0,0);
+ const p=geometry.attributes.position;for(let i=0;i<p.count;i++)p.setY(i,heightAt(p.getX(i),p.getZ(i)));geometry.computeVertexNormals();
+ const surface=new Mesh(geometry,new MeshStandardMaterial({color:'#739a66',roughness:1}));surface.receiveShadow=true;return surface;
 }
 export function riverBanks(){
  const positions:number[]=[],colors:number[]=[];
