@@ -86,6 +86,13 @@
       </section>
       <div id="orientation-gate" class="orientation-gate" role="dialog" aria-modal="true" aria-labelledby="orientation-title" hidden tabindex="-1"><span aria-hidden="true">↻</span><h2 id="orientation-title">가로로 돌려 주세요</h2><p>전투는 멈춰 있어요. 회전 후 직접 재개할 수 있어요.</p></div>
     </main>
+    <section id="rush-render-error" class="rush-render-error" role="alertdialog" aria-modal="true" aria-labelledby="rush-render-error-title" hidden tabindex="-1">
+      <div class="rush-render-card">
+        <h1 id="rush-render-error-title">3D 전장을 열 수 없어요</h1>
+        <p id="rush-render-error-detail">그래픽 기능을 사용할 수 없어 러시를 시작하지 못했어요.</p>
+        <div class="actions"><button id="rush-render-retry" class="primary">다시 시도</button><a href="/index.html">시작 화면으로</a></div>
+      </div>
+    </section>
     <script type="module" src="/src/rush/main.ts"></script>
   </body>
 </html>

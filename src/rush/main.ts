@@ -32,7 +32,17 @@ const frameWatch = createFrameWatch();
 
 const canvas = $<HTMLCanvasElement>('rush-canvas');
 const surface = $('rush');
-const view = new RushView(canvas);
+function showRendererFailure(lost:boolean) {
+  $('rush-render-error-detail').textContent = lost
+    ? '그래픽 연결이 끊겨 전투를 멈췄어요. 다시 시도하면 현재 전투가 종료되며 저장되지 않은 진행이 사라질 수 있어요.'
+    : '그래픽 기능을 사용할 수 없어 러시를 시작하지 못했어요. 다른 전투 모드는 시작 화면에서 선택할 수 있어요.';
+  surface.inert = true;
+  const dialog=$('rush-render-error');dialog.hidden=false;dialog.focus();
+}
+$('rush-render-retry').addEventListener('click',()=>location.reload());
+const candidateView = (() => { try { return new RushView(canvas); } catch { showRendererFailure(false); return null; } })();
+if (candidateView) {
+const view: RushView = candidateView;
 view.setQuality(resolveQuality(qualityPref, false));
 let state: RushState = createRush(Number(params.get('seed')) || 1);
 let mode: 'title' | 'town' | 'play' | 'demo' | 'result' = 'title';
@@ -46,6 +56,10 @@ const input = new RushInput({
   surface: $('rush-surface'), stick: $('stick'), knob: $('stick-knob'),
   fire: $('fire'), superBtn: $('super'), build: $('build'), buildFrost: $('build-frost'), startWave: $('start-wave'),
 }, (x, y) => view.groundPoint(x, y, canvas.getBoundingClientRect()), () => state.hero);
+let rendererLost=false;
+canvas.addEventListener('webglcontextlost',event=>{
+  event.preventDefault();rendererLost=true;paused=true;input.enabled=false;input.reset();showRendererFailure(true);
+});
 const portrait = matchMedia('(orientation: portrait)');
 const orientationGate = $('orientation-gate');
 function updateOrientation() {
@@ -354,7 +368,7 @@ function pauseForBackground() { if (mode === 'play') { paused = true; input.enab
 document.addEventListener('visibilitychange', () => { if (document.hidden) pauseForBackground(); });
 window.addEventListener(NATIVE_BACKGROUND, pauseForBackground);
 window.addEventListener('blur', pauseForBackground);
-window.addEventListener('keydown', e => { if (e.code === 'Escape' && mode === 'play' && !portrait.matches && !document.hidden) { paused = !paused; input.enabled = !paused; input.reset(); showScreen(paused ? 'pause' : null); } });
+window.addEventListener('keydown', e => { if (!rendererLost && e.code === 'Escape' && mode === 'play' && !portrait.matches && !document.hidden) { paused = !paused; input.enabled = !paused; input.reset(); showScreen(paused ? 'pause' : null); } });
 
 // ---------- loop ----------
 // Menus (title, result, pause) sit over a still battlefield: redraw it every MENU_DRAW_EVERY frames (cycle 30).
@@ -376,6 +390,7 @@ const PRELOAD_AFTER = 0.5;
 let townPick: HeroKind | null = null, townPickAt = 0;
 let clock = createClock(prev / 1000);
 function frame(now: number) {
+  if(rendererLost)return;
   readLayout((mode === 'play' || mode === 'demo') && !noFade);
   const rawDt = (now - prev) / 1000;
   const dt = Math.min(0.1, rawDt);
@@ -451,3 +466,4 @@ else if (params.has('play')) start('play');
 
 // Read-only handle for automated browser checks.
 Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, get quality() { return { pref: qualityPref, tier: view.quality, autoDropped: frameWatch.dropped }; }, get drawnFrames() { return drawnFrames; }, info: () => view.info(), enemyScreen, towerLevels: TOWER_LEVELS.length } });
+}
