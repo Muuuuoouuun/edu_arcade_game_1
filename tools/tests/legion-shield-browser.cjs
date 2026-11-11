@@ -10,7 +10,7 @@ for(const mode of [{name:'pc',w:1280,h:720},{name:'mobile',w:844,h:390,touch:tru
  if(mode.fail)await page.waitForFunction(()=>document.querySelector('.legion-card[aria-label^="방패병"] svg[viewBox="0 0 48 56"]'));
  else await page.waitForFunction(()=>document.querySelector('.legion-card[aria-label^="방패병"] image')?.getAttribute('href')?.endsWith('legion-shield-atlas.webp'));
  const board=page.locator('canvas.legion-board'),rect=await board.boundingBox();await board.click({position:{x:rect.width*.72,y:rect.height*.5}});if(artifacts)await page.screenshot({path:`${artifacts}/shield-${mode.name}-prep.png`});
- await page.getByRole('button',{name:/전투 시작/}).click();await page.getByRole('button',{name:/전투 속도 1배/}).click();
+ await page.getByRole('button',{name:/전투 시작/}).click();assert.equal(await page.getByRole('button',{name:'배치 도움말'}).count(),0);assert.equal(await page.getByRole('button',{name:'군단 방어 메뉴'}).count(),0);await page.getByRole('button',{name:/전투 속도 1배/}).click();
  if(!mode.fail&&!mode.reduced)await page.waitForFunction(()=>window.__shieldFrames.includes(519)&&window.__shieldFrames.includes(903),null,{timeout:25000});else await page.waitForTimeout(6000);
  const frames=await page.evaluate(()=>[...new Set(window.__shieldFrames)]);if(mode.fail)assert.deepEqual(frames,[]);else if(mode.reduced)assert.deepEqual(frames,[135]);else assert.ok(frames.includes(135)&&frames.includes(519)&&frames.includes(903));
  if(artifacts)await page.screenshot({path:`${artifacts}/shield-${mode.name}-battle.png`});

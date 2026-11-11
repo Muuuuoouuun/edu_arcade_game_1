@@ -32,7 +32,6 @@ export default function LegionGame({blocked,onExit,sound}:{blocked:boolean;onExi
   const [speed,setSpeed]=useState<1|2>(1),speedRef=useRef(speed);
   const [reduced,setReduced]=useState(()=>matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [help,setHelp]=useState(false),helpRef=useRef(false);
-  const [fieldNotice,setFieldNotice]=useState('');
   const [message,setMessage]=useState('병종을 고르고 청록색 구역을 눌러 배치하세요.');
   const [best,setBest]=useState(readBest),[saveFailed,setSaveFailed]=useState(false);
   const recorded=useRef(false), resetClock=useRef(true);
@@ -42,7 +41,7 @@ export default function LegionGame({blocked,onExit,sound}:{blocked:boolean;onExi
   const dispatch=useCallback((action:LegionAction)=>{
     if(blockedRef.current||pauseRef.current||helpRef.current||document.hidden)return;
     const before=stateRef.current;
-    if(action.type==='deploy'){const issue=deploymentIssue(before,action.kind,action.point);if(issue){setMessage(issue);setFieldNotice(issue);return;}}
+    if(action.type==='deploy'){const issue=deploymentIssue(before,action.kind,action.point);if(issue){setMessage(issue);return;}}
     const next=actLegion(before,action);
     publish(next);
     if(action.type==='deploy'){
@@ -55,7 +54,6 @@ export default function LegionGame({blocked,onExit,sound}:{blocked:boolean;onExi
   const place=(point:Point)=>dispatch({type:'deploy',kind:selected,point});
   const resume=()=>{if(blockedRef.current||document.hidden)return;pauseRef.current=null;setPauseReason(null);resetClock.current=true;};
   const reset=()=>{if(blockedRef.current)return;recorded.current=false;setSaveFailed(false);pauseRef.current=null;setPauseReason(null);helpRef.current=false;setHelp(false);resetClock.current=true;setInspected(null);publish(createLegion());setMessage('병종을 고르고 청록색 구역을 눌러 배치하세요.');};
-  useEffect(()=>{if(!fieldNotice)return;const timer=setTimeout(()=>setFieldNotice(''),3500);return()=>clearTimeout(timer);},[fieldNotice]);
   useEffect(()=>{ document.body.classList.add('legion-active'); return()=>document.body.classList.remove('legion-active'); },[]);
   useEffect(()=>{
     let frame=0,last=performance.now(),accumulator=0,lastPublish=last,lastSound=-Infinity;
@@ -105,19 +103,18 @@ export default function LegionGame({blocked,onExit,sound}:{blocked:boolean;onExi
   return <main id="main" className="legion-game" data-screen="legion" data-phase={state.phase} data-time={state.time.toFixed(2)} data-kills={state.kills} data-enemies={state.enemies.length}>
     <div className="legion-shell" inert={disabled||undefined}>
       <header className="legion-header">
-        <button className="legion-home" onClick={()=>pause('manual')} aria-label="군단 방어 메뉴"><Icon name="back" size={18}/></button>
+        {state.phase!=='wave'?<button className="legion-home" onClick={()=>pause('manual')} aria-label="군단 방어 메뉴"><Icon name="back" size={18}/></button>:null}
         <div className="legion-title"><span>ARCANA · LEGION</span><h1>군단 방어 <small>{phaseNames[state.phase]}</small></h1></div>
         <div className="legion-resource" aria-label={`마을 체력 ${state.hp}`}><span>마을</span><strong>{state.hp}<i>/20</i></strong></div>
         <div className="legion-resource"><span>웨이브</span><strong>{state.wave}<i>/{WAVE_COUNT}</i></strong></div>
         <div className="legion-resource legion-coins"><span>소환 골드</span><strong>{state.coins}</strong></div>
         <button className="legion-speed" aria-label={`전투 속도 ${speed}배`} onClick={()=>{if(canAct()){const n=speedRef.current===1?2:1;speedRef.current=n;setSpeed(n);}}}>×{speed}</button>
-        <button className="legion-help-head" aria-label="배치 도움말" onClick={()=>{if(canAct()){helpRef.current=true;setHelp(true);resetClock.current=true;}}}>?</button>
+        {state.phase!=='wave'?<button className="legion-help-head" aria-label="배치 도움말" onClick={()=>{if(canAct()){helpRef.current=true;setHelp(true);resetClock.current=true;}}}>?</button>:null}
         <button className="legion-pause" onClick={()=>pause('manual')} aria-label="군단 전투 일시정지">Ⅱ</button>
       </header>
       <section className="legion-battlefield" aria-label="군단 배치와 자동 전투">
         <LegionBoard state={state} selected={selected} onPlace={place} onInspect={id=>{if(canAct()&&stateRef.current.phase!=='wave')setInspected(id);}} disabled={disabled} reducedMotion={reduced}/>
         <div className="legion-field-top"><span>이동 · 공격 · 스킬 자동</span><span>전장 적 <b>{state.enemies.length}</b> · 격퇴 <b>{state.kills}</b></span></div>
-        {fieldNotice?<p className="legion-field-notice">{fieldNotice}</p>:null}
         {state.phase==='prep'?<div className="legion-deploy-hint">병종 선택 → 청록색 구역에 배치</div>:null}
         {state.phase==='wave'?<div className="legion-wave-progress" aria-label={`출현 ${state.spawned}/${WAVE_TOTALS[state.wave-1]}`}><span>습격 {state.spawned}/{WAVE_TOTALS[state.wave-1]}</span><progress max={WAVE_TOTALS[state.wave-1]} value={state.spawned}/></div>:null}
         {unit&&state.phase!=='wave'?<div className="legion-unit-panel"><strong>{UNIT_DEFS[unit.kind].name}</strong><span>체력 {Math.ceil(unit.hp)}/{unit.maxHp}</span><button onClick={()=>dispatch({type:'remove',id:unit.id})}>회수 +{Math.floor(UNIT_DEFS[unit.kind].cost/UNIT_DEFS[unit.kind].count)} G</button><button onClick={()=>setInspected(null)} aria-label="부대 정보 닫기">×</button></div>:null}
