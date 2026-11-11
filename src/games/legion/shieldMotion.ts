@@ -2,7 +2,7 @@ import type { SpriteAsset } from '../defense/art.ts';
 
 /** A single shared Blender bake for the shield soldier's card and battlefield. */
 export const LEGION_SHIELD_ATLAS = '/defense/models/legion-shield-atlas.webp';
-export const LEGION_SHIELD_FRAME = { width:384, height:384, crop:[135,154,164,191], groundY:330, displayScale:1.32311 } as const;
+export const LEGION_SHIELD_FRAME = { width:384, height:384, crop:[132,154,167,191], groundY:330, displayScale:1.32311 } as const;
 
 /** Damage is immediate: contact starts with the effect, then the shield recoils. */
 export function legionShieldFrame(attackAge:number|null,reduced:boolean):0|1|2 {

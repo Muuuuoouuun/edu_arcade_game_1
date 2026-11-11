@@ -153,10 +153,11 @@ def wavy(start,end,sway,amp,waves,n=7):
  """Points from start to end that sway sideways more toward the tip (wavy hair, vines)."""
  a,b=Vector(start),Vector(end);return [a.lerp(b,i/n)+sway*(amp*math.sin(i/n*waves*math.pi)*(i/n)**.6) for i in range(n+1)]
 
-TEAL=(.012,.16,.19)
+TEAL=(.018,.055,.10) # dark navy tunic contrasts with the brighter teal shield
 M={
  'teal':material('Cloth / teal tunic',TEAL,0,.8),
  'teallight':material('Cloth / lit teal and shield face',(.02,.27,.31),0,.7),
+ 'navy':material('Cloth / deep navy shoulder mantle',(.018,.036,.075),0,.86),
  'steel':material('Armor / dark steel',(.085,.11,.12),.7,.45),
  'steellight':material('Armor / lit steel',(.36,.42,.42),.75,.35),
  'ivory':material('Cloth / ivory tabard',(.62,.57,.44),0,.8),
@@ -179,6 +180,11 @@ HS=SF+D*.30+Z*-.42;shield_c=HS+D*.12+CAM*.10+Z*-.05;shield_n=(D*.30+CAM*.95).nor
 
 ROOT_OBJ=group('legion-shield-soldier')
 ROOT_OBJ['asset']='Arcana legion shield soldier / draft (cycle 92)'
+# The generated turnaround suggests a broad navy mantle. These are actual
+# double-sided meshes rather than a decal; all existing combat poses inherit it.
+cape=[(-.52,-.27,1.78),(0,-.39,1.84),(.52,-.27,1.78),(.70,-.34,1.35),(.58,-.46,1.09),(0,-.52,1.18),(-.58,-.46,1.09),(-.70,-.34,1.35)]
+mesh('Mantle / navy shoulder silhouette',cape,[(0,1,5,6,7),(1,2,3,4,5)],'navy',ROOT_OBJ).modifiers.new('Mantle thickness','SOLIDIFY').thickness=.035
+lock('Mantle / gold lower edge',[Vector(p) for p in (cape[7],cape[6],cape[5],cape[4],cape[3])],.018,.018,'gold',ROOT_OBJ,1,6,2)
 # Boots, shin guards and legs stay grounded.
 for side,x in [('right',-.24),('left',.24)]:
  cube(f'{side} boot / sole',(x,.06,.05),(.32,.52,.10),'steel',ROOT_OBJ,.04)

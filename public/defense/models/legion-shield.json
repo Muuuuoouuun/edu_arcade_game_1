@@ -14,9 +14,9 @@
       330.0
     ],
     "crop": [
-      135,
+      132,
       154,
-      164,
+      167,
       191
     ],
     "body_span": 176.12,
@@ -46,14 +46,14 @@
     "samples": 32,
     "transparent": true
   },
-  "mesh_objects": 58,
-  "triangles": 11488,
+  "mesh_objects": 60,
+  "triangles": 11620,
   "bounds": [
     {
       "pose": "idle",
       "frame": 10,
       "bbox": [
-        143.84,
+        139.09,
         157.65,
         279.93,
         341.49
@@ -64,7 +64,7 @@
       "pose": "strike",
       "frame": 1,
       "bbox": [
-        138.85,
+        135.59,
         158.82,
         295.84,
         341.49
@@ -75,7 +75,7 @@
       "pose": "recoil",
       "frame": 4,
       "bbox": [
-        142.32,
+        137.76,
         157.95,
         286.41,
         341.49
@@ -84,22 +84,22 @@
     }
   ],
   "regeneration_command": "blender -b --python tools/blender/build_legion_shield.py",
-  "source_sha256": "305b188d5a8ba7b8bbabbdbb6355484275f77cd5c3900826c3d5435c4d57d07a",
+  "source_sha256": "8295a43e396047f28522ffd903d22ebf0dea5a6cc1d982d5646dcbda47dfe3e2",
   "files": [
     {
       "file": "legion-shield-atlas.webp",
-      "bytes": 24784,
-      "sha256": "12f72a028c97bed3c8cbc3cef131f03c0cf7235a1dfc81da6ee76e13dde580ad"
+      "bytes": 25298,
+      "sha256": "38cac76267d8e61b37b6d19c5509afff301fbed2b47e351d60d3c0ecc2f3dd5b"
     },
     {
       "file": "legion-shield.png",
-      "bytes": 113626,
-      "sha256": "6923dc1cb6de0713173d01e62c8d40c893eb06fed4acdb1823bce5b463c3ed1f"
+      "bytes": 114826,
+      "sha256": "d208f4ab1e4679071bf97f3fd8b02514c216ccc04c892e3b4fb06e805d408f48"
     },
     {
       "file": "legion-shield.glb",
-      "bytes": 295584,
-      "sha256": "f7c4679195900b1db5f0efaf459776d5493638a1ea0c078a82e7c07da127a5a1"
+      "bytes": 305724,
+      "sha256": "d637d168f264bd5d8c313e2fca5410e7713a0c18becc502599cd6d20ccb47351"
     }
   ]
 }
