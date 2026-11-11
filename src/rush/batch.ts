@@ -3,8 +3,11 @@
 import { Color, DynamicDrawUsage, InstancedMesh, type BufferGeometry, type Material, type Matrix4, type Scene } from 'three';
 
 export class Batch {
+  /** Instances refused because a batch was full (cycle 49): debug info reports it, so an overflow is never silent. */
+  static dropped = 0;
   readonly mesh: InstancedMesh;
   private n = 0;
+  private warned = false;
 
   constructor(scene: Scene, geo: BufferGeometry, mat: Material, readonly capacity: number, opts: { colors?: boolean; order?: number } = {}) {
     this.mesh = new InstancedMesh(geo, mat, capacity);
@@ -19,7 +22,11 @@ export class Batch {
 
   begin() { this.n = 0; }
   push(matrix: Matrix4, color?: Color) {
-    if (this.n >= this.capacity) return;
+    if (this.n >= this.capacity) {
+      Batch.dropped++;
+      if (!this.warned && import.meta.env?.DEV) { this.warned = true; console.warn(`rush batch full (${this.capacity}): extra instances are not drawn`); }
+      return;
+    }
     this.mesh.setMatrixAt(this.n, matrix);
     if (color) this.mesh.setColorAt(this.n, color);
     this.n++;
