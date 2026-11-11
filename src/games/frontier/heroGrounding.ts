@@ -3,7 +3,7 @@ import {HERO_MODEL} from './heroModel.ts';
 import {HERO_ATTACK} from './heroAttack.ts';
 
 type HeightField=(x:number,z:number)=>number;
-type Foot={node:Object3D;sample:Vector3;sole:Vector3[]};
+type Foot={node:Object3D;sample:Vector3;sole:Vector3[];all:Vector3[]};
 
 /** Vertical sole placement over the existing height field; no extra renderer or IK rig. */
 export class HeroGrounding {
@@ -24,13 +24,13 @@ export class HeroGrounding {
    });
    const all=[...vertices.values()];if(!all.length)continue;
    const bottom=Math.min(...all.map(p=>p.y));
-   // Only the shoe sole, not the rest of the leg, participates in grounding.
-   this.feet.push({node,sample:node.position.clone(),sole:all.filter(p=>p.y<=bottom+.025)});
+   // Keep the usual sole sample plus all foot vertices for a leaning dash.
+   this.feet.push({node,sample:node.position.clone(),sole:all.filter(p=>p.y<=bottom+.025),all});
   }
  }
  /** Restore the sampled animation pose before the mixer's next evaluation. */
  restore(){if(this.applied){for(const foot of this.feet)foot.node.position.copy(foot.sample);this.applied=false;}}
- apply(x:number,z:number,height?:HeightField,strides:{time:number;left:number;right:number}[]=[]){
+ apply(x:number,z:number,height?:HeightField,strides:{time:number;left:number;right:number}[]=[],fullFoot=false){
   for(const foot of this.feet)foot.sample.copy(foot.node.position);
   this.applied=true;
   for(const stride of strides){
@@ -47,7 +47,8 @@ export class HeroGrounding {
   const base=height(x,z);
   for(const foot of this.feet){
    let flat=Infinity,clearance=Infinity;
-   for(const p of foot.sole){this.point.copy(p).applyMatrix4(foot.node.matrixWorld);
+   // A leaning dash can make the toe/heel rather than the flat sole lowest.
+   for(const p of fullFoot?foot.all:foot.sole){this.point.copy(p).applyMatrix4(foot.node.matrixWorld);
     flat=Math.min(flat,this.point.y-base);clearance=Math.min(clearance,this.point.y-height(this.point.x,this.point.z));
    }
    // Preserve the animation's authored lift while making its lowest sole point

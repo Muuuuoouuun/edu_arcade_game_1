@@ -24,3 +24,9 @@ test('core attackers plant outside the gate before preparing and do not switch t
  let s=fight('defense');s.enemies[0].z=18;s=advance(s,1);assert.ok(Math.hypot(s.enemies[0].x-CORE.x,s.enemies[0].z-CORE.z)>1.6);assert.ok(s.enemies[0].attack);assert.equal(s.enemies[0].moving,false);
  const command={...s,mode:'command' as const};command.hero.x=s.enemies[0].x;command.hero.z=s.enemies[0].z;command.hero.cooldown=999;command.hero.target={x:command.hero.x,z:command.hero.z};command.squad=[];const hit=advance(command,.3);assert.equal(hit.hero.hp,100);assert.equal(hit.coreHp,170);
 });
+
+test('a moving dash avoids contact only after the hero physically leaves the committed strike',()=>{
+ function starting(){let s=stepFrontier(fight(),.01);s.hero.heading=Math.PI/2;return s;}
+ let early=starting();early.enemies[0].attack!.time=.27;early=actFrontier(early,{type:'dash'});early=stepFrontier(early,.01);assert.equal(early.hero.hp,92,'no automatic invulnerability during the early path');assert.ok(early.hero.x>-14&&early.hero.x<-13);
+ let timely=starting();timely.enemies[0].attack!.time=.15;timely=actFrontier(timely,{type:'dash'});timely=advance(timely,.13);assert.equal(timely.hero.hp,100,'an actually cleared strike misses');assert.ok(timely.hero.x>-11);
+});

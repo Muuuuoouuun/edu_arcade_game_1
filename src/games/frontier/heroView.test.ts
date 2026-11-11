@@ -120,3 +120,12 @@ test('the supporting boot stays planted while the other settles into attack or s
  }
  view.dispose();
 });
+
+test('leaning dash preserves boot clearance on flat ground, a ramp and the bridge',()=>{
+ const model=compact.scene.clone(true),root=new Group();root.add(model);const view=new HeroView(model,compact.animations.find(c=>c.name==='kar-walk')!),hero=createFrontier('solo').hero,p=new Vector3();hero.moving=true;
+ for(const [x,z] of [[-14,14],[-14,-7],[6,0]])for(let d=0;d<8;d++)for(const progress of [.25,.5,.75]){hero.x=x;hero.z=z;hero.heading=d*Math.PI/4;hero.walkDistance=progress*5;hero.dashMotion={from:{x,z},to:{x:x+1,z},at:0,progress,duration:.2};root.position.set(x,heightAt(x,z),z);root.rotation.set(.16*Math.sin(Math.PI*progress),hero.heading,0,'YXZ');view.update(hero,false,heightAt);root.updateMatrixWorld(true);
+  for(const name of ['left-foot','right-foot'])root.getObjectByName(name)!.traverse(o=>{if(o instanceof Mesh){const v=o.geometry.getAttribute('position');for(let i=0;i<v.count;i++){p.fromBufferAttribute(v,i).applyMatrix4(o.matrixWorld);assert.ok(p.y-heightAt(p.x,p.z)>-.0001,`${name} penetrates terrain`);}}});
+  const once=matrices(root);view.update(hero,false,heightAt);assert.ok(error(once,matrices(root))<1e-6,'paused sample does not accumulate');
+ }
+ view.dispose();
+});

@@ -44,7 +44,7 @@ export class HeroView{
    settle(attack.time,entry*.1,.18,(attack.walkWeight??1)*entryBlend)
   ]:!hero.moving&&hero.settle&&this.stops.length===8?[settle(hero.settle.time,hero.settle.walkTime,.24,hero.settle.walkWeight??1)]:
    !action&&hero.moving?[{time:this.walk.time,left:weight,right:weight}]:[];
-  this.grounding.apply(hero.x,hero.z,height,stride);
+  this.grounding.apply(hero.x,hero.z,height,stride,!!hero.dashMotion&&!reduced);
  }
  dispose(){this.mixer.stopAllAction();this.mixer.uncacheRoot(this.model);}
 }
