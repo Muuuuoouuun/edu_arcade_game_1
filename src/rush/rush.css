@@ -283,7 +283,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .town-bar { position: absolute; top: calc(8px + var(--safe-t)); left: calc(10px + var(--safe-l)); right: calc(10px + var(--safe-r)); display: flex; align-items: center; gap: 10px; }
 .town-bar h1 { margin: 0; flex: 1; font-family: var(--display); font-weight: 400; font-size: 26px; color: #fff; -webkit-text-stroke: 6px var(--outline); paint-order: stroke fill; text-shadow: 0 3px 0 var(--outline); }
 .town-bar .collect { width: auto; margin: 0; padding: 7px 14px; min-height: 44px; }
-.town-screen .town-reward { position: absolute; top: calc(64px + var(--safe-t)); left: 50%; transform: translateX(-50%); margin: 0; background: rgba(29, 20, 51, 0.88); white-space: nowrap; }
+.town-screen .town-reward { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); margin: 0; background: rgba(29, 20, 51, 0.88); white-space: nowrap; }
 .town-dock {
   position: absolute; left: calc(10px + var(--safe-l)); right: calc(10px + var(--safe-r)); bottom: calc(10px + var(--safe-b));
   display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
@@ -388,3 +388,21 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 }
 .town-tag .goal:empty { display: none; }
 .town-tag[hidden] { display: none; }
+
+/* Top bar fit (cycle 58): labels never fold one letter per line. Collect is a two-line button like the hero button;
+ * portrait wraps the bar (title and resources, then hero and collect); narrow landscape drops the title. */
+.town-bar h1, .town-bar b, .town-bar small { white-space: nowrap; }
+.town-bar .collect { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; padding: 3px 12px; }
+.town-bar .collect small { font-size: 12px; -webkit-text-stroke-width: 3px; }
+.town-bar .collect b { font-size: 14px; -webkit-text-stroke-width: 3px; }
+.town-bar .collect .res-ico { width: 11px; height: 11px; margin: 0 1px 0 4px; border-width: 1.5px; vertical-align: -1px; }
+.town-bar .collect .res-ico:first-child { margin-left: 0; }
+@media (orientation: portrait) {
+  .town-bar { flex-wrap: wrap; row-gap: 8px; }
+  .town-bar h1 { flex: 1 1 auto; font-size: 20px; -webkit-text-stroke-width: 5px; }
+  .town-bar .hero-pick, .town-bar .collect { flex: 1 1 45%; }
+}
+@media (orientation: landscape) and (max-width: 760px) {
+  .town-bar { justify-content: flex-end; }
+  .town-bar h1 { display: none; }
+}

@@ -245,7 +245,10 @@ export class TownScreen {
     this.$('res-shard').textContent = String(k.shards);
     const collectBtn = this.$('btn-collect') as HTMLButtonElement;
     collectBtn.disabled = wait.food + wait.wood === 0;
-    this.$('collect-amount').textContent = wait.food + wait.wood === 0 ? '생산 중…' : `식량 +${wait.food} · 목재 +${wait.wood}${storageFull(k, now) ? ' (창고 가득)' : ''}`;
+    // Icons and numbers only (cycle 58): the full sentence goes to the accessible name.
+    const full = storageFull(k, now), idle = wait.food + wait.wood === 0;
+    this.$('collect-amount').innerHTML = idle ? '생산 중…' : `<i class="res-ico food"></i>+${wait.food}<i class="res-ico wood"></i>+${wait.wood}${full ? ' 가득' : ''}`;
+    collectBtn.setAttribute('aria-label', idle ? '수확: 생산 중' : `수확: 식량 +${wait.food}, 목재 +${wait.wood}${full ? ', 창고 가득' : ''}`);
     for (const r of ROWS) {
       const row = this.root.querySelector<HTMLElement>(`[data-id="${r.id}"]`)!;
       const cost = upgradeCost(k, r.id), btn = row.querySelector<HTMLButtonElement>('[data-up]')!;
