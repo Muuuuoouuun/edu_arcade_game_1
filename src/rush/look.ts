@@ -1,7 +1,7 @@
 // Render tone ("look") for Arcana Rush: bright toon shading, rim light, ink outlines and baked multi-part meshes.
 // Art direction: docs/rush/art-direction.md. Our own palette and shapes; reference games are principles only.
 import {
-  BackSide, BufferAttribute, Color, DataTexture, Euler, Matrix4, MeshBasicMaterial, MeshToonMaterial, NearestFilter, Quaternion,
+  BackSide, BoxGeometry, BufferAttribute, Color, DataTexture, Euler, Matrix4, MeshBasicMaterial, MeshToonMaterial, NearestFilter, Quaternion,
   RedFormat, Vector3, type BufferGeometry, type Material, type Mesh,
 } from 'three';
 import { mergeGeometries, toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -67,6 +67,37 @@ export type Part = {
   geo: BufferGeometry; color: number;
   at?: [number, number, number]; rot?: [number, number, number]; scale?: number | [number, number, number];
 };
+
+/** A solid cover block remains inside its simulation footprint and the original 1.42m height. */
+export function wallParts(b:{x:number;z:number;w:number;d:number}):Part[] {
+  const parts:Part[]=[];
+  const alongX=b.w>=b.d, length=alongX?b.w:b.d, depth=alongX?b.d:b.w;
+  const part=(offset:number,y:number,span:number,height:number,thickness:number,color:number) => {
+    parts.push({geo:new BoxGeometry(alongX?span:thickness,height,alongX?thickness:span),color,
+      at:[b.x+(alongX?offset:0),y,b.z+(alongX?0:offset)]});
+  };
+  part(0,.09,length,.18,depth,0x596e67); // grounded stone foot
+  part(0,.62,length-.08,.88,depth-.08,0x687a72); // mortar between inset stones
+  const inside=length-.12, half=inside/2, step=.78, gap=.045;
+  for(let row=0;row<2;row++) {
+    // Offset the second course; clip end pieces instead of crossing the collider.
+    for(let start=-half-(row?step/2:0);start<half;start+=step) {
+      const left=Math.max(-half,start),right=Math.min(half,start+step-gap);
+      if(right-left<.09)continue;
+      part((left+right)/2,.40+row*.42,right-left,.36,depth-.04,
+        (row+Math.round((start+half)/step))%2?0xb4b6a0:0x9fa995);
+    }
+  }
+  // Teal timber and paired stone end posts echo the forest gate palette.
+  part(0,1.105,length-.08,.16,depth-.08,0x347970);
+  const post=Math.min(.24,length*.2);
+  for(const side of [-1,1]) {
+    const offset=side*(length/2-post/2);
+    part(offset,.65,post,.96,depth-.02,0x87988a);
+    part(offset,1.205,post,.22,depth-.02,0xd7d2b3);
+  }
+  return parts;
+}
 /** Bake several coloured primitives into one vertex-coloured geometry: one draw call per object. */
 export function bake(parts: Part[]): BufferGeometry {
   const q = new Quaternion(), e = new Euler(), p = new Vector3(), s = new Vector3();

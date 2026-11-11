@@ -13,7 +13,7 @@ import bronGlb from './models/dwarf-guardian.glb?url';
 import bearGlb from './models/polar-bear.glb?url';
 import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, LANES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
 import { heroDef, heroHidden, heroMaxHp, lobReach, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
-import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, type Part } from './look.ts';
+import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, wallParts, type Part } from './look.ts';
 import { Batch } from './batch.ts';
 import { Particles } from './fx.ts';
 import { QUALITY, type Quality } from './quality.ts';
@@ -272,13 +272,10 @@ export class RushView {
   }
 
   private buildWalls() {
-    // Chunky blocks: pale tops catch the key light, cool sides fall into the shadow band.
-    const parts: Part[] = [];
-    for (const b of WALLS) {
-      parts.push({ geo: new BoxGeometry(b.w, 1.2, b.d), color: PAL.stone, at: [b.x, 0.6, b.z] });
-      parts.push({ geo: new BoxGeometry(b.w + 0.14, 0.24, b.d + 0.14), color: PAL.stoneTop, at: [b.x, 1.3, b.z] });
-      parts.push({ geo: new BoxGeometry(b.w + 0.22, 0.18, b.d + 0.22), color: PAL.stoneFoot, at: [b.x, 0.09, b.z] });
-    }
+    // The physical cover remains opaque but stone courses, end posts and teal timber
+    // make its volume legible. Every part stays within WALLS' unchanged x/z collider
+    // and below the old 1.42m top; all walls still share one baked mesh + hull.
+    const parts: Part[] = WALLS.flatMap(wallParts);
     this.addBaked(bake(parts), 0.05, undefined, 'terrain');
   }
 
