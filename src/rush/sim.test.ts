@@ -332,7 +332,7 @@ test('auto-aim skips a raised shield when another target is close, but still sho
   assert.ok(SHIELD_AIM_PENALTY > 0);
 });
 
-test('boss rally: from stage 6, below half health it roars in place for a second, then calls its minions once', async () => {
+test('boss rally: from stage 6, below half health it roars in place for a second, then calls its minions once, town side', async () => {
   const { stageDifficulty } = await import('./stages.ts');
   const call = ENEMIES.boss.summon!;
   const setup = (stage: number) => {
@@ -354,6 +354,11 @@ test('boss rally: from stage 6, below half health it roars in place for a second
   assert.equal(minions.length, call.count);
   assert.ok(minions.every(m => m.kind === call.kind && m.hp === Math.round(ENEMIES[call.kind].hp * stageDifficulty(6).enemyHp) && m.lane === b.lane));
   assert.ok(minions.every(m => Math.hypot(m.x - b.x, m.z - b.z) > ENEMIES.boss.radius), 'minions appear around the boss, not inside it');
+  // Cycle 34: they stand on the arc that faces the town (here due south), so the boss never hides one from the camera.
+  const { TOWN } = await import('./data.ts');
+  const toTown = Math.atan2(TOWN.z - b.z, TOWN.x - b.x);
+  const off = (m: Enemy) => { const d = Math.atan2(m.z - b.z, m.x - b.x) - toTown; return Math.abs(Math.atan2(Math.sin(d), Math.cos(d))); };
+  assert.ok(minions.every(m => off(m) <= call.arc / 2 + 0.1 && m.z > b.z), `minions lead towards the town: ${minions.map(off).map(v => v.toFixed(2))}`);
   b.hp = Math.floor(b.maxHp * 0.2);
   const later = run(s, 120);
   assert.ok(!later.includes('roar') && !later.includes('summon'), 'only once per boss');

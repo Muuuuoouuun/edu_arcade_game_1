@@ -548,8 +548,15 @@ export class RushView {
       const r = ENEMIES[e.kind].radius;
       if (!this.onScreen(e.x, r * 2, e.z, r * 4 + 1)) continue;
       const bob = Math.abs(Math.sin(this.time * 10 + e.id) * 0.06);
-      const sx = e.windup ? 1.1 : 1, sy = e.windup ? 0.88 : 1;
-      const m = this.place(e.x, bob, e.z, 0, yaw(e.facing), 0, sx, sy, sx);
+      // Slam wind-up crouches (wide and low); the rally roar (cycle 34) is the opposite: it swells up and trembles.
+      let sx = e.windup ? 1.1 : 1, sy = e.windup ? 0.88 : 1, jx = 0;
+      const roar = e.roarT ?? 0, call = ENEMIES[e.kind].summon;
+      if (roar > 0 && call) {
+        const k = 1 - roar / call.roar;
+        sx = 1 + 0.12 * k; sy = 1 + 0.18 * k;
+        jx = 0.07 * Math.sin(this.time * 70 + e.id);
+      }
+      const m = this.place(e.x + jx, bob, e.z, 0, yaw(e.facing), 0, sx, sy, sx);
       (e.flash > 0 ? B.flash : B.body)[e.kind].push(m);
       B.hull[e.kind].push(m);
       // Frost shell; blinks in its last quarter second so the player sees the slow wearing off.

@@ -583,9 +583,10 @@ function updateEnemies(s: RushState) {
 }
 
 function rally(s: RushState, boss: Enemy, call: NonNullable<EnemyDef['summon']>) {
-  const def = ENEMIES[call.kind], hp = Math.round(def.hp * s.diff.enemyHp);
+  const def = ENEMIES[call.kind], hp = Math.round(def.hp * s.diff.enemyHp), toTown = Math.atan2(TOWN.z - boss.z, TOWN.x - boss.x);
   for (let i = 0; i < call.count; i++) {
-    const a = boss.facing + ((i + 0.5) / call.count) * Math.PI * 2;
+    // Evenly over the arc that faces the town: the minions lead the march, and the boss never hides one from view.
+    const a = toTown + (call.count > 1 ? (i / (call.count - 1) - 0.5) * call.arc : 0);
     s.enemies.push({
       id: s.nextId++, kind: call.kind, x: boss.x + Math.cos(a) * call.ring, z: boss.z + Math.sin(a) * call.ring, kx: 0, kz: 0,
       hp, maxHp: hp, lane: boss.lane, wp: boss.wp, cd: def.cooldown * 0.5, flash: 0, chasing: false, facing: boss.facing, windup: null,
