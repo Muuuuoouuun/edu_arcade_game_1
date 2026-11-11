@@ -6,6 +6,7 @@ function entryPoints(mode:string):Record<string,string>{
   const inputs:Record<string,string>={
     arcana:fileURLToPath(new URL('./index.html',import.meta.url)),
     frontier:fileURLToPath(new URL('./frontier.html',import.meta.url)),
+    rush:fileURLToPath(new URL('./rush.html',import.meta.url)),
   };
   if(mode!=='mobile'){
     inputs.arcade=fileURLToPath(new URL('./arcade.html',import.meta.url));
