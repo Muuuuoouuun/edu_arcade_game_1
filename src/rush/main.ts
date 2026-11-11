@@ -1,7 +1,7 @@
 // Arcana Rush prototype bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
 import { ECONOMY, ENEMIES, HEROES, TOWER_LEVELS, type HeroKind } from './data.ts';
-import { createRush, padCost, padInReach, stepRush, superReady, WAVE_COUNT, type RushEvent, type RushState } from './sim.ts';
+import { createRush, padCost, padInReach, stepRush, superReady, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
 import { RushInput } from './input.ts';
@@ -110,6 +110,8 @@ function updateCallout() {
 const SOUND: Partial<Record<RushEvent['type'], CombatSoundKind>> = {
   fire: 'arrow', swing: 'slash', burst: 'skill', slam: 'cannon', roar: 'surge', lap: 'surge', summon: 'cast', townHit: 'breach', heroDown: 'breach', build: 'cast', waveStart: 'surge', superReady: 'freeze',
 };
+/** Endless lap twists (cycle 52), as the player reads them. */
+const TWIST_NAME: Record<LapTwist, string> = { swift: '빠른 걸음', shields: '방패 행렬', twin: '쌍둥이 보스' };
 let toastTimer = 0;
 function toast(text: string, cls = '', seconds = 1.6) {
   const el = $('toast');
@@ -139,7 +141,7 @@ function feedback(events: RushEvent[]) {
     else if (ev.type === 'lap') {
       // Endless lap (cycle 47): comes right after the fifth wave's clear, so this toast replaces that one.
       playHaptic('surge', true);
-      toast(`${ev.lap}바퀴째 · 적이 강해졌다!`, 'bad', 2.6);
+      toast(`${ev.lap}바퀴째 · ${ev.twist ? `${TWIST_NAME[ev.twist]}!` : '적이 강해졌다!'}`, 'bad', 2.6);
       const box = hud.wave.parentElement!;
       box.classList.remove('lap-flash'); void box.offsetWidth; box.classList.add('lap-flash');
     }
@@ -200,7 +202,7 @@ function updateHud() {
   const s = state;
   setText('wave', hud.wave, s.diff.endless ? `웨이브 ${s.wave + 1}` : `웨이브 ${Math.min(s.wave + 1, WAVE_COUNT)}/${WAVE_COUNT}`);
   const lap = Math.floor(s.wave / WAVE_COUNT) + 1;
-  const where = mode === 'demo' ? '시연' : s.diff.endless ? `끝없는 도전${lap > 1 ? ` ${lap}바퀴` : ''}` : `스테이지 ${stage}`;
+  const where = mode === 'demo' ? '시연' : s.diff.endless ? `끝없는 도전${lap > 1 ? ` ${lap}바퀴` : ''}${s.diff.twist ? ` · ${TWIST_NAME[s.diff.twist]}` : ''}` : `스테이지 ${stage}`;
   setText('waveSub', hud.waveSub, s.phase === 'prep' ? `${where} · 준비 ${Math.ceil(s.prepT)}초` : s.phase === 'wave' ? `${where} · 남은 적 ${s.enemies.length}` : where);
   setStyle('townFill', hud.townFill, 'transform', `scaleX(${s.town.hp / s.town.maxHp})`);
   setText('townHp', hud.townHp, String(Math.ceil(s.town.hp)));

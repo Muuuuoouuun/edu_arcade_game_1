@@ -446,3 +446,28 @@ test('endless lap event (cycle 47): one per new lap, numbered from 2; none in a 
   while (t.phase !== 'won' && t.phase !== 'lost' && t.tick < 60 * 60 * 6) { stepRush(t, guardBot(t)); seen += t.events.filter(e => e.type === 'lap').length; }
   assert.equal(seen, 0);
 });
+
+test('endless lap twists (cycle 52): swift, shields, twin in turn from lap 2; none in a stage battle', async () => {
+  const { stageDifficulty } = await import('./stages.ts');
+  const { twistForLap, groupCount, TWIST, WAVE_COUNT } = await import('./sim.ts');
+  const { WAVES } = await import('./data.ts');
+  assert.deepEqual([1, 2, 3, 4, 5, 6, 7].map(twistForLap), [undefined, 'swift', 'shields', 'twin', 'swift', 'shields', 'twin']);
+  const base = { ...stageDifficulty(10), endless: true };
+  const at = (twist?: 'swift' | 'shields' | 'twin') => createRush(1, NO_MODS, { ...base, twist });
+  const shieldGroup = WAVES.flat().find(g => g.kind === 'shield')!, bossGroup = WAVES.flat().find(g => g.kind === 'boss')!;
+  assert.equal(groupCount(at('shields'), shieldGroup), Math.round(shieldGroup.count * base.enemyCount * TWIST.shieldCount));
+  assert.equal(groupCount(at(), shieldGroup), Math.round(shieldGroup.count * base.enemyCount));
+  assert.equal(groupCount(at('twin'), bossGroup), 2);
+  assert.equal(groupCount(at(), bossGroup), 1);
+  // Swift: a grunt with nothing in reach walks 20% further per tick.
+  const walk = (twist?: 'swift') => { const s = at(twist); Object.assign(s.hero, { x: 9, z: 9 }); const e = enemy(s, 'grunt', 0, -10); e.wp = 99; const z0 = e.z; steps(s, 30); return e.z - z0; };
+  assert.ok(Math.abs(walk('swift') / walk() - TWIST.swiftSpeed) < 0.02, `swift ×${(walk('swift') / walk()).toFixed(3)}`);
+  // The lap event carries the twist; stage battles never get one.
+  const s = createRush(1, NO_MODS, base);
+  s.town.hp = s.town.maxHp = 1e9;
+  const seen: (string | undefined)[] = [];
+  while (s.wave < WAVE_COUNT + 1 && s.tick < 60 * 60 * 30) { stepRush(s, guardBot(s)); for (const e of s.events) if (e.type === 'lap') seen.push(e.twist); }
+  assert.deepEqual(seen, ['swift']);
+  assert.equal(s.diff.twist, 'swift');
+  assert.equal(createRush(1, NO_MODS, stageDifficulty(10)).diff.twist, undefined);
+});

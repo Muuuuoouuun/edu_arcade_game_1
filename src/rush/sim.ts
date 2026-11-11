@@ -62,7 +62,7 @@ export type RushEvent =
   | { type: 'block'; x: number; z: number }
   | { type: 'waveStart'; wave: number }
   | { type: 'waveClear'; wave: number; bonus: number }
-  | { type: 'lap'; lap: number }
+  | { type: 'lap'; lap: number; twist?: LapTwist }
   | { type: 'won' }
   | { type: 'lost' };
 
@@ -82,7 +82,14 @@ export interface Difficulty {
   enemyHp: number; enemyCount: number; enemyDamage: number; stage?: number;
   /** Endless challenge (cycle 46): the five waves repeat with no victory, harder every lap. */
   endless?: boolean;
+  /** Endless lap twist (cycle 52), for that lap only. */
+  twist?: LapTwist;
 }
+/** Endless lap twists (cycle 52): from lap 2, one per lap in this order, then round again. */
+export type LapTwist = 'swift' | 'shields' | 'twin';
+export const LAP_TWISTS: readonly LapTwist[] = ['swift', 'shields', 'twin'];
+export const TWIST = { swiftSpeed: 1.2, shieldCount: 2, twinBosses: 2 } as const;
+export const twistForLap = (lap: number): LapTwist | undefined => (lap >= 2 ? LAP_TWISTS[(lap - 2) % LAP_TWISTS.length] : undefined);
 /** Endless: each completed lap of five waves multiplies enemy health, numbers and damage by these. */
 export const ENDLESS_LAP = { enemyHp: 1.35, enemyCount: 1.2, enemyDamage: 1.15 } as const;
 /** The wave plan for the current wave (endless runs reuse the five in a loop). */
@@ -279,8 +286,9 @@ export function stepRush(s: RushState, cmd: Command = {}): RushState {
       // Endless: a new lap of the five waves starts harder.
       if (s.diff.endless && s.wave % WAVE_COUNT === 0) {
         const d = s.diff;
-        s.diff = { ...d, enemyHp: d.enemyHp * ENDLESS_LAP.enemyHp, enemyCount: d.enemyCount * ENDLESS_LAP.enemyCount, enemyDamage: d.enemyDamage * ENDLESS_LAP.enemyDamage };
-        s.events.push({ type: 'lap', lap: s.wave / WAVE_COUNT + 1 }); // cycle 47: the player must see the step up
+        const lap = s.wave / WAVE_COUNT + 1, twist = twistForLap(lap);
+        s.diff = { ...d, enemyHp: d.enemyHp * ENDLESS_LAP.enemyHp, enemyCount: d.enemyCount * ENDLESS_LAP.enemyCount, enemyDamage: d.enemyDamage * ENDLESS_LAP.enemyDamage, twist };
+        s.events.push({ type: 'lap', lap, twist }); // cycle 47: the player must see the step up; cycle 52: and the twist
       }
       s.phase = 'prep';
       s.prepT = ECONOMY.prepTime;
@@ -305,8 +313,12 @@ function waveSpawned(s: RushState) {
   return waveDef(s).every((g, i) => (s.groups[i]?.spawned ?? 0) >= groupCount(s, g));
 }
 /** Enemies in a spawn group after stage scaling. The boss stays a single boss. */
-export const groupCount = (s: RushState, g: { kind: EnemyKind; count: number; minStage?: number }) =>
-  (g.minStage ?? 1) > (s.diff.stage ?? 1) ? 0 : g.kind === 'boss' ? g.count : Math.max(1, Math.round(g.count * s.diff.enemyCount));
+export const groupCount = (s: RushState, g: { kind: EnemyKind; count: number; minStage?: number }) => {
+  if ((g.minStage ?? 1) > (s.diff.stage ?? 1)) return 0;
+  const t = s.diff.twist;
+  if (g.kind === 'boss') return g.count * (t === 'twin' ? TWIST.twinBosses : 1);
+  return Math.max(1, Math.round(g.count * s.diff.enemyCount * (t === 'shields' && g.kind === 'shield' ? TWIST.shieldCount : 1)));
+};
 function spawn(s: RushState) {
   waveDef(s).forEach((g, i) => {
     const p = s.groups[i];
@@ -595,7 +607,7 @@ function updateEnemies(s: RushState) {
       }
       const dx = goal.x - e.x, dz = goal.z - e.z, d = len(dx, dz);
       if (d > 1e-6) {
-        const step = Math.min(d, def.speed * pace * STEP);
+        const step = Math.min(d, def.speed * pace * (s.diff.twist === 'swift' ? TWIST.swiftSpeed : 1) * STEP);
         e.x += (dx / d) * step; e.z += (dz / d) * step;
         e.facing = Math.atan2(dz, dx);
       }
