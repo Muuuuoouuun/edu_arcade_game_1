@@ -66,7 +66,7 @@ export class RushView {
   private heroBar: Bar;
   private ammoSegs: Mesh[] = [];
   /** One loaded model per hero kind; only the current hero's rig is visible. */
-  private heroRigs = new Map<HeroKind, { holder: Group; mixer: AnimationMixer | null; shot: AnimationAction | null } | 'loading'>();
+  private heroRigs = new Map<HeroKind, { holder: Group; mixer: AnimationMixer | null; shot: AnimationAction | null; held: Mesh | null } | 'loading'>();
   private heroKind: HeroKind | null = null;
   private heroPlaceholder: Mesh | null = null;
   private get heroRig() { const r = this.heroKind ? this.heroRigs.get(this.heroKind) : undefined; return r && r !== 'loading' ? r : null; }
@@ -442,11 +442,14 @@ export class RushView {
         // A mesh that parents other nodes stays in the graph but draws nothing.
         if (mesh.children.length) mesh.material = hidden; else mesh.removeFromParent();
       }
+      // A held prop (cycle 48) is its own mesh on the animated node, not baked in: it can leave the hand on a throw.
       const prop = HERO_PROPS[kind], propNode = prop && model.getObjectByName(prop.node);
+      let held: Mesh | null = null;
       if (prop && propNode) {
-        const list = groups.get(propNode) ?? [];
-        groups.set(propNode, list);
-        for (const p of prop.parts) list.push({ geo: p.geo, color: p.color, matrix: new Matrix4().makeTranslation(...p.at) });
+        const geo = bake(prop.parts.map(p => ({ geo: p.geo, color: p.color, at: p.at })));
+        held = new Mesh(geo, this.mats.baked);
+        held.add(new Mesh(hullGeometry(geo), outlineMaterial(+(0.035 / (propNode.getWorldScale(ws).x || 1)).toFixed(3))));
+        propNode.add(held);
       }
       for (const [owner, parts] of groups) {
         const geo = bakeMatrices(parts), body = new Mesh(geo, this.mats.baked);
@@ -461,7 +464,7 @@ export class RushView {
         shot.setLoop(LoopOnce, 1);
         shot.clampWhenFinished = false;
       }
-      this.heroRigs.set(kind, { holder, mixer, shot });
+      this.heroRigs.set(kind, { holder, mixer, shot, held });
     }, undefined, () => { this.heroRigs.delete(kind); /* Keep the placeholder; the prototype stays playable without the model. */ });
   }
 
@@ -868,6 +871,9 @@ export class RushView {
     const h = s.hero, alive = h.downT <= 0, def = heroDef(s);
     this.showHero(h.kind);
     this.syncFan(def);
+    // Popo's snowball (cycle 48): in the paw only with a round loaded and not right after a throw; an empty paw = reloading.
+    const paw = this.heroRig?.held;
+    if (paw) paw.visible = h.ammo >= 1 && h.fireCd <= 0;
     // Hero
     this.hero.visible = alive;
     this.hero.position.set(h.x, 0, h.z);
@@ -1020,7 +1026,7 @@ export class RushView {
 
   render() { this.renderer.render(this.scene, this.camera); }
   /** Renderer statistics for the debug overlay and performance notes. */
-  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroKind: this.heroKind, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
+  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroKind: this.heroKind, heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
 }
 
 /** Cape placement per hero model (shoulder height y, back offset x, height h, width w), tuned on the model sheet. */
