@@ -219,7 +219,12 @@ function feedback(events: RushEvent[]) {
       const boss = ev.wave % WAVE_COUNT === WAVE_COUNT - 1;
       toast(boss ? (state.diff.endless ? `웨이브 ${ev.wave + 1} · 보스 출현!` : `마지막 웨이브 · 보스 출현!`) : `웨이브 ${ev.wave + 1} 시작`, boss ? 'bad' : '');
     }
-    else if (ev.type === 'waveClear') toast(`웨이브 ${ev.wave + 1} 방어 성공 · +${ev.bonus}G`, 'good');
+    else if (ev.type === 'waveClear') {
+      // Cycle 79: the toast (and every floating number) is hidden since #107, so the held wave also sounds bright
+      // and buzzes lightly; the renderer adds a gold ring and sparks around the town.
+      toast(`웨이브 ${ev.wave + 1} 방어 성공 · +${ev.bonus}G`, 'good');
+      playCombatSound('skill'); playHaptic('cast', feedbackEnabled);
+    }
     else if (ev.type === 'lap') {
       // Endless lap (cycle 47): comes right after the fifth wave's clear, so this toast replaces that one.
       playHaptic('surge', feedbackEnabled);

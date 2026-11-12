@@ -895,6 +895,16 @@ export class RushView {
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.6);
           break;
         case 'townHit': if (!reducedMotion) this.shake = Math.max(this.shake, 0.12); break;
+        // Wave held (cycle 79): a gold ink ring around the town and sparks rising from it; no text (#107 hid the toasts).
+        case 'waveClear': {
+          this.ring(TOWN.x, TOWN.z, PAL.gold, 4.5, 0.9, 0.9, true);
+          // Sparks rise from eight points on the ring, not over the castle roof where they hid behind it.
+          for (let i = 0; i < 8; i++) {
+            const a = (i / 8) * Math.PI * 2, x = TOWN.x + Math.cos(a) * 3.4, z = TOWN.z + Math.sin(a) * 3.4;
+            fx.emit({ kind: 'spark', n: reducedMotion ? 1 : 3, color: PAL.gold, at: [x, this.groundHeight(x, z) + 0.4, z], speed: 1.2, up: 5, size: 0.22, life: 0.9 });
+          }
+          break;
+        }
         // Boss arrival (cycle 67): a wide red ink ring where it walks in and one big shake; no text since #107 hid the toasts.
         case 'bossEnter': this.ring(ev.x, ev.z, TEAM.enemy, 5, 1.1, 0.95, true); if (!reducedMotion) this.shake = Math.max(this.shake, 0.55); break;
         case 'heroDown':
