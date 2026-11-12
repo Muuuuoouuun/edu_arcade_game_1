@@ -57,6 +57,8 @@ export type RushEvent =
   | { type: 'roar'; x: number; z: number; radius: number; time: number }
   /** A shaman's pulse that restored at least one ally (cycle 59). */
   | { type: 'heal'; x: number; z: number; radius: number; count: number }
+  /** One ally restored by a shaman pulse, and by how much (cycle 60: a green number over it). */
+  | { type: 'healed'; id: number; x: number; z: number; amount: number }
   | { type: 'summon'; x: number; z: number; count: number }
   | { type: 'coin'; value: number }
   | { type: 'build'; pad: number; level: number; branch?: TowerBranch }
@@ -560,7 +562,9 @@ function healPulse(s: RushState, e: Enemy, heal: NonNullable<EnemyDef['heal']>) 
   let count = 0;
   for (const o of s.enemies) {
     if (o === e || o.hp <= 0 || o.hp >= o.maxHp || dist(o, e) > heal.radius + ENEMIES[o.kind].radius) continue;
+    const before = o.hp;
     o.hp = Math.min(o.maxHp, o.hp + amount);
+    s.events.push({ type: 'healed', id: o.id, x: o.x, z: o.z, amount: o.hp - before });
     count++;
   }
   if (count) s.events.push({ type: 'heal', x: e.x, z: e.z, radius: heal.radius, count });

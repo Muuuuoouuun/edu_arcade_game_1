@@ -478,19 +478,24 @@ test('shaman (cycle 59): its pulse heals hurt allies in range, never itself or t
   const mk = (id: number, kind: EnemyKind, x: number, hp: number, maxHp: number): Enemy =>
     ({ id, kind, x, z: -12, kx: 0, kz: 0, hp, maxHp, lane: 0, wp: 1, cd: 9, flash: 0, chasing: false, facing: 0, windup: null });
   const shaman = mk(1, 'shaman', 0, 10, 140), near = mk(2, 'brute', 2, 100, 520), full = mk(3, 'grunt', -1.5, 120, 120), far = mk(4, 'grunt', 9, 10, 120);
-  s.enemies.push(shaman, near, full, far);
+  const almost = mk(5, 'grunt', -1, 110, 120); // cycle 60: a heal that tops out reports only what it restored
+  s.enemies.push(shaman, near, full, far, almost);
   const heal = ENEMIES.shaman.heal!;
   let pulses: RushEvent[] = [];
+  const healed: RushEvent[] = [];
   const at = new Map(s.enemies.map(e => [e, e.x]));
   for (let t = 0; t < heal.every + 0.05; t += STEP) {
     for (const e of s.enemies) { e.x = at.get(e)!; e.z = -12; } // pinned: only the pulse is under test
     stepRush(s, {});
     pulses.push(...s.events.filter(e => e.type === 'heal'));
+    healed.push(...s.events.filter(e => e.type === 'healed'));
   }
   assert.equal(pulses.length, 1, 'one pulse per period');
   assert.equal(near.hp, 100 + heal.amount * 2, 'ally in range healed by amount × stage health');
   assert.equal(shaman.hp, 10, 'never heals itself');
   assert.equal(full.hp, 120, 'unhurt ally unchanged');
   assert.equal(far.hp, 10, 'ally out of range unchanged');
-  assert.deepEqual(pulses[0].type === 'heal' && [pulses[0].count, pulses[0].radius], [1, heal.radius]);
+  assert.equal(almost.hp, 120, 'capped at max');
+  assert.deepEqual(pulses[0].type === 'heal' && [pulses[0].count, pulses[0].radius], [2, heal.radius]);
+  assert.deepEqual(healed.map(e => e.type === 'healed' && [e.id, e.amount]), [[2, heal.amount * 2], [5, 10]], 'one healed event per ally with the amount restored');
 });

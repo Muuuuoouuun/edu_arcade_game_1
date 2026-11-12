@@ -103,6 +103,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .pop.hurt { color: #ff6b7a; font-size: 21px; }
 .pop.gold { color: var(--gold); font-size: 18px; }
 .pop.blocked { color: #dfe6f5; font-size: 14px; }
+.pop.heal { color: #7dff9a; font-size: 18px; } /* shaman heal (cycle 60) */
 
 /* ---------- screens ---------- */
 .screen { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse at center, rgba(29,20,51,0.45), rgba(20,12,40,0.85)); padding: 16px; }

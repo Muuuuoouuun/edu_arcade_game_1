@@ -836,7 +836,8 @@ export class RushView {
         // Boss rally (cycle 33): amber, not the red of a slam, because the roar itself does no damage.
         case 'roar': this.telegraph(ev.x, ev.z, ev.radius, ev.time, 0xffb02e); break;
         // Shaman heal (cycle 59): a green ring out to the heal radius, so the cause of the refilled bars is visible.
-        case 'heal': this.ring(ev.x, ev.z, 0x5ee87a, ev.radius, 0.55, 0.55, true); break;
+        // Cycle 60: at 0.55 opacity the ink band won and it read as a grey smudge; 0.9 and a little longer reads green.
+        case 'heal': this.ring(ev.x, ev.z, 0x5ee87a, ev.radius, 0.7, 0.9, true); break;
         case 'lap': // endless lap (cycle 47): a wide red ink ring around the town and a shake
           this.ring(TOWN.x, TOWN.z, 0xff4d5e, 7, 0.7, 0.95, true);
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.5);
