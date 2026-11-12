@@ -18,3 +18,11 @@ for pair in "prototypes/gecko-ranger:gecko-ranger" "dwarf-guardian:dwarf-guardia
   $GT meshopt "$TMP/$name-3.glb" "$OUT/$name.glb" --level high
   printf '%-16s %8d -> %8d bytes\n' "$name" "$(stat -c %s "$src")" "$(stat -c %s "$OUT/$name.glb")"
 done
+# Rush forest town (cycle 66): the Blender output stays the source (its tests, tools/check-rush-town.mjs and the model
+# lab read it); the game loads this web copy (src/rush/townModel.ts).
+src=src/rush/models/forest-town.glb; name=forest-town.web
+$GT prune "$src" "$TMP/$name-1.glb" --keep-attributes false
+$GT dedup "$TMP/$name-1.glb" "$TMP/$name-2.glb"
+$GT weld "$TMP/$name-2.glb" "$TMP/$name-3.glb"
+$GT meshopt "$TMP/$name-3.glb" "$OUT/$name.glb" --level high
+printf '%-16s %8d -> %8d bytes\n' "$name" "$(stat -c %s "$src")" "$(stat -c %s "$OUT/$name.glb")"

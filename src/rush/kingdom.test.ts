@@ -331,3 +331,28 @@ test('the town record flag (cycle 57) appears once endless opens and gains a sta
   assert.equal(flagStage({ ...open, endlessBest: 14 }), 2);
   assert.equal(flagStage({ ...open, endlessBest: 40 }), ENDLESS_MILESTONES.length);
 });
+
+test('kingdom goals (cycle 64): one at a time, claimed only when met, paid once, saved and migrated', async () => {
+  const { GOALS, currentGoal, claimGoal } = await import('./kingdom.ts');
+  const k = createKingdom(T0);
+  const first = currentGoal(k)!;
+  assert.deepEqual([first.index, first.done, first.have, first.need], [0, false, 0, 1]);
+  assert.equal(claimGoal(k), k, 'an unmet goal cannot be claimed');
+  const won = { ...k, stars: [1, ...k.stars.slice(1)] };
+  const after = claimGoal(won);
+  assert.deepEqual([after.goal, after.food - won.food, won.goal], [1, GOALS[0].reward.food, 0], 'pays, moves on, leaves the input alone');
+  assert.equal(claimGoal(after), after, 'the next goal (castle Lv2) is not met yet');
+  // A grown kingdom meets every goal in order: the whole chain can be claimed and then nothing is left.
+  let grown: Kingdom = { ...k, castle: 5, farm: 5, mill: 5, perks: { ...k.perks, attack: 1, forge: 1 }, stars: k.stars.map(() => 3), heroLv: { ...k.heroLv, ranger: 2 }, endlessBest: 5 };
+  const shards0 = grown.shards;
+  for (let i = 0; i < GOALS.length; i++) grown = claimGoal(grown);
+  assert.equal(grown.goal, GOALS.length);
+  assert.equal(currentGoal(grown), null);
+  assert.equal(claimGoal(grown), grown);
+  assert.equal(grown.shards - shards0, GOALS.reduce((a, g) => a + (g.reward.shards ?? 0), 0));
+  // Saves: the index round-trips; older saves start at 0; nonsense clamps to a valid start.
+  assert.equal(parseKingdom(serializeKingdom({ ...k, goal: 4 }), T0).goal, 4);
+  const old = JSON.parse(serializeKingdom(k)); delete old.goal;
+  assert.equal(parseKingdom(JSON.stringify(old), T0).goal, 0);
+  assert.equal(parseKingdom(JSON.stringify({ ...old, goal: 99 }), T0).goal, 0);
+});

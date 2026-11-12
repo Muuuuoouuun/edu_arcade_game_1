@@ -499,3 +499,18 @@ test('shaman (cycle 59): its pulse heals hurt allies in range, never itself or t
   assert.deepEqual(pulses[0].type === 'heal' && [pulses[0].count, pulses[0].radius], [2, heal.radius]);
   assert.deepEqual(healed.map(e => e.type === 'healed' && [e.id, e.amount]), [[2, heal.amount * 2], [5, 10]], 'one healed event per ally with the amount restored');
 });
+
+test('boss arrival (cycle 67): exactly one bossEnter per boss, at its spawn, and none for other enemies', () => {
+  const s = createRush(3);
+  const enters: RushEvent[] = [];
+  while (s.phase !== 'won' && s.phase !== 'lost' && s.tick < 60 * 60 * 8) {
+    stepRush(s, guardBot(s));
+    for (const e of s.events) if (e.type === 'bossEnter') {
+      enters.push(e);
+      const boss = s.enemies.find(x => x.id === e.id)!;
+      assert.equal(boss.kind, 'boss');
+      assert.ok(Math.hypot(boss.x - e.x, boss.z - e.z) < 0.3, 'reported where it spawned (it has taken at most one step since)');
+    }
+  }
+  assert.equal(enters.length, 1, 'stage 1 has one boss');
+});

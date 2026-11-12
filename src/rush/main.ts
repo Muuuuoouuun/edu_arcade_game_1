@@ -119,6 +119,31 @@ function hitPop(owner: string, id: number | undefined, damage: number, x: number
   p.y = 1.6; p.jitter = (Math.random() - 0.5) * 0.4; p.bumpAge = 0;
   trimPops();
 }
+// Boss arrival (cycle 67): while a boss that just walked in is off screen, a red chevron on the screen edge points at
+// it for a few seconds; no text (the battle HUD and toasts are hidden since #107). Gone once the boss is on screen.
+const BOSS_EDGE_TIME = 2.5;
+const bossEdge = Object.assign(document.createElement('span'), { className: 'boss-edge', hidden: true });
+bossEdge.setAttribute('aria-hidden', 'true');
+fxLayer.append(bossEdge);
+let bossEdgeFor: { id: number; left: number } | null = null;
+function updateBossEdge(dt: number) {
+  if (!bossEdgeFor) return;
+  bossEdgeFor.left -= dt;
+  const boss = state.enemies.find(e => e.id === bossEdgeFor!.id && e.hp > 0);
+  const sp = boss && view.screenPoint(boss.x, 1, boss.z, canvasRect);
+  const rect = canvasRect, onScreen = sp && sp.x >= 0 && sp.x <= rect.width && sp.y >= 0 && sp.y <= rect.height;
+  if (!boss || !sp || onScreen || bossEdgeFor.left <= 0) {
+    setFlag('bossEdgeHidden', bossEdge, 'hidden', true);
+    if (!boss || onScreen || bossEdgeFor.left <= 0) bossEdgeFor = null;
+    return;
+  }
+  // Clamp the direction from the screen centre to the edge, inset so the chevron stays whole.
+  const cx = rect.width / 2, cy = rect.height / 2, dx = sp.x - cx, dy = sp.y - cy, inset = 34;
+  const k = Math.min((cx - inset) / Math.max(1e-6, Math.abs(dx)), (cy - inset) / Math.max(1e-6, Math.abs(dy)));
+  setFlag('bossEdgeHidden', bossEdge, 'hidden', false);
+  bossEdge.style.transform = `translate(${Math.round(cx + dx * k)}px, ${Math.round(cy + dy * k)}px) translate(-50%, -50%) rotate(${Math.atan2(dy, dx)}rad)`;
+}
+
 function updatePops(dt: number) {
   const rect = canvasRect;
   pops = pops.filter(p => {
@@ -162,7 +187,7 @@ function updateCallout() {
 // ---------- events → feedback ----------
 // A melee swing sounds like an impact rather than a bowstring.
 const SOUND: Partial<Record<RushEvent['type'], CombatSoundKind>> = {
-  fire: 'arrow', swing: 'slash', burst: 'skill', slam: 'cannon', roar: 'surge', lap: 'surge', summon: 'cast', townHit: 'breach', heroDown: 'breach', build: 'cast', waveStart: 'surge', superReady: 'freeze',
+  bossEnter: 'cannon', fire: 'arrow', swing: 'slash', burst: 'skill', slam: 'cannon', roar: 'surge', lap: 'surge', summon: 'cast', townHit: 'breach', heroDown: 'breach', build: 'cast', waveStart: 'surge', superReady: 'freeze',
 };
 /** Endless lap twists (cycle 52), as the player reads them. */
 const TWIST_NAME: Record<LapTwist, string> = { swift: '빠른 걸음', shields: '방패 행렬', twin: '쌍둥이 보스' };
@@ -188,6 +213,7 @@ function feedback(events: RushEvent[]) {
     else if (ev.type === 'heroDown') { playHaptic('breach', feedbackEnabled); toast(`쓰러졌다! ${HEROES[state.hero.kind].respawn}초 뒤 마을에서 복귀`, 'bad'); }
     else if (ev.type === 'superReady') toast('필살기 준비 완료!', 'super');
     else if (ev.type === 'roar') { playHaptic('surge', feedbackEnabled); if (!bossCallout(ev)) toast('보스가 부하를 부른다!', 'bad'); }
+    else if (ev.type === 'bossEnter') { playHaptic('breach', feedbackEnabled); bossEdgeFor = { id: ev.id, left: BOSS_EDGE_TIME }; }
     else if (ev.type === 'waveStart') {
       playHaptic('surge', feedbackEnabled);
       const boss = ev.wave % WAVE_COUNT === WAVE_COUNT - 1;
@@ -466,6 +492,7 @@ function frame(now: number) {
     if (!menu || forceDraw || menuFrames % MENU_DRAW_EVERY === 1) { view.render(); drawnFrames++; forceDraw = false; }
   }
   updatePops(dt);
+  updateBossEdge(dt);
   updateCallout();
   updateHud();
   seeThroughHud();

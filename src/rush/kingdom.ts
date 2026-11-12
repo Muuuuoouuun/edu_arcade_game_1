@@ -31,6 +31,8 @@ export interface Kingdom {
   shards: number;
   /** Endless challenge (cycle 46): most waves held in one run. */
   endlessBest: number;
+  /** Kingdom goal chain (cycle 64): index of the next goal to claim (GOALS.length = all done). */
+  goal: number;
   /** Local day number (see `dayIndex`) of the last daily first-win bonus (cycle 32); 0 = never. */
   dailyWin: number;
   /** Recently rewarded battle ids, so one battle never pays twice. */
@@ -50,7 +52,7 @@ export const HERO_GROWTH = { hp: 0.1, damage: 0.1 } as const;
 
 export const createKingdom = (now: number): Kingdom => ({
   version: 1, castle: 1, farm: 1, mill: 1, perks: { attack: 0, towerDiscount: 0, townHp: 0, forge: 0, vault: 0 },
-  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), hero: 'ranger', heroLv: { ranger: 1, bron: 1, bear: 1 }, talent: { ranger: 0, bron: 0, bear: 0 }, shards: 0, endlessBest: 0, dailyWin: 0, rewarded: [],
+  food: 120, wood: 120, lastCollect: now, battles: { won: 0, lost: 0 }, stars: Array(STAGE_COUNT).fill(0), hero: 'ranger', heroLv: { ranger: 1, bron: 1, bear: 1 }, talent: { ranger: 0, bron: 0, bear: 0 }, shards: 0, endlessBest: 0, goal: 0, dailyWin: 0, rewarded: [],
 });
 
 const clone = (k: Kingdom): Kingdom => ({ ...k, perks: { ...k.perks }, battles: { ...k.battles }, stars: [...k.stars], heroLv: { ...k.heroLv }, talent: { ...k.talent }, rewarded: [...k.rewarded] });
@@ -302,9 +304,47 @@ export function parseKingdom(raw: string | null, now: number): Kingdom {
       dailyWin: count(v.dailyWin, 0, 1e7) ?? 0,
       // Saves from before the endless challenge (cycle 46) have no record yet.
       endlessBest: count(v.endlessBest, 0, 1e6) ?? 0, rewarded,
+      // Saves from before goals (cycle 64) start the chain at the first goal; ones already met can be claimed at once.
+      goal: count(v.goal, 0, GOALS.length) ?? 0,
     };
   } catch {
     return createKingdom(now);
   }
 }
 export const serializeKingdom = (k: Kingdom): string => JSON.stringify(k);
+
+/** Kingdom goal chain (cycle 64): one goal at a time, in the order a growing kingdom meets them (castle, stages, hero,
+ * forge, endless), each paying a little food, wood or shards when claimed in town. */
+export type Goal = { text: string; progress: (k: Kingdom) => [number, number]; reward: Partial<Cost> & { shards?: number } };
+const starsOn = (k: Kingdom, n: number) => k.stars[n - 1] ?? 0;
+const bestHeroLv = (k: Kingdom) => Math.max(k.heroLv.ranger, k.heroLv.bron, k.heroLv.bear);
+export const GOALS: readonly Goal[] = [
+  { text: '스테이지 1 승리', progress: k => [Math.min(1, starsOn(k, 1)), 1], reward: { food: 60 } },
+  { text: '성 Lv 2', progress: k => [Math.min(2, k.castle), 2], reward: { wood: 60 } },
+  { text: '농장 Lv 2', progress: k => [Math.min(2, k.farm), 2], reward: { food: 80 } },
+  { text: '스테이지 3에서 별', progress: k => [Math.min(1, starsOn(k, 3)), 1], reward: { shards: 2 } },
+  { text: '공격 강화 Lv 1', progress: k => [Math.min(1, k.perks.attack), 1], reward: { wood: 80 } },
+  { text: '영웅 Lv 2', progress: k => [Math.min(2, bestHeroLv(k)), 2], reward: { shards: 2 } },
+  { text: '성 Lv 3', progress: k => [Math.min(3, k.castle), 3], reward: { food: 150, wood: 150 } },
+  { text: '스테이지 5에서 별 3개', progress: k => [starsOn(k, 5), 3], reward: { shards: 3 } },
+  { text: '대장간 Lv 1', progress: k => [Math.min(1, k.perks.forge), 1], reward: { shards: 3 } },
+  { text: '스테이지 10에서 별', progress: k => [Math.min(1, starsOn(k, 10)), 1], reward: { shards: 5 } },
+  { text: '끝없는 도전 5웨이브', progress: k => [Math.min(5, k.endlessBest), 5], reward: { shards: 5 } },
+  { text: '성 Lv 5', progress: k => [Math.min(5, k.castle), 5], reward: { shards: 8 } },
+];
+/** The goal to work on (null once the chain is done), its progress and whether it can be claimed. */
+export function currentGoal(k: Kingdom): { index: number; goal: Goal; have: number; need: number; done: boolean } | null {
+  const goal = GOALS[k.goal];
+  if (!goal) return null;
+  const [have, need] = goal.progress(k);
+  return { index: k.goal, goal, have, need, done: have >= need };
+}
+/** Claim the current goal if it is met: pay its reward and move to the next. Otherwise the kingdom is unchanged. */
+export function claimGoal(k: Kingdom): Kingdom {
+  const g = currentGoal(k);
+  if (!g?.done) return k;
+  const next = clone(k), r = g.goal.reward;
+  next.food += r.food ?? 0; next.wood += r.wood ?? 0; next.shards += r.shards ?? 0;
+  next.goal = k.goal + 1;
+  return next;
+}
