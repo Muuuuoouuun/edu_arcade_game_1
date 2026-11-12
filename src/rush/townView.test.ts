@@ -79,3 +79,19 @@ test('damage affects only the town material, survives model loading and clears f
   assert.equal(read(first).emissiveIntensity, 0);
   assert.deepEqual(first.root.position.toArray(), [TOWN.x, 0, TOWN.z]);
 });
+
+test('the web copy the game loads (cycle 66) bakes the same town as the authored source', async () => {
+  const { parseTownScene } = await import('./townModel.ts');
+  const read = async (name: string) => { const b = await readFile(new URL(`./models/${name}`, import.meta.url)); return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength); };
+  const source = townGeometry((await new GLTFLoader().parseAsync(await read('forest-town.glb'), '')).scene);
+  const web = townGeometry(await parseTownScene(await read('forest-town.web.glb')));
+  const tris = (g: typeof source) => (g.index?.count ?? g.attributes.position.count) / 3;
+  assert.equal(tris(web), tris(source), 'same triangles');
+  source.computeBoundingBox(); web.computeBoundingBox();
+  const a = source.boundingBox!, b = web.boundingBox!, size = a.getSize(new Vector3()).length();
+  assert.ok(a.min.distanceTo(b.min) < size * 0.005 && a.max.distanceTo(b.max) < size * 0.005, 'same bounds within 0.5%');
+  // Normalized reads: the copy may store colours as normalized integers.
+  const avg = (g: typeof source) => { const c = g.getAttribute('color'); let t = 0; for (let i = 0; i < c.count; i++) t += c.getX(i) + c.getY(i) + c.getZ(i); return t / c.count / 3; };
+  assert.ok(Math.abs(avg(web) - avg(source)) < 0.01, `same average colour (${avg(source).toFixed(4)} vs ${avg(web).toFixed(4)})`);
+  source.dispose(); web.dispose();
+});

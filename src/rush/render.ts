@@ -18,6 +18,7 @@ import bearGlb from './models/polar-bear.glb?url';
 import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
 import { heroDef, heroHidden, heroMaxHp, lobReach, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, wallParts, type Part } from './look.ts';
+import { loadForestTown, toFloat32 } from './townModel.ts';
 import { Batch } from './batch.ts';
 import { Particles } from './fx.ts';
 import { QUALITY, type Quality } from './quality.ts';
@@ -31,18 +32,6 @@ export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'lob'; offset: Vec
 const TEAM = { ally: PAL.ally, enemy: PAL.enemy };
 const HERO_MODELS: Record<HeroKind, string> = { ranger: rangerGlb, bron: bronGlb, bear: bearGlb };
 const heroLoader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-/** The meshopt copies carry quantized positions and normals (normalized Int16/Int8, often interleaved). Baking writes
- * transformed values back into the same array type, which would clip them (cycle 31: broken parts), so the hero's
- * meshes go back to plain float32 before anything else touches them. */
-function toFloat32(mesh: Mesh) {
-  for (const name of ['position', 'normal'] as const) {
-    const a = mesh.geometry.getAttribute(name);
-    if (!a || (a.array instanceof Float32Array && !('isInterleavedBufferAttribute' in a))) continue;
-    const f = new Float32Array(a.count * 3);
-    for (let i = 0; i < a.count; i++) { f[i * 3] = a.getX(i); f[i * 3 + 1] = a.getY(i); f[i * 3 + 2] = a.getZ(i); }
-    mesh.geometry.setAttribute(name, new BufferAttribute(f, 3));
-  }
-}
 /** Hero ink hulls at half the triangles (cycle 62; measured in cycle 56: no visible change at battle size, a thin
  * part's ink only starts to drop at a quarter). The simplifier is three.js's bundled meshoptimizer, fetched on demand
  * with the first hero model so the first screen does not pay for it; without it (no WASM) hulls stay full. */
@@ -381,18 +370,8 @@ export class RushView {
     this.townView = town;
     town.root.position.y=heightAt(TOWN.x,TOWN.z);
     this.scene.add(town.root);
-    new GLTFLoader().load(new URL('./models/forest-town.glb', import.meta.url).href, gltf => {
-      try { town.accept(gltf.scene); }
-      catch { town.fail(); }
-      finally {
-        gltf.scene.traverse(o => {
-          if (o instanceof Mesh) {
-            o.geometry.dispose();
-            for (const material of Array.isArray(o.material) ? o.material : [o.material]) material.dispose();
-          }
-        });
-      }
-    }, undefined, () => town.fail());
+    // Cycle 66: the shared meshopt web copy (townModel.ts); the scene is shared with the town screen, so it is not disposed.
+    loadForestTown().then(scene => { try { town.accept(scene); } catch { town.fail(); } }, () => town.fail());
   }
 
   private buildPads() {
