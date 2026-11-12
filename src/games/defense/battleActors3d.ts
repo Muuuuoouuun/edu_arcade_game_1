@@ -11,7 +11,7 @@ type Instance = {
  model:BattleModelId;root:THREE.Group;rig:THREE.Group;content:THREE.Group;
  mixer:THREE.AnimationMixer;actions:Map<string,THREE.AnimationAction>;active?:string;
  aim?:THREE.Object3D;materials:Map<THREE.MeshStandardMaterial,THREE.Color>;
- previous?:BattleActorPose;walkDistance:number;pose?:BattleActorPose;
+ pose?:BattleActorPose;
 };
 type Options = {onLoad:()=>void;load?:(id:BattleModelId)=>Promise<GLTF>};
 
@@ -78,16 +78,12 @@ export function createBattleActors3D(scene:THREE.Scene,options:Options){
   const mixer=new THREE.AnimationMixer(content),actions=new Map<string,THREE.AnimationAction>();
   for(const clip of asset.gltf.animations){const action=mixer.clipAction(clip);action.setLoop(THREE.LoopOnce,1);action.clampWhenFinished=true;actions.set(clip.name,action);}
   const spec=BATTLE_MODELS[pose.model];
-  return {model:pose.model,root:actor,rig,content,mixer,actions,materials,aim:spec.aimNode?content.getObjectByName(spec.aimNode):undefined,walkDistance:0};
+  return {model:pose.model,root:actor,rig,content,mixer,actions,materials,aim:spec.aimNode?content.getObjectByName(spec.aimNode):undefined};
  }
 
  function apply(instance:Instance,pose:BattleActorPose,asset:Asset){
   const spec=BATTLE_MODELS[pose.model];
-  let clipTime=pose.clipTime;
-  if(pose.phase==='walk'&&spec.walk&&pose.model!=='wood'){
-   if(instance.previous?.phase==='walk')instance.walkDistance+=Math.hypot(pose.position.x-instance.previous.position.x,pose.position.y-instance.previous.position.y);
-   clipTime=(instance.walkDistance/spec.walk.stride%1)*spec.walk.duration;
-  }
+  const clipTime=pose.clipTime;
   if(instance.active!==pose.clip){
    instance.mixer.stopAllAction();instance.active=pose.clip;
    const action=pose.clip?instance.actions.get(pose.clip):undefined;
@@ -98,15 +94,15 @@ export function createBattleActors3D(scene:THREE.Scene,options:Options){
   instance.root.position.copy(boardToWorld(pose.position,pose.ground));
   instance.rig.scale.setScalar(scale);instance.rig.position.y=-asset.ground*scale;
   instance.rig.rotation.x=pose.phase==='dash'?-.14:0;
-  const radius=(pose.model==='ballista'?31:pose.model==='wood'?18:23)*pose.scale;
+  const radius=(spec.footprint??(pose.model==='ballista'?31:pose.model==='wood'?18:23))*pose.scale;
   instance.root.getObjectByName('contact-shadow')?.scale.setScalar(radius);
   instance.root.getObjectByName('hero-selection')?.scale.setScalar(29*pose.scale);
   // Towers rotate only the authored aiming platform, keeping their footing
   // stationary. Character headings include native asset-axis correction.
   if(instance.aim){instance.root.rotation.y=0;instance.aim.rotation.y=pose.heading+spec.forward;}
-  else instance.root.rotation.y=pose.heading+spec.forward;
+  else instance.root.rotation.y=spec.fixedBase?0:pose.heading+spec.forward;
   for(const [material,color] of instance.materials){material.color.copy(color).lerp(hitColor,pose.hit*.35);}
-  instance.previous=pose;instance.pose={...pose,clipTime};
+  instance.pose={...pose,clipTime};
  }
 
  return {

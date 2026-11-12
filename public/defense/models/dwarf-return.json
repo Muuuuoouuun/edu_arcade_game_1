@@ -1,0 +1,2312 @@
+{
+  "generator": "tools/blender/build_dwarf_return.py",
+  "command": "npm run models:dwarf-return",
+  "source_cast_sha256": "3a8e35589a65b3cd8f66c1fa48b04ac418e1cd22498072ee75bce15cdb7d51ca",
+  "source_walk_sha256": "7bdb61ed5aa563b4ad71c026151c630e69689ae2ec5ccc7c2d4721a07aaf3032",
+  "reference": "art-source/defense/atlases/melee-motion.png",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      330
+    ],
+    "orthographic_scale": 6.8
+  },
+  "delivery_frame": {
+    "width": 192,
+    "height": 192,
+    "ground": [
+      96,
+      165
+    ],
+    "columns": 16,
+    "rows": 1
+  },
+  "duration_seconds": 0.14,
+  "source_recovery_seconds": 0.39,
+  "battle_start_seconds": 0.38,
+  "battle_end_seconds": 0.52,
+  "hit_at": 0.24,
+  "hammer_follow_delay_seconds": 0.015,
+  "samples_seconds": [
+    0.04,
+    0.12
+  ],
+  "return_checks": [
+    {
+      "target_walk_frame": 0,
+      "swing_leg": "walk-right-leg",
+      "frames": 15,
+      "min_sole_z": 0.005000025033950806,
+      "recovery_start_error": 0,
+      "walk_end_error": 0
+    },
+    {
+      "target_walk_frame": 1,
+      "swing_leg": "walk-left-leg",
+      "frames": 15,
+      "min_sole_z": 0.005000025033950806,
+      "recovery_start_error": 0,
+      "walk_end_error": 0
+    },
+    {
+      "target_walk_frame": 2,
+      "swing_leg": "walk-left-leg",
+      "frames": 15,
+      "min_sole_z": 0.005000025033950806,
+      "recovery_start_error": 0,
+      "walk_end_error": 0
+    },
+    {
+      "target_walk_frame": 3,
+      "swing_leg": "walk-left-leg",
+      "frames": 15,
+      "min_sole_z": 0.005000025033950806,
+      "recovery_start_error": 0,
+      "walk_end_error": 0
+    },
+    {
+      "target_walk_frame": 4,
+      "swing_leg": "walk-left-leg",
+      "frames": 15,
+      "min_sole_z": 0.005000025033950806,
+      "recovery_start_error": 0,
+      "walk_end_error": 8.57252763722393e-18
+    },
+    {
+      "target_walk_frame": 5,
+      "swing_leg": "walk-right-leg",
+      "frames": 15,
+      "min_sole_z": 0.005000025033950806,
+      "recovery_start_error": 0,
+      "walk_end_error": 0
+    },
+    {
+      "target_walk_frame": 6,
+      "swing_leg": "walk-right-leg",
+      "frames": 15,
+      "min_sole_z": 0.005000025033950806,
+      "recovery_start_error": 0,
+      "walk_end_error": 0
+    },
+    {
+      "target_walk_frame": 7,
+      "swing_leg": "walk-right-leg",
+      "frames": 15,
+      "min_sole_z": 0.005000025033950806,
+      "recovery_start_error": 0,
+      "walk_end_error": 0
+    }
+  ],
+  "files": [
+    {
+      "file": "art-source/defense/dwarf-return.blend",
+      "bytes": 3079512,
+      "sha256": "43db8f8e89e6c179e9dea49865da327ea63760b6c0cdf2b915b971d7fb9bb9fc"
+    },
+    {
+      "file": "public/defense/models/dwarf-return.glb",
+      "bytes": 1387636,
+      "sha256": "6d175ad15e9cea00b7cb02bd0d26c4d56a1a94eabcbbc0b6a85ca71455828948"
+    },
+    {
+      "file": "public/defense/models/dwarf-return.png",
+      "bytes": 127725,
+      "sha256": "c90afeac12288c9f74b13ea6a1badf8ab733ea9e13bf25a3c4643044fa4db42c"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-0-0.png",
+      "bytes": 114002,
+      "sha256": "b8bd7f5a856380e2efda1563a5d6b73bd6addad88771aacc3fece1133e4b1d71"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-0-1.png",
+      "bytes": 117857,
+      "sha256": "75fae6b67491e1c775511dc2f17b92d1b0537bcffc1f0663673696bef8c60b7c"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-1-0.png",
+      "bytes": 113330,
+      "sha256": "9feb7d9317376ae0c4642618ee5a345ad1f0d4354947866abe0504d4366ba5ce"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-1-1.png",
+      "bytes": 116188,
+      "sha256": "96f7daa2bfa239b17829aac19b406c9b92b4c532a3846cdbec04c1e1dd66b28d"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-2-0.png",
+      "bytes": 113121,
+      "sha256": "f54d14b87625dca3c60816e0a71878c9d7156af24dfc8fdfc050802597078073"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-2-1.png",
+      "bytes": 114994,
+      "sha256": "82d045d14f8eaff0974f96a3654922772a65a02dc05eca3aa5eeafbfa930afbc"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-3-0.png",
+      "bytes": 113179,
+      "sha256": "d32f11b6b9392e0fbff5c07c4a5ff96a14ad784e79d543d7cce8ec6b78d58938"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-3-1.png",
+      "bytes": 115715,
+      "sha256": "ae01f70da5e73ef49162e718fc0391d11438245d9731ebd4b406788b392a3395"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-4-0.png",
+      "bytes": 113596,
+      "sha256": "8b1c6fc30ce810298fe8449bfc9be212258966791bb2a2170ac9163207bef23b"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-4-1.png",
+      "bytes": 116879,
+      "sha256": "82fa7a1ae61aa7e606dde2f3969671753065fdb891b6d1361f26f68ccfb2b3bc"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-5-0.png",
+      "bytes": 113640,
+      "sha256": "09bc0b71c5eae9f1880d9d3850bc9218d4e00a9464565fc28147049bdadab12a"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-5-1.png",
+      "bytes": 116265,
+      "sha256": "53be0b7a5ad230e6c7546702b77b878e4a9c15b4b74073c72182fe8360f3a78b"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-6-0.png",
+      "bytes": 113669,
+      "sha256": "238fd5b711d80f4371f2f8215c95f6efc79c964a72b4473319ff9bfe8b654267"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-6-1.png",
+      "bytes": 116389,
+      "sha256": "67affbdf3be7b951305366d859b6536144519fe7afa31747acbc76d5afa18edc"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-7-0.png",
+      "bytes": 113878,
+      "sha256": "5eec486e523bb9012669dcbef07b94606704bc23cc5ab137e96d3fdde42d3a76"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-0-7-1.png",
+      "bytes": 117147,
+      "sha256": "37c49e039c9fcfdfb9eb8c610d3a6ed1d5606c9c96041c89fe28013af4013e8b"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-0-0.png",
+      "bytes": 124189,
+      "sha256": "fe02dd9ba3ffbff7396fc75f5887197fb79affdf6bcc7775509d2cd1edc8d689"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-0-1.png",
+      "bytes": 128177,
+      "sha256": "19fa461ea7bb388afe3f0d41489631ff21a614573bc7da5209e525700e51558d"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-1-0.png",
+      "bytes": 124111,
+      "sha256": "98f316f41af6f20af03d0391dd1e505d7a8415bb8ad31a28ff76305fee78425e"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-1-1.png",
+      "bytes": 128388,
+      "sha256": "47e13fa465c2adce7ab14b76fafa0a936bf3dce70eba4d01ecf8d19456381b5d"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-2-0.png",
+      "bytes": 124084,
+      "sha256": "435ff69bf4dcfd3286e09249a2553abbde152b6dbd99b4b8b521713406274497"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-2-1.png",
+      "bytes": 127644,
+      "sha256": "e8e9e9dca36d6cad1c283a493f40954eb20e29b19b848024b89ed255a66f0458"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-3-0.png",
+      "bytes": 124050,
+      "sha256": "fdfad6fb55c4aa8a22467a808f6b66854c68e849b5e732b5ec60369d72157a1f"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-3-1.png",
+      "bytes": 127725,
+      "sha256": "c90afeac12288c9f74b13ea6a1badf8ab733ea9e13bf25a3c4643044fa4db42c"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-4-0.png",
+      "bytes": 123812,
+      "sha256": "e9f64fd8421d4d87a43bc8d0f3a83a24692e78084e69c944350578d5f1b1f60b"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-4-1.png",
+      "bytes": 127488,
+      "sha256": "59eca3bb867ad21dcb2461daf4dade660c5cb2bf69f0c623e1ac6d72e510d8f9"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-5-0.png",
+      "bytes": 123956,
+      "sha256": "5ba11e68b7e1584a8ea75e80bab3d9af5789dd88a741f426c898a30f3b979ebd"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-5-1.png",
+      "bytes": 127525,
+      "sha256": "eac9283c5896da45dbad7a7c115d52082df39cfe01b2a0e621d001ca64009b14"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-6-0.png",
+      "bytes": 124069,
+      "sha256": "1c03a9909e8e0f3ec76304f9176bc2acc24bee1b60a2ecca8eaca3a7633b6077"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-6-1.png",
+      "bytes": 127446,
+      "sha256": "c148e295b1e245bc2c6dae85eb896cf87e06e4393e7a6b1ce0ef019cfb5ab1a5"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-7-0.png",
+      "bytes": 124138,
+      "sha256": "5bcd15458ae19d7d2f5d81f12b77fe880e15b46dbccb263260802004fc103d9e"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-1-7-1.png",
+      "bytes": 127559,
+      "sha256": "4696760ada4c97a8855400bb210332f5904f491fa7f0060f177523b8a7013a1e"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-0-0.png",
+      "bytes": 119916,
+      "sha256": "5c484a91665b4dc2a6be1761b3add3efd15f05a7ef4078fd04742257bd6b6eef"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-0-1.png",
+      "bytes": 123613,
+      "sha256": "69b5c455c015005a252ec1277aee4e76d11827b0a7c347776bf7a76d703d5ac1"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-1-0.png",
+      "bytes": 120056,
+      "sha256": "3b73be4518a6a5979ba2f7881351498cc644ea155e6040ae9c00ba63a951e471"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-1-1.png",
+      "bytes": 123918,
+      "sha256": "2daf4edcf022e1a0c81ecbde9cd593914900325367cc6a39778772d9d3ddd44c"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-2-0.png",
+      "bytes": 120112,
+      "sha256": "ce7cf2405f73ac3a4d4ce259b8d0ae7d217d8453cb28bbe7878133daab5e7c04"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-2-1.png",
+      "bytes": 123888,
+      "sha256": "95a2cab5d014d8f6d86216964c2a4f4bc61ecd6b0830074db1564b1cca592993"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-3-0.png",
+      "bytes": 119956,
+      "sha256": "92417597aa4d49071d1090075367d27b30613ad75150ee8cf5454ded1f5c5cde"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-3-1.png",
+      "bytes": 123810,
+      "sha256": "b01bc34a2e2d7362f6fb7031e41b8c1a9704189fb0b652f82d60f3e8a55110fb"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-4-0.png",
+      "bytes": 119839,
+      "sha256": "99aaa452a110406ec5621a994e24af3b472bb8a37e950af6e93db1fd500b64f0"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-4-1.png",
+      "bytes": 123762,
+      "sha256": "7cf085e5d902c81fcc00fe92d3c024822268c540a61d619fb31a920723a04354"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-5-0.png",
+      "bytes": 119832,
+      "sha256": "64ce18a01984ea8b86bbc20e3720baaa2228e31adb415490a0b0fa8eb48a87d6"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-5-1.png",
+      "bytes": 123094,
+      "sha256": "34e1d6f750bc3241d88b7a39c8dabf60d2364f717536679b73e9473d9ac5dfb2"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-6-0.png",
+      "bytes": 119858,
+      "sha256": "d9324b57cc4407acb2a0eeb0c1f1c54bd9503e0ddf22dcf871c770bf74c8bc2b"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-6-1.png",
+      "bytes": 122699,
+      "sha256": "1486ecbfc0bd08125ba205fa075b4339a75ffd10b834a3e0ebe53f10dd24f75a"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-7-0.png",
+      "bytes": 119891,
+      "sha256": "5e6bc6dce27a226b8d0fa936620ce0c573cb0a4df47e436fa357f7605fe84e5c"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-2-7-1.png",
+      "bytes": 122766,
+      "sha256": "814b2cdd3b07eac4c11cecb9e8feac12385e3f95ea38b429e17430d0c148a1dd"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-0-0.png",
+      "bytes": 118433,
+      "sha256": "5309cd322d2fcc1a4a7b25399274a93987978e0758337f196e822f20d8ee3c71"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-0-1.png",
+      "bytes": 121159,
+      "sha256": "4259fa4135593fa01211b27102952a53f3731a61d0d3396523b461cfe5b1f88b"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-1-0.png",
+      "bytes": 118546,
+      "sha256": "da349f4aa6af91d5b06ef4146936ad1e71a6e725cb1d3767769d77fce0f00cab"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-1-1.png",
+      "bytes": 121910,
+      "sha256": "47bd0f9d05277d95c3e6a092b9ec9687ac3e66f279ce87793e15a9c93923796e"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-2-0.png",
+      "bytes": 118796,
+      "sha256": "86e3df94e497a3457df9aecc1edcb2f2ffd6309559e955ebd26a9a2dc1b84ce7"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-2-1.png",
+      "bytes": 122241,
+      "sha256": "fe4013c8ce1fb5897a5e72b072d7c84f438a1f4b5fee9c4b1d5d59886b982138"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-3-0.png",
+      "bytes": 118627,
+      "sha256": "b7e263f6aa3146df02de7001f6889505138c2316689bf1a3b9daa3cff006cc03"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-3-1.png",
+      "bytes": 121916,
+      "sha256": "9b0351888b6086f16dd5d97c796e65ffacee68367b3b91f34b6bae0fc8b0e28a"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-4-0.png",
+      "bytes": 118697,
+      "sha256": "708a90b0c7a3feae6532585afac72538f72d68ac80c02364b39ccd8b3efb7f45"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-4-1.png",
+      "bytes": 121597,
+      "sha256": "a7a31c8b1cdf971cf2d8db991f2d1f1cde00806371de094fc698429da73018d6"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-5-0.png",
+      "bytes": 118368,
+      "sha256": "486298d949b3fa125b533a076a1bc74be40dd4d2e4e2adc36300986147e2c1c9"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-5-1.png",
+      "bytes": 120668,
+      "sha256": "873f401612c69038470246e286902932621454a037c588841a5588a955329f3a"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-6-0.png",
+      "bytes": 118315,
+      "sha256": "bc079e89ab8dd0ae90a252a63b519c21271b6cab52a85130559160ab24ce4375"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-6-1.png",
+      "bytes": 120226,
+      "sha256": "b26b082da704f4884166ad765c2be72556e70f19c053716a9bf8cd310bb3aa25"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-7-0.png",
+      "bytes": 118432,
+      "sha256": "fd851a225937a05509239b8a5f1ba2d716322248213a7093a7a3327ff94778d8"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-3-7-1.png",
+      "bytes": 120195,
+      "sha256": "232474775d07fdab594c0f5c7def8f5b5afaff7699b4bdf67c76cc5ba046ca86"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-0-0.png",
+      "bytes": 112299,
+      "sha256": "fea649cc227a575801de7024e83196138ac13dcbbf33576ffee4f7f6513fcb4e"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-0-1.png",
+      "bytes": 112997,
+      "sha256": "ef8e47d7e411728eabf9e586c4b5f92ee8622c596f5dc6a4e2d9a435609be9ec"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-1-0.png",
+      "bytes": 112390,
+      "sha256": "66fa201bd950d403f005f2fa94c153b3f45f23a864612c0e6acc56058fa3d066"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-1-1.png",
+      "bytes": 111724,
+      "sha256": "558a57fb517852011ea4cc81edb13c6be95ad8e778e0a8c4dad8d618d8915377"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-2-0.png",
+      "bytes": 112522,
+      "sha256": "9e5fd112e93117052d90339cd645b2b0cc5f064d3f6837f171063801a2930a98"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-2-1.png",
+      "bytes": 111651,
+      "sha256": "7968bad46cb4ec485f5830377795da30dcefa0d4abdc8ecdcfeccea165a20c4e"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-3-0.png",
+      "bytes": 112615,
+      "sha256": "c7489cd830eb48608d265badfaeb069da680eb13a105b03ec8a037db2d8b5171"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-3-1.png",
+      "bytes": 112749,
+      "sha256": "2dbfaac5be3b8842df54bb940626df55e6e014e960e4c84086d2341f67c8f039"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-4-0.png",
+      "bytes": 113073,
+      "sha256": "be43eb0f133c0c7d2e38ef825f18e815fc16ee508aa59e0950a3849120e565ed"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-4-1.png",
+      "bytes": 113841,
+      "sha256": "948edbdc178e96a605563e6f9ef2a82eafe3b65aaef7179a8f47f4ec3b519027"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-5-0.png",
+      "bytes": 112220,
+      "sha256": "ba651f807e8f7849dc002b092b9a9e7e0249134af44ae3f6fcb8ea75f38ca1a9"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-5-1.png",
+      "bytes": 112745,
+      "sha256": "409b89706abb436d53d2c531835f8c096d7f5821b8e1d1920ba103848e409eef"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-6-0.png",
+      "bytes": 111968,
+      "sha256": "083df44b34beb26a7a3bf8fbf3f4164105d16168d7ee0da85b67dbae6ff83540"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-6-1.png",
+      "bytes": 111408,
+      "sha256": "1fbed96295b08451b16c367fd3323aea27be3b9ce85463bd204d00454d34af1f"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-7-0.png",
+      "bytes": 112087,
+      "sha256": "bf553e14f918ca1396bb904fbf272507ee493120abca14f882f0588783c96c28"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-4-7-1.png",
+      "bytes": 111993,
+      "sha256": "47c099b4b5f290489fa08c7f768281eebfad6ac4d05cda8f976276e35c060d17"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-0-0.png",
+      "bytes": 121678,
+      "sha256": "604aca329dae332666189c0c4ab864dc1169cff3af946f1883db40b2d14c5bcc"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-0-1.png",
+      "bytes": 122580,
+      "sha256": "27c16d07ee54f6426927d867c3159f3fdc8e775d0cfa48500142359f6826cb5d"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-1-0.png",
+      "bytes": 121645,
+      "sha256": "84c6ffc01639a68c616adfb606ff839a2a690dc3b420342b546b214d2497afdd"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-1-1.png",
+      "bytes": 122776,
+      "sha256": "3d043f0c149b06de8e43d618f205c10ffdd6747e65a8f5456000fd5b8ad5b870"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-2-0.png",
+      "bytes": 121877,
+      "sha256": "835fb2ec2bdca2f6ec905674c1b6e0e335515a4f5a3d8fb61184a2fa45652c38"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-2-1.png",
+      "bytes": 122848,
+      "sha256": "6ce4bb44dfe15a1bb65e675e0fa16b5606fa3c88bf9361a17d2a42f31f668aae"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-3-0.png",
+      "bytes": 121580,
+      "sha256": "76a2a1aee72f011cefb6571537688793b2a3d797da4523970e0e88fd774cc0b6"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-3-1.png",
+      "bytes": 122370,
+      "sha256": "ccb03cc706aea0153c90a12f0f9a769789fe23ee3c6e96b1764c304c16950a42"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-4-0.png",
+      "bytes": 121445,
+      "sha256": "348451df159b7a175434e872ec1ce8b5c4ce902968ff6043443e58ae54917785"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-4-1.png",
+      "bytes": 121571,
+      "sha256": "6436bded97ebe3c7ada9c1192d7fa870624fb56a362ebf09757b0bae74bdbace"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-5-0.png",
+      "bytes": 121460,
+      "sha256": "d021c4b7690466f6aaca8833b6ef0d7813e2717219109d6bb4493eeac9356459"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-5-1.png",
+      "bytes": 121144,
+      "sha256": "983e11970c892526c6882aeec355ec0fca845a158e23fd4b4b68ef087efd9d5a"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-6-0.png",
+      "bytes": 121414,
+      "sha256": "f08c5c0b27fce6c45f6b39d2bcc74fcbdd9aff48e7744a7991c648ad9305d888"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-6-1.png",
+      "bytes": 121582,
+      "sha256": "2d4cc4e06fd1d0c231370bc326874a156595a4e655cf2093dd2172098e3029be"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-7-0.png",
+      "bytes": 121596,
+      "sha256": "1e55e3f3de2a9aa024148736b043a53b98bb70031dac6e94a52129e4f3f716f8"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-5-7-1.png",
+      "bytes": 121886,
+      "sha256": "b27dcacbe9de38f7abb7cbca28970b6bfc0b17ffddc20f9e0de0dd5928aabf96"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-0-0.png",
+      "bytes": 118385,
+      "sha256": "a13d8174759b752f986cf54ccd2e92fff05c987c6d00ffe1fd2b3bb413da8e12"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-0-1.png",
+      "bytes": 119117,
+      "sha256": "aa40d66c9f60425162164b1ef2567550ba7df61f3c78b1fda64cff86094c6383"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-1-0.png",
+      "bytes": 118207,
+      "sha256": "1195c66dd23a489c25d4050a8a8d1fc233253df1ef76a19aad9e297f72f55f48"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-1-1.png",
+      "bytes": 118711,
+      "sha256": "676df4c55dbf9019b6a255a9068e6c516b9a80e0876e097156f565da6549b3c8"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-2-0.png",
+      "bytes": 118430,
+      "sha256": "fe8450e42656a39f5bd82ca7fc518d5c7e13dfc6fb7b4d0c27be26ff5b64dc72"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-2-1.png",
+      "bytes": 119419,
+      "sha256": "cd1075dddd2cffff8e099e625e135cfc622a345439320ea26da16ef83c3c015e"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-3-0.png",
+      "bytes": 118441,
+      "sha256": "dd40b4df1b71820a1fe19f4f356a58875ee3d90855c57405c5b7b45b314cdb50"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-3-1.png",
+      "bytes": 119149,
+      "sha256": "1571421ce944096c851b3f8cca48102fc1d4f9c468913c0b359526072537ca58"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-4-0.png",
+      "bytes": 118445,
+      "sha256": "f0a9868a3c5fcc4f7d35604daf8adb44618ec03a7e5f668a7fe1e563c644567b"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-4-1.png",
+      "bytes": 119318,
+      "sha256": "74787b4c7d900606493ce41a604a69ff1598defadddd16de11b0519ba46c08eb"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-5-0.png",
+      "bytes": 118194,
+      "sha256": "8753e687f5941d126e06a390152fbb2e0bc1bc4849719210d6bf30b5b9c08352"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-5-1.png",
+      "bytes": 118230,
+      "sha256": "5dd89c5ad8bd492a3f959961ba17116687175ebbbc557786975799ee3eb20484"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-6-0.png",
+      "bytes": 117968,
+      "sha256": "df9bd202bedfc19661d4987a8e184dd4c0feb2dd44d8807cc930496f2287ab2b"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-6-1.png",
+      "bytes": 118345,
+      "sha256": "636d6f411aa602fb6478808b0c1e72442fea0ea98ec4ee0dde9569dbe532ad20"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-7-0.png",
+      "bytes": 118269,
+      "sha256": "fec6a2caa985f35143b268e020ced9a2ad2e7e481333b1741df5a9d4382faa5a"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-6-7-1.png",
+      "bytes": 118559,
+      "sha256": "6a4c6a35f23a9a764942cee411b8f37c0f348b26401c2bcbe95c7486e4b0477d"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-0-0.png",
+      "bytes": 120247,
+      "sha256": "8d2c55e4c68e636d2aeafca78c4c8ac3e70a51ec47190c30a686ffa0a23fa370"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-0-1.png",
+      "bytes": 122103,
+      "sha256": "23726732596e7c833ec96f885f0e4e1217651545f5042a91e24d7f3c6ea9ca6d"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-1-0.png",
+      "bytes": 120127,
+      "sha256": "08a8af2df886b19b4f0dec5b911e70b19ae9c46de27cb644ea5adbbc2d788a8e"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-1-1.png",
+      "bytes": 122066,
+      "sha256": "6a8906f7705c00cd9c9da5092ea761f585d1946cad440721733f651f0d10d167"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-2-0.png",
+      "bytes": 120397,
+      "sha256": "7ac9ea376afbf7e34428a287783c4185c5965393ddc1f0c3305cd7ddd1db45a4"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-2-1.png",
+      "bytes": 123007,
+      "sha256": "8a737e23b79b7836087d80d287d60c9c97890a0a73ec7f65d9ebb201f5135889"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-3-0.png",
+      "bytes": 120272,
+      "sha256": "cd74991ac8920a05a5d962c24ab123f3f734ad4d2afe99546eb50f8f7ac3a743"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-3-1.png",
+      "bytes": 122974,
+      "sha256": "9868a6ebb56b29fd52904fde7893e4182bb9c8d6a47e9792c0c8d48a180b3384"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-4-0.png",
+      "bytes": 120402,
+      "sha256": "477b6ec0b3218082ffb77b48cbc9b7e9dac3476de9b0f0c45884fd6848f2fb7c"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-4-1.png",
+      "bytes": 123140,
+      "sha256": "ebfc9b409042e3de126461d77b9accbe6030e8f14c891f7b4ed72e35fa6478db"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-5-0.png",
+      "bytes": 120376,
+      "sha256": "94c74e7db765507c6c45162cefa5517996dcfe6dc7aa2698010a5a4935e839d3"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-5-1.png",
+      "bytes": 122227,
+      "sha256": "88117f7a121297a2948de438d5539a28aee7f8070c5dc148830d93c33efbb070"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-6-0.png",
+      "bytes": 120190,
+      "sha256": "04cccbb89d45e96cce4a3d39df5e38fdfe11c4377e7ba399d4506af2bdec9bed"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-6-1.png",
+      "bytes": 122164,
+      "sha256": "7096de180d4596d2864d3f30e83e9e469493fd5ccd60ddde149db2eccd04eb65"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-7-0.png",
+      "bytes": 120260,
+      "sha256": "0e4652288a14372b0b3ff72d78f6dbdffacfde3d18ff37b06fdbd97b9341b173"
+    },
+    {
+      "file": "art-source/defense/dwarf-return-frames/dwarf-return-7-7-1.png",
+      "bytes": 121835,
+      "sha256": "3f884a24616dcb11928fe4b04b33e7f6408e07d5080d13797ed0f295dfefeee1"
+    },
+    {
+      "file": "public/defense/models/dwarf-return-0-atlas.webp",
+      "bytes": 56942,
+      "sha256": "bda1c0f830cf01d523bf91a62125ee6b8bbe437d9258058f5d14c0574afba756"
+    },
+    {
+      "file": "public/defense/models/dwarf-return-1-atlas.webp",
+      "bytes": 72450,
+      "sha256": "e9daaa08315973f3802ee4a07eef38b5bae703a92d161b38aea8c35299a742ea"
+    },
+    {
+      "file": "public/defense/models/dwarf-return-2-atlas.webp",
+      "bytes": 64658,
+      "sha256": "09ece34c40da9a383503485724459a7bfb25de0ad9ef12e6e08cd98fa6882533"
+    },
+    {
+      "file": "public/defense/models/dwarf-return-3-atlas.webp",
+      "bytes": 63832,
+      "sha256": "0cd22c99bf28f6e1ee530da44ee2b216ff6fcb6d8319bcbc50dca1e11363d47a"
+    },
+    {
+      "file": "public/defense/models/dwarf-return-4-atlas.webp",
+      "bytes": 54834,
+      "sha256": "06c6c80473c83c0a1c92b5fa45de4f2c6336a98a372a271cc627a9033678d313"
+    },
+    {
+      "file": "public/defense/models/dwarf-return-5-atlas.webp",
+      "bytes": 68772,
+      "sha256": "79eb1a10eb8ce1d7d7ef3235bbf28a5bc6a344a0a794f3b0f591b18ceced45b3"
+    },
+    {
+      "file": "public/defense/models/dwarf-return-6-atlas.webp",
+      "bytes": 57970,
+      "sha256": "b2548a6505a443e538d707333c6fedd6e710bfa3e99bb1904915e1fba94c7ee2"
+    },
+    {
+      "file": "public/defense/models/dwarf-return-7-atlas.webp",
+      "bytes": 61814,
+      "sha256": "0f5cf31a426964ead59c90726e8d17190e0f9a3c464adb404bd9831e96820c2b"
+    }
+  ],
+  "clips": [
+    {
+      "name": "dwarf-return-0",
+      "entry": 0,
+      "duration": 0.14
+    },
+    {
+      "name": "dwarf-return-1",
+      "entry": 1,
+      "duration": 0.14
+    },
+    {
+      "name": "dwarf-return-2",
+      "entry": 2,
+      "duration": 0.14
+    },
+    {
+      "name": "dwarf-return-3",
+      "entry": 3,
+      "duration": 0.14
+    },
+    {
+      "name": "dwarf-return-4",
+      "entry": 4,
+      "duration": 0.14
+    },
+    {
+      "name": "dwarf-return-5",
+      "entry": 5,
+      "duration": 0.14
+    },
+    {
+      "name": "dwarf-return-6",
+      "entry": 6,
+      "duration": 0.14
+    },
+    {
+      "name": "dwarf-return-7",
+      "entry": 7,
+      "duration": 0.14
+    }
+  ],
+  "directions": [
+    {
+      "direction": 0,
+      "yaw": 0.960070013999939,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            155.58206176757812,
+            130.10885620117188,
+            311.1519470214844,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            156.65333557128906,
+            116.27396392822266,
+            271.7020263671875,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            155.4239959716797,
+            129.28189086914062,
+            310.93902587890625,
+            343.6341857910156
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            155.90396118164062,
+            113.36336517333984,
+            267.82110595703125,
+            340.53509521484375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            155.358642578125,
+            128.7296142578125,
+            310.8495178222656,
+            343.1529541015625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            155.5964813232422,
+            110.70577239990234,
+            266.3449401855469,
+            338.24212646484375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            155.4239959716797,
+            129.28189086914062,
+            310.93902587890625,
+            343.6341857910156
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            155.90396118164062,
+            113.36336517333984,
+            267.82110595703125,
+            340.53509521484375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            155.58206176757812,
+            130.10885620117188,
+            311.1519470214844,
+            344.7960205078125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            156.65333557128906,
+            116.27396392822266,
+            271.7020263671875,
+            346.0708312988281
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            155.42396545410156,
+            130.21963500976562,
+            311.62139892578125,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            155.9039306640625,
+            115.9570541381836,
+            275.3963623046875,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            155.35861206054688,
+            130.0557861328125,
+            311.81451416015625,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            155.59645080566406,
+            114.87938690185547,
+            276.86920166015625,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            155.42396545410156,
+            130.21963500976562,
+            311.62139892578125,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            155.9039306640625,
+            115.9570541381836,
+            275.3963623046875,
+            346.60894775390625
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 1,
+      "yaw": -0.23171095550060272,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.16030883789062,
+            153.9650115966797,
+            325.5032958984375,
+            346.5448913574219
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            122.3673095703125,
+            153.20925903320312,
+            310.9059143066406,
+            346.0139465332031
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.06106567382812,
+            153.60977172851562,
+            325.5089111328125,
+            344.19146728515625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            121.92396545410156,
+            148.34246826171875,
+            309.3500061035156,
+            343.5915222167969
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.02102661132812,
+            153.25213623046875,
+            325.51019287109375,
+            344.33160400390625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            121.76454162597656,
+            145.3638916015625,
+            308.6824951171875,
+            340.6309814453125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.06106567382812,
+            153.60977172851562,
+            325.5089111328125,
+            345.4341735839844
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            121.92396545410156,
+            148.34246826171875,
+            309.3500061035156,
+            344.6742858886719
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.16030883789062,
+            153.9650115966797,
+            325.5032958984375,
+            347.21734619140625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            122.3673095703125,
+            153.20925903320312,
+            310.9059143066406,
+            353.1705627441406
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.26313781738281,
+            153.6015625,
+            325.4940185546875,
+            348.408935546875
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            122.89107513427734,
+            152.751708984375,
+            312.2763366699219,
+            350.7481384277344
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.30677795410156,
+            153.24053955078125,
+            325.4891357421875,
+            347.78759765625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            123.130859375,
+            151.03497314453125,
+            312.7906799316406,
+            347.78759765625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.26313781738281,
+            153.6015625,
+            325.4940185546875,
+            347.1662292480469
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            122.89107513427734,
+            152.751708984375,
+            312.2763366699219,
+            344.8270568847656
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 2,
+      "yaw": -0.610725998878479,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            118.77824401855469,
+            157.42039489746094,
+            290.40008544921875,
+            341.9728698730469
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            118.77822875976562,
+            157.9888458251953,
+            290.40008544921875,
+            348.28350830078125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            118.67306518554688,
+            157.023193359375,
+            290.59814453125,
+            343.11700439453125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            118.29307556152344,
+            156.09701538085938,
+            290.631103515625,
+            345.6349182128906
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            118.62837219238281,
+            156.64816284179688,
+            290.6795654296875,
+            342.44818115234375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            118.06610107421875,
+            154.310791015625,
+            290.68896484375,
+            342.44818115234375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            118.67306518554688,
+            157.023193359375,
+            290.59814453125,
+            341.7793884277344
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            118.29307556152344,
+            156.09701538085938,
+            290.631103515625,
+            339.5610656738281
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            118.77824401855469,
+            157.42039489746094,
+            290.40008544921875,
+            341.9728698730469
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            118.77822875976562,
+            157.9888458251953,
+            290.40008544921875,
+            348.28350830078125
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            118.85438537597656,
+            157.023193359375,
+            290.36590576171875,
+            343.11700439453125
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            119.07609558105469,
+            156.09701538085938,
+            290.69580078125,
+            345.6349182128906
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            118.88613891601562,
+            156.64816284179688,
+            290.3510437011719,
+            342.44818115234375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            119.17689514160156,
+            154.310791015625,
+            290.79425048828125,
+            342.44818115234375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            118.85438537597656,
+            157.023193359375,
+            290.36590576171875,
+            341.7793884277344
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            119.07609558105469,
+            156.09701538085938,
+            290.69580078125,
+            339.5610656738281
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 3,
+      "yaw": -0.9897410869598389,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            110.921142578125,
+            153.9650115966797,
+            261.2403869628906,
+            347.21734619140625
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            110.52660369873047,
+            154.47628784179688,
+            269.991943359375,
+            353.1705627441406
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            110.77371215820312,
+            153.6015625,
+            261.1060485839844,
+            348.408935546875
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            109.84741973876953,
+            152.751708984375,
+            270.9017333984375,
+            350.7481384277344
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            110.71359252929688,
+            153.24053955078125,
+            261.0499267578125,
+            347.78759765625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            109.5867691040039,
+            151.03497314453125,
+            271.2918701171875,
+            347.78759765625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            110.77371215820312,
+            153.6015625,
+            261.1060485839844,
+            347.1662292480469
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            109.84741973876953,
+            152.751708984375,
+            270.9017333984375,
+            344.8270568847656
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            110.921142578125,
+            153.9650115966797,
+            261.2403869628906,
+            346.5448913574219
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            110.52660369873047,
+            154.47628784179688,
+            269.991943359375,
+            346.0139465332031
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            111.07184600830078,
+            153.60977172851562,
+            261.3731689453125,
+            344.1914978027344
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            110.17311096191406,
+            152.77874755859375,
+            269.034423828125,
+            343.5915222167969
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            111.13522338867188,
+            153.25213623046875,
+            261.427734375,
+            344.33160400390625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            110.00804901123047,
+            151.07322692871094,
+            268.62518310546875,
+            340.6309814453125
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            111.07184600830078,
+            153.60977172851562,
+            261.3731689453125,
+            345.4341735839844
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            110.17311096191406,
+            152.77874755859375,
+            269.034423828125,
+            344.6742858886719
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 4,
+      "yaw": -2.1815226078033447,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            72.84829711914062,
+            153.58990478515625,
+            228.4181671142578,
+            344.7960205078125
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            112.2981948852539,
+            153.93890380859375,
+            227.34689331054688,
+            346.0708312988281
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            73.06119537353516,
+            153.1842498779297,
+            228.57623291015625,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            116.17913818359375,
+            151.78228759765625,
+            228.0962677001953,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            73.15069580078125,
+            152.80572509765625,
+            228.64157104492188,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            117.6552734375,
+            149.86865234375,
+            228.40374755859375,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            73.06119537353516,
+            153.1842498779297,
+            228.57623291015625,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            116.17913818359375,
+            151.78228759765625,
+            228.0962677001953,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            72.84829711914062,
+            153.58990478515625,
+            228.4181671142578,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            112.2981948852539,
+            153.93890380859375,
+            227.34689331054688,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            72.37882995605469,
+            153.27685546875,
+            228.57627868652344,
+            343.6341857910156
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            108.6038589477539,
+            152.43218994140625,
+            228.0963134765625,
+            340.53509521484375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            72.18572235107422,
+            152.93667602539062,
+            228.64163208007812,
+            343.1529541015625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            107.13101196289062,
+            150.80580139160156,
+            228.40379333496094,
+            338.24212646484375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            72.37882995605469,
+            153.27685546875,
+            228.57627868652344,
+            343.6341857910156
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            108.6038589477539,
+            152.43218994140625,
+            228.0963134765625,
+            340.53509521484375
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 5,
+      "yaw": 2.909881591796875,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            58.496917724609375,
+            138.01104736328125,
+            261.83990478515625,
+            338.8815002441406
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            73.09429931640625,
+            130.98446655273438,
+            261.6329345703125,
+            340.7016296386719
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            58.491302490234375,
+            137.3839111328125,
+            261.93914794921875,
+            341.3157958984375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            74.65020751953125,
+            127.4963150024414,
+            262.07623291015625,
+            338.9765930175781
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            58.49003601074219,
+            136.91432189941406,
+            261.97918701171875,
+            341.9371337890625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            75.3177261352539,
+            125.10399627685547,
+            262.2356872558594,
+            341.9371337890625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            58.491302490234375,
+            137.3839111328125,
+            261.93914794921875,
+            342.5585021972656
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            74.65020751953125,
+            127.4963150024414,
+            262.07623291015625,
+            344.897705078125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            58.496917724609375,
+            138.01104736328125,
+            261.83990478515625,
+            343.17987060546875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            73.09429931640625,
+            130.98446655273438,
+            261.6329345703125,
+            347.8582458496094
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            58.50617980957031,
+            137.9216766357422,
+            261.7370910644531,
+            339.583740234375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            71.723876953125,
+            131.23631286621094,
+            261.1091613769531,
+            338.8238525390625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            58.511085510253906,
+            137.6748046875,
+            261.6934509277344,
+            338.48114013671875
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            71.20954895019531,
+            130.39219665527344,
+            260.869384765625,
+            334.7805480957031
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            58.50617980957031,
+            137.9216766357422,
+            261.7370910644531,
+            338.3410339355469
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            71.723876953125,
+            131.23631286621094,
+            261.1091613769531,
+            337.7410888671875
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 6,
+      "yaw": 2.5308666229248047,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            93.60014343261719,
+            132.39691162109375,
+            265.22198486328125,
+            337.48846435546875
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            93.60012817382812,
+            125.70243072509766,
+            265.22198486328125,
+            342.5242614746094
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            93.40208435058594,
+            131.76356506347656,
+            265.3271789550781,
+            335.48199462890625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            93.36911010742188,
+            122.274169921875,
+            265.7071533203125,
+            333.2637023925781
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            93.3206787109375,
+            131.29151916503906,
+            265.3718566894531,
+            336.15081787109375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            93.3112564086914,
+            119.91332244873047,
+            265.93414306640625,
+            336.15081787109375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            93.40208435058594,
+            131.76356506347656,
+            265.3271789550781,
+            336.81964111328125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            93.36911010742188,
+            122.274169921875,
+            265.7071533203125,
+            339.3375549316406
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            93.60014343261719,
+            132.39691162109375,
+            265.22198486328125,
+            337.48846435546875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            93.60012817382812,
+            125.70243072509766,
+            265.22198486328125,
+            342.5242614746094
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            93.63433837890625,
+            132.21014404296875,
+            265.1458435058594,
+            335.48199462890625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            93.304443359375,
+            125.42070007324219,
+            264.92413330078125,
+            333.263671875
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            93.64918518066406,
+            131.9230499267578,
+            265.11407470703125,
+            336.15081787109375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            93.20597839355469,
+            124.36182403564453,
+            264.8233337402344,
+            336.15081787109375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            93.63433837890625,
+            132.21014404296875,
+            265.1458435058594,
+            336.81964111328125
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            93.304443359375,
+            125.42070007324219,
+            264.92413330078125,
+            339.3375549316406
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 7,
+      "yaw": 2.1518516540527344,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.75984191894531,
+            120.86846923828125,
+            273.0790710449219,
+            343.17987060546875
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            114.00826263427734,
+            113.84188842773438,
+            273.4736328125,
+            347.8582458496094
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.8941879272461,
+            120.30455017089844,
+            273.22650146484375,
+            339.583740234375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            113.09848022460938,
+            110.7275161743164,
+            274.1528015136719,
+            338.8238525390625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.95028686523438,
+            119.86138916015625,
+            273.2866516113281,
+            338.48114013671875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            112.7083511352539,
+            108.50129699707031,
+            274.4134521484375,
+            334.7805480957031
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.8941879272461,
+            120.30455017089844,
+            273.22650146484375,
+            338.3410339355469
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            113.09848022460938,
+            110.7275161743164,
+            274.1528015136719,
+            337.7410888671875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.75984191894531,
+            120.86846923828125,
+            273.0790710449219,
+            338.8815002441406
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            114.00826263427734,
+            113.84188842773438,
+            273.4736328125,
+            340.70166015625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.62705993652344,
+            120.7166976928711,
+            272.9283752441406,
+            341.3157958984375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            114.96580505371094,
+            113.75660705566406,
+            273.8271484375,
+            338.9765930175781
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.572509765625,
+            120.4442138671875,
+            272.864990234375,
+            341.9371643066406
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            115.37505340576172,
+            112.78303527832031,
+            273.9921875,
+            341.9371643066406
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.62705993652344,
+            120.7166976928711,
+            272.9283752441406,
+            342.5585021972656
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            114.96580505371094,
+            113.75660705566406,
+            273.8271484375,
+            344.897705078125
+          ]
+        }
+      ]
+    }
+  ],
+  "fps": 100,
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 48
+  },
+  "display_scale": 1.406896551724138,
+  "reference_sha256": "9e264fcf20942375e1017348f0f555f9e44e89f6fbf097ddd2dd3789a44c5222",
+  "generator_sha256": "912542cef988eb3ba57c506446caa9d364aeb667d3076842fc82429307fbf126",
+  "runtime": {
+    "mesh_objects": 55,
+    "triangles": 23190,
+    "materials": 18
+  }
+}

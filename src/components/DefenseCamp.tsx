@@ -1,3 +1,4 @@
+import { DefenseTerrain3D } from './DefenseTerrain3D';
 import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { DefenseSprite } from './DefenseBoard';
@@ -16,9 +17,11 @@ import '../defense-themes.css';
 import '../camp-art.css';
 import '../camp-redesign.css';
 import '../arcana-selection.css';
+import '../legion.css';
 
 type Props = {
   campaign: Campaign;
+  onLegion: () => void;
   onDepart: (stage: number) => void;
   onChooseHero: (hero: HeroId) => void;
   onSelectDifficulty: (difficulty: Difficulty) => void;
@@ -35,7 +38,7 @@ const difficultyTags:Record<Difficulty,string> = {relaxed:'가볍게 모험',sta
 const regionNames = {forest:'청록의 숲',snow:'서리산맥'};
 const regionSummary = {forest:'숲길과 물길을 따라, 이웃 마을을 지켜요.',snow:'빙판을 달리는 적들과 서리군주가 기다려요.'};
 
-export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDifficulty,onTrain,onExit,storageFailed,themeId,onSelectTheme,themeStorageFailed}:Props) {
+export default function DefenseCamp({onLegion,campaign,onDepart,onChooseHero,onSelectDifficulty,onTrain,onExit,storageFailed,themeId,onSelectTheme,themeStorageFailed}:Props) {
   const menuRef = useRef<HTMLElement>(null);
   const [section,setSection] = useState<'expedition'|'companions'|'home'|'growth'>('home');
   const [confirmUpgrade,setConfirmUpgrade] = useState(false);
@@ -87,6 +90,9 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
       <span className="camp-gold" aria-label={`성장 골드 ${campaign.gold}`}><Gold/>{campaign.gold.toLocaleString()}<small>G</small></span>
     </div>
     {storageFailed ? <p className="camp-save-warning" role="status">진행을 저장할 수 없어요. 현재 원정은 계속할 수 있지만, 창을 닫으면 기록이 사라질 수 있어요.</p> : null}
+    <a className="camp-frontier-entry" href="/frontier.html"><span><b>변경 전장 · 입체 공간에서 다른 방식으로 싸워요</b><small>성문 방어 / 분대 지휘 / 영웅 직접 조작 · 독립 훈련</small></span><strong>입장 ↗</strong></a>
+    <a className="camp-frontier-entry" href="/rush.html"><span><b>마을 수비 · 아르카나 러시</b><small>3D 직접 전투와 마을 성장 · 원정과 성장·보상을 따로 저장해요</small></span><strong>입장 ↗</strong></a>
+    <button className="camp-legion-entry" onClick={onLegion}><span className="legion-entry-mark" aria-hidden="true">⚑</span><span><strong>군단 방어</strong><small>배치·소환만으로 싸우는 자동 전투 · 3개 진입로 · 4번의 습격</small></span><b aria-hidden="true">↗</b></button>
     <section className="camp-panorama" aria-labelledby="camp-panorama-title">
       <picture key={themeId}>
         <img src={theme.image} width="1200" height="800" alt={`${theme.name}, 원정을 준비하는 수비대의 거점`} fetchPriority="high" decoding="async"/>
@@ -160,7 +166,7 @@ export default function DefenseCamp({campaign,onDepart,onChooseHero,onSelectDiff
           <div className="camp-letter-rule" aria-hidden="true"/>
           <p className="camp-sender"><span>보낸 사람</span><strong>{request?.stage===selectedStage?request.from:stage.region==='snow'?'서리산맥의 전령':'청록 마을의 촌장'}</strong></p>
           <p className="camp-letter-body">{letterBody}</p>
-          <div className={`camp-region-art camp-region-art-${stage.region}`}><span>{stage.label} {stage.name}</span></div>
+          <div className="camp-region-art" role="img" aria-label={stage.region==='snow'?'서리산맥의 입체 지형':'청록의 숲과 물길의 입체 지형'}><DefenseTerrain3D stage={stage.id} mode="camp"/><span>{stage.label} {stage.name}</span></div>
           <div className="camp-difficulty" role="group" aria-labelledby="camp-difficulty-title">
             <h3 id="camp-difficulty-title">원정 난이도</h3>
             <div className="camp-difficulty-choices">{DIFFICULTY_ORDER.map(mode=><button key={mode} type="button" className={difficulty===mode?'selected':''} aria-pressed={difficulty===mode} aria-label={`${DIFFICULTIES[mode].name} 난이도 선택`} onClick={()=>onSelectDifficulty(mode)}><span className={`camp-difficulty-mark camp-difficulty-mark-${mode}`} aria-hidden="true"/><strong>{DIFFICULTIES[mode].name}</strong><small>{difficultyTags[mode]}</small></button>)}</div>

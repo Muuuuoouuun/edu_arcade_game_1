@@ -9,10 +9,10 @@ const output = process.env.ARCANA_EVIDENCE_DIR || '/tmp/arcana-battle-models';
 const save = {version:1,gold:500,cleared:[1,2,3,4,5,6,7],questClaimed:[],seenVisitors:['mage','elf','dwarf','tao','barbarian','druid'],training:0,selectedHero:'barbarian',difficulty:'relaxed',processedRuns:[]};
 const reports=[];
 
-async function enter(page, hero='barbarian', snow=false){
- await page.addInitScript(value=>localStorage.setItem('playground:defense:v1',JSON.stringify(value)),{...save,selectedHero:hero});
+async function enter(page, hero='barbarian', snow=false,fresh=false){
+ await page.addInitScript(value=>localStorage.setItem('playground:defense:v1',JSON.stringify(value)),{...save,selectedHero:hero,...(fresh?{gold:0,cleared:[],seenVisitors:['mage']}: {})});
  await page.goto(base);
- await page.getByRole('button',{name:/모험 이어가기/}).click();
+ await page.locator('button.arcana-mode').click();
  await page.locator('[data-camp-menu="expedition"]').click();
  await page.locator('.camp-region-tabs button').nth(snow?1:0).click();
  await page.locator('.camp-stages button').first().click();
@@ -25,7 +25,7 @@ async function model(page,selector='.def-hero'){
 async function pierce(page){
  await page.getByRole('button',{name:/3번 건설 지점/}).click();
  await page.locator('.tactical-towers button').filter({hasText:'석궁탑'}).click();
- await page.locator('.def-tower[data-renderer="sprite"][data-branch="base"]').waitFor({state:'attached'});
+ await model(page,'.def-tower[data-branch="base"]');
  await page.getByRole('button',{name:/3번 건설 지점/}).click();
  await page.locator('.tactical-upgrades button').filter({hasText:'관통 석궁'}).click();
  await model(page,'.def-tower');
@@ -42,7 +42,8 @@ async function renderInfo(page){return page.locator('.def-terrain-3d-battle').ev
   assert.equal(await page.locator('.def-terrain-3d canvas').count(),1);
   const prep=await renderInfo(page);assert.ok(Number(prep.renderCalls)<100);
   await page.getByRole('button',{name:'웨이브 시작',exact:true}).click();
-  await page.locator('.def-monster[data-enemy="wood"][data-renderer="model"]').first().waitFor({timeout:30000});
+  await page.locator('.def-monster[data-enemy="wood"][data-renderer="model"]').first().waitFor({state:'attached',timeout:30000});
+  assert.ok(await page.locator('.def-monster[data-enemy="wood"] .def-model-hit-area').first().isVisible(),'hidden HP bars must not hide the 3D enemy input area');
   await page.screenshot({path:path.join(output,'forest-battle.png')});
   await page.locator('.battle-pause').click();
   await page.locator('.battle-page[data-paused="true"]').waitFor();
@@ -57,10 +58,26 @@ async function renderInfo(page){return page.locator('.def-terrain-3d-battle').ev
   const xBefore=Number(await page.locator('.battle-page').getAttribute('data-hero-x'));
   await page.locator('.def-map').focus();await page.keyboard.press('ArrowLeft');
   await page.waitForFunction(x=>Number(document.querySelector('.battle-page').dataset.heroX)<x-5,xBefore);
-  reports.push({case:'desktop_campaign',checks:['build base sprite','upgrade pierce GLB','wood GLB','pause','context loss/restore','keyboard movement','single renderer'],prep:JSON.parse(prep.actorStates),drawCalls:Number(prep.renderCalls),errors});
+  reports.push({case:'desktop_campaign',checks:['build base GLB','upgrade pierce GLB','wood GLB','pause','context loss/restore','keyboard movement','single renderer'],prep:JSON.parse(prep.actorStates),drawCalls:Number(prep.renderCalls),errors});
   assert.deepEqual(errors,[]);await page.close();console.log('desktop campaign passed');
 
-  const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true}),mobileErrors=[];
+  const starter=await browser.newPage({viewport:{width:1280,height:720}}),starterErrors=[];
+  starter.on('pageerror',error=>starterErrors.push(error.message));
+  await enter(starter,'mage',false,true);await model(starter);
+  for(const [index,name] of [[1,'석궁탑'],[2,'마법탑'],[3,'포격탑']]){
+   await starter.getByRole('button',{name:new RegExp(`${index}번 건설 지점`)}).click();
+   await starter.locator('.tactical-towers button').filter({hasText:name}).click();
+  }
+  await starter.waitForFunction(()=>document.querySelectorAll('.def-tower[data-renderer="model"]').length===3);
+  await starter.getByRole('button',{name:'웨이브 시작',exact:true}).click();
+  await starter.waitForFunction(()=>document.querySelector('.def-terrain-3d-battle').dataset.actorStates.includes('"phase":"attack"'));
+  assert.equal(await starter.locator('image.def-terrain-backdrop').count(),0);
+  await starter.screenshot({path:path.join(output,'starter-3d-battle.png')});
+  assert.deepEqual(starterErrors,[]);
+  reports.push({case:'fresh_campaign_starter',checks:['first hero GLB','three base tower GLBs','real attack state','no map backdrop image'],render:await renderInfo(starter),errors:starterErrors});
+  await starter.close();console.log('fresh campaign passed');
+
+  const mobile=await browser.newPage({viewport:{width:844,height:390},isMobile:true,hasTouch:true}),mobileErrors=[];
   mobile.on('pageerror',error=>mobileErrors.push(error.message));
   await enter(mobile,'dwarf',true);await model(mobile);
   const before=JSON.parse((await renderInfo(mobile)).actorStates)[0].position;
@@ -78,7 +95,7 @@ async function renderInfo(page){return page.locator('.def-terrain-3d-battle').ev
   await failed.locator('.def-hero[data-renderer="sprite"]').waitFor();
   reports.push({case:'asset_failure',checks:['hero SVG fallback','independent tower GLB'],render:await renderInfo(failed)});await failed.close();
 
-  const fallback=await browser.newPage({viewport:{width:390,height:844}});
+  const fallback=await browser.newPage({viewport:{width:844,height:390}});
   await fallback.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(kind,...args){return String(kind).includes('webgl')?null:original.call(this,kind,...args);};});
   await enter(fallback);await fallback.locator('[data-terrain-ready="false"] .def-hero[data-renderer="sprite"]').waitFor();
   await fallback.screenshot({path:path.join(output,'no-webgl.png')});

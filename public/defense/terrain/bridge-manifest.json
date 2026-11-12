@@ -1,0 +1,304 @@
+{
+  "projection": {
+    "width": 900,
+    "height": 600,
+    "camera": "orthographic",
+    "ground_plane": "X=(x-450), Y=(300-y-.6z)/.8"
+  },
+  "variants": [
+    {
+      "id": "forest-single",
+      "file": "forest-single-bridge.webp",
+      "bytes": 54944,
+      "sha256": "9e067410a0a03b6ddfb46c0c9b9a16a02bfb96c27cf917a00efebb95ea6b0e0f",
+      "path_anchors": [
+        {
+          "logical": [
+            0,
+            170
+          ],
+          "projected": [
+            0.0,
+            170.0
+          ]
+        },
+        {
+          "logical": [
+            130,
+            170
+          ],
+          "projected": [
+            130.0,
+            170.0
+          ]
+        },
+        {
+          "logical": [
+            230,
+            285
+          ],
+          "projected": [
+            230.0,
+            285.0
+          ]
+        },
+        {
+          "logical": [
+            410,
+            285
+          ],
+          "projected": [
+            410.0,
+            285.0
+          ]
+        },
+        {
+          "logical": [
+            520,
+            430
+          ],
+          "projected": [
+            520.0,
+            430.0
+          ]
+        },
+        {
+          "logical": [
+            730,
+            430
+          ],
+          "projected": [
+            730.0,
+            430.0
+          ]
+        },
+        {
+          "logical": [
+            820,
+            300
+          ],
+          "projected": [
+            820.0,
+            300.0
+          ]
+        },
+        {
+          "logical": [
+            900,
+            300
+          ],
+          "projected": [
+            900.0,
+            300.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "forest-expanded",
+      "file": "forest-expanded-bridge.webp",
+      "bytes": 90780,
+      "sha256": "a988f57cb2a5ed150925a5308e0987bcd323bf5ff7488680079cbada1ffc8b74",
+      "path_anchors": [
+        {
+          "logical": [
+            0,
+            170
+          ],
+          "projected": [
+            0.0,
+            170.0
+          ]
+        },
+        {
+          "logical": [
+            130,
+            170
+          ],
+          "projected": [
+            130.0,
+            170.0
+          ]
+        },
+        {
+          "logical": [
+            230,
+            285
+          ],
+          "projected": [
+            230.0,
+            285.0
+          ]
+        },
+        {
+          "logical": [
+            410,
+            285
+          ],
+          "projected": [
+            410.0,
+            285.0
+          ]
+        },
+        {
+          "logical": [
+            520,
+            430
+          ],
+          "projected": [
+            520.0,
+            430.0
+          ]
+        },
+        {
+          "logical": [
+            730,
+            430
+          ],
+          "projected": [
+            730.0,
+            430.0
+          ]
+        },
+        {
+          "logical": [
+            820,
+            300
+          ],
+          "projected": [
+            820.0,
+            300.0
+          ]
+        },
+        {
+          "logical": [
+            900,
+            300
+          ],
+          "projected": [
+            900.0,
+            300.0
+          ]
+        },
+        {
+          "logical": [
+            380,
+            0
+          ],
+          "projected": [
+            380.0,
+            0.0
+          ]
+        },
+        {
+          "logical": [
+            380,
+            150
+          ],
+          "projected": [
+            380.0,
+            150.0
+          ]
+        },
+        {
+          "logical": [
+            520,
+            235
+          ],
+          "projected": [
+            520.0,
+            235.0
+          ]
+        },
+        {
+          "logical": [
+            730,
+            235
+          ],
+          "projected": [
+            730.0,
+            235.0
+          ]
+        },
+        {
+          "logical": [
+            820,
+            115
+          ],
+          "projected": [
+            820.0,
+            115.0
+          ]
+        },
+        {
+          "logical": [
+            900,
+            115
+          ],
+          "projected": [
+            900.0,
+            115.0
+          ]
+        }
+      ]
+    }
+  ],
+  "bridge": {
+    "source": "art-source/defense/forest-bridge.blend",
+    "regeneration_command": "npm run models:bridge",
+    "reference": "art-source/defense/concepts/2026-11-06/verdant-heart.png",
+    "camera": {
+      "location": [
+        0,
+        -900,
+        1200
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "orthographic_scale": 900,
+      "render": [
+        1800,
+        1200
+      ]
+    },
+    "placement": {
+      "x": 596,
+      "y_offset": -46,
+      "width": 164,
+      "height": 100,
+      "sort_y_offset": 25
+    },
+    "walkway": {
+      "x_range": [
+        604,
+        752
+      ],
+      "center_y": 430,
+      "top_z": 20
+    },
+    "glb_materials": "PBR base colors and roughness; procedural grain is preserved in Blender and baked images",
+    "front_meshes": 20,
+    "meshes": 120,
+    "runtime_meshes": 14,
+    "files": [
+      {
+        "file": "defense/terrain/forest-bridge-front.webp",
+        "bytes": 4712,
+        "sha256": "34bb907f26cb2c345bf79003e8111782f34e11367a0fe4f93cd6643ea3c32e37"
+      },
+      {
+        "file": "defense/models/forest-bridge.glb",
+        "bytes": 601476,
+        "sha256": "bfde60aef349da925d031d699f05bdef45cd73f730742554a6f463e69e851282"
+      },
+      {
+        "file": "defense/models/forest-bridge.png",
+        "bytes": 105175,
+        "sha256": "585493623ab321ac61f82da93b318b688c894f6fee7a277097eb7a4e7df2ff7a"
+      }
+    ]
+  }
+}

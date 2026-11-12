@@ -18,12 +18,13 @@ function freezeDeep(value:unknown):void {
  }
 }
 
-test('only supported heroes, wood enemies and unlocked level-two piercing crossbows use models',()=>{
+test('starter hero and three base towers use models without changing unsupported upgrade appearances',()=>{
  const initial=createDefense(1,'barbarian');
  const hired=actDefense(initial,{type:'hire',hero:'dwarf'});
  const supported={...hired,enemies:[enemy(),{...enemy(101),kind:'sprout' as const}]};
  assert.deepEqual(battleActorPoses(supported).map(({key,model})=>[key,model]),[['hero','kar'],['merc','bron'],['enemy-100','wood']]);
- for(const hero of ['mage','elf','tao','druid'] as const)assert.equal(battleActorPoses(createDefense(1,hero)).length,0);
+ assert.equal(pose(createDefense(1,'mage')).model,'ian');
+ for(const hero of ['elf','tao','druid'] as const)assert.equal(battleActorPoses(createDefense(1,hero)).length,0);
  const variants:Tower[]=[
   {slot:2,kind:'crossbow',level:1,branch:null,cooldown:0},
   {slot:2,kind:'crossbow',level:2,branch:'pierce',cooldown:0},
@@ -32,10 +33,13 @@ test('only supported heroes, wood enemies and unlocked level-two piercing crossb
   {slot:2,kind:'magic',level:2,branch:'fire',cooldown:0},
   {slot:6,kind:'crossbow',level:2,branch:'pierce',cooldown:0},
   {slot:999,kind:'crossbow',level:2,branch:'pierce',cooldown:0},
+  {slot:2,kind:'magic',level:1,branch:null,cooldown:0},
+  {slot:2,kind:'cannon',level:1,branch:null,cooldown:0},
  ];
  for(const [index,tower] of variants.entries()){
-  const result=battleActorPoses({...createDefense(1,'mage'),towers:[tower]});
-  assert.deepEqual(result.map(actor=>actor.key),index===1?['tower-2']:[],JSON.stringify(tower));
+  const result=battleActorPoses({...createDefense(1,'elf'),towers:[tower]});
+  assert.deepEqual(result.map(actor=>actor.key),[0,1,7,8].includes(index)?['tower-2']:[],JSON.stringify(tower));
+  if(result.length)assert.equal(result[0].model,index===1?'ballista':`base-${tower.kind}`);
  }
 });
 
@@ -105,4 +109,34 @@ test('a frozen piercing tower holds its unlaunched clip while the simulation clo
  const frozen=stepDefense({...state,freeze:1},.05);
  assert.ok(frozen.time>state.time);
  assert.deepEqual(pose(frozen,'tower-2'),before);
+});
+
+test('hero gait uses engine travel and retains the last movement heading after a vertical stop',()=>{
+ let state=actDefense(createDefense(1,'mage'),{type:'move',point:{x:440,y:120}});
+ for(let i=0;i<8;i++)state=stepDefense(state,.05);
+ const walking=pose(state);
+ assert.equal(walking.phase,'walk');assert.equal(walking.clip,'ian-walk');
+ assert.ok(Math.abs(walking.clipTime-(state.locomotion.hero.distance/64%1)*.8)<1e-10);
+ assert.ok(Math.abs(Math.abs(walking.heading)-Math.PI)<1e-10);
+ assert.deepEqual(pose({...state,time:state.time+100}),walking,'wall time does not change traveled gait');
+ for(let i=0;i<60;i++)state=stepDefense(state,.05);
+ assert.equal(state.heroPosition.y,120);assert.equal(pose(state).phase,'idle');
+ assert.equal(pose(state).heading,walking.heading);
+});
+
+test('following mercenary gait advances even when it reaches the moving formation target each tick',()=>{
+ let state=actDefense(createDefense(1,'barbarian'),{type:'hire',hero:'mage'});
+ state=actDefense(state,{type:'move',point:{x:450,y:355}});state=stepDefense(state,.01);
+ assert.equal(state.mercenaryPosition.x,state.heroPosition.x+38);
+ assert.ok(state.locomotion.mercenary.speed>.5);
+ assert.equal(pose(state,'merc').phase,'walk');
+ assert.ok(pose(state,'merc').clipTime>0);
+});
+
+test('wood knockback changes position without winding the authored walk clip backwards',()=>{
+ const initial={...combat('elf'),heroCooldown:99,enemies:[{...enemy(),speed:45,walkDistance:120,walkSpeed:45,knockVelocity:180}]};
+ const before=pose(initial,'enemy-100'),next=stepDefense(initial,.05),after=pose(next,'enemy-100');
+ assert.ok(next.enemies[0].progress<initial.enemies[0].progress);
+ assert.equal(next.enemies[0].walkDistance,120);assert.equal(after.clipTime,before.clipTime);
+ assert.equal(after.phase,'idle');assert.notDeepEqual(after.position,before.position);
 });

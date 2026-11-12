@@ -1,0 +1,2307 @@
+{
+  "generator": "tools/blender/build_riel_stop.py",
+  "command": "npm run models:riel-stop",
+  "source_walk_sha256": "6d4fc3507e5afe04c19f359f55b6e34815d031bfd1a6e4e3a27a4ff06710ffd6",
+  "source_cast_sha256": "0f0c0225ccdd325ed257474b55eb3466a21ac59eeebed9bbeb97c51569f8b44f",
+  "reference": "art-source/defense/atlases/ranged-motion.png",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      330
+    ],
+    "orthographic_scale": 6.8
+  },
+  "delivery_frame": {
+    "width": 192,
+    "height": 192,
+    "ground": [
+      96,
+      165
+    ],
+    "columns": 16,
+    "rows": 1
+  },
+  "duration_seconds": 0.24,
+  "samples_seconds": [
+    0.08,
+    0.2
+  ],
+  "entry_checks": [
+    {
+      "entry": 0,
+      "first_leg": "left-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    },
+    {
+      "entry": 1,
+      "first_leg": "left-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    },
+    {
+      "entry": 2,
+      "first_leg": "left-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    },
+    {
+      "entry": 3,
+      "first_leg": "left-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    },
+    {
+      "entry": 4,
+      "first_leg": "right-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    },
+    {
+      "entry": 5,
+      "first_leg": "right-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    },
+    {
+      "entry": 6,
+      "first_leg": "right-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    },
+    {
+      "entry": 7,
+      "first_leg": "right-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    }
+  ],
+  "files": [
+    {
+      "file": "art-source/defense/riel-stop.blend",
+      "bytes": 5372324,
+      "sha256": "a7abae8b34bfa1fbd1bba39755acc2b690d5740a02d8882c9608b2a77ea5c4ab"
+    },
+    {
+      "file": "public/defense/models/riel-stop.glb",
+      "bytes": 1325416,
+      "sha256": "e30db32c06a1bacef52e0cc6d16e07bc93258efd6648e6605d7f2b4e10aa8f29"
+    },
+    {
+      "file": "public/defense/models/riel-stop.png",
+      "bytes": 117846,
+      "sha256": "b2cee9d647139aa7265ed919a72cf13c9020101d095277b12e394e7e198ad2a8"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-0-0.png",
+      "bytes": 110997,
+      "sha256": "1427c9e1cf8cdb5610633791bd99aedfb83e06be88d3408f5f02c480a984889d"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-0-1.png",
+      "bytes": 110208,
+      "sha256": "9cb9d80aef05724bd185a169680833c079454cd8fd80fe5bd7bc1e476f49a7c5"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-1-0.png",
+      "bytes": 110209,
+      "sha256": "6a09254da69da36398f60efb01b0882e86d80338bb29f4b9e1525de420bc5c10"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-1-1.png",
+      "bytes": 109970,
+      "sha256": "0b3a99d4afcaeb716772148a591134ad8ad5a253fa597a668d7d1309788e37bc"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-2-0.png",
+      "bytes": 109413,
+      "sha256": "4fc2029ab11b485703f1afbc317db262e257d50a386e4417c989d4008ba765aa"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-2-1.png",
+      "bytes": 109919,
+      "sha256": "0a958be0e6b7baaa8d35100df0014dc0c95e3d971e366ee1ca4f81a31b07ab0e"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-3-0.png",
+      "bytes": 108204,
+      "sha256": "e7f08c4e17481b49c531ca0638bac526a82f00e5169a0ef7ce39a4134a5f36a8"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-3-1.png",
+      "bytes": 109667,
+      "sha256": "075fdd783b0cdaa61c20a2323fd6b8ba1ec5aeb42006e6bc8864325fe41c7397"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-4-0.png",
+      "bytes": 107915,
+      "sha256": "0158b9cc36ad23ea19a44b1190358adb25134e28c881edc767f009fa5c03ca54"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-4-1.png",
+      "bytes": 108785,
+      "sha256": "075071d717eb7b4b097e3d19fea0988c0aeede266c01f19a5c36c1cebe00c17b"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-5-0.png",
+      "bytes": 109077,
+      "sha256": "63c3f718590babcb951645bedaa50262850be930103f25aa5b004abf3b160bbf"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-5-1.png",
+      "bytes": 109446,
+      "sha256": "b891eccc9e54b2d7321f44d7f03eeb5dc9e666256ca82e2a9141188a24be4fd1"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-6-0.png",
+      "bytes": 109869,
+      "sha256": "99d0516fa09ddd9682d356ac6cba5b5ab0d53463993f9e5a7856bf7e0c235664"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-6-1.png",
+      "bytes": 109659,
+      "sha256": "273e849a59fe2974f65da3cd0cb8f8ae5a3eef1c284a38dbe9a21fb673f14cb1"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-7-0.png",
+      "bytes": 110375,
+      "sha256": "47b48b92abd6e1fa8ae258f0b5476f5774db6145b67469f37dab401ffb14d99b"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-0-7-1.png",
+      "bytes": 109822,
+      "sha256": "95314d3286f0cb307dfbd8c1d61035482b00f84f912453d544c1cee0fbc7eb6b"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-0-0.png",
+      "bytes": 117846,
+      "sha256": "b2cee9d647139aa7265ed919a72cf13c9020101d095277b12e394e7e198ad2a8"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-0-1.png",
+      "bytes": 117677,
+      "sha256": "4cab44fd8c1e5fb716e3e15945fb4d392670137006441b480f6bf6fa3dfa6eb0"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-1-0.png",
+      "bytes": 117828,
+      "sha256": "6ceb885b3bb8b9ec460dd414580320ff29a11e4e846ed0a962cdce15c902e0d0"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-1-1.png",
+      "bytes": 117692,
+      "sha256": "58fe40e81156fee6b26781d507d8c4ddcaf4bda15ae196cf6a035f70f9375464"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-2-0.png",
+      "bytes": 117675,
+      "sha256": "5d613f75b85d8a93f8e1ea3b122f3a144ef2789b72ca3b3b735b630c19a27544"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-2-1.png",
+      "bytes": 117599,
+      "sha256": "df61799729ac8210e5d9c376fdf85eda7b16a6cf2700a97cbb863f9f98370664"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-3-0.png",
+      "bytes": 117817,
+      "sha256": "b99a556ed17bd1ab6d073c91fbcff75cc15a2949772946e8852cf111ba58aa43"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-3-1.png",
+      "bytes": 117602,
+      "sha256": "589595d0f6332347d7c0728100fe8e0463e661998a646bcf989ff66164fd4088"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-4-0.png",
+      "bytes": 117870,
+      "sha256": "320fd78926b85a2f9a7a18af832fb0dcc80b344729810a7c066a21c57361935e"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-4-1.png",
+      "bytes": 117568,
+      "sha256": "f3a64222f9f2649a77a6ea391e39f93142cd05e338097ea3fc4a301d449f6b55"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-5-0.png",
+      "bytes": 117898,
+      "sha256": "841b7df7704f19e3c24485d35af29695ba748dd6ac5217755825cb61986a3256"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-5-1.png",
+      "bytes": 117637,
+      "sha256": "fe36e8a4f1fa0f25b38fd3fe9874169cde8701815bafdefa032da5606e70c7fa"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-6-0.png",
+      "bytes": 117924,
+      "sha256": "53d3a7d938c9682aea66197a737b5fe1c7360fdce6470622e5510baef70eddd6"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-6-1.png",
+      "bytes": 117697,
+      "sha256": "e963cc2b3268c9d6b5b68ebf3b67135d16fbf624829f620dd2cc10871c8c76bb"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-7-0.png",
+      "bytes": 117418,
+      "sha256": "4d390fcaa05d6907907421c29d1102b6bb876919c682369b9a42920380f84680"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-1-7-1.png",
+      "bytes": 117518,
+      "sha256": "4ee30b9a02ecc685c558951d0968012a1df4c5024c668042cca20262a2651f2d"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-0-0.png",
+      "bytes": 111816,
+      "sha256": "b483620764297e931139e6d64761473f8af47a866bc99b4f29731d577ddefdb6"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-0-1.png",
+      "bytes": 111579,
+      "sha256": "39a8d84d599b10d286cd204500c85687c6d3a11ec2e6f80220fad197cd35d5d5"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-1-0.png",
+      "bytes": 111710,
+      "sha256": "fd8dee8f9e2d88080a2b5158e92bd5e9a28b260589bf86b181e8a627b9ca6ebc"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-1-1.png",
+      "bytes": 111514,
+      "sha256": "e176c7f9723f366024005f25220cb268ea7544f01b60f24c88d8ee1ca98452a3"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-2-0.png",
+      "bytes": 111959,
+      "sha256": "eb4b56757ec65f4623a5f81cd527104fcce6aa58f6f42ff9a8b3d2348b7784a8"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-2-1.png",
+      "bytes": 111560,
+      "sha256": "75eba1c4e01cc5d80caea8de93af581eadff24db6e1227c105f490e140c0ad81"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-3-0.png",
+      "bytes": 111530,
+      "sha256": "295926a9295a9cc4cda978566bbe4d01a7d01bc54b86fbc24bf43b5145d453be"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-3-1.png",
+      "bytes": 111374,
+      "sha256": "1f1364b177125900d5d0f998fd757aad3a1bf03f0985cbce98e7a82d8e9964ac"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-4-0.png",
+      "bytes": 111950,
+      "sha256": "2800f675cda3d658c1c71a52207f7d0512bffc86ff0134cd1ee7165b68c0462d"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-4-1.png",
+      "bytes": 111646,
+      "sha256": "06761c5035e3e017723c4b8f897894644e9c00dfe4f621efe9288038ec15904c"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-5-0.png",
+      "bytes": 111695,
+      "sha256": "36c2fbf14a2e1eaf6c4cc8bf7b7797a353d5350b36c7dcbd37d71b91518ff1b3"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-5-1.png",
+      "bytes": 111513,
+      "sha256": "7d4da39c4dc5cfe8d92490bb92ce7403e487a6cb0b3defeb0a04cf13156b5f78"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-6-0.png",
+      "bytes": 111487,
+      "sha256": "6b86a41d2d1c2b893caf1daeeac126188312d8348927c347a5c25bea9d3afcd5"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-6-1.png",
+      "bytes": 111560,
+      "sha256": "3c0a4dcc6fc18567b59926bdecf6a78cfb5a7cbb668652542e670cb1cc32ed8b"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-7-0.png",
+      "bytes": 111285,
+      "sha256": "49488f800abe7ff67e7c11ce9bf1a3ed6046cabd47e9a242b3bf71a19d2a29af"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-2-7-1.png",
+      "bytes": 111420,
+      "sha256": "90773316678982338ce74ca3d0cd5dbe5e0a86568ba3a2ec73a749769a50424b"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-0-0.png",
+      "bytes": 111063,
+      "sha256": "67c39426dfbabcd80ee7ee7f041252ee2e289d6226ad9e77399ae5f44132db58"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-0-1.png",
+      "bytes": 110666,
+      "sha256": "dd899b0f9b40ab699f3185b15cc07098171a084dbc8e4bef57ed83fb9a8cd6ce"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-1-0.png",
+      "bytes": 111005,
+      "sha256": "e24124afb92495186d9194ea3c312f01035f9d13a49f6d968f346e1cb3a2b777"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-1-1.png",
+      "bytes": 110811,
+      "sha256": "7d29a9f436a3004ed2b450b94edca1d1aedc8a7ee6edc3cbfa14226cf5979f73"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-2-0.png",
+      "bytes": 111073,
+      "sha256": "0a84539b472f6711ec4950b307c53f9bbfc95343200d3821547f4eddb7ff97b5"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-2-1.png",
+      "bytes": 110702,
+      "sha256": "aae387727a18f27945d35ce0d2cd82f0c8773f477f258554702e181d68b46634"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-3-0.png",
+      "bytes": 110944,
+      "sha256": "42ba68df92a63765c483e9ceb0a9b2d3bbbf48d4f273553a1d5f52c4b74d33ac"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-3-1.png",
+      "bytes": 110687,
+      "sha256": "24650fa783bad11db124ffa776b31a600c08926381b816e7d33ea8988f831fd4"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-4-0.png",
+      "bytes": 111206,
+      "sha256": "213687185fabeda6194da95727441c94d4804e8b6630e061c80a40a2a20134d2"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-4-1.png",
+      "bytes": 111074,
+      "sha256": "f3500cbf194465c754a45b646b6548a7979797cc9150667927dd6f4ba1faddb2"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-5-0.png",
+      "bytes": 111086,
+      "sha256": "15c3dc14a8ccf0149609053f1bd3c80706c64e07ab45b55f7bb927815eefd3b3"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-5-1.png",
+      "bytes": 110844,
+      "sha256": "910c727adb22d437a9e625b4d3e4c966913b7bddb720f5ced077f3d3869dd2a8"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-6-0.png",
+      "bytes": 110704,
+      "sha256": "19f1ef1d3eff1769f207d93d8d8ffaa3fe439fbabb6512c864dec99fb493433b"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-6-1.png",
+      "bytes": 110758,
+      "sha256": "34129001323dbb16ae1bdff64169059124a629029c1e4aec0e6807ddfc569a9b"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-7-0.png",
+      "bytes": 110060,
+      "sha256": "61c8f8b2d592e0c08f40b365a9b041e9422e2b2faba18dce4a4b91e5a518a3b2"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-3-7-1.png",
+      "bytes": 110550,
+      "sha256": "7365c4789321788856f6f179cdf794d56c5a291ea1a30a7cd9300d055089fb8f"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-0-0.png",
+      "bytes": 110236,
+      "sha256": "4e933f993fdab27503997fa4df78ede255140cfaac11e508e6be04d5f5b803e6"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-0-1.png",
+      "bytes": 109159,
+      "sha256": "622dd4768cb4d9ff1ca2a094d58835c2cffcd3e604958bafc124c1145a7bc9e7"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-1-0.png",
+      "bytes": 109579,
+      "sha256": "ad8e7e33f8f425badb90ca192384dff10308c410af7751b4edf7436ecc676d95"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-1-1.png",
+      "bytes": 109061,
+      "sha256": "42571f468ae4d4e192107c1f403747b8ce971cf5b5f3e89ede85419773e0b58f"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-2-0.png",
+      "bytes": 108711,
+      "sha256": "dc94c4ff6ce8b4a377862edaabd7b2067e330e7fb56be1eb4b6d8a18391178de"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-2-1.png",
+      "bytes": 108885,
+      "sha256": "fe5f545b9571f134db6562b6744ced9e425fffed04f139bfcd0c43718ab149b7"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-3-0.png",
+      "bytes": 108020,
+      "sha256": "c0c880c7630ffb93a83c5ec8f5a261c43e96c6e65193c4e22521c51f2bee1969"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-3-1.png",
+      "bytes": 108609,
+      "sha256": "25ba0551fb95610febe756a2b96f6868149f7c75f88da1410ebce47e1c56cc61"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-4-0.png",
+      "bytes": 106754,
+      "sha256": "8efa3dc6827b1319708014f8dec93435e27f101ee6c1e355664c575f3bd14b32"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-4-1.png",
+      "bytes": 108617,
+      "sha256": "ba2764a591610fab8eed59275eb2f5541d0b1dfcba4634ed5790c4733ee40b5f"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-5-0.png",
+      "bytes": 107390,
+      "sha256": "c802ae86fca427906f24cb26bd5c6d1230b78c7641449903244f9ee53073d5e9"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-5-1.png",
+      "bytes": 108856,
+      "sha256": "80523a171a8599b269336a22e34412f37b26425b68cb9c680e29eec358af0822"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-6-0.png",
+      "bytes": 108711,
+      "sha256": "ac9f83ba81adf7d865a4c739deaabe5fcfddc76077c43eec44ffd59a80b1cde6"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-6-1.png",
+      "bytes": 109193,
+      "sha256": "fbd7c8cfc49af1ad402b220a5f98bb3550d17ed476845f954c49bd0c7ed313d7"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-7-0.png",
+      "bytes": 109246,
+      "sha256": "c0d944a4c477bd01436eb957595d5bc1245e5d5b78986f9d484e3a628f75ddbd"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-4-7-1.png",
+      "bytes": 109203,
+      "sha256": "1719203c01e0eb4e5ac016aad7a317ae894e86deeee16f32aa11f4cddf9f45c6"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-0-0.png",
+      "bytes": 108532,
+      "sha256": "ca77befc638e488e04aedbd08e010a4d3e62cd92349790e4d299f5d60fa58643"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-0-1.png",
+      "bytes": 109094,
+      "sha256": "d534bc5983ebea0493f90b882ce6a1cebb4143686ecd5343568bc011d0b4c21d"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-1-0.png",
+      "bytes": 108717,
+      "sha256": "c627b967beeda2293d7d1a376d8f6b609d1df02bd8d66304c0d0f7c8941323f2"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-1-1.png",
+      "bytes": 108852,
+      "sha256": "2007082c0091db6989895e4d02645ed34be53863f6ed199adc1bedb82f76882d"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-2-0.png",
+      "bytes": 109007,
+      "sha256": "466c036704c9c2f9386ab7a4de4052673525fa129c453c28e8fc8f23c7d8068f"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-2-1.png",
+      "bytes": 108956,
+      "sha256": "034605c316e998e0e925faa48b8fb12b7ae77c93a0deb650545e3be9db3c9b39"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-3-0.png",
+      "bytes": 108698,
+      "sha256": "770470d4d595405414b33af772535a06d869ae191e637554401c7b79c2731e7e"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-3-1.png",
+      "bytes": 108937,
+      "sha256": "69e30a55ff9adbb717d91e55b4d0db31cf6e963214445eb2515f8e111a1ddce8"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-4-0.png",
+      "bytes": 108282,
+      "sha256": "14d341180873a1e0662289d6a7d30b837f9bfd93ded1d722dcf3bdb9a90d0cf3"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-4-1.png",
+      "bytes": 108607,
+      "sha256": "66c08fd0eb28a66b927ebd11a7091f0ee4808cf61118f98703c4b9f32da7be44"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-5-0.png",
+      "bytes": 108627,
+      "sha256": "0981efe4ba9ed0b3843d853d4ff552539fa37b44a3a042ab342b26ebbb5cdd13"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-5-1.png",
+      "bytes": 108776,
+      "sha256": "ab4e2870dd66e4977767fcf0bb0f196ddf851bf6c5a3a5a8c32558eb8f8f03dc"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-6-0.png",
+      "bytes": 109294,
+      "sha256": "387e0bafe07f4bc3d58c0f0d31996834ee912f7bbede2a9e7eb68f6134d5e35c"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-6-1.png",
+      "bytes": 108900,
+      "sha256": "3c36db42d1f55a9745fa52e073fb3c13ef3fc3887fc5531f06c6b25d6e5cc008"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-7-0.png",
+      "bytes": 109539,
+      "sha256": "dcfb39c6928e1d5af776756f3c5198c942afb806c5adcd34ac2d5df2dac4b0e8"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-5-7-1.png",
+      "bytes": 109053,
+      "sha256": "0b0ada2118b79bb32c7076ceb119d18353ddb98591fd4ab98480b2a4b192c714"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-0-0.png",
+      "bytes": 102440,
+      "sha256": "b529eff64cee7a5dce2dd0d419d1b47f6d56e96869a64939b699be81234f0da4"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-0-1.png",
+      "bytes": 102854,
+      "sha256": "8d042f45f66c712e9287ee2cc7a89521ccc52a3242881c57299a2974e3d00420"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-1-0.png",
+      "bytes": 102380,
+      "sha256": "679ab0915c446c44065dd20e77ea2cf099b54ead94bc06a13c6dd215756c27b6"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-1-1.png",
+      "bytes": 102857,
+      "sha256": "68a702ff59093ceabf6f35132d9d8db5942251f1d2316a32c554e2a1016fc05d"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-2-0.png",
+      "bytes": 102342,
+      "sha256": "439f09d4a8b6f99ee1f8f8f9bd11b3857cf372df35dc52c97d2da3319805a737"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-2-1.png",
+      "bytes": 102673,
+      "sha256": "d1be6f5beb70f7cc4e834c79df0cd0d178be9ce8c7e1ec4d96382d2505b64bac"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-3-0.png",
+      "bytes": 102490,
+      "sha256": "ed5ecf2351e7d95c8943ba7fa7331a4cc3faa38b3799e96caf46831f32e408d6"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-3-1.png",
+      "bytes": 102870,
+      "sha256": "b982f8747c59c9def78f89809c4ebd65ed0a1f1107b8956d9cee22bf42235454"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-4-0.png",
+      "bytes": 101982,
+      "sha256": "8fc4425866813016567aa92f6ddf7466e364c0e57e6328102a37297ca61c33dd"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-4-1.png",
+      "bytes": 102483,
+      "sha256": "d2d2d5d2e02b14a79c07a1101be7b8c9952efb2a2afd1780145f39c814395c59"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-5-0.png",
+      "bytes": 102360,
+      "sha256": "efcf75430106ffb5c3b227d18a03383ec337356c34aa169e6f6de210227768ea"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-5-1.png",
+      "bytes": 102377,
+      "sha256": "164b79b6c5012a256b40eedd6b07a70c0b46c32dbab4c1349eb8239649db4786"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-6-0.png",
+      "bytes": 102865,
+      "sha256": "576f013b8610165436b2efe2176fea2a309c60c0c78148fa16f5438a0b707186"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-6-1.png",
+      "bytes": 102498,
+      "sha256": "e15c79dff536f0cee15bd9cfc3a44c75e6c2a7d8b87974327f4fe2c73df60c81"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-7-0.png",
+      "bytes": 103099,
+      "sha256": "78817d0357e6fde9a0e47b977dac215f67ce8177aa02035f7ce4d6ef3703952f"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-6-7-1.png",
+      "bytes": 102618,
+      "sha256": "0cd264f14d2e6a21706a459a3835b7ef5208ad8950ef61d2cfd6b1b8d902b8fa"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-0-0.png",
+      "bytes": 101691,
+      "sha256": "0c61cd697a9930a21f382b0387ae1a582601d3ac1771955777b19ba01cd8ee78"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-0-1.png",
+      "bytes": 102681,
+      "sha256": "f5fc12427d8b825ccdd0818f5562aeeccd389f81df3001549566d6d3c5adb369"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-1-0.png",
+      "bytes": 102115,
+      "sha256": "f7c495d490f862b21a9f06cf83674eb729cc40a1fec2588763caa9b070f842f0"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-1-1.png",
+      "bytes": 102757,
+      "sha256": "1fe17252ea0f6762618e078880d382828002cb87781925077acf1eb751ec6dac"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-2-0.png",
+      "bytes": 101973,
+      "sha256": "cfe30d2af22c1b30f3866984ccf47a78d4d40fc663d4985b5f67568de5e838eb"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-2-1.png",
+      "bytes": 102719,
+      "sha256": "df5079ecda7c3c0029ad798c191269c562aee94c4528bb5f211ac948baf4a86b"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-3-0.png",
+      "bytes": 102092,
+      "sha256": "ef5d11fc82a4a683e918d7b9bd20ee5f465bebab2703a5464d06117cd5187c50"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-3-1.png",
+      "bytes": 102883,
+      "sha256": "a035901585b3d439b835b20d49b71601fe1d3e081766de6cff6d03a657570445"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-4-0.png",
+      "bytes": 101537,
+      "sha256": "817fa82aca147e83548696b3f1896f5dfda28aa8ae5301c3de95e62297367959"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-4-1.png",
+      "bytes": 102027,
+      "sha256": "5c0186708d29e08d097c4e7e377b36165b9413997ec6c3c611141f38d7bcefc8"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-5-0.png",
+      "bytes": 101898,
+      "sha256": "7da722d7806144f25d5b03ecc9b628cd400ff135d4d73429e05de17294e2d9c7"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-5-1.png",
+      "bytes": 102022,
+      "sha256": "550d2f5d7a27f1c429a4c122c1b6f944a67c954b910ea8d0f12c079d07f94f41"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-6-0.png",
+      "bytes": 102595,
+      "sha256": "c7e1e1fbfae7dd09e2449a7038dda81b33ce5fb9f3039e07c71e46580072eea1"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-6-1.png",
+      "bytes": 101998,
+      "sha256": "bddf89ce7131beff3f3989ece8550a4e8a942a674023ce4c776f286ed3627f36"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-7-0.png",
+      "bytes": 102891,
+      "sha256": "c03af87e2a872e0bf9e37e835691e79fbe532ee74288c803e8bacd684333d532"
+    },
+    {
+      "file": "art-source/defense/riel-stop-frames/riel-stop-7-7-1.png",
+      "bytes": 102200,
+      "sha256": "0a2d1b17d80d26862c4c2a17abb18bde29311c3ce0460a5890e1635ac1a5ea64"
+    },
+    {
+      "file": "public/defense/models/riel-stop-0-atlas.webp",
+      "bytes": 63876,
+      "sha256": "4bec852cced6f0f2c18ff32d5ea13dbba9390753ccc04df767dbe5b33cac9723"
+    },
+    {
+      "file": "public/defense/models/riel-stop-1-atlas.webp",
+      "bytes": 68492,
+      "sha256": "604eda846b93cab9d88f03f6770b3629f419a020ae13946c61ca4a3683b66c53"
+    },
+    {
+      "file": "public/defense/models/riel-stop-2-atlas.webp",
+      "bytes": 52576,
+      "sha256": "5762ab70acc05ae89c82b80c9de948e09823c03dbfb7dff5ad1fc515082ca1da"
+    },
+    {
+      "file": "public/defense/models/riel-stop-3-atlas.webp",
+      "bytes": 52536,
+      "sha256": "c4152773a85340e1dbfe302305831baee76839fc866ac5dfdf8b40d2d180d74e"
+    },
+    {
+      "file": "public/defense/models/riel-stop-4-atlas.webp",
+      "bytes": 63226,
+      "sha256": "cd7b8f92e7987de7a522c368034c3939d5c6a9577326ae1032c3b313348cc485"
+    },
+    {
+      "file": "public/defense/models/riel-stop-5-atlas.webp",
+      "bytes": 58488,
+      "sha256": "2a2060ec412b5b397040738e1bd31c30e2c7aa8e840001d8ae6de45612f9ba04"
+    },
+    {
+      "file": "public/defense/models/riel-stop-6-atlas.webp",
+      "bytes": 41122,
+      "sha256": "fe9c0e004575441fd58b6d06103f508a672fd3c705f6e723dcb511754d12c223"
+    },
+    {
+      "file": "public/defense/models/riel-stop-7-atlas.webp",
+      "bytes": 42846,
+      "sha256": "3701a397f480500492fc27bd3fadb1751c233da5fdc02fff08c21db13aab6edc"
+    }
+  ],
+  "clips": [
+    {
+      "name": "riel-stop-0",
+      "entry": 0,
+      "duration": 0.24
+    },
+    {
+      "name": "riel-stop-1",
+      "entry": 1,
+      "duration": 0.24
+    },
+    {
+      "name": "riel-stop-2",
+      "entry": 2,
+      "duration": 0.24
+    },
+    {
+      "name": "riel-stop-3",
+      "entry": 3,
+      "duration": 0.24
+    },
+    {
+      "name": "riel-stop-4",
+      "entry": 4,
+      "duration": 0.24
+    },
+    {
+      "name": "riel-stop-5",
+      "entry": 5,
+      "duration": 0.24
+    },
+    {
+      "name": "riel-stop-6",
+      "entry": 6,
+      "duration": 0.24
+    },
+    {
+      "name": "riel-stop-7",
+      "entry": 7,
+      "duration": 0.24
+    }
+  ],
+  "directions": [
+    {
+      "direction": 0,
+      "yaw": 0.960070013999939,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            149.42543029785156,
+            138.06842041015625,
+            297.6001281738281,
+            337.28759765625
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            149.42544555664062,
+            138.01528930664062,
+            297.6001281738281,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            149.30047607421875,
+            137.3448028564453,
+            297.6001281738281,
+            336.0531005859375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            149.4110870361328,
+            137.9429168701172,
+            297.6001281738281,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            149.01361083984375,
+            136.483154296875,
+            297.6001281738281,
+            335.5417785644531
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            149.37664794921875,
+            137.8567657470703,
+            297.6001281738281,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            148.74789428710938,
+            137.3448028564453,
+            297.6001281738281,
+            336.0531005859375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            149.3424835205078,
+            137.9429168701172,
+            297.6001281738281,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            148.64407348632812,
+            139.4318389892578,
+            297.6001281738281,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            149.32839965820312,
+            138.80245971679688,
+            297.6001281738281,
+            337.28759765625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            148.74789428710938,
+            138.23699951171875,
+            297.6001281738281,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            149.34246826171875,
+            138.68295288085938,
+            297.6001281738281,
+            337.28759765625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            149.01361083984375,
+            137.18019104003906,
+            297.6001281738281,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            149.37664794921875,
+            138.57728576660156,
+            297.6001281738281,
+            337.28759765625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            149.30047607421875,
+            138.23699951171875,
+            297.6001281738281,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            149.4110870361328,
+            138.68295288085938,
+            297.6001281738281,
+            337.28759765625
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 1,
+      "yaw": -0.23171095550060272,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            133.2087860107422,
+            136.48329162597656,
+            266.2391052246094,
+            346.5230407714844
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            132.53668212890625,
+            136.24862670898438,
+            265.5669860839844,
+            339.52117919921875
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            132.6129608154297,
+            135.61123657226562,
+            265.68951416015625,
+            344.12017822265625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            132.47640991210938,
+            136.16140747070312,
+            265.51202392578125,
+            339.52117919921875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            132.2791748046875,
+            134.6881103515625,
+            265.46185302734375,
+            341.7173156738281
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            132.44090270996094,
+            136.06912231445312,
+            265.4892883300781,
+            339.52117919921875
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            132.4084930419922,
+            135.61123657226562,
+            265.68951416015625,
+            339.314453125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            132.45101928710938,
+            136.16140747070312,
+            265.51202392578125,
+            339.52117919921875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            129.73927307128906,
+            136.98776245117188,
+            263.0587158203125,
+            344.326904296875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            130.66458129882812,
+            136.53988647460938,
+            263.73077392578125,
+            341.7173156738281
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.3272705078125,
+            135.94134521484375,
+            263.6082763671875,
+            341.9240417480469
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            130.72474670410156,
+            136.43524169921875,
+            263.7857666015625,
+            341.7173156738281
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.65322875976562,
+            134.94601440429688,
+            263.8359375,
+            339.52117919921875
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            130.76016235351562,
+            136.33570861816406,
+            263.80853271484375,
+            341.7173156738281
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.53173828125,
+            135.94134521484375,
+            263.6082763671875,
+            337.1183166503906
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            130.75013732910156,
+            136.43524169921875,
+            263.7857666015625,
+            341.7173156738281
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 2,
+      "yaw": -0.610725998878479,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            145.673828125,
+            140.9710235595703,
+            244.34915161132812,
+            348.7455749511719
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            144.9503936767578,
+            140.6297607421875,
+            243.62571716308594,
+            340.4279479980469
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            145.082275390625,
+            140.01177978515625,
+            243.757568359375,
+            346.1591491699219
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            144.8912353515625,
+            140.53384399414062,
+            243.56655883789062,
+            339.75738525390625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            144.8372344970703,
+            139.05255126953125,
+            243.51254272460938,
+            343.5727233886719
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            144.8667449951172,
+            140.4379119873047,
+            243.5420379638672,
+            339.0868225097656
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            145.082275390625,
+            140.01177978515625,
+            243.757568359375,
+            340.9862976074219
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            144.8912353515625,
+            140.53384399414062,
+            243.56655883789062,
+            338.416259765625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            142.25048828125,
+            140.9710235595703,
+            240.92581176757812,
+            340.6489562988281
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            142.97393798828125,
+            140.6297607421875,
+            241.64923095703125,
+            343.5727233886719
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            142.84205627441406,
+            140.01177978515625,
+            241.51736450195312,
+            338.0625305175781
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            143.0330810546875,
+            140.53384399414062,
+            241.70840454101562,
+            343.5727233886719
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            143.08709716796875,
+            139.05255126953125,
+            241.76239013671875,
+            337.3410339355469
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            143.05758666992188,
+            140.4379119873047,
+            241.73291015625,
+            343.5727233886719
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            142.84207153320312,
+            140.01177978515625,
+            241.51736450195312,
+            338.5229187011719
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            143.0330810546875,
+            140.53384399414062,
+            241.70840454101562,
+            343.5727233886719
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 3,
+      "yaw": -0.9897410869598389,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            148.26597595214844,
+            136.9877471923828,
+            253.97186279296875,
+            351.848876953125
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            147.5938720703125,
+            136.53988647460938,
+            253.29977416992188,
+            343.8031921386719
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            147.71640014648438,
+            135.94134521484375,
+            253.468505859375,
+            349.4460144042969
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            147.53892517089844,
+            136.43524169921875,
+            253.25010681152344,
+            343.18023681640625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            147.48873901367188,
+            134.94601440429688,
+            253.34698486328125,
+            347.04315185546875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            147.51614379882812,
+            136.33570861816406,
+            253.24008178710938,
+            342.5572509765625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            147.71640014648438,
+            135.94134521484375,
+            253.6729736328125,
+            344.6402893066406
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            147.53892517089844,
+            136.43524169921875,
+            253.27548217773438,
+            341.9342956542969
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            145.08558654785156,
+            136.48329162597656,
+            251.08056640625,
+            341.31134033203125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            145.7576904296875,
+            136.24862670898438,
+            251.49945068359375,
+            347.04315185546875
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            145.63516235351562,
+            135.61123657226562,
+            251.59173583984375,
+            340.6998291015625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            145.81263732910156,
+            136.16140747070312,
+            251.54922485351562,
+            347.04315185546875
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            145.86280822753906,
+            134.6881103515625,
+            251.7210693359375,
+            340.81146240234375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            145.8354034423828,
+            136.06910705566406,
+            251.559326171875,
+            347.04315185546875
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            145.63516235351562,
+            135.61123657226562,
+            251.3872833251953,
+            341.9457702636719
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            145.81263732910156,
+            136.16140747070312,
+            251.52383422851562,
+            347.04315185546875
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 4,
+      "yaw": -2.1815226078033447,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            86.40010833740234,
+            139.4318389892578,
+            234.57481384277344,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            86.40011596679688,
+            138.80245971679688,
+            234.57481384277344,
+            337.2875671386719
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            86.40011596679688,
+            138.23699951171875,
+            234.69976806640625,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            86.40010833740234,
+            138.68295288085938,
+            234.58914184570312,
+            337.2875671386719
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            86.40010833740234,
+            137.18019104003906,
+            234.9866180419922,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            86.40010833740234,
+            138.57728576660156,
+            234.62359619140625,
+            337.28759765625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            86.40011596679688,
+            138.23699951171875,
+            235.2523193359375,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            86.40010833740234,
+            138.68295288085938,
+            234.6577606201172,
+            337.28759765625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            86.40010833740234,
+            138.0684356689453,
+            235.35614013671875,
+            337.28759765625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            86.40010833740234,
+            138.01528930664062,
+            234.67184448242188,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            86.40011596679688,
+            137.3448028564453,
+            235.2523193359375,
+            336.0531005859375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            86.40010833740234,
+            137.9429168701172,
+            234.6577606201172,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            86.40011596679688,
+            136.483154296875,
+            234.9866180419922,
+            335.5417785644531
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            86.40011596679688,
+            137.8567657470703,
+            234.62359619140625,
+            341.7734680175781
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            86.40011596679688,
+            137.3448028564453,
+            234.69976806640625,
+            336.0531005859375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            86.40010833740234,
+            137.9429168701172,
+            234.58914184570312,
+            341.7734680175781
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 5,
+      "yaw": 2.909881591796875,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            117.76114654541016,
+            145.29331970214844,
+            250.7914581298828,
+            333.88055419921875
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            118.43323516845703,
+            144.84544372558594,
+            251.4635467529297,
+            337.12054443359375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            118.31072998046875,
+            144.24691772460938,
+            251.38726806640625,
+            332.52154541015625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            118.48820495605469,
+            144.7407989501953,
+            251.5238037109375,
+            337.12054443359375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            118.53836059570312,
+            143.2515869140625,
+            251.72103881835938,
+            334.92437744140625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            118.5109634399414,
+            144.6412811279297,
+            251.55931091308594,
+            337.12054443359375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            118.31072998046875,
+            144.24691772460938,
+            251.5917205810547,
+            337.3272399902344
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            118.48820495605469,
+            144.7407989501953,
+            251.5491943359375,
+            337.12054443359375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            120.94154357910156,
+            144.78884887695312,
+            254.2609405517578,
+            332.3148193359375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            120.26943969726562,
+            144.55419921875,
+            253.33563232421875,
+            334.92437744140625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            120.39195251464844,
+            143.91677856445312,
+            253.67294311523438,
+            334.7176818847656
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            120.2144775390625,
+            144.46697998046875,
+            253.2754669189453,
+            334.92437744140625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            120.164306640625,
+            142.99368286132812,
+            253.34698486328125,
+            337.12054443359375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            120.19172668457031,
+            144.3746795654297,
+            253.24005126953125,
+            334.92437744140625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            120.39195251464844,
+            143.91677856445312,
+            253.46847534179688,
+            339.5234069824219
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            120.2144775390625,
+            144.46697998046875,
+            253.25009155273438,
+            334.92437744140625
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 6,
+      "yaw": 2.5308666229248047,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            139.65109252929688,
+            145.674072265625,
+            238.32638549804688,
+            335.4800109863281
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            140.37452697753906,
+            145.33277893066406,
+            239.04983520507812,
+            338.6247863769531
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            140.24264526367188,
+            144.71484375,
+            238.91796875,
+            333.5749816894531
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            140.43368530273438,
+            145.23684692382812,
+            239.10897827148438,
+            338.6247863769531
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            140.48768615722656,
+            143.75559997558594,
+            239.16299438476562,
+            332.3930969238281
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            140.4581756591797,
+            145.14093017578125,
+            239.1334991455078,
+            338.6247863769531
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            140.24264526367188,
+            144.71484375,
+            238.91796875,
+            333.1145935058594
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            140.43368530273438,
+            145.23684692382812,
+            239.10897827148438,
+            338.6247863769531
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            143.07443237304688,
+            145.674072265625,
+            241.74972534179688,
+            333.45196533203125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            142.3509979248047,
+            145.33277893066406,
+            241.02630615234375,
+            332.79779052734375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            142.4828643798828,
+            144.71481323242188,
+            241.15818786621094,
+            336.0383605957031
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            142.29183959960938,
+            145.23684692382812,
+            240.96713256835938,
+            333.46832275390625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            142.23782348632812,
+            143.75559997558594,
+            240.91314697265625,
+            338.6247863769531
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            142.267333984375,
+            145.14096069335938,
+            240.94265747070312,
+            334.1388854980469
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            142.4828643798828,
+            144.71481323242188,
+            241.15817260742188,
+            341.2112121582031
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            142.29183959960938,
+            145.23684692382812,
+            240.96713256835938,
+            334.8094482421875
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 7,
+      "yaw": 2.1518516540527344,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.02838134765625,
+            140.50172424316406,
+            235.73423767089844,
+            339.2064208984375
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            130.70046997070312,
+            140.26705932617188,
+            236.40634155273438,
+            342.4463806152344
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.53172302246094,
+            139.62966918945312,
+            236.28382873535156,
+            337.3489990234375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            130.7501220703125,
+            140.17984008789062,
+            236.4613037109375,
+            342.4463806152344
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.65322875976562,
+            138.70655822753906,
+            236.511474609375,
+            336.2146911621094
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            130.76014709472656,
+            140.08753967285156,
+            236.4840545654297,
+            342.4463806152344
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.3272705078125,
+            139.62966918945312,
+            236.28382873535156,
+            336.1030578613281
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            130.7247314453125,
+            140.17984008789062,
+            236.4613037109375,
+            342.4463806152344
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            132.91966247558594,
+            141.00619506835938,
+            238.91464233398438,
+            337.6406555175781
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            132.50076293945312,
+            140.55831909179688,
+            238.24252319335938,
+            336.7145690917969
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            132.4084930419922,
+            139.95980834960938,
+            238.36505126953125,
+            340.04351806640625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            132.45101928710938,
+            140.45367431640625,
+            238.1875762939453,
+            337.3375244140625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            132.2791748046875,
+            138.96446228027344,
+            238.1374053955078,
+            342.4463806152344
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            132.44090270996094,
+            140.35414123535156,
+            238.16482543945312,
+            337.9604797363281
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            132.61294555664062,
+            139.95980834960938,
+            238.36505126953125,
+            344.8492431640625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            132.47640991210938,
+            140.45367431640625,
+            238.1875762939453,
+            338.5834655761719
+          ]
+        }
+      ]
+    }
+  ],
+  "fps": 100,
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 32
+  },
+  "display_scale": 1.406896551724138,
+  "reference_sha256": "444644e358d8312d72c9192237dbe1e662338e5f287138e54639d02eb283f28c",
+  "generator_sha256": "f631ba5122299c8911af5024936e78ecf70a72ac9ece66823bbb40dc50d3b436",
+  "runtime": {
+    "mesh_objects": 55,
+    "triangles": 16734,
+    "materials": 14
+  }
+}

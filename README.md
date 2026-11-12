@@ -11,14 +11,23 @@ Node.js 22.12 이상에서 `npm ci`, `npm run dev`로 실행합니다. 기본 �
 | `/` | 아르카나 전용 타이틀 → 마을 → 동료/성장/원정 → 전투 |
 | `/arcade.html` | 보존한 기존 교육 미니게임 허브 |
 | `/model-lab.html` | 개발용 3D 모델·동작 검토 작업실 |
+| `/frontier.html` | 실시간 3D 변경 전장: 성문 방어·분대 지휘·수정 원정 |
+| `/rush.html` | **아르카나 러시** 시제품: 영웅 직접 조작 + 탑 건설 웨이브 방어 ([설명](docs/rush/README.md) · [엔진 조사](docs/rush/engine-research-2026-11.md) · [1시간 루프](docs/rush/loop.md)) |
 | `npm test` | 게임 규칙·캠페인·저장·모바일 입력 등 검증 |
+| `npm run smoke:rush` | 러시 시제품 브라우저 점검(데스크톱·모바일 가로 터치) |
 | `npm run build` | `dist/` 웹 빌드: 아르카나와 별도 기존 허브·작업실 |
 | `npm run build:mobile` | `dist-mobile/` 아르카나 전용 빌드 |
 | `npm run android:debug` | 아르카나 전용 웹 동기화 후 Android 디버그 APK |
 
-Android 설치판은 미니게임 진입점·코드와 제작 작업실용 GLB를 포함하지 않습니다. 전투 지형과 카르·브론·관통 석궁 Lv2·나무 병사는 같은 Three.js 장면에서 실시간 3D로 표시합니다. 나머지 유닛·전투 효과와 로딩 실패 시 대체 표현은 기존 스프라이트/SVG를 사용합니다. 새 인간 창방패병은 `/model-lab.html?model=human-guard`에서 호흡·보행·찌르기를 검토할 수 있는 제작 시제품입니다. [이번 모델링·전투 연결과 검증](docs/arcana-battle-models-20261112.md) · [Android 빌드·설치 안내](docs/android-install.md).
+원정은 실제 3D 지형과 이안·카르·브론, 기본 타워 3종·관통 석궁 Lv2·나무 병사의 실시간 모델을 같은 장면에 표시합니다. 나머지 유닛과 효과는 기존 스프라이트/SVG를 사용합니다. 변경 전장과 러시의 독립 3D 플레이, 군단 방어도 함께 유지합니다. 모드별 저장·성장·보상은 기존 경계를 따릅니다.
 
-[전체 게임 구성도와 계획](docs/arcana-full-game-plan-20261111.html) · [분야별 기획·개발 척도](docs/arcana-discipline-scorecard-20261111.md) · [최근 모델링·전투·운영 작업](docs/arcana-production-20261111.md) · [프로젝트 통합 기준과 브랜치](docs/arcana-project-direction.md) · [3D 전장과 모델링 방향](docs/arcana-3d-world-direction.md) · [기본 게임 규칙 v1 — 현재 규칙·설계 결정·적용 순서](docs/arcana-game-rules-v1.md) · [적·보스 모델링과 전투 연출 설계](docs/arcana-enemy-design/README.md)
+작업실의 기존 93개 모델과 새 인간 창방패병 등 5개 시제품을 함께 보존했습니다. `/model-lab.html?model=human-guard`에서 호흡·보행·찌르기를 확인할 수 있습니다. Android 웹 패키지에는 실제 전투 모델을 포함하고 제작 작업실 전용 GLB는 제외합니다. [3D 복구·통합 기록](docs/arcana-3d-recovery-20261112.md) · [Android 빌드·설치 안내](docs/android-install.md).
+
+[기본 게임 규칙 v1 — 현재 규칙·설계 결정·적용 순서](docs/arcana-game-rules-v1.md) · [적·보스 모델링과 전투 연출 설계](docs/arcana-enemy-design/README.md)
+
+## 군단 방어
+
+마을 상단 **군단 방어**에서 배치·소환 전용 자동 전투를 플레이할 수 있습니다. 병종4종, 세 진입로, 네 번의 습격과 보스, 최대 동시 적80을 지원합니다. [규칙·실제 화면·검증](docs/arcana-legion/README.md)을 참고하세요.
 
 ## 현재 게임
 

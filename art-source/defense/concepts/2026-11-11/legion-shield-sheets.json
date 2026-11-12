@@ -1,0 +1,14 @@
+{
+  "date": "2026-11-11",
+  "purpose": "군단 방패병의 편집 가능한 3D 원본과 관절 보행 제작을 위한 시각 참고. 이 그림은 3D 메시나 실제 애니메이션이 아니다.",
+  "generator": "연결된 OpenAI 이미지 생성 도구",
+  "source_references": [
+    "art-source/defense/concepts/2026-10-29/heroes/spear-guardian.png",
+    "public/defense/models/legion-shield.png"
+  ],
+  "sheets": [
+    {"file":"legion-shield-turnaround.png","sha256":"6c3715479d04a8a4a09a087b05a89b204c7ea1fe85d2f0485b52689cbda44886","content":"정면·측면·후면·방패를 내민 자세"},
+    {"file":"legion-shield-walk-reference.png","sha256":"17e8022babe592349ed54d5c031ac62c69d325e2c4c99ab1eb88af418b371d27","content":"측면 보행 자세 5개; 이미지 일부가 반복되어 그대로 보행 애니메이션으로 사용하지 않음"}
+  ],
+  "constraints": "남청 어깨와 투구, 주홍 목도리, 상아 천, 금 테두리 청록 방패, 손과 창의 연결, 바닥을 짚는 발. 실제 원본과 런타임 산출물의 상태는 군단 모델 문서에서 확인한다."
+}

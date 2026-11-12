@@ -79,6 +79,103 @@
         "contact": 0.3333333333333333
       },
       "status": "campaign_runtime_vertical_slice"
+    },
+    {
+      "id": "ian",
+      "file": "ian.glb",
+      "source": "public/defense/models/ian-mage.glb",
+      "source_files": [
+        {
+          "file": "public/defense/models/ian-mage.glb",
+          "sha256": "0d31f16feec8ee965b77e32446c66c65a234163b2986148322cf026331895e7c"
+        },
+        {
+          "file": "public/defense/models/ian-mage-walk.glb",
+          "sha256": "1905f919f629a72a1528620b91db6116e700934945be7a5ce82a6abaf485013b"
+        }
+      ],
+      "provenance": "origin/main ae5cffd9 (2026-11-12)",
+      "generator": "tools/build-battle-starter-models.mjs",
+      "bytes": 1404852,
+      "sha256": "753d90629f30071c187db30fb323de88d994aefa9d37ea415aa2975913dc4ccb",
+      "animations": [
+        "ian-cast",
+        "ian-walk"
+      ],
+      "attack_timing": {
+        "duration": 0.33,
+        "contact": 0.15
+      },
+      "status": "campaign_runtime_starter_models"
+    },
+    {
+      "id": "base-crossbow",
+      "file": "base-crossbow.glb",
+      "source": "public/defense/models/base-crossbow-action.glb",
+      "source_files": [
+        {
+          "file": "public/defense/models/base-crossbow-action.glb",
+          "sha256": "d64b5eb78c3f18384ca7d39d53a4cce2f04d0609f1c1d38ca48cfc186738507c"
+        }
+      ],
+      "provenance": "origin/main ae5cffd9 (2026-11-12)",
+      "generator": "tools/build-battle-starter-models.mjs",
+      "bytes": 1057532,
+      "sha256": "d64b5eb78c3f18384ca7d39d53a4cce2f04d0609f1c1d38ca48cfc186738507c",
+      "animations": [
+        "base-crossbow-release"
+      ],
+      "attack_timing": {
+        "duration": 0.4,
+        "contact": 0.1
+      },
+      "status": "campaign_runtime_starter_models"
+    },
+    {
+      "id": "base-cannon",
+      "file": "base-cannon.glb",
+      "source": "public/defense/models/base-cannon-action.glb",
+      "source_files": [
+        {
+          "file": "public/defense/models/base-cannon-action.glb",
+          "sha256": "66670308f47b4bfdc254d5a0c1bc2da40324b0555a48f36db6ad476c89bd33fc"
+        }
+      ],
+      "provenance": "origin/main ae5cffd9 (2026-11-12)",
+      "generator": "tools/build-battle-starter-models.mjs",
+      "bytes": 1067452,
+      "sha256": "66670308f47b4bfdc254d5a0c1bc2da40324b0555a48f36db6ad476c89bd33fc",
+      "animations": [
+        "base-cannon-fire"
+      ],
+      "attack_timing": {
+        "duration": 0.52,
+        "contact": 0.28
+      },
+      "status": "campaign_runtime_starter_models"
+    },
+    {
+      "id": "base-magic",
+      "file": "base-magic.glb",
+      "source": "public/defense/models/base-magic-action.glb",
+      "source_files": [
+        {
+          "file": "public/defense/models/base-magic-action.glb",
+          "sha256": "907067a062d7af54d67c41550b33658540315f1905705585da095e9631d626e3"
+        }
+      ],
+      "provenance": "origin/main ae5cffd9 (2026-11-12)",
+      "generator": "tools/build-battle-starter-models.mjs",
+      "bytes": 884580,
+      "sha256": "907067a062d7af54d67c41550b33658540315f1905705585da095e9631d626e3",
+      "animations": [
+        "base-magic-release"
+      ],
+      "attack_timing": {
+        "duration": 0.39,
+        "contact": 0.15
+      },
+      "status": "campaign_runtime_starter_models"
     }
   ]
 }

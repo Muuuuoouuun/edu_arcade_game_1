@@ -1,5 +1,7 @@
 # 아르카나 수비대: 제품·3D·브랜치 통합 기준
 
+**최신 기준(2026-11-12 재통합):** `main ae5cffd9`에 보존된 변경 전장·Rush·군단 및 모델 작업실과 이 작업 공간의 원정 3D·인간 병사·컨셉 제작물을 합쳤다. 현재 브랜치는 `codex/arcana-3d-recovery-20261112`, 실행 폴더는 `/workspace/arcana-main-sync`다. [현재 상태·검증·실행 경로](arcana-3d-recovery-20261112.md)를 우선하며, 아래 브랜치 표·미커밋 여부·화면 방향 논의는 과거 스냅샷이다.
+
 2026-11-10 KST 조사. 기준 제품은 `main` **b175a9f**, 현재 3D 지형 작업은 `codex/arcana-3d-world-sync-20261109` **a6af307**이다. [전체 원격 브랜치 목록과 PR 교차 검증](arcana-branch-inventory.md)은 이 시점의 스냅샷이다. 새 작업 전 원격 HEAD를 다시 확인한다.
 
 ## 게임과 미술의 기준

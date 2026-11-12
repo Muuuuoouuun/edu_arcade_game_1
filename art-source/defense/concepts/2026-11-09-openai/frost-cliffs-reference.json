@@ -1,0 +1,11 @@
+{
+  "kind": "concept-reference-not-a-3d-model",
+  "provider": "OpenAI connected image generation tool",
+  "tool": "image_gen.imagegen",
+  "successful_generation_calls": 1,
+  "source_reference": "art-source/defense/concepts/2026-11-09/polar-battlefield.png",
+  "output": "frost-cliffs-reference.png",
+  "brief": "Four views of the same stylized snow cliff module: broad tiered blue slate/ice masses, deep vertical fissures, asymmetric ledges, thick snow overhangs, readable mobile silhouette. Preserve Arcana polar palette. No pointed cones, characters, UI or typography.",
+  "implementation": "Editable polygon geometry and renders are generated separately by tools/blender/build_frontier_frost_cliffs.py using Blender bpy.",
+  "notes": "User confirmed using the connected OpenAI image generation tool. Direct OpenAI REST and Claude API were not called. No 90 percent utilization metric or billing quota claim is made. The concept is not a gameplay screenshot or an automatic image-to-3D export."
+}

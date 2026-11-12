@@ -44,16 +44,17 @@ async function loadedLayer(state:DefenseState,ids:BattleModelId[]) {
 }
 
 test('shipped GLBs play their real named attack clips at the engine hit and restore their rest pose',async()=>{
- const cases=[['barbarian','kar','kar-slam',.28],['dwarf','bron','dwarf-hammer-attack',10/30],['mage','ballista','frontier-ballista-release',.1]] as const;
+ const cases=[['barbarian','kar','kar-slam',.28],['dwarf','bron','dwarf-hammer-attack',10/30],['mage','ian','ian-cast',.15],['elf','ballista','frontier-ballista-release',.1],['elf','base-crossbow','base-crossbow-release',.1],['elf','base-cannon','base-cannon-fire',.28],['elf','base-magic','base-magic-release',.15]] as const;
  for(const [hero,model,name,contact] of cases){
   let state=combat(hero);
-  if(model==='ballista'){
-   state.heroCooldown=99;state=actDefense(state,{type:'build',slot:2,kind:'crossbow'});
-   state=actDefense(state,{type:'upgrade',slot:2,branch:'pierce'});
+  const tower=model==='ballista'||model.startsWith('base-');
+  if(tower){
+   state.heroCooldown=99;state=actDefense(state,{type:'build',slot:2,kind:model==='base-cannon'?'cannon':model==='base-magic'?'magic':'crossbow'});
+   if(model==='ballista')state=actDefense(state,{type:'upgrade',slot:2,branch:'pierce'});
   }
   state=stepDefense(state,.01);
-  const attack=state.attacks.find(attack=>attack.source===(model==='ballista'?'tower':'hero'));assert.ok(attack);
-  const key=model==='ballista'?'tower-2':'hero';
+  const attack=state.attacks.find(attack=>attack.source===(tower?'tower':'hero'));assert.ok(attack,`${model} must attack`);
+  const key=tower?'tower-2':'hero';
   const rest={...state,enemies:[],attacks:[]};
   const {scene,layer,assets}=await loadedLayer(rest,[model]);
   try{
@@ -62,7 +63,10 @@ test('shipped GLBs play their real named attack clips at the engine hit and rest
    layer.sync({...state,enemies:[],attacks:[{...attack,elapsed:attack.hitAt,fired:true}]});
    const diagnostic=layer.diagnostics().find(actor=>actor.key===key);assert.ok(diagnostic);
    assert.equal(diagnostic.clip,name);assert.ok(Math.abs(diagnostic.time!-contact)<1e-10);
-   assert.notDeepEqual(transforms(root.children[0]),before,'the clip changes actual mesh joints');
+   // Base ballistic clips intentionally keep their loaded pose through hitAt,
+   // then show release/recoil in the next authored frame.
+   if(model==='base-crossbow'||model==='base-cannon')layer.sync({...state,enemies:[],attacks:[{...attack,elapsed:attack.hitAt+.02,fired:true}]});
+   assert.notDeepEqual(transforms(root.children[0]),before,`${model} changes actual mesh joints`);
    if(model==='ballista'){
     const bolt=root.getObjectByName('loaded-bolt');assert.ok(bolt);
     assert.ok(bolt.scale.length()<.01,'the authored release hides the loaded bolt');
@@ -73,7 +77,7 @@ test('shipped GLBs play their real named attack clips at the engine hit and rest
 });
 
 test('hero and mercenary clones have independent joints and never animate the cached GLTF',async()=>{
- for(const [hero,model] of [['barbarian','kar'],['dwarf','bron']] as const){
+ for(const [hero,model] of [['barbarian','kar'],['dwarf','bron'],['mage','ian']] as const){
   const active=stepDefense(combat(hero),.01),attack=active.attacks.find(attack=>attack.source==='hero');assert.ok(attack);
   // Hiring currently disallows duplicates; exercise shared-asset isolation directly.
   const state={...createDefense(1,hero),mercenary:hero};
@@ -91,7 +95,7 @@ test('hero and mercenary clones have independent joints and never animate the ca
 });
 
 test('wood gait follows path distance, hit colors stay local, and removing one clone keeps shared geometry alive',async()=>{
- const state={...createDefense(1,'mage'),enemies:[wood(1),wood(2,430)]};
+ const state={...createDefense(1,'elf'),enemies:[wood(1),wood(2,430)]};
  const {scene,layer,assets}=await loadedLayer(state,['wood']);
  try{
   const meshes=(key:string)=>{const found:THREE.Mesh[]=[];actorRoot(scene,key).traverse(node=>{if(node instanceof THREE.Mesh)found.push(node);});return found;};
@@ -109,6 +113,42 @@ test('wood gait follows path distance, hit colors stay local, and removing one c
   assert.equal(cloneDisposed,1);assert.equal(tracked.disposed.geometries,0);
   assert.equal(tracked.disposed.materials,0);
  }finally{layer.dispose();}
+});
+
+test('starter tower aiming keeps all foundations fixed and does not replace the magic ring animation',async()=>{
+ const state={...createDefense(1,'elf'),towers:([
+  {slot:1,kind:'crossbow'},{slot:2,kind:'cannon'},{slot:3,kind:'magic'},
+ ] as const).map(tower=>({...tower,branch:null,level:1,cooldown:0,aim:{x:550,y:100}}))};
+ const {scene,layer}=await loadedLayer(state,['base-crossbow','base-cannon','base-magic']);
+ try{
+  const before=state.towers.map(tower=>({root:actorRoot(scene,`tower-${tower.slot}`),rotation:actorRoot(scene,`tower-${tower.slot}`).quaternion.clone()}));
+  const cannon=before[1].root.getObjectByName('aim-platform')!;const aim=cannon.quaternion.clone();
+  const magicRing=before[2].root.getObjectByName('focus-ring')!;const ring=magicRing.quaternion.clone();
+  layer.sync({...state,towers:state.towers.map(tower=>({...tower,aim:{x:100,y:500}}))});
+  for(const {root,rotation} of before)assert.ok(root.quaternion.equals(rotation));
+  assert.ok(!cannon.quaternion.equals(aim));assert.ok(magicRing.quaternion.equals(ring));
+ }finally{layer.dispose();}
+});
+
+test('Ian combined asset keeps the source cast mesh and binds the walk clip by original joint names',async()=>{
+ const combined=await readModel('ian');
+ assert.deepEqual(combined.animations.map(clip=>clip.name),['ian-cast','ian-walk']);
+ let state=actDefense(createDefense(1,'mage'),{type:'move',point:{x:440,y:120}});
+ for(let i=0;i<6;i++)state=stepDefense(state,.05);
+ const {scene,layer}=await loadedLayer(state,['ian']);
+ const other=await loadedLayer(createDefense(1,'mage'),['ian']);
+ try{
+  // Skipping intermediate render frames must produce the same engine pose.
+  other.layer.sync(state);
+  assert.deepEqual(transforms(actorRoot(scene,'hero')),transforms(actorRoot(other.scene,'hero')));
+  assert.equal(layer.diagnostics()[0].clip,'ian-walk');
+  assert.ok(actorRoot(scene,'hero').getObjectByName('left-leg'));
+  assert.ok(actorRoot(scene,'hero').getObjectByName('staff-hand'));
+  const legs=actorRoot(scene,'hero').getObjectByName('left-leg')!;
+  assert.notEqual(legs.position.z,0);
+  layer.sync(state,1,true);assert.equal(layer.diagnostics()[0].clip,undefined);
+  assert.equal(legs.position.z,0,'reduced motion restores the cast mesh rest pose, not the walk export bind pose');
+ }finally{layer.dispose();other.layer.dispose();}
 });
 
 test('individual rejected or invalid loads retain sprite fallback while a valid model remains usable',async()=>{

@@ -1,0 +1,60 @@
+{
+  "createdAt": "2026-11-11T23:37:06.204911+00:00",
+  "displayDateKst": "2026-11-12",
+  "baseCommit": "6612cf8e4755d90bb331133d62883f59d5689520",
+  "generator": {
+    "tool": "image_gen.imagegen",
+    "provider": "connected OpenAI image generation tool",
+    "successfulCalls": 3,
+    "retries": 0,
+    "modelVersion": "not exposed by tool",
+    "actualChargeUsd": null
+  },
+  "status": "concept images only; no new editable mesh, GLB, rig, animation, simulation or gameplay integration",
+  "prompts": "generation-prompts.json",
+  "sourcesReviewed": [
+    "../2026-11-06/verdant-heart.png",
+    "../2026-10-29/props/six-tower-modules.png"
+  ],
+  "files": [
+    {
+      "id": "lantern-otter-engineer",
+      "titleKo": "등불 수달 공병",
+      "kind": "character",
+      "file": "lantern-otter-engineer.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 2176247,
+      "sha256": "39f18bcb6f6e9160f7f5c00075903a19c6ee1cb25c94c74c461ae4ab5806e1c1"
+    },
+    {
+      "id": "rootback-boar-charger",
+      "titleKo": "뿌리갑 멧돼지 돌격병",
+      "kind": "enemy",
+      "file": "rootback-boar-charger.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 2305474,
+      "sha256": "0895c0a6d7da29cd77d79f47312115deaafea08e98ae52fa785554585f81f3f6"
+    },
+    {
+      "id": "woodland-turret-family",
+      "titleKo": "덩굴 노포 · 도토리 박격포 · 서리 공명탑",
+      "kind": "turret-family",
+      "file": "woodland-turret-family.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 2079133,
+      "sha256": "a7d014c239329fe7c28fa0edafc3d18b1a1ffb4ec56ff886a31206df7686d278"
+    }
+  ],
+  "modelingReview": [
+    "Generated views are visual references, not a dimensional orthographic contract. Resolve differences in one Blender blockout before rigging.",
+    "Rootback charge arrow points opposite to the visible facing; use body facing and explicit world axes in the later animation contract.",
+    "Otter follow-through illustration swings upward. It is not a validated downward repair-strike animation; re-author the contact/follow-through when choosing its gameplay action.",
+    "Turret small views contain simplified supports; establish shared pivot, rail, barrel travel and projectile origin in the actual mesh."
+  ]
+}

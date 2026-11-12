@@ -1,0 +1,2317 @@
+{
+  "generator": "tools/blender/build_dwarf_entry.py",
+  "command": "npm run models:dwarf-entry",
+  "source_cast_sha256": "3a8e35589a65b3cd8f66c1fa48b04ac418e1cd22498072ee75bce15cdb7d51ca",
+  "source_walk_sha256": "7bdb61ed5aa563b4ad71c026151c630e69689ae2ec5ccc7c2d4721a07aaf3032",
+  "reference": "art-source/defense/atlases/melee-motion.png",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      330
+    ],
+    "orthographic_scale": 6.8
+  },
+  "delivery_frame": {
+    "width": 192,
+    "height": 192,
+    "ground": [
+      96,
+      165
+    ],
+    "columns": 16,
+    "rows": 1
+  },
+  "duration_seconds": 0.52,
+  "transition_seconds": 0.16,
+  "hit_at": 0.24,
+  "samples_seconds": [
+    0.06,
+    0.12
+  ],
+  "entry_checks": [
+    {
+      "entry": 0,
+      "first_leg": "walk-left-leg",
+      "frames": 53,
+      "min_sole_z": 0.005000025033950806,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_16_error": 0
+    },
+    {
+      "entry": 1,
+      "first_leg": "walk-left-leg",
+      "frames": 53,
+      "min_sole_z": 0.005000025033950806,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_16_error": 0
+    },
+    {
+      "entry": 2,
+      "first_leg": "walk-left-leg",
+      "frames": 53,
+      "min_sole_z": 0.005000025033950806,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_16_error": 0
+    },
+    {
+      "entry": 3,
+      "first_leg": "walk-left-leg",
+      "frames": 53,
+      "min_sole_z": 0.005000025033950806,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_16_error": 0
+    },
+    {
+      "entry": 4,
+      "first_leg": "walk-right-leg",
+      "frames": 53,
+      "min_sole_z": 0.005000025033950806,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_16_error": 0
+    },
+    {
+      "entry": 5,
+      "first_leg": "walk-right-leg",
+      "frames": 53,
+      "min_sole_z": 0.005000025033950806,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_16_error": 0
+    },
+    {
+      "entry": 6,
+      "first_leg": "walk-right-leg",
+      "frames": 53,
+      "min_sole_z": 0.005000025033950806,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_16_error": 0
+    },
+    {
+      "entry": 7,
+      "first_leg": "walk-right-leg",
+      "frames": 53,
+      "min_sole_z": 0.005000025033950806,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_16_error": 0
+    }
+  ],
+  "files": [
+    {
+      "file": "art-source/defense/dwarf-entry.blend",
+      "bytes": 4655444,
+      "sha256": "c4470cd58160a0af3a917420a1e9a5bc5080e424c2cc0e5ce86d9e5c6c9640db"
+    },
+    {
+      "file": "public/defense/models/dwarf-entry.glb",
+      "bytes": 1428864,
+      "sha256": "218f635b39fa767eda1dfe406a4a2702521dd60e957a8aa3e2f090432001d2f9"
+    },
+    {
+      "file": "public/defense/models/dwarf-entry.png",
+      "bytes": 127895,
+      "sha256": "99af154b5b3fc300faa3c1a4366d025bf4859a1f2c46ae8e3716e277033a3111"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-0-0.png",
+      "bytes": 117401,
+      "sha256": "9d01bb9dbc79d37bc7135ed6816045699a04d1d4528a3ac4d5637f05594888ed"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-0-1.png",
+      "bytes": 118574,
+      "sha256": "cab3373ce8d9a1f9e130c2db08401559a198596f376c17467c82d5bddde58c89"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-1-0.png",
+      "bytes": 116526,
+      "sha256": "5989dbb5c60e76bc1b687a1a1c21a5d48ab67b02adf40352844e1a7d427831cc"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-1-1.png",
+      "bytes": 118076,
+      "sha256": "3a1c62fe15324968c7f1c12a2090c72305b63c1d9c0d833d524023605a23f275"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-2-0.png",
+      "bytes": 116324,
+      "sha256": "031c5ea611bfc62cb910c4c5ea1aa73af67e430f04c098d29f4f9f8f5d72a5fc"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-2-1.png",
+      "bytes": 117898,
+      "sha256": "6c13861da22461068d2d028e8dc7973307ebe8bb15273e47d7b2aaf231c3f36b"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-3-0.png",
+      "bytes": 116233,
+      "sha256": "45c1b52d598d63b5cd1f9d58a8f7d8af0f4f75a968003fb6e9e74be87dda5e94"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-3-1.png",
+      "bytes": 117902,
+      "sha256": "2e6436a9dff87a04ac6c2e80933dde5e4d541c4e9393efdbf02196218151a891"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-4-0.png",
+      "bytes": 116686,
+      "sha256": "d428bc39dc5ac80934a5247ab589b7dbd09cd0879b2fa725d57cabe9489219b5"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-4-1.png",
+      "bytes": 117693,
+      "sha256": "19d2a4687c25f0c336628c084c2d8a46c3d324148a7edae0aa2233523a3f3605"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-5-0.png",
+      "bytes": 116495,
+      "sha256": "ee23c8f04cbd263dc9a5cdf4ddf4fa76e4b4c67622c0857b02680bed0e857f50"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-5-1.png",
+      "bytes": 117478,
+      "sha256": "7d2794f2b9de39b4e07e1475a6b783354db997ef53b9446f03b57dedd2fff43a"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-6-0.png",
+      "bytes": 116094,
+      "sha256": "7e023d4eb887c9e3ca512c16418aafa071d46307292a9c0d66406e685e551f91"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-6-1.png",
+      "bytes": 117520,
+      "sha256": "9d4b34fd399bd0f87c3b296b23647a8cdd17ae9643d1f1c4fec038e892543348"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-7-0.png",
+      "bytes": 116899,
+      "sha256": "8b4be9d09443ab6409139703a2459a3ff2eacdb941335d432ef233f01cdccb10"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-0-7-1.png",
+      "bytes": 117722,
+      "sha256": "007db8bfde40cb25c908ece04bec0e41c114bc17f824e25010d351cc1c77c314"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-0-0.png",
+      "bytes": 128877,
+      "sha256": "29a929855d6ccee8d9f40536ca9ce289272971d3cb3ce74827b9917e1a852022"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-0-1.png",
+      "bytes": 130389,
+      "sha256": "5bdaa81240a64b33c7e52ade3227d455bf0d37183e4ab9ed0e7ba46fadff50b6"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-1-0.png",
+      "bytes": 128727,
+      "sha256": "97d2483e44930788a5a5e98b08c8a42a8f58ddcd35e33af018ecb0737ed77fc5"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-1-1.png",
+      "bytes": 130490,
+      "sha256": "cb3d3c9c2788356ae7d62c92f29ec6f73c0feddd9046978ff9c0002ac1a18446"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-2-0.png",
+      "bytes": 128903,
+      "sha256": "e381f40cbe974ebb3d71a0f89b60b469aba2fe2be883cc81d8b790914eedf81e"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-2-1.png",
+      "bytes": 130514,
+      "sha256": "956c858bd72e8c1c32f226886a2af881877946c360272ac0577671dcb0da6603"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-3-0.png",
+      "bytes": 127895,
+      "sha256": "99af154b5b3fc300faa3c1a4366d025bf4859a1f2c46ae8e3716e277033a3111"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-3-1.png",
+      "bytes": 130044,
+      "sha256": "eb169c35c14b00cd0ed0f01f42593a938a4013adc772db2cd3a96eaeb5bbe479"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-4-0.png",
+      "bytes": 128608,
+      "sha256": "a7aa10dba77c151779c3b3c829e8ab918120263ff44394c4e5d33a016f0badd6"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-4-1.png",
+      "bytes": 130132,
+      "sha256": "f011df18098e46f6a7e76aac608b28f0836e08ef907ad92d5d53e7ed44e84761"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-5-0.png",
+      "bytes": 128148,
+      "sha256": "409202818ae21a854945d146efab012f0983ea6fb7a0ad40c4a987128a9c5736"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-5-1.png",
+      "bytes": 130057,
+      "sha256": "cdd553be24cd331c7a7e098203de7e768056dda51f413e2b69787f1004289d3d"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-6-0.png",
+      "bytes": 127786,
+      "sha256": "a02e089ca189cc1219d9833f012487dabbaf2516bf0204733a157a67291f7379"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-6-1.png",
+      "bytes": 129919,
+      "sha256": "3accd1dfe266736bf864d4aa9b34b5035aafb35b78e20ff4f7eeb42574c84762"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-7-0.png",
+      "bytes": 127427,
+      "sha256": "1f565231f3687661f270a7f495682680befd257f89d1eb7ecab52a581bb093bb"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-1-7-1.png",
+      "bytes": 129690,
+      "sha256": "f87d4499ae86ae9b199c360c6a0cd3fa4c80f7b1e3a56b04e482b9cfaafa42e1"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-0-0.png",
+      "bytes": 124786,
+      "sha256": "6dab785263d9c7cb2a1da0898843aebb8a1c6d0ddda1ad5535347a7d4f719b0e"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-0-1.png",
+      "bytes": 127514,
+      "sha256": "fd31c67f44c5d8ef62c99bc1440cbad05e3fbe8c310cdfc6a9baac9574903262"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-1-0.png",
+      "bytes": 124591,
+      "sha256": "c0a021ad364a4476633fc9704dd45ea8c01d52796ff9ed8b27e866166ea1a5f1"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-1-1.png",
+      "bytes": 127287,
+      "sha256": "645055107a629a2bc2943fda4ff0c51b43bef2b301365aeceb2c36c4f89ed62d"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-2-0.png",
+      "bytes": 124390,
+      "sha256": "71e2cfca0ac0417aba54817173f47a95f756bcc44b2f3c3236b1032b3381f37f"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-2-1.png",
+      "bytes": 127161,
+      "sha256": "008eeff6f715760cace9bfbd54654d06cdca8de3110226e2fa754d26ecd50923"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-3-0.png",
+      "bytes": 123736,
+      "sha256": "0336a39d133e2154e9612da72d9578cc906a1d7994e0e10e08991e42317f2e9a"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-3-1.png",
+      "bytes": 126830,
+      "sha256": "95308aa8b69270e14fd930dd98755ba5b023ff6d25ab2d400ae268780989e6f3"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-4-0.png",
+      "bytes": 124531,
+      "sha256": "826314f9140d5f8fede9ddd7bfbf8d3a927513d357ccfb1baa1713829eb605bf"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-4-1.png",
+      "bytes": 127550,
+      "sha256": "04f2b035e2c8ca3f5be7ea58b38c488a20eb4f6d5d281d772655c0f5ad85b549"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-5-0.png",
+      "bytes": 123746,
+      "sha256": "4e981c022ead886be5069cab4b08ef6a7cebe553b0c74d77b01632e67d038e58"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-5-1.png",
+      "bytes": 127418,
+      "sha256": "da3b5a715101c9e5b082038dc68e9267597b543aaf58d12ade15f4e1d6a31e1b"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-6-0.png",
+      "bytes": 123477,
+      "sha256": "4058f83edd55c20925d640a60f34cd14131add6913432300e67a675452f398d0"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-6-1.png",
+      "bytes": 127134,
+      "sha256": "33d81ba6c83ef206265ba5a5133b7e2640a68f97e56e627fcef6a118470a4ab7"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-7-0.png",
+      "bytes": 122824,
+      "sha256": "de9e4d539c56d60c01807af23a766aee700938098706b7a72bc8c1f5dfe4b2fd"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-2-7-1.png",
+      "bytes": 126671,
+      "sha256": "323b26d5d3fd860b4fe6ecf43d7e31326ee23804b7e5ca3744f9fbb8bd18e9eb"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-0-0.png",
+      "bytes": 122507,
+      "sha256": "b22bf4559169bf2ef9e1c3da14aadad4886ccd4b29bc59c968a6332efde746af"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-0-1.png",
+      "bytes": 128532,
+      "sha256": "d9b93026a7d3026da0678d939ca04084dc7d15ff8baeab77e2d7f3c9845ee781"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-1-0.png",
+      "bytes": 122903,
+      "sha256": "d4b240a6361cfb0e787069d45655b033f0b34d7ac9639ca3e48ef11698aeb19f"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-1-1.png",
+      "bytes": 128535,
+      "sha256": "d4ba63ee8132a53e1a7f9a5f58045ba514339dcf2ccc7939434f905a7f888e33"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-2-0.png",
+      "bytes": 122949,
+      "sha256": "33bb951e5b43a744684eaa8d475acce5c35e9f246b55c69beb9f8060037d6033"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-2-1.png",
+      "bytes": 128239,
+      "sha256": "9faa3c83da1067aa094c575abd43d11f9aef336b13099c7016aa2f7150f53912"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-3-0.png",
+      "bytes": 122363,
+      "sha256": "6413b6b88b5e61c3f8ae151700b5285bfeb72c72e99abdb08e92901e5ff046d0"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-3-1.png",
+      "bytes": 128232,
+      "sha256": "78575145a32e01de4bdecf87adb66a15d0e1c46d2e8eb6a2374a077274c0992c"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-4-0.png",
+      "bytes": 122806,
+      "sha256": "259605a181be1b1fefe7e0099110e6d3612cad02b1ed72fb27eecd6bc405e9d8"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-4-1.png",
+      "bytes": 129031,
+      "sha256": "c5d36b99399e876284c258ba6d039798ca35d058fed7ccb917c5dd37e1021a02"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-5-0.png",
+      "bytes": 121715,
+      "sha256": "bec628f665c3a300389a6a2262ce15d09352abc0f2bda76f2ca876ca7fffa655"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-5-1.png",
+      "bytes": 128676,
+      "sha256": "a2003da0288e118f91c9d8f29b7cfbf9bc407bf82ad0455a06ea4567a5e72b13"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-6-0.png",
+      "bytes": 121354,
+      "sha256": "013ae16daecdfa3825877df03398cf903c026f78e31ffd6a1aca4f129fd39028"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-6-1.png",
+      "bytes": 128152,
+      "sha256": "091d3f33a410b3142dcfd84feb231fc5f4bb1fd8b6e9b60b0640d47a72f4ea1e"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-7-0.png",
+      "bytes": 120892,
+      "sha256": "8a6504e593aa3e45e0a7b24785fb02473bff479cb24bc85ecfcfc174063d789c"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-3-7-1.png",
+      "bytes": 128107,
+      "sha256": "0590fbbdcc8263ea1d860a1fe4dea9e1d5ce5a8e3539776f90fe75a196f732f6"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-0-0.png",
+      "bytes": 110846,
+      "sha256": "3f0dbfbeac98a908e633f92c01cc8137f3a690b325faa7841414204f145e35b6"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-0-1.png",
+      "bytes": 105316,
+      "sha256": "49fed82daefaeff93c0634ee77a1c9e17203460cf75aadf685e645f498799b51"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-1-0.png",
+      "bytes": 109979,
+      "sha256": "ee48ad80344a6f312787fe963adf380f86dbe5042f69e34fc7a0a1746fa11168"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-1-1.png",
+      "bytes": 105246,
+      "sha256": "cfc0a01ba72fb305db7c86bb45cc2d120a30f233684e1eb78e4c53c77700f704"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-2-0.png",
+      "bytes": 109649,
+      "sha256": "dbf8735505a611fefb6ac4e15806a8c824e4a1bdfedfa9c2b1e9616b4848a7e4"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-2-1.png",
+      "bytes": 105215,
+      "sha256": "a8d84d17c23760ff46a137b43fca39686e99b2c0d09f8ce1dbe15391e240fcfc"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-3-0.png",
+      "bytes": 110447,
+      "sha256": "f55ca73d8b4538ff37d6380e2dac24960c207306eb43d50cb280b4a32050bde5"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-3-1.png",
+      "bytes": 105600,
+      "sha256": "d71d87659a372e5cb3d1745e2ca416c119b242973aea20bca55d5a32151967cc"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-4-0.png",
+      "bytes": 111646,
+      "sha256": "26c965995b90b5fce78b1c7f29b6122ffa7244bdff939a4294c76c3fc05a2bdf"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-4-1.png",
+      "bytes": 106572,
+      "sha256": "673f5150523114ca3021ade00a5f704654c23b7fed27f7290a7e52392b8c6600"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-5-0.png",
+      "bytes": 110914,
+      "sha256": "e534b121eb4e106e1739dc38d873c031b8c11be7bd1fe84949621f7b887950c9"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-5-1.png",
+      "bytes": 106322,
+      "sha256": "f565d3aff20973e99aee95183dc4e02ecad2677df5b5e40f0619c6f45eee6899"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-6-0.png",
+      "bytes": 110467,
+      "sha256": "81bbaf865b51e86ef3e8b437b8be83e545268154f454661d9d203745c8ccd39c"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-6-1.png",
+      "bytes": 105891,
+      "sha256": "5a6023275fc84df0aaeb81810535cbdf98ee1abe3d3450363ed9752c32687520"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-7-0.png",
+      "bytes": 110414,
+      "sha256": "cd2bfd839b4e57aeaa53717ebca7be3d11c6ba0b9f0d1aad576f54d2b08a3fcf"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-4-7-1.png",
+      "bytes": 106013,
+      "sha256": "9605c0899c45053f227462ae3b9e39707f1bdf25391e0bcff6d8d7a18509abe3"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-0-0.png",
+      "bytes": 121966,
+      "sha256": "6b04d695090d785082d8bf71d7a272c1127e24d034178ba87265a261a08c9ea6"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-0-1.png",
+      "bytes": 119111,
+      "sha256": "7595ee37365e5cdbdb0a22eafcc827986e8896330e93816ef73fb7f11a5a9b63"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-1-0.png",
+      "bytes": 122663,
+      "sha256": "e06949714d60f4f66f3a0a30918e0692168c9266a64b560c99fff25d3e300732"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-1-1.png",
+      "bytes": 119139,
+      "sha256": "86886d091734b73f3c25306c45f67addd6e103d4e6a14b29f854ccd7620db02f"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-2-0.png",
+      "bytes": 123206,
+      "sha256": "f9af1b72d48c8e54faa96f2d920eadf07341bfb58980fdb6ae258929af940e52"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-2-1.png",
+      "bytes": 119198,
+      "sha256": "a69b255f267a8ea6f19107d7b10bf3ddacf7813c0c72d5cce5bf95854e7365ce"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-3-0.png",
+      "bytes": 122824,
+      "sha256": "939e5f5b6fafc1c7c299f237078615174904bc1f133274d0ada1d5e21c29290a"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-3-1.png",
+      "bytes": 119209,
+      "sha256": "f2de14b894d952b5f0bde254dbe7ff90b51cf14048d41a21482b58a4011ce6b5"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-4-0.png",
+      "bytes": 121298,
+      "sha256": "f8ee6c284532e06bb77907c7262ed447b00618fa0137a54678eca1ac10e6a401"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-4-1.png",
+      "bytes": 118872,
+      "sha256": "a72890886d39221b0ee64a9f814d4ece7fc985a1a98360825b9d76d37a3930b2"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-5-0.png",
+      "bytes": 121629,
+      "sha256": "3cd4642b0e92e601d263d89c9b517c71b053a286b30952f3f9af09b0fec9ce5a"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-5-1.png",
+      "bytes": 119433,
+      "sha256": "bf6124908348b96c0b2ce79c70aa8c49eff2c968acb9b66e1b60d43017b4aacd"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-6-0.png",
+      "bytes": 122138,
+      "sha256": "0f3befc8b032c4d66f9a1ba04dc2d3d77cc9b3f1aee79619539c2b1fbcd43bca"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-6-1.png",
+      "bytes": 119783,
+      "sha256": "d52a3fb35f3fe1463cb9b4b86a6796f43a3ea87d497fe02dc8de97dd33d67f1d"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-7-0.png",
+      "bytes": 122587,
+      "sha256": "42ab31705758b63d6c353f31833c8268a799f51ee33ee13f616107dc538bdc62"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-5-7-1.png",
+      "bytes": 119872,
+      "sha256": "4d48f599ce63c011403f75a2984b51a68495c2805fb532ca6d6db2b74dc1d700"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-0-0.png",
+      "bytes": 118735,
+      "sha256": "2d517e8ba3b17bd3747ef663b23729608d160ea06fe2db5cc42007eaacfdfb10"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-0-1.png",
+      "bytes": 117858,
+      "sha256": "d9c56093449d86ab50726f06515b41bb2acd4da4fbfd7babfd3f2aec974133fb"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-1-0.png",
+      "bytes": 118642,
+      "sha256": "3959b2effc9491de2268abe16d86963813827bf6466ecec706c303961fc030c6"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-1-1.png",
+      "bytes": 117886,
+      "sha256": "5bdd31f605d983e21d51658d5a5f18cde4fed48a1e6b72ebf9846d91ace05330"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-2-0.png",
+      "bytes": 119297,
+      "sha256": "e4d493760e2e78778a3d4d233479b82734afd1831613edc0404cf2b0e6a70c6a"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-2-1.png",
+      "bytes": 117955,
+      "sha256": "ad0f98d98f65225d6526e431317d5432dc5812fc5736c2cff64702f570e33a53"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-3-0.png",
+      "bytes": 119606,
+      "sha256": "c998aa700528b4f300b2f33d265323450ef577ac6ad9902f13a63f943626939e"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-3-1.png",
+      "bytes": 118048,
+      "sha256": "83a12166e24b73f6a5059b8b4d553b4e0bca83e05da0046462231e6d39fcd7a0"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-4-0.png",
+      "bytes": 118719,
+      "sha256": "f0e5f40015c337ab40fd4eb5cd6d1df10e012aa4285bc1f53c0ecad3a4805066"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-4-1.png",
+      "bytes": 117734,
+      "sha256": "abc6c309eb7fbe265e45889cd26ac3efe5489243c8bf7050317284732316c476"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-5-0.png",
+      "bytes": 118219,
+      "sha256": "3f59c99982344ab3833eb9d9cc8f57443cf86cb05a96e61951f4c6c67dc1f4e8"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-5-1.png",
+      "bytes": 118439,
+      "sha256": "f9958ff1cbfc34398d761a43e3422f931a19f0070e7a4b6ad84dcf7e3c74dc17"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-6-0.png",
+      "bytes": 118926,
+      "sha256": "9a388bfc600345304d00c54e9535f071d66850458bd06129d0f619e8d2dd3e4f"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-6-1.png",
+      "bytes": 118449,
+      "sha256": "6d20f4461624f814b6ae6d15093eb74f3f9df0d9d914a962902c42c76e606695"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-7-0.png",
+      "bytes": 119069,
+      "sha256": "0ab9775069b1ebd3eec7a72e8a2fee3e2e9e0125673ecfde0b88a00d566844bd"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-6-7-1.png",
+      "bytes": 118590,
+      "sha256": "65b98c33c3b07d3f26565bc724ebfe217001ea3c530a2731101ba47b8d17f48c"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-0-0.png",
+      "bytes": 122122,
+      "sha256": "da0c93860194302c55c68343e860142dbc6e7a4b1f10a3b0fc826b5763572501"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-0-1.png",
+      "bytes": 122298,
+      "sha256": "f7618b5835d2fd4517a03c60e42bf6d83bb79b3475cb314a23b4e024f408e566"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-1-0.png",
+      "bytes": 123093,
+      "sha256": "c3835ab9fc040b2230a76fffbf5a5314f313b90acc159472dcbf6a57bb76573a"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-1-1.png",
+      "bytes": 122512,
+      "sha256": "51ebc3dd5f41ba7fc4279f91c4890526cd856bab89f734f42454ff1f7ba9c81b"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-2-0.png",
+      "bytes": 123906,
+      "sha256": "c5bb47b5eb55ade0f799be79fa72ff28ef9acfbb1e30341e99dcc914b5c8a360"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-2-1.png",
+      "bytes": 122939,
+      "sha256": "a30948070a9676422b8144736eea8f493746e8a7f017818181955f4b1ce113ef"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-3-0.png",
+      "bytes": 123963,
+      "sha256": "78a02629cb2c04fd1067413b5fb9b2418f523fea2d66182630ff6efe694f292b"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-3-1.png",
+      "bytes": 122977,
+      "sha256": "55a33b33f03c15add4e8351a3b23832f54ac33aee5716ddb17ca849979c43ecc"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-4-0.png",
+      "bytes": 122563,
+      "sha256": "2f306459dddb39aa1e031fd816e2a7a3396428a87803bc79e63890cdd7089330"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-4-1.png",
+      "bytes": 122549,
+      "sha256": "435b85af224b7f9ebd24a7d4be6b291d3f04785d2059d3be31728d20c8f25e3c"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-5-0.png",
+      "bytes": 122964,
+      "sha256": "cef10084a162885d6f60f99c1591b9beba659e64c3984b6ea7f0a1d94e4f8094"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-5-1.png",
+      "bytes": 122825,
+      "sha256": "4a6c376b10bb21ea11e09f016116e0dd619fd9c54ff55a51ab98de30a8574435"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-6-0.png",
+      "bytes": 122952,
+      "sha256": "1f13fa82408dff4e823339702d01867ded39e2227b9293ea53521fd5e91cbb9f"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-6-1.png",
+      "bytes": 122873,
+      "sha256": "1a7ea31e1f07c34c6dd867020a2439cada935af07b8b1c054213d6083b61aa34"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-7-0.png",
+      "bytes": 123106,
+      "sha256": "7a01a8e4bd3258559cecbe9f96d7b497a9d4da3b2f9ce7f0f354264bb6d8f535"
+    },
+    {
+      "file": "art-source/defense/dwarf-entry-frames/dwarf-entry-7-7-1.png",
+      "bytes": 122963,
+      "sha256": "99104d1b3a8204c36573cb12dc56da99bcc4328c223e83104c78ff7265f079e7"
+    },
+    {
+      "file": "public/defense/models/dwarf-entry-0-atlas.webp",
+      "bytes": 59142,
+      "sha256": "bc4d9400b81897089f140f2c557b56d04c9a88d9f4f0a07308655b3b2ecadb38"
+    },
+    {
+      "file": "public/defense/models/dwarf-entry-1-atlas.webp",
+      "bytes": 78122,
+      "sha256": "00714c6b4e47d988b0e87c75e874d00e601842e0722f718ddf25f2fe128f8660"
+    },
+    {
+      "file": "public/defense/models/dwarf-entry-2-atlas.webp",
+      "bytes": 70612,
+      "sha256": "49c0d8fabb622ca7739ceb132310c493da6ed9ce251500d3c26a4575a9a80881"
+    },
+    {
+      "file": "public/defense/models/dwarf-entry-3-atlas.webp",
+      "bytes": 71772,
+      "sha256": "07227cec2ce5f6c8a1497a9d4856d0357a2a2b7982814fe8880371ceb005c774"
+    },
+    {
+      "file": "public/defense/models/dwarf-entry-4-atlas.webp",
+      "bytes": 49742,
+      "sha256": "496c7a1697c3298fb5a7f4dc32b9d69f943130fb8d805621f7e5dcf035131aca"
+    },
+    {
+      "file": "public/defense/models/dwarf-entry-5-atlas.webp",
+      "bytes": 65442,
+      "sha256": "66051bad8cc1e7ba36a955d3fad0afaebf152eb0256e5599be7196b252669ac9"
+    },
+    {
+      "file": "public/defense/models/dwarf-entry-6-atlas.webp",
+      "bytes": 57420,
+      "sha256": "bcfe855ca7ed3e3824d48d0b786e244c5badc614436641376af4dc47059073b0"
+    },
+    {
+      "file": "public/defense/models/dwarf-entry-7-atlas.webp",
+      "bytes": 64400,
+      "sha256": "04b2c0988c6a7159c3594ef2bcc887a8ad9c263ed060668993eee98e2a20a2b2"
+    }
+  ],
+  "clips": [
+    {
+      "name": "dwarf-entry-0",
+      "entry": 0,
+      "duration": 0.52
+    },
+    {
+      "name": "dwarf-entry-1",
+      "entry": 1,
+      "duration": 0.52
+    },
+    {
+      "name": "dwarf-entry-2",
+      "entry": 2,
+      "duration": 0.52
+    },
+    {
+      "name": "dwarf-entry-3",
+      "entry": 3,
+      "duration": 0.52
+    },
+    {
+      "name": "dwarf-entry-4",
+      "entry": 4,
+      "duration": 0.52
+    },
+    {
+      "name": "dwarf-entry-5",
+      "entry": 5,
+      "duration": 0.52
+    },
+    {
+      "name": "dwarf-entry-6",
+      "entry": 6,
+      "duration": 0.52
+    },
+    {
+      "name": "dwarf-entry-7",
+      "entry": 7,
+      "duration": 0.52
+    }
+  ],
+  "directions": [
+    {
+      "direction": 0,
+      "yaw": 0.960070013999939,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            156.11880493164062,
+            112.26800537109375,
+            261.639892578125,
+            344.594482421875
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            154.13804626464844,
+            98.87596893310547,
+            273.8348388671875,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            155.5755157470703,
+            109.10149383544922,
+            259.2152099609375,
+            343.67877197265625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            154.01344299316406,
+            98.6352310180664,
+            273.694091796875,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            155.35198974609375,
+            107.09783935546875,
+            258.8868408203125,
+            343.29949951171875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            153.96189880371094,
+            98.3716049194336,
+            273.63421630859375,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            155.5755157470703,
+            109.10149383544922,
+            259.2152099609375,
+            343.67877197265625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            154.01344299316406,
+            98.6352310180664,
+            273.694091796875,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            156.11880493164062,
+            113.30694580078125,
+            261.639892578125,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            154.13804626464844,
+            99.67115020751953,
+            273.8348388671875,
+            343.7600402832031
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            155.57546997070312,
+            114.10812377929688,
+            264.004638671875,
+            346.6089782714844
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            154.01339721679688,
+            99.35234069824219,
+            274.00872802734375,
+            343.7600402832031
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            155.35194396972656,
+            113.74639892578125,
+            264.9575500488281,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            153.9618377685547,
+            99.0564193725586,
+            274.07916259765625,
+            343.7600402832031
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            155.57546997070312,
+            114.10812377929688,
+            264.004638671875,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            154.01339721679688,
+            99.35234069824219,
+            274.00872802734375,
+            343.7600402832031
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 1,
+      "yaw": -0.23171095550060272,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            123.55509948730469,
+            149.142333984375,
+            308.5885925292969,
+            346.8992919921875
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            123.49349212646484,
+            124.71338653564453,
+            294.5376281738281,
+            347.78759765625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            123.22537994384766,
+            146.03741455078125,
+            307.6717529296875,
+            344.3677062988281
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            123.41645812988281,
+            124.07235717773438,
+            294.17529296875,
+            347.78759765625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            123.10133361816406,
+            144.0487060546875,
+            307.26922607421875,
+            344.4781494140625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            123.38519287109375,
+            123.64256286621094,
+            294.0240478515625,
+            347.78759765625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            123.22537994384766,
+            146.03741455078125,
+            307.6717529296875,
+            345.3471374511719
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            123.41645812988281,
+            124.07235717773438,
+            294.17529296875,
+            347.78759765625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            121.13162231445312,
+            149.5267333984375,
+            306.16510009765625,
+            354.0559387207031
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            121.63865661621094,
+            125.00761413574219,
+            292.68280029296875,
+            348.0728454589844
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            121.50325012207031,
+            150.23101806640625,
+            307.00555419921875,
+            350.9217529296875
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            121.71784973144531,
+            125.08786010742188,
+            293.0411376953125,
+            346.5057373046875
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            121.669189453125,
+            149.8190460205078,
+            307.3316955566406,
+            347.78759765625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            121.75128173828125,
+            124.95687103271484,
+            293.18841552734375,
+            344.93865966796875
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            121.50325012207031,
+            150.23101806640625,
+            307.00555419921875,
+            344.6534423828125
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            121.71784973144531,
+            125.08786010742188,
+            293.0411376953125,
+            343.37158203125
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 2,
+      "yaw": -0.610725998878479,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            120.08251953125,
+            159.53375244140625,
+            291.70440673828125,
+            349.19537353515625
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            119.77650451660156,
+            139.04946899414062,
+            291.39837646484375,
+            342.9728698730469
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            119.75611877441406,
+            158.16444396972656,
+            291.78521728515625,
+            345.82177734375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            119.7125015258789,
+            138.35980224609375,
+            291.32196044921875,
+            342.44818115234375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            119.60762023925781,
+            156.87155151367188,
+            291.8035583496094,
+            342.44818115234375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            119.6861343383789,
+            137.90966796875,
+            291.28924560546875,
+            342.44818115234375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            119.75611877441406,
+            158.16444396972656,
+            291.78521728515625,
+            340.0451354980469
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            119.7125015258789,
+            138.35980224609375,
+            291.32196044921875,
+            342.44818115234375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            117.47393798828125,
+            159.53375244140625,
+            289.0957946777344,
+            349.19537353515625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            117.77996063232422,
+            139.04946899414062,
+            289.40185546875,
+            342.9728698730469
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            117.68202209472656,
+            158.16444396972656,
+            289.43310546875,
+            345.82177734375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            117.82025146484375,
+            139.0956573486328,
+            289.60577392578125,
+            342.44818115234375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            117.75627136230469,
+            156.87155151367188,
+            289.5522766113281,
+            342.44818115234375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            117.83631134033203,
+            138.95034790039062,
+            289.68927001953125,
+            342.44818115234375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            117.68202209472656,
+            158.16444396972656,
+            289.43310546875,
+            340.0451354980469
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            117.82025146484375,
+            139.0956573486328,
+            289.60577392578125,
+            342.44818115234375
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 3,
+      "yaw": -0.9897410869598389,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            111.49028015136719,
+            156.19891357421875,
+            275.3245849609375,
+            354.0559387207031
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            110.2558822631836,
+            142.15020751953125,
+            291.7014465332031,
+            348.0728454589844
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            111.18850708007812,
+            154.95236206054688,
+            276.25921630859375,
+            350.9217529296875
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            110.326416015625,
+            141.5438690185547,
+            291.7865295410156,
+            346.5057373046875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            110.99256896972656,
+            153.71047973632812,
+            276.6297912597656,
+            347.78759765625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            110.35556030273438,
+            141.12808227539062,
+            291.8206787109375,
+            344.93865966796875
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            111.18850708007812,
+            154.95236206054688,
+            276.25921630859375,
+            344.6534423828125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            110.326416015625,
+            141.5438690185547,
+            291.7865295410156,
+            343.37158203125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            109.06680297851562,
+            155.81451416015625,
+            272.901123046875,
+            346.8992919921875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            108.40104675292969,
+            141.85598754882812,
+            289.8465881347656,
+            347.78759765625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            108.7771224975586,
+            154.58383178710938,
+            271.91204833984375,
+            344.3677062988281
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            108.33027648925781,
+            141.90020751953125,
+            289.7578430175781,
+            347.78759765625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            108.65623474121094,
+            153.34854125976562,
+            271.4869384765625,
+            344.4781494140625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            108.30091094970703,
+            141.75390625,
+            289.719970703125,
+            347.78759765625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            108.7771224975586,
+            154.58383178710938,
+            271.91204833984375,
+            345.3471374511719
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            108.33027648925781,
+            141.90020751953125,
+            289.7578430175781,
+            347.78759765625
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 4,
+      "yaw": -2.1815226078033447,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            122.36033630371094,
+            155.84275817871094,
+            227.88143920898438,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            110.1653823852539,
+            146.00177001953125,
+            229.86221313476562,
+            343.7600402832031
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            124.78501892089844,
+            154.25518798828125,
+            228.42474365234375,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            110.30613708496094,
+            145.64898681640625,
+            229.98681640625,
+            343.7600402832031
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            125.1134033203125,
+            152.8720703125,
+            228.6482391357422,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            110.36599731445312,
+            145.33790588378906,
+            230.03836059570312,
+            343.7600402832031
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            124.78501892089844,
+            154.25518798828125,
+            228.42474365234375,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            110.30613708496094,
+            145.64898681640625,
+            229.98681640625,
+            343.7600402832031
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            122.36034393310547,
+            154.80381774902344,
+            227.88143920898438,
+            344.594482421875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            110.16539001464844,
+            145.2066192626953,
+            229.86221313476562,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            119.9955825805664,
+            153.87686157226562,
+            228.42477416992188,
+            343.67877197265625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            109.99150085449219,
+            144.996337890625,
+            229.98683166503906,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            119.04267883300781,
+            152.69754028320312,
+            228.64828491210938,
+            343.29949951171875
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            109.92103576660156,
+            144.74435424804688,
+            230.03839111328125,
+            346.60894775390625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            119.9955825805664,
+            153.87686157226562,
+            228.42477416992188,
+            343.67877197265625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            109.99150085449219,
+            144.996337890625,
+            229.98683166503906,
+            346.60894775390625
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 5,
+      "yaw": 2.909881591796875,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            75.41165161132812,
+            130.4322509765625,
+            260.44512939453125,
+            335.6688232421875
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            89.46259307861328,
+            138.86740112304688,
+            260.5067443847656,
+            335.9540710449219
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            76.3284683227539,
+            128.38589477539062,
+            260.77484130859375,
+            338.802978515625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            89.82492065429688,
+            138.838623046875,
+            260.583740234375,
+            337.5211486816406
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            76.73097229003906,
+            126.84228515625,
+            260.89886474609375,
+            341.9371337890625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            89.9761734008789,
+            138.66207885742188,
+            260.6150207519531,
+            339.0882263183594
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            76.3284683227539,
+            128.38589477539062,
+            260.77484130859375,
+            345.0713195800781
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            89.82492065429688,
+            138.838623046875,
+            260.583740234375,
+            340.6553039550781
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            77.83512115478516,
+            130.0478515625,
+            262.8686218261719,
+            340.902099609375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            91.31742858886719,
+            138.5731658935547,
+            262.361572265625,
+            341.9371337890625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            76.99466705322266,
+            129.71800231933594,
+            262.4969787597656,
+            339.4967041015625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            90.95906829833984,
+            138.0399627685547,
+            262.2823791503906,
+            341.9371337890625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            76.66851806640625,
+            128.8853302001953,
+            262.3310546875,
+            338.627685546875
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            90.81181335449219,
+            137.65452575683594,
+            262.2489318847656,
+            341.9371337890625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            76.99466705322266,
+            129.71800231933594,
+            262.4969787597656,
+            338.51727294921875
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            90.95906829833984,
+            138.0399627685547,
+            262.2823791503906,
+            341.9371337890625
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 6,
+      "yaw": 2.5308666229248047,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            92.29581451416016,
+            125.35546875,
+            263.917724609375,
+            335.1905822753906
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            92.60184478759766,
+            135.515869140625,
+            264.2237243652344,
+            336.15081787109375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            92.21501159667969,
+            123.38323974609375,
+            264.244140625,
+            333.7477722167969
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            92.67826843261719,
+            135.52987670898438,
+            264.2877197265625,
+            336.15081787109375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            92.19664764404297,
+            121.87399291992188,
+            264.39263916015625,
+            336.15081787109375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            92.71098327636719,
+            135.37124633789062,
+            264.3140869140625,
+            336.15081787109375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            92.21501159667969,
+            123.38323974609375,
+            264.244140625,
+            339.5244140625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            92.67826843261719,
+            135.52987670898438,
+            264.2877197265625,
+            336.15081787109375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            94.9044189453125,
+            125.35546875,
+            266.52630615234375,
+            335.1905822753906
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            94.59838104248047,
+            135.515869140625,
+            266.22027587890625,
+            336.15081787109375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            94.56709289550781,
+            124.60494232177734,
+            266.3182373046875,
+            333.7477722167969
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            94.3944320678711,
+            134.85850524902344,
+            266.17999267578125,
+            336.15081787109375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            94.44793701171875,
+            123.60152435302734,
+            266.24395751953125,
+            336.15081787109375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            94.31095886230469,
+            134.42184448242188,
+            266.1639099121094,
+            336.15081787109375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            94.56709289550781,
+            124.60494232177734,
+            266.3182373046875,
+            339.5244140625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            94.3944320678711,
+            134.85850524902344,
+            266.17999267578125,
+            336.15081787109375
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 7,
+      "yaw": 2.1518516540527344,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            108.67561340332031,
+            112.90525817871094,
+            272.50994873046875,
+            340.902099609375
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            92.29877471923828,
+            121.43058013916016,
+            273.7443542480469,
+            341.9371643066406
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            107.74101257324219,
+            111.17486572265625,
+            272.81170654296875,
+            339.4967041015625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            92.21368408203125,
+            121.51945495605469,
+            273.673828125,
+            341.9371643066406
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            107.37041473388672,
+            109.76861572265625,
+            273.0076599121094,
+            338.627685546875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            92.1795425415039,
+            121.39203643798828,
+            273.6446533203125,
+            341.9371643066406
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            107.74101257324219,
+            111.17486572265625,
+            272.81170654296875,
+            338.51727294921875
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            92.21368408203125,
+            121.51945495605469,
+            273.673828125,
+            341.9371643066406
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            111.09908294677734,
+            113.28966522216797,
+            274.9334411621094,
+            335.6688232421875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            94.15361022949219,
+            121.72478485107422,
+            275.5992126464844,
+            335.9540710449219
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            112.08817291259766,
+            112.66520690917969,
+            275.2231140136719,
+            338.802978515625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            94.24238586425781,
+            121.07524108886719,
+            275.6699523925781,
+            337.5211486816406
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            112.51325988769531,
+            111.71656036376953,
+            275.343994140625,
+            341.9371643066406
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            94.28024291992188,
+            120.64201354980469,
+            275.6993103027344,
+            339.0882263183594
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            112.08817291259766,
+            112.66520690917969,
+            275.2231140136719,
+            345.0713195800781
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 13,
+          "bounds": [
+            94.24238586425781,
+            121.07524108886719,
+            275.6699523925781,
+            340.6553039550781
+          ]
+        }
+      ]
+    }
+  ],
+  "fps": 100,
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 48
+  },
+  "display_scale": 1.406896551724138,
+  "reference_sha256": "9e264fcf20942375e1017348f0f555f9e44e89f6fbf097ddd2dd3789a44c5222",
+  "generator_sha256": "4761d6d9b723704bbb6f58a116c511ff406b9783ae9ab65939904196fe05d2cf",
+  "runtime": {
+    "mesh_objects": 55,
+    "triangles": 23190,
+    "materials": 18
+  }
+}

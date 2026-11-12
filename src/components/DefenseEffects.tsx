@@ -1,6 +1,7 @@
 import { memo } from 'react';
-import { monsterSpriteAsset, spriteAsset } from '../games/defense/art';
-import type { CombatAttack, Effect, Element, Point, Projectile } from '../games/defense/types';
+import { frostWolfBracedFallAsset, frostWolfFallAsset, baseMagicProjectileOffset, baseCrossbowProjectileOffset, baseCannonProjectileOffset, crushCannonProjectileOffset, rapidCrossbowProjectileOffset, lightningTowerProjectileOffset, fireTowerProjectileOffset, idleSpriteAsset, druidCastSocket, druidProjectileOffset, taoSealSocket, taoProjectileOffset, elfArrowSocket, elfProjectileOffset, mageProjectileOffset, mageCastSocket, hammerSequenceSpriteAsset, monsterDeathSpriteAsset, monsterSpriteAsset, spriteAsset, ballistaProjectileOffset, waterCannonProjectileOffset } from '../games/defense/art';
+import { projectileScreenPosition, shellTrailPositions } from '../games/defense/action';
+import type { CombatAttack, Effect, Element, HeroId, Point, Projectile } from '../games/defense/types';
 
 export const FX_COLORS: Record<Element, string> = { physical:'#fff0be', fire:'#ff9d38', lightning:'#fff27a', impact:'#ecc58b', water:'#4fd6c4' };
 /** Water reads teal and lightning yellow-white so a wet hit followed by a shock is not one blue blob. */
@@ -8,6 +9,19 @@ export const hitCore=(element:Element)=>element==='fire'?'def-fire-core':element
 const clamp = (v:number) => Math.max(0,Math.min(1,v));
 const noise = (n:number) => { const x=Math.sin(n*127.1)*43758.5453; return x-Math.floor(x); };
 const effectKind = (effect:Effect) => effect.kind??(effect.text?.startsWith('+')?'coin':'impact');
+
+/** A compact signature at the actual hit point, never an invented local radius. */
+function SkillTargetMark({hero}:{hero:HeroId}) {
+ const common={fill:'none',strokeLinecap:'round' as const,strokeLinejoin:'round' as const};
+ switch(hero){
+  case 'mage':return <g {...common}><path d="M-16-29 0-11 7-18M-10-36 5-19" stroke="#ffb64c" strokeWidth="5"/><path d="M-10-8 0-15 10-8 6 2-6 2Z" fill="#ffd274" stroke="#fff3ba" strokeWidth="2"/></g>;
+  case 'elf':return <g {...common} stroke="#eaffcc"><path d="M-15-38 0-12M-4-42 9-19M7-41 16-26" strokeWidth="3"/><path d="m-5-17 5 5 2-7M5-25l4 6 3-7" strokeWidth="2"/><path d="m0-8 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" fill="#eaffcc" strokeWidth="1"/></g>;
+  case 'dwarf':return <g {...common} stroke="#ffe0a0" strokeWidth="3"><path d="M-19 1-9-4-4-1 1-12 7-5 18-1"/><path d="M-6-8-11-15M9-9l6-6"/></g>;
+  case 'tao':return <g {...common}><path d="m3-42-13 20 9-1-5 17 18-24-10 2 5-14Z" fill="#fff6ae" stroke="#e9bf50" strokeWidth="2"/><path d="M-13-2Q0 4 13-2" stroke="#8ce9df" strokeWidth="2"/></g>;
+  case 'barbarian':return <g {...common} stroke="#ffe3aa" strokeWidth="4"><path d="M-18-29 13-4M-11-38 20-13"/><path d="M-20 0Q0 7 20 0" stroke="#d8a56d" strokeWidth="2"/></g>;
+  case 'druid':return <g {...common} stroke="#d8f6b5" strokeWidth="3"><path d="M-14 2Q-15-15-5-23M14 2Q15-15 5-23M-10-11Q-19-13-18-21Q-10-21-10-11ZM10-11Q19-13 18-21Q10-21 10-11Z"/><path d="M-11 3Q0 8 11 3" stroke="#79c68b"/></g>;
+ }
+}
 
 /** Dynamic FX use simulation ages, never wall-clock CSS animation. */
 export const DefenseFxDefs = memo(function DefenseFxDefs(){return <defs>
@@ -42,23 +56,23 @@ export function DashTrail({effect,position,remaining,reduced}:{effect?:Effect;po
  </g>;
 }
 
-export function ProjectileLayer({projectiles,reduced}:{projectiles:Projectile[];reduced:boolean}) {
+export function ProjectileLayer({projectiles,reduced,unit=1}:{projectiles:Projectile[];reduced:boolean;unit?:number}) {
   return <g className="def-projectiles" aria-hidden="true" pointerEvents="none">{projectiles.map((p,index)=>{
     const detail=!reduced&&index>=projectiles.length-24;
-    const x=p.position.x,y=p.position.y-27-p.height;
-    const heightSpeed=p.arcHeight?4*p.arcHeight*(1-2*p.progress)/Math.max(.1,p.duration):0;
-    const angle=Math.atan2(p.velocity.y-heightSpeed,p.velocity.x)*180/Math.PI;
+    const elfOffset=elfProjectileOffset(p,unit),rapidOffset=rapidCrossbowProjectileOffset(p),baseOffset=baseCrossbowProjectileOffset(p),tipAnchored=!!(elfOffset??rapidOffset??baseOffset);
+    const launchOffset=elfOffset??rapidOffset??baseOffset??baseCannonProjectileOffset(p)??crushCannonProjectileOffset(p)??druidProjectileOffset(p,unit)??taoProjectileOffset(p,unit)??mageProjectileOffset(p,unit)??ballistaProjectileOffset(p)??waterCannonProjectileOffset(p)??baseMagicProjectileOffset(p,reduced)??fireTowerProjectileOffset(p,reduced)??lightningTowerProjectileOffset(p,reduced);
+    const {x,y,angle}=projectileScreenPosition(p,launchOffset);
     const water=p.element==='water',lightning=p.element==='lightning',green=p.actor==='druid';
     return <g key={p.id} data-projectile={p.kind} data-element={p.element} data-progress={p.progress.toFixed(3)}>
       {p.kind==='shell'?<ellipse cx={p.position.x} cy={p.position.y-1} rx={Math.max(3,9-p.height*.025)} ry="3.3" fill="#142e39" opacity={Math.max(.12,.35-p.height*.002)}/>:null}
+      {p.kind==='shell'&&detail?shellTrailPositions(p,launchOffset).map((point,i)=><circle key={i} data-shell-trail={water?'water':'stone'} cx={point.x} cy={point.y} r={(water?3.5:4.5)-i*.7} fill={water?'#a2fff0':'#dcc7a3'} opacity={.37-i*.1}/>):null}
       <g transform={`translate(${x},${y}) rotate(${angle})`}>
-        {p.kind==='arrow'?<>
+        {p.kind==='arrow'?<g data-arrow-anchor={tipAnchored?'tip':'center'} transform={tipAnchored?'translate(-16,0)':undefined}>
           {detail?<path d="M-34 0H-10" stroke="#fff2c2" strokeWidth="3" strokeLinecap="round" opacity=".32"/>:null}
           <path d="M-16 0H9" stroke="#473f31" strokeWidth="3.5" strokeLinecap="round"/><path d="M-16 -.5H9" stroke="#ebd39a" strokeWidth="1.6"/>
           <path d="m7-4 9 4-9 4 2-4Z" fill="#faf7db" stroke="#91875d" strokeWidth=".8"/><path d="m-14 0-7-5 1 5-1 5Z" fill="#c5e3b0" stroke="#648773" strokeWidth=".8"/>
-        </>:p.kind==='shell'?<>
-          {detail?<><circle cx="-14" cy="2" r="5" fill={water?'#8ff0dc':'#e1c99e'} opacity=".25"/><circle cx="-25" cy="5" r="3" fill={water?'#8ff0dc':'#e1c99e'} opacity=".12"/></>:null}
-          <circle r={water?9:8} fill={water?'#2fb3a3':'#33494c'} stroke={water?'#c8fff0':'#1f2f30'} strokeWidth="1.8"/><path d="M-4-4Q1-8 5-3" fill="none" stroke={water?'#eaffff':'#b6cbbe'} strokeWidth="2" strokeLinecap="round"/>
+        </g>:p.kind==='shell'?<>
+          <circle r={p.radius} fill={water?'#2fb3a3':'#33494c'} stroke={water?'#c8fff0':'#1f2f30'} strokeWidth="1.8"/><path d="M-4-4Q1-8 5-3" fill="none" stroke={water?'#eaffff':'#b6cbbe'} strokeWidth="2" strokeLinecap="round"/>
           {water?<path d="M-5 2Q0-1 5 2" fill="none" stroke="#b8fff0" strokeWidth="1.2"/>:<><path d="M-7-3-11-7" stroke="#c8a45e" strokeWidth="1.6"/><circle cx="-12" cy="-8" r="2.5" fill="#ffdb82"/></>}
         </>:lightning?<>
           <circle r="18" fill="url(#def-spark-core)" opacity=".8"/>
@@ -76,12 +90,13 @@ export function ProjectileLayer({projectiles,reduced}:{projectiles:Projectile[];
 
 /** The barbarian's heavy hammer: a thick overhead crescent, then a ground burst where it lands. */
 function HammerSlam({attack:a,direction,progress,contact,reduced}:{attack:CombatAttack;direction:number;progress:number;contact:number;reduced:boolean}) {
+ const modeled=!!hammerSequenceSpriteAsset('barbarian',a);
  const swing=clamp((contact+.08)/.08),impact=clamp(contact/.2),fade=(1-progress)*.9;
  return <g data-attack-trail={a.actor} opacity={fade}>
-  <g transform={`translate(${a.from.x},${a.from.y-26}) rotate(${direction})`}>
+  {!modeled?<g transform={`translate(${a.from.x},${a.from.y-26}) rotate(${direction})`}>
    <path d={reduced?'M20-40Q78-36 92 22':'M14-52Q86-52 100 26Q80-8 52-16Q30-24 14-52Z'} fill={reduced?'none':'#ffd98a99'} stroke="#fff1c4" strokeWidth={reduced?4:3} strokeLinecap="round" strokeLinejoin="round" opacity={reduced?1:.45+.55*swing}/>
    {!reduced?<path d="M10-60Q94-56 108 28" fill="none" stroke="#f0a43d" strokeWidth="4" strokeLinecap="round" opacity=".75"/>:null}
-  </g>
+  </g>:null}
   {contact>=0?<g transform={`translate(${a.to.x},${a.to.y+4})`}>
    <ellipse rx={10+impact*(reduced?24:34)} ry={4+impact*(reduced?9:13)} fill="none" stroke="#fff1c4" strokeWidth={4-impact*2.5}/>
    {!reduced?[0,1,2,3].map(i=>{const dir=(i-1.5)*.7+direction*Math.PI/180*.3,reach=14+i%2*8;return <path key={i} d="M-3-2 3-3 4 2-2 4Z" transform={`translate(${Math.sin(dir)*reach*impact*2},${-Math.sin(impact*Math.PI)*(12+i*3)}) rotate(${impact*(i%2?200:-160)})`} fill={i%2?'#e7d0a1':'#8e7d70'} stroke="#5d4e41" strokeWidth=".7"/>;}):null}
@@ -91,11 +106,12 @@ function HammerSlam({attack:a,direction,progress,contact,reduced}:{attack:Combat
 
 /** The dwarf's compact stone hammer: a short steel-blue chop, then a flat double shock ring and dust where it lands. */
 function DwarfThud({attack:a,direction,progress,contact,reduced}:{attack:CombatAttack;direction:number;progress:number;contact:number;reduced:boolean}) {
+ const modeled=!!hammerSequenceSpriteAsset('dwarf',a);
  const swing=clamp((contact+.08)/.08),impact=clamp(contact/.2),fade=(1-progress)*.9;
  return <g data-attack-trail={a.actor} opacity={fade}>
-  <g transform={`translate(${a.from.x},${a.from.y-20}) rotate(${direction})`}>
+  {!modeled?<g transform={`translate(${a.from.x},${a.from.y-20}) rotate(${direction})`}>
    <path d={reduced?'M20-30Q58-28 70 18':'M16-36Q66-36 76 20Q58-4 38-10Q26-16 16-36Z'} fill={reduced?'none':'#bfe0f099'} stroke="#e4f4fb" strokeWidth={reduced?4:3} strokeLinecap="round" strokeLinejoin="round" opacity={reduced?1:.45+.55*swing}/>
-  </g>
+  </g>:null}
   {contact>=0?<g transform={`translate(${a.to.x},${a.to.y+4})`}>
    <ellipse rx={8+impact*(reduced?20:28)} ry={3+impact*(reduced?6:9)} fill="none" stroke="#e4f4fb" strokeWidth={3.5-impact*2.2}/>
    {!reduced?<><ellipse rx={4+impact*16} ry={2+impact*5} fill="none" stroke="#9fb6c2" strokeWidth={2.5-impact*1.6}/>
@@ -107,17 +123,19 @@ function DwarfThud({attack:a,direction,progress,contact,reduced}:{attack:CombatA
 /** Hero spellcasting wind-up: a rune ring at the caster's feet and motes drawn into the wind-up orb (the orb itself is drawn by the actor). */
 function CastGlyph({attack:a,reduced}:{attack:CombatAttack;reduced:boolean}) {
  const charge=clamp(a.elapsed/a.hitAt),release=clamp((a.elapsed-a.hitAt)/.18),fade=a.elapsed<a.hitAt?.95:(1-release)*.9;
+ const modeledCaster=(a.actor==='mage'&&!!mageCastSocket(a.from,a.to,84))||(a.actor==='tao'&&!!taoSealSocket(a.from,a.to,84))||(a.actor==='druid'&&!!druidCastSocket(a.from,a.to,84));
  const green=a.actor==='druid',lightning=a.actor==='tao';
  const rune=green?'#c9f59a':lightning?'#fff08a':'#ffd27a';
  const facing=a.to.x<a.from.x?-1:1,hand={x:a.from.x+facing*24,y:a.from.y-48};
  return <g data-cast-glyph={a.actor} opacity={fade}>
   <ellipse cx={a.from.x} cy={a.from.y+3} rx={14+charge*12} ry={5+charge*4} fill="none" stroke={rune} strokeWidth="2.5" strokeDasharray={reduced?undefined:'5 4'} transform={reduced?undefined:`rotate(${charge*50} ${a.from.x} ${a.from.y+3})`}/>
-  {!reduced?[0,1,2].map(i=>{const ang=i*2.1+charge*4,r=(1-charge)*20+4;return <circle key={i} cx={hand.x+Math.cos(ang)*r} cy={hand.y+Math.sin(ang)*r*.7} r="1.8" fill={rune} opacity={.4+.5*charge}/>;}):null}
+  {!reduced&&!modeledCaster?[0,1,2].map(i=>{const ang=i*2.1+charge*4,r=(1-charge)*20+4;return <circle key={i} cx={hand.x+Math.cos(ang)*r} cy={hand.y+Math.sin(ang)*r*.7} r="1.8" fill={rune} opacity={.4+.5*charge}/>;}):null}
  </g>;
 }
 
 /** Elf bow draw: a pulled bowstring with a nocked light arrow along the aim line that snaps and streaks on release. */
 function ElfDraw({attack:a,reduced}:{attack:CombatAttack;reduced:boolean}) {
+ if(elfArrowSocket(a.from,a.to,84))return null;
  const charge=clamp(a.elapsed/a.hitAt),release=clamp((a.elapsed-a.hitAt)/.18),fade=a.elapsed<a.hitAt?.95:(1-release)*.9;
  const facing=a.to.x<a.from.x?-1:1,angle=Math.atan2(a.to.y-(a.from.y-40),a.to.x-a.from.x)*180/Math.PI;
  const pull=a.elapsed<a.hitAt?charge*11:(reduced?0:-(1-release)*4*Math.sin(release*18));
@@ -133,6 +151,7 @@ function ElfDraw({attack:a,reduced}:{attack:CombatAttack;reduced:boolean}) {
 export function AttackTrails({attacks,reduced}:{attacks:CombatAttack[];reduced:boolean}) {
  return <g className="def-attack-trails" aria-hidden="true" pointerEvents="none">{attacks.filter(a=>a.kind==='spell'&&a.source!=='tower'&&a.elapsed<=a.hitAt+.18).map(a=><CastGlyph key={`cast-${a.id}`} attack={a} reduced={reduced}/>)}{attacks.filter(a=>a.kind==='shot'&&a.actor==='elf'&&a.elapsed<=a.hitAt+.18).map(a=><ElfDraw key={`draw-${a.id}`} attack={a} reduced={reduced}/>)}{attacks.filter(a=>a.kind==='melee'||a.kind==='slam').map(a=>{
   const contact=a.elapsed-a.hitAt;if(contact<-.08||contact>.22)return null;
+  if(a.actor==='wolf'&&idleSpriteAsset('wolf'))return null;
   const direction=Math.atan2(a.to.y-a.from.y,a.to.x-a.from.x)*180/Math.PI;
   const progress=clamp((contact+.08)/.3),opacity=(1-progress)*.85;
   if(a.actor==='barbarian')return <HammerSlam key={a.id} attack={a} direction={direction} progress={progress} contact={contact} reduced={reduced}/>;
@@ -165,7 +184,7 @@ const Lightning=memo(function Lightning({effect}:{effect:Effect}){
  }).join(' ');
  return <><polyline points={nodes} fill="none" stroke="#f2cf3a" strokeWidth="7" opacity=".45" strokeLinejoin="round"/><polyline points={nodes} fill="none" stroke="#fffbd0" strokeWidth="2.6" strokeLinejoin="round"/></>;
 },(before,after)=>before.effect.id===after.effect.id&&before.effect.from.x===after.effect.from.x&&before.effect.from.y===after.effect.from.y&&before.effect.to.x===after.effect.to.x&&before.effect.to.y===after.effect.to.y);
-export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];reduced:boolean;layer?:'ground'|'front'}){
+export function EffectLayer({effects,reduced,unit=1,layer='front'}:{effects:Effect[];reduced:boolean;unit?:number;layer?:'ground'|'front'}){
  // Keep every damage number, hit core, coin and death; cap only decorative fragments.
  const sparkCounts=new Map<number,number>();
  if(!reduced&&layer==='front'){
@@ -183,8 +202,14 @@ export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];re
     {!reduced&&kind==='build'?[-1,1].map(side=><path key={side} d="M-8 0Q0-5 8 0" transform={`translate(${side*(23+p*18)},${p*6})`} fill="none" stroke="#e1d4b6" strokeWidth={3*(1-p)} opacity=".5"/>):null}
    </g>;
    if(kind==='breach'){const r=30+(reduced?30:p*(46+(e.force??1)*9));return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} opacity={fade*.9} data-effect-ground="breach"><ellipse rx={r} ry={r*.38} fill="#d9433a24" stroke="#ff7b6b" strokeWidth={Math.min(6,2+(e.force??1)*.5)}/></g>;}
-   if(!['shockwave','skill','impact','freeze','interrupt'].includes(kind)||(kind==='impact'&&!detail))return null;
-   const wide=kind==='skill'||kind==='shockwave'||kind==='interrupt';
+   // Skills hit the entire field; this small ring marks the caster, not a range.
+   if(kind==='skill')return <g key={e.id} opacity={fade} data-effect-ground="skill">
+    {/* Draw each actual hit below actors and death poses, at its captured position. */}
+    {e.skillHero?e.skillTargets?.map(target=><g key={target.id} data-skill-target={target.id} data-skill-hero={e.skillHero} transform={`translate(${target.x},${target.y}) scale(${unit*(reduced?1:.85+.15*Math.min(1,p*8))})`}><SkillTargetMark hero={e.skillHero!}/></g>):null}
+    <ellipse cx={e.to.x} cy={e.to.y} rx={reduced?24:20+p*10} ry={reduced?8:7+p*3} fill="none" stroke={color} strokeWidth="2" opacity=".7"/>
+   </g>;
+   if(!['shockwave','impact','freeze','interrupt'].includes(kind)||(kind==='impact'&&!detail))return null;
+   const wide=kind==='shockwave'||kind==='interrupt';
    const radius=wide?35+p*(e.force?Math.min(145,e.force):100):12+p*30;
    return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} opacity={fade*(wide?.75:.4)} data-effect-ground={kind}>
     <ellipse rx={reduced?radius*.65:radius} ry={radius*.38} fill="none" stroke={color} strokeWidth={wide?3:1.5}/>
@@ -204,24 +229,30 @@ export function EffectLayer({effects,reduced,layer='front'}:{effects:Effect[];re
   if(kind==='chain')return <g key={e.id} opacity={fade} data-effect="chain"><Lightning effect={e}/><circle cx={e.to.x} cy={e.to.y-25} r={12+p*12} fill={`url(#${hitCore(e.element)})`}/></g>;
   if(kind==='death'){
    const kind=e.targetKind??(e.targetSprite===20?'frostboss':e.targetSprite===14?'boss':undefined);
-   const deathArt=kind?monsterSpriteAsset(kind,'death'):null;
+   const braced=kind==='frostwolf'&&e.targetWalk?frostWolfBracedFallAsset(e.targetWalk.heading,e.targetWalk.distance,e.targetWalk.cycles,e.targetWalk.braceVelocity??0,e.age??p*(e.maxLife??.7),73*unit,reduced):null;
+   const directional=braced??(kind==='frostwolf'&&e.targetWalk?frostWolfFallAsset(e.targetWalk.heading,e.targetWalk.distance,e.targetWalk.cycles,e.age??p*(e.maxLife??.7),73*unit,reduced):null);
+   const collapse=directional??(kind?monsterDeathSpriteAsset(kind,p,reduced):null);
+   const deathArt=collapse?.asset??(kind?monsterSpriteAsset(kind,'death'):null);
    const art=deathArt??(typeof e.targetSprite==='number'?spriteAsset(e.targetSprite):null);
    const boss=kind==='boss'||kind==='frostboss';
-   const fall=reduced?0:p*(deathArt?3:10),scale=reduced?1:1-p*(boss?.08:.24),bodySize=e.targetSprite===20?135:e.targetSprite===14?115:e.targetSprite===8?54:e.targetSprite===19?73:68,size=bodySize*(art?.displayScale??1);
-   const [,,frameWidth,frameHeight]=art?.viewBox.split(' ').map(Number)??[0,0,1,1];
+   const fall=reduced||collapse?0:p*(deathArt?3:10),scale=reduced||collapse?1:1-p*(boss?.08:.24),bodySize=e.targetSprite===20?135:e.targetSprite===14?115:e.targetSprite===8?54:e.targetSprite===19?73:68,size=bodySize*(collapse?unit:1)*(art?.displayScale??1);
+   const [,frameY,frameWidth,frameHeight]=art?.viewBox.split(' ').map(Number)??[0,0,1,1];
    const width=size*Math.min(1,frameWidth/frameHeight),height=size*Math.min(1,frameHeight/frameWidth);
-   return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} data-effect="death">
-    {art?<g opacity={Math.min(1,(1-p)*(boss?1.6:.85))} transform={`translate(0,${fall}) rotate(${reduced||deathArt?0:(noise(e.id)>.5?1:-1)*p*13}) scale(${scale*(e.targetFacing===-1?-1:1)},${scale})`}><svg x={-width/2} y={bodySize*.1-height} width={width} height={height} viewBox={art.viewBox} preserveAspectRatio="xMidYMax meet" overflow="hidden"><image href={art.src} width={art.width} height={art.height}/></svg></g>:null}
-    {sparks>0?<g transform="translate(0,-20)"><Sparks effect={e} reduced={reduced} count={sparks}/></g>:null}
+   const bottom=collapse&&art?.groundY!==undefined?height*(1-(art.groundY-frameY)/frameHeight):bodySize*.1;
+   return <g key={e.id} transform={`translate(${e.to.x},${e.to.y})`} data-effect="death" data-death-brace={braced?.brace} data-death-model={collapse?'collapse':undefined} data-death-frame={collapse?.frame} data-death-direction={directional?.direction} data-death-gait={directional?.gait}>
+    {art?<g opacity={collapse?Math.min(1,(1-p)/.3):Math.min(1,(1-p)*(boss?1.6:.85))} transform={`translate(0,${fall}) rotate(${reduced||deathArt?0:(noise(e.id)>.5?1:-1)*p*13}) scale(${scale*(!art?.oriented&&e.targetFacing===-1?-1:1)},${scale})`}><svg x={-width/2} y={bottom-height} width={width} height={height} viewBox={art.viewBox} preserveAspectRatio="xMidYMax meet" overflow="hidden"><image href={art.src} width={art.width} height={art.height}/></svg></g>:null}
+    {sparks>0&&!collapse?<g transform="translate(0,-20)"><Sparks effect={e} reduced={reduced} count={sparks}/></g>:null}
    </g>;
   }
   if(kind==='coin')return <g key={e.id} transform={`translate(${(e.text?.length??0)>4?Math.max(40,Math.min(760,e.to.x)):e.to.x},${e.to.y-35-(reduced?0:p*37)})`} opacity={fade} data-effect="coin">
     <g transform={`translate(-15,${reduced?0:-Math.sin(p*Math.PI)*8})`}><ellipse rx={reduced?5:Math.max(1,Math.abs(Math.cos(p*Math.PI*2))*5)} ry="6" fill="#ffdc76" stroke="#a4742d" strokeWidth="1.2"/><path d="M0-3v6" stroke="#fff5bc" strokeWidth="1.2"/></g>
     <text x="-6" y="5" className="def-float-number def-float-coin">{e.text}</text>
   </g>;
-  if(kind==='skill'||kind==='interrupt')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y-27})`} opacity={fade} data-effect={kind}>
-   <circle r={reduced?22:15+p*65} fill={`url(#${hitCore(e.element)})`} opacity=".7"/>
-   {!reduced?Array.from({length:6},(_,i)=>{const angle=i*Math.PI/3,r=18+p*50;return <path key={i} d={`M${Math.cos(angle)*r} ${Math.sin(angle)*r}l${Math.cos(angle)*13} ${Math.sin(angle)*13}`} stroke={color} strokeWidth="2" strokeLinecap="round"/>;}):null}
+  if(kind==='skill'||kind==='interrupt')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y-27})`} opacity={fade} data-effect={kind} data-skill-mode={e.skillMode}>
+   {e.skillMode==='control'?<g fill="none" stroke="#8fe8d3" strokeWidth="2"><ellipse cy="22" rx={reduced?24:21+p*9} ry={reduced?8:7+p*3}/><ellipse cy="22" rx={reduced?18:15+p*7} ry={reduced?6:5+p*2}/></g>:null}
+   {e.skillMode==='power'?<path d="M-32 0 -12 -8 0 -34 12 -8 32 0 12 8 0 34 -12 8Z" fill="none" stroke="#ffe49a" strokeWidth={reduced?2:4*(1-p)} opacity={1-p}/>:null}
+   <circle r={reduced?22:kind==='skill'?15+p*16:15+p*65} fill={`url(#${hitCore(e.element)})`} opacity=".7"/>
+   {!reduced?Array.from({length:6},(_,i)=>{const angle=i*Math.PI/3,r=18+p*(kind==='skill'?14:50);return <path key={i} d={`M${Math.cos(angle)*r} ${Math.sin(angle)*r}l${Math.cos(angle)*13} ${Math.sin(angle)*13}`} stroke={color} strokeWidth="2" strokeLinecap="round"/>;}):null}
    {e.text?<text y={-45-(reduced?0:p*15)} textAnchor="middle" className="def-float-number def-float-skill">{e.text}</text>:null}
   </g>;
   if(kind==='freeze')return <g key={e.id} transform={`translate(${e.to.x},${e.to.y-35})`} opacity={fade} data-effect="freeze"><path d="M0-25v50M-22-13l44 26M-22 13l44-26M-6-18l6 5 6-5M-6 18l6-5 6 5" fill="none" stroke="#dafbff" strokeWidth="2" strokeLinecap="round"/>{e.text?<text y="-35" textAnchor="middle" className="def-float-number">{e.text}</text>:null}</g>;

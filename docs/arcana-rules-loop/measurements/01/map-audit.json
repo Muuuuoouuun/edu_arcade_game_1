@@ -1,0 +1,835 @@
+{
+ "geometry": [
+  {
+   "stage": "1-1",
+   "region": "forest",
+   "climate": "clear",
+   "expanded": false,
+   "slots": 6,
+   "lanes": [
+    {
+     "lane": 0,
+     "length": 1095,
+     "zoneSharePct": 8,
+     "traverseSec": {
+      "sprout": 23.3,
+      "wood": 39.9
+     },
+     "coverageDepthPct": {
+      "none": 0,
+      "one": 29,
+      "two": 36,
+      "threePlus": 36
+     },
+     "slotCoveragePct": {
+      "0:high": 37,
+      "1:plain": 27,
+      "2:plain": 35,
+      "3:plain": 41,
+      "4:water": 32,
+      "5:high": 39
+     }
+    }
+   ]
+  },
+  {
+   "stage": "1-2",
+   "region": "forest",
+   "climate": "rain",
+   "expanded": false,
+   "slots": 6,
+   "lanes": [
+    {
+     "lane": 0,
+     "length": 1095,
+     "zoneSharePct": 8,
+     "traverseSec": {
+      "sprout": 23.3,
+      "metal": 30.2,
+      "wood": 39.9,
+      "insulator": 21.9
+     },
+     "coverageDepthPct": {
+      "none": 0,
+      "one": 29,
+      "two": 36,
+      "threePlus": 36
+     },
+     "slotCoveragePct": {
+      "0:high": 37,
+      "1:plain": 27,
+      "2:plain": 35,
+      "3:plain": 41,
+      "4:water": 32,
+      "5:high": 39
+     }
+    }
+   ]
+  },
+  {
+   "stage": "1-3",
+   "region": "forest",
+   "climate": "clear",
+   "expanded": false,
+   "slots": 6,
+   "lanes": [
+    {
+     "lane": 0,
+     "length": 1095,
+     "zoneSharePct": 8,
+     "traverseSec": {
+      "ice": 32.9,
+      "sprout": 23.3,
+      "stone": 48.6,
+      "wood": 39.9
+     },
+     "coverageDepthPct": {
+      "none": 0,
+      "one": 29,
+      "two": 36,
+      "threePlus": 36
+     },
+     "slotCoveragePct": {
+      "0:high": 37,
+      "1:plain": 27,
+      "2:plain": 35,
+      "3:plain": 41,
+      "4:water": 32,
+      "5:high": 39
+     }
+    }
+   ]
+  },
+  {
+   "stage": "1-4",
+   "region": "forest",
+   "climate": "rain",
+   "expanded": true,
+   "slots": 8,
+   "lanes": [
+    {
+     "lane": 0,
+     "length": 1095,
+     "zoneSharePct": 8,
+     "traverseSec": {
+      "wood": 39.9,
+      "ice": 32.9,
+      "metal": 30.2,
+      "stone": 48.6,
+      "insulator": 21.9,
+      "sprout": 23.3,
+      "boss": 58.8
+     },
+     "coverageDepthPct": {
+      "none": 0,
+      "one": 15,
+      "two": 47,
+      "threePlus": 38
+     },
+     "slotCoveragePct": {
+      "0:high": 37,
+      "1:plain": 27,
+      "2:plain": 35,
+      "3:plain": 41,
+      "4:water": 32,
+      "5:high": 39,
+      "6:plain": 1,
+      "7:water": 15
+     }
+    },
+    {
+     "lane": 1,
+     "length": 754,
+     "zoneSharePct": 12,
+     "traverseSec": {
+      "wood": 27.7,
+      "ice": 22.8,
+      "metal": 21,
+      "stone": 33.7,
+      "insulator": 15.2,
+      "sprout": 16.2,
+      "boss": 40.8
+     },
+     "coverageDepthPct": {
+      "none": 0,
+      "one": 1,
+      "two": 31,
+      "threePlus": 68
+     },
+     "slotCoveragePct": {
+      "0:high": 25,
+      "1:plain": 0,
+      "2:plain": 50,
+      "3:plain": 40,
+      "4:water": 0,
+      "5:high": 52,
+      "6:plain": 68,
+      "7:water": 53
+     }
+    }
+   ]
+  },
+  {
+   "stage": "2-1",
+   "region": "snow",
+   "climate": "snow",
+   "expanded": false,
+   "slots": 6,
+   "lanes": [
+    {
+     "lane": 0,
+     "length": 1175,
+     "zoneSharePct": 19,
+     "traverseSec": {
+      "frostwolf": 19.8,
+      "ice": 33.2,
+      "wood": 40.3
+     },
+     "coverageDepthPct": {
+      "none": 0,
+      "one": 32,
+      "two": 23,
+      "threePlus": 45
+     },
+     "slotCoveragePct": {
+      "0:high": 33,
+      "1:plain": 23,
+      "2:ice": 39,
+      "3:high": 46,
+      "4:plain": 31,
+      "5:high": 42
+     }
+    }
+   ]
+  },
+  {
+   "stage": "2-2",
+   "region": "snow",
+   "climate": "snow",
+   "expanded": false,
+   "slots": 6,
+   "lanes": [
+    {
+     "lane": 0,
+     "length": 1175,
+     "zoneSharePct": 19,
+     "traverseSec": {
+      "frostwolf": 19.8,
+      "stone": 49.1,
+      "ice": 33.2,
+      "insulator": 22.2
+     },
+     "coverageDepthPct": {
+      "none": 0,
+      "one": 32,
+      "two": 23,
+      "threePlus": 45
+     },
+     "slotCoveragePct": {
+      "0:high": 33,
+      "1:plain": 23,
+      "2:ice": 39,
+      "3:high": 46,
+      "4:plain": 31,
+      "5:high": 42
+     }
+    }
+   ]
+  },
+  {
+   "stage": "2-3",
+   "region": "snow",
+   "climate": "blizzard",
+   "expanded": false,
+   "slots": 6,
+   "lanes": [
+    {
+     "lane": 0,
+     "length": 1175,
+     "zoneSharePct": 19,
+     "traverseSec": {
+      "ice": 33.2,
+      "metal": 30.5,
+      "frostwolf": 19.8,
+      "stone": 49.1
+     },
+     "coverageDepthPct": {
+      "none": 0,
+      "one": 32,
+      "two": 23,
+      "threePlus": 45
+     },
+     "slotCoveragePct": {
+      "0:high": 33,
+      "1:plain": 23,
+      "2:ice": 39,
+      "3:high": 46,
+      "4:plain": 31,
+      "5:high": 42
+     }
+    }
+   ]
+  },
+  {
+   "stage": "2-4",
+   "region": "snow",
+   "climate": "blizzard",
+   "expanded": true,
+   "slots": 8,
+   "lanes": [
+    {
+     "lane": 0,
+     "length": 1175,
+     "zoneSharePct": 19,
+     "traverseSec": {
+      "frostwolf": 19.8,
+      "ice": 33.2,
+      "stone": 49.1,
+      "metal": 30.5,
+      "insulator": 22.2,
+      "frostboss": 66.5
+     },
+     "coverageDepthPct": {
+      "none": 0,
+      "one": 20,
+      "two": 30,
+      "threePlus": 50
+     },
+     "slotCoveragePct": {
+      "0:high": 33,
+      "1:plain": 23,
+      "2:ice": 39,
+      "3:high": 46,
+      "4:plain": 31,
+      "5:high": 42,
+      "6:ice": 0,
+      "7:high": 17
+     }
+    },
+    {
+     "lane": 1,
+     "length": 723,
+     "zoneSharePct": 46,
+     "traverseSec": {
+      "frostwolf": 11.5,
+      "ice": 19.3,
+      "stone": 28.6,
+      "metal": 17.8,
+      "insulator": 12.9,
+      "frostboss": 38.6
+     },
+     "coverageDepthPct": {
+      "none": 0,
+      "one": 2,
+      "two": 31,
+      "threePlus": 67
+     },
+     "slotCoveragePct": {
+      "0:high": 32,
+      "1:plain": 0,
+      "2:ice": 54,
+      "3:high": 46,
+      "4:plain": 0,
+      "5:high": 36,
+      "6:ice": 65,
+      "7:high": 56
+     }
+    }
+   ]
+  }
+ ],
+ "pressure": [
+  {
+   "stage": "1-1",
+   "waves": [
+    {
+     "count": 10,
+     "totalHp": 875,
+     "kinds": {
+      "sprout": 7,
+      "wood": 3
+     }
+    },
+    {
+     "count": 12,
+     "totalHp": 1248,
+     "kinds": {
+      "sprout": 8,
+      "wood": 4
+     }
+    },
+    {
+     "count": 14,
+     "totalHp": 1694,
+     "kinds": {
+      "wood": 5,
+      "sprout": 9
+     }
+    },
+    {
+     "count": 16,
+     "totalHp": 2086,
+     "kinds": {
+      "sprout": 11,
+      "wood": 5
+     }
+    }
+   ]
+  },
+  {
+   "stage": "1-2",
+   "waves": [
+    {
+     "count": 12,
+     "totalHp": 1579,
+     "kinds": {
+      "sprout": 3,
+      "metal": 5,
+      "wood": 2,
+      "insulator": 2
+     }
+    },
+    {
+     "count": 14,
+     "totalHp": 2243,
+     "kinds": {
+      "metal": 6,
+      "wood": 3,
+      "insulator": 3,
+      "sprout": 2
+     }
+    },
+    {
+     "count": 16,
+     "totalHp": 2867,
+     "kinds": {
+      "wood": 4,
+      "metal": 6,
+      "insulator": 3,
+      "sprout": 3
+     }
+    },
+    {
+     "count": 18,
+     "totalHp": 3478,
+     "kinds": {
+      "metal": 7,
+      "insulator": 4,
+      "sprout": 4,
+      "wood": 3
+     }
+    }
+   ]
+  },
+  {
+   "stage": "1-3",
+   "waves": [
+    {
+     "count": 14,
+     "totalHp": 2808,
+     "kinds": {
+      "ice": 6,
+      "sprout": 3,
+      "stone": 3,
+      "wood": 2
+     }
+    },
+    {
+     "count": 16,
+     "totalHp": 3577,
+     "kinds": {
+      "sprout": 4,
+      "stone": 3,
+      "ice": 6,
+      "wood": 3
+     }
+    },
+    {
+     "count": 18,
+     "totalHp": 4873,
+     "kinds": {
+      "stone": 4,
+      "ice": 7,
+      "wood": 4,
+      "sprout": 3
+     }
+    },
+    {
+     "count": 20,
+     "totalHp": 5912,
+     "kinds": {
+      "ice": 8,
+      "wood": 4,
+      "sprout": 4,
+      "stone": 4
+     }
+    }
+   ]
+  },
+  {
+   "stage": "1-4",
+   "waves": [
+    {
+     "count": 16,
+     "totalHp": 3440,
+     "kinds": {
+      "wood": 3,
+      "ice": 3,
+      "metal": 3,
+      "stone": 3,
+      "insulator": 2,
+      "sprout": 2
+     }
+    },
+    {
+     "count": 18,
+     "totalHp": 4266,
+     "kinds": {
+      "ice": 3,
+      "metal": 3,
+      "stone": 3,
+      "insulator": 3,
+      "sprout": 3,
+      "wood": 3
+     }
+    },
+    {
+     "count": 20,
+     "totalHp": 5561,
+     "kinds": {
+      "metal": 4,
+      "stone": 4,
+      "insulator": 3,
+      "sprout": 3,
+      "wood": 3,
+      "ice": 3
+     }
+    },
+    {
+     "count": 23,
+     "totalHp": 11581,
+     "kinds": {
+      "stone": 4,
+      "insulator": 4,
+      "sprout": 4,
+      "wood": 4,
+      "ice": 3,
+      "metal": 3,
+      "boss": 1
+     }
+    }
+   ]
+  },
+  {
+   "stage": "2-1",
+   "waves": [
+    {
+     "count": 14,
+     "totalHp": 2385,
+     "kinds": {
+      "frostwolf": 7,
+      "ice": 4,
+      "wood": 3
+     }
+    },
+    {
+     "count": 16,
+     "totalHp": 3144,
+     "kinds": {
+      "ice": 4,
+      "frostwolf": 8,
+      "wood": 4
+     }
+    },
+    {
+     "count": 18,
+     "totalHp": 4003,
+     "kinds": {
+      "frostwolf": 9,
+      "wood": 5,
+      "ice": 4
+     }
+    },
+    {
+     "count": 20,
+     "totalHp": 5015,
+     "kinds": {
+      "wood": 5,
+      "frostwolf": 10,
+      "ice": 5
+     }
+    }
+   ]
+  },
+  {
+   "stage": "2-2",
+   "waves": [
+    {
+     "count": 16,
+     "totalHp": 3138,
+     "kinds": {
+      "frostwolf": 7,
+      "stone": 3,
+      "ice": 3,
+      "insulator": 3
+     }
+    },
+    {
+     "count": 18,
+     "totalHp": 4306,
+     "kinds": {
+      "frostwolf": 7,
+      "stone": 4,
+      "ice": 4,
+      "insulator": 3
+     }
+    },
+    {
+     "count": 20,
+     "totalHp": 5272,
+     "kinds": {
+      "stone": 4,
+      "ice": 4,
+      "insulator": 4,
+      "frostwolf": 8
+     }
+    },
+    {
+     "count": 22,
+     "totalHp": 6463,
+     "kinds": {
+      "ice": 5,
+      "insulator": 5,
+      "frostwolf": 8,
+      "stone": 4
+     }
+    }
+   ]
+  },
+  {
+   "stage": "2-3",
+   "waves": [
+    {
+     "count": 18,
+     "totalHp": 4463,
+     "kinds": {
+      "ice": 7,
+      "metal": 4,
+      "frostwolf": 4,
+      "stone": 3
+     }
+    },
+    {
+     "count": 20,
+     "totalHp": 5896,
+     "kinds": {
+      "metal": 4,
+      "frostwolf": 4,
+      "stone": 4,
+      "ice": 8
+     }
+    },
+    {
+     "count": 22,
+     "totalHp": 7392,
+     "kinds": {
+      "frostwolf": 5,
+      "stone": 5,
+      "ice": 8,
+      "metal": 4
+     }
+    },
+    {
+     "count": 24,
+     "totalHp": 9162,
+     "kinds": {
+      "stone": 5,
+      "ice": 10,
+      "metal": 5,
+      "frostwolf": 4
+     }
+    }
+   ]
+  },
+  {
+   "stage": "2-4",
+   "waves": [
+    {
+     "count": 20,
+     "totalHp": 5054,
+     "kinds": {
+      "frostwolf": 4,
+      "ice": 7,
+      "stone": 3,
+      "metal": 3,
+      "insulator": 3
+     }
+    },
+    {
+     "count": 22,
+     "totalHp": 6580,
+     "kinds": {
+      "ice": 7,
+      "stone": 4,
+      "metal": 4,
+      "insulator": 4,
+      "frostwolf": 3
+     }
+    },
+    {
+     "count": 24,
+     "totalHp": 8088,
+     "kinds": {
+      "stone": 4,
+      "metal": 4,
+      "insulator": 4,
+      "ice": 8,
+      "frostwolf": 4
+     }
+    },
+    {
+     "count": 27,
+     "totalHp": 17151,
+     "kinds": {
+      "metal": 5,
+      "insulator": 5,
+      "ice": 8,
+      "frostwolf": 4,
+      "stone": 4,
+      "frostboss": 1
+     }
+    }
+   ]
+  }
+ ],
+ "util": [
+  {
+   "stage": "1-1",
+   "phase": "won",
+   "hp": 20,
+   "outpost": 12,
+   "leaks": 0,
+   "combatSec": 92,
+   "busyPct": {
+    "0": 100,
+    "1": 72,
+    "2": 55,
+    "3": 5
+   }
+  },
+  {
+   "stage": "1-2",
+   "phase": "won",
+   "hp": 20,
+   "outpost": 12,
+   "leaks": 0,
+   "combatSec": 109,
+   "busyPct": {
+    "0": 97,
+    "1": 80,
+    "2": 75,
+    "3": 32
+   }
+  },
+  {
+   "stage": "1-3",
+   "phase": "won",
+   "hp": 20,
+   "outpost": 12,
+   "leaks": 0,
+   "combatSec": 150,
+   "busyPct": {
+    "0": 86,
+    "1": 75,
+    "2": 80,
+    "3": 56,
+    "4": 18,
+    "5": 10
+   }
+  },
+  {
+   "stage": "1-4",
+   "phase": "won",
+   "hp": 12,
+   "outpost": 12,
+   "leaks": 1,
+   "combatSec": 168,
+   "busyPct": {
+    "0": 78,
+    "1": 71,
+    "2": 88,
+    "3": 64,
+    "4": 22,
+    "5": 19,
+    "6": 64,
+    "7": 7
+   }
+  },
+  {
+   "stage": "2-1",
+   "phase": "won",
+   "hp": 20,
+   "outpost": 12,
+   "leaks": 0,
+   "combatSec": 136,
+   "busyPct": {
+    "0": 92,
+    "1": 76,
+    "2": 83,
+    "3": 47,
+    "4": 8,
+    "5": 7
+   }
+  },
+  {
+   "stage": "2-2",
+   "phase": "won",
+   "hp": 20,
+   "outpost": 12,
+   "leaks": 0,
+   "combatSec": 155,
+   "busyPct": {
+    "0": 89,
+    "1": 79,
+    "2": 83,
+    "3": 65,
+    "4": 19,
+    "5": 19
+   }
+  },
+  {
+   "stage": "2-3",
+   "phase": "won",
+   "hp": 7,
+   "outpost": 12,
+   "leaks": 13,
+   "combatSec": 192,
+   "busyPct": {
+    "0": 73,
+    "1": 66,
+    "2": 74,
+    "3": 66,
+    "4": 43,
+    "5": 44
+   }
+  },
+  {
+   "stage": "2-4",
+   "phase": "won",
+   "hp": 9,
+   "outpost": 12,
+   "leaks": 4,
+   "combatSec": 233,
+   "busyPct": {
+    "0": 62,
+    "1": 58,
+    "2": 76,
+    "3": 70,
+    "4": 43,
+    "5": 48,
+    "6": 45,
+    "7": 23
+   }
+  }
+ ]
+}

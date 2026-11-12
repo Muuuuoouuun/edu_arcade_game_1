@@ -1,0 +1,72 @@
+{
+  "generator": "tools/blender/build_frontier_frost.py",
+  "generator_sha256": "16b14f88c112c45e07a6389ffd588e9e8249fc6b03d89a8afc15474fe11de9cb",
+  "source_terrain_sha256": "de7487bb7bda3dd4ec3b46cce75b029b755a8aea812b3c88f9c2900393e60c92",
+  "command": "npm run models:frontier-frost",
+  "concept": "art-source/defense/concepts/2026-11-09/polar-battlefield.png",
+  "editable_terrain_objects": 428,
+  "editable_gate_objects": 38,
+  "runtime_surfaces_per_model": 1,
+  "footprint": [
+    64,
+    64
+  ],
+  "bridge_walkable_z": [
+    -2,
+    2
+  ],
+  "camera": {
+    "size": [
+      960,
+      540
+    ],
+    "location": [
+      0,
+      -68,
+      72
+    ],
+    "orthographic_scale": 114
+  },
+  "files": [
+    {
+      "file": "art-source/defense/frontier-frost.blend",
+      "bytes": 3660180,
+      "sha256": "51e0a21495df43cfdf44cf6e615a9d5e752975f7355d6ff6d12f3e88bdd6af42"
+    },
+    {
+      "file": "public/defense/models/frontier-frost-crossing.png",
+      "bytes": 808885,
+      "sha256": "2f1402e3459d226ddbd56c1adf668101efb6d81658f6aabcc40a90da43f7bbfc"
+    },
+    {
+      "file": "public/defense/models/frontier-frost.glb",
+      "bytes": 714700,
+      "sha256": "091be843a3d96300534891ce8b6e17e9d06a7493e97cab2730cdc86f5de7ce74"
+    },
+    {
+      "file": "public/defense/models/frontier-frost.png",
+      "bytes": 593537,
+      "sha256": "a273be99cb04e4d3f20bd49a3aec07d84c8e8ddb363e0eaa7c95125087744db3"
+    },
+    {
+      "file": "public/defense/models/frontier-frost.webp",
+      "bytes": 30776,
+      "sha256": "62c90f976de8bb56cd9c1e8b08da75a9d4833d63d8938a8518cf051189e58d7b"
+    },
+    {
+      "file": "public/defense/models/frontier-frost-gate.glb",
+      "bytes": 44240,
+      "sha256": "4e62255a106cf0be61e56a8350ec37794a98c622d1353f2bff4f801f36f6ce4f"
+    },
+    {
+      "file": "public/defense/models/frontier-frost-gate.png",
+      "bytes": 158794,
+      "sha256": "1ff4e6e298eb65b27b89dfb31f0da83dcc0c01217be4cf4ff6451263642acb76"
+    },
+    {
+      "file": "public/defense/models/frontier-frost-gate.webp",
+      "bytes": 12784,
+      "sha256": "6fb6ce92e24868f15caef50d082e41fe0bfc36e769f109b71be3d303943564c1"
+    }
+  ]
+}

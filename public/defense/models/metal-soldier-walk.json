@@ -1,0 +1,745 @@
+{
+  "source": "art-source/defense/metal-soldier-walk.blend",
+  "source_sha256": "f8bdafa83db4e4c9b1c959e9ef23bd408b64aa76be4bb034ea5cd7fd3b1f19b0",
+  "base_source": "art-source/defense/metal-soldier.blend",
+  "base_source_sha256": "99f3c25b4a7db78857151f071a029769ab3d5a42a951ac8043d60089003580d3",
+  "regeneration_command": "npm run models:metal-walk",
+  "reference": "public/defense/atlas.png",
+  "generator": "tools/blender/build_metal_walk.py",
+  "generator_sha256": "d619b7cb8cf44046cc3fc654fa6a6c4ae9f6606dc2304ffbc0a81b9d9a0e0a98",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      292.91
+    ],
+    "display_anchor_y": 296,
+    "crop": [
+      0,
+      0,
+      384,
+      384
+    ],
+    "orthographic_scale": 6.599999904632568
+  },
+  "boot_parents": {
+    "near": "foot-joint-near",
+    "far": "foot-joint-far"
+  },
+  "clip": "metal-soldier-walk",
+  "duration": 1,
+  "stride_world": 24.69776,
+  "stride_reference_size": 68,
+  "baked_frames": [
+    1,
+    5,
+    9,
+    13,
+    17,
+    21,
+    25,
+    29
+  ],
+  "samples": [
+    {
+      "frame": 1,
+      "phase": 0.0,
+      "bounds": [
+        130.014,
+        83.983,
+        275.471,
+        307.014
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.0,
+        "far": -0.0
+      },
+      "foot_projected_x": {
+        "near": 163.001999,
+        "far": 242.482727
+      }
+    },
+    {
+      "frame": 2,
+      "phase": 0.19635,
+      "bounds": [
+        130.513,
+        84.113,
+        275.138,
+        306.834
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.00609,
+        "far": -0.0
+      },
+      "foot_projected_x": {
+        "near": 163.496418,
+        "far": 242.155037
+      }
+    },
+    {
+      "frame": 3,
+      "phase": 0.392699,
+      "bounds": [
+        131.88,
+        84.026,
+        273.958,
+        306.228
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.023431,
+        "far": 0.0
+      },
+      "foot_projected_x": {
+        "near": 164.856628,
+        "far": 240.980782
+      }
+    },
+    {
+      "frame": 4,
+      "phase": 0.589049,
+      "bounds": [
+        134.064,
+        83.734,
+        271.938,
+        305.325
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.049385,
+        "far": -0.0
+      },
+      "foot_projected_x": {
+        "near": 167.035091,
+        "far": 238.967537
+      }
+    },
+    {
+      "frame": 5,
+      "phase": 0.785398,
+      "bounds": [
+        136.998,
+        83.295,
+        269.123,
+        304.321
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.08,
+        "far": -0.0
+      },
+      "foot_projected_x": {
+        "near": 169.963955,
+        "far": 236.156937
+      }
+    },
+    {
+      "frame": 6,
+      "phase": 0.981748,
+      "bounds": [
+        138.547,
+        82.813,
+        268.198,
+        303.445
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.110615,
+        "far": 0.0
+      },
+      "foot_projected_x": {
+        "near": 173.54884,
+        "far": 232.631035
+      }
+    },
+    {
+      "frame": 7,
+      "phase": 1.178097,
+      "bounds": [
+        137.647,
+        82.424,
+        267.438,
+        302.921
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.136569,
+        "far": 0.0
+      },
+      "foot_projected_x": {
+        "near": 177.661285,
+        "far": 228.513725
+      }
+    },
+    {
+      "frame": 8,
+      "phase": 1.374447,
+      "bounds": [
+        136.515,
+        82.26,
+        266.363,
+        302.927
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.15391,
+        "far": -0.0
+      },
+      "foot_projected_x": {
+        "near": 182.136406,
+        "far": 223.966782
+      }
+    },
+    {
+      "frame": 9,
+      "phase": 1.570796,
+      "bounds": [
+        135.317,
+        82.432,
+        265.102,
+        303.566
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.16,
+        "far": -0.0
+      },
+      "foot_projected_x": {
+        "near": 186.779984,
+        "far": 219.181847
+      }
+    },
+    {
+      "frame": 10,
+      "phase": 1.767146,
+      "bounds": [
+        134.241,
+        82.951,
+        263.827,
+        304.842
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.15391,
+        "far": 0.0
+      },
+      "foot_projected_x": {
+        "near": 191.385796,
+        "far": 214.36908
+      }
+    },
+    {
+      "frame": 11,
+      "phase": 1.963495,
+      "bounds": [
+        133.473,
+        83.402,
+        262.73,
+        306.665
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.136568,
+        "far": -0.0
+      },
+      "foot_projected_x": {
+        "near": 195.758148,
+        "far": 209.743492
+      }
+    },
+    {
+      "frame": 12,
+      "phase": 2.159845,
+      "bounds": [
+        133.168,
+        83.859,
+        261.997,
+        308.854
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.110615,
+        "far": 0.0
+      },
+      "foot_projected_x": {
+        "near": 199.731331,
+        "far": 205.510689
+      }
+    },
+    {
+      "frame": 13,
+      "phase": 2.356194,
+      "bounds": [
+        133.425,
+        84.585,
+        262.532,
+        311.171
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.08,
+        "far": -0.0
+      },
+      "foot_projected_x": {
+        "near": 203.179138,
+        "far": 201.852837
+      }
+    },
+    {
+      "frame": 14,
+      "phase": 2.552544,
+      "bounds": [
+        134.267,
+        85.42,
+        265.955,
+        313.345
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.049385,
+        "far": 0.0
+      },
+      "foot_projected_x": {
+        "near": 206.011757,
+        "far": 198.916924
+      }
+    },
+    {
+      "frame": 15,
+      "phase": 2.748894,
+      "bounds": [
+        135.637,
+        86.117,
+        269.068,
+        315.117
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.023431,
+        "far": 0.0
+      },
+      "foot_projected_x": {
+        "near": 208.164185,
+        "far": 196.807343
+      }
+    },
+    {
+      "frame": 16,
+      "phase": 2.945243,
+      "bounds": [
+        137.4,
+        86.738,
+        271.738,
+        316.267
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.006089,
+        "far": 0.0
+      },
+      "foot_projected_x": {
+        "near": 209.582954,
+        "far": 195.584061
+      }
+    },
+    {
+      "frame": 17,
+      "phase": 3.141593,
+      "bounds": [
+        139.361,
+        87.173,
+        273.818,
+        316.652
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": -0.0,
+        "far": 0.0
+      },
+      "foot_projected_x": {
+        "near": 210.218285,
+        "far": 195.266418
+      }
+    },
+    {
+      "frame": 18,
+      "phase": 3.337942,
+      "bounds": [
+        141.287,
+        87.346,
+        275.161,
+        316.544
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": -0.0,
+        "far": 0.00609
+      },
+      "foot_projected_x": {
+        "near": 210.025177,
+        "far": 195.841805
+      }
+    },
+    {
+      "frame": 19,
+      "phase": 3.534292,
+      "bounds": [
+        142.949,
+        87.226,
+        275.638,
+        316.267
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.023431
+      },
+      "foot_projected_x": {
+        "near": 208.972389,
+        "far": 197.274765
+      }
+    },
+    {
+      "frame": 20,
+      "phase": 3.730641,
+      "bounds": [
+        144.147,
+        86.828,
+        275.16,
+        315.826
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": -0.0,
+        "far": 0.049385
+      },
+      "foot_projected_x": {
+        "near": 207.055733,
+        "far": 199.513321
+      }
+    },
+    {
+      "frame": 21,
+      "phase": 3.926991,
+      "bounds": [
+        144.749,
+        86.215,
+        273.693,
+        315.232
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": -0.0,
+        "far": 0.08
+      },
+      "foot_projected_x": {
+        "near": 204.310226,
+        "far": 202.488693
+      }
+    },
+    {
+      "frame": 22,
+      "phase": 4.12334,
+      "bounds": [
+        144.704,
+        85.317,
+        272.009,
+        314.502
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.110615
+      },
+      "foot_projected_x": {
+        "near": 200.817467,
+        "far": 206.109055
+      }
+    },
+    {
+      "frame": 23,
+      "phase": 4.31969,
+      "bounds": [
+        144.051,
+        84.403,
+        271.784,
+        313.66
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.136569
+      },
+      "foot_projected_x": {
+        "near": 196.706039,
+        "far": 210.250648
+      }
+    },
+    {
+      "frame": 24,
+      "phase": 4.516039,
+      "bounds": [
+        142.912,
+        83.618,
+        271.1,
+        312.736
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": -0.0,
+        "far": 0.15391
+      },
+      "foot_projected_x": {
+        "near": 192.145775,
+        "far": 214.753143
+      }
+    },
+    {
+      "frame": 25,
+      "phase": 4.712389,
+      "bounds": [
+        141.47,
+        83.084,
+        270.093,
+        311.767
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": -0.0,
+        "far": 0.16
+      },
+      "foot_projected_x": {
+        "near": 187.336636,
+        "far": 219.424324
+      }
+    },
+    {
+      "frame": 26,
+      "phase": 4.908739,
+      "bounds": [
+        139.938,
+        82.766,
+        268.934,
+        310.793
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.15391
+      },
+      "foot_projected_x": {
+        "near": 182.494755,
+        "far": 224.055862
+      }
+    },
+    {
+      "frame": 27,
+      "phase": 5.105088,
+      "bounds": [
+        138.527,
+        82.563,
+        267.801,
+        309.859
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": -0.0,
+        "far": 0.136568
+      },
+      "foot_projected_x": {
+        "near": 177.837547,
+        "far": 228.44577
+      }
+    },
+    {
+      "frame": 28,
+      "phase": 5.301438,
+      "bounds": [
+        137.412,
+        82.4,
+        266.855,
+        309.006
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.110615
+      },
+      "foot_projected_x": {
+        "near": 173.569221,
+        "far": 232.419434
+      }
+    },
+    {
+      "frame": 29,
+      "phase": 5.497787,
+      "bounds": [
+        136.709,
+        82.52,
+        268.842,
+        308.272
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": -0.0,
+        "far": 0.08
+      },
+      "foot_projected_x": {
+        "near": 169.868351,
+        "far": 235.841629
+      }
+    },
+    {
+      "frame": 30,
+      "phase": 5.694137,
+      "bounds": [
+        133.88,
+        82.842,
+        271.615,
+        307.69
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.049385
+      },
+      "foot_projected_x": {
+        "near": 166.878399,
+        "far": 238.616661
+      }
+    },
+    {
+      "frame": 31,
+      "phase": 5.890486,
+      "bounds": [
+        131.707,
+        83.263,
+        273.675,
+        307.28
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.023431
+      },
+      "foot_projected_x": {
+        "near": 164.702374,
+        "far": 240.678886
+      }
+    },
+    {
+      "frame": 32,
+      "phase": 6.086836,
+      "bounds": [
+        130.409,
+        83.675,
+        274.973,
+        307.054
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.006089
+      },
+      "foot_projected_x": {
+        "near": 163.402073,
+        "far": 241.980469
+      }
+    },
+    {
+      "frame": 33,
+      "phase": 6.283185,
+      "bounds": [
+        130.014,
+        83.983,
+        275.471,
+        307.014
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.0,
+        "far": -0.0
+      },
+      "foot_projected_x": {
+        "near": 163.001999,
+        "far": 242.482727
+      }
+    }
+  ],
+  "files": [
+    {
+      "file": "metal-soldier-walk.glb",
+      "bytes": 208444,
+      "sha256": "feb92e2dff68b0981f0ce8f376cb07d645cf3b9e36de0b5f354bf761f96772f2"
+    },
+    {
+      "file": "metal-soldier-walk-atlas.webp",
+      "bytes": 50290,
+      "sha256": "6dbf158ea8d25140cdcbc1bbcfc602a1b9248d160f4e6c0aae2e1678cd966245"
+    },
+    {
+      "file": "metal-soldier-walk.png",
+      "bytes": 120503,
+      "sha256": "d0a0231511449c17e7fe9afb34c601c5c23b25aa536be96a1e2871175775748a"
+    }
+  ],
+  "renders": [
+    {
+      "path": "art-source/defense/metal-walk-frames/metal-walk-0.png",
+      "sha256": "d0a0231511449c17e7fe9afb34c601c5c23b25aa536be96a1e2871175775748a"
+    },
+    {
+      "path": "art-source/defense/metal-walk-frames/metal-walk-1.png",
+      "sha256": "c279f81d301d61724d80bb174e48fd64fd094f069012b5c23708afb432591752"
+    },
+    {
+      "path": "art-source/defense/metal-walk-frames/metal-walk-2.png",
+      "sha256": "2b0a73ce814b8b352767250b0befcf5ce061a62cac7a4535042f6ac7aba9e67a"
+    },
+    {
+      "path": "art-source/defense/metal-walk-frames/metal-walk-3.png",
+      "sha256": "8ee8c5f0cb339226dec0a748e2714fa676d4134ed3b196bfaa1635d45f1d90a4"
+    },
+    {
+      "path": "art-source/defense/metal-walk-frames/metal-walk-4.png",
+      "sha256": "e52875f1382843d2b885e49ecec48f15223ad7dc4dfc6d7739898869a4beefa7"
+    },
+    {
+      "path": "art-source/defense/metal-walk-frames/metal-walk-5.png",
+      "sha256": "7f1d5b2461957f5354003927c0ef706faa5462a73545d0466769bbfaf5c26da9"
+    },
+    {
+      "path": "art-source/defense/metal-walk-frames/metal-walk-6.png",
+      "sha256": "5318630b42387610ae60c2d7e6ed0f3617793eb4fc8c59d1f18adef945b95210"
+    },
+    {
+      "path": "art-source/defense/metal-walk-frames/metal-walk-7.png",
+      "sha256": "3e4eac644e623ab4b013d6b87feb73c99bf7b7587d7184ea326c57fab4c18082"
+    }
+  ],
+  "camera": {
+    "location": [
+      5.0,
+      -10.0,
+      6.900000095367432
+    ],
+    "rotation_euler": [
+      1.1502621173858643,
+      3.684800020664625e-08,
+      0.46364766359329224
+    ],
+    "samples": 48,
+    "view_transform": "Standard"
+  },
+  "delivery_frame": {
+    "width": 256,
+    "height": 256,
+    "columns": 8,
+    "source_scale": 0.6666666666666666,
+    "ground_y": 197.33333333333334
+  }
+}

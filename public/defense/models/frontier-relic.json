@@ -1,0 +1,76 @@
+{
+  "command": "npm run models:frontier-relic",
+  "concept": "art-source/defense/concepts/2026-11-06/polar-night-coast.png",
+  "runtime": {
+    "meshes": 2,
+    "triangles": 230,
+    "materials": 1,
+    "ground": 0,
+    "core_pivot_y": 0.55,
+    "procedural_pickup": true
+  },
+  "camera": {
+    "position": [
+      5,
+      -10,
+      6.9
+    ],
+    "rotation": [
+      1.157740592956543,
+      0,
+      0.46364766359329224
+    ],
+    "ortho_scale": 6.3,
+    "resolution": [
+      384,
+      384
+    ]
+  },
+  "preview_frames": [
+    1,
+    6,
+    11
+  ],
+  "files": [
+    {
+      "path": "tools/blender/build_frontier_relic.py",
+      "bytes": 7233,
+      "sha256": "469989f6d4e6d89ed29d39d00d53b0a41cb057ffd25f660a00f02df7c32a6f90"
+    },
+    {
+      "path": "art-source/defense/frontier-relic.blend",
+      "bytes": 665436,
+      "sha256": "76ec64e05fc4eaca77d42df281988aa9659e408968e60289d03aa8a7f9345086"
+    },
+    {
+      "path": "art-source/defense/frontier-relic/idle.png",
+      "bytes": 96298,
+      "sha256": "82d7e4fe488dbc6ac18a114a7eeb24f8b367710a61f5b4d2577fd924807e2adf"
+    },
+    {
+      "path": "art-source/defense/frontier-relic/collect.png",
+      "bytes": 90853,
+      "sha256": "a3955de6db4d477a9007bb54b948dfbfec6ff935e047b23da0be76664d08c57f"
+    },
+    {
+      "path": "art-source/defense/frontier-relic/empty.png",
+      "bytes": 85944,
+      "sha256": "bc4bdbeaab02fc27b2a8b163e950f0aac673425db0619837035048a593de7b3e"
+    },
+    {
+      "path": "public/defense/models/frontier-relic.glb",
+      "bytes": 22888,
+      "sha256": "022ae5366d68d7d34d8b1c9a18607c42b666fb7c716bcb7b83d3f8e522353109"
+    },
+    {
+      "path": "public/defense/models/frontier-relic.png",
+      "bytes": 96298,
+      "sha256": "82d7e4fe488dbc6ac18a114a7eeb24f8b367710a61f5b4d2577fd924807e2adf"
+    },
+    {
+      "path": "public/defense/models/frontier-relic-atlas.webp",
+      "bytes": 9334,
+      "sha256": "75db8296f58aea994df97e81147d0da9f307452f6e2e2a325a3effd652955f65"
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "command": "npm run models:frontier-frost-forest",
+  "source": "art-source/defense/frontier-frost-cliffs.blend",
+  "concept": "art-source/defense/concepts/2026-11-06/silverfrost-pass.png",
+  "tree_count": 11,
+  "new_meshes": 77,
+  "editable_meshes": 505,
+  "runtime_surfaces": 1,
+  "playable_boundary": 28,
+  "placements": [
+    {
+      "x": -31.8,
+      "z": -25,
+      "base_height": 7.703834533691406
+    },
+    {
+      "x": -31.8,
+      "z": -16,
+      "base_height": 9.329925537109375
+    },
+    {
+      "x": -31.8,
+      "z": -7,
+      "base_height": 7.870887756347656
+    },
+    {
+      "x": -31.8,
+      "z": 2,
+      "base_height": 4.156055450439453
+    },
+    {
+      "x": -31.8,
+      "z": 11,
+      "base_height": 4.495521545410156
+    },
+    {
+      "x": -31.8,
+      "z": 20,
+      "base_height": 3.4793319702148438
+    },
+    {
+      "x": -20,
+      "z": -31.8,
+      "base_height": 7.07000732421875
+    },
+    {
+      "x": -10,
+      "z": -31.8,
+      "base_height": 5.781837463378906
+    },
+    {
+      "x": 0,
+      "z": -31.8,
+      "base_height": 4.849999904632568
+    },
+    {
+      "x": 10,
+      "z": -31.8,
+      "base_height": 4.849999904632568
+    },
+    {
+      "x": 20,
+      "z": -31.8,
+      "base_height": 5.699998378753662
+    }
+  ],
+  "camera": {
+    "size": [
+      960,
+      540
+    ],
+    "location": [
+      0,
+      -68,
+      72
+    ],
+    "ortho_scale": 114
+  },
+  "files": [
+    {
+      "path": "tools/blender/build_frontier_frost_forest.py",
+      "bytes": 6666,
+      "sha256": "d914cfbdd736972283bc816e2b1145ad3c5b0781199971193268d52c001bd31a"
+    },
+    {
+      "path": "art-source/defense/concepts/2026-11-06/silverfrost-pass.png",
+      "bytes": 3493797,
+      "sha256": "f2e487ddc8cef3bba29320363e8f5d22391c460295e744938ccbbdeab77279cf"
+    },
+    {
+      "path": "art-source/defense/frontier-frost-cliffs.blend",
+      "bytes": 3767516,
+      "sha256": "ec2341813c3195d28fe0e5d79975394e6aa032a514c4b9a86a0f1ec87d0a2731"
+    },
+    {
+      "path": "art-source/defense/frontier-frost-forest.blend",
+      "bytes": 4103520,
+      "sha256": "5a60cdb37504746a760ee9020ef6191cb6fda08ab90ab087c45301141fc63b76"
+    },
+    {
+      "path": "public/defense/models/frontier-frost-forest.glb",
+      "bytes": 1343472,
+      "sha256": "7539784910c8248b96c7b821198fbcb73783971ebbfc80c1c240d812426301a5"
+    },
+    {
+      "path": "public/defense/models/frontier-frost-forest.png",
+      "bytes": 663717,
+      "sha256": "24b8aec81f14883b45d8253309b7aee04e6e8549dad2dc31294df3911c48784a"
+    },
+    {
+      "path": "public/defense/models/frontier-frost-forest-detail.png",
+      "bytes": 725586,
+      "sha256": "03d21331909cf37881350f634263494dd2e0b2cc26b37461dcb6f676d7323f72"
+    },
+    {
+      "path": "public/defense/models/frontier-frost-forest.webp",
+      "bytes": 41988,
+      "sha256": "02301dfe59ebc3ce058164ee889bcb5ad994153c35b193770fde5c3ba9edeb92"
+    }
+  ]
+}

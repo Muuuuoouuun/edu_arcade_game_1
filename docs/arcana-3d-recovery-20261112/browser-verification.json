@@ -1,0 +1,116 @@
+{
+  "date": "2026-11-12",
+  "environment": "Chromium SwiftShader; desktop and emulated mobile, not device GPU",
+  "reports": [
+    {
+      "case": "desktop_campaign",
+      "checks": [
+        "build base GLB",
+        "upgrade pierce GLB",
+        "wood GLB",
+        "pause",
+        "context loss/restore",
+        "keyboard movement",
+        "single renderer"
+      ],
+      "prep": [
+        {
+          "key": "hero",
+          "model": "kar",
+          "phase": "idle",
+          "time": 0,
+          "position": [
+            440,
+            0.5,
+            409.91869112463434
+          ],
+          "heading": -1.5707963267948966
+        },
+        {
+          "key": "tower-2",
+          "model": "ballista",
+          "phase": "idle",
+          "time": 0,
+          "position": [
+            380,
+            0.5,
+            236.71361036774658
+          ],
+          "heading": 1.5707963267948966
+        }
+      ],
+      "drawCalls": 48,
+      "errors": []
+    },
+    {
+      "case": "fresh_campaign_starter",
+      "checks": [
+        "first hero GLB",
+        "three base tower GLBs",
+        "real attack state",
+        "no map backdrop image"
+      ],
+      "render": {
+        "terrainRenderer": "webgl",
+        "modelCount": "4",
+        "modelKeys": "hero,tower-0,tower-1,tower-2",
+        "renderCalls": "227",
+        "renderTriangles": "192820",
+        "actorStates": "[{\"key\":\"hero\",\"model\":\"ian\",\"phase\":\"idle\",\"time\":0,\"position\":[440,0.5,409.91869112463434],\"heading\":-1.5707963267948966},{\"key\":\"tower-0\",\"model\":\"base-crossbow\",\"phase\":\"idle\",\"time\":0,\"position\":[170,3.1,127.01705922171767],\"heading\":-1.093617649962229},{\"key\":\"tower-1\",\"model\":\"base-magic\",\"phase\":\"idle\",\"time\":0,\"position\":[220,0.5,438.7862045841156],\"heading\":1.5707963267948966},{\"key\":\"tower-2\",\"model\":\"base-cannon\",\"phase\":\"idle\",\"time\":0,\"position\":[380,0.5,236.71361036774658],\"heading\":1.5707963267948966}]"
+      },
+      "errors": []
+    },
+    {
+      "case": "mobile_snow_bron",
+      "checks": [
+        "GLB",
+        "touch movement",
+        "single renderer"
+      ],
+      "render": {
+        "terrainRenderer": "webgl",
+        "modelCount": "1",
+        "modelKeys": "hero",
+        "renderCalls": "67",
+        "renderTriangles": "37118",
+        "actorStates": "[{\"key\":\"hero\",\"model\":\"bron\",\"phase\":\"idle\",\"time\":0,\"position\":[400.0000163195605,0.5,484.97420350623935],\"heading\":-0.8570720689915253}]"
+      },
+      "errors": []
+    },
+    {
+      "case": "asset_failure",
+      "checks": [
+        "hero SVG fallback",
+        "independent tower GLB"
+      ],
+      "render": {
+        "terrainRenderer": "webgl",
+        "modelCount": "1",
+        "modelKeys": "tower-2",
+        "renderCalls": "26",
+        "renderTriangles": "17552",
+        "actorStates": "[{\"key\":\"tower-2\",\"model\":\"ballista\",\"phase\":\"idle\",\"time\":0,\"position\":[380,0.5,236.71361036774658],\"heading\":1.5707963267948966}]"
+      }
+    },
+    {
+      "case": "no_webgl",
+      "checks": [
+        "terrain fallback",
+        "hero SVG fallback"
+      ],
+      "canvases": 0
+    },
+    {
+      "case": "human_guard_workshop",
+      "checks": [
+        "GLB",
+        "walk",
+        "idle",
+        "thrust",
+        "return",
+        "reduced-motion"
+      ],
+      "errors": []
+    }
+  ]
+}
