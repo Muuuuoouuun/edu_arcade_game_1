@@ -67,6 +67,8 @@ export type RushEvent =
   | { type: 'snow'; x: number; z: number; radius: number }
   | { type: 'block'; x: number; z: number }
   | { type: 'waveStart'; wave: number }
+  /** A boss just walked in (cycle 67: the arrival signal now that the battle HUD and its toasts are hidden). */
+  | { type: 'bossEnter'; id: number; x: number; z: number }
   | { type: 'waveClear'; wave: number; bonus: number }
   | { type: 'lap'; lap: number; twist?: LapTwist }
   | { type: 'won' }
@@ -337,6 +339,7 @@ function spawn(s: RushState) {
         id: s.nextId++, kind: g.kind, x: start.x + (rand(s) - 0.5) * 1.6, z: start.z + (rand(s) - 0.5) * 0.8, kx: 0, kz: 0,
         hp: Math.round(def.hp * s.diff.enemyHp), maxHp: Math.round(def.hp * s.diff.enemyHp), lane: g.lane, wp: 1, cd: def.cooldown * 0.5, flash: 0, chasing: false, facing: Math.PI / 2, windup: null,
       });
+      if (g.kind === 'boss') { const b = s.enemies[s.enemies.length - 1]; s.events.push({ type: 'bossEnter', id: b.id, x: b.x, z: b.z }); }
       p.spawned++;
       // Single-spawn groups (interval 0) can grow with stage scaling: space the extras instead of never spawning them.
       p.timer += g.interval > 0 ? g.interval : 1.5;

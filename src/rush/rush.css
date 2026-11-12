@@ -458,3 +458,14 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   .town-goal:not([hidden]) ~ .town-reward { left: 50%; right: auto; transform: translateX(-50%); top: calc(100% + 76px); }
 }
 @media (prefers-reduced-motion: reduce) { .town-goal.done { animation: none; } }
+
+/* Boss arrival edge chevron (cycle 67): a red arrow head on the screen edge pointing at an off-screen boss. No text. */
+.boss-edge {
+  position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; will-change: transform;
+  border-top: 18px solid transparent; border-bottom: 18px solid transparent; border-left: 30px solid #ff3d55;
+  filter: drop-shadow(0 0 0 #1d1433) drop-shadow(2px 0 0 #1d1433) drop-shadow(-2px 0 0 #1d1433) drop-shadow(0 2px 0 #1d1433) drop-shadow(0 -2px 0 #1d1433);
+  animation: bossEdgePulse 0.5s ease-in-out infinite alternate;
+}
+.boss-edge[hidden] { display: none; }
+@keyframes bossEdgePulse { to { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .boss-edge { animation: none; } }

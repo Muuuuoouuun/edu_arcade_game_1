@@ -891,6 +891,8 @@ export class RushView {
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.6);
           break;
         case 'townHit': if (!reducedMotion) this.shake = Math.max(this.shake, 0.12); break;
+        // Boss arrival (cycle 67): a wide red ink ring where it walks in and one big shake; no text since #107 hid the toasts.
+        case 'bossEnter': this.ring(ev.x, ev.z, TEAM.enemy, 5, 1.1, 0.95, true); if (!reducedMotion) this.shake = Math.max(this.shake, 0.55); break;
         case 'heroDown':
           this.ring(hp.x, hp.z, 0xff5d73, 1.6, 0.5, 0.9, true);
           fx.emit({ kind: 'shard', n: 10, color: 0x7fd36b, at: [hp.x, 1.0, hp.z], speed: 4, up: 5, size: 0.14, life: 0.6 });
