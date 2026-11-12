@@ -23,6 +23,8 @@ export interface Enemy {
   slowT?: number;
   /** Boss rally (cycle 33): seconds of roar left, and whether it has already called its minions. */
   roarT?: number; rallied?: boolean;
+  /** Shaman (cycle 59): seconds until its next heal pulse (starts at a full period). */
+  healT?: number;
 }
 export type ShotOwner = 'hero' | 'super' | 'tower' | 'enemy' | 'lob';
 export interface Shot {
@@ -53,6 +55,10 @@ export type RushEvent =
   | { type: 'telegraph'; x: number; z: number; radius: number; time: number }
   | { type: 'slam'; x: number; z: number; radius: number }
   | { type: 'roar'; x: number; z: number; radius: number; time: number }
+  /** A shaman's pulse that restored at least one ally (cycle 59). */
+  | { type: 'heal'; x: number; z: number; radius: number; count: number }
+  /** One ally restored by a shaman pulse, and by how much (cycle 60: a green number over it). */
+  | { type: 'healed'; id: number; x: number; z: number; amount: number }
   | { type: 'summon'; x: number; z: number; count: number }
   | { type: 'coin'; value: number }
   | { type: 'build'; pad: number; level: number; branch?: TowerBranch }
@@ -62,7 +68,7 @@ export type RushEvent =
   | { type: 'block'; x: number; z: number }
   | { type: 'waveStart'; wave: number }
   | { type: 'waveClear'; wave: number; bonus: number }
-  | { type: 'lap'; lap: number }
+  | { type: 'lap'; lap: number; twist?: LapTwist }
   | { type: 'won' }
   | { type: 'lost' };
 
@@ -82,7 +88,14 @@ export interface Difficulty {
   enemyHp: number; enemyCount: number; enemyDamage: number; stage?: number;
   /** Endless challenge (cycle 46): the five waves repeat with no victory, harder every lap. */
   endless?: boolean;
+  /** Endless lap twist (cycle 52), for that lap only. */
+  twist?: LapTwist;
 }
+/** Endless lap twists (cycle 52): from lap 2, one per lap in this order, then round again. */
+export type LapTwist = 'swift' | 'shields' | 'twin';
+export const LAP_TWISTS: readonly LapTwist[] = ['swift', 'shields', 'twin'];
+export const TWIST = { swiftSpeed: 1.2, shieldCount: 2, twinBosses: 2 } as const;
+export const twistForLap = (lap: number): LapTwist | undefined => (lap >= 2 ? LAP_TWISTS[(lap - 2) % LAP_TWISTS.length] : undefined);
 /** Endless: each completed lap of five waves multiplies enemy health, numbers and damage by these. */
 export const ENDLESS_LAP = { enemyHp: 1.35, enemyCount: 1.2, enemyDamage: 1.15 } as const;
 /** The wave plan for the current wave (endless runs reuse the five in a loop). */
@@ -279,8 +292,9 @@ export function stepRush(s: RushState, cmd: Command = {}): RushState {
       // Endless: a new lap of the five waves starts harder.
       if (s.diff.endless && s.wave % WAVE_COUNT === 0) {
         const d = s.diff;
-        s.diff = { ...d, enemyHp: d.enemyHp * ENDLESS_LAP.enemyHp, enemyCount: d.enemyCount * ENDLESS_LAP.enemyCount, enemyDamage: d.enemyDamage * ENDLESS_LAP.enemyDamage };
-        s.events.push({ type: 'lap', lap: s.wave / WAVE_COUNT + 1 }); // cycle 47: the player must see the step up
+        const lap = s.wave / WAVE_COUNT + 1, twist = twistForLap(lap);
+        s.diff = { ...d, enemyHp: d.enemyHp * ENDLESS_LAP.enemyHp, enemyCount: d.enemyCount * ENDLESS_LAP.enemyCount, enemyDamage: d.enemyDamage * ENDLESS_LAP.enemyDamage, twist };
+        s.events.push({ type: 'lap', lap, twist }); // cycle 47: the player must see the step up; cycle 52: and the twist
       }
       s.phase = 'prep';
       s.prepT = ECONOMY.prepTime;
@@ -305,8 +319,12 @@ function waveSpawned(s: RushState) {
   return waveDef(s).every((g, i) => (s.groups[i]?.spawned ?? 0) >= groupCount(s, g));
 }
 /** Enemies in a spawn group after stage scaling. The boss stays a single boss. */
-export const groupCount = (s: RushState, g: { kind: EnemyKind; count: number; minStage?: number }) =>
-  (g.minStage ?? 1) > (s.diff.stage ?? 1) ? 0 : g.kind === 'boss' ? g.count : Math.max(1, Math.round(g.count * s.diff.enemyCount));
+export const groupCount = (s: RushState, g: { kind: EnemyKind; count: number; minStage?: number }) => {
+  if ((g.minStage ?? 1) > (s.diff.stage ?? 1)) return 0;
+  const t = s.diff.twist;
+  if (g.kind === 'boss') return g.count * (t === 'twin' ? TWIST.twinBosses : 1);
+  return Math.max(1, Math.round(g.count * s.diff.enemyCount * (t === 'shields' && g.kind === 'shield' ? TWIST.shieldCount : 1)));
+};
 function spawn(s: RushState) {
   waveDef(s).forEach((g, i) => {
     const p = s.groups[i];
@@ -535,6 +553,23 @@ function towerHit(s: RushState, target: Enemy, shot: Shot) {
   }
 }
 
+/** Shaman heal (cycle 59): on its period, every hurt living ally in range (not the shaman) gains the amount. */
+function healPulse(s: RushState, e: Enemy, heal: NonNullable<EnemyDef['heal']>) {
+  e.healT = (e.healT ?? heal.every) - STEP;
+  if (e.healT > 0) return;
+  e.healT += heal.every;
+  const amount = heal.amount * s.diff.enemyHp;
+  let count = 0;
+  for (const o of s.enemies) {
+    if (o === e || o.hp <= 0 || o.hp >= o.maxHp || dist(o, e) > heal.radius + ENEMIES[o.kind].radius) continue;
+    const before = o.hp;
+    o.hp = Math.min(o.maxHp, o.hp + amount);
+    s.events.push({ type: 'healed', id: o.id, x: o.x, z: o.z, amount: o.hp - before });
+    count++;
+  }
+  if (count) s.events.push({ type: 'heal', x: e.x, z: e.z, radius: heal.radius, count });
+}
+
 function updateEnemies(s: RushState) {
   const h = s.hero, alive = heroAlive(s), hidden = heroHidden(s);
   for (const e of s.enemies) {
@@ -575,6 +610,7 @@ function updateEnemies(s: RushState) {
       if (e.roarT === 0) rally(s, e, call!);
       continue;
     }
+    if (def.heal) healPulse(s, e, def.heal);
 
     const chase = alive && dist(e, h) <= def.aggro && (!hidden || dist(e, h) <= BUSH.reveal);
     if (e.chasing && !chase) e.wp = nearestSegmentEnd(LANES[e.lane], e);
@@ -595,7 +631,7 @@ function updateEnemies(s: RushState) {
       }
       const dx = goal.x - e.x, dz = goal.z - e.z, d = len(dx, dz);
       if (d > 1e-6) {
-        const step = Math.min(d, def.speed * pace * STEP);
+        const step = Math.min(d, def.speed * pace * (s.diff.twist === 'swift' ? TWIST.swiftSpeed : 1) * STEP);
         e.x += (dx / d) * step; e.z += (dz / d) * step;
         e.facing = Math.atan2(dz, dx);
       }

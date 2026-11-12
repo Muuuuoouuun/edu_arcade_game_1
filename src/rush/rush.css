@@ -123,6 +123,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .pop.hurt { color: #ff6b7a; font-size: 21px; }
 .pop.gold { color: var(--gold); font-size: 18px; }
 .pop.blocked { color: #dfe6f5; font-size: 14px; }
+.pop.heal { color: #7dff9a; font-size: 18px; } /* shaman heal (cycle 60) */
 
 /* ---------- screens ---------- */
 .screen { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse at center, rgba(29,20,51,0.45), rgba(20,12,40,0.85)); padding: 16px; }
@@ -303,7 +304,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .town-bar { position: absolute; top: calc(8px + var(--safe-t)); left: calc(10px + var(--safe-l)); right: calc(10px + var(--safe-r)); display: flex; align-items: center; gap: 10px; }
 .town-bar h1 { margin: 0; flex: 1; font-family: var(--display); font-weight: 400; font-size: 26px; color: #fff; -webkit-text-stroke: 6px var(--outline); paint-order: stroke fill; text-shadow: 0 3px 0 var(--outline); }
 .town-bar .collect { width: auto; margin: 0; padding: 7px 14px; min-height: 44px; }
-.town-screen .town-reward { position: absolute; top: calc(64px + var(--safe-t)); left: 50%; transform: translateX(-50%); margin: 0; background: rgba(29, 20, 51, 0.88); white-space: nowrap; }
+.town-screen .town-reward { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); margin: 0; background: rgba(29, 20, 51, 0.88); white-space: nowrap; }
 .town-storage-warning { position:absolute; top:calc(106px + var(--safe-t)); left:50%; transform:translateX(-50%); max-width:min(90vw,600px); padding:8px 12px; border:2px solid #ffc46a; border-radius:12px; background:#34203aee; font-size:13px; text-align:center; }
 .town-storage-warning[hidden] { display:none; }
 .town-storage-warning button { border:1px solid #e9ca78; border-radius:8px; padding:5px 9px; background:#66522d; }
@@ -403,3 +404,36 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   100% { transform: scale(1); }
 }
 @media (prefers-reduced-motion: reduce) { .hud-wave.lap-flash { animation: none; } }
+
+/* Endless record milestones (cycle 51) */
+.daily-badge.goal { background: #8a5cf0; }
+.result-stars .milestone { display: block; margin-top: 2px; color: #d9c6ff; }
+.result-stars .milestone .res-ico { width: 11px; height: 11px; }
+
+/* Endless record flag tag (cycle 57): the ∞ chip's purple, best record in the pill, next milestone in a gold corner pill. */
+.tone-endless { background: linear-gradient(#e2ccff, #a879ff); }
+.town-tag.tone-endless .tag-ico { font-size: 18px; }
+.town-tag .goal {
+  position: absolute; right: -14px; top: -6px; height: 15px; padding: 0 3px; border-radius: 8px; border: 2px solid var(--outline);
+  background: var(--gold); color: #3a2400; font-style: normal; font-size: 9px; font-weight: 800; line-height: 11px; white-space: nowrap;
+}
+.town-tag .goal:empty { display: none; }
+.town-tag[hidden] { display: none; }
+
+/* Top bar fit (cycle 58): labels never fold one letter per line. Collect is a two-line button like the hero button;
+ * portrait wraps the bar (title and resources, then hero and collect); narrow landscape drops the title. */
+.town-bar h1, .town-bar b, .town-bar small { white-space: nowrap; }
+.town-bar .collect { display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; padding: 3px 12px; }
+.town-bar .collect small { font-size: 12px; -webkit-text-stroke-width: 3px; }
+.town-bar .collect b { font-size: 14px; -webkit-text-stroke-width: 3px; }
+.town-bar .collect .res-ico { width: 11px; height: 11px; margin: 0 1px 0 4px; border-width: 1.5px; vertical-align: -1px; }
+.town-bar .collect .res-ico:first-child { margin-left: 0; }
+@media (orientation: portrait) {
+  .town-bar { flex-wrap: wrap; row-gap: 8px; }
+  .town-bar h1 { flex: 1 1 auto; font-size: 20px; -webkit-text-stroke-width: 5px; }
+  .town-bar .hero-pick, .town-bar .collect { flex: 1 1 45%; }
+}
+@media (orientation: landscape) and (max-width: 760px) {
+  .town-bar { justify-content: flex-end; }
+  .town-bar h1 { display: none; }
+}

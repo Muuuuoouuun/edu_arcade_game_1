@@ -288,7 +288,8 @@ test('endless settlement (cycle 46): rewards grow with waves held, 1 shard per 5
   assert.ok(stageUnlocked(k, ENDLESS_STAGE));
   const run = (waves: number) => { const s = createRush(1); s.wave = waves; s.phase = 'lost'; return s; };
   const a = settleEndless(k, 'e1', run(7));
-  assert.deepEqual([a.reward.waves, a.reward.shards, a.reward.newBest, a.kingdom.endlessBest], [7, 1, true, 7]);
+  // 1 shard for 5 waves held, plus 3 for passing the 5-wave milestone the first time (cycle 51).
+  assert.deepEqual([a.reward.waves, a.reward.shards, a.reward.newBest, a.kingdom.endlessBest], [7, 1 + 3, true, 7]);
   assert.equal(settleEndless(a.kingdom, 'e1', run(7)).granted, false, 'same run pays once');
   const b = settleEndless(a.kingdom, 'e2', run(4));
   assert.deepEqual([b.reward.newBest, b.kingdom.endlessBest, b.reward.best], [false, 7, 7]);
@@ -296,4 +297,37 @@ test('endless settlement (cycle 46): rewards grow with waves held, 1 shard per 5
   const old = JSON.parse(serializeKingdom(createKingdom(T0)));
   delete old.endlessBest;
   assert.equal(parseKingdom(JSON.stringify(old), T0).endlessBest, 0);
+});
+
+test('endless milestones (cycle 51): shards the first time a record passes 5/10/15/20, all passed at once, never twice', async () => {
+  const { settleEndless, nextMilestone, ENDLESS_MILESTONES } = await import('./kingdom.ts');
+  const run = (waves: number) => { const s = createRush(1); s.wave = waves; s.phase = 'lost'; return s; };
+  let k = { ...createKingdom(T0), stars: [3, 3, 3, 3, 3, 3, 3, 3, 3, 1] };
+  assert.deepEqual(nextMilestone(0), ENDLESS_MILESTONES[0]);
+  const a = settleEndless(k, 'm1', run(4));
+  assert.deepEqual(a.reward.milestones, [], 'below 5: none');
+  const b = settleEndless(a.kingdom, 'm2', run(11));
+  assert.deepEqual(b.reward.milestones.map(m => m.waves), [5, 10], 'one run passes two milestones');
+  assert.equal(b.reward.shards, Math.floor(11 / 5) + 3 + 6);
+  assert.equal(settleEndless(b.kingdom, 'm2', run(11)).granted, false, 'same run id: nothing again');
+  const c = settleEndless(b.kingdom, 'm3', run(11));
+  assert.deepEqual([c.reward.milestones, c.reward.shards], [[], Math.floor(11 / 5)], 'equal record: no milestone');
+  const d = settleEndless(c.kingdom, 'm4', run(15));
+  assert.deepEqual(d.reward.milestones.map(m => m.waves), [15]);
+  assert.deepEqual(nextMilestone(d.kingdom.endlessBest), { waves: 20, shards: 15 });
+  assert.equal(nextMilestone(25), null);
+  k = d.kingdom;
+  assert.equal(settleEndless(k, 'm5', run(7)).reward.milestones.length, 0, 'a lower run pays no milestone');
+});
+
+test('the town record flag (cycle 57) appears once endless opens and gains a stage per record milestone', async () => {
+  const { flagStage } = await import('./townScene.ts'), { ENDLESS_MILESTONES } = await import('./kingdom.ts');
+  const k = createKingdom(0);
+  assert.equal(flagStage(k), -1, 'no flag while endless is locked');
+  const open = { ...k, stars: k.stars.map(() => 1) };
+  assert.equal(flagStage({ ...open, endlessBest: 0 }), 0);
+  assert.equal(flagStage({ ...open, endlessBest: 4 }), 0);
+  assert.equal(flagStage({ ...open, endlessBest: 5 }), 1);
+  assert.equal(flagStage({ ...open, endlessBest: 14 }), 2);
+  assert.equal(flagStage({ ...open, endlessBest: 40 }), ENDLESS_MILESTONES.length);
 });

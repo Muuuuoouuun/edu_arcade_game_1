@@ -3,10 +3,14 @@ import {
   AnimationMixer, Box3, BufferAttribute, DodecahedronGeometry, BoxGeometry, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
   DirectionalLight, Group, HemisphereLight, LoopOnce, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera,
   PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
-  Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, type AnimationAction, type BufferGeometry, type Material,
+  Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, BackSide, BufferGeometry, type AnimationAction, type Material,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+// Loaded by URL, not bundled: the shared Vite config puts every three/examples module in the first-screen 'three-tools'
+// chunk, and this one is only needed once a hero model arrives (cycle 62). The file is self-contained (no imports).
+import simplifierUrl from 'three/addons/libs/meshopt_simplifier.module.js?url';
 // Rush-only meshopt copies of the shared campaign models (decision 2026-11-11, cycle 43; made by tools/rush-glb.sh).
 import rangerGlb from './models/gecko-ranger.glb?url';
 import bronGlb from './models/dwarf-guardian.glb?url';
@@ -39,9 +43,46 @@ function toFloat32(mesh: Mesh) {
     mesh.geometry.setAttribute(name, new BufferAttribute(f, 3));
   }
 }
+/** Hero ink hulls at half the triangles (cycle 62; measured in cycle 56: no visible change at battle size, a thin
+ * part's ink only starts to drop at a quarter). The simplifier is three.js's bundled meshoptimizer, fetched on demand
+ * with the first hero model so the first screen does not pay for it; without it (no WASM) hulls stay full. */
+const HULL_RATIO = 0.5;
+type Simplifier = (typeof import('three/addons/libs/meshopt_simplifier.module.js'))['MeshoptSimplifier'];
+let simplifierLoad: Promise<Simplifier | null> | null = null;
+/** ?hullSimplify=0 forces the full-hull fallback (cycle 62: checks that path). */
+const simplifierOff = new URLSearchParams(location.search).get('hullSimplify') === '0';
+function loadSimplifier(): Promise<Simplifier | null> {
+  if (simplifierOff) return Promise.resolve(null);
+  simplifierLoad ??= (import(/* @vite-ignore */ simplifierUrl) as Promise<typeof import('three/addons/libs/meshopt_simplifier.module.js')>)
+    .then(async ({ MeshoptSimplifier: m }) => { if (!m.supported) return null; await m.ready; return m; })
+    .catch(() => null);
+  return simplifierLoad;
+}
+/** The ink hull for a baked hero part: positions only, welded, then simplified (full hull when that is not possible). */
+function heroHull(geo: BufferGeometry, simplifier: Simplifier | null): BufferGeometry {
+  if (!simplifier) return hullGeometry(geo);
+  const g = new BufferGeometry();
+  g.setAttribute('position', geo.getAttribute('position').clone());
+  const welded = mergeVertices(g, 1e-5);
+  const idx = new Uint32Array(welded.index!.array), pos = welded.getAttribute('position').array as Float32Array;
+  const [out] = simplifier.simplify(idx, pos, 3, Math.floor(idx.length * HULL_RATIO / 3) * 3, 0.05, []);
+  if (out.length < 3) return hullGeometry(geo);
+  welded.setIndex(new BufferAttribute(out, 1));
+  return hullGeometry(welded);
+}
 const HERO_HEIGHT = 2.0;
 /** Yaw that turns the GLB authored front (-z) toward simulation angle 0 (+x). Verified by east/north close-up renders. */
 const HERO_MODEL_YAW = -Math.PI / 2;
+/** The same sphere, cone or cylinder with half its round segments (min 6 around, 4 down); other shapes as they are. */
+function fewerSegments(geo: BufferGeometry): BufferGeometry {
+  const g = geo as BufferGeometry & { type: string; parameters?: Record<string, number> }, q = g.parameters;
+  if (!q) return geo;
+  const half = (n: number, min: number) => Math.max(min, Math.round(n / 2));
+  if (g.type === 'SphereGeometry') return new SphereGeometry(q.radius, half(q.widthSegments, 6), half(q.heightSegments, 4));
+  if (g.type === 'ConeGeometry') return new ConeGeometry(q.radius, q.height, half(q.radialSegments, 6));
+  if (g.type === 'CylinderGeometry') return new CylinderGeometry(q.radiusTop, q.radiusBottom, q.height, half(q.radialSegments, 6));
+  return geo;
+}
 /** Per-hero tweaks to a shared campaign GLB (cycle 41), applied when baking; the files stay untouched. Names are
  * GLTFLoader's (spaces → underscores). Popo's polar-bear guardian drops its hammer (handle, iron head, ivory cap)
  * and holds a snowball on the same animated node, so the attack clip becomes an overhand throw. */
@@ -104,7 +145,7 @@ export class RushView {
   /** Instanced batches: draw calls stay fixed however many enemies, shots and coins are alive. */
   private batches!: {
     body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>; flash: Record<EnemyKind, Batch>; ice: Record<EnemyKind, Batch>;
-    shadow: Batch; ring: Batch; frostRing: Batch; barBg: Batch; barFill: Batch; shots: Record<Shot['owner'], Batch>; branchShots: Record<TowerBranch, Batch>; coins: Batch;
+    shadow: Batch; ring: Batch; frostRing: Batch; streak: Batch; barBg: Batch; barFill: Batch; shots: Record<Shot['owner'], Batch>; branchShots: Record<TowerBranch, Batch>; coins: Batch;
   };
   private counts = { enemies: 0, shots: 0 };
   private tmp = { m: new Matrix4(), q: new Quaternion(), e: new Euler(), p: new Vector3(), s: new Vector3(), o: new Vector3() };
@@ -160,6 +201,12 @@ export class RushView {
     blob: new CircleGeometry(1, 20), ring: new RingGeometry(0.82, 1, 32), inkRing: new RingGeometry(0.74, 1.08, 32), bolt: new CapsuleGeometry(0.11, 0.5, 4, 8),
     orb: new SphereGeometry(0.28, 12, 10), coin: new CylinderGeometry(0.28, 0.28, 0.08, 14), spark: new OctahedronGeometry(0.22),
     bar: new PlaneGeometry(1, 0.13), barFill: new PlaneGeometry(1, 0.13).translate(0.5, 0, 0), disc: new CircleGeometry(1, 40),
+    // Swift-lap speed lines (cycle 53): two thin pale streaks trailing behind an enemy (local -x is behind), unit radius.
+    streak: bake([
+      { geo: new BoxGeometry(1.6, 0.14, 0.14), color: 0xfffbe8, at: [-2.0, 0.35, 0.5] },
+      { geo: new BoxGeometry(1.2, 0.14, 0.14), color: 0xfffbe8, at: [-1.9, 0.75, 0] },
+      { geo: new BoxGeometry(1.6, 0.14, 0.14), color: 0xfffbe8, at: [-2.0, 0.35, -0.5] },
+    ]),
   };
   private mats = {
     blob: basic(0x0b1a12, 0.32), allyRing: basic(TEAM.ally, 0.85), enemyRing: basic(TEAM.enemy, 0.8),
@@ -422,7 +469,9 @@ export class RushView {
 
   private loadHeroModel(kind: HeroKind) {
     this.heroRigs.set(kind, 'loading');
-    heroLoader.load(HERO_MODELS[kind], gltf => {
+    // The simplifier downloads alongside the model; baking waits for both (cycle 62).
+    const simplifier = loadSimplifier();
+    heroLoader.load(HERO_MODELS[kind], gltf => void simplifier.then(simplifier => {
       gltf.scene.traverse(node => { if (node instanceof Mesh) toFloat32(node); });
       const model = gltf.scene, box = new Box3().setFromObject(model), size = box.getSize(new Vector3()), center = box.getCenter(new Vector3());
       const k = HERO_HEIGHT / Math.max(size.y, 0.01);
@@ -445,7 +494,7 @@ export class RushView {
         if (drop.has(mesh.name)) { mesh.removeFromParent(); continue; }
         let owner: Object3D = model;
         for (let p: Object3D | null = mesh; p && p !== model; p = p.parent) if (animated.has(p.name)) { owner = p; break; }
-        if (owner === mesh) { toonify(mesh); mesh.add(new Mesh(hullGeometry(mesh.geometry), outlineMaterial(+(0.035 / (mesh.getWorldScale(ws).x || 1)).toFixed(3)))); continue; }
+        if (owner === mesh) { toonify(mesh); mesh.add(new Mesh(heroHull(mesh.geometry, simplifier), outlineMaterial(+(0.035 / (mesh.getWorldScale(ws).x || 1)).toFixed(3)))); continue; }
         inv.copy(owner.matrixWorld).invert();
         const mat = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material) as Material & { color?: Color };
         const list = groups.get(owner) ?? [];
@@ -465,7 +514,7 @@ export class RushView {
       }
       for (const [owner, parts] of groups) {
         const geo = bakeMatrices(parts), body = new Mesh(geo, this.mats.hero);
-        body.add(new Mesh(hullGeometry(geo), outlineMaterial(+(0.035 / (owner.getWorldScale(ws).x || 1)).toFixed(3))));
+        body.add(new Mesh(heroHull(geo, simplifier), outlineMaterial(+(0.035 / (owner.getWorldScale(ws).x || 1)).toFixed(3))));
         owner.add(body);
       }
       const clip = gltf.animations[0];
@@ -477,7 +526,7 @@ export class RushView {
         shot.clampWhenFinished = false;
       }
       this.heroRigs.set(kind, { holder, mixer, shot, held });
-    }, undefined, () => { this.heroRigs.delete(kind); /* Keep the placeholder; the prototype stays playable without the model. */ });
+    }), undefined, () => { this.heroRigs.delete(kind); /* Keep the placeholder; the prototype stays playable without the model. */ });
   }
 
   /** One baked body + hull per enemy kind, shared by every instance of that kind. */
@@ -531,6 +580,19 @@ export class RushView {
         { geo: new OctahedronGeometry(r * 0.32), color: TEAM.enemy, at: [r * 1.1, r * 1.6, 0] },
         ...eyes(r * 0.5, r * 2.25, r * 0.2, r * 0.13, 0xffffff, PAL.ink),
       ];
+    } else if (kind === 'shaman') {
+      // Shaman (cycle 59): yellow-green bell robe, bone mask with green eyes, and a staff taller than the body with
+      // a glowing green orb (the heal colour), held to one side: an 'i' beside a bell, unlike the skirmisher's T.
+      parts = [
+        { geo: new ConeGeometry(r * 1.0, r * 2.1, 10), color: 0x8fbf2f, at: [0, r * 1.05, 0] },
+        { geo: new CylinderGeometry(r * 1.02, r * 1.05, r * 0.2, 12), color: 0x5c7d1a, at: [0, r * 0.1, 0] },
+        { geo: new SphereGeometry(r * 0.52, 12, 10), color: 0xf3e6c8, at: [r * 0.1, r * 2.2, 0] },
+        { geo: new ConeGeometry(r * 0.66, r * 1.0, 10), color: 0x5c7d1a, at: [-r * 0.08, r * 2.75, 0], rot: [0, 0, 0.18] },
+        { geo: new CylinderGeometry(r * 0.11, r * 0.11, r * 3.6, 6), color: 0x7a4a24, at: [r * 0.5, r * 1.8, r * 0.85] },
+        { geo: new SphereGeometry(r * 0.4, 10, 8), color: 0x7dff9a, at: [r * 0.5, r * 3.75, r * 0.85] },
+        { geo: new OctahedronGeometry(r * 0.22), color: 0x3fd46a, at: [r * 0.5, r * 4.25, r * 0.85] },
+        ...eyes(r * 0.58, r * 2.25, r * 0.2, r * 0.13, 0x9dff5a, 0x1d4a0a),
+      ];
     } else if (kind === 'brute') {
       parts = [
         { geo: new BoxGeometry(r * 1.6, r * 1.5, r * 2.1), color: 0xe8842a, at: [0, r * 1.2, 0] },
@@ -563,14 +625,16 @@ export class RushView {
         parts.push({ geo: new ConeGeometry(r * 0.12, r * 0.55, 6), color: PAL.gold, at: [r * 0.2 + Math.cos(a) * r * 0.42, r * 3.9, Math.sin(a) * r * 0.42] });
       }
     }
-    const body = bake(parts);
+    // Cycle 54 (measured in cycle 50): small enemies seen from the top-down camera look the same with half the round
+    // segments, at 52-64% fewer triangles each. The boss keeps its full segments; its arms read faceted otherwise.
+    const body = bake(kind === 'boss' ? parts : parts.map(p => ({ ...p, geo: fewerSegments(p.geo) })));
     kit = { body, hull: hullGeometry(body) };
     this.enemyKits.set(kind, kit);
     return kit;
   }
 
   private buildBatches() {
-    const kinds: EnemyKind[] = ['grunt', 'skirmisher', 'brute', 'boss', 'shield'];
+    const kinds: EnemyKind[] = ['grunt', 'skirmisher', 'brute', 'boss', 'shield', 'shaman'];
     const per = <T,>(f: (k: EnemyKind) => T) => Object.fromEntries(kinds.map(k => [k, f(k)])) as Record<EnemyKind, T>;
     const cap = 160;
     this.batches = {
@@ -582,6 +646,7 @@ export class RushView {
       shadow: new Batch(this.scene, this.geo.blob, this.mats.blob, cap),
       ring: new Batch(this.scene, this.geo.ring, this.mats.enemyRing, cap),
       frostRing: new Batch(this.scene, this.geo.ring, basic(0x8fe6ff, 0.9), cap),
+      streak: new Batch(this.scene, this.geo.streak, this.mats.baked, cap),
       barBg: new Batch(this.scene, this.geo.bar, this.mats.barBg, cap, { order: 5 }),
       barFill: new Batch(this.scene, this.geo.barFill, this.mats.barEnemy, cap, { order: 5 }),
       shots: {
@@ -603,11 +668,12 @@ export class RushView {
     return t.m.compose(t.p.set(x, y + this.groundHeight(x,z), z), t.q.setFromEuler(t.e), t.s.set(sx, sy, sz));
   }
 
-  private drawEnemies(s: RushState) {
+  private drawEnemies(s: RushState, reduced: boolean) {
     const B = this.batches, t = this.tmp;
     this.camera.updateMatrixWorld();
     this.frustum.setFromProjectionMatrix(t.m.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
-    const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), ...Object.values(B.ice), B.shadow, B.ring, B.frostRing, B.barBg, B.barFill];
+    const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), ...Object.values(B.ice), B.shadow, B.ring, B.frostRing, B.streak, B.barBg, B.barFill];
+    const swift = s.diff.twist === 'swift';
     all.forEach(b => b.begin());
     for (const e of s.enemies) {
       const r = ENEMIES[e.kind].radius;
@@ -631,6 +697,7 @@ export class RushView {
       B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.25));
       B.ring.push(this.place(e.x, 0.03, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.15));
       if ((e.slowT ?? 0) > 0) B.frostRing.push(this.place(e.x, 0.05, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.5)); // frost slow
+      if (swift && !reduced && e.kind !== 'boss' && !e.windup) B.streak.push(this.place(e.x, bob, e.z, 0, yaw(e.facing), 0, Math.max(0.6, r))); // swift lap: readable even on small enemies
     }
     all.forEach(b => b.end());
     this.counts.enemies = s.enemies.length;
@@ -827,6 +894,9 @@ export class RushView {
         case 'telegraph': this.telegraph(ev.x, ev.z, ev.radius, ev.time); break;
         // Boss rally (cycle 33): amber, not the red of a slam, because the roar itself does no damage.
         case 'roar': this.telegraph(ev.x, ev.z, ev.radius, ev.time, 0xffb02e); break;
+        // Shaman heal (cycle 59): a green ring out to the heal radius, so the cause of the refilled bars is visible.
+        // Cycle 60: at 0.55 opacity the ink band won and it read as a grey smudge; 0.9 and a little longer reads green.
+        case 'heal': this.ring(ev.x, ev.z, 0x5ee87a, ev.radius, 0.7, 0.9, true); break;
         case 'lap': // endless lap (cycle 47): a wide red ink ring around the town and a shake
           this.ring(TOWN.x, TOWN.z, 0xff4d5e, 7, 0.7, 0.95, true);
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.5);
@@ -916,7 +986,7 @@ export class RushView {
       seg.position.x = (i - 1) * 0.44 - (full ? 0 : (1 - seg.scale.x) * 0.2);
       seg.quaternion.copy(this.camera.quaternion);
     });
-    this.drawEnemies(s);
+    this.drawEnemies(s, reduced);
     this.drawShotsAndCoins(s);
     // Cover: bushes turn see-through while the hero hides in one; broken crates disappear.
     const hiding = alive && heroHidden(s);
@@ -1086,7 +1156,17 @@ export class RushView {
 
   render() { this.renderer.render(this.scene, this.camera); }
   /** Renderer statistics for the debug overlay and performance notes. */
-  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroKind: this.heroKind, heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, townModel: this.townView?.status, townOccluders: this.townView?.occlusion.count ?? 0, damage: { ...this.damageStages }, heroTint: this.mats.hero.color.getHex(), heroPosture: this.heroBody.scale.y, terrain: {heroY:this.hero.position.y,townY:this.townView?.root.position.y,focusY:this.focus.y}, dropped: Batch.dropped, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
+  /** Hero model triangles split into body and ink hull (outline meshes draw back faces), for measurement. */
+  private heroTris() {
+    const rig = this.heroRig, out = { body: 0, hull: 0 };
+    rig?.holder.traverse(o => {
+      if (!(o instanceof Mesh) || !o.visible || !(o.material as Material).visible) return; // parents drawn as nothing
+      const g = o.geometry as BufferGeometry, n = (g.index ? g.index.count : g.attributes.position.count) / 3;
+      if ((o.material as Material).side === BackSide) out.hull += n; else out.body += n;
+    });
+    return out;
+  }
+  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroKind: this.heroKind, heroTris: this.heroTris(), enemyTris: Object.fromEntries([...this.enemyKits].map(([k, v]) => [k, (v.body.index ? v.body.index.count : v.body.attributes.position.count) / 3])), heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, townModel: this.townView?.status, townOccluders: this.townView?.occlusion.count ?? 0, damage: { ...this.damageStages }, heroTint: this.mats.hero.color.getHex(), heroPosture: this.heroBody.scale.y, terrain: {heroY:this.hero.position.y,townY:this.townView?.root.position.y,focusY:this.focus.y}, dropped: Batch.dropped, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
 }
 
 /** Cape placement per hero model (shoulder height y, back offset x, height h, width w), tuned on the model sheet. */
@@ -1098,5 +1178,5 @@ const CAPE: Record<HeroKind, { x: number; y: number; h: number; w: number }> = {
 };
 const BRANCH_COLOR: Record<TowerBranch, number> = { fire: 0xff7a2f, frost: 0x4fc3ff };
 const ICE = new MeshBasicMaterial({ color: 0xc4f2ff, transparent: true, opacity: 0.4, depthWrite: false });
-const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4 };
+const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4, shaman: 0x8fbf2f };
 const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };

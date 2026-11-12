@@ -1,7 +1,7 @@
 // Arcana Rush prototype bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
 import { ECONOMY, ENEMIES, HEROES, TOWER_LEVELS, type HeroKind } from './data.ts';
-import { createRush, padCost, padInReach, stepRush, superReady, WAVE_COUNT, type RushEvent, type RushState } from './sim.ts';
+import { createRush, padCost, padInReach, stepRush, superReady, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
 import { RushInput } from './input.ts';
@@ -135,21 +135,28 @@ function updatePops(dt: number) {
 
 // Boss rally warning (cycle 35): a callout pinned just under the roaring boss (its camera side), so the warning reads
 // where the eye already is and never covers the boss it warns about. Off screen, the toast strip says it instead.
-let callout: { el: HTMLSpanElement; id: number } | null = null;
-function bossCallout(): boolean {
-  const boss = state.enemies.find(e => e.kind === 'boss' && (e.roarT ?? 0) > 0);
+// One callout per roaring boss (cycle 53: twin-boss laps can have two roaring at once).
+const callouts = new Map<number, HTMLSpanElement>();
+/** Pin a callout on the boss that just roared (the roaring boss nearest the event); false = off screen, use the toast. */
+function bossCallout(at: { x: number; z: number }): boolean {
+  let boss: (typeof state.enemies)[number] | null = null, best = Infinity;
+  for (const e of state.enemies) {
+    if (e.kind !== 'boss' || !((e.roarT ?? 0) > 0)) continue;
+    const d = Math.hypot(e.x - at.x, e.z - at.z);
+    if (d < best) { best = d; boss = e; }
+  }
   if (!boss || !view.screenPoint(boss.x, 1, boss.z, canvasRect).visible) return false;
-  callout?.el.remove();
-  callout = { el: popEl('부하를 부른다!', 'callout'), id: boss.id };
+  if (!callouts.has(boss.id)) callouts.set(boss.id, popEl('부하를 부른다!', 'callout'));
   updateCallout();
   return true;
 }
 function updateCallout() {
-  if (!callout) return;
-  const boss = state.enemies.find(e => e.id === callout!.id);
-  if (!boss || boss.hp <= 0 || !((boss.roarT ?? 0) > 0)) { callout.el.remove(); callout = null; return; }
-  const sp = view.screenPoint(boss.x, 0, boss.z + ENEMIES.boss.radius + 0.4, canvasRect);
-  callout.el.style.transform = `translate(${sp.x}px, ${sp.y}px) translate(-50%, 0)`;
+  for (const [id, el] of callouts) {
+    const boss = state.enemies.find(e => e.id === id);
+    if (!boss || boss.hp <= 0 || !((boss.roarT ?? 0) > 0)) { el.remove(); callouts.delete(id); continue; }
+    const sp = view.screenPoint(boss.x, 0, boss.z + ENEMIES.boss.radius + 0.4, canvasRect);
+    el.style.transform = `translate(${sp.x}px, ${sp.y}px) translate(-50%, 0)`;
+  }
 }
 
 // ---------- events → feedback ----------
@@ -157,6 +164,8 @@ function updateCallout() {
 const SOUND: Partial<Record<RushEvent['type'], CombatSoundKind>> = {
   fire: 'arrow', swing: 'slash', burst: 'skill', slam: 'cannon', roar: 'surge', lap: 'surge', summon: 'cast', townHit: 'breach', heroDown: 'breach', build: 'cast', waveStart: 'surge', superReady: 'freeze',
 };
+/** Endless lap twists (cycle 52), as the player reads them. */
+const TWIST_NAME: Record<LapTwist, string> = { swift: '빠른 걸음', shields: '방패 행렬', twin: '쌍둥이 보스' };
 let toastTimer = 0;
 function toast(text: string, cls = '', seconds = 1.6) {
   const el = $('toast');
@@ -170,13 +179,15 @@ function feedback(events: RushEvent[]) {
     const sound = SOUND[ev.type];
     if (sound) playCombatSound(sound);
     if (ev.type === 'hit') { if (ev.owner !== 'tower') playCombatSound('impact'); hitPop(ev.owner, ev.id, ev.damage, ev.x, ev.z); }
+    // Shaman heal (cycle 60): a green number over each ally it restored, beside the ring the renderer draws.
+    else if (ev.type === 'healed') pop(`+${Math.round(ev.amount)}`, ev.x, ev.z, 'heal', 2.1);
     else if (ev.type === 'block') { playCombatSound('cannon'); pop('막힘', ev.x, ev.z, 'blocked', 2.1); } // a heavier clank than a flesh hit
     else if (ev.type === 'heroHit') pop(String(Math.round(ev.damage)), state.hero.x, state.hero.z, 'hurt', 2.2);
     else if (ev.type === 'coin') pop(`+${ev.value}`, state.hero.x, state.hero.z, 'gold', 2.4);
     else if (ev.type === 'burst') playHaptic('skill', feedbackEnabled);
     else if (ev.type === 'heroDown') { playHaptic('breach', feedbackEnabled); toast(`쓰러졌다! ${HEROES[state.hero.kind].respawn}초 뒤 마을에서 복귀`, 'bad'); }
     else if (ev.type === 'superReady') toast('필살기 준비 완료!', 'super');
-    else if (ev.type === 'roar') { playHaptic('surge', feedbackEnabled); if (!bossCallout()) toast('보스가 부하를 부른다!', 'bad'); }
+    else if (ev.type === 'roar') { playHaptic('surge', feedbackEnabled); if (!bossCallout(ev)) toast('보스가 부하를 부른다!', 'bad'); }
     else if (ev.type === 'waveStart') {
       playHaptic('surge', feedbackEnabled);
       const boss = ev.wave % WAVE_COUNT === WAVE_COUNT - 1;
@@ -186,7 +197,7 @@ function feedback(events: RushEvent[]) {
     else if (ev.type === 'lap') {
       // Endless lap (cycle 47): comes right after the fifth wave's clear, so this toast replaces that one.
       playHaptic('surge', feedbackEnabled);
-      toast(`${ev.lap}바퀴째 · 적이 강해졌다!`, 'bad', 2.6);
+      toast(`${ev.lap}바퀴째 · ${ev.twist ? `${TWIST_NAME[ev.twist]}!` : '적이 강해졌다!'}`, 'bad', 2.6);
       const box = hud.wave.parentElement!;
       box.classList.remove('lap-flash'); void box.offsetWidth; box.classList.add('lap-flash');
     }
@@ -247,7 +258,7 @@ function updateHud() {
   const s = state;
   setText('wave', hud.wave, s.diff.endless ? `웨이브 ${s.wave + 1}` : `웨이브 ${Math.min(s.wave + 1, WAVE_COUNT)}/${WAVE_COUNT}`);
   const lap = Math.floor(s.wave / WAVE_COUNT) + 1;
-  const where = mode === 'demo' ? '시연' : s.diff.endless ? `끝없는 도전${lap > 1 ? ` ${lap}바퀴` : ''}` : `스테이지 ${stage}`;
+  const where = mode === 'demo' ? '시연' : s.diff.endless ? `끝없는 도전${lap > 1 ? ` ${lap}바퀴` : ''}${s.diff.twist ? ` · ${TWIST_NAME[s.diff.twist]}` : ''}` : `스테이지 ${stage}`;
   setText('waveSub', hud.waveSub, s.phase === 'prep' ? `${where} · 준비 ${Math.ceil(s.prepT)}초` : s.phase === 'wave' ? `${where} · 남은 적 ${s.enemies.length}` : where);
   setStyle('townFill', hud.townFill, 'transform', `scaleX(${s.town.hp / s.town.maxHp})`);
   setText('townHp', hud.townHp, String(Math.ceil(s.town.hp)));
@@ -303,7 +314,8 @@ function start(nextMode: 'play' | 'demo') {
   stage = nextMode === 'play' ? town.stage : 1;
   const kingdom = loadKingdom();
   // Endless challenge (cycle 46): stage-10 difficulty, the five waves on a loop.
-  const diff = stage === ENDLESS_STAGE ? { ...stageDifficulty(10), endless: true } : stageDifficulty(stage);
+  // Endless keeps stage 10's numbers but reports its own stage, so endless-only groups (cycle 59: shamans) appear.
+  const diff = stage === ENDLESS_STAGE ? { ...stageDifficulty(10), stage: ENDLESS_STAGE, endless: true } : stageDifficulty(stage);
   state = createRush(seed, nextMode === 'play' ? kingdomMods(kingdom) : undefined, diff, nextMode === 'play' ? kingdom.hero : 'ranger');
   battleId = `${Date.now().toString(36)}-${seed}`;
   mode = nextMode;
@@ -348,7 +360,9 @@ function showEndlessResult() {
   const s = state, { kingdom, granted, reward } = settleEndless(collect(loadKingdom(), Date.now()), battleId, s);
   $('result-title').textContent = `끝없는 도전 · 웨이브 ${reward.waves}`;
   $('screen-result').classList.remove('won');
-  $('result-stars').innerHTML = reward.newBest ? `<small class="best">새 최고 기록! ${reward.waves}웨이브</small>` : `<small>최고 기록 ${reward.best}웨이브</small>`;
+  const passed = reward.milestones.map(m => `${m.waves}웨이브 돌파 <i class="res-ico shard"></i>+${m.shards}`).join(' · ');
+  $('result-stars').innerHTML = (reward.newBest ? `<small class="best">새 최고 기록! ${reward.waves}웨이브</small>` : `<small>최고 기록 ${reward.best}웨이브</small>`)
+    + (passed ? `<small class="milestone">기록 보상: ${passed}</small>` : '');
   const saved = granted && saveKingdom(kingdom), rewardEl = $('result-reward');
   rewardEl.hidden = !granted;
   rewardEl.innerHTML = `<i class="res-ico food"></i>식량 +${reward.food} <i class="res-ico wood"></i>목재 +${reward.wood}${reward.shards ? ` <i class="res-ico shard"></i>조각 +${reward.shards}` : ''}${saved ? '' : ' <small>(저장되지 않아 이번 창에서만 유지돼요)</small>'}`;
@@ -470,8 +484,9 @@ if (params.has('sheet')) {
   state.crates = [];
   // ?back=1 turns the hero away from the camera, as in battle where it faces the enemies at the top.
   Object.assign(state.hero, { x: 9.4, z: 2, facing: params.has('back') ? -Math.PI / 2 : Math.PI / 2 });
-  (['grunt', 'skirmisher', 'brute', 'shield', 'boss'] as const).forEach((kind, i) => state.enemies.push({
-    id: 900 + i, kind, x: [-6.4, -4, -1.2, 1.4, 5][i], z: 2, kx: 0, kz: 0, hp: 1, maxHp: 1, lane: 0, wp: 1, cd: 0, flash: 0, chasing: false, facing: Math.PI / 2, windup: null,
+  // The shaman (cycle 59) stands at the left end so the earlier sheet positions stay comparable.
+  (['grunt', 'skirmisher', 'brute', 'shield', 'boss', 'shaman'] as const).forEach((kind, i) => state.enemies.push({
+    id: 900 + i, kind, x: [-6.4, -4, -1.2, 1.4, 5, -8.8][i], z: 2, kx: 0, kz: 0, hp: 1, maxHp: 1, lane: 0, wp: 1, cd: 0, flash: 0, chasing: false, facing: Math.PI / 2, windup: null,
     // ?frost=1 shows the frost shell (cycle 16) on every enemy.
     ...(params.has('frost') ? { slowT: 99 } : {}),
   }));

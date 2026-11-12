@@ -3,7 +3,7 @@ import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
 import { FORGE, HEROES, TALENT_MAX, TALENTS, type HeroKind } from './data.ts';
 import {
-  CASTLE_MAX, DAILY_WIN, ENDLESS_STAGE, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canLearnTalent, canTrain, learnTalent, talentCost, dailyReady, dayIndex, canUpgrade, chooseHero, collect, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, pending, PERK_EFFECT, rate,
+  CASTLE_MAX, DAILY_WIN, ENDLESS_STAGE, nextMilestone, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canLearnTalent, canTrain, learnTalent, talentCost, dailyReady, dayIndex, canUpgrade, chooseHero, collect, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, pending, PERK_EFFECT, rate,
   storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 import { createKingdomStore } from './storage.ts';
@@ -32,6 +32,9 @@ function bumped(k: Kingdom, u: Upgrade): Kingdom {
   return { ...k, perks: { ...k.perks, [u]: k.perks[u] + 1 } };
 }
 
+/** Town tag box size (CSS px, `.town-tag` in rush.css). */
+const TAG_SIZE = 44;
+
 export class TownScreen {
   private kingdom: Kingdom;
   private timer = 0;
@@ -40,16 +43,26 @@ export class TownScreen {
   /** Card shown: a building (picked by tapping its name tag in the 3D town) or the hero (hero button). */
   selected: Upgrade | 'hero' = 'castle';
   private $ = (id: string) => document.getElementById(id)!;
+  /** Bottom edge (page CSS px) of the top bar, re-measured only when the bar changes size (cycle 61). */
+  private barBottom = 0;
 
   constructor(private root: HTMLElement, private view: TownView) {
     this.kingdom = loadKingdom();
+    const bar = root.querySelector<HTMLElement>('.town-bar');
+    if (bar && typeof ResizeObserver !== 'undefined') new ResizeObserver(() => { this.barBottom = bar.getBoundingClientRect().bottom; }).observe(bar);
     const tags = this.$('town-tags');
     tags.innerHTML = SPOTS.map(p => {
       const row = ROWS.find(r => r.id === p.id)!;
       // Icon badge (cycle 17): the card below names the building, so the tag keeps only its icon, level and upgrade dot.
       return `<button class="town-tag tone-${row.tone}" data-select="${p.id}" aria-label="${row.name}"><span class="tag-ico" aria-hidden="true">${row.badge}</span><em data-tag-level></em><i class="up" aria-hidden="true">▲</i></button>`;
-    }).join('');
+    }).join('') +
+      // Endless record flag (cycle 57): best waves in the pill, the next milestone in the corner; a tap picks ∞.
+      `<button class="town-tag tone-endless" data-endless hidden><span class="tag-ico" aria-hidden="true">∞</span><em data-tag-level></em><i class="goal" aria-hidden="true"></i></button>`;
     tags.addEventListener('click', e => {
+      if ((e.target as HTMLElement).closest('[data-endless]')) {
+        if (stageUnlocked(this.kingdom, ENDLESS_STAGE)) { this.stage = ENDLESS_STAGE; this.render(); }
+        return;
+      }
       const id = (e.target as HTMLElement).closest<HTMLElement>('[data-select]')?.dataset.select as Upgrade | undefined;
       if (id) { this.selected = id; this.render(); }
     });
@@ -142,13 +155,19 @@ export class TownScreen {
   /** Short message in the reward line (reused for hints). */
   private note(text: string) { const el = this.$('town-reward'); el.textContent = text; el.hidden = false; }
   /** Pin the name tags over their buildings (call every frame while the town is shown). */
-  layout(rect: { width: number; height: number }) {
+  layout(rect: { width: number; height: number; top?: number }) {
+    // A tag's foot sits on its anchor; keep its top at least 8px under the top bar (cycle 61: on some aspect ratios the
+    // castle, forge and vault tags slid under it). A pushed tag overlaps its own roof a little more.
+    const minY = this.barBottom > 0 ? this.barBottom - (rect.top ?? 0) + 8 + TAG_SIZE : -Infinity;
+    const place = (tag: HTMLElement, at: { x: number; y: number }) => {
+      tag.style.transform = `translate(${Math.round(at.x)}px, ${Math.round(Math.max(at.y, minY))}px) translate(-50%, -100%)`;
+    };
     for (const p of SPOTS) {
       const tag = this.root.querySelector<HTMLElement>(`[data-select="${p.id}"]`);
-      if (!tag) continue;
-      const at = this.view.labelAt(p.id, rect);
-      tag.style.transform = `translate(${Math.round(at.x)}px, ${Math.round(at.y)}px) translate(-50%, -100%)`;
+      if (tag) place(tag, this.view.labelAt(p.id, rect));
     }
+    const flag = this.root.querySelector<HTMLElement>('[data-endless]');
+    if (flag && !flag.hidden) place(flag, this.view.flagLabelAt(rect));
   }
   /** Replace the kingdom (e.g. after a battle reward) and persist it. */
   set(k: Kingdom) { this.kingdom = k; saveKingdom(k); this.render(); }
@@ -182,10 +201,13 @@ export class TownScreen {
       chip.querySelector('[data-stars]')!.textContent = open ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '잠김';
     });
     // Daily first win (cycle 32): a small badge on the battle button while today's bonus is waiting.
-    const daily = dailyReady(k, today(now));
-    const label = this.stage === ENDLESS_STAGE ? '끝없는 도전' : `스테이지 ${this.stage}`;
-    this.$('btn-battle').innerHTML = `${label} 출전${daily ? `<span class="daily-badge">첫 승리 <i class="res-ico shard"></i>+${DAILY_WIN.shards}</span>` : ''}`;
-    this.$('btn-battle').setAttribute('aria-label', `${label} 출전${daily ? ', 오늘의 첫 승리 보상 대기 중' : ''}`);
+    // Endless never ends in a win, so it shows the next record milestone (cycle 51) instead of the daily first-win badge.
+    const endless = this.stage === ENDLESS_STAGE, daily = !endless && dailyReady(k, today(now)), goal = endless ? nextMilestone(k.endlessBest) : null;
+    const label = endless ? '끝없는 도전' : `스테이지 ${this.stage}`;
+    const badge = daily ? `<span class="daily-badge">첫 승리 <i class="res-ico shard"></i>+${DAILY_WIN.shards}</span>`
+      : goal ? `<span class="daily-badge goal">목표 ${goal.waves} <i class="res-ico shard"></i>+${goal.shards}</span>` : '';
+    this.$('btn-battle').innerHTML = `${label} 출전${badge}`;
+    this.$('btn-battle').setAttribute('aria-label', `${label} 출전${daily ? ', 오늘의 첫 승리 보상 대기 중' : goal ? `, 다음 목표 ${goal.waves}웨이브, 조각 ${goal.shards}개` : ''}`);
     this.$('hero-name').textContent = `${HEROES[k.hero].name} Lv${k.heroLv[k.hero]}`;
     const heroRow = this.root.querySelector<HTMLElement>('[data-id="hero"]')!;
     const lv = k.heroLv[k.hero], g = heroGrowth(lv), tc = trainCost(k, k.hero), trainBtn = heroRow.querySelector<HTMLButtonElement>('[data-train]')!;
@@ -217,12 +239,21 @@ export class TownScreen {
       tag.classList.toggle('on', r.id === this.selected);
       this.root.querySelector<HTMLElement>(`[data-id="${r.id}"]`)!.classList.toggle('selected', r.id === this.selected);
     }
+    const flag = this.root.querySelector<HTMLElement>('[data-endless]')!, open = stageUnlocked(k, ENDLESS_STAGE), next = nextMilestone(k.endlessBest);
+    flag.hidden = !open;
+    flag.querySelector('[data-tag-level]')!.textContent = String(k.endlessBest);
+    flag.querySelector('.goal')!.textContent = next ? `→${next.waves}` : '';
+    flag.classList.toggle('on', this.stage === ENDLESS_STAGE);
+    flag.setAttribute('aria-label', `끝없는 도전 기록 ${k.endlessBest}웨이브${next ? `, 다음 목표 ${next.waves}웨이브` : ''}. 누르면 끝없는 도전을 골라요`);
     this.$('res-food').textContent = String(k.food);
     this.$('res-wood').textContent = String(k.wood);
     this.$('res-shard').textContent = String(k.shards);
     const collectBtn = this.$('btn-collect') as HTMLButtonElement;
     collectBtn.disabled = wait.food + wait.wood === 0;
-    this.$('collect-amount').textContent = wait.food + wait.wood === 0 ? '생산 중…' : `식량 +${wait.food} · 목재 +${wait.wood}${storageFull(k, now) ? ' (창고 가득)' : ''}`;
+    // Icons and numbers only (cycle 58): the full sentence goes to the accessible name.
+    const full = storageFull(k, now), idle = wait.food + wait.wood === 0;
+    this.$('collect-amount').innerHTML = idle ? '생산 중…' : `<i class="res-ico food"></i>+${wait.food}<i class="res-ico wood"></i>+${wait.wood}${full ? ' 가득' : ''}`;
+    collectBtn.setAttribute('aria-label', idle ? '수확: 생산 중' : `수확: 식량 +${wait.food}, 목재 +${wait.wood}${full ? ', 창고 가득' : ''}`);
     for (const r of ROWS) {
       const row = this.root.querySelector<HTMLElement>(`[data-id="${r.id}"]`)!;
       const cost = upgradeCost(k, r.id), btn = row.querySelector<HTMLButtonElement>('[data-up]')!;

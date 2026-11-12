@@ -104,7 +104,7 @@ export function heroStats(kind: HeroKind, talent = 0): HeroDef {
 /** The default hero (kept for code that predates hero choice). */
 export const HERO = HEROES.ranger;
 
-export type EnemyKind = 'grunt' | 'skirmisher' | 'brute' | 'boss' | 'shield';
+export type EnemyKind = 'grunt' | 'skirmisher' | 'brute' | 'boss' | 'shield' | 'shaman';
 export type EnemyDef = {
   hp: number; speed: number; radius: number; damage: number; reach: number; cooldown: number;
   aggro: number; gold: number; knockTaken: number; shotSpeed?: number; windup?: number; slamRadius?: number;
@@ -114,6 +114,9 @@ export type EnemyDef = {
    * calls `count` minions of `kind` at distance `ring`, spread over `arc` rad in front of it (cycle 34: in front, so the
    * boss's own body never hides one from the camera). Only from stage `minStage`. */
   summon?: { at: number; roar: number; count: number; kind: EnemyKind; ring: number; arc: number; minStage: number };
+  /** Shaman (cycle 59): every `every` s it restores `amount` (times the stage health multiplier) to each hurt ally
+   * within `radius` of it, never itself. A priority target: it keeps the brutes and shield-bearers around it alive. */
+  heal?: { every: number; radius: number; amount: number };
 };
 export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   grunt: { hp: 60, speed: 2.5, radius: 0.42, damage: 9, reach: 0.6, cooldown: 0.8, aggro: 3.2, gold: 6, knockTaken: 1 },
@@ -122,6 +125,7 @@ export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   shield: { hp: 90, speed: 1.9, radius: 0.5, damage: 14, reach: 0.6, cooldown: 1, aggro: 3.2, gold: 10, knockTaken: 0.6, shield: 0.25, shieldArc: 1 },
   boss: { hp: 1800, speed: 1.25, radius: 1.15, damage: 70, reach: 2.2, cooldown: 2.6, aggro: 5, gold: 0, knockTaken: 0.1, windup: 0.9, slamRadius: 2.8,
     summon: { at: 0.5, roar: 1, count: 3, kind: 'skirmisher', ring: 1.9, arc: 1.8, minStage: 6 } },
+  shaman: { hp: 70, speed: 1.8, radius: 0.45, damage: 8, reach: 0.6, cooldown: 1, aggro: 3, gold: 14, knockTaken: 1, heal: { every: 2.5, radius: 3, amount: 30 } },
 };
 
 export type TowerLevel = { cost: number; damage: number; cooldown: number; range: number };
@@ -142,7 +146,8 @@ export const FORGE = { splashShare: 0.05, slowTime: 0.15 } as const;
 
 export const ECONOMY = { startGold: 60, waveBonus: 30, earlyBonusPerSecond: 2, prepTime: 12, coinLife: 14 } as const;
 
-/** minStage: the group only appears from that stage on (shield-bearers from stage 6, cycle 27). */
+/** minStage: the group only appears from that stage on (shield-bearers from stage 6, cycle 27). Shamans (cycle 59) use
+ * 11, the endless challenge only: in stages 8-10 they cost a maxed kingdom stage 10 wins without rewarding focus fire. */
 export type SpawnGroup = { kind: EnemyKind; count: number; lane: number; interval: number; delay: number; minStage?: number };
 export const WAVES: readonly (readonly SpawnGroup[])[] = [
   [{ kind: 'grunt', count: 8, lane: 0, interval: 1.1, delay: 0 }],
@@ -157,6 +162,7 @@ export const WAVES: readonly (readonly SpawnGroup[])[] = [
     { kind: 'skirmisher', count: 4, lane: 2, interval: 1.6, delay: 2 },
     { kind: 'brute', count: 2, lane: 0, interval: 4, delay: 8 },
     { kind: 'shield', count: 1, lane: 0, interval: 3, delay: 4, minStage: 6 },
+    { kind: 'shaman', count: 1, lane: 0, interval: 0, delay: 9, minStage: 11 },
   ],
   [
     { kind: 'grunt', count: 10, lane: 1, interval: 0.7, delay: 0 },
@@ -165,6 +171,7 @@ export const WAVES: readonly (readonly SpawnGroup[])[] = [
     { kind: 'brute', count: 3, lane: 0, interval: 3.5, delay: 6 },
     { kind: 'shield', count: 1, lane: 1, interval: 3, delay: 4, minStage: 6 },
     { kind: 'shield', count: 1, lane: 2, interval: 3, delay: 5, minStage: 6 },
+    { kind: 'shaman', count: 1, lane: 1, interval: 0, delay: 7, minStage: 11 },
   ],
   [
     { kind: 'boss', count: 1, lane: 0, interval: 0, delay: 2 },
@@ -172,5 +179,6 @@ export const WAVES: readonly (readonly SpawnGroup[])[] = [
     { kind: 'grunt', count: 12, lane: 2, interval: 0.9, delay: 4 },
     { kind: 'skirmisher', count: 6, lane: 0, interval: 1.4, delay: 6 },
     { kind: 'shield', count: 2, lane: 0, interval: 2.5, delay: 8, minStage: 6 },
+    { kind: 'shaman', count: 2, lane: 0, interval: 3, delay: 9, minStage: 11 },
   ],
 ];
