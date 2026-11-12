@@ -1,0 +1,313 @@
+{
+  "sourceBranch": "origin/work",
+  "sourceCommit": "803134271d26390b2083a83f1fccf683186f51bf",
+  "baseline": "45703131f26ccdba1cbc10b5d77cbf057e8c26a7",
+  "status": "historical research originals only; not current runtime assets or active build scripts",
+  "archivedFiles": [
+    {
+      "originalPath": ".gitignore",
+      "gitBlob": "b518b92f470aa139bdf3e9b7635492dd0079c2bb",
+      "bytes": 38,
+      "sha256": "3aef4c1678d94ef60efd5c3d8f5287bd27ffbba5279ef54d806497cd42e65eb9",
+      "reason": "different_and_work_blob_absent_from_head_history"
+    },
+    {
+      "originalPath": "art-source/defense/frost-beacon.blend",
+      "gitBlob": "c15205a3d6b8d5423a2c5b088ed9cd197c230a37",
+      "bytes": 737076,
+      "sha256": "24c8cd3352a28bf30274537484e9a92a6eb8bb51ea119e31ad27b9d15d60dcea",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "art-source/defense/frost-guardian.blend",
+      "gitBlob": "39ac69e7ff3a073248177cd6f797601dea46499a",
+      "bytes": 1356332,
+      "sha256": "66239687b9ba3445132cf7e13bbe61074f2232ec0a4291cfb3d61416bcfdb5d7",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "art-source/defense/hero-armory.blend",
+      "gitBlob": "04e38cfe818d0789a8188eb1443fdffed639a3da",
+      "bytes": 2991476,
+      "sha256": "b9eba178caeb5d53acec32d1244268ebb409daf09c3c6f2dfe563ebd5c1d96c1",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "art-source/defense/towers-crafted.blend",
+      "gitBlob": "8bb3afbf5798101dc5e22a4a7c5b9d16f31d1927",
+      "bytes": 5016924,
+      "sha256": "9ea4b7309a62c0ecac18027b43d9df67e933139ff3f9b9b0eab9a5ff4a403d42",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "docs/arcana-api-cross-review.md",
+      "gitBlob": "e0af32c747504e831bec24c5f06355a11a8dc7dc",
+      "bytes": 2670,
+      "sha256": "491104d939c17bfcf7c602e70ea4316dc3fbd5b503ee8dcc57dc6b5a235ab752",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "docs/arcana-asset-pipeline.md",
+      "gitBlob": "f1034caf6ec5238e4caf19869603dcf124941976",
+      "bytes": 8195,
+      "sha256": "1b12493440c9a0fb47e9aeb90668a87b39aacedb0dc585ff7859225d5f0f9b99",
+      "reason": "different_and_work_blob_absent_from_head_history"
+    },
+    {
+      "originalPath": "docs/arcana-character-modeling-plan.md",
+      "gitBlob": "ca60b0dcf9d9c9ad94821d043af86d3591727be4",
+      "bytes": 11961,
+      "sha256": "7471956a01e0749edb16cd79e03f622400c7258ff6c69a9f4c421d374b164271",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "docs/arcana-hero-armory.md",
+      "gitBlob": "83508c94e4dfdf397c52870766ef026f5073193b",
+      "bytes": 3683,
+      "sha256": "b2fa6b38d7698c0e59b073d82f34f02e3636b7d26a15ca4441348c1e2dc374ad",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "docs/arcana-higgsfield-workflow.md",
+      "gitBlob": "fe65f7071f17acfcd6c236cbe41b9e64219c7a69",
+      "bytes": 2919,
+      "sha256": "a84f3fc85b26055a5c08c6dcb00fbe6bcf65fe4d06a66610fa45c80d99f9e77f",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "docs/arcana-image-inventory.md",
+      "gitBlob": "f9ab21280ff157c5675dcd9f3ae119ac1928fed0",
+      "bytes": 19000,
+      "sha256": "72ea028d00829454426761c60cb31c23857f3f2ed9eccef4f2144243baeb8b02",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "docs/arcana-tower-review.md",
+      "gitBlob": "b434a83dfc1655e8910a31ddcf29645103090fb8",
+      "bytes": 3550,
+      "sha256": "9ab0e148245c46938efd08ce2b78b99c06ca99c7cb4e3b8395df06a88947ff53",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "docs/arcana-visual-identity.md",
+      "gitBlob": "a593dfff3ff71a4db93d128fe5e6ca9a93f3f83d",
+      "bytes": 2868,
+      "sha256": "fd39243c05031613e58b4304b2bbbf17e0b666da87489761e276b7dfbcc7212b",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "model-lab.html",
+      "gitBlob": "40a3c36b6e69cd17e44b4940af1ad9b1ba8ea72f",
+      "bytes": 2702,
+      "sha256": "ec248ede61a68da4eae1fcfe20ccb5f873625b6283d5b5e5f34fc0850f6424ef",
+      "reason": "different_and_work_blob_absent_from_head_history"
+    },
+    {
+      "originalPath": "public/defense/models/bron-hammer.glb",
+      "gitBlob": "5b4caac465eea998962a6f87cbe063772217e61e",
+      "bytes": 660928,
+      "sha256": "a43f440f032800dc1c12e9a2bb00053648547cbeab19bd501b1b8d525c48b82e",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/bron-hammer.png",
+      "gitBlob": "b056de8c583dead22b411b14c01cf2512ac27a43",
+      "bytes": 168093,
+      "sha256": "e9b71364b6c2dfe387485c2ba33a588e56966ab8e3d4c7cb1dc2afe2352b6589",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/cheongun-sword.glb",
+      "gitBlob": "1108f0d8be8a5508544433f77aebe347490efa96",
+      "bytes": 192628,
+      "sha256": "08a86ed13ebecf5580f903b7e2f1f39c6dad86dee3a47dadc67fdc28189602bb",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/cheongun-sword.png",
+      "gitBlob": "7b161dc74399491c980ef6197b6548b94a45b5fc",
+      "bytes": 160550,
+      "sha256": "b3b8f04827b5d9180bbd7ad8a175def7f315faffad21199e725c7550aee19a58",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/fire-tower-crafted.glb",
+      "gitBlob": "886e79d677832f672eb4ffff0917112489eec98a",
+      "bytes": 1067480,
+      "sha256": "533c530e0e89a122b267ab31f1b9baf27015cd04e9f226f05710c02a1bb61c77",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/fire-tower-crafted.png",
+      "gitBlob": "ad57b7148cb14f36a8661cf3ef63f7c2914730aa",
+      "bytes": 478965,
+      "sha256": "2d1ed19a1a1b399d6dfda4e8c8e34a07b1a58f59f9287a165ceee57f290035eb",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/frost-beacon.glb",
+      "gitBlob": "25bf5ac684b70ac60421130b269b16dcdc61f16a",
+      "bytes": 143992,
+      "sha256": "dafd43ec58b25eeef63482456dc236d608a59278d5dab5d57683d6663ce60bc3",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/frost-beacon.png",
+      "gitBlob": "07ab7fb79e71f00fb072a73b909db0c1f01b1f13",
+      "bytes": 388815,
+      "sha256": "3fe8adee0961863153f03be68290e13552b4dd53a200f90dccc1295151736d68",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/frost-guardian.glb",
+      "gitBlob": "55c2f94c48948b2041bb6d0eb0b8a12c359a1717",
+      "bytes": 591576,
+      "sha256": "56ec72c90f440d05b4ec17329ccaac4095746136a38dff05e19b9bae4755ecf4",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/frost-guardian.png",
+      "gitBlob": "ece6ef4bfc2773b6007083957d90e524e0cc1f10",
+      "bytes": 417252,
+      "sha256": "9805b5f03b5b3dec998be26144eb345dbb8b55e4525601d5e746bfc6d2f322b6",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/ian-staff.glb",
+      "gitBlob": "525a3da7cf15d4b1869efc548dbfe653277b2f34",
+      "bytes": 632140,
+      "sha256": "0020ace58a28b2d4aa160df644fb0113522e4f2c02cab9c1228beacb8a6992c7",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/ian-staff.png",
+      "gitBlob": "74b27a7f67ef804fa8553620da70a1ebd5dd3029",
+      "bytes": 162026,
+      "sha256": "c88b05892f61118deeec928f27a217e936f89213636895555ef7db8f831a1dce",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/kar-hammer.glb",
+      "gitBlob": "d23d08d1583b8727141431bff76898f57a5a6152",
+      "bytes": 633752,
+      "sha256": "bf544e2ffae966b4a152f621b037eb904ff3e2ff3b1413ce2d76899411877f97",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/kar-hammer.png",
+      "gitBlob": "89cd5aa17a35b89b960e1a536665731d166566a9",
+      "bytes": 172346,
+      "sha256": "e8dc6be64c1085a926ae985e7ba1b7308d10c5a1f2b8121e627e1bd37a52c37c",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/luna-staff.glb",
+      "gitBlob": "1d74a1fd67ec9c7d69e9df7c524a96cb180d7462",
+      "bytes": 1092452,
+      "sha256": "523b923d21e9f8af34275e3bb2fa62990f00b1d331572f933ac290d0a515a784",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/luna-staff.png",
+      "gitBlob": "dbe061267314540846e3b4d6cf535adef346dd8c",
+      "bytes": 162817,
+      "sha256": "893a55b1bea7fc1db7c8d321c7901a21523a69e48a8b9ceeb1b2e08bd7228bc5",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/manifest-crafted.json",
+      "gitBlob": "d2b8104022efa202a3e2a8ff3303f037f4c37db3",
+      "bytes": 1350,
+      "sha256": "ff1acfd8f4e95cf4f7228f9b1553986658df1b8a2c3a74d82252411296feb2c3",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/piercing-ballista-crafted.glb",
+      "gitBlob": "c0931b34cdb42f74e6ad1ed6413600e37514df8e",
+      "bytes": 1312804,
+      "sha256": "c81017b2d46e8634f4737b9206dc42253cd5ffa51cf824273ea42a2aac43de05",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/piercing-ballista-crafted.png",
+      "gitBlob": "0676bc50483fb7059e9f36903c2dc197f9d3d35e",
+      "bytes": 480912,
+      "sha256": "355eb1e96964c4972f41e544fd32c0f561d11c71ae0622025b0e614a41a238a7",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/riel-bow.glb",
+      "gitBlob": "dcffff1864b8a8ba7667989d9cb7c6c3124ab3b5",
+      "bytes": 278052,
+      "sha256": "413839e0ea843870a6c03fbcb6c9eaf95c6fc1b6b3a2c7a504a757f18cc2f92d",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/riel-bow.png",
+      "gitBlob": "e6b9e1dc8ecabecbfeb06197208340cc05b6fed0",
+      "bytes": 153018,
+      "sha256": "79ad82380eb471876146a7f00481d35ec98f91f8c8fe92f265046807dab906f4",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/water-cannon-crafted.glb",
+      "gitBlob": "3cce8a2c2b98d60178ad0bcf6bdfc8db7c2cf91c",
+      "bytes": 1356224,
+      "sha256": "9eacd575b32c22f5eb5b4fc1e62e223c115d82f619247e5104de04409729aca9",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "public/defense/models/water-cannon-crafted.png",
+      "gitBlob": "30dc217dbddf2ea74b53ac271b24623c4d69e76c",
+      "bytes": 486590,
+      "sha256": "124b21496662a2a0bb3f1360525b599e6880788ae319b4d8d590501594f38e71",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "src/model-lab.css",
+      "gitBlob": "74803434a7b694e138c31930496166a1fa26c426",
+      "bytes": 6240,
+      "sha256": "b6988594194190534490a49d8233d80c141a6e9fdbfb6da6da424d71a3a22ef5",
+      "reason": "different_and_work_blob_absent_from_head_history"
+    },
+    {
+      "originalPath": "src/model-lab.ts",
+      "gitBlob": "cf9ffcac1dfebceb21ce4e940e8d1118da0d0ebb",
+      "bytes": 13451,
+      "sha256": "0966e204aec9ad632216f39cf1d6a6c486873ddf62842f7fe3ede4100c13facc",
+      "reason": "different_and_work_blob_absent_from_head_history"
+    },
+    {
+      "originalPath": "tools/blender/build_frost_beacon.py",
+      "gitBlob": "effc525c4dead10fae566a976c82a334a553fb68",
+      "bytes": 5709,
+      "sha256": "ea501e4ab717b78dcccfb7b1398883aec9697530ce2307b911465ef7449d452e",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "tools/blender/build_frost_guardian.py",
+      "gitBlob": "c0d9d2dd7e2be6ab7987092480a8c8cd184de817",
+      "bytes": 9398,
+      "sha256": "5a184b4c5080e6a2724784bf1995136950a4fdfee8d43b636af0597711cd9473",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "tools/blender/build_hero_armory.py",
+      "gitBlob": "e7c77d096d854f4ad8e792c2e70fdb8bb7952d59",
+      "bytes": 12577,
+      "sha256": "01397c84d48b7c7c3690982a26d768009aa84aba550f5d3285a009cdbfe6d0d7",
+      "reason": "absent_from_head_and_history"
+    },
+    {
+      "originalPath": "tools/blender/build_towers.py",
+      "gitBlob": "bcadd612b78de800870dbaa8e55a07ecfb3d373e",
+      "bytes": 32805,
+      "sha256": "42c29145293fddddb502faf2feb5af289ea669c1dc3d69d85e5ba1d34b23a5fa",
+      "reason": "different_and_work_blob_absent_from_head_history"
+    }
+  ],
+  "otherWorkFiles": {
+    "identicalAtBaseline": 70,
+    "exactBytesAlreadyInBaselineHistory": 51
+  }
+}
