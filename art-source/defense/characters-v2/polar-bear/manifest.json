@@ -1,0 +1,68 @@
+{
+  "hero": "bear",
+  "asset": "polar-bear",
+  "source": "art-source/defense/prototypes/polar-bear/polar-bear.blend",
+  "reference": "art-source/defense/concepts/2026-11-09/polar-bear-guardian.png",
+  "reference_sha256": "5897414d8fcd6172841d23d3102ce2f64eb2484b6b1eaa3e1b871f328732cbb5",
+  "generator": "tools/blender/build_character_production.py",
+  "materials": 1,
+  "texture_size": 1024,
+  "texture_maps": [
+    "color",
+    "normal",
+    "orm"
+  ],
+  "source_material_tiles": [
+    {
+      "name": "01 Warm white fur",
+      "surface": "fur"
+    },
+    {
+      "name": "02 Ivory enamel armor",
+      "surface": "metal"
+    },
+    {
+      "name": "03 Navy cloth and joints",
+      "surface": "cloth"
+    },
+    {
+      "name": "04 Blue steel edges",
+      "surface": "metal"
+    },
+    {
+      "name": "05 Muted brass trim",
+      "surface": "metal"
+    },
+    {
+      "name": "06 Team blue ice",
+      "surface": "ice"
+    },
+    {
+      "name": "07 Pale ice facets",
+      "surface": "ice"
+    },
+    {
+      "name": "08 Nose eyes leather",
+      "surface": "smooth"
+    },
+    {
+      "name": "09 Muzzle and inner ear",
+      "surface": "smooth"
+    }
+  ],
+  "triangles": 9176,
+  "meshes": 87,
+  "clips": [
+    "polar-bear-attack",
+    "bear-idle",
+    "bear-walk"
+  ],
+  "rig": "Articulated rigid pivots, including independent leg assemblies; no deforming skin weights",
+  "glb_bytes": 998920,
+  "glb_sha256": "78b8dcbb28845686fc85a97f7f4174220ac189394b84f7c119afe7873b8ec4e8",
+  "limits": [
+    "Concept-guided procedural surface textures, not a photogrammetry reconstruction",
+    "No physical-device FPS measurement",
+    "Rush retains its snowball prop and attack timing for Popo"
+  ]
+}

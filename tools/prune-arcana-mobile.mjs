@@ -4,7 +4,7 @@ import { readdir, rm, stat } from 'node:fs/promises';
 // Only generated mobile output is pruned. Web/arcade/workshop sources stay intact.
 const output = new URL('../dist-mobile/', import.meta.url);
 await stat(new URL('index.html', output));
-for (const path of ['art/', 'flags/', 'race/', 'defense/models/prototypes/']) {
+for (const path of ['art/', 'flags/', 'race/', 'defense/models/prototypes/', 'defense/models/characters-v2/']) {
   await rm(new URL(path, output), { recursive: true, force: true });
 }
 const models = new URL('defense/models/', output);

@@ -110,11 +110,12 @@ export function bake(parts: Part[]): BufferGeometry {
 }
 
 /** Same as bake(), with an explicit transform per part (used to merge an imported model's meshes). */
-export function bakeMatrices(parts: { geo: BufferGeometry; color: number; matrix: Matrix4 }[]): BufferGeometry {
+export function bakeMatrices(parts: { geo: BufferGeometry; color: number; matrix: Matrix4 }[], preserveUv = false): BufferGeometry {
   const c = new Color();
   const geos = parts.map(part => {
     const g = part.geo.index ? part.geo.toNonIndexed() : part.geo.clone();
-    for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal') g.deleteAttribute(name);
+    for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal' && !(preserveUv && name === 'uv')) g.deleteAttribute(name);
+    if (preserveUv && !g.getAttribute('uv')) throw new Error('textured model part is missing UV coordinates');
     g.applyMatrix4(part.matrix);
     c.set(part.color);
     const n = g.attributes.position.count, colors = new Float32Array(n * 3);
@@ -131,9 +132,11 @@ export function bakeMatrices(parts: { geo: BufferGeometry; color: number; matrix
 /** Convert an imported model's materials to the toon look, keeping base colour and texture. */
 export function toonify(mesh: Mesh): void {
   const convert = (old: Material): Material => {
-    const src = old as Material & { color?: Color; map?: MeshToonMaterial['map'] };
+    const src = old as Material & { color?: Color; map?: MeshToonMaterial['map']; normalMap?: MeshToonMaterial['normalMap']; normalScale?: MeshToonMaterial['normalScale'] };
     const m = toon(src.color?.clone() ?? new Color(0xffffff), { rim: 0.3 });
     if (src.map) m.map = src.map;
+    if (src.normalMap) m.normalMap = src.normalMap;
+    if (src.normalScale) m.normalScale.copy(src.normalScale);
     old.dispose();
     return m;
   };

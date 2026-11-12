@@ -1,9 +1,9 @@
 // Three.js view of the Arcana Rush simulation. Reads RushState, never writes it.
 import {
-  AnimationMixer, Box3, BufferAttribute, DodecahedronGeometry, BoxGeometry, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
-  DirectionalLight, Group, HemisphereLight, LoopOnce, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera,
+  Box3, BufferAttribute, DodecahedronGeometry, BoxGeometry, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
+  DirectionalLight, Group, HemisphereLight, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera,
   PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
-  Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, BackSide, BufferGeometry, type AnimationAction, type Material,
+  Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, BackSide, BufferGeometry, type AnimationAction, type Material, type MeshToonMaterial, type MeshStandardMaterial,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -11,7 +11,7 @@ import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 // Loaded by URL, not bundled: the shared Vite config puts every three/examples module in the first-screen 'three-tools'
 // chunk, and this one is only needed once a hero model arrives (cycle 62). The file is self-contained (no imports).
 import simplifierUrl from 'three/addons/libs/meshopt_simplifier.module.js?url';
-// Rush-only meshopt copies of the shared campaign models (decision 2026-11-11, cycle 43; made by tools/rush-glb.sh).
+// Shared textured deliveries from models:characters; tools/rush-glb.sh optionally compresses the runtime copies.
 import rangerGlb from './models/gecko-ranger.glb?url';
 import bronGlb from './models/dwarf-guardian.glb?url';
 import bearGlb from './models/polar-bear.glb?url';
@@ -25,6 +25,7 @@ import { QUALITY, type Quality } from './quality.ts';
 import { TownView } from './townView.ts';
 import { TownDamage } from './townDamage.ts';
 import { battleFocus } from './battleCamera.ts';
+import { HeroMotion } from './heroMotion.ts';
 import { createGroundGeometry, createCliffGeometry, heightAt, raycastTerrain } from './terrainElevation.ts';
 
 export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'lob'; offset: Vec } | { kind: 'super'; offset: Vec } | null;
@@ -108,11 +109,10 @@ export class RushView {
   private heroBar: Bar;
   private ammoSegs: Mesh[] = [];
   /** One loaded model per hero kind; only the current hero's rig is visible. */
-  private heroRigs = new Map<HeroKind, { holder: Group; mixer: AnimationMixer | null; shot: AnimationAction | null; held: Mesh | null } | 'loading'>();
+  private heroRigs = new Map<HeroKind, { holder: Group; shot: AnimationAction | null; held: Mesh | null; motion: HeroMotion; material: MeshToonMaterial } | 'loading'>();
   private heroKind: HeroKind | null = null;
   private heroPlaceholder: Mesh | null = null;
   private get heroRig() { const r = this.heroKind ? this.heroRigs.get(this.heroKind) : undefined; return r && r !== 'loading' ? r : null; }
-  private get heroMixer() { return this.heroRig?.mixer ?? null; }
   private get heroShot() { return this.heroRig?.shot ?? null; }
   private enemyKits = new Map<EnemyKind, { body: BufferGeometry; hull: BufferGeometry }>();
   private towerKits = new Map<string, { base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; h: number }>();
@@ -461,16 +461,26 @@ export class RushView {
       holder.visible = this.heroKind === kind;
       if (this.heroKind === kind && this.heroPlaceholder) this.heroPlaceholder.visible = false;
       this.hero.updateMatrixWorld(true);
-      // Bake the parts per animated node (plus one static group): 5 meshes + 5 ink hulls instead of 24 + 24.
-      // The model has no textures, so material colours become vertex colours.
-      const animated = new Set((gltf.animations[0]?.tracks ?? []).map(t => t.name.split('.')[0]));
+      // Bake parts per animated owner instead of drawing each costume piece separately.
+      // The shared atlas and UVs survive batching; all clips contribute articulated owners.
+      const animated = new Set(gltf.animations.flatMap(c => c.tracks).map(t => t.name.split('.')[0]));
       const meshes: Mesh[] = [];
       model.traverse(node => { if (node instanceof Mesh) meshes.push(node); });
+      const sourceMaterial = meshes.find(m => !Array.isArray(m.material))?.material as MeshStandardMaterial | undefined;
+      const material = this.mats.hero.clone();
+      material.map = sourceMaterial?.map ?? null;
+      material.normalMap = sourceMaterial?.normalMap ?? null;
+      if (sourceMaterial?.normalScale) material.normalScale.copy(sourceMaterial.normalScale);
+      if (material.map) material.map.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
+      // Three's clone does not copy onBeforeCompile; preserve the common toon rim program.
+      material.onBeforeCompile = this.mats.hero.onBeforeCompile;
+      material.customProgramCacheKey = this.mats.hero.customProgramCacheKey;
+      material.needsUpdate = true;
       const groups = new Map<Object3D, { geo: BufferGeometry; color: number; matrix: Matrix4 }[]>();
       const inv = new Matrix4(), ws = new Vector3(), hidden = new MeshBasicMaterial({ visible: false });
       const drop = new Set(HERO_DROP[kind] ?? []);
       for (const mesh of meshes) {
-        if (drop.has(mesh.name)) { mesh.removeFromParent(); continue; }
+        if (drop.has(mesh.name) || (kind === 'bear' && mesh.userData.rushHideForThrow)) { mesh.removeFromParent(); continue; }
         let owner: Object3D = model;
         for (let p: Object3D | null = mesh; p && p !== model; p = p.parent) if (animated.has(p.name)) { owner = p; break; }
         if (owner === mesh) { toonify(mesh); mesh.add(new Mesh(heroHull(mesh.geometry, simplifier), outlineMaterial(+(0.035 / (mesh.getWorldScale(ws).x || 1)).toFixed(3)))); continue; }
@@ -492,19 +502,12 @@ export class RushView {
         propNode.add(held);
       }
       for (const [owner, parts] of groups) {
-        const geo = bakeMatrices(parts), body = new Mesh(geo, this.mats.hero);
+        const geo = bakeMatrices(parts, !!material.map), body = new Mesh(geo, material);
         body.add(new Mesh(heroHull(geo, simplifier), outlineMaterial(+(0.035 / (owner.getWorldScale(ws).x || 1)).toFixed(3))));
         owner.add(body);
       }
-      const clip = gltf.animations[0];
-      let mixer: AnimationMixer | null = null, shot: AnimationAction | null = null;
-      if (clip) {
-        mixer = new AnimationMixer(model);
-        shot = mixer.clipAction(clip);
-        shot.setLoop(LoopOnce, 1);
-        shot.clampWhenFinished = false;
-      }
-      this.heroRigs.set(kind, { holder, mixer, shot, held });
+      const motion = new HeroMotion(model, gltf.animations, kind);
+      this.heroRigs.set(kind, { holder, shot: motion.shot, held, motion, material });
     }), undefined, () => { this.heroRigs.delete(kind); /* Keep the placeholder; the prototype stays playable without the model. */ });
   }
 
@@ -959,7 +962,7 @@ export class RushView {
     this.hero.position.set(h.x, this.groundHeight(h.x,h.z), h.z);
     this.heroFootprints.forEach((m,i)=>this.conformDecal(m,.02+i*.01));
     this.heroBody.rotation.y = yaw(h.facing);
-    this.heroMixer?.update(worldDt);
+    this.heroRig?.motion.sync(s, h.x, h.z, worldDt, reduced, alive);
     this.setBar(this.heroBar, h.hp / heroMaxHp(s));
     this.ammoSegs.forEach((seg, i) => {
       const full = h.ammo > i, partial = h.ammo === i ? h.reloadT / def.reload : 0;
@@ -1083,6 +1086,8 @@ export class RushView {
     this.mats.hero.color.setHex(hero.tint);
     this.mats.hero.emissive.setHex(hero.emissive);
     this.mats.hero.emissiveIntensity = hero.emissiveIntensity;
+    const skin = this.heroRig?.material;
+    if (skin) { skin.color.copy(this.mats.hero.color); skin.emissive.copy(this.mats.hero.emissive); skin.emissiveIntensity = hero.emissiveIntensity; }
     // Compress from the grounded origin: feet stay at y=0 and the collision radius never changes.
     this.heroBody.scale.y = hero.stage === 'critical' ? .9 : hero.stage === 'damaged' ? .96 : 1;
     if (s !== this.damageBattle || s.tick < this.lastSmokeTick) {
@@ -1148,7 +1153,7 @@ export class RushView {
     });
     return out;
   }
-  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroKind: this.heroKind, heroTris: this.heroTris(), enemyTris: Object.fromEntries([...this.enemyKits].map(([k, v]) => [k, (v.body.index ? v.body.index.count : v.body.attributes.position.count) / 3])), heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, townModel: this.townView?.status, townOccluders: this.townView?.occlusion.count ?? 0, damage: { ...this.damageStages }, heroTint: this.mats.hero.color.getHex(), heroPosture: this.heroBody.scale.y, terrain: {heroY:this.hero.position.y,townY:this.townView?.root.position.y,focusY:this.focus.y}, dropped: Batch.dropped, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
+  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroTexture: !!this.heroRig?.material.map, heroNormalMap: !!this.heroRig?.material.normalMap, heroMotion: this.heroRig?.motion.info(), heroKind: this.heroKind, heroTris: this.heroTris(), enemyTris: Object.fromEntries([...this.enemyKits].map(([k, v]) => [k, (v.body.index ? v.body.index.count : v.body.attributes.position.count) / 3])), heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, townModel: this.townView?.status, townOccluders: this.townView?.occlusion.count ?? 0, damage: { ...this.damageStages }, heroTint: this.mats.hero.color.getHex(), heroPosture: this.heroBody.scale.y, terrain: {heroY:this.hero.position.y,townY:this.townView?.root.position.y,focusY:this.focus.y}, dropped: Batch.dropped, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
 }
 
 /** Cape placement per hero model (shoulder height y, back offset x, height h, width w), tuned on the model sheet. */
