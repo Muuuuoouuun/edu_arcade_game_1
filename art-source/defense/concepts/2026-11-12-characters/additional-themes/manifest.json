@@ -1,0 +1,143 @@
+{
+  "date": "2026-11-12",
+  "status": "visual_candidates_not_runtime_assets",
+  "style_standard": "../../../../../docs/arcana-character-art-standard.md",
+  "verification": {
+    "visual_review": "all five sheets inspected",
+    "image_decode": "Pillow verify",
+    "runtime_integration": false,
+    "mobile_readability_test": false
+  },
+  "sheets": [
+    {
+      "sheet": 6,
+      "file": "06-desert-kingdom.png",
+      "theme": "사막 왕국",
+      "candidates": {
+        "A": "모래길 곡도 수호자",
+        "B": "사막여우 모래술사",
+        "C": "자칼 태양 근위병",
+        "D": "사암 항아리 골렘"
+      },
+      "source": "exec-58b173a7-1aca-4a4e-b674-554dce550f84.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2485208,
+      "sha256": "d06c9660b22b64aea9dfaf3b5c58da8329a8ae28b55f3de9917733bc21ce5dc4",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/base-theme-v2/02-eastern-fortress.png",
+          "sha256": "054cde0aa5c667279b4616dc3e4bc8d4ae688b622b3788445aaf21afc68a37a7"
+        }
+      ]
+    },
+    {
+      "sheet": 7,
+      "file": "07-volcanic-forge.png",
+      "theme": "화산 대장간",
+      "candidates": {
+        "A": "홍철 드워프 대장장이",
+        "B": "도롱뇽 화로 창수",
+        "C": "흑요석 방패 수호자",
+        "D": "잿불 풀무 사수"
+      },
+      "source": "exec-9502fd47-20b2-49b5-9d4f-13797a8ce4d0.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2460735,
+      "sha256": "2db269cf18e294a22ccc537832b7f2a6ac4e99d6024eb045ba7c32b687a90f4d",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/base-theme-v2/02-eastern-fortress.png",
+          "sha256": "054cde0aa5c667279b4616dc3e4bc8d4ae688b622b3788445aaf21afc68a37a7"
+        }
+      ]
+    },
+    {
+      "sheet": 8,
+      "file": "08-sky-sanctum.png",
+      "theme": "천공 성역",
+      "candidates": {
+        "A": "천공 날개창 기사",
+        "B": "부엉이 성역 기록관",
+        "C": "산양 구름종 수도사",
+        "D": "제비 바람 전령"
+      },
+      "source": "exec-8f05cae9-9822-4866-b243-134e2f12a99e.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2479668,
+      "sha256": "701799729648a1380c7416a252eab21bacee0bbe0d49369d74429560ec0b9182",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/base-theme-v2/02-eastern-fortress.png",
+          "sha256": "054cde0aa5c667279b4616dc3e4bc8d4ae688b622b3788445aaf21afc68a37a7"
+        }
+      ]
+    },
+    {
+      "sheet": 9,
+      "file": "09-marsh-alchemists.png",
+      "theme": "늪지 연금술",
+      "candidates": {
+        "A": "개구리 약액 사수",
+        "B": "늪뿌리 등불 마녀",
+        "C": "악어 갈대 방패병",
+        "D": "반딧불 등불지기"
+      },
+      "source": "exec-968cc311-d8d0-4050-93f7-68b7b323a4ec.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2577621,
+      "sha256": "73db55fb0b2a66f3735e2a499f135ff8d55a66a601e052cf8c8abaf6951e9c0e",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/base-theme-v2/02-eastern-fortress.png",
+          "sha256": "054cde0aa5c667279b4616dc3e4bc8d4ae688b622b3788445aaf21afc68a37a7"
+        }
+      ]
+    },
+    {
+      "sheet": 10,
+      "file": "10-starlit-ruins.png",
+      "theme": "별빛 유적",
+      "candidates": {
+        "A": "별자리 관측술사",
+        "B": "달토끼 쌍월검사",
+        "C": "수정 천산갑 수호자",
+        "D": "비단나방 룬 예언자"
+      },
+      "source": "exec-f8f0b141-ad8b-436f-b631-d1b02a446d5f.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2589426,
+      "sha256": "cbc4896134c1307c2831065bedeb3a06056e725a0c7159657af5bd952300fbc5",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/base-theme-v2/02-eastern-fortress.png",
+          "sha256": "054cde0aa5c667279b4616dc3e4bc8d4ae688b622b3788445aaf21afc68a37a7"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "asset": "human-guard",
+  "status": "passed",
+  "clips": [
+    {
+      "clip": "human-guard-idle",
+      "duration_seconds": 2,
+      "minimum_feet_y": -0.0,
+      "loop_or_restored": true
+    },
+    {
+      "clip": "human-guard-walk",
+      "duration_seconds": 0.8,
+      "minimum_feet_y": -0.0,
+      "loop_or_restored": true
+    },
+    {
+      "clip": "human-guard-thrust",
+      "duration_seconds": 1,
+      "minimum_feet_y": -0.0,
+      "loop_or_restored": true,
+      "peak_forward_reach_seconds": 0.4,
+      "peak_forward_reach": 2.568048
+    }
+  ],
+  "rest_bounds": [
+    [
+      -1.0799999833106995,
+      -7.450580596923828e-09,
+      -0.9650000134098033
+    ],
+    [
+      1.4900000095367432,
+      3.619999885559082,
+      0.5474000386893749
+    ]
+  ],
+  "runtime": {
+    "meshes": 8,
+    "primitives": 43,
+    "triangles": 23028,
+    "materials": 15,
+    "nodes": 17
+  },
+  "scope": "GLB kinematics at 60 Hz and integrity; not collision or actual mobile rendering verification"
+}

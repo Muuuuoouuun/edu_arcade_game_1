@@ -1,0 +1,34 @@
+{
+  "task": "wood",
+  "requested_model": "claude-fable-5-2",
+  "effort": "high",
+  "max_tokens": 3000,
+  "image": "images/frontier-wood-walk.png",
+  "prompt": "첨부는 모바일 판타지 디펜스의 나무 병사 3D 보행 정지 렌더입니다. 이미지에서 실제 보이는 나무·잎·눈·무기의 구분을 기준으로 축소 시 혼동 가능성 하나와 구체적인 실루엣/재질 개선 두 가지만 한국어로 말하세요. 보이지 않는 방향이나 동작은 추측하지 마세요.",
+  "source_commit": "bec804114a26a85a800379058463f4e9fd0bf2cf",
+  "model": "claude-fable-5-2",
+  "start_usage": {
+    "input_tokens": 359,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 3,
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard"
+  },
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 359,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 2114,
+    "output_tokens_details": {
+      "thinking_tokens": 1389
+    }
+  },
+  "text_characters": 660
+}

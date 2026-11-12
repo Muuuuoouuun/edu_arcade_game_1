@@ -1,4 +1,4 @@
-import { AmbientLight, AnimationMixer, Box3, Color, DirectionalLight, GridHelper, Group, LoopOnce, Mesh, MeshStandardMaterial, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Scene, ShadowMaterial, SRGBColorSpace, Vector3, WebGLRenderer, ACESFilmicToneMapping, type AnimationAction, type Object3D, type Material } from 'three';
+import { AmbientLight, AnimationMixer, Box3, Color, DirectionalLight, GridHelper, Group, LoopOnce, LoopRepeat, Mesh, MeshStandardMaterial, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Scene, ShadowMaterial, SRGBColorSpace, Vector3, WebGLRenderer, ACESFilmicToneMapping, type AnimationAction, type Object3D, type Material } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
@@ -7,13 +7,18 @@ import './model-lab.css';
 import { createHitClip, hitFlashStrength } from './model-lab-hit';
 import { createBronIdle } from './model-lab-motion';
 
-type Model = {id:string;name:string;kind:string;detail:string;description:string;source:string;command:string;action:string;clip?:string;prototype?:boolean;viewRotation?:number};
+type Model = {id:string;name:string;kind:string;detail:string;description:string;source:string;command:string;action:string;clip?:string;prototype?:boolean;viewRotation?:number;previews?:{idle:string;walk:string}};
 const models:Model[] = [
+ {id:'human-guard',name:'인간 창방패병 · 제작 시제품',kind:'HUMAN / GARRISON STUDY',detail:'청록 제복 · 철투구 · 목재 방패',description:'14-A 시안을 참고해 큰 머리와 짧은 팔다리로 만든 인간 병사입니다. 호흡·보행·찌르기와 장비 결합을 살펴보세요. 기하 모델 시제품이며 캠페인 병과로 추가되지는 않았습니다.',source:'prototypes/human-guard/human-guard.blend',command:'blender -b --python tools/blender/build_human_guard.py',action:'▶ 창 찌르기',clip:'human-guard-thrust',prototype:true,viewRotation:-1.85,previews:{idle:'human-guard-idle',walk:'human-guard-walk'}},
  {id:'fire-tower',name:'화염 수정탑',kind:'ELEMENTAL TOWER',detail:'돌 · 청동 · 발광 수정',description:'층층이 쌓은 석재 위에 청동 발톱이 수정을 지탱합니다. 마력 코어가 회전하며 불꽃을 모읍니다.',source:'towers.blend',command:'npm run models:build',action:'▶ 발사 동작'},
  {id:'piercing-ballista',name:'관통 발리스타',kind:'SIEGE WEAPON',detail:'오크 · 황동 · 강철',description:'보강한 목재 프레임과 거대한 활대, 긴 관통탄을 조합했습니다. 발사 후 장전 장치가 복귀합니다.',source:'towers.blend',command:'npm run models:build',action:'▶ 발사 동작'},
  {id:'water-cannon',name:'물폭탄포',kind:'HYDRAULIC TOWER',detail:'황동 · 유리 · 물',description:'유리 탱크와 배관이 압력 포신으로 연결됩니다. 포신 반동과 물 코어의 움직임을 확인하세요.',source:'towers.blend',command:'npm run models:build',action:'▶ 발사 동작'},
  {clip:'dwarf-hammer-attack',viewRotation:-1.85,id:'dwarf-guardian',name:'브론 · 드워프 공병',kind:'DWARF GUARDIAN',detail:'강철 · 청동 · 가죽',description:'두꺼운 갑옷과 땋은 수염, 묵직한 망치로 드워프 공병의 실루엣을 만들었습니다. 망치를 들어 강타하고 원래 자세로 돌아옵니다.',source:'dwarf.blend',command:'npm run models:dwarf',action:'▶ 망치 강타'},
  {id:'kar-barbarian',name:'카르 · 설산 전사',kind:'PROTOTYPE / HERO',detail:'붉은 머리 · 흰 털망토 · 양손 망치',description:'변경 전장에서 제작한 카르의 3D 시안입니다. 두 손으로 망치를 들어 내려치는 동작을 살펴보세요. 기존 캠페인 전투에는 아직 연결되지 않았습니다.',source:'kar-barbarian.blend',command:'blender -b --python tools/blender/build_barbarian.py',action:'▶ 망치 강타',clip:'kar-slam',viewRotation:-1.85},
+ {id:'frontier-kar-game',name:'카르 · 전장 원본',kind:'FRONTIER / HERO',detail:'양손 망치 · 보행·강타',description:'기존 Frontier에서 가져온 카르 모델입니다. 캠페인에서 카르의 보행·강타에 연결한 원본입니다. 공격 시점은 기존 전투 엔진과 맞춥니다.',source:'frontier-kar.blend',command:'원본: Frontier bec8041',action:'▶ 망치 강타',clip:'kar-slam',prototype:true,viewRotation:-1.85},
+ {id:'kar-detail-20261111',name:'카르 · 망치 디테일 시안',kind:'FRONTIER / DETAIL STUDY',detail:'자루 · 망치 끝 실루엣',description:'망치 자루와 머리 형태를 조정한 검토용 시안입니다. 게임 적용 전 손 관통과 실제 전장 크기 검증이 필요합니다.',source:'kar-detail-20261111/kar-detail.blend',command:'python3 tools/tests/check-kar-detail.py',action:'▶ 망치 강타',clip:'kar-slam',prototype:true,viewRotation:-1.85},
+ {id:'frontier-ballista-game',name:'발리스타 · 전장 원본',kind:'FRONTIER / TOWER',detail:'나무 · 금속 · 화살',description:'기존 Frontier의 발리스타 모델과 발사 클립입니다. 캠페인 관통 석궁 Lv.2에 연결한 원본입니다. 기단을 유지하고 상부를 조준하며 발사합니다.',source:'frontier-ballista.blend',command:'원본: Frontier bec8041',action:'▶ 발사 동작',clip:'frontier-ballista-release',prototype:true},
+ {id:'frontier-wood-strike-game',name:'나무 병사 · 전장 원본',kind:'FRONTIER / ENEMY',detail:'나뭇결 · 나뭇가지 · 이끼',description:'기존 Frontier 나무 병사의 공격 모델입니다. 자세와 재질을 검토하는 시안이며 캠페인에는 아직 연결되지 않았습니다.',source:'frontier-wood-strike.blend',command:'원본: Frontier bec8041',action:'▶ 공격 동작',clip:'frontier-wood-strike',prototype:true},
  {id:'polar-bear',name:'북극곰 · 빙해 수호자',kind:'PROTOTYPE / POLAR',detail:'제작 시안 · 닻 망치',description:'큰 방패와 닻 망치로 만든 극지 수호자입니다. 무기를 크게 들었다가 내려치는 동작과 손잡이 결합을 살펴보세요. 제작 시안이며 캠페인 전투에는 아직 연결되지 않았습니다.',source:'prototypes/polar-bear/polar-bear.blend',command:'npm run models:bear',action:'▶ 닻 망치 강타',clip:'polar-bear-attack',prototype:true,viewRotation:-1.85},
  {id:'gecko-ranger',name:'도마뱀 · 씨앗 궁수',kind:'PROTOTYPE / TROPICAL',detail:'제작 시안 · 씨앗 쇠뇌',description:'잎 두건과 긴 꼬리, 큼직한 씨앗 쇠뇌가 특징인 열대 궁수입니다. 조준·발사 반동·복귀를 확인하세요. 제작 시안이며 캠페인 전투에는 아직 연결되지 않았습니다.',source:'prototypes/gecko-ranger/gecko-ranger.blend',command:'npm run models:gecko',action:'▶ 씨앗 발사',clip:'gecko-seed-shot',prototype:true,viewRotation:-1.85},
 ];
@@ -22,6 +27,8 @@ const $ = <T extends HTMLElement>(id:string) => document.getElementById(id) as T
 const stage = $<HTMLDivElement>('model-stage'), status = $<HTMLParagraphElement>('model-loading'), fallback = $<HTMLImageElement>('model-fallback');
 const shoot = $<HTMLButtonElement>('attack-preview'), rotate = $<HTMLButtonElement>('auto-rotate'), wire = $<HTMLButtonElement>('wireframe'), reset = $<HTMLButtonElement>('reset-view');
 const idleButton = $<HTMLButtonElement>('idle-preview');
+const clipIdle=$<HTMLButtonElement>('clip-idle-preview'),clipWalk=$<HTMLButtonElement>('clip-walk-preview');
+const previewActions=new Map<string,AnimationAction>();let previewAction:AnimationAction|null=null;
 let idleRig:ReturnType<typeof createBronIdle> = null, idleEnabled = false;
 const pose = $<HTMLInputElement>('pose-progress'), hit = $<HTMLButtonElement>('hit-preview');
 let renderer:WebGLRenderer|null = null, controls:OrbitControls|null = null, current:Group|null = null, mixer:AnimationMixer|null = null, attackAction:AnimationAction|null = null, hitAction:AnimationAction|null = null;
@@ -47,18 +54,20 @@ function release(object:Object3D) {
 // Authoring +Y becomes GLB -Z; character defaults show the face and weapon.
 function resetView() {pivot.rotation.y = models.find(model => model.id===currentModelId)?.viewRotation??0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,2.0,0);controls?.update();}
 function stopAction() {
- attackAction?.stop(); hitAction?.stop(); idleRig?.restore(); idleEnabled = false; idleButton.setAttribute('aria-pressed','false'); $('motion-state').textContent = 'REST · 기본 자세'; baseColors.forEach((color,material) => material.color.copy(color)); pose.value = '0'; $('pose-value').textContent = '0%'; shotAt = -Infinity; stage.dataset.action = 'idle'; redraw = true;
+ attackAction?.stop(); hitAction?.stop(); previewAction?.stop();previewAction=null;clipIdle.setAttribute('aria-pressed','false');clipWalk.setAttribute('aria-pressed','false');idleRig?.restore(); idleEnabled = false; idleButton.setAttribute('aria-pressed','false'); $('motion-state').textContent = 'REST · 기본 자세'; baseColors.forEach((color,material) => material.color.copy(color)); pose.value = '0'; $('pose-value').textContent = '0%'; shotAt = -Infinity; stage.dataset.action = 'idle'; redraw = true;
 }
 function clearModel() {
  stopAction(); idleRig = null;
  mixer?.stopAllAction();
  if(mixer)mixer.uncacheRoot(mixer.getRoot());
- attackAction = null; hitAction = null; mixer = null;
+ attackAction = null; hitAction = null; mixer = null;previewActions.clear();
  if(current){pivot.remove(current);release(current);current = null;}
  parts.length = 0; currentMaterials = []; emissionLevels.clear(); baseColors.clear(); pivot.rotation.y = 0; stopAction();
 }
 function setReady(ready:boolean) {
  $('motion-review').hidden = currentModelId!=='dwarf-guardian';
+ const previews=models.find(model=>model.id===currentModelId)?.previews;
+ for(const [kind,button] of [['idle',clipIdle],['walk',clipWalk]] as const){button.hidden=!previews;button.disabled=!ready||reduced.matches||!previews||!previewActions.has(previews[kind]);}
  idleButton.disabled = !ready || !idleRig || reduced.matches;
  document.querySelectorAll<HTMLButtonElement>('[data-review-pose]').forEach(button => {button.disabled = !ready || !attackAction;});
  $('pose-control').hidden = !ready || !attackAction;
@@ -136,6 +145,7 @@ async function select(index:number) {
    attackAction.setLoop(LoopOnce,1); attackAction.clampWhenFinished = true;
    const hitClip = createHitClip(model.id,gltf.scene);
    if(hitClip){hitAction = mixer.clipAction(hitClip);hitAction.setLoop(LoopOnce,1);}
+   if(model.previews)for(const name of Object.values(model.previews)){const animation=gltf.animations.find(item=>item.name===name);if(animation){const action=mixer.clipAction(animation);action.setLoop(LoopRepeat,Infinity);previewActions.set(name,action);}}
    mixer.addEventListener('finished',stopAction);
   }
   $('triangle-count').textContent = Math.round(triangles).toLocaleString(); $('mesh-count').textContent = String(meshes); $('material-count').textContent = String(materials(current).size);
@@ -157,6 +167,14 @@ shoot.onclick = () => {
  stopAction(); shotAt = elapsed; redraw = true; stage.dataset.action = 'firing'; $('motion-state').textContent = 'ATTACK · 강타 재생';
  attackAction?.reset().play();
 };
+for(const [kind,button] of [['idle',clipIdle],['walk',clipWalk]] as const){
+ button.onclick=()=>{
+  const name=models.find(model=>model.id===currentModelId)?.previews?.[kind],action=name?previewActions.get(name):undefined;
+  if(!action||reduced.matches)return;const stop=previewAction===action;stopAction();
+  if(!stop){previewAction=action;action.reset().play();button.setAttribute('aria-pressed','true');stage.dataset.action=kind==='walk'?'walking':'breathing';}
+  redraw=true;
+ };
+}
 hit.onclick = () => {
  if(!hitAction||reduced.matches)return;
  stopAction(); stage.dataset.action = 'hit'; hitAction.reset().play(); redraw = true;
@@ -199,7 +217,7 @@ function draw(now:number) {
   elapsed += dt;
   const autoMoving = automatic&&!reduced.matches&&!!current;
   if(autoMoving)pivot.rotation.y += dt*.28;
-  const age = elapsed-shotAt, clipMoving = !!attackAction?.isRunning() || !!hitAction?.isRunning();
+  const age = elapsed-shotAt, clipMoving = !!attackAction?.isRunning() || !!hitAction?.isRunning() || !!previewAction?.isRunning();
   // Towers use procedural recoil; characters use their authored attack clips.
   const power = !attackAction&&!reduced.matches&&age<.8?Math.sin(Math.min(1,age/.8)*Math.PI)*(1-age/.8):0;
   for(const part of parts){
@@ -227,4 +245,4 @@ function draw(now:number) {
 }
 // Allow a direct preview link without accepting arbitrary asset paths.
 const requestedModel = new URLSearchParams(location.search).get('model');
-void select(requestedModel?Math.max(0,models.findIndex(model => model.id===requestedModel)):3); requestAnimationFrame(draw);
+void select(requestedModel?Math.max(0,models.findIndex(model => model.id===requestedModel)):models.findIndex(model=>model.id==='dwarf-guardian')); requestAnimationFrame(draw);

@@ -1,0 +1,144 @@
+{
+  "date": "2026-11-12",
+  "status": "visual_candidates_not_runtime_assets",
+  "species": "human",
+  "style_standard": "../../../../../docs/arcana-character-art-standard.md",
+  "verification": {
+    "visual_review": "all five sheets inspected",
+    "image_decode": "Pillow verify",
+    "runtime_integration": false,
+    "mobile_readability_test": false
+  },
+  "sheets": [
+    {
+      "sheet": 11,
+      "file": "11-human-heroes.png",
+      "theme": "인간 영웅·지휘관",
+      "candidates": {
+        "A": "청록 성문대장",
+        "B": "백발 룬 현자",
+        "C": "동방 유랑검사",
+        "D": "사막 유적 추적자"
+      },
+      "source": "exec-413239f8-a6b5-40b2-a9fb-f1519790b2ab.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2420358,
+      "sha256": "fc3ed5017710a6a924754ee781cc509469e4d659cbabd2dbbec5c3a6a2ac6d1e",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/base-theme-v2/02-eastern-fortress.png",
+          "sha256": "054cde0aa5c667279b4616dc3e4bc8d4ae688b622b3788445aaf21afc68a37a7"
+        }
+      ]
+    },
+    {
+      "sheet": 12,
+      "file": "12-human-mercenaries.png",
+      "theme": "인간 용병단",
+      "candidates": {
+        "A": "노련한 방패 용병",
+        "B": "붉은 두건 쌍검 용병",
+        "C": "사막 석궁 사수",
+        "D": "산길 장창 용병"
+      },
+      "source": "exec-d2dd77aa-d8de-4439-955f-ed77a00aec91.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2426965,
+      "sha256": "8d303c322e5c27a98bfce3d9bc8605e2d1d63a38256c89c05bf787ff1f128b2f",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/base-theme-v2/02-eastern-fortress.png",
+          "sha256": "054cde0aa5c667279b4616dc3e4bc8d4ae688b622b3788445aaf21afc68a37a7"
+        }
+      ]
+    },
+    {
+      "sheet": 13,
+      "file": "13-human-village-npcs.png",
+      "theme": "마을 인간 NPC",
+      "candidates": {
+        "A": "마을 대장장이",
+        "B": "잡화상인",
+        "C": "약초상 할머니",
+        "D": "여관 주인"
+      },
+      "source": "exec-73b43778-5cf6-4e67-93ed-bb3cf168472a.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2289647,
+      "sha256": "23d24057cbb58eb7ec2a0a824c1e563e19c42e3c0b8646d1e9c94ed5428f39cc",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/base-theme-v2/02-eastern-fortress.png",
+          "sha256": "054cde0aa5c667279b4616dc3e4bc8d4ae688b622b3788445aaf21afc68a37a7"
+        }
+      ]
+    },
+    {
+      "sheet": 14,
+      "file": "14-human-garrison-troops.png",
+      "theme": "생성 병사·기본 보병",
+      "candidates": {
+        "A": "창방패병",
+        "B": "검방패병",
+        "C": "장궁병",
+        "D": "석궁병"
+      },
+      "source": "exec-0bd5f72b-713a-41f8-846e-1aa770748891.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2261383,
+      "sha256": "ac7a69434f75c2de4fd7f2d893447f21a35b44f851f5ec9cc3d622d8c25e6a43",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/base-theme-v2/02-eastern-fortress.png",
+          "sha256": "054cde0aa5c667279b4616dc3e4bc8d4ae688b622b3788445aaf21afc68a37a7"
+        }
+      ]
+    },
+    {
+      "sheet": 15,
+      "file": "15-human-support-troops.png",
+      "theme": "생성 병사·지원 병과",
+      "candidates": {
+        "A": "수습 마도병",
+        "B": "야전 의무병",
+        "C": "수비 공병",
+        "D": "군기수"
+      },
+      "source": "exec-3e0e4d04-96c9-4ac2-8f82-28cc61babeea.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2305034,
+      "sha256": "dc334c6892048f7f29fda36f8fd0016a7621979e27be018a0c9dc4ed816f1d44",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/base-theme-v2/02-eastern-fortress.png",
+          "sha256": "054cde0aa5c667279b4616dc3e4bc8d4ae688b622b3788445aaf21afc68a37a7"
+        }
+      ]
+    }
+  ]
+}

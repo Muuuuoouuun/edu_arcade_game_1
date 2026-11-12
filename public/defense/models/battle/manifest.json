@@ -1,0 +1,84 @@
+{
+  "date": "2026-11-12",
+  "models": [
+    {
+      "id": "kar",
+      "file": "kar.glb",
+      "source": "art-source/defense/model-bridge-20261110/models/frontier-kar-game.glb",
+      "provenance": "bec804114a26a85a800379058463f4e9fd0bf2cf",
+      "bytes": 1320844,
+      "sha256": "dcb44aa08e794b2985b7be0dd9cafae65a29d5a1cb44a92cd023da6144658c37",
+      "animations": [
+        "kar-walk",
+        "kar-slam",
+        "kar-entry-0",
+        "kar-entry-1",
+        "kar-entry-2",
+        "kar-entry-3",
+        "kar-entry-4",
+        "kar-entry-5",
+        "kar-entry-6",
+        "kar-entry-7",
+        "kar-reset-0",
+        "kar-stop-0",
+        "kar-stop-1",
+        "kar-stop-2",
+        "kar-stop-3",
+        "kar-stop-4",
+        "kar-stop-5",
+        "kar-stop-6",
+        "kar-stop-7"
+      ],
+      "attack_timing": {
+        "duration": 0.56,
+        "contact": 0.28
+      },
+      "status": "campaign_runtime_vertical_slice"
+    },
+    {
+      "id": "ballista",
+      "file": "ballista.glb",
+      "source": "art-source/defense/model-bridge-20261110/models/frontier-ballista-game.glb",
+      "provenance": "bec804114a26a85a800379058463f4e9fd0bf2cf",
+      "bytes": 230188,
+      "sha256": "624d3a2a236fd3e8563e8a98eb7aeef70f27994cb5d8418d341672ed82b29b87",
+      "animations": [
+        "frontier-ballista-release"
+      ],
+      "attack_timing": {
+        "duration": 0.4,
+        "contact": 0.1
+      },
+      "status": "campaign_runtime_vertical_slice"
+    },
+    {
+      "id": "wood",
+      "file": "wood.glb",
+      "source": "art-source/defense/model-bridge-20261110/models/frontier-wood-game.glb",
+      "provenance": "bec804114a26a85a800379058463f4e9fd0bf2cf",
+      "bytes": 134616,
+      "sha256": "e7293e2391a4d2bbb3aa60bfe386dc85b7c1597bea41f04e4ca4d02600e999f6",
+      "animations": [
+        "frontier-wood-walk"
+      ],
+      "attack_timing": null,
+      "status": "campaign_runtime_vertical_slice"
+    },
+    {
+      "id": "bron",
+      "file": "bron.glb",
+      "source": "public/defense/models/dwarf-guardian.glb",
+      "provenance": "existing campaign model; tools/blender/build_dwarf.py",
+      "bytes": 1326260,
+      "sha256": "2eec1192cd9a14abb77961b6e42421192111973cc82fb657e2b743ac591a9381",
+      "animations": [
+        "dwarf-hammer-attack"
+      ],
+      "attack_timing": {
+        "duration": 0.8,
+        "contact": 0.3333333333333333
+      },
+      "status": "campaign_runtime_vertical_slice"
+    }
+  ]
+}

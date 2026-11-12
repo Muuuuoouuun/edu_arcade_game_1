@@ -16,9 +16,9 @@ Node.js 22.12 이상에서 `npm ci`, `npm run dev`로 실행합니다. 기본 �
 | `npm run build:mobile` | `dist-mobile/` 아르카나 전용 빌드 |
 | `npm run android:debug` | 아르카나 전용 웹 동기화 후 Android 디버그 APK |
 
-Android 설치판은 미니게임 진입점·코드와 제작 작업실용 GLB를 포함하지 않습니다. 전투 지형은 Three.js 3D 메시로 표시하고, 캐릭터·타워와 전투 효과는 기존 스프라이트를 함께 사용합니다. GLB 모델은 웹 제작 작업실에서 검토하며 실시간 전투 유닛에는 아직 연결하지 않았습니다. [Android 빌드·설치 안내](docs/android-install.md)를 참고하세요.
+Android 설치판은 미니게임 진입점·코드와 제작 작업실용 GLB를 포함하지 않습니다. 전투 지형과 카르·브론·관통 석궁 Lv2·나무 병사는 같은 Three.js 장면에서 실시간 3D로 표시합니다. 나머지 유닛·전투 효과와 로딩 실패 시 대체 표현은 기존 스프라이트/SVG를 사용합니다. 새 인간 창방패병은 `/model-lab.html?model=human-guard`에서 호흡·보행·찌르기를 검토할 수 있는 제작 시제품입니다. [이번 모델링·전투 연결과 검증](docs/arcana-battle-models-20261112.md) · [Android 빌드·설치 안내](docs/android-install.md).
 
-[3D 전장과 모델링 방향](docs/arcana-3d-world-direction.md) · [기본 게임 규칙 v1 — 현재 규칙·설계 결정·적용 순서](docs/arcana-game-rules-v1.md) · [적·보스 모델링과 전투 연출 설계](docs/arcana-enemy-design/README.md)
+[전체 게임 구성도와 계획](docs/arcana-full-game-plan-20261111.html) · [분야별 기획·개발 척도](docs/arcana-discipline-scorecard-20261111.md) · [최근 모델링·전투·운영 작업](docs/arcana-production-20261111.md) · [프로젝트 통합 기준과 브랜치](docs/arcana-project-direction.md) · [3D 전장과 모델링 방향](docs/arcana-3d-world-direction.md) · [기본 게임 규칙 v1 — 현재 규칙·설계 결정·적용 순서](docs/arcana-game-rules-v1.md) · [적·보스 모델링과 전투 연출 설계](docs/arcana-enemy-design/README.md)
 
 ## 현재 게임
 

@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && vite build && node tools/build-prototypes.mjs",
     "test:prototype": "node prototype/tests/sim_test.js",
     "preview": "vite preview --host 0.0.0.0 --port 3100 --strictPort",
-    "test": "node --experimental-strip-types --test src/games/engine.test.ts src/games/quiz.test.ts src/games/race/engine.test.ts src/games/defense/engine.test.ts src/games/defense/campaign.test.ts src/games/defense/difficulty.test.ts src/lib/storage.test.ts src/lib/haptic.test.ts src/games/defense/tactics.test.ts src/components/defenseInput.test.ts src/components/defenseFrame.test.ts src/components/defenseSpeed.test.ts src/components/defenseSound.test.ts src/components/battleClock.test.ts src/games/defense/themes.test.ts src/games/defense/fieldGuide.test.ts src/games/defense/art.test.ts src/games/defense/terrain3d.test.ts",
+    "test": "node --experimental-strip-types --test src/games/engine.test.ts src/games/quiz.test.ts src/games/race/engine.test.ts src/games/defense/engine.test.ts src/games/defense/campaign.test.ts src/games/defense/difficulty.test.ts src/lib/storage.test.ts src/lib/haptic.test.ts src/games/defense/tactics.test.ts src/components/defenseInput.test.ts src/components/defenseFrame.test.ts src/components/defenseSpeed.test.ts src/components/defenseSound.test.ts src/components/battleClock.test.ts src/games/defense/themes.test.ts src/games/defense/fieldGuide.test.ts src/games/defense/art.test.ts src/games/defense/terrain3d.test.ts src/games/defense/animationTiming.test.ts src/games/defense/battleModels.test.ts src/games/defense/battleActors3d.test.ts",
     "art:themes": "node tools/build-defense-themes.mjs",
     "models:build": "blender -b --python tools/blender/build_towers.py && npm run models:sprites",
     "balance:defense": "node --experimental-strip-types tools/balance-defense.ts",
@@ -23,7 +23,8 @@
     "models:bear": "blender -b --python tools/blender/build_polar_bear.py && npm run models:prototypes",
     "models:gecko": "blender -b --python tools/blender/build_gecko.py && npm run models:prototypes",
     "models:prototypes": "node tools/sync-model-prototypes.mjs",
-    "build:mobile": "tsc --noEmit && vite build --mode mobile && node tools/prune-arcana-mobile.mjs"
+    "build:mobile": "tsc --noEmit && vite build --mode mobile && node tools/prune-arcana-mobile.mjs",
+    "models:human-guard": "blender -b --python tools/blender/build_human_guard.py"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
