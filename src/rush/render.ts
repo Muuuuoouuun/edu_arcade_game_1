@@ -560,13 +560,14 @@ export class RushView {
         ...eyes(r * 0.5, r * 2.25, r * 0.2, r * 0.13, 0xffffff, PAL.ink),
       ];
     } else if (kind === 'shaman') {
-      // Shaman (cycle 59): yellow-green bell robe, bone mask with green eyes, and a staff taller than the body with
-      // a glowing green orb (the heal colour), held to one side: an 'i' beside a bell, unlike the skirmisher's T.
+      // Shaman (cycle 59): bell robe, bone mask with green eyes, and a staff taller than the body with a glowing green orb
+      // (the heal colour), held to one side: an 'i' beside a bell, unlike the skirmisher's T. Cycle 68: the robe was
+      // yellow-green and measured dE 8 against the #107 grass (it vanished); magenta (hue ~304) stands off grass and path.
       parts = [
-        { geo: new ConeGeometry(r * 1.0, r * 2.1, 10), color: 0x8fbf2f, at: [0, r * 1.05, 0] },
-        { geo: new CylinderGeometry(r * 1.02, r * 1.05, r * 0.2, 12), color: 0x5c7d1a, at: [0, r * 0.1, 0] },
+        { geo: new ConeGeometry(r * 1.0, r * 2.1, 10), color: 0xd65fcf, at: [0, r * 1.05, 0] },
+        { geo: new CylinderGeometry(r * 1.02, r * 1.05, r * 0.2, 12), color: 0x7d2f86, at: [0, r * 0.1, 0] },
         { geo: new SphereGeometry(r * 0.52, 12, 10), color: 0xf3e6c8, at: [r * 0.1, r * 2.2, 0] },
-        { geo: new ConeGeometry(r * 0.66, r * 1.0, 10), color: 0x5c7d1a, at: [-r * 0.08, r * 2.75, 0], rot: [0, 0, 0.18] },
+        { geo: new ConeGeometry(r * 0.66, r * 1.0, 10), color: 0x7d2f86, at: [-r * 0.08, r * 2.75, 0], rot: [0, 0, 0.18] },
         { geo: new CylinderGeometry(r * 0.11, r * 0.11, r * 3.6, 6), color: 0x7a4a24, at: [r * 0.5, r * 1.8, r * 0.85] },
         { geo: new SphereGeometry(r * 0.4, 10, 8), color: 0x7dff9a, at: [r * 0.5, r * 3.75, r * 0.85] },
         { geo: new OctahedronGeometry(r * 0.22), color: 0x3fd46a, at: [r * 0.5, r * 4.25, r * 0.85] },
@@ -1159,5 +1160,5 @@ const CAPE: Record<HeroKind, { x: number; y: number; h: number; w: number }> = {
 };
 const BRANCH_COLOR: Record<TowerBranch, number> = { fire: 0xff7a2f, frost: 0x4fc3ff };
 const ICE = new MeshBasicMaterial({ color: 0xc4f2ff, transparent: true, opacity: 0.4, depthWrite: false });
-const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4, shaman: 0x8fbf2f };
+const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4, shaman: 0xd65fcf };
 const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };
