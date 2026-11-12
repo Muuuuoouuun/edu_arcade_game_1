@@ -1,0 +1,698 @@
+{
+  "baseline": "45703131f26ccdba1cbc10b5d77cbf057e8c26a7",
+  "snapshot": "2026-11-12 KST",
+  "remoteHeadCount": 115,
+  "scope": "all refs/heads in this game repository; other repositories are excluded",
+  "branches": [
+    {
+      "branch": "claude/confident-knuth-qc16ui",
+      "sha": "b7d52189310c131a49bb4355795baa357a664c50",
+      "wasAncestorOfBaseline": false,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "claude/nice-meitner-5fin85",
+      "sha": "bf7c1c67ebb23a9d7386d87c67f470dea362b0f9",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "claude/pensive-ptolemy-uhyunb",
+      "sha": "766e432f501e0869314ee0960d55b2aca8ac5852",
+      "wasAncestorOfBaseline": false,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "claude/wizardly-shannon-zqnwg0",
+      "sha": "435882948c821e30497b5f64b717601e3bd86f37",
+      "wasAncestorOfBaseline": false,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-3d-world-sync-20261109",
+      "sha": "a6af307f2f0b570bdf83920c047a8725cdff688a",
+      "wasAncestorOfBaseline": false,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-android-install-20261106",
+      "sha": "3038bb9278816924f7f974f690aae4b94fcfb3c8",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-api-production-20261109",
+      "sha": "1686b6c491bd6c5e74069d8acfcc007687274437",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-art-camp-20261031",
+      "sha": "080c5a77edea1fbd9cf81d673db2da401c5126ee",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-art-direction-followup-20261109",
+      "sha": "ebf354c13c2f6dafcc4499013cb54cfafe96fbf6",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-character-motion",
+      "sha": "9e1376d41b38bfa39a023be27cc09be13e649967",
+      "wasAncestorOfBaseline": false,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-concept-expansion-20261106",
+      "sha": "597a9bb9f28200a63ca0a81a98997fc8a5da07f9",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-core-rules-20261109",
+      "sha": "fea802b4b2468a784e54c649876969f944e19d30",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-development-loop-20261030",
+      "sha": "f6b4777e9487dfbc5f94ec27b324154395ce89e9",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-dwarf-model-20261031",
+      "sha": "ee6f695a69f50649f651820b6af2461ff6f38400",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-enemy-design-20261109",
+      "sha": "7cdcb9a6a12eccaccf5ed5265cd718ee850ae153",
+      "wasAncestorOfBaseline": false,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-graphics-20261029",
+      "sha": "f6d2dd7c0a42826c4b2fdb56bbe789f97efe55bf",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-hourly-production-20261101",
+      "sha": "9ee075692fc3a352266025103399deaa2038b799",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-kar-3d-preview-20261109",
+      "sha": "f5f0c28c8868a42ef307d9f073a845b4ec0236fd",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-legion-playable-20261111",
+      "sha": "f2fcac86933c2bd642535a25fb9808b4d7800a48",
+      "wasAncestorOfBaseline": false,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-lightning-model-20261031",
+      "sha": "9b0939d7505663d43e456c9dc33af40690b83469",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-0342",
+      "sha": "053a10962601ef57f73f1f4af8f43fe07253a92b",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-0542",
+      "sha": "caf1c5132f31664433e7a5716dc3136cd1077410",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-1142",
+      "sha": "681454258782a95c4441db7e50b7c5e4b5ccc215",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-1542",
+      "sha": "933d51e40723500868b50888b43d3d43871c98dd",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-1942",
+      "sha": "d4579a68f2b6abe5260bd16e841471158f3a993e",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-2042",
+      "sha": "86ce3f3477abd41a275e6b459a7acc12946f4999",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-2142",
+      "sha": "e2acd5db0db0f6293840a27b9271f2149415b31d",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-2342",
+      "sha": "d89f881150259df557c532d9d2a962166c8236ce",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261031-0342",
+      "sha": "c5b83821ca3bec3891af6b2313fe1ad03cc25f36",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261031-2342",
+      "sha": "988a9720c7ea62c9b7c35c448eb781a5da1eab58",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261101-0224",
+      "sha": "04814daceee6c3a9be783dcfc4f2f8d4dd389f5b",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0115",
+      "sha": "e2ef306fd29e8d961b3a927806625dc64e20dbec",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0214",
+      "sha": "8f45cc36f23e7fdb38aff67ba8652ac5d385f5b3",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0315",
+      "sha": "87a22cb05c7faeb9950076ae67a6c106521f67a0",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0415",
+      "sha": "d7b80f4e650f5b52cb174d996fd73c3be086cce7",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0514",
+      "sha": "c814a2828ca0bfcc001d2ff3ead40b98cfc759dc",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0614",
+      "sha": "7a5981ea774bcc8afb57fa629ec8843f9c3a27dc",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0714",
+      "sha": "df08b41ec335416ef4b0c10c4c16997791962773",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0814",
+      "sha": "3a959ad4a129bb0ebabab120839cc9accfa6610b",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0920",
+      "sha": "bb9e92cefdc285266db6294d01272165db70feec",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1013",
+      "sha": "e8b24ba030fa3a7a1e7ca5fdf80c451cf8736cbd",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1114",
+      "sha": "8cb3f68d2c52689ecdb58dae0dd2505211bfcd06",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1215",
+      "sha": "2d7117eb566c7f3e569dc9eb53544b1cffe0e4e2",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1316",
+      "sha": "567cdbaccc7e9134610ac22809fee07101119d0d",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1414",
+      "sha": "a83106b6076c1b2b825faa18532f042f9b363580",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1514",
+      "sha": "2924c0fc2f08edfefcc6e99d5060e95a2ddd1b5b",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1614",
+      "sha": "34d5832f7267042d8eb63352d4af64bf67948c9d",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1814",
+      "sha": "656860a3910ac2465724a67dae7aa0d1b4b198ee",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1913",
+      "sha": "abed7888617d1a251520202fc628c258e4d18f8b",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-2013",
+      "sha": "701a582edf6b8d955a5c58986febeaee963d0618",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-2113",
+      "sha": "223b3933e5dbea2ec35b1e5a1d54357fb4df137d",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-2213",
+      "sha": "b7386d904bb94721743b5e2333de26f59f06c37a",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-2313",
+      "sha": "eede58146fc030934afb0266de59d2336ff39972",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-0014",
+      "sha": "81510e1b9da01150b96a97ed6c33b76158b0779f",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-0514",
+      "sha": "6553f8a3dc620f426b1f97de6efc4780c76459f6",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-0615",
+      "sha": "f759776089e63eb569e0cc625ed43ff156bcc6a4",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-0715",
+      "sha": "f66a223cd715fc530803b2c9214410deaf045c19",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-0813",
+      "sha": "99fae02c060a3efb963fd12b64402653303de8ea",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-0915",
+      "sha": "9f3fa32b20dfd630289eb03fb8dca5b0ffae2dd6",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1015",
+      "sha": "270529cbbdbaf0dfe607171e254ff547f22cf960",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1120",
+      "sha": "bea73745857ba941cab1e6b0a3b6763ea73cab0c",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1213",
+      "sha": "1b65fba9f531302c056bdd82cd30ef58de597baf",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1314",
+      "sha": "a075e7a084069bfc494a020a6b2de9e54037f781",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1414",
+      "sha": "8a70cf39efc77e20b5f746271daa034a37c1bbda",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1513",
+      "sha": "51e9fc1e3fa0a0e9087ff91b88bd4f629907f510",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1614",
+      "sha": "96b88b125a8c8f38baf0f5677b2f981ff0df3473",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1715",
+      "sha": "ee808164d3a15c51094421e46c4ff243ca1abdc4",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1813",
+      "sha": "b2b3bdc940e68346e54d1e780fd349217338649f",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1914",
+      "sha": "52aca5398b0cc911c4a748d0d55cf70480de160e",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-2015",
+      "sha": "ba5141ee49d51877614ab6408e620a54da9d5524",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1020",
+      "sha": "c3b536154a5a99f61450b30134e62f38e63ebb4c",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1215",
+      "sha": "c0cf1307dbd5b7c376a67bdcde0ffc3681b1c41b",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1320",
+      "sha": "c94ab8ff0a5cba2c9e259862b54c6717ae256186",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1415",
+      "sha": "b12fa8890336ae38b2e2d2c078a74c8af75e7a1f",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1615",
+      "sha": "360d2e503f10ddde47ddf01fde794f2a268c2120",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1715",
+      "sha": "30ee577e15043163295b53ee0df851ff6e97f52b",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1815",
+      "sha": "4b580b8e56538f612790e895317fe537568056d9",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1915",
+      "sha": "9214ec36af22e87eb428189f929a6a9406502f14",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-2015",
+      "sha": "81bb4afeb5b47c054470ed8aef8350af4731f865",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-2115",
+      "sha": "e8cca5e99d2c38cb8d2d106abb4ec0939097370b",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-2315",
+      "sha": "33f608362494a624850791ae2c5c7b13d8e2c28e",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261107-0015",
+      "sha": "af798dd5038bee0f205135aaf9716a896938745d",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261107-0215",
+      "sha": "9052039c42adb4aaa8aa4b4e2ffd3e2904de5b12",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261107-0315",
+      "sha": "5a0c225185a6fa2cadc5d20921068a3c8cd0d8d2",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261107-0416",
+      "sha": "547bc716f8b7c63fb1624d56e0e4bc335578d4e4",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261107-0916",
+      "sha": "b2a873c9d2f74d419b85c39f5c1953e1577de883",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261107-1015",
+      "sha": "4e21c338fc6e740804e8e75d3538c21a46df9012",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261107-1020",
+      "sha": "cfef6986e94de5e993fe328a0cdf1d413b853c57",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0158",
+      "sha": "93ca3aaefa7993105e17b6c9973fe22f89d96b2e",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0258",
+      "sha": "6e2dcd0a690ff15cb85b0e069e5420b779cd4798",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0358",
+      "sha": "2f5c7d53b93e09413e7ac82245fc77876dd7ff01",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0458",
+      "sha": "7de64e690cefb9e1864d4b99defe17a2a3cd6853",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0558",
+      "sha": "ec1cba9447ce6fdbcb9d9395fc6708a37c0f7ee2",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0658",
+      "sha": "1061a20f63e3c98175027787ee2eec26db958afd",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0758",
+      "sha": "c07dff558cf2e0eb4f403bd8646e69e11f76de79",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0858",
+      "sha": "a0e46a18c189ea7ad4cdcbf4b8945e064df3c4ea",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-1158",
+      "sha": "adaadadc27f039af6b931bdab451da092ae4f010",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-1258",
+      "sha": "7639c5bb08332f716360e1114a4fe9abdddc0e7b",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-1358",
+      "sha": "10b011c3c8e269e555f552287c926e6b2b30443c",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-math-integrated-20261109",
+      "sha": "40a7d4ad6964e8bd4b3c3147472a9ae543c49697",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-mobile-baseline-20261106",
+      "sha": "a168afe059506183f5550eec3ad34cb65e7194d7",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-mobile-battle-20261102",
+      "sha": "0dbf5882d955c8866b4fcdc76aa356b5753e4b6c",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-mobile-integration-20261109",
+      "sha": "c9487bbbc46b703360358b4badadeb8a3fea1912",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-model-actions-20261109",
+      "sha": "f93be6572825a054f0907b00357497cbd77b80d1",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-modeling-focus-20261030",
+      "sha": "9d0443b9f4b021205b5dbaf1a437ae2500ce946f",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-polar-tropical-concepts-20261106",
+      "sha": "1c7fd5a58115acf2ea4b0ffce7b89071f4541146",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-self-contained-math-20261109",
+      "sha": "bfdca24b293b687623a94391d9e8e4d648a4f518",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-stage-experience-20261106",
+      "sha": "45703131f26ccdba1cbc10b5d77cbf057e8c26a7",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-standalone-pivot-20261109",
+      "sha": "7bd4d0478dbb08a304c0246a84afb4537a63dc16",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-subject-concepts-20261109",
+      "sha": "c43a0f45da04d9854efbb656213bf088dc8b040f",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-theme-campaign-20261030",
+      "sha": "86e35c122c9e804e157b9c976d01a1d9831fb7da",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-village-ui-plan-20261109",
+      "sha": "52275ae02478dedf56f248a9093367db206c6a76",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "codex/arcana-world-art-planning",
+      "sha": "8e09b967b038db433df713a95892813694735674",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "main",
+      "sha": "7459b61ee20be0298db2ec31c7d7d164015de70c",
+      "wasAncestorOfBaseline": true,
+      "isAncestorOfIntegratedCandidate": true
+    },
+    {
+      "branch": "work",
+      "sha": "803134271d26390b2083a83f1fccf683186f51bf",
+      "wasAncestorOfBaseline": false,
+      "isAncestorOfIntegratedCandidate": true
+    }
+  ]
+}
