@@ -2,7 +2,7 @@
 import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
 import { FORGE, HEROES, TALENT_MAX, TALENTS, type HeroKind } from './data.ts';
-import {
+import { claimGoal, currentGoal, GOALS,
   CASTLE_MAX, DAILY_WIN, ENDLESS_STAGE, nextMilestone, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canLearnTalent, canTrain, learnTalent, talentCost, dailyReady, dayIndex, canUpgrade, chooseHero, collect, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, pending, PERK_EFFECT, rate,
   storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
@@ -35,6 +35,11 @@ function bumped(k: Kingdom, u: Upgrade): Kingdom {
 /** Town tag box size (CSS px, `.town-tag` in rush.css). */
 const TAG_SIZE = 44;
 
+/** Goal rewards (cycle 64): icons for the card, words for the note and screen readers. */
+type Reward = { food?: number; wood?: number; shards?: number };
+const rewardHtml = (r: Reward) => (['food', 'wood', 'shard'] as const).map(kind => { const n = kind === 'shard' ? r.shards : r[kind]; return n ? `<i class="res-ico ${kind}"></i>+${n}` : ''; }).join(' ');
+const rewardText = (r: Reward) => [r.food ? `식량 +${r.food}` : '', r.wood ? `목재 +${r.wood}` : '', r.shards ? `조각 +${r.shards}` : ''].filter(Boolean).join(' · ');
+
 export class TownScreen {
   private kingdom: Kingdom;
   private timer = 0;
@@ -50,6 +55,15 @@ export class TownScreen {
     this.kingdom = loadKingdom();
     const bar = root.querySelector<HTMLElement>('.town-bar');
     if (bar && typeof ResizeObserver !== 'undefined') new ResizeObserver(() => { this.barBottom = bar.getBoundingClientRect().bottom; }).observe(bar);
+    // Kingdom goal (cycle 64): a met goal glows; a tap pays its reward and shows the next one.
+    this.$('town-goal').addEventListener('click', () => {
+      const g = currentGoal(this.kingdom);
+      if (!g?.done) return;
+      this.kingdom = claimGoal(this.kingdom);
+      saveKingdom(this.kingdom);
+      this.render();
+      this.note(`목표 달성! ${g.goal.text} · ${rewardText(g.goal.reward)}`);
+    });
     const tags = this.$('town-tags');
     tags.innerHTML = SPOTS.map(p => {
       const row = ROWS.find(r => r.id === p.id)!;
@@ -245,6 +259,16 @@ export class TownScreen {
     flag.querySelector('.goal')!.textContent = next ? `→${next.waves}` : '';
     flag.classList.toggle('on', this.stage === ENDLESS_STAGE);
     flag.setAttribute('aria-label', `끝없는 도전 기록 ${k.endlessBest}웨이브${next ? `, 다음 목표 ${next.waves}웨이브` : ''}. 누르면 끝없는 도전을 골라요`);
+    const goalEl = this.$('town-goal') as HTMLButtonElement, cur = currentGoal(k);
+    goalEl.hidden = !cur;
+    if (cur) {
+      goalEl.classList.toggle('done', cur.done);
+      goalEl.disabled = !cur.done;
+      goalEl.querySelector('[data-goal-head]')!.textContent = cur.done ? `목표 ${cur.index + 1}/${GOALS.length} · 받기` : `목표 ${cur.index + 1}/${GOALS.length}`;
+      goalEl.querySelector('[data-goal-text]')!.textContent = cur.need > 1 && !cur.done ? `${cur.goal.text} (${cur.have}/${cur.need})` : cur.goal.text;
+      goalEl.querySelector('[data-goal-reward]')!.innerHTML = rewardHtml(cur.goal.reward);
+      goalEl.setAttribute('aria-label', `목표 ${cur.index + 1}: ${cur.goal.text}, ${cur.done ? '달성, 눌러서 보상 받기' : `진행 ${cur.have}/${cur.need}`}, 보상 ${rewardText(cur.goal.reward)}`);
+    }
     this.$('res-food').textContent = String(k.food);
     this.$('res-wood').textContent = String(k.wood);
     this.$('res-shard').textContent = String(k.shards);
