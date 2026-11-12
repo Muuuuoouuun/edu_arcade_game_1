@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { AnimationMixer, Box3, LoopOnce, Mesh } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { HERO_ATTACK } from './heroMotion.ts';
 
 for (const [hero, name] of [['ranger','gecko-ranger'],['bron','dwarf-guardian'],['bear','polar-bear']] as const) {
@@ -18,7 +19,7 @@ for (const [hero, name] of [['ranger','gecko-ranger'],['bron','dwarf-guardian'],
   doc.materials=[{name:'validation'}];delete doc.images;delete doc.textures;delete doc.samplers;
   const encoded=Buffer.from(JSON.stringify(doc)),padding=Buffer.alloc((4-encoded.length%4)%4,32),json=Buffer.concat([encoded,padding]),tail=bytes.subarray(20+size);
   const head=Buffer.alloc(20);head.writeUInt32LE(0x46546c67,0);head.writeUInt32LE(2,4);head.writeUInt32LE(20+json.length+tail.length,8);head.writeUInt32LE(json.length,12);head.writeUInt32LE(0x4e4f534a,16);
-  const data=Buffer.concat([head,json,tail]);const gltf=await new GLTFLoader().parseAsync(data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength),'');
+  const data=Buffer.concat([head,json,tail]);const gltf=await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(data.buffer.slice(data.byteOffset,data.byteOffset+data.byteLength),'');
   let count=0;gltf.scene.traverse(o=>{if(o instanceof Mesh){const uv=o.geometry.getAttribute('uv');assert.ok(uv);for(const x of uv.array)assert.ok(Number.isFinite(x)&&x>=0&&x<=1);count++;}});assert.ok(count>0);
   const mixer=new AnimationMixer(gltf.scene),clip=gltf.animations.find(c=>c.name===`${hero}-walk`)!;
   assert.ok(Math.abs(clip.duration-1)<.001);
