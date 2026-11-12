@@ -540,10 +540,10 @@ export class RushView {
       ];
     } else if (kind === 'skirmisher') {
       parts = [
-        { geo: new ConeGeometry(r * 0.62, r * 2.6, 12), color: 0x2fa38f, at: [0, r * 1.3, 0] },
-        { geo: new SphereGeometry(r * 0.55, 12, 10), color: 0x237f72, at: [0, r * 2.75, 0] },
-        { geo: new CylinderGeometry(r * 1.0, r * 1.0, r * 0.12, 16), color: 0x26a08c, at: [0, r * 3.2, 0] },
-        { geo: new ConeGeometry(r * 0.5, r * 2.0, 12), color: 0x1d7d6e, at: [-r * 0.15, r * 4.2, 0], rot: [0, 0, 0.25] },
+        { geo: new ConeGeometry(r * 0.62, r * 2.6, 12), color: 0x1fa6b0, at: [0, r * 1.3, 0] }, // cycle 74: teal leans cyan, off the grass
+        { geo: new SphereGeometry(r * 0.55, 12, 10), color: 0x18808a, at: [0, r * 2.75, 0] },
+        { geo: new CylinderGeometry(r * 1.0, r * 1.0, r * 0.12, 16), color: 0x1d9faa, at: [0, r * 3.2, 0] },
+        { geo: new ConeGeometry(r * 0.5, r * 2.0, 12), color: 0x166f7a, at: [-r * 0.15, r * 4.2, 0], rot: [0, 0, 0.25] },
         { geo: new BoxGeometry(r * 0.22, r * 0.22, r * 2.8), color: 0xffb52e, at: [r * 0.75, r * 1.9, 0] },
         { geo: new BoxGeometry(r * 0.06, r * 0.06, r * 2.6), color: 0xfff1c2, at: [r * 0.55, r * 1.9, 0] },
         { geo: new CylinderGeometry(r * 0.22, r * 0.22, r * 1.1, 8), color: 0x7a4a24, at: [-r * 0.55, r * 2.0, r * 0.3], rot: [0.3, 0, 0] },
@@ -555,7 +555,7 @@ export class RushView {
         { geo: new CylinderGeometry(r * 0.7, r * 0.85, r * 1.9, 12), color: 0x4f5d7e, at: [0, r * 0.95, 0] },
         { geo: new SphereGeometry(r * 0.62, 12, 10), color: 0x6b7aa0, at: [0, r * 2.2, 0] },
         { geo: new ConeGeometry(r * 0.66, r * 0.7, 10), color: 0x2f3854, at: [0, r * 2.75, 0] },
-        { geo: new BoxGeometry(r * 0.22, r * 2.7, r * 2.0), color: 0xd8dee9, at: [r * 0.95, r * 1.45, 0] },
+        { geo: new BoxGeometry(r * 0.22, r * 2.7, r * 2.0), color: 0x7c869c, at: [r * 0.95, r * 1.45, 0] }, // cycle 74: gunmetal, the silver read as sand
         { geo: new BoxGeometry(r * 0.26, r * 2.9, r * 0.16), color: PAL.gold, at: [r * 0.97, r * 1.45, r * 1.0] },
         { geo: new BoxGeometry(r * 0.26, r * 2.9, r * 0.16), color: PAL.gold, at: [r * 0.97, r * 1.45, -r * 1.0] },
         { geo: new BoxGeometry(r * 0.26, r * 0.16, r * 2.1), color: PAL.gold, at: [r * 0.97, r * 2.85, 0] },
@@ -1165,5 +1165,5 @@ const CAPE: Record<HeroKind, { x: number; y: number; h: number; w: number }> = {
 };
 const BRANCH_COLOR: Record<TowerBranch, number> = { fire: 0xff7a2f, frost: 0x4fc3ff };
 const ICE = new MeshBasicMaterial({ color: 0xc4f2ff, transparent: true, opacity: 0.4, depthWrite: false });
-const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4, shaman: 0xd65fcf };
+const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x1fa6b0, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4, shaman: 0xd65fcf };
 const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };
