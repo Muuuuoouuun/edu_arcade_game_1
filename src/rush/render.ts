@@ -18,6 +18,7 @@ import bearGlb from './models/polar-bear.glb?url';
 import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
 import { heroDef, heroHidden, heroMaxHp, lobReach, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, wallParts, type Part } from './look.ts';
+import { loadForestTown, toFloat32 } from './townModel.ts';
 import { Batch } from './batch.ts';
 import { Particles } from './fx.ts';
 import { QUALITY, type Quality } from './quality.ts';
@@ -31,18 +32,6 @@ export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'lob'; offset: Vec
 const TEAM = { ally: PAL.ally, enemy: PAL.enemy };
 const HERO_MODELS: Record<HeroKind, string> = { ranger: rangerGlb, bron: bronGlb, bear: bearGlb };
 const heroLoader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-/** The meshopt copies carry quantized positions and normals (normalized Int16/Int8, often interleaved). Baking writes
- * transformed values back into the same array type, which would clip them (cycle 31: broken parts), so the hero's
- * meshes go back to plain float32 before anything else touches them. */
-function toFloat32(mesh: Mesh) {
-  for (const name of ['position', 'normal'] as const) {
-    const a = mesh.geometry.getAttribute(name);
-    if (!a || (a.array instanceof Float32Array && !('isInterleavedBufferAttribute' in a))) continue;
-    const f = new Float32Array(a.count * 3);
-    for (let i = 0; i < a.count; i++) { f[i * 3] = a.getX(i); f[i * 3 + 1] = a.getY(i); f[i * 3 + 2] = a.getZ(i); }
-    mesh.geometry.setAttribute(name, new BufferAttribute(f, 3));
-  }
-}
 /** Hero ink hulls at half the triangles (cycle 62; measured in cycle 56: no visible change at battle size, a thin
  * part's ink only starts to drop at a quarter). The simplifier is three.js's bundled meshoptimizer, fetched on demand
  * with the first hero model so the first screen does not pay for it; without it (no WASM) hulls stay full. */
@@ -381,18 +370,8 @@ export class RushView {
     this.townView = town;
     town.root.position.y=heightAt(TOWN.x,TOWN.z);
     this.scene.add(town.root);
-    new GLTFLoader().load(new URL('./models/forest-town.glb', import.meta.url).href, gltf => {
-      try { town.accept(gltf.scene); }
-      catch { town.fail(); }
-      finally {
-        gltf.scene.traverse(o => {
-          if (o instanceof Mesh) {
-            o.geometry.dispose();
-            for (const material of Array.isArray(o.material) ? o.material : [o.material]) material.dispose();
-          }
-        });
-      }
-    }, undefined, () => town.fail());
+    // Cycle 66: the shared meshopt web copy (townModel.ts); the scene is shared with the town screen, so it is not disposed.
+    loadForestTown().then(scene => { try { town.accept(scene); } catch { town.fail(); } }, () => town.fail());
   }
 
   private buildPads() {
@@ -581,13 +560,14 @@ export class RushView {
         ...eyes(r * 0.5, r * 2.25, r * 0.2, r * 0.13, 0xffffff, PAL.ink),
       ];
     } else if (kind === 'shaman') {
-      // Shaman (cycle 59): yellow-green bell robe, bone mask with green eyes, and a staff taller than the body with
-      // a glowing green orb (the heal colour), held to one side: an 'i' beside a bell, unlike the skirmisher's T.
+      // Shaman (cycle 59): bell robe, bone mask with green eyes, and a staff taller than the body with a glowing green orb
+      // (the heal colour), held to one side: an 'i' beside a bell, unlike the skirmisher's T. Cycle 68: the robe was
+      // yellow-green and measured dE 8 against the #107 grass (it vanished); magenta (hue ~304) stands off grass and path.
       parts = [
-        { geo: new ConeGeometry(r * 1.0, r * 2.1, 10), color: 0x8fbf2f, at: [0, r * 1.05, 0] },
-        { geo: new CylinderGeometry(r * 1.02, r * 1.05, r * 0.2, 12), color: 0x5c7d1a, at: [0, r * 0.1, 0] },
+        { geo: new ConeGeometry(r * 1.0, r * 2.1, 10), color: 0xd65fcf, at: [0, r * 1.05, 0] },
+        { geo: new CylinderGeometry(r * 1.02, r * 1.05, r * 0.2, 12), color: 0x7d2f86, at: [0, r * 0.1, 0] },
         { geo: new SphereGeometry(r * 0.52, 12, 10), color: 0xf3e6c8, at: [r * 0.1, r * 2.2, 0] },
-        { geo: new ConeGeometry(r * 0.66, r * 1.0, 10), color: 0x5c7d1a, at: [-r * 0.08, r * 2.75, 0], rot: [0, 0, 0.18] },
+        { geo: new ConeGeometry(r * 0.66, r * 1.0, 10), color: 0x7d2f86, at: [-r * 0.08, r * 2.75, 0], rot: [0, 0, 0.18] },
         { geo: new CylinderGeometry(r * 0.11, r * 0.11, r * 3.6, 6), color: 0x7a4a24, at: [r * 0.5, r * 1.8, r * 0.85] },
         { geo: new SphereGeometry(r * 0.4, 10, 8), color: 0x7dff9a, at: [r * 0.5, r * 3.75, r * 0.85] },
         { geo: new OctahedronGeometry(r * 0.22), color: 0x3fd46a, at: [r * 0.5, r * 4.25, r * 0.85] },
@@ -912,6 +892,8 @@ export class RushView {
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.6);
           break;
         case 'townHit': if (!reducedMotion) this.shake = Math.max(this.shake, 0.12); break;
+        // Boss arrival (cycle 67): a wide red ink ring where it walks in and one big shake; no text since #107 hid the toasts.
+        case 'bossEnter': this.ring(ev.x, ev.z, TEAM.enemy, 5, 1.1, 0.95, true); if (!reducedMotion) this.shake = Math.max(this.shake, 0.55); break;
         case 'heroDown':
           this.ring(hp.x, hp.z, 0xff5d73, 1.6, 0.5, 0.9, true);
           fx.emit({ kind: 'shard', n: 10, color: 0x7fd36b, at: [hp.x, 1.0, hp.z], speed: 4, up: 5, size: 0.14, life: 0.6 });
@@ -1178,5 +1160,5 @@ const CAPE: Record<HeroKind, { x: number; y: number; h: number; w: number }> = {
 };
 const BRANCH_COLOR: Record<TowerBranch, number> = { fire: 0xff7a2f, frost: 0x4fc3ff };
 const ICE = new MeshBasicMaterial({ color: 0xc4f2ff, transparent: true, opacity: 0.4, depthWrite: false });
-const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4, shaman: 0x8fbf2f };
+const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4, shaman: 0xd65fcf };
 const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };

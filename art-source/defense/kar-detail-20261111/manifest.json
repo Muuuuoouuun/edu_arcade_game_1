@@ -1,0 +1,46 @@
+{
+  "source_commit": "bec804114a26a85a800379058463f4e9fd0bf2cf",
+  "shaft_vertices": 538,
+  "head_vertices": 276,
+  "animations": [
+    "kar-walk",
+    "kar-slam",
+    "kar-entry-0",
+    "kar-entry-1",
+    "kar-entry-2",
+    "kar-entry-3",
+    "kar-entry-4",
+    "kar-entry-5",
+    "kar-entry-6",
+    "kar-entry-7",
+    "kar-reset-0",
+    "kar-stop-0",
+    "kar-stop-1",
+    "kar-stop-2",
+    "kar-stop-3",
+    "kar-stop-4",
+    "kar-stop-5",
+    "kar-stop-6",
+    "kar-stop-7"
+  ],
+  "meshes": 13,
+  "primitives": 20,
+  "outputs": {
+    "kar-detail.glb": {
+      "bytes": 1321056,
+      "sha256": "bea91fe588fcb2bc5e13a521ec856fa0a6805fd038d5d70c28eb48b66d84b179"
+    },
+    "kar-detail.blend": {
+      "bytes": 9948376,
+      "sha256": "a3df44438b68ab6c888fa390068b6757de594f7d490d8008dd030ffa58dfa172"
+    },
+    "before.png": {
+      "bytes": 144232,
+      "sha256": "67367592f272d7e87e65b3b78b5fd51f458459ae9d0a693ae86b6f04aae6c901"
+    },
+    "after.png": {
+      "bytes": 144709,
+      "sha256": "1aa63f0d16d892b3d4c1363d884b792e97ee3a89ccb3b327d2b1095399ce5063"
+    }
+  }
+}

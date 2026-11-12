@@ -1,10 +1,21 @@
-import { stat } from 'node:fs/promises';
+import { stat, readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 // The village's offline 3D training link must work for either theme and when
 // the compact hero or the detailed frost terrain fails to load.
 const output = new URL('../../dist-mobile/', import.meta.url);
+test('mobile package retains every active campaign GLB with its verified bytes', async () => {
+  const manifest = JSON.parse(await readFile(new URL('defense/models/battle/manifest.json', output), 'utf8'));
+  assert.equal(manifest.models.length, 8);
+  for (const model of manifest.models) {
+    const data = await readFile(new URL(`defense/models/battle/${model.file}`, output));
+    assert.equal(data.length, model.bytes, model.id);
+    assert.equal(createHash('sha256').update(data).digest('hex'), model.sha256, model.id);
+  }
+  await assert.rejects(stat(new URL('defense/models/prototypes/', output)), { code: 'ENOENT' });
+});
 test('mobile package retains both 3D battlefields and authored fallbacks', async () => {
   const paths = [
     'index.html', 'frontier.html',

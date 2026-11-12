@@ -437,3 +437,35 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   .town-bar { justify-content: flex-end; }
   .town-bar h1 { display: none; }
 }
+
+/* Kingdom goal (cycle 64): a small card under the top bar on the left; it glows gold when it can be claimed.
+ * While it shows, the reward note moves aside: right in landscape, below it in portrait. */
+.town-goal {
+  position: absolute; top: calc(100% + 8px); left: 0; max-width: 230px; padding: 5px 12px 6px; border-radius: 12px;
+  border: 3px solid var(--outline); background: rgba(29, 20, 51, 0.88); color: #fff; text-align: left;
+  display: flex; flex-direction: column; gap: 1px; line-height: 1.15; box-shadow: 0 4px 0 var(--outline); touch-action: manipulation;
+}
+.town-goal:disabled { cursor: default; opacity: 1; }
+.town-goal small { font-size: 10px; color: var(--muted); }
+.town-goal b { font-size: 13px; font-weight: 700; white-space: nowrap; }
+.town-goal span { font-size: 12px; color: var(--gold); white-space: nowrap; }
+.town-goal .res-ico { width: 11px; height: 11px; margin: 0 1px 0 2px; border-width: 1.5px; vertical-align: -1px; }
+.town-goal.done { background: linear-gradient(#ffe58a, #ffc93c); color: #3a2400; box-shadow: 0 0 0 3px #fff3b0, 0 4px 0 var(--outline); animation: tagUp 0.9s ease-in-out infinite; }
+.town-goal.done small { color: #6a4a00; font-weight: 800; }
+.town-goal.done span { align-self: flex-start; padding: 0 6px 1px; border-radius: 8px; background: rgba(38, 26, 74, 0.9); color: var(--gold); } /* gold icons need a dark ground */
+.town-goal:not([hidden]) ~ .town-reward { left: auto; right: 0; transform: none; }
+@media (orientation: portrait) {
+  .town-goal:not([hidden]) ~ .town-reward { left: 50%; right: auto; transform: translateX(-50%); top: calc(100% + 76px); }
+}
+@media (prefers-reduced-motion: reduce) { .town-goal.done { animation: none; } }
+
+/* Boss arrival edge chevron (cycle 67): a red arrow head on the screen edge pointing at an off-screen boss. No text. */
+.boss-edge {
+  position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; will-change: transform;
+  border-top: 18px solid transparent; border-bottom: 18px solid transparent; border-left: 30px solid #ff3d55;
+  filter: drop-shadow(0 0 0 #1d1433) drop-shadow(2px 0 0 #1d1433) drop-shadow(-2px 0 0 #1d1433) drop-shadow(0 2px 0 #1d1433) drop-shadow(0 -2px 0 #1d1433);
+  animation: bossEdgePulse 0.5s ease-in-out infinite alternate;
+}
+.boss-edge[hidden] { display: none; }
+@keyframes bossEdgePulse { to { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .boss-edge { animation: none; } }

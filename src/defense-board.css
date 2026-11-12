@@ -27,3 +27,6 @@
 /* Keep environmental detail subordinate to units and their telegraphs. */
 .def-terrain-backdrop{filter:saturate(.84) brightness(.94)}
 .def-snow .def-terrain-backdrop{filter:saturate(.86) brightness(.98)}
+
+/* Campaign terrain and actors share one canvas beneath the interaction overlay. */
+.def-terrain-3d{position:absolute;inset:0;pointer-events:none}.def-terrain-3d canvas{display:block;width:100%;height:100%}.def-map{position:relative}
