@@ -90,6 +90,8 @@ export default function DefenseCamp({onLegion,campaign,onDepart,onChooseHero,onS
       <span className="camp-gold" aria-label={`성장 골드 ${campaign.gold}`}><Gold/>{campaign.gold.toLocaleString()}<small>G</small></span>
     </div>
     {storageFailed ? <p className="camp-save-warning" role="status">진행을 저장할 수 없어요. 현재 원정은 계속할 수 있지만, 창을 닫으면 기록이 사라질 수 있어요.</p> : null}
+    <a className="camp-frontier-entry" href="/frontier.html"><span><b>변경 전장 · 입체 공간에서 다른 방식으로 싸워요</b><small>성문 방어 / 분대 지휘 / 영웅 직접 조작 · 독립 훈련</small></span><strong>입장 ↗</strong></a>
+    <a className="camp-frontier-entry" href="/rush.html"><span><b>마을 수비 · 아르카나 러시</b><small>3D 직접 전투와 마을 성장 · 원정과 성장·보상을 따로 저장해요</small></span><strong>입장 ↗</strong></a>
     <button className="camp-legion-entry" onClick={onLegion}><span className="legion-entry-mark" aria-hidden="true">⚑</span><span><strong>군단 방어</strong><small>배치·소환만으로 싸우는 자동 전투 · 3개 진입로 · 4번의 습격</small></span><b aria-hidden="true">↗</b></button>
     <section className="camp-panorama" aria-labelledby="camp-panorama-title">
       <picture key={themeId}>

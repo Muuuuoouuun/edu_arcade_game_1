@@ -1,5 +1,34 @@
-import type { Branch, EnemyKind, HeroId, TowerKind } from './types';
-export type SpriteAsset = {src:string;viewBox:string;width:number;height:number;displayScale?:number;nativeFacing?:-1|1;groundY?:number};
+import { BASE_MAGIC_SOCKETS } from './baseMagicSockets.ts';
+import { BASE_CROSSBOW_MUZZLES } from './baseCrossbowMuzzles.ts';
+import { BASE_CANNON_MUZZLES } from './baseCannonMuzzles.ts';
+import { TAO_ENTRY_SOCKETS } from './taoEntrySockets.ts';
+import { CRUSH_CANNON_LV3_MUZZLES, CRUSH_CANNON_LV3_FRAME } from './crushCannonLv3Muzzles.ts';
+import { RAPID_CROSSBOW_LV3_MUZZLES, RAPID_CROSSBOW_LV3_FRAME } from './rapidCrossbowLv3Muzzles.ts';
+import { CRUSH_CANNON_MUZZLES } from './crushCannonMuzzles.ts';
+import { RAPID_CROSSBOW_MUZZLES, RAPID_CROSSBOW_FRAME } from './rapidCrossbowMuzzles.ts';
+import { LIGHTNING_TOWER_LV3_SOCKETS } from './lightningTowerLv3Sockets.ts';
+import { LIGHTNING_TOWER_SOCKETS } from './lightningTowerSockets.ts';
+import { KAR_HAMMER_TRAIL } from './karHammerTrail.ts';
+import { FIRE_TOWER_LV3_SOCKETS } from './fireTowerLv3Sockets.ts';
+import { FIRE_TOWER_SOCKETS } from './fireTowerSockets.ts';
+import { FROST_WOLF_FRAME } from './frostWolfGait.ts';
+import { frostWolfWalkFrame, enemyWalkFrame, metalWalkFrame, walkFrame, petWalkFrame, MAGE_STOP_DURATION, type Locomotion } from './locomotion.ts';
+import { attackOctant, dwarfHammerFrame, karHammerFrame, petBiteFrame } from './action.ts';
+import { MAGE_ENTRY_SOCKETS } from './mageEntrySockets.ts';
+import { MAGE_SOCKETS } from './mageSockets.ts';
+import { ELF_SOCKETS } from './elfSockets.ts';
+import { PET_WOLF_SOCKETS } from './petWolfSockets.ts';
+import { DRUID_ENTRY_SOCKETS } from './druidEntrySockets.ts';
+import { DRUID_SOCKETS } from './druidSockets.ts';
+import { DRUID_ULTIMATE_SOCKETS } from './druidUltimateSockets.ts';
+import { TAO_SOCKETS } from './taoSockets.ts';
+import { DWARF_HAMMER_TRAIL } from './dwarfHammerTrail.ts';
+import { BALLISTA_MUZZLES } from './ballistaMuzzles.ts';
+import { BALLISTA_LV3_MUZZLES } from './ballistaLv3Muzzles.ts';
+import { WATER_CANNON_MUZZLES } from './waterCannonMuzzles.ts';
+import { WATER_CANNON_LV3_MUZZLES } from './waterCannonLv3Muzzles.ts';
+import type { Branch, CombatAttack, EnemyKind, HeroId, Point, Projectile, TowerKind } from './types';
+export type SpriteAsset = {src:string;viewBox:string;width:number;height:number;displayScale?:number;nativeFacing?:-1|1;groundY?:number;oriented?:boolean};
 export type ActionPose = 'windup'|'strike'|'recover';
 // Source frames are shared by tactical units, portraits and the growing village.
 const ORIGINAL = [[38,65,275,250],[350,65,265,255],[675,65,225,255],[950,65,280,260],[40,380,260,260],[355,360,240,280],[650,385,260,260],[965,355,270,290],[40,690,245,210],[330,650,280,270],[660,665,250,245],[965,675,270,240],[20,940,280,250],[335,950,270,250],[635,915,300,285],[960,950,270,250]];
@@ -29,6 +58,284 @@ const RANGED:Record<'mage'|'elf'|'tao'|'druid',MotionFrame[]> = {
 };
 const motionLoaded = new Set<string>();
 let motionPreload:Promise<void>|null = null;
+const KAR_SLAM=Array.from({length:8},(_,i)=>`/defense/models/kar-slam-${i}-atlas.webp`);
+const KAR_WALK=Array.from({length:8},(_,i)=>`/defense/models/kar-walk-${i}-atlas.webp`);
+function karModelReady(){return [...KAR_SLAM,...KAR_WALK].every(src=>motionLoaded.has(src));}
+function karAsset(direction:number,mode:'slam'|'walk',frame:number):SpriteAsset|null {
+ if(!karModelReady())return null;
+ return {src:(mode==='slam'?KAR_SLAM:KAR_WALK)[direction],viewBox:`${frame*256} 0 256 256`,width:2048,height:256,groundY:220,displayScale:1.2*6.8/5.8,oriented:true};
+}
+const MAGE_CAST=Array.from({length:8},(_,i)=>`/defense/models/ian-cast-${i}-atlas.webp`);
+const MAGE_WALK=Array.from({length:8},(_,i)=>`/defense/models/ian-walk-${i}-atlas.webp`);
+const MAGE_RESET=Array.from({length:8},(_,i)=>`/defense/models/ian-reset-${i}-atlas.webp`);
+const MAGE_RETURN=Array.from({length:8},(_,i)=>`/defense/models/ian-return-${i}-atlas.webp`);
+const MAGE_ENTRY=Array.from({length:8},(_,i)=>`/defense/models/ian-entry-${i}-atlas.webp`);
+const MAGE_STOP=Array.from({length:8},(_,i)=>`/defense/models/ian-stop-${i}-atlas.webp`);
+function mageModelReady(){return [...MAGE_CAST,...MAGE_WALK].every(src=>motionLoaded.has(src));}
+/** Preserve the last simulated walk frame, then settle the boots in sequence. */
+export function mageStopSpriteAsset(actor:HeroId|'wolf',motion:Locomotion,reduced=false):{asset:SpriteAsset;frame:number;entry:number}|null {
+ const stop=motion.settle;
+ if(actor!=='mage'||reduced||motion.speed>.5||!stop||!Number.isInteger(stop.frame)||stop.frame<0||stop.frame>7||!Number.isFinite(stop.elapsed)||stop.elapsed<0||stop.elapsed>=MAGE_STOP_DURATION||!mageModelReady()||!MAGE_STOP.every(src=>motionLoaded.has(src)))return null;
+ const direction=attackOctant({x:0,y:0},stop.heading);if(direction===null)return null;
+ const frame=Math.min(2,Math.floor((stop.elapsed+1e-9)/.08));
+ const asset=frame===0?mageAsset(direction,'walk',stop.frame):{src:MAGE_STOP[direction],viewBox:`${(stop.frame*2+frame-1)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true};
+ return asset?{asset,frame,entry:stop.frame}:null;
+}
+/** Plant the captured step before the existing .15-second spell release. */
+export function mageCastEntrySpriteAsset(attack:CombatAttack,position:Point,reduced=false):{asset:SpriteAsset;entry:number;frame:'walk'|'first-foot'|'second-foot';direction:number;socket:Point}|null {
+ const entry=attack.walkEntry,direction=attackOctant(position,attack.to),t=attack.elapsed;
+ if(attack.actor!=='mage'||(attack.source!=='hero'&&attack.source!=='mercenary')||reduced||entry===undefined||!Number.isInteger(entry)||entry<0||entry>7||!Number.isFinite(t)||t<0||t>=.10||direction===null||!mageModelReady()||!MAGE_ENTRY.every(src=>motionLoaded.has(src)))return null;
+ const sample=t<.025?0:t<.065?1:2;
+ const [x,y]=MAGE_ENTRY_SOCKETS[direction][entry][sample];
+ const asset=sample===0?mageAsset(direction,'walk',entry)!:{src:MAGE_ENTRY[direction],viewBox:`${(entry*2+sample-1)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true};
+ return {asset,entry,direction,frame:sample===0?'walk':sample===1?'first-foot':'second-foot',socket:{x,y}};
+}
+/** Recover only into aligned travel; follow the current gait rather than the attack's captured entry. */
+export function mageCastReturnSpriteAsset(attack:CombatAttack,position:Point,motion:Locomotion,reduced=false):{asset:SpriteAsset;walk:number;frame:'hold'|'release-weight'|'stride-pickup'|'walk';direction:number}|null {
+ const direction=attackOctant(position,attack.to),heading=motion.heading?attackOctant({x:0,y:0},motion.heading):null,start=attack.hitAt+.06;
+ if(attack.actor!=='mage'||(attack.source!=='hero'&&attack.source!=='mercenary')||reduced||attack.hitAt<=0||motion.speed<=.5||!Number.isFinite(motion.speed)||!Number.isFinite(motion.distance)||direction===null||direction!==heading||![attack.elapsed,start,attack.duration].every(Number.isFinite)||start>=attack.duration||attack.elapsed<start||attack.elapsed>=attack.duration||!mageModelReady()||!MAGE_RETURN.every(src=>motionLoaded.has(src)))return null;
+ const walk=walkFrame(motion.distance),progress=(attack.elapsed-start)/(attack.duration-start)+1e-9;
+ if(progress<.125)return {asset:mageAsset(direction,'cast',2)!,walk,frame:'hold',direction};
+ if(progress>=11/12)return {asset:mageAsset(direction,'walk',walk)!,walk,frame:'walk',direction};
+ const sample=progress<.5?0:1;
+ return {walk,frame:sample===0?'release-weight':'stride-pickup',direction,asset:{src:MAGE_RETURN[direction],viewBox:`${(walk*2+sample)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+/** Settle a stationary released spell without changing release or attack duration. */
+export function mageCastResetSpriteAsset(attack:CombatAttack,position:Point,motion:Locomotion,reduced=false):{asset:SpriteAsset;frame:'hold'|'recover'|'settle'|'ready';direction:number}|null {
+ const direction=attackOctant(position,attack.to),start=attack.hitAt+.06;
+ if(attack.actor!=='mage'||(attack.source!=='hero'&&attack.source!=='mercenary')||reduced||!Number.isFinite(motion.speed)||motion.speed<0||motion.speed>.5||attack.hitAt<=0||direction===null||![attack.elapsed,start,attack.duration].every(Number.isFinite)||start>=attack.duration||attack.elapsed<start||attack.elapsed>=attack.duration||!mageModelReady()||!MAGE_RESET.every(src=>motionLoaded.has(src)))return null;
+ const progress=(attack.elapsed-start)/(attack.duration-start)+1e-9;
+ if(progress<.125)return {direction,frame:'hold',asset:mageAsset(direction,'cast',2)!};
+ if(progress>=11/12)return {direction,frame:'ready',asset:mageAsset(direction,'cast',0)!};
+ const sample=progress<.5?0:1;
+ return {direction,frame:sample===0?'recover':'settle',asset:{src:MAGE_RESET[direction],viewBox:`${sample*192} 0 192 192`,width:384,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+function mageAsset(direction:number,mode:'cast'|'walk',frame:number):SpriteAsset|null {
+ if(!mageModelReady())return null;
+ return {src:(mode==='cast'?MAGE_CAST:MAGE_WALK)[direction],viewBox:`${frame*256} 0 256 256`,width:mode==='cast'?1024:2048,height:256,groundY:220,displayScale:1.2*6.8/5.8,oriented:true};
+}
+export function mageCastSocket(from:Point,to:Point,size:number,pose:ActionPose|'idle'='strike'):Point|null {
+ const direction=attackOctant(from,to);
+ if(direction===null||!mageModelReady()||!Number.isFinite(size)||size<=0)return null;
+ const frame=pose==='idle'?0:pose==='windup'?1:pose==='strike'?2:3;
+ const [x,y]=MAGE_SOCKETS[direction][frame];return {x:x*size,y:y*size};
+}
+/** Use the launch-time pose and size; following, promotion and moving cannot move a released bolt's origin. */
+export function mageProjectileOffset(p:Projectile,unit=1):Point|undefined {
+ if(p.actor!=='mage'||!p.launchAim||(p.source!=='hero'&&p.source!=='mercenary')||(p.sourceSize!==84&&p.sourceSize!==94))return undefined;
+ const socket=mageCastSocket(p.from,p.launchAim,p.sourceSize*unit);
+ return socket?{x:socket.x,y:socket.y+27}:undefined;
+}
+const PET_WOLF_BITE=Array.from({length:8},(_,i)=>`/defense/models/moonlight-bite-${i}-atlas.webp`);
+const PET_WOLF_WALK=Array.from({length:8},(_,i)=>`/defense/models/moonlight-walk-${i}-atlas.webp`);
+function petWolfModelReady(){return [...PET_WOLF_BITE,...PET_WOLF_WALK].every(src=>motionLoaded.has(src));}
+function petWolfAsset(direction:number,mode:'bite'|'walk',frame:number):SpriteAsset|null {
+ if(!petWolfModelReady())return null;
+ return {src:(mode==='bite'?PET_WOLF_BITE:PET_WOLF_WALK)[direction],viewBox:`${frame*256} 0 256 256`,width:2048,height:256,groundY:220,displayScale:1.2*6.8/5.8,oriented:true};
+}
+export function petBiteSocket(from:Point,to:Point,size:number,pose:ActionPose|'idle'='strike'):Point|null {
+ const direction=attackOctant(from,to);
+ if(direction===null||!petWolfModelReady()||!Number.isFinite(size)||size<=0)return null;
+ const frame=pose==='idle'?0:pose==='windup'?2:pose==='strike'?4:6;
+ const [x,y]=PET_WOLF_SOCKETS[direction][frame];return {x:x*size,y:y*size};
+}
+/** Contact cue follows the simulated hit window and the actual modeled mouth, never the old claw arc. */
+export function petBiteContact(attack:CombatAttack,size:number,from:Point=attack.from,reduced=false):Point|null {
+ if(attack.actor!=='wolf'||![attack.elapsed,attack.hitAt,attack.duration].every(Number.isFinite)||attack.hitAt<=0||attack.duration<=attack.hitAt||attack.elapsed<attack.hitAt||attack.elapsed>=Math.min(attack.duration,attack.hitAt+.12))return null;
+ const direction=attackOctant(from,attack.to);
+ if(direction===null||!petWolfModelReady()||!Number.isFinite(size)||size<=0)return null;
+ const [x,y]=PET_WOLF_SOCKETS[direction][petBiteFrame(attack,reduced)];return {x:x*size,y:y*size};
+}
+export function petBiteSequenceSpriteAsset(attack:CombatAttack,from:Point=attack.from,reduced=false):SpriteAsset|null {
+ const direction=attackOctant(from,attack.to);
+ return attack.actor==='wolf'&&direction!==null?petWolfAsset(direction,'bite',petBiteFrame(attack,reduced)):null;
+}
+const KAR_STOP=Array.from({length:8},(_,i)=>`/defense/models/kar-stop-${i}-atlas.webp`);
+/** Finish the saved walking stance with alternating planted feet before returning to ready. */
+export function karStopSpriteAsset(actor:HeroId|'wolf',motion:Locomotion,reduced=false):{asset:SpriteAsset;frame:number;entry:number}|null {
+ const stop=motion.settle;
+ if(actor!=='barbarian'||reduced||!Number.isFinite(motion.speed)||motion.speed<0||motion.speed>.5||!stop||!Number.isInteger(stop.frame)||stop.frame<0||stop.frame>7||!Number.isFinite(stop.elapsed)||stop.elapsed<0||stop.elapsed>=MAGE_STOP_DURATION||!karModelReady()||!KAR_STOP.every(src=>motionLoaded.has(src)))return null;
+ const direction=attackOctant({x:0,y:0},stop.heading);if(direction===null)return null;
+ const frame=Math.min(2,Math.floor((stop.elapsed+1e-9)/.08));
+ return {frame,entry:stop.frame,asset:frame===0?directionalLocomotionSpriteAsset('barbarian',stop.heading,stop.frame*8)!:{src:KAR_STOP[direction],viewBox:`${(stop.frame*2+frame-1)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+const DRUID_STOP=Array.from({length:8},(_,i)=>`/defense/models/luna-stop-${i}-atlas.webp`);
+/** Finish the saved walking stance with alternating planted feet before returning to ready. */
+export function druidStopSpriteAsset(actor:HeroId|'wolf',motion:Locomotion,reduced=false):{asset:SpriteAsset;frame:number;entry:number}|null {
+ const stop=motion.settle;
+ if(actor!=='druid'||reduced||!Number.isFinite(motion.speed)||motion.speed<0||motion.speed>.5||!stop||!Number.isInteger(stop.frame)||stop.frame<0||stop.frame>7||!Number.isFinite(stop.elapsed)||stop.elapsed<0||stop.elapsed>=MAGE_STOP_DURATION||!druidModelReady()||!DRUID_STOP.every(src=>motionLoaded.has(src)))return null;
+ const direction=attackOctant({x:0,y:0},stop.heading);if(direction===null)return null;
+ const frame=Math.min(2,Math.floor((stop.elapsed+1e-9)/.08));
+ return {frame,entry:stop.frame,asset:frame===0?directionalLocomotionSpriteAsset('druid',stop.heading,stop.frame*8)!:{src:DRUID_STOP[direction],viewBox:`${(stop.frame*2+frame-1)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+const DRUID_RESET=Array.from({length:8},(_,i)=>`/defense/models/luna-reset-${i}-atlas.webp`);
+/** Settle a stationary released spell without changing release or attack duration. */
+export function druidCastResetSpriteAsset(attack:CombatAttack,position:Point,motion:Locomotion,reduced=false):{asset:SpriteAsset;frame:'hold'|'recover'|'settle'|'ready';direction:number}|null {
+ const direction=attackOctant(position,attack.to),start=attack.hitAt+.06;
+ if(attack.actor!=='druid'||(attack.source!=='hero'&&attack.source!=='mercenary')||reduced||!Number.isFinite(motion.speed)||motion.speed<0||motion.speed>.5||attack.hitAt<=0||direction===null||![attack.elapsed,start,attack.duration].every(Number.isFinite)||start>=attack.duration||attack.elapsed<start||attack.elapsed>=attack.duration||!druidModelReady()||!DRUID_RESET.every(src=>motionLoaded.has(src)))return null;
+ const progress=(attack.elapsed-start)/(attack.duration-start)+1e-9;
+ if(progress<.125)return {direction,frame:'hold',asset:druidAsset(direction,'cast',2)!};
+ if(progress>=11/12)return {direction,frame:'ready',asset:druidAsset(direction,'cast',0)!};
+ const sample=progress<.5?0:1;
+ return {direction,frame:sample===0?'recover':'settle',asset:{src:DRUID_RESET[direction],viewBox:`${sample*192} 0 192 192`,width:384,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+const DRUID_RETURN=Array.from({length:8},(_,i)=>`/defense/models/luna-return-${i}-atlas.webp`);
+/** Recover only into aligned travel; follow the current gait rather than the attack's captured entry. */
+export function druidCastReturnSpriteAsset(attack:CombatAttack,position:Point,motion:Locomotion,reduced=false):{asset:SpriteAsset;walk:number;frame:'hold'|'release-weight'|'stride-pickup'|'walk';direction:number}|null {
+ const direction=attackOctant(position,attack.to),heading=motion.heading?attackOctant({x:0,y:0},motion.heading):null,start=attack.hitAt+.06;
+ if(attack.actor!=='druid'||(attack.source!=='hero'&&attack.source!=='mercenary')||reduced||attack.hitAt<=0||motion.speed<=.5||!Number.isFinite(motion.speed)||!Number.isFinite(motion.distance)||direction===null||direction!==heading||![attack.elapsed,start,attack.duration].every(Number.isFinite)||start>=attack.duration||attack.elapsed<start||attack.elapsed>=attack.duration||!druidModelReady()||!DRUID_RETURN.every(src=>motionLoaded.has(src)))return null;
+ const walk=walkFrame(motion.distance),progress=(attack.elapsed-start)/(attack.duration-start)+1e-9;
+ if(progress<.125)return {asset:druidAsset(direction,'cast',2)!,walk,frame:'hold',direction};
+ if(progress>=11/12)return {asset:druidAsset(direction,'walk',walk)!,walk,frame:'walk',direction};
+ const sample=progress<.5?0:1;
+ return {walk,frame:sample===0?'release-weight':'stride-pickup',direction,asset:{src:DRUID_RETURN[direction],viewBox:`${(walk*2+sample)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+const DRUID_ENTRY=Array.from({length:8},(_,i)=>`/defense/models/luna-entry-${i}-atlas.webp`);
+/** Plant the captured step before the existing .15-second spell release. */
+export function druidCastEntrySpriteAsset(attack:CombatAttack,position:Point,reduced=false):{asset:SpriteAsset;entry:number;frame:'walk'|'first-foot'|'second-foot';direction:number;socket:Point}|null {
+ const entry=attack.walkEntry,direction=attackOctant(position,attack.to),t=attack.elapsed;
+ if(attack.actor!=='druid'||(attack.source!=='hero'&&attack.source!=='mercenary')||reduced||entry===undefined||!Number.isInteger(entry)||entry<0||entry>7||!Number.isFinite(t)||t<0||t>=.10||direction===null||!druidModelReady()||!DRUID_ENTRY.every(src=>motionLoaded.has(src)))return null;
+ const sample=t<.025?0:t<.065?1:2;
+ const [x,y]=DRUID_ENTRY_SOCKETS[direction][entry][sample];
+ const asset=sample===0?druidAsset(direction,'walk',entry)!:{src:DRUID_ENTRY[direction],viewBox:`${(entry*2+sample-1)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true};
+ return {asset,entry,direction,frame:sample===0?'walk':sample===1?'first-foot':'second-foot',socket:{x,y}};
+}
+const DRUID_CAST=Array.from({length:8},(_,i)=>`/defense/models/luna-cast-${i}-atlas.webp`);
+const DRUID_WALK=Array.from({length:8},(_,i)=>`/defense/models/luna-walk-${i}-atlas.webp`);
+function druidModelReady(){return [...DRUID_CAST,...DRUID_WALK].every(src=>motionLoaded.has(src));}
+const DRUID_ULTIMATE=Array.from({length:8},(_,i)=>`/defense/models/luna-ultimate-${i}-atlas.webp`);
+/** The raised staff is shown at the instant of damage, then returns to ready. */
+export function druidUltimateSpriteAsset(actor:HeroId|'wolf',heading:Point,age:number,reduced=false):{asset:SpriteAsset;frame:number;socket:Point}|null {
+ const direction=attackOctant({x:0,y:0},heading);
+ if(actor!=='druid'||direction===null||!Number.isFinite(age)||age<0||age>=.5||!druidModelReady()||!DRUID_ULTIMATE.every(src=>motionLoaded.has(src)))return null;
+ const frame=reduced||age<1/6?0:age<1/3?1:2;
+ const [x,y]=DRUID_ULTIMATE_SOCKETS[direction][frame];
+ return {frame,socket:{x,y},asset:{src:DRUID_ULTIMATE[direction],viewBox:`${frame*192} 0 192 192`,width:576,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+function druidAsset(direction:number,mode:'cast'|'walk',frame:number):SpriteAsset|null {
+ if(!druidModelReady())return null;
+ return {src:(mode==='cast'?DRUID_CAST:DRUID_WALK)[direction],viewBox:`${frame*256} 0 256 256`,width:mode==='cast'?1024:2048,height:256,groundY:220,displayScale:1.2*6.8/5.8,oriented:true};
+}
+export function druidCastSocket(from:Point,to:Point,size:number,pose:ActionPose|'idle'='strike'):Point|null {
+ const direction=attackOctant(from,to);
+ if(direction===null||!druidModelReady()||!Number.isFinite(size)||size<=0)return null;
+ const frame=pose==='idle'?0:pose==='windup'?1:pose==='strike'?2:3;
+ const [x,y]=DRUID_SOCKETS[direction][frame];return {x:x*size,y:y*size};
+}
+/** Use the launch-time pose and size; following, promotion and moving cannot move a released bolt's origin. */
+export function druidProjectileOffset(p:Projectile,unit=1):Point|undefined {
+ if(p.actor!=='druid'||!p.launchAim||(p.source!=='hero'&&p.source!=='mercenary')||(p.sourceSize!==84&&p.sourceSize!==94))return undefined;
+ const socket=druidCastSocket(p.from,p.launchAim,p.sourceSize*unit);
+ return socket?{x:socket.x,y:socket.y+27}:undefined;
+}
+const TAO_STOP=Array.from({length:8},(_,i)=>`/defense/models/cheongun-stop-${i}-atlas.webp`);
+/** Finish the saved walking stance with alternating planted feet before returning to ready. */
+export function taoStopSpriteAsset(actor:HeroId|'wolf',motion:Locomotion,reduced=false):{asset:SpriteAsset;frame:number;entry:number}|null {
+ const stop=motion.settle;
+ if(actor!=='tao'||reduced||!Number.isFinite(motion.speed)||motion.speed<0||motion.speed>.5||!stop||!Number.isInteger(stop.frame)||stop.frame<0||stop.frame>7||!Number.isFinite(stop.elapsed)||stop.elapsed<0||stop.elapsed>=MAGE_STOP_DURATION||!taoModelReady()||!TAO_STOP.every(src=>motionLoaded.has(src)))return null;
+ const direction=attackOctant({x:0,y:0},stop.heading);if(direction===null)return null;
+ const frame=Math.min(2,Math.floor((stop.elapsed+1e-9)/.08));
+ return {frame,entry:stop.frame,asset:frame===0?directionalLocomotionSpriteAsset('tao',stop.heading,stop.frame*8)!:{src:TAO_STOP[direction],viewBox:`${(stop.frame*2+frame-1)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+const TAO_RESET=Array.from({length:8},(_,i)=>`/defense/models/cheongun-reset-${i}-atlas.webp`);
+/** Settle a stationary released spell without changing release or attack duration. */
+export function taoCastResetSpriteAsset(attack:CombatAttack,position:Point,motion:Locomotion,reduced=false):{asset:SpriteAsset;frame:'hold'|'recover'|'settle'|'ready';direction:number}|null {
+ const direction=attackOctant(position,attack.to),start=attack.hitAt+.06;
+ if(attack.actor!=='tao'||(attack.source!=='hero'&&attack.source!=='mercenary')||reduced||!Number.isFinite(motion.speed)||motion.speed<0||motion.speed>.5||attack.hitAt<=0||direction===null||![attack.elapsed,start,attack.duration].every(Number.isFinite)||start>=attack.duration||attack.elapsed<start||attack.elapsed>=attack.duration||!taoModelReady()||!TAO_RESET.every(src=>motionLoaded.has(src)))return null;
+ const progress=(attack.elapsed-start)/(attack.duration-start)+1e-9;
+ if(progress<.125)return {direction,frame:'hold',asset:taoAsset(direction,'cast',2)!};
+ if(progress>=11/12)return {direction,frame:'ready',asset:taoAsset(direction,'cast',0)!};
+ const sample=progress<.5?0:1;
+ return {direction,frame:sample===0?'recover':'settle',asset:{src:TAO_RESET[direction],viewBox:`${sample*192} 0 192 192`,width:384,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+const TAO_RETURN=Array.from({length:8},(_,i)=>`/defense/models/cheongun-return-${i}-atlas.webp`);
+/** Recover only into aligned travel; follow the current gait rather than the attack's captured entry. */
+export function taoCastReturnSpriteAsset(attack:CombatAttack,position:Point,motion:Locomotion,reduced=false):{asset:SpriteAsset;walk:number;frame:'hold'|'release-weight'|'stride-pickup'|'walk';direction:number}|null {
+ const direction=attackOctant(position,attack.to),heading=motion.heading?attackOctant({x:0,y:0},motion.heading):null,start=attack.hitAt+.06;
+ if(attack.actor!=='tao'||(attack.source!=='hero'&&attack.source!=='mercenary')||reduced||attack.hitAt<=0||motion.speed<=.5||!Number.isFinite(motion.speed)||!Number.isFinite(motion.distance)||direction===null||direction!==heading||![attack.elapsed,start,attack.duration].every(Number.isFinite)||start>=attack.duration||attack.elapsed<start||attack.elapsed>=attack.duration||!taoModelReady()||!TAO_RETURN.every(src=>motionLoaded.has(src)))return null;
+ const walk=walkFrame(motion.distance),progress=(attack.elapsed-start)/(attack.duration-start)+1e-9;
+ if(progress<.125)return {asset:taoAsset(direction,'cast',2)!,walk,frame:'hold',direction};
+ if(progress>=11/12)return {asset:taoAsset(direction,'walk',walk)!,walk,frame:'walk',direction};
+ const sample=progress<.5?0:1;
+ return {walk,frame:sample===0?'release-weight':'stride-pickup',direction,asset:{src:TAO_RETURN[direction],viewBox:`${(walk*2+sample)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+const TAO_ENTRY=Array.from({length:8},(_,i)=>`/defense/models/cheongun-entry-${i}-atlas.webp`);
+/** Plant the captured step before the existing .15-second spell release. */
+export function taoCastEntrySpriteAsset(attack:CombatAttack,position:Point,reduced=false):{asset:SpriteAsset;entry:number;frame:'walk'|'first-foot'|'second-foot';direction:number;socket:Point}|null {
+ const entry=attack.walkEntry,direction=attackOctant(position,attack.to),t=attack.elapsed;
+ if(attack.actor!=='tao'||(attack.source!=='hero'&&attack.source!=='mercenary')||reduced||entry===undefined||!Number.isInteger(entry)||entry<0||entry>7||!Number.isFinite(t)||t<0||t>=.10||direction===null||!taoModelReady()||!TAO_ENTRY.every(src=>motionLoaded.has(src)))return null;
+ const sample=t<.025?0:t<.065?1:2;
+ const [x,y]=TAO_ENTRY_SOCKETS[direction][entry][sample];
+ const asset=sample===0?taoAsset(direction,'walk',entry)!:{src:TAO_ENTRY[direction],viewBox:`${(entry*2+sample-1)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true};
+ return {asset,entry,direction,frame:sample===0?'walk':sample===1?'first-foot':'second-foot',socket:{x,y}};
+}
+const TAO_CAST=Array.from({length:8},(_,i)=>`/defense/models/cheongun-cast-${i}-atlas.webp`);
+const TAO_WALK=Array.from({length:8},(_,i)=>`/defense/models/cheongun-walk-${i}-atlas.webp`);
+const TAO_ULTIMATE=Array.from({length:8},(_,i)=>`/defense/models/cheongun-ultimate-${i}-atlas.webp`);
+function taoModelReady(){return [...TAO_CAST,...TAO_WALK].every(src=>motionLoaded.has(src));}
+/** Immediate skill release and recovery use the same authored body and ground anchor. */
+export function taoUltimateSpriteAsset(actor:HeroId|'wolf',heading:Point,age:number,reduced=false):{asset:SpriteAsset;frame:number}|null {
+ const direction=attackOctant({x:0,y:0},heading);
+ if(actor!=='tao'||direction===null||!Number.isFinite(age)||age<0||age>=.5||!taoModelReady()||!TAO_ULTIMATE.every(src=>motionLoaded.has(src)))return null;
+ const frame=reduced||age<1/6?0:age<1/3?1:2;
+ return {frame,asset:{src:TAO_ULTIMATE[direction],viewBox:`${frame*192} 0 192 192`,width:576,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+function taoAsset(direction:number,mode:'cast'|'walk',frame:number):SpriteAsset|null {
+ if(!taoModelReady())return null;
+ return {src:(mode==='cast'?TAO_CAST:TAO_WALK)[direction],viewBox:`${frame*256} 0 256 256`,width:mode==='cast'?1024:2048,height:256,groundY:220,displayScale:1.2*6.8/5.8,oriented:true};
+}
+export function taoSealSocket(from:Point,to:Point,size:number,pose:ActionPose|'idle'='strike'):Point|null {
+ const direction=attackOctant(from,to);
+ if(direction===null||!taoModelReady()||!Number.isFinite(size)||size<=0)return null;
+ const frame=pose==='idle'?0:pose==='windup'?1:pose==='strike'?2:3;
+ const [x,y]=TAO_SOCKETS[direction][frame];return {x:x*size,y:y*size};
+}
+/** Use the launch-time pose and size; following, promotion and moving cannot move a released bolt's origin. */
+export function taoProjectileOffset(p:Projectile,unit=1):Point|undefined {
+ if(p.actor!=='tao'||!p.launchAim||(p.source!=='hero'&&p.source!=='mercenary')||(p.sourceSize!==84&&p.sourceSize!==94))return undefined;
+ const socket=taoSealSocket(p.from,p.launchAim,p.sourceSize*unit);
+ return socket?{x:socket.x,y:socket.y+27}:undefined;
+}
+const RIEL_RESET=Array.from({length:8},(_,i)=>`/defense/models/riel-reset-${i}-atlas.webp`);
+const RIEL_RETURN=Array.from({length:8},(_,i)=>`/defense/models/riel-return-${i}-atlas.webp`);
+const RIEL_ENTRY=Array.from({length:8},(_,i)=>`/defense/models/riel-entry-${i}-atlas.webp`);
+const RIEL_ULTIMATE=Array.from({length:8},(_,i)=>`/defense/models/riel-ultimate-${i}-atlas.webp`);
+const ELF_CAST=Array.from({length:8},(_,i)=>`/defense/models/riel-cast-${i}-atlas.webp`);
+const ELF_WALK=Array.from({length:8},(_,i)=>`/defense/models/riel-walk-${i}-atlas.webp`);
+function elfModelReady(){return [...ELF_CAST,...ELF_WALK].every(src=>motionLoaded.has(src));}
+/** Immediate arrow-rain release and recovery keep the authored bow and feet. */
+export function rielUltimateSpriteAsset(actor:HeroId|'wolf',heading:Point,age:number,reduced=false):{asset:SpriteAsset;frame:number}|null {
+ const direction=attackOctant({x:0,y:0},heading);
+ if(actor!=='elf'||direction===null||!Number.isFinite(age)||age<0||age>=.5||!elfModelReady()||!RIEL_ULTIMATE.every(src=>motionLoaded.has(src)))return null;
+ const frame=reduced||age<1/6?0:age<1/3?1:2;
+ return {frame,asset:{src:RIEL_ULTIMATE[direction],viewBox:`${frame*192} 0 192 192`,width:576,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+function elfAsset(direction:number,mode:'cast'|'walk',frame:number):SpriteAsset|null {
+ if(!elfModelReady())return null;
+ return {src:(mode==='cast'?ELF_CAST:ELF_WALK)[direction],viewBox:`${frame*256} 0 256 256`,width:mode==='cast'?1024:2048,height:256,groundY:220,displayScale:1.2*6.8/5.8,oriented:true};
+}
+export function elfArrowSocket(from:Point,to:Point,size:number,pose:ActionPose|'idle'='strike'):Point|null {
+ const direction=attackOctant(from,to);
+ if(direction===null||!elfModelReady()||!Number.isFinite(size)||size<=0)return null;
+ const frame=pose==='idle'?0:pose==='windup'?1:pose==='strike'?2:3;
+ const [x,y]=ELF_SOCKETS[direction][frame];return {x:x*size,y:y*size};
+}
+/** Use the launch-time pose and size; following, promotion and moving cannot move a released arrow's origin. */
+export function elfProjectileOffset(p:Projectile,unit=1):Point|undefined {
+ if(p.actor!=='elf'||!p.launchAim||(p.source!=='hero'&&p.source!=='mercenary')||(p.sourceSize!==84&&p.sourceSize!==94))return undefined;
+ const socket=elfArrowSocket(p.from,p.launchAim,p.sourceSize*unit);
+ return socket?{x:socket.x,y:socket.y+27}:undefined;
+}
 const DWARF_POSES = ['idle','windup','strike','recover'] as const;
 const DWARF_RENDERS = Object.fromEntries(DWARF_POSES.map(pose=>[pose,{
  src:`/defense/models/dwarf-${pose}-game.webp`,viewBox:'0 0 640 640',width:640,height:640,displayScale:1.2,nativeFacing:1,groundY:550,
@@ -36,8 +343,175 @@ const DWARF_RENDERS = Object.fromEntries(DWARF_POSES.map(pose=>[pose,{
 // Switch the whole actor together: a missing action frame must never alternate
 // a modeled body with the old illustrated body during an attack.
 function dwarfModelReady(){return DWARF_POSES.every(pose=>motionLoaded.has(DWARF_RENDERS[pose].src));}
+const DWARF_DIRECTIONS=Array.from({length:8},(_,i)=>`/defense/models/dwarf-attack-${i}-atlas.webp`);
+/** Preserve the captured walking pose, then plant each boot before the unchanged release. */
+export function rielShotEntrySpriteAsset(actor:HeroId|'wolf',attack:CombatAttack,position:Point,reduced=false):{asset:SpriteAsset;entry:number;frame:'walk'|'first-foot'|'second-foot';direction:number}|null {
+ const entry=attack.walkEntry,direction=attackOctant(position,attack.to),t=attack.elapsed;
+ if(actor!=='elf'||attack.actor!=='elf'||reduced||entry===undefined||!Number.isInteger(entry)||entry<0||entry>7||!Number.isFinite(t)||t<0||t>=.08||direction===null||!elfModelReady()||!RIEL_ENTRY.every(src=>motionLoaded.has(src)))return null;
+ if(t<.025)return {asset:elfAsset(direction,'walk',entry)!,entry,frame:'walk',direction};
+ const sample=t<.055?0:1;
+ return {entry,frame:sample===0?'first-foot':'second-foot',direction,asset:{src:RIEL_ENTRY[direction],viewBox:`${(entry*2+sample)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+/** Recover only into aligned travel; follow the current gait rather than the attack's captured entry. */
+export function rielShotReturnSpriteAsset(attack:CombatAttack,position:Point,motion:Locomotion,reduced=false):{asset:SpriteAsset;walk:number;frame:'hold'|'release-weight'|'stride-pickup'|'walk';direction:number}|null {
+ const direction=attackOctant(position,attack.to),heading=motion.heading?attackOctant({x:0,y:0},motion.heading):null,start=attack.hitAt+.06;
+ if(attack.actor!=='elf'||reduced||attack.hitAt<=0||motion.speed<=.5||!Number.isFinite(motion.speed)||!Number.isFinite(motion.distance)||direction===null||direction!==heading||![attack.elapsed,start,attack.duration].every(Number.isFinite)||start>=attack.duration||attack.elapsed<start||attack.elapsed>=attack.duration||!elfModelReady()||!RIEL_RETURN.every(src=>motionLoaded.has(src)))return null;
+ const walk=walkFrame(motion.distance),progress=(attack.elapsed-start)/(attack.duration-start)+1e-9;
+ if(progress<.125)return {asset:elfAsset(direction,'cast',2)!,walk,frame:'hold',direction};
+ if(progress>=11/12)return {asset:elfAsset(direction,'walk',walk)!,walk,frame:'walk',direction};
+ const sample=progress<.5?0:1;
+ return {walk,frame:sample===0?'release-weight':'stride-pickup',direction,asset:{src:RIEL_RETURN[direction],viewBox:`${(walk*2+sample)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+const RIEL_STOP=Array.from({length:8},(_,i)=>`/defense/models/riel-stop-${i}-atlas.webp`);
+/** Finish the saved walking stance with alternating planted feet before returning to ready. */
+export function archerStopSpriteAsset(actor:HeroId|'wolf',motion:Locomotion,reduced=false):{asset:SpriteAsset;frame:number;entry:number}|null {
+ const stop=motion.settle;
+ if(actor!=='elf'||reduced||!Number.isFinite(motion.speed)||motion.speed<0||motion.speed>.5||!stop||!Number.isInteger(stop.frame)||stop.frame<0||stop.frame>7||!Number.isFinite(stop.elapsed)||stop.elapsed<0||stop.elapsed>=MAGE_STOP_DURATION||!elfModelReady()||!RIEL_STOP.every(src=>motionLoaded.has(src)))return null;
+ const direction=attackOctant({x:0,y:0},stop.heading);if(direction===null)return null;
+ const frame=Math.min(2,Math.floor((stop.elapsed+1e-9)/.08));
+ return {frame,entry:stop.frame,asset:frame===0?elfAsset(direction,'walk',stop.frame)!:{src:RIEL_STOP[direction],viewBox:`${(stop.frame*2+frame-1)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+/** Settle a stationary released shot without changing release or attack duration. */
+export function rielShotResetSpriteAsset(attack:CombatAttack,position:Point,motion:Locomotion,reduced=false):{asset:SpriteAsset;frame:'hold'|'settle'|'reload'|'ready';direction:number}|null {
+ const direction=attackOctant(position,attack.to),start=attack.hitAt+.06;
+ if(attack.actor!=='elf'||reduced||!Number.isFinite(motion.speed)||motion.speed<0||motion.speed>.5||attack.hitAt<=0||direction===null||![attack.elapsed,start,attack.duration].every(Number.isFinite)||start>=attack.duration||attack.elapsed<start||attack.elapsed>=attack.duration||!elfModelReady()||!RIEL_RESET.every(src=>motionLoaded.has(src)))return null;
+ const progress=(attack.elapsed-start)/(attack.duration-start)+1e-9;
+ if(progress<.125)return {direction,frame:'hold',asset:elfAsset(direction,'cast',2)!};
+ if(progress>=11/12)return {direction,frame:'ready',asset:elfAsset(direction,'cast',0)!};
+ const sample=progress<.5?0:1;
+ return {direction,frame:sample===0?'settle':'reload',asset:{src:RIEL_RESET[direction],viewBox:`${sample*192} 0 192 192`,width:384,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+/** Rotate the authored model instead of mirroring its asymmetric hammer/shield. */
+export function directionalActionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose,from:Point,to:Point,reduced=false):SpriteAsset|null {
+ const direction=attackOctant(from,to);
+ if(actor==='barbarian'&&direction!==null)return karAsset(direction,'slam',reduced?(pose==='strike'?4:0):pose==='windup'?2:pose==='strike'?4:6);
+ if(actor==='wolf'&&direction!==null)return petWolfAsset(direction,'bite',reduced?(pose==='strike'?4:0):pose==='windup'?2:pose==='strike'?4:6);
+ if(actor==='druid'&&direction!==null)return druidAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
+ if(actor==='tao'&&direction!==null)return taoAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
+ if(actor==='elf'&&direction!==null)return elfAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
+ if(actor==='mage'&&direction!==null)return mageAsset(direction,'cast',reduced?(pose==='strike'?2:0):pose==='windup'?1:pose==='strike'?2:3);
+ if(actor!=='dwarf'||direction===null||!dwarfModelReady()||!DWARF_DIRECTIONS.every(src=>motionLoaded.has(src)))return null;
+ const frame=pose==='windup'?0:pose==='strike'?1:2;
+ return {src:DWARF_DIRECTIONS[direction],viewBox:`${frame*384} 0 384 384`,width:1152,height:384,displayScale:1.2*6.8/5.8,groundY:330};
+}
+const DWARF_HAMMER=Array.from({length:8},(_,i)=>`/defense/models/dwarf-hammer-${i}-atlas.webp`);
+/** Eight authored load/contact/recovery poses, with the same ground and scale as walking. */
+export function hammerSequenceSpriteAsset(actor:HeroId|'wolf',attack:CombatAttack,reduced=false):SpriteAsset|null {
+ const direction=attackOctant(attack.from,attack.to);
+ if(actor==='barbarian'&&direction!==null)return karAsset(direction,'slam',karHammerFrame(attack,reduced));
+ if(actor!=='dwarf'||direction===null||!dwarfModelReady()||!DWARF_HAMMER.every(src=>motionLoaded.has(src)))return null;
+ const frame=dwarfHammerFrame(attack,reduced);
+ return {src:DWARF_HAMMER[direction],viewBox:`${frame*256} 0 256 256`,width:2048,height:256,displayScale:1.2*6.8/5.8,groundY:220,oriented:true};
+}
+/** Contact-only ribbon sampled from the same camera as the visible hammer head. */
+export function hammerContactTrail(attack:CombatAttack,size:number):Point[]|null {
+ if((attack.actor!=='dwarf'&&attack.actor!=='barbarian')||(attack.actor==='barbarian'?karHammerFrame(attack):dwarfHammerFrame(attack))!==4||!Number.isFinite(size)||size<=0||!hammerSequenceSpriteAsset(attack.actor,attack))return null;
+ const direction=attackOctant(attack.from,attack.to)!;
+ return (attack.actor==='barbarian'?KAR_HAMMER_TRAIL:DWARF_HAMMER_TRAIL)[direction].map(([x,y])=>({x:x*size,y:y*size}));
+}
+const DWARF_STOP=Array.from({length:8},(_,i)=>`/defense/models/dwarf-stop-${i}-atlas.webp`);
+/** Finish the saved walking stance with alternating planted feet before returning to ready. */
+export function dwarfStopSpriteAsset(actor:HeroId|'wolf',motion:Locomotion,reduced=false):{asset:SpriteAsset;frame:number;entry:number}|null {
+ const stop=motion.settle;
+ if(actor!=='dwarf'||reduced||!Number.isFinite(motion.speed)||motion.speed<0||motion.speed>.5||!stop||!Number.isInteger(stop.frame)||stop.frame<0||stop.frame>7||!Number.isFinite(stop.elapsed)||stop.elapsed<0||stop.elapsed>=MAGE_STOP_DURATION||!dwarfModelReady()||!DWARF_LOCOMOTION.every(src=>motionLoaded.has(src))||!DWARF_STOP.every(src=>motionLoaded.has(src)))return null;
+ const direction=attackOctant({x:0,y:0},stop.heading);if(direction===null)return null;
+ const frame=Math.min(2,Math.floor((stop.elapsed+1e-9)/.08));
+ return {frame,entry:stop.frame,asset:frame===0?directionalLocomotionSpriteAsset('dwarf',stop.heading,stop.frame*8)!:{src:DWARF_STOP[direction],viewBox:`${(stop.frame*2+frame-1)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+
+const DWARF_LOCOMOTION=Array.from({length:8},(_,i)=>`/defense/models/dwarf-locomotion-${i}-atlas.webp`);
+const DWARF_ENTRY=Array.from({length:8},(_,i)=>`/defense/models/dwarf-entry-${i}-atlas.webp`);
+/** Captured stance plants before the original hammer apex; contact/trail stay unchanged. */
+export function dwarfHammerEntrySpriteAsset(attack:CombatAttack,reduced=false):{asset:SpriteAsset;entry:number;frame:'walk'|'first-foot'|'second-foot';direction:number}|null {
+ const entry=attack.walkEntry,direction=attackOctant(attack.from,attack.to),t=attack.elapsed*.24/attack.hitAt;
+ if(attack.actor!=='dwarf'||reduced||entry===undefined||!Number.isInteger(entry)||entry<0||entry>7||!Number.isFinite(t)||attack.hitAt<=0||t<0||t>=.16||direction===null||!dwarfModelReady()||![...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY].every(src=>motionLoaded.has(src)))return null;
+ if(t<.04)return {asset:directionalLocomotionSpriteAsset('dwarf',{x:attack.to.x-attack.from.x,y:attack.to.y-attack.from.y},entry*8)!,entry,frame:'walk',direction};
+ const sample=t<.10?0:1;
+ return {entry,frame:sample===0?'first-foot':'second-foot',direction,asset:{src:DWARF_ENTRY[direction],viewBox:`${(entry*2+sample)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+const KAR_ENTRY=Array.from({length:8},(_,i)=>`/defense/models/kar-entry-${i}-atlas.webp`);
+/** Plant the captured gait while both hands lift the hammer; preserve the original apex/contact. */
+export function karHammerEntrySpriteAsset(attack:CombatAttack,reduced=false):{asset:SpriteAsset;entry:number;frame:'walk'|'first-foot'|'second-foot';direction:number}|null {
+ const entry=attack.walkEntry,direction=attackOctant(attack.from,attack.to);
+ if(attack.actor!=='barbarian'||(attack.source!=='hero'&&attack.source!=='mercenary')||reduced||entry===undefined||!Number.isInteger(entry)||entry<0||entry>7||![attack.elapsed,attack.hitAt,attack.duration].every(Number.isFinite)||attack.hitAt<=0||attack.duration<=attack.hitAt||direction===null||!karModelReady()||!KAR_ENTRY.every(src=>motionLoaded.has(src)))return null;
+ const t=attack.elapsed*.28/attack.hitAt;
+ if(t<0||t+1e-9>=.182)return null;
+ if(t<.04)return {asset:directionalLocomotionSpriteAsset('barbarian',{x:attack.to.x-attack.from.x,y:attack.to.y-attack.from.y},entry*8)!,entry,frame:'walk',direction};
+ const sample=t<.11?0:1;
+ return {entry,frame:sample===0?'first-foot':'second-foot',direction,asset:{src:KAR_ENTRY[direction],viewBox:`${(entry*2+sample)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+const DWARF_RETURN=Array.from({length:8},(_,i)=>`/defense/models/dwarf-return-${i}-atlas.webp`);
+/** Keep impact/rebound intact, then recover into the current aligned walking stance. */
+export function dwarfHammerReturnSpriteAsset(attack:CombatAttack,motion:Locomotion,reduced=false):{asset:SpriteAsset;walk:number;frame:'hold'|'weight-release'|'stride-pickup'|'walk';direction:number}|null {
+ const direction=attackOctant(attack.from,attack.to),heading=motion.heading?attackOctant({x:0,y:0},motion.heading):null;
+ if(attack.actor!=='dwarf'||reduced||![attack.elapsed,attack.hitAt,attack.duration,motion.distance,motion.speed].every(Number.isFinite)||attack.hitAt<=0||attack.duration<=attack.hitAt||motion.speed<=.5||direction===null||direction!==heading||!dwarfModelReady()||![...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_RETURN].every(src=>motionLoaded.has(src)))return null;
+ const recovery=(attack.elapsed-attack.hitAt)/(attack.duration-attack.hitAt)+1e-9;
+ if(recovery<.5||recovery>=1)return null;
+ const walk=walkFrame(motion.distance),progress=(recovery-.5)*2;
+ if(progress<1/7)return {walk,frame:'hold',direction,asset:{src:DWARF_HAMMER[direction],viewBox:'1536 0 256 256',width:2048,height:256,groundY:220,displayScale:1.2*6.8/5.8,oriented:true}};
+ if(progress>=6/7)return {walk,frame:'walk',direction,asset:directionalLocomotionSpriteAsset('dwarf',motion.heading!,motion.distance)!};
+ const sample=progress<.5?0:1;
+ return {walk,frame:sample===0?'weight-release':'stride-pickup',direction,asset:{src:DWARF_RETURN[direction],viewBox:`${(walk*2+sample)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+const KAR_RESET=Array.from({length:8},(_,i)=>`/defense/models/kar-reset-${i}-atlas.webp`);
+/** Plant both feet after rebound; the body settles before the heavy hammer. */
+export function karHammerResetSpriteAsset(attack:CombatAttack,motion:Locomotion,reduced=false):{asset:SpriteAsset;frame:'hold'|'recover'|'settle'|'ready';direction:number}|null {
+ const direction=attackOctant(attack.from,attack.to);
+ if(attack.actor!=='barbarian'||(attack.source!=='hero'&&attack.source!=='mercenary')||reduced||![attack.elapsed,attack.hitAt,attack.duration,motion.speed].every(Number.isFinite)||attack.hitAt<=0||attack.duration<=attack.hitAt||motion.speed<0||motion.speed>.5||direction===null||!karModelReady()||!KAR_RESET.every(src=>motionLoaded.has(src)))return null;
+ const recovery=(attack.elapsed-attack.hitAt)/(attack.duration-attack.hitAt)+1e-9;
+ if(recovery<.5||recovery>=1)return null;
+ const progress=(recovery-.5)*2;
+ if(progress<1/7)return {direction,frame:'hold',asset:karAsset(direction,'slam',6)!};
+ if(progress>=6/7)return {direction,frame:'ready',asset:karAsset(direction,'slam',0)!};
+ const sample=progress<.5?0:1;
+ return {direction,frame:sample===0?'recover':'settle',asset:{src:KAR_RESET[direction],viewBox:`${sample*192} 0 192 192`,width:384,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+const KAR_RETURN=Array.from({length:8},(_,i)=>`/defense/models/kar-return-${i}-atlas.webp`);
+/** Keep impact/rebound intact, then recover into the current aligned walking stance. */
+export function karHammerReturnSpriteAsset(attack:CombatAttack,motion:Locomotion,reduced=false):{asset:SpriteAsset;walk:number;frame:'hold'|'weight-release'|'stride-pickup'|'walk';direction:number}|null {
+ const direction=attackOctant(attack.from,attack.to),heading=motion.heading?attackOctant({x:0,y:0},motion.heading):null;
+ if(attack.actor!=='barbarian'||(attack.source!=='hero'&&attack.source!=='mercenary')||reduced||![attack.elapsed,attack.hitAt,attack.duration,motion.distance,motion.speed].every(Number.isFinite)||attack.hitAt<=0||attack.duration<=attack.hitAt||motion.speed<=.5||direction===null||direction!==heading||!karModelReady()||![...KAR_SLAM,...KAR_WALK,...KAR_RETURN].every(src=>motionLoaded.has(src)))return null;
+ const recovery=(attack.elapsed-attack.hitAt)/(attack.duration-attack.hitAt)+1e-9;
+ if(recovery<.5||recovery>=1)return null;
+ const walk=walkFrame(motion.distance),progress=(recovery-.5)*2;
+ if(progress<1/7)return {walk,frame:'hold',direction,asset:{src:KAR_SLAM[direction],viewBox:'1536 0 256 256',width:2048,height:256,groundY:220,displayScale:1.2*6.8/5.8,oriented:true}};
+ if(progress>=6/7)return {walk,frame:'walk',direction,asset:directionalLocomotionSpriteAsset('barbarian',motion.heading!,motion.distance)!};
+ const sample=progress<.5?0:1;
+ return {walk,frame:sample===0?'weight-release':'stride-pickup',direction,asset:{src:KAR_RETURN[direction],viewBox:`${(walk*2+sample)*192} 0 192 192`,width:3072,height:192,groundY:165,displayScale:1.2*6.8/5.8,oriented:true}};
+}
+/** One complete direction set shares the attack camera; frame 8 is a neutral stop. */
+export function directionalLocomotionSpriteAsset(actor:HeroId|'wolf',heading:Point,distance:number|null,size=73,gaitCycles?:number):SpriteAsset|null {
+ const direction=attackOctant({x:0,y:0},heading);
+ if(actor==='barbarian'&&direction!==null)return karAsset(direction,distance===null?'slam':'walk',distance===null?0:walkFrame(distance));
+ if(actor==='wolf'&&direction!==null)return petWolfAsset(direction,distance===null?'bite':'walk',distance===null?0:petWalkFrame(heading,distance,size,gaitCycles));
+ if(actor==='druid'&&direction!==null)return druidAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
+ if(actor==='tao'&&direction!==null)return taoAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
+ if(actor==='elf'&&direction!==null)return elfAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
+ if(actor==='mage'&&direction!==null)return mageAsset(direction,distance===null?'cast':'walk',distance===null?0:walkFrame(distance));
+ if(actor!=='dwarf'||direction===null||!dwarfModelReady()||!DWARF_LOCOMOTION.every(src=>motionLoaded.has(src)))return null;
+ const frame=distance===null?8:walkFrame(distance);
+ return {src:DWARF_LOCOMOTION[direction],viewBox:`${frame*256} 0 256 256`,width:2304,height:256,displayScale:1.2*6.8/5.8,groundY:220,oriented:true};
+}
 export function idleSpriteAsset(actor:HeroId|'wolf'):SpriteAsset|null {
- return actor==='dwarf'&&dwarfModelReady()?DWARF_RENDERS.idle:null;
+ return actor==='barbarian'?karAsset(1,'slam',0):actor==='wolf'?petWolfAsset(1,'bite',0):actor==='druid'?druidAsset(1,'cast',0):actor==='tao'?taoAsset(1,'cast',0):actor==='elf'?elfAsset(1,'cast',0):actor==='mage'?mageAsset(1,'cast',0):actor==='dwarf'&&dwarfModelReady()?DWARF_RENDERS.idle:null;
+}
+const DWARF_WALK = Array.from({length:8},(_,i):SpriteAsset=>({
+ ...DWARF_RENDERS.idle,src:`/defense/models/dwarf-walk-${i}-game.webp`,
+}));
+/** A partial walk set keeps the existing modeled idle pose, never mixes styles. */
+export function walkingSpriteAsset(actor:HeroId|'wolf',distance:number):SpriteAsset|null {
+ if(actor==='barbarian')return karAsset(1,'walk',walkFrame(distance));
+ if(actor==='wolf')return petWolfAsset(1,'walk',petWalkFrame({x:1,y:1},distance));
+ if(actor==='druid')return druidAsset(1,'walk',walkFrame(distance));
+ if(actor==='tao')return taoAsset(1,'walk',walkFrame(distance));
+ if(actor==='elf')return elfAsset(1,'walk',walkFrame(distance));
+ if(actor==='mage')return mageAsset(1,'walk',walkFrame(distance));
+ return actor==='dwarf'&&dwarfModelReady()&&DWARF_WALK.every(frame=>motionLoaded.has(frame.src))
+  ?DWARF_WALK[walkFrame(distance)]:null;
 }
 const TOWER_MODELS:MotionFrame[] = [
  [40,35,337,380,1],[432,24,460,391,1.15],[889,48,333,370,1],
@@ -62,6 +536,162 @@ const BAKED_BRANCHES:BakedTower[] = [
  {kind:'cannon',branch:'crush',asset:{src:'/defense/models/crush-cannon-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1},mastered:{src:'/defense/models/crush-cannon-lv3-game.webp',viewBox:'32 24 576 576',width:640,height:640,displayScale:1.16,nativeFacing:-1}},
 ];
 const bakedFor=(kind:TowerKind,branch:Branch|null)=>BAKED_BRANCHES.find(model=>model.kind===kind&&model.branch===branch)??BAKED_TOWERS[kind];
+const BASE_MAGIC_ACTION_ATLAS='/defense/models/base-magic-action-atlas.webp';
+/** Lv.1's fixed foundation supports a floating crystal and a moving focus ring. */
+export function baseMagicActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,windup=0,recoil=0,reduced=false) {
+ if(kind!=='magic'||branch!==null||level!==1||!motionLoaded.has(BASE_MAGIC_ACTION_ATLAS))return null;
+ const charge=Number.isFinite(windup)&&windup>0,release=Number.isFinite(recoil)&&recoil>0;
+ const pose=reduced?0:charge?(windup<.5?1:2):release?(recoil>.16?3:recoil>.08?4:5):0;
+ const [x,y]=BASE_MAGIC_SOCKETS[pose],size=92+level*4;
+ return {direction:0,pose,muzzle:{x:x*size,y:y*size},asset:{src:BASE_MAGIC_ACTION_ATLAS,viewBox:`${pose*256+12.8} 9.6 230.4 230.4`,width:1536,height:256,displayScale:1.16} as SpriteAsset};
+}
+/** Preserve the launch-level crystal socket even if the tower upgrades or is sold. */
+export function baseMagicProjectileOffset(p:Projectile,reduced=false):Point|undefined {
+ if(p.source!=='tower'||p.actor!=='magic'||p.element!=='fire'||p.sourceLevel!==1)return undefined;
+ const render=baseMagicActionSpriteAsset('magic',null,1,0,.24,reduced);
+ return render?{x:render.muzzle.x,y:render.muzzle.y+39}:undefined;
+}
+const FIRE_ACTION_ATLAS='/defense/models/fire-action-atlas.webp',FIRE_LV3_ACTION_ATLAS='/defense/models/fire-lv3-action-atlas.webp';
+/** Fixed masonry; the crystal, bronze retainers and ascended halo charge and release. */
+export function fireTowerActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,windup=0,recoil=0,reduced=false) {
+ if(kind!=='magic'||branch!=='fire'||(level!==2&&level!==3))return null;
+ const mastered=level===3,atlas=mastered?FIRE_LV3_ACTION_ATLAS:FIRE_ACTION_ATLAS,base=mastered?BAKED_TOWERS.magic.mastered!:BAKED_TOWERS.magic.asset;
+ if(!motionLoaded.has(atlas)||!motionLoaded.has(base.src))return null;
+ const charge=Number.isFinite(windup)&&windup>0,release=Number.isFinite(recoil)&&recoil>0;
+ // Lv.3 gives each action pose >=75ms of simulation time: more than a 30Hz tick at 2x.
+ const pose=reduced?0:charge?(windup<(mastered?.5:.6)?1:2):release?(recoil>(mastered?.16:.18)?3:recoil>(mastered?.08:.10)?4:5):0;
+ const [x,y]=(mastered?FIRE_TOWER_LV3_SOCKETS:FIRE_TOWER_SOCKETS)[pose],size=92+level*4;
+ return {direction:0,pose,muzzle:{x:x*size,y:y*size},asset:{src:atlas,viewBox:`${pose*384+19.2} 14.4 345.6 345.6`,width:2304,height:384,displayScale:1.16*(mastered?1.025:1)} as SpriteAsset};
+}
+/** Use the launch-level socket even after upgrade/sale; reduced motion uses the resting core. */
+export function fireTowerProjectileOffset(p:Projectile,reduced=false):Point|undefined {
+ if(p.source!=='tower'||p.actor!=='magic'||p.element!=='fire'||(p.sourceLevel!==2&&p.sourceLevel!==3))return undefined;
+ const render=fireTowerActionSpriteAsset('magic','fire',p.sourceLevel,0,.24,reduced);
+ return render?{x:render.muzzle.x,y:12+render.muzzle.y+27}:undefined;
+}
+const LIGHTNING_ACTION_ATLAS='/defense/models/lightning-action-atlas.webp',LIGHTNING_LV3_ACTION_ATLAS='/defense/models/lightning-lv3-action-atlas.webp';
+/** The side conductors and focusing ring move; the keep and discharge tip stay fixed. */
+export function lightningTowerActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,windup=0,recoil=0,reduced=false) {
+ if(kind!=='magic'||branch!=='lightning'||(level!==2&&level!==3))return null;
+ const mastered=level===3,atlas=mastered?LIGHTNING_LV3_ACTION_ATLAS:LIGHTNING_ACTION_ATLAS,baked=bakedFor(kind,branch),base=mastered?baked.mastered!:baked.asset;
+ if(!motionLoaded.has(atlas)||!motionLoaded.has(base.src))return null;
+ const charge=Number.isFinite(windup)&&windup>0,release=Number.isFinite(recoil)&&recoil>0;
+ // Each pose occupies >=75ms simulation time, including 30Hz publication at 2x.
+ const pose=reduced?0:charge?(windup<.5?1:2):release?(recoil>.16?3:recoil>.08?4:5):0;
+ const [x,y]=(mastered?LIGHTNING_TOWER_LV3_SOCKETS:LIGHTNING_TOWER_SOCKETS)[pose],size=92+level*4;
+ return {direction:0,pose,muzzle:{x:x*size,y:y*size},asset:{src:atlas,viewBox:`${pose*384+19.2} 14.4 345.6 345.6`,width:2304,height:384,displayScale:1.16*(mastered?1.025:1)} as SpriteAsset};
+}
+/** Snapshot launch level survives upgrade/sale; collision and chain targets are unchanged. */
+export function lightningTowerProjectileOffset(p:Projectile,reduced=false):Point|undefined {
+ if(p.source!=='tower'||p.actor!=='magic'||p.element!=='lightning'||(p.sourceLevel!==2&&p.sourceLevel!==3))return undefined;
+ const render=lightningTowerActionSpriteAsset('magic','lightning',p.sourceLevel,0,.24,reduced);
+ return render?{x:render.muzzle.x,y:12+render.muzzle.y+27}:undefined;
+}
+const BASE_CROSSBOW_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/base-crossbow-action-${i}-atlas.webp`);
+/** Lv.1: fixed keep, aimed bow and string release only when the engine fires. */
+export function baseCrossbowActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,from:Point,to:Point,recoil=0,reduced=false) {
+ const direction=attackOctant(from,to);
+ if(kind!=='crossbow'||branch!==null||level!==1||direction===null||!BASE_CROSSBOW_ACTION_ATLASES.every(src=>motionLoaded.has(src)))return null;
+ const pose=reduced||!Number.isFinite(recoil)||recoil<=0?0:recoil>.16?1:recoil>.08?2:3;
+ const [x,y]=BASE_CROSSBOW_MUZZLES[direction][0],size=92+level*4;
+ return {direction,pose,muzzle:{x:x*size,y:y*size},asset:{src:BASE_CROSSBOW_ACTION_ATLASES[direction],viewBox:`${pose*192+9.6} 7.2 172.8 172.8`,width:768,height:192,displayScale:1.16} as SpriteAsset};
+}
+/** Hold the modeled arrow tip at the launch snapshot through later target motion or upgrades. */
+export function baseCrossbowProjectileOffset(p:Projectile):Point|undefined {
+ if(p.source!=='tower'||p.actor!=='crossbow'||p.pierce||p.sourceLevel!==1||!p.launchAim)return undefined;
+ const render=baseCrossbowActionSpriteAsset('crossbow',null,1,p.from,p.launchAim);
+ return render?{x:render.muzzle.x,y:render.muzzle.y+39}:undefined;
+}
+const BASE_CANNON_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/base-cannon-action-${i}-atlas.webp`);
+/** Lv.1: the base stays planted as the aimed barrel recoils after release. */
+export function baseCannonActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,from:Point,to:Point,recoil=0,reduced=false) {
+ const direction=attackOctant(from,to);
+ if(kind!=='cannon'||branch!==null||level!==1||direction===null||!BASE_CANNON_ACTION_ATLASES.every(src=>motionLoaded.has(src)))return null;
+ const pose=reduced||!Number.isFinite(recoil)||recoil<=0?0:recoil>.16?1:recoil>.08?2:3;
+ const [x,y]=BASE_CANNON_MUZZLES[direction][0],size=92+level*4;
+ return {direction,pose,muzzle:{x:x*size,y:y*size},asset:{src:BASE_CANNON_ACTION_ATLASES[direction],viewBox:`${pose*192+9.6} 7.2 172.8 172.8`,width:768,height:192,displayScale:1.16} as SpriteAsset};
+}
+/** Preserve the launch-level socket when the tower is upgraded or sold mid-flight. */
+export function baseCannonProjectileOffset(p:Projectile):Point|undefined {
+ if(p.source!=='tower'||p.actor!=='cannon'||p.element!=='impact'||p.sourceLevel!==1||!p.launchAim)return undefined;
+ const render=baseCannonActionSpriteAsset('cannon',null,1,p.from,p.launchAim);
+ return render?{x:render.muzzle.x,y:render.muzzle.y+39}:undefined;
+}
+const WATER_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/water-action-${i}-atlas.webp`);
+const WATER_LV3_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/water-lv3-action-${i}-atlas.webp`);
+/** Each upgrade uses its own complete set and matching authored fallback. */
+export function waterCannonActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,from:Point,to:Point,recoil=0,reduced=false) {
+ const direction=attackOctant(from,to);
+ if(kind!=='cannon'||branch!=='water'||(level!==2&&level!==3)||direction===null)return null;
+ const mastered=level===3,atlases=mastered?WATER_LV3_ACTION_ATLASES:WATER_ACTION_ATLASES;
+ const base=mastered?BAKED_TOWERS.cannon.mastered!:BAKED_TOWERS.cannon.asset;
+ if(!motionLoaded.has(base.src)||!atlases.every(src=>motionLoaded.has(src)))return null;
+ const pose=reduced||!Number.isFinite(recoil)||recoil<=0?0:recoil>.12?1:2;
+ const [x,y]=(mastered?WATER_CANNON_LV3_MUZZLES:WATER_CANNON_MUZZLES)[direction][pose],size=92+level*4;
+ return {direction,pose,muzzle:{x:x*size,y:y*size},asset:{src:atlases[direction],viewBox:`${pose*384+19.2} 14.4 345.6 345.6`,width:1152,height:384,displayScale:1.16*(mastered?1.025:1)} as SpriteAsset};
+}
+const CRUSH_LV3_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/crush-lv3-action-${i}-atlas.webp`);
+const CRUSH_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/crush-action-${i}-atlas.webp`);
+/** Fixed keep and buffer sleeves; only the barrel/pistons recoil after shell release. */
+export function crushCannonActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,from:Point,to:Point,recoil=0,reduced=false) {
+ const direction=attackOctant(from,to);
+ if(kind!=='cannon'||branch!=='crush'||(level!==2&&level!==3)||direction===null)return null;
+ const atlases=level===3?CRUSH_LV3_ACTION_ATLASES:CRUSH_ACTION_ATLASES,model=bakedFor(kind,branch),base=level===3?model.mastered:model.asset;
+ if(!base||!motionLoaded.has(base.src)||!atlases.every(src=>motionLoaded.has(src)))return null;
+ const pose=reduced||!Number.isFinite(recoil)||recoil<=0?0:recoil>.16?1:recoil>.08?2:3;
+ // The discharge cloud stays at the launch point while the bore recoils behind it.
+ const [x,y]=(level===3?CRUSH_CANNON_LV3_MUZZLES:CRUSH_CANNON_MUZZLES)[direction][0],size=92+level*4;
+ return {direction,pose,muzzle:{x:x*size,y:y*size},asset:{src:atlases[direction],viewBox:`${pose*256+12.8} 9.6 230.4 230.4`,width:1024,height:256,...(level===3?CRUSH_CANNON_LV3_FRAME:{displayScale:1.16})} as SpriteAsset};
+}
+/** Launch socket is immutable through target motion, upgrade and sale; collision is unchanged. */
+export function crushCannonProjectileOffset(p:Projectile):Point|undefined {
+ if(p.source!=='tower'||p.actor!=='cannon'||p.element!=='impact'||(p.sourceLevel!==2&&p.sourceLevel!==3)||!p.launchAim)return undefined;
+ const render=crushCannonActionSpriteAsset('cannon','crush',p.sourceLevel,p.from,p.launchAim);
+ return render?{x:render.muzzle.x,y:render.muzzle.y+39}:undefined;
+}
+const RAPID_LV3_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/rapid-lv3-action-${i}-atlas.webp`);
+const RAPID_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/rapid-action-${i}-atlas.webp`);
+/** A fixed keep, aimed upper carriage, string release and reciprocating magazine feed. */
+export function rapidCrossbowActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,from:Point,to:Point,recoil=0,reduced=false) {
+ const direction=attackOctant(from,to);
+ if(kind!=='crossbow'||branch!=='rapid'||(level!==2&&level!==3)||direction===null)return null;
+ const atlases=level===3?RAPID_LV3_ACTION_ATLASES:RAPID_ACTION_ATLASES,model=bakedFor(kind,branch),base=level===3?model.mastered:model.asset;
+ if(!base||!motionLoaded.has(base.src)||!atlases.every(src=>motionLoaded.has(src)))return null;
+ const pose=reduced||!Number.isFinite(recoil)||recoil<=0?0:recoil>.16?1:recoil>.08?2:3;
+ const [x,y]=(level===3?RAPID_CROSSBOW_LV3_MUZZLES:RAPID_CROSSBOW_MUZZLES)[direction][pose],size=92+level*4;
+ return {direction,pose,muzzle:{x:x*size,y:y*size},asset:{src:atlases[direction],viewBox:`${pose*256+12.8} 9.6 230.4 230.4`,width:1024,height:256,...(level===3?RAPID_CROSSBOW_LV3_FRAME:RAPID_CROSSBOW_FRAME)} as SpriteAsset};
+}
+/** Use launch aim/level, including while the target moves or the tower upgrades/sells. */
+export function rapidCrossbowProjectileOffset(p:Projectile):Point|undefined {
+ if(p.source!=='tower'||p.actor!=='crossbow'||p.pierce||(p.sourceLevel!==2&&p.sourceLevel!==3)||!p.launchAim)return undefined;
+ const render=rapidCrossbowActionSpriteAsset('crossbow','rapid',p.sourceLevel,p.from,p.launchAim);
+ return render?{x:render.muzzle.x,y:12+render.muzzle.y+27}:undefined;
+}
+const BALLISTA_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/ballista-action-${i}-atlas.webp`);
+const BALLISTA_LV3_ACTION_ATLASES=Array.from({length:8},(_,i)=>`/defense/models/ballista-lv3-action-${i}-atlas.webp`);
+/** Release only after the engine fires; the foundation never recoils with the bow. */
+export function ballistaActionSpriteAsset(kind:TowerKind,branch:Branch|null,level:number,from:Point,to:Point,recoil=0,reduced=false) {
+ const direction=attackOctant(from,to);
+ if(kind!=='crossbow'||branch!=='pierce'||(level!==2&&level!==3)||direction===null)return null;
+ const mastered=level===3,atlases=mastered?BALLISTA_LV3_ACTION_ATLASES:BALLISTA_ACTION_ATLASES;
+ const base=mastered?BAKED_TOWERS.crossbow.mastered!:BAKED_TOWERS.crossbow.asset;
+ if(!motionLoaded.has(base.src)||!atlases.every(src=>motionLoaded.has(src)))return null;
+ const pose=reduced||!Number.isFinite(recoil)||recoil<=0?0:recoil>.16?1:recoil>.08?2:3;
+ const [x,y]=(mastered?BALLISTA_LV3_MUZZLES:BALLISTA_MUZZLES)[direction][pose],size=92+level*4;
+ return {direction,pose,muzzle:{x:x*size,y:y*size},asset:{src:atlases[direction],viewBox:`${pose*256+12.8} 9.6 230.4 230.4`,width:1024,height:256,displayScale:1.16*(mastered?1.025:1)} as SpriteAsset};
+}
+/** Keep a released arrow at its launch-level socket even if the tower upgrades or sells. */
+export function ballistaProjectileOffset(p:Projectile):Point|undefined {
+ if(p.source!=='tower'||p.actor!=='crossbow'||!p.pierce||!p.launchAim||(p.sourceLevel!==2&&p.sourceLevel!==3))return undefined;
+ const render=ballistaActionSpriteAsset('crossbow','pierce',p.sourceLevel,p.from,p.launchAim);
+ return render?{x:render.muzzle.x,y:12+render.muzzle.y+27}:undefined;
+}
+/** Presentation offset fades to zero on landing; collision coordinates stay untouched. */
+export function waterCannonProjectileOffset(p:Projectile):Point|undefined {
+ if(p.source!=='tower'||p.actor!=='cannon'||p.element!=='water'||(p.sourceLevel!==2&&p.sourceLevel!==3))return undefined;
+ const render=waterCannonActionSpriteAsset('cannon','water',p.sourceLevel,p.from,p.to);
+ return render?{x:render.muzzle.x,y:12+render.muzzle.y+27}:undefined;
+}
 /** Available model renders take precedence; each failed render keeps its atlas fallback. */
 export function towerSpriteAsset(kind:TowerKind,branch:Branch|null=null,level=1):SpriteAsset|null {
  const baked=bakedFor(kind,branch);
@@ -79,17 +709,28 @@ type MonsterModel={span:number;frames:ModelFrame[];atlas?:{src:string;width:numb
 /** Baked Blender monster renders (tools/blender/build_<name>.py): 384px frames, walk-a/walk-b/hit, one shared crop band. */
 const bakedAtlas=(file:string)=>({src:`/defense/models/${file}-atlas.webp`,width:1152,height:384});
 const SLIME_ATLAS=bakedAtlas('insulator-slime'),GOLEM_ATLAS=bakedAtlas('stone-golem'),WOOD_ATLAS=bakedAtlas('wood-soldier'),ICE_ATLAS=bakedAtlas('ice-knight'),WOLF_ATLAS=bakedAtlas('frost-wolf'),METAL_ATLAS=bakedAtlas('metal-soldier');
+const WOOD_WALK_ATLAS={src:'/defense/models/wood-soldier-walk-atlas.webp',width:3072,height:384};
+const GOLEM_WALK_ATLAS={src:'/defense/models/stone-golem-walk-atlas.webp',width:3072,height:384};
+const ICE_WALK_ATLAS={src:'/defense/models/ice-knight-walk-atlas.webp',width:2048,height:256};
+const METAL_WALK_ATLAS={src:'/defense/models/metal-soldier-walk-atlas.webp',width:2048,height:256};
+const WOLF_COLLAPSE_ATLAS={src:'/defense/models/frost-wolf-collapse-atlas.webp',width:1536,height:384};
+const METAL_DEATH_ATLAS={src:'/defense/models/metal-soldier-death-atlas.webp',width:1920,height:384};
+const WOOD_DEATH_ATLAS={src:'/defense/models/wood-soldier-death-atlas.webp',width:1920,height:384};
+const ICE_DEATH_ATLAS={src:'/defense/models/ice-knight-death-atlas.webp',width:1920,height:384};
+const GOLEM_DEATH_ATLAS={src:'/defense/models/stone-golem-death-atlas.webp',width:1280,height:256};
+const FROST_STRIDE_ATLASES=Array.from({length:8},(_,d)=>`/defense/models/frost-stride-${d}-atlas.webp`);
+const WOLF_TROT_ATLAS={src:'/defense/models/frost-wolf-trot-atlas.webp',width:3072,height:384};
 const MONSTER_MODELS:Partial<Record<EnemyKind,MonsterModel>>={
- wood:{span:360,frames:[[0,8,384,364],[384,8,384,364],[768,8,384,364]],atlas:WOOD_ATLAS,
+ wood:{span:320,frames:[[0,8,384,364],[384,8,384,364],[768,8,384,364]],atlas:WOOD_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
   fallback:{span:330,frames:[[38,59,324,323],[405,66,286,316],[761,62,325,320]]}},
  ice:{span:360,frames:[[0,4,384,372],[384,4,384,372],[768,4,384,372]],atlas:ICE_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
   fallback:{span:345,frames:[[53,399,309,353],[416,403,295,349],[776,401,310,351]]}},
- stone:{span:260,frames:[[22,68,340,255],[406,68,340,255],[790,68,340,255]],atlas:GOLEM_ATLAS,
+ stone:{span:260,frames:[[22,60,340,263],[406,60,340,263],[790,60,340,263]],atlas:GOLEM_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
   fallback:{span:340,frames:[[26,759,372,326],[414,757,326,328],[779,761,307,324]]}},
- frostwolf:{span:315,frames:[[6,68,360,242],[390,68,360,242],[774,68,360,242]],atlas:WOLF_ATLAS,
+ frostwolf:{span:315,frames:[[8,100,368,228],[392,100,368,228],[776,100,368,228]],atlas:WOLF_ATLAS,
   // Previous illustrated frames keep the creature on screen if the baked render fails to load.
   fallback:{span:350,frames:[[15,1101,365,304],[394,1105,347,300],[756,1087,330,318]]}},
  // No illustrated pose set exists for the metal soldier: if the render fails the single atlas.png frame stays.
@@ -109,10 +750,99 @@ export function monsterSpriteAsset(kind:EnemyKind,pose:MonsterPose):SpriteAsset|
  const atlas=model.atlas,src=atlas?.src??(boss?'/defense/boss-models.webp':'/defense/monster-models.webp');if(!motionLoaded.has(src))return null;
  const frame=boss?(pose==='charge'?1:pose==='hit'?2:pose==='death'?3:0):(pose==='hit'||pose==='death'?2:pose==='walk-b'?1:0);
  const [x,y,w,h]=model.frames[frame];
- return {src,viewBox:`${x} ${y} ${w} ${h}`,width:atlas?.width??(boss?1774:1086),height:atlas?.height??(boss?887:1448),displayScale:Math.max(w,h)/model.span};
+ return {src,viewBox:`${x} ${y} ${w} ${h}`,width:atlas?.width??(boss?1774:1086),height:atlas?.height??(boss?887:1448),displayScale:Math.max(w,h)/model.span,...(atlas&&kind==='wood'?{groundY:317.61}:atlas&&kind==='frostwolf'?{groundY:284.49}:{})};
+}
+/** Eight authored poses, complete atlas only; never swap a modeled gait onto illustrated hit art. */
+export function monsterWalkingSpriteAsset(kind:EnemyKind,distance:number,size=68):SpriteAsset|null {
+ if(kind==='frostwolf'&&motionLoaded.has(WOLF_ATLAS.src)&&motionLoaded.has(WOLF_TROT_ATLAS.src))return {...WOLF_TROT_ATLAS,viewBox:`${enemyWalkFrame(kind,distance)*384+8} 100 368 228`,displayScale:368/315,groundY:284.49};
+ // The delivery sheet is shifted 22px from its raw camera render, aligning planted feet with the existing hit/death anchor.
+ if(kind==='ice'&&motionLoaded.has(ICE_ATLAS.src)&&motionLoaded.has(ICE_WALK_ATLAS.src))return {...ICE_WALK_ATLAS,viewBox:`${enemyWalkFrame(kind,distance,size)*256} 0 256 256`,displayScale:384/360,groundY:339.61*2/3};
+ // Full-frame anchor matches the legacy hit crop and keeps contact through pose changes.
+ if(kind==='metal'&&motionLoaded.has(METAL_ATLAS.src)&&motionLoaded.has(METAL_WALK_ATLAS.src))return {...METAL_WALK_ATLAS,viewBox:`${metalWalkFrame(distance,size)*256} 0 256 256`,displayScale:384/260,groundY:296*2/3};
+ // y=297 preserves the living golem's legacy crop/bottom offset with the full camera frame.
+ if(kind==='stone'&&motionLoaded.has(GOLEM_ATLAS.src)&&motionLoaded.has(GOLEM_WALK_ATLAS.src))return {...GOLEM_WALK_ATLAS,viewBox:`${enemyWalkFrame(kind,distance,size)*384} 0 384 384`,displayScale:384/260,groundY:297};
+ if(kind!=='wood'||!motionLoaded.has(WOOD_ATLAS.src)||!motionLoaded.has(WOOD_WALK_ATLAS.src))return null;
+ return {...WOOD_WALK_ATLAS,viewBox:`${enemyWalkFrame(kind,distance)*384} 8 384 364`,displayScale:384/320,groundY:317.61};
+}
+/** Use a complete direction set; missing images keep the original trot available. */
+export function frostWolfDirectionalWalkAsset(heading:Point,distance:number,size=73,cycles?:number):{asset:SpriteAsset;frame:number;direction:number}|null {
+ const direction=attackOctant({x:0,y:0},heading);
+ if(direction===null||!motionLoaded.has(WOLF_ATLAS.src)||!FROST_STRIDE_ATLASES.every(src=>motionLoaded.has(src)))return null;
+ const frame=frostWolfWalkFrame(heading,distance,size,cycles),[x,y,w,h]=FROST_WOLF_FRAME.crop;
+ return {direction,frame,asset:{src:FROST_STRIDE_ATLASES[direction],width:2048,height:256,viewBox:`${frame*256+x} ${y} ${w} ${h}`,displayScale:FROST_WOLF_FRAME.display_scale,groundY:FROST_WOLF_FRAME.ground_y}};
+}
+/** Reduced motion keeps the authored facing and a stable grounded pose across all travel. */
+export function frostWolfRestAsset(heading:Point,size=73):{asset:SpriteAsset;frame:number;direction:number}|null {
+ if(!Number.isFinite(size)||size<=0)return null;
+ const walk=frostWolfDirectionalWalkAsset(heading,0,size,size*.5/73);
+ return walk?{...walk,asset:{...walk.asset,oriented:true}}:null;
+}
+const FROST_FLINCH_ATLASES=Array.from({length:8},(_,d)=>`/defense/models/frost-flinch-${d}-atlas.webp`);
+/** Ordinary hits keep the current heading and gait; knockback/death retain their own poses. */
+export function frostWolfHitAsset(heading:Point,distance:number,hit:number,size=73,cycles?:number,reduced=false):{asset:SpriteAsset;frame:number;direction:number;phase:'compress'|'release'}|null {
+ if(reduced||!Number.isFinite(hit)||hit<=.02||hit>.16||!Number.isFinite(distance)||!Number.isFinite(size)||size<=0||(cycles!==undefined&&!Number.isFinite(cycles))||!FROST_FLINCH_ATLASES.every(src=>motionLoaded.has(src)))return null;
+ const walk=frostWolfDirectionalWalkAsset(heading,distance,size,cycles);if(!walk)return null;
+ const sample=hit>.09?0:1,[x,y,w,h]=FROST_WOLF_FRAME.crop.map(v=>v*.75);
+ return {direction:walk.direction,frame:walk.frame,phase:sample===0?'compress':'release',asset:{src:FROST_FLINCH_ATLASES[walk.direction],width:3072,height:192,viewBox:`${(walk.frame*2+sample)*192+x} ${y} ${w} ${h}`,displayScale:FROST_WOLF_FRAME.display_scale,groundY:FROST_WOLF_FRAME.ground_y*.75,oriented:true}};
+}
+const FROST_BRACE_ATLASES=Array.from({length:8},(_,d)=>`/defense/models/frost-brace-${d}-atlas.webp`);
+/** Strength follows the engine's decaying knock speed, while the gait stays frozen. */
+export function frostWolfBraceAsset(heading:Point,distance:number,cycles:number|undefined,velocity:number,size=73,reduced=false):{asset:SpriteAsset;frame:number;gait:number;direction:number}|null {
+ if(!Number.isFinite(velocity)||velocity<=7||!Number.isFinite(distance)||!Number.isFinite(size)||size<=0||(cycles!==undefined&&!Number.isFinite(cycles)))return null;
+ if(reduced){const rest=frostWolfRestAsset(heading,size);return rest?{asset:rest.asset,frame:3,gait:rest.frame,direction:rest.direction}:null;}
+ if(!FROST_BRACE_ATLASES.every(src=>motionLoaded.has(src)))return null;
+ const walk=frostWolfDirectionalWalkAsset(heading,distance,size,cycles);if(!walk)return null;
+ const frame=velocity>65?0:velocity>22?1:2,[x,y,w,h]=FROST_WOLF_FRAME.crop.map(v=>v*.75);
+ return {frame,gait:walk.frame,direction:walk.direction,asset:{src:FROST_BRACE_ATLASES[walk.direction],width:1536,height:576,viewBox:`${walk.frame*192+x} ${frame*192+y} ${w} ${h}`,displayScale:FROST_WOLF_FRAME.display_scale,groundY:frame*192+FROST_WOLF_FRAME.ground_y*.75,oriented:true}};
+}
+const FROST_FALL_ATLASES=Array.from({length:8},(_,d)=>`/defense/models/frost-fall-${d}-atlas.webp`);
+/** The death effect owns the frozen gait; age advances only with simulation time. */
+export function frostWolfFallAsset(heading:Point,distance:number,cycles:number|undefined,age:number,size=73,reduced=false):{asset:SpriteAsset;frame:number;gait:number;direction:number}|null {
+ if(!Number.isFinite(age)||!Number.isFinite(distance)||!Number.isFinite(size)||size<=0||(cycles!==undefined&&!Number.isFinite(cycles))||!FROST_FALL_ATLASES.every(src=>motionLoaded.has(src)))return null;
+ const walk=frostWolfDirectionalWalkAsset(heading,distance,size,cycles);if(!walk)return null;
+ const frame=reduced?3:age<.06?0:age<.24?1:age<.42?2:3;
+ if(frame===0)return {asset:{...walk.asset,oriented:true},frame,gait:walk.frame,direction:walk.direction};
+ const [x,y,w,h]=FROST_WOLF_FRAME.crop.map(v=>v*.75);
+ return {frame,gait:walk.frame,direction:walk.direction,asset:{src:FROST_FALL_ATLASES[walk.direction],width:1536,height:576,viewBox:`${walk.frame*192+x} ${(frame-1)*192+y} ${w} ${h}`,displayScale:FROST_WOLF_FRAME.display_scale,groundY:(frame-1)*192+FROST_WOLF_FRAME.ground_y*.75,oriented:true}};
+}
+const FROST_BRACE_FALL_ATLASES=Array.from({length:8},(_,d)=>`/defense/models/frost-brace-fall-${d}-atlas.webp`);
+/** Keep the pre-lethal brace through death; the new impulse is not a displayed pose. */
+export function frostWolfBracedFallAsset(heading:Point,distance:number,cycles:number|undefined,velocity:number,age:number,size=73,reduced=false):{asset:SpriteAsset;frame:number;gait:number;direction:number;brace:number}|null {
+ if(!Number.isFinite(velocity)||velocity<=7||!FROST_BRACE_FALL_ATLASES.every(src=>motionLoaded.has(src)))return null;
+ const fall=frostWolfFallAsset(heading,distance,cycles,age,size,reduced),start=frostWolfBraceAsset(heading,distance,cycles,velocity,size);
+ if(!fall||!start)return null;
+ const brace=start.frame;
+ if(reduced||fall.frame===3)return {...fall,brace};
+ if(fall.frame===0)return {...fall,brace,asset:start.asset};
+ const [x,y,w,h]=FROST_WOLF_FRAME.crop.map(v=>v*.5);
+ return {...fall,brace,asset:{src:FROST_BRACE_FALL_ATLASES[fall.direction],width:2048,height:384,viewBox:`${(fall.gait*2+fall.frame-1)*128+x} ${brace*128+y} ${w} ${h}`,displayScale:FROST_WOLF_FRAME.display_scale,groundY:brace*128+FROST_WOLF_FRAME.ground_y*.5,oriented:true}};
+}
+/** Collapses follow simulation age and retain each modeled actor's camera scale and ground. */
+export function monsterDeathSpriteAsset(kind:EnemyKind,progress:number,reduced=false):{asset:SpriteAsset;frame:number}|null {
+ if(kind==='metal'||kind==='wood'||kind==='ice'||kind==='stone'){
+  const base=kind==='wood'?WOOD_ATLAS:kind==='ice'?ICE_ATLAS:kind==='stone'?GOLEM_ATLAS:METAL_ATLAS,death=kind==='wood'?WOOD_DEATH_ATLAS:kind==='ice'?ICE_DEATH_ATLAS:kind==='stone'?GOLEM_DEATH_ATLAS:METAL_DEATH_ATLAS;
+  if(!motionLoaded.has(base.src)||!motionLoaded.has(death.src))return null;
+  const t=Math.max(0,Math.min(.7,(Number.isFinite(progress)?progress:0)*.7));
+  const frame=reduced?4:t>=19/30?4:t>=14/30?3:t>=9/30?2:t>=4/30?1:0;
+  // Ice and stone hit crops used legacy bottom offsets (y=340 and y=297).
+  // Settle into the authored ground over .1s without a first-frame jump.
+  const u=reduced?1:Math.max(0,Math.min(1,t/.1)),settle=u*u*(3-2*u);
+  const ground=kind==='wood'?317.61:kind==='ice'?340-(340-317.61)*settle:kind==='stone'?(297-(297-292.91)*settle)*2/3:292.91;
+  const cell=kind==='stone'?256:384;
+  return {frame,asset:{...death,viewBox:`${frame*cell} 0 ${cell} ${cell}`,displayScale:384/(kind==='wood'?320:kind==='ice'?360:260),groundY:ground}};
+ }
+ if(kind!=='frostwolf'||!motionLoaded.has(WOLF_ATLAS.src)||!motionLoaded.has(WOLF_COLLAPSE_ATLAS.src))return null;
+ const frame=reduced?3:Math.max(0,Math.min(3,Math.floor((Number.isFinite(progress)?progress:0)/.24)));
+ return {frame,asset:{...WOLF_COLLAPSE_ATLAS,viewBox:`${frame*384+8} 100 368 228`,displayScale:368/315,groundY:284.49}};
 }
 /** Long weapons need a larger viewport to keep the actor's body size consistent. */
 export function actionSpriteAsset(actor:HeroId|'wolf',pose:ActionPose):SpriteAsset|null {
+ if(actor==='barbarian'&&karModelReady())return karAsset(1,'slam',pose==='windup'?2:pose==='strike'?4:6);
+ if(actor==='wolf'&&petWolfModelReady())return petWolfAsset(1,'bite',pose==='windup'?2:pose==='strike'?4:6);
+ if(actor==='druid'&&druidModelReady())return druidAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);
+ if(actor==='tao'&&taoModelReady())return taoAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);
+ if(actor==='elf'&&elfModelReady())return elfAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);
+ if(actor==='mage'&&mageModelReady())return mageAsset(1,'cast',pose==='windup'?1:pose==='strike'?2:3);
  if(actor==='dwarf'&&dwarfModelReady())return DWARF_RENDERS[pose];
  const melee = actor==='barbarian'||actor==='dwarf'||actor==='wolf';
  const src = melee?'/defense/melee-motion.webp':'/defense/ranged-motion.webp';
@@ -130,7 +860,7 @@ export function preloadDefenseMotion():Promise<void> {
   asset.onerror=()=>{asset.onload=null;asset.onerror=null;resolve();};
   asset.src=src;
  });
- return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...Object.values(DWARF_RENDERS).map(asset=>asset.src)].map(load)).then(()=>{
+ return motionPreload ??= Promise.all(['/defense/melee-motion.webp','/defense/ranged-motion.webp','/defense/tower-models.webp','/defense/boss-models.webp',...MONSTER_ATLAS_SOURCES,WOOD_WALK_ATLAS.src,GOLEM_WALK_ATLAS.src,ICE_WALK_ATLAS.src,METAL_WALK_ATLAS.src,WOLF_TROT_ATLAS.src,...FROST_STRIDE_ATLASES,...FROST_FLINCH_ATLASES,...FROST_BRACE_ATLASES,...FROST_BRACE_FALL_ATLASES,...FROST_FALL_ATLASES,WOLF_COLLAPSE_ATLAS.src,METAL_DEATH_ATLAS.src,WOOD_DEATH_ATLAS.src,ICE_DEATH_ATLAS.src,GOLEM_DEATH_ATLAS.src,...MAGE_CAST,...MAGE_WALK,...MAGE_STOP,...MAGE_ENTRY,...MAGE_RETURN,...MAGE_RESET,...KAR_SLAM,...KAR_WALK,...KAR_ENTRY,...KAR_RETURN,...KAR_RESET,...KAR_STOP,...PET_WOLF_BITE,...PET_WOLF_WALK,...DRUID_CAST,...DRUID_WALK,...DRUID_ULTIMATE,...DRUID_ENTRY,...DRUID_RETURN,...DRUID_RESET,...DRUID_STOP,...TAO_CAST,...TAO_WALK,...TAO_ULTIMATE,...TAO_ENTRY,...TAO_RETURN,...TAO_RESET,...TAO_STOP,...ELF_CAST,...ELF_WALK,...RIEL_ULTIMATE,...RIEL_ENTRY,...RIEL_RETURN,...RIEL_RESET,...RIEL_STOP,...DWARF_DIRECTIONS,...DWARF_HAMMER,...DWARF_LOCOMOTION,...DWARF_ENTRY,...DWARF_RETURN,...DWARF_STOP,FIRE_ACTION_ATLAS,FIRE_LV3_ACTION_ATLAS,LIGHTNING_ACTION_ATLAS,LIGHTNING_LV3_ACTION_ATLAS,...WATER_ACTION_ATLASES,...WATER_LV3_ACTION_ATLASES,...BALLISTA_ACTION_ATLASES,...BALLISTA_LV3_ACTION_ATLASES,...RAPID_ACTION_ATLASES,...RAPID_LV3_ACTION_ATLASES,...CRUSH_ACTION_ATLASES,...CRUSH_LV3_ACTION_ATLASES,...BASE_CANNON_ACTION_ATLASES,...BASE_CROSSBOW_ACTION_ATLASES,BASE_MAGIC_ACTION_ATLAS,...[...Object.values(BAKED_TOWERS),...BAKED_BRANCHES].flatMap(model=>model.mastered?[model.asset.src,model.mastered.src]:[model.asset.src]),...[...Object.values(DWARF_RENDERS),...DWARF_WALK].map(asset=>asset.src)].map(load)).then(()=>{
   // The illustrated monster sheet (~594 KB) is only a fallback: fetch it only when a baked atlas that relies on it failed.
   const needed=Object.values(MONSTER_MODELS).some(model=>model.fallback&&model.atlas&&!motionLoaded.has(model.atlas.src));
   return needed?load('/defense/monster-models.webp'):undefined;

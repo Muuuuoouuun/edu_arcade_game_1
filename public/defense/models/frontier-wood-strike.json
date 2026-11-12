@@ -1,0 +1,118 @@
+{
+  "generator": "tools/blender/build_frontier_wood_strike.py",
+  "regeneration_command": "npm run models:frontier-wood-strike",
+  "base_source": "art-source/defense/wood-soldier.blend",
+  "runtime_scale": 0.52,
+  "native_forward_gltf": [
+    1,
+    0,
+    0
+  ],
+  "runtime_heading_offset": -1.5707963267948966,
+  "stride_world": 1.5,
+  "clip": "frontier-wood-strike",
+  "duration": 0.6,
+  "contact": 0.28,
+  "fps": 100,
+  "camera": {
+    "resolution": [
+      384,
+      384
+    ],
+    "position": [
+      5.0,
+      -10.0,
+      6.900000095367432
+    ],
+    "ortho_scale": 8.0
+  },
+  "poses": [
+    1,
+    19,
+    29,
+    35,
+    47,
+    61
+  ],
+  "files": [
+    {
+      "path": "art-source/defense/wood-soldier.blend",
+      "bytes": 1712424,
+      "sha256": "90db5602af49e7eaf6bd69e9809872fb11e7321331d5c894b0253220f622229e"
+    },
+    {
+      "path": "tools/blender/build_frontier_wood_strike.py",
+      "bytes": 10648,
+      "sha256": "0e3e3661fe440e43e2318e284a44504dfbe8d61be299010b0a5fc1fc17d3838a"
+    },
+    {
+      "path": "art-source/defense/frontier-wood-strike.blend",
+      "bytes": 1782052,
+      "sha256": "d21efedc198ff3c27d37cb594ebeab61f7f5a397afe2ab818d1468e25f9320b4"
+    },
+    {
+      "path": "art-source/defense/frontier-wood-strike/strike-0.png",
+      "bytes": 123350,
+      "sha256": "66ea1f4f4ecb97f3859e88f324e379178b2c122ee2d00a90c799b58ed3dfd71c"
+    },
+    {
+      "path": "art-source/defense/frontier-wood-strike/strike-1.png",
+      "bytes": 129750,
+      "sha256": "6a31a5c01954f22179bc0828119a67460944a94d0e35aea5cb4ff9ad1fa0d756"
+    },
+    {
+      "path": "art-source/defense/frontier-wood-strike/strike-2.png",
+      "bytes": 129598,
+      "sha256": "95fb98f89936e30a1ac08822f712f0dac4c529abd0599cfe46ea6342530c1c7f"
+    },
+    {
+      "path": "art-source/defense/frontier-wood-strike/strike-3.png",
+      "bytes": 129293,
+      "sha256": "21d08fc49d98e2e6ef6848a228aa6df64bc2be23bfee0f91581b160ba2f9688b"
+    },
+    {
+      "path": "art-source/defense/frontier-wood-strike/strike-4.png",
+      "bytes": 128174,
+      "sha256": "fe9d6a438365e58f299e1def4ac6df1205f563457acbe7646e6011378bf3cba7"
+    },
+    {
+      "path": "art-source/defense/frontier-wood-strike/strike-5.png",
+      "bytes": 123350,
+      "sha256": "7fe63590672d5692b35a785a405ed42cc826e950be71daa5afa7a68dbfde641b"
+    },
+    {
+      "path": "public/defense/models/frontier-wood-strike.glb",
+      "bytes": 478064,
+      "sha256": "54bb2a5c1fefeded0a2e8d7519c12a88ccf5c272bc9663c02266c233383e9f11"
+    },
+    {
+      "path": "public/defense/models/frontier-wood-strike-game.glb",
+      "bytes": 138612,
+      "sha256": "31f5a048d1786ff434b5971deccff08a07c0e6b1ce76ef1b61520d67472b31fc"
+    },
+    {
+      "path": "public/defense/models/frontier-wood-strike.png",
+      "bytes": 123350,
+      "sha256": "66ea1f4f4ecb97f3859e88f324e379178b2c122ee2d00a90c799b58ed3dfd71c"
+    },
+    {
+      "path": "public/defense/models/frontier-wood-strike-atlas.webp",
+      "bytes": 50758,
+      "sha256": "00116d9c2949aa0a0e03c6d233d57d32fd56fc4bf60525c226b87f258e81e624"
+    }
+  ],
+  "runtime": {
+    "meshes": 8,
+    "triangles": 4026,
+    "materials": 1,
+    "editable_meshes": 100,
+    "blender_triangles": 4026
+  },
+  "runtime_game": {
+    "meshes": 8,
+    "triangles": 1024,
+    "materials": 1,
+    "file": "frontier-wood-strike-game.glb",
+    "blender_triangles": 1038
+  }
+}

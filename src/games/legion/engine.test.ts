@@ -3,6 +3,7 @@ import test from 'node:test';
 import { actLegion, createLegion, deploymentIssue, inDeployment, stepLegion } from './engine.ts';
 import { DEPLOY, MAX_ENEMIES, MONSTER_DEFS, POPULATION_CAP, UNIT_DEFS, WAVE_TOTALS } from './data.ts';
 import type { LegionState, Monster, Point, UnitKind } from './types.ts';
+import { legionWolfFrame, LEGION_WOLF_SIZE } from './wolfMotion.ts';
 
 const deploy=(s:LegionState,kind:UnitKind,x=1050,y=450)=>actLegion(s,{type:'deploy',kind,point:{x,y}});
 function monster(id=1000,overrides:Partial<Monster>={}):Monster {return {id,kind:'sprout',hp:64,maxHp:64,x:1020,y:450,lane:1,progress:960,cooldown:0,hit:0,slow:0,facing:1,...overrides};}
@@ -64,6 +65,80 @@ test('soldiers attack and monsters retaliate automatically with no control actio
   assert.ok(next.units[0].hp<initial.units[0].hp);
   assert.ok(next.effects.some(e=>e.kind==='slash'));
   assert.equal(initial.enemies[0].hp,2000);
+});
+
+test('a shield absorbs only frontal hits, including bosses, once per enemy cooldown',()=>{
+  for(const kind of Object.keys(MONSTER_DEFS) as Monster['kind'][]){
+    const ready=deploy(createLegion(),'shield');
+    const shield={...ready.units[1],cooldown:99,skillCooldown:99};
+    const foe=monster(1000,{kind,x:shield.x-30,y:shield.y,hp:10000,maxHp:10000});
+    const initial=combat({...ready,units:[shield]},[foe]);
+    const snapshot=structuredClone(initial);
+    assert.equal(stepLegion(initial,0),initial,'pause cannot deal a hit');
+    const after=stepLegion(initial,1/60);
+    assert.ok(Math.abs(after.units[0].hp-(shield.hp-MONSTER_DEFS[kind].damage*.3))<1e-8,`${kind} frontal damage`);
+    assert.equal(after.effects.filter(e=>e.kind==='slash'&&e.color==='#9deae1').length,1,`${kind} guard cue`);
+    assert.equal(after.effects.find(e=>e.kind==='slash'&&e.color==='#9deae1')?.material,'guard','the visual shield cue follows only a guarded hit');
+    assert.equal(stepLegion(after,1/60).units[0].hp,after.units[0].hp,`${kind} must not hit twice during cooldown`);
+    assert.deepEqual(initial,snapshot,'stepping must not mutate the earlier state');
+  }
+});
+
+test('an attack behind the shield is not guarded while it faces a nearer enemy',()=>{
+  const ready=deploy(createLegion(),'shield'),shield={...ready.units[1],cooldown:99,skillCooldown:99};
+  const front=monster(1000,{x:shield.x-20,y:shield.y,hp:1000,maxHp:1000});
+  const rear=monster(1001,{x:shield.x+35,y:shield.y,hp:1000,maxHp:1000});
+  const next=stepLegion(combat({...ready,units:[shield]},[front,rear]),1/60);
+  assert.equal(next.units[0].facing,-1);
+  assert.ok(Math.abs(next.units[0].hp-(shield.hp-MONSTER_DEFS.sprout.damage*1.3))<1e-8);
+  assert.equal(next.effects.filter(e=>e.kind==='slash'&&e.color==='#9deae1').length,1);
+  assert.equal(next.effects.filter(e=>e.kind==='slash'&&e.color==='#ff8875').length,1);
+  assert.equal(next.effects.find(e=>e.color==='#ff8875')?.material,undefined,'rear hits do not show the shield cue');
+});
+
+test('the same-x boundary guards the shield but never protects other unit kinds',()=>{
+  for(const kind of ['shield','archer','mage','beast'] as const){
+    const ready=deploy(createLegion(),kind),unit={...ready.units[0],cooldown:99,skillCooldown:99};
+    const foe=monster(1000,{x:unit.x,y:unit.y,hp:1000,maxHp:1000});
+    const next=stepLegion(combat({...ready,units:[unit]},[foe]),1/60);
+    const expected=kind==='shield'?MONSTER_DEFS.sprout.damage*.3:MONSTER_DEFS.sprout.damage;
+    assert.ok(Math.abs(next.units[0].hp-(unit.hp-expected))<1e-8,`${kind} same-x damage`);
+  }
+});
+
+test('frontal guard composes with late-wave damage and the boss same-x boundary',()=>{
+  const ready=deploy(createLegion(),'shield'),shield={...ready.units[1],cooldown:99,skillCooldown:99};
+  const foe=monster(1000,{kind:'boss',x:shield.x,y:shield.y+60,hp:10000,maxHp:10000});
+  const initial={...combat({...ready,units:[shield]},[foe]),wave:4,spawned:WAVE_TOTALS[3]};
+  const next=stepLegion(initial,1/60);
+  assert.ok(Math.abs(next.units[0].hp-(shield.hp-MONSTER_DEFS.boss.damage*1.3*.3))<1e-8);
+  assert.equal(next.effects.filter(e=>e.kind==='slash'&&e.color==='#9deae1').length,1);
+});
+
+test('a rear hit is not blocked if a nearer front threat dies after facing was selected',()=>{
+  const ready=deploy(createLegion(),'shield'),shield={...ready.units[1],cooldown:99,skillCooldown:99};
+  const archers=deploy(createLegion(),'archer',shield.x-60,shield.y);
+  const archer={...archers.units[1],cooldown:0,skillCooldown:99};
+  const front=monster(1000,{x:shield.x-20,y:shield.y,hp:1});
+  const rear=monster(1001,{x:shield.x+35,y:shield.y,hp:1000,maxHp:1000});
+  const next=stepLegion(combat({...ready,units:[shield,archer]},[front,rear]),1/60);
+  assert.equal(next.kills,1);
+  assert.equal(next.units[0].facing,-1,'the selected facing remains for this tick');
+  assert.equal(next.units[0].hp,shield.hp-MONSTER_DEFS.sprout.damage);
+  assert.equal(next.effects.filter(e=>e.kind==='slash'&&e.color==='#ff8875').length,1);
+});
+
+test('wolf stops its distance-driven gait while striking, without delaying combat damage',()=>{
+  const ready=deploy(createLegion(),'beast');
+  const initial=combat(ready,[monster(1000,{kind:'frostwolf',hp:1000,maxHp:1000})]);
+  const after=stepLegion(initial,1/60);
+  assert.equal(after.enemies[0].progress,initial.enemies[0].progress);
+  assert.equal(legionWolfFrame(after.enemies[0].progress,LEGION_WOLF_SIZE,false),legionWolfFrame(initial.enemies[0].progress,LEGION_WOLF_SIZE,false));
+  assert.equal(after.units[0].hp,initial.units[0].hp-MONSTER_DEFS.frostwolf.damage);
+  assert.ok(after.effects.some(e=>e.kind==='slash'&&e.from.x===initial.enemies[0].x));
+  const recovered=run(after,.2);
+  assert.equal(recovered.enemies[0].progress,initial.enemies[0].progress);
+  assert.equal(legionWolfFrame(recovered.enemies[0].progress,LEGION_WOLF_SIZE,false),legionWolfFrame(initial.enemies[0].progress,LEGION_WOLF_SIZE,false));
 });
 
 test('automatic special attacks affect a group and track fire versus physical death',()=>{

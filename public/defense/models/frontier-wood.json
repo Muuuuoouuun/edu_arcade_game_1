@@ -1,0 +1,105 @@
+{
+  "generator": "tools/blender/build_frontier_wood.py",
+  "regeneration_command": "npm run models:frontier-wood",
+  "base_source": "art-source/defense/wood-soldier.blend",
+  "runtime_scale": 0.52,
+  "native_forward_gltf": [
+    1,
+    0,
+    0
+  ],
+  "runtime_heading_offset": -1.5707963267948966,
+  "stride_world": 1.5,
+  "clip": "frontier-wood-walk",
+  "duration": 1,
+  "fps": 32,
+  "camera": {
+    "resolution": [
+      384,
+      384
+    ],
+    "position": [
+      5.0,
+      -10.0,
+      6.900000095367432
+    ],
+    "ortho_scale": 6.300000190734863
+  },
+  "poses": [
+    1,
+    9,
+    17,
+    25
+  ],
+  "files": [
+    {
+      "path": "art-source/defense/wood-soldier.blend",
+      "bytes": 1712424,
+      "sha256": "90db5602af49e7eaf6bd69e9809872fb11e7321331d5c894b0253220f622229e"
+    },
+    {
+      "path": "tools/blender/build_frontier_wood.py",
+      "bytes": 8151,
+      "sha256": "d5cfd81889099b7fd423931bc9d8208183ad365cc1e636479e347dca059e43b1"
+    },
+    {
+      "path": "art-source/defense/frontier-wood.blend",
+      "bytes": 1685280,
+      "sha256": "bd6d139b36be1d6456efaa94a2dcb904be106410fd2167f92303ef01608113e8"
+    },
+    {
+      "path": "art-source/defense/frontier-wood/walk-0.png",
+      "bytes": 148440,
+      "sha256": "f3f53fec65f7030433e8516545d6b6c56ab57d423a5529cd92131c6531273dab"
+    },
+    {
+      "path": "art-source/defense/frontier-wood/walk-1.png",
+      "bytes": 146763,
+      "sha256": "b146a3868222e4396036679075a237067f15227d5642be8ccc3fc37db18ea0f4"
+    },
+    {
+      "path": "art-source/defense/frontier-wood/walk-2.png",
+      "bytes": 150350,
+      "sha256": "537f3642008f73872815fdce3ce1ac35636e1933fc3b80be9aa007fa387c3636"
+    },
+    {
+      "path": "art-source/defense/frontier-wood/walk-3.png",
+      "bytes": 149890,
+      "sha256": "d561ca1e9fad76e9a9af240a53324e76bc6f452d868cc871e10b04e1038a8c83"
+    },
+    {
+      "path": "public/defense/models/frontier-wood.glb",
+      "bytes": 474068,
+      "sha256": "2d5c0cdd1057c611e174c0fd95c47656804657057ab8a930e11895e66b41aba3"
+    },
+    {
+      "path": "public/defense/models/frontier-wood-game.glb",
+      "bytes": 134616,
+      "sha256": "e7293e2391a4d2bbb3aa60bfe386dc85b7c1597bea41f04e4ca4d02600e999f6"
+    },
+    {
+      "path": "public/defense/models/frontier-wood.png",
+      "bytes": 148440,
+      "sha256": "f3f53fec65f7030433e8516545d6b6c56ab57d423a5529cd92131c6531273dab"
+    },
+    {
+      "path": "public/defense/models/frontier-wood-atlas.webp",
+      "bytes": 45264,
+      "sha256": "a1418be0a072cce6a098ba68a94fd27f36280867e628d8de00cfd1220b8acd7f"
+    }
+  ],
+  "runtime": {
+    "meshes": 8,
+    "triangles": 4026,
+    "materials": 1,
+    "editable_meshes": 100,
+    "blender_triangles": 4026
+  },
+  "runtime_game": {
+    "meshes": 8,
+    "triangles": 1024,
+    "materials": 1,
+    "file": "frontier-wood-game.glb",
+    "blender_triangles": 1038
+  }
+}

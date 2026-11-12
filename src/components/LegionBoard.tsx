@@ -4,6 +4,10 @@ import { spriteAsset } from '../games/defense/art';
 import type { SpriteAsset } from '../games/defense/art';
 import { DEPLOY, LANES, UNIT_DEFS, WORLD } from '../games/legion/data';
 import { deploymentIssue } from '../games/legion/engine';
+import { legionWolfAsset, legionWolfDirectionalAsset, LEGION_WOLF_SIZE, LEGION_WOLF_DIRECTIONS, WOLF_BASE, WOLF_DIRECTIONAL_HIT, WOLF_DIRECTIONAL_WALK, WOLF_ILLUSTRATION, WOLF_WALK } from '../games/legion/wolfMotion';
+import { legionShieldAsset, LEGION_SHIELD_ATLAS } from '../games/legion/shieldMotion';
+import { advanceShieldMotion, legionShieldDisplayAsset, LEGION_SHIELD_WALK_ATLAS } from '../games/legion/shieldWalk';
+import type { ShieldMotionState } from '../games/legion/shieldWalk';
 import type { LegionEffect, LegionState, Monster, MonsterKind, Point, Soldier, UnitKind } from '../games/legion/types';
 import '../legion-board.css';
 
@@ -25,7 +29,8 @@ function loadImage(src:string):Promise<void>{
  pendingImages.set(src,promise);return promise;
 }
 const TERRAIN_ART='/defense/legion/forest-arena.webp';
-const sources=[TERRAIN_ART,'/defense/atlas.png','/defense/snow-atlas.png','/defense/boss-models.webp',...Object.values(BAKED).map(x=>`/defense/models/${x.file}-atlas.webp`)];
+const directionalWolfWalk=LEGION_WOLF_DIRECTIONS.map(WOLF_DIRECTIONAL_WALK),directionalWolfHit=LEGION_WOLF_DIRECTIONS.map(WOLF_DIRECTIONAL_HIT);
+const sources=[TERRAIN_ART,'/defense/atlas.png','/defense/snow-atlas.png','/defense/boss-models.webp',WOLF_WALK,LEGION_SHIELD_ATLAS,LEGION_SHIELD_WALK_ATLAS,...directionalWolfWalk,...directionalWolfHit,...Object.values(BAKED).map(x=>`/defense/models/${x.file}-atlas.webp`)];
 const clamp=(value:number,min:number,max:number)=>Math.max(min,Math.min(max,value));
 function noise(seed:number){const n=Math.sin(seed*127.1+311.7)*43758.5453;return n-Math.floor(n);}
 function round(ctx:CanvasRenderingContext2D,x:number,y:number,w:number,h:number,r:number,fill:string,stroke?:string){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.stroke();}}
@@ -75,16 +80,16 @@ function terrain():HTMLCanvasElement{
  for(let i=0;i<24;i++){const x=570+noise(i+60)*810,y=i%2?120+noise(i+80)*55:745+noise(i+80)*70;rock(ctx,x,y,12+noise(i+100)*15);}
  for(let i=0;i<70;i++){const x=noise(i+810)*1400,y=noise(i+960)*850;if(y<90||y>800){oval(ctx,x,y,3,2,i%3?'#edda8c':'#eee7b6');}}
  castle(ctx);
- ctx.font='600 15px system-ui';ctx.textAlign='center';ctx.fillStyle='#fff1c3';ctx.shadowColor='#18382c';ctx.shadowBlur=4;ctx.fillText('마을 성문',1450,590);ctx.shadowBlur=0;
  for(let i=0;i<LANES.length;i++){const p=LANES[i][0];polygon(ctx,[[p.x-18,p.y-7],[p.x+5,p.y-7],[p.x+5,p.y-15],[p.x+25,p.y],[p.x+5,p.y+15],[p.x+5,p.y+7],[p.x-18,p.y+7]],'#dc825d','#ffdb9e');}
  terrainCache=canvas;return canvas;
 }
 function renderAsset(ctx:CanvasRenderingContext2D,asset:SpriteAsset,x:number,y:number,size:number,flip=false){
  const image=imageCache.get(asset.src);if(!image)return false;
  const [sx,sy,sw,sh]=asset.viewBox.split(' ').map(Number);const scale=size*(asset.displayScale??1)/Math.max(sw,sh),w=sw*scale,h=sh*scale;
- ctx.save();ctx.translate(x,y);if(flip)ctx.scale(-1,1);ctx.drawImage(image,sx,sy,sw,sh,-w/2,-h+size*.13,w,h);ctx.restore();return true;
+ ctx.save();ctx.translate(x,y);if(flip)ctx.scale(-1,1);ctx.drawImage(image,sx,sy,sw,sh,-w/2,asset.groundY===undefined?-h+size*.13:-(asset.groundY-sy)*scale,w,h);ctx.restore();return true;
 }
-function monsterAsset(e:Monster):SpriteAsset{
+function monsterAsset(e:Monster,reduced:boolean,size:number):SpriteAsset{
+ if(e.kind==='frostwolf')return (e.facing===1?legionWolfDirectionalAsset(e.lane,e.progress,e.hit,size,reduced,directionalWolfWalk.every(src=>imageCache.has(src)),directionalWolfHit.every(src=>imageCache.has(src))):null)??legionWolfAsset(e.progress,e.hit,size,reduced,imageCache.has(WOLF_BASE)&&imageCache.has(WOLF_WALK));
  const model=BAKED[e.kind];if(model){const frame=e.hit>0?2:Math.floor(e.progress/15)%2,[x,y,w,h]=model.crop;return {src:`/defense/models/${model.file}-atlas.webp`,viewBox:`${x+frame*384} ${y} ${w} ${h}`,width:1152,height:384,displayScale:Math.max(w,h)/model.span};}
  if(e.kind==='boss')return {src:'/defense/boss-models.webp',viewBox:e.hit>0?'933 111 393 334':'42 105 349 340',width:1774,height:887};
  return spriteAsset(ENEMY_INDEX[e.kind]);
@@ -97,17 +102,20 @@ function shieldSoldier(ctx:CanvasRenderingContext2D,x:number,y:number,hit:number
  polygon(ctx,[[-19,-31],[-1,-28],[-1,-9],[-10,-1],[-22,-10]],hit>0?'#fff5d5':'#276c91','#e8c375');line(ctx,[{x:-11,y:-25},{x:-11,y:-9}],2,'#f2d782');ctx.restore();
 }
 function fallbackActor(ctx:CanvasRenderingContext2D,x:number,y:number,size:number,friendly:boolean,color:string){oval(ctx,x,y-size*.3,size*.22,size*.34,color);oval(ctx,x,y-size*.67,size*.19,size*.18,friendly?'#e9d8b1':'#aac06c');}
-function actor(ctx:CanvasRenderingContext2D,unit:Soldier|Monster,friendly:boolean,time:number,reduced:boolean,attacking:boolean){
- const boss=!friendly&&unit.kind==='boss';const size=boss?84:unit.kind==='beast'?60:unit.kind==='stone'?49:43;
+function actor(ctx:CanvasRenderingContext2D,unit:Soldier|Monster,friendly:boolean,time:number,reduced:boolean,attacking:boolean,shieldAttackAge:number|null,shieldWalk:{moving:boolean;distance:number}|undefined){
+ const boss=!friendly&&unit.kind==='boss';const size=boss?84:unit.kind==='beast'?60:!friendly&&unit.kind==='frostwolf'?LEGION_WOLF_SIZE:unit.kind==='stone'?49:43;
  const moving=friendly?Math.hypot(unit.x-(unit as Soldier).home.x,unit.y-(unit as Soldier).home.y)>8:true;
- const gait=reduced?0:Math.sin((friendly?time*9+unit.id:(unit as Monster).progress*.12))* (moving?1.5:.35);
+ const shieldModel=friendly&&unit.kind==='shield'&&imageCache.has(LEGION_SHIELD_ATLAS);
+ const gait=reduced||shieldModel||(!friendly&&unit.kind==='frostwolf')?0:Math.sin((friendly?time*9+unit.id:(unit as Monster).progress*.12))* (moving?1.5:.35);
  ctx.save();oval(ctx,unit.x+2,unit.y+3,size*.36,size*.13,'#1d3c3c38');
  ctx.beginPath();ctx.ellipse(unit.x,unit.y,size*.29,size*.14,0,0,TAU);ctx.strokeStyle=friendly?'#79eee4':'#ef9378';ctx.lineWidth=friendly?2.2:1.5;ctx.stroke();
- if(friendly&&unit.kind==='shield')shieldSoldier(ctx,unit.x,unit.y+gait,unit.hit,unit.facing);
- else{const asset=friendly?spriteAsset(UNIT_DEFS[unit.kind as UnitKind].sprite):monsterAsset(unit as Monster);const scale=friendly?size:unit.kind==='sprout'?38:size;const drawn=renderAsset(ctx,asset,unit.x,unit.y+gait,scale,unit.facing===-1);if(!drawn&&!renderAsset(ctx,spriteAsset(friendly?UNIT_DEFS[unit.kind as UnitKind].sprite:ENEMY_INDEX[unit.kind as MonsterKind]),unit.x,unit.y+gait,scale,unit.facing===-1))fallbackActor(ctx,unit.x,unit.y+gait,size,friendly,friendly?'#347a9c':'#768749');}
+ if(friendly&&unit.kind==='shield'){
+  const asset=legionShieldDisplayAsset(shieldAttackAge,reduced,shieldWalk,imageCache.has(LEGION_SHIELD_WALK_ATLAS),size);ctx.save();if(unit.hit>0&&!reduced)ctx.filter='brightness(1.5)';
+  const drawn=shieldModel&&renderAsset(ctx,asset,unit.x,unit.y,size,unit.facing===-1);ctx.restore();
+  if(!drawn)shieldSoldier(ctx,unit.x,unit.y+gait,unit.hit,unit.facing);
+ }
+ else{const asset=friendly?spriteAsset(UNIT_DEFS[unit.kind as UnitKind].sprite):monsterAsset(unit as Monster,reduced,size);const fallback=!friendly&&unit.kind==='frostwolf'?WOLF_ILLUSTRATION:spriteAsset(friendly?UNIT_DEFS[unit.kind as UnitKind].sprite:ENEMY_INDEX[unit.kind as MonsterKind]);const scale=friendly?size:unit.kind==='sprout'?38:size;const drawn=renderAsset(ctx,asset,unit.x,unit.y+gait,scale,!asset.oriented&&unit.facing===-1);if(!drawn&&!renderAsset(ctx,fallback,unit.x,unit.y+gait,scale,unit.facing===-1))fallbackActor(ctx,unit.x,unit.y+gait,size,friendly,friendly?'#347a9c':'#768749');}
  if(attacking&&!reduced){ctx.strokeStyle=friendly?'#f5e6a4':'#e99366';ctx.lineWidth=2;ctx.beginPath();ctx.arc(unit.x+unit.facing*13,unit.y-20,13,-.7,.7);ctx.stroke();}
- if(unit.hp<unit.maxHp*.68||unit.hit>0||boss){const w=boss?62:31,ratio=clamp(unit.hp/unit.maxHp,0,1);round(ctx,unit.x-w/2,unit.y-size-5,w,4,2,'#203b39c9');round(ctx,unit.x-w/2,unit.y-size-5,w*ratio,4,2,friendly?'#83e9c2':'#f19073');}
- if(boss){ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.fillStyle='#78332a';ctx.fillText('고목왕',unit.x,unit.y-size-12);}
  ctx.restore();
 }
 function effects(ctx:CanvasRenderingContext2D,list:LegionEffect[],reduced:boolean){
@@ -120,6 +128,13 @@ function effects(ctx:CanvasRenderingContext2D,list:LegionEffect[],reduced:boolea
    if(!reduced){const colors=e.material==='wood'?(e.color==='#f2ab57'?['#9f642f','#ffb957','#eec76a']:['#99704a','#c7a067','#694e36']):e.material==='stone'?['#c6c4ab','#858f81','#ddd5b7']:e.material==='metal'?['#97b4b8','#e7d6a0','#657d86']:e.material==='frost'?['#b9efff','#76c5ed','#eefcff']:['#71d5d1','#d0f4e3','#f6dc8a'];for(let j=0;j<5&&debris<64;j++,debris++){const a=j*TAU/5+e.id,speed=18+noise(e.id+j)*25,dx=Math.cos(a)*speed*t,dy=Math.sin(a)*speed*t*.6-18*Math.sin(t*Math.PI);ctx.save();ctx.translate(e.to.x+dx,e.to.y+dy);ctx.rotate(a+t*2);ctx.fillStyle=colors[j%3];ctx.fillRect(-3,-3,5+(j%2)*3,4);ctx.restore();}}}
   else if(e.kind==='summon'){ctx.beginPath();ctx.ellipse(e.to.x,e.to.y,18+t*18,10+t*9,0,0,TAU);ctx.lineWidth=3;ctx.stroke();}
   else if(e.kind==='breach'){ctx.beginPath();ctx.ellipse(e.to.x,e.to.y,22+t*45,16+t*30,0,0,TAU);ctx.lineWidth=4;ctx.stroke();}
+  else if(e.kind==='slash'&&e.material==='guard'){
+   // A stationary, outlined shield arc points toward the actual attacker.  Its
+   // size remains readable at mobile battle scale, including reduced motion.
+   ctx.save();ctx.translate(e.to.x,e.to.y-19);ctx.rotate(Math.atan2(e.from.y-e.to.y,e.from.x-e.to.x));
+   if(reduced)ctx.globalAlpha=.9;
+   ctx.beginPath();ctx.ellipse(0,0,26,21,0,-1.05,1.05);ctx.strokeStyle='#183b40';ctx.lineWidth=8;ctx.stroke();ctx.strokeStyle=e.color;ctx.lineWidth=4;ctx.stroke();ctx.restore();
+  }
   else if(e.kind==='slash'){ctx.beginPath();ctx.arc(e.to.x,e.to.y-15,15+t*12,-1.5,.8);ctx.lineWidth=4*(1-t)+1;ctx.stroke();}
   else{const r=reduced?20:10+t*48;ctx.beginPath();ctx.ellipse(e.to.x,e.to.y,r,r*.58,0,0,TAU);ctx.lineWidth=4*(1-t)+1;ctx.stroke();oval(ctx,e.to.x,e.to.y,6*(1-t)+2,4*(1-t)+1,'#fff4d0');}
   ctx.restore();
@@ -128,6 +143,7 @@ function effects(ctx:CanvasRenderingContext2D,list:LegionEffect[],reduced:boolea
 
 export default function LegionBoard({state,selected,onPlace,onInspect,disabled,reducedMotion}:Props){
  const canvasRef=useRef<HTMLCanvasElement>(null),viewport=useRef<Viewport>({width:1600,height:900,scale:1,x:0,y:0});
+ const shieldMotion=useRef<ShieldMotionState|null>(null);
  const pointer=useRef<{x:number;y:number;id:number}|null>(null);
  const [revision,setRevision]=useState(0),[hover,setHover]=useState<Point|null>(null),[keyboard,setKeyboard]=useState(false);
  const keyPoint=useRef<Point>({x:(DEPLOY.left+DEPLOY.right)/2,y:(DEPLOY.top+DEPLOY.bottom)/2});
@@ -145,8 +161,9 @@ export default function LegionBoard({state,selected,onPlace,onInspect,disabled,r
    ctx.save();ctx.globalAlpha=state.phase==='wave'?.32:.7;ctx.fillStyle='#7cebd514';ctx.strokeStyle='#bcfff0';ctx.lineWidth=2;ctx.setLineDash([9,8]);ctx.beginPath();ctx.roundRect(DEPLOY.left,DEPLOY.top,DEPLOY.right-DEPLOY.left,DEPLOY.bottom-DEPLOY.top,20);ctx.fill();ctx.stroke();ctx.restore();
    for(const p of [{x:990,y:320},{x:1160,y:450},{x:1040,y:610}]){if(state.units.some(u=>Math.hypot(u.home.x-p.x,u.home.y-p.y)<65))continue;ctx.globalAlpha=.55;oval(ctx,p.x,p.y,17,11,'#e8e7ba');line(ctx,[{x:p.x-6,y:p.y},{x:p.x+6,y:p.y}],3,'#477760');line(ctx,[{x:p.x,y:p.y-5},{x:p.x,y:p.y+5}],3,'#477760');ctx.globalAlpha=1;}
   }
+  shieldMotion.current=advanceShieldMotion(shieldMotion.current,state.time,state.phase,state.units);
   const actors=[...state.units.map(unit=>({unit,friendly:true})),...state.enemies.map(unit=>({unit,friendly:false}))].sort((a,b)=>a.unit.y-b.unit.y||a.unit.id-b.unit.id);
-  for(const a of actors){const attacking=state.effects.some(e=>e.age<.2&&e.kind!=='death'&&e.kind!=='summon'&&Math.hypot(e.from.x-a.unit.x,e.from.y-a.unit.y)<16);actor(ctx,a.unit,a.friendly,state.time,reducedMotion,attacking);}
+  for(const a of actors){const attack=state.effects.find(e=>e.age<.2&&e.kind!=='death'&&e.kind!=='summon'&&Math.hypot(e.from.x-a.unit.x,e.from.y-a.unit.y)<16);const shieldAttack=a.friendly&&a.unit.kind==='shield'?state.effects.find(e=>e.kind==='slash'&&e.sourceId===a.unit.id&&e.age<.22):undefined;actor(ctx,a.unit,a.friendly,state.time,reducedMotion,Boolean(attack),shieldAttack?.age??null,a.friendly?shieldMotion.current.units.get(a.unit.id):undefined);}
   effects(ctx,state.effects,reducedMotion);
   if(hover&&selected&&!disabled){const issue=deploymentIssue(state,selected,hover),count=UNIT_DEFS[selected].count;ctx.save();ctx.setLineDash([5,4]);ctx.lineWidth=3;ctx.strokeStyle=issue?'#f7b1a0':'#caffed';for(let i=0;i<count;i++){ctx.beginPath();ctx.ellipse(hover.x,hover.y+(i-(count-1)/2)*32,21,12,0,0,TAU);ctx.stroke();}ctx.font='bold 15px system-ui';ctx.textAlign='center';const label=issue??`${UNIT_DEFS[selected].name} ${count}명 배치`,tw=ctx.measureText(label).width,tx=clamp(hover.x,tw/2+12,WORLD.width-tw/2-12),ty=clamp(hover.y-count*16-22,25,WORLD.height-20);round(ctx,tx-tw/2-8,ty-17,tw+16,24,5,issue?'#663f35e6':'#1d5147eb');ctx.fillStyle=issue?'#ffe0c8':'#d2ffef';ctx.fillText(label,tx,ty);ctx.restore();}
   ctx.restore();

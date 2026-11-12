@@ -1,0 +1,307 @@
+{
+  "source": "art-source/defense/metal-soldier-death.blend",
+  "source_sha256": "3627ef78bf75d4a1ae88abb246df643b2308e152b468c01429c0dfce0b71ea5d",
+  "base_source_sha256": "99f3c25b4a7db78857151f071a029769ab3d5a42a951ac8043d60089003580d3",
+  "regeneration_command": "npm run models:metal-death",
+  "reference": "b175a9f7a3b400dff1a819d4d79b8e79ac8e5d9e:docs/arcana-enemy-design/enemy-destruction-storyboard.webp",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      292.91
+    ],
+    "crop": [
+      0,
+      0,
+      384,
+      384
+    ],
+    "orthographic_scale": 6.599999904632568
+  },
+  "clip": "metal-soldier-death",
+  "duration": 0.6333333333333333,
+  "baked_frames": [
+    1,
+    5,
+    10,
+    15,
+    20
+  ],
+  "effect_duration": 0.7,
+  "samples": [
+    {
+      "frame": 1,
+      "time": 0.0,
+      "bounds": [
+        78.781,
+        68.095,
+        248.292,
+        305.092
+      ],
+      "lowest_vertex": -0.00057
+    },
+    {
+      "frame": 2,
+      "time": 0.03333,
+      "bounds": [
+        77.739,
+        67.244,
+        249.334,
+        305.092
+      ],
+      "lowest_vertex": -0.00057
+    },
+    {
+      "frame": 3,
+      "time": 0.06667,
+      "bounds": [
+        75.398,
+        65.333,
+        251.674,
+        305.092
+      ],
+      "lowest_vertex": -0.00057
+    },
+    {
+      "frame": 4,
+      "time": 0.1,
+      "bounds": [
+        73.6,
+        64.388,
+        254.942,
+        305.295
+      ],
+      "lowest_vertex": -0.00062
+    },
+    {
+      "frame": 5,
+      "time": 0.13333,
+      "bounds": [
+        74.245,
+        66.741,
+        258.836,
+        306.099
+      ],
+      "lowest_vertex": -0.00074
+    },
+    {
+      "frame": 6,
+      "time": 0.16667,
+      "bounds": [
+        76.892,
+        72.393,
+        262.465,
+        307.377
+      ],
+      "lowest_vertex": -0.00081
+    },
+    {
+      "frame": 7,
+      "time": 0.2,
+      "bounds": [
+        80.467,
+        80.048,
+        266.778,
+        309.079
+      ],
+      "lowest_vertex": -0.00072
+    },
+    {
+      "frame": 8,
+      "time": 0.23333,
+      "bounds": [
+        84.78,
+        89.344,
+        271.118,
+        310.772
+      ],
+      "lowest_vertex": -0.00058
+    },
+    {
+      "frame": 9,
+      "time": 0.26667,
+      "bounds": [
+        89.664,
+        99.159,
+        284.123,
+        312.564
+      ],
+      "lowest_vertex": -0.00022
+    },
+    {
+      "frame": 10,
+      "time": 0.3,
+      "bounds": [
+        94.533,
+        107.296,
+        302.484,
+        314.738
+      ],
+      "lowest_vertex": 0.00028
+    },
+    {
+      "frame": 11,
+      "time": 0.33333,
+      "bounds": [
+        98.779,
+        116.03,
+        318.082,
+        316.897
+      ],
+      "lowest_vertex": 0.00082
+    },
+    {
+      "frame": 12,
+      "time": 0.36667,
+      "bounds": [
+        103.003,
+        124.129,
+        329.17,
+        318.717
+      ],
+      "lowest_vertex": 0.00121
+    },
+    {
+      "frame": 13,
+      "time": 0.4,
+      "bounds": [
+        106.999,
+        131.941,
+        337.89,
+        320.326
+      ],
+      "lowest_vertex": 0.00111
+    },
+    {
+      "frame": 14,
+      "time": 0.43333,
+      "bounds": [
+        110.556,
+        138.308,
+        344.082,
+        322.039
+      ],
+      "lowest_vertex": 0.00146
+    },
+    {
+      "frame": 15,
+      "time": 0.46667,
+      "bounds": [
+        111.991,
+        142.918,
+        347.599,
+        323.442
+      ],
+      "lowest_vertex": 0.00179
+    },
+    {
+      "frame": 16,
+      "time": 0.5,
+      "bounds": [
+        109.907,
+        146.412,
+        349.852,
+        324.538
+      ],
+      "lowest_vertex": 0.00196
+    },
+    {
+      "frame": 17,
+      "time": 0.53333,
+      "bounds": [
+        108.728,
+        148.35,
+        351.084,
+        325.163
+      ],
+      "lowest_vertex": 0.002
+    },
+    {
+      "frame": 18,
+      "time": 0.56667,
+      "bounds": [
+        108.579,
+        148.609,
+        351.232,
+        325.246
+      ],
+      "lowest_vertex": 0.002
+    },
+    {
+      "frame": 19,
+      "time": 0.6,
+      "bounds": [
+        108.579,
+        148.609,
+        351.232,
+        325.246
+      ],
+      "lowest_vertex": 0.002
+    },
+    {
+      "frame": 20,
+      "time": 0.63333,
+      "bounds": [
+        108.579,
+        148.609,
+        351.232,
+        325.246
+      ],
+      "lowest_vertex": 0.002
+    }
+  ],
+  "files": [
+    {
+      "file": "metal-soldier-death.glb",
+      "bytes": 206004,
+      "sha256": "80b64690aceb5ae1b5b65a64c8d7132e7a6a758755973d27e460971b3d503371"
+    },
+    {
+      "file": "metal-soldier-death-atlas.webp",
+      "bytes": 52284,
+      "sha256": "21cbec2d48db58ee0b26d74ef09bec6c8c8e0e700d1f161f70638d68809c49d8"
+    },
+    {
+      "file": "metal-soldier-death.png",
+      "bytes": 126843,
+      "sha256": "41a9f36f71ccc8a9a4b5e89f2f6cf41e0a25d2a1376982763231b6f2c48671d9"
+    }
+  ],
+  "renders": [
+    {
+      "path": "art-source/defense/metal-death-frames/metal-death-0.png",
+      "sha256": "41a9f36f71ccc8a9a4b5e89f2f6cf41e0a25d2a1376982763231b6f2c48671d9"
+    },
+    {
+      "path": "art-source/defense/metal-death-frames/metal-death-1.png",
+      "sha256": "8e2a43da44c4eb68ae206057d77f002ab6a1d546d74fd64ef5c7300835a018dd"
+    },
+    {
+      "path": "art-source/defense/metal-death-frames/metal-death-2.png",
+      "sha256": "15a5aa2729d886587a97877352e90b697ee29ea3952c4d521929f66756fec7f5"
+    },
+    {
+      "path": "art-source/defense/metal-death-frames/metal-death-3.png",
+      "sha256": "e55e1f2574b67aec7017d2b947bfdbde608b429c686a06b32feca6ef2c918795"
+    },
+    {
+      "path": "art-source/defense/metal-death-frames/metal-death-4.png",
+      "sha256": "b073f09b23ac9e01860611dee0b9af6a23f356fc7368095b488ba9627fdb412a"
+    }
+  ],
+  "camera": {
+    "location": [
+      5.0,
+      -10.0,
+      6.900000095367432
+    ],
+    "rotation_euler": [
+      1.1502621173858643,
+      3.684800020664625e-08,
+      0.46364766359329224
+    ],
+    "samples": 48,
+    "view_transform": "Standard"
+  }
+}

@@ -1,0 +1,197 @@
+{
+  "id": "legion-shield-walk",
+  "source": "art-source/defense/legion-shield-walk.blend",
+  "base_source": "art-source/defense/legion-shield.blend",
+  "base_source_sha256": "8295a43e396047f28522ffd903d22ebf0dea5a6cc1d982d5646dcbda47dfe3e2",
+  "source_sha256": "ec525109edeccae030b9dca86c1763cbe3a203b05a0db0e7bf1b0e2e9bff9988",
+  "generator": "tools/blender/build_legion_shield_walk.py",
+  "regeneration_command": "blender --background --python-exit-code 1 --python tools/blender/build_legion_shield_walk.py",
+  "camera": "legion-shield shared orthographic",
+  "clip": "legion-shield-walk",
+  "duration_seconds": 0.8,
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground_y": 330,
+    "crop": [
+      131,
+      151,
+      169,
+      194
+    ],
+    "body_span": 176.12,
+    "display_scale": 1.343856
+  },
+  "model_stride": 1.36,
+  "projected_stride_per_display_size": 0.6237222094097262,
+  "continuous_checks": {
+    "samples": 81,
+    "min_leg_z": 0.0,
+    "max_support_drift": 1.3667345011292298e-07
+  },
+  "bounds": [
+    [
+      139.093,
+      157.65,
+      279.931,
+      341.522
+    ],
+    [
+      139.093,
+      156.132,
+      279.931,
+      335.913
+    ],
+    [
+      139.093,
+      154.614,
+      279.931,
+      334.395
+    ],
+    [
+      139.093,
+      156.132,
+      279.931,
+      335.913
+    ],
+    [
+      139.093,
+      157.65,
+      279.931,
+      341.463
+    ],
+    [
+      139.093,
+      156.132,
+      279.931,
+      341.477
+    ],
+    [
+      139.093,
+      154.614,
+      279.931,
+      341.492
+    ],
+    [
+      139.093,
+      156.132,
+      279.931,
+      341.507
+    ]
+  ],
+  "samples": [
+    {
+      "frame": 0,
+      "feet_min_z": {
+        "right": 0.0,
+        "left": 0.0
+      }
+    },
+    {
+      "frame": 1,
+      "feet_min_z": {
+        "right": 0.0,
+        "left": 0.098995
+      }
+    },
+    {
+      "frame": 2,
+      "feet_min_z": {
+        "right": 0.0,
+        "left": 0.14
+      }
+    },
+    {
+      "frame": 3,
+      "feet_min_z": {
+        "right": 0.0,
+        "left": 0.098995
+      }
+    },
+    {
+      "frame": 4,
+      "feet_min_z": {
+        "right": 0.0,
+        "left": 0.0
+      }
+    },
+    {
+      "frame": 5,
+      "feet_min_z": {
+        "right": 0.098995,
+        "left": 0.0
+      }
+    },
+    {
+      "frame": 6,
+      "feet_min_z": {
+        "right": 0.14,
+        "left": 0.0
+      }
+    },
+    {
+      "frame": 7,
+      "feet_min_z": {
+        "right": 0.098995,
+        "left": 0.0
+      }
+    }
+  ],
+  "files": [
+    {
+      "file": "public/defense/models/legion-shield-walk-atlas.webp",
+      "sha256": "e69d6a3508b5e513dd1379b89fd629cedc3bfe22a8ec0cbf0932ea393837eeb4",
+      "bytes": 60778
+    },
+    {
+      "file": "public/defense/models/legion-shield-walk.glb",
+      "sha256": "ad999ba2e6b329f828e32a40fb8aca8e49719abeed6786e0b218de849b886fba",
+      "bytes": 306212
+    },
+    {
+      "file": "public/defense/models/legion-shield-walk.png",
+      "sha256": "c04dab3d629e2e76a94543696ed530e3021b2b967fe038467c520200ba5ff749",
+      "bytes": 116416
+    },
+    {
+      "file": "art-source/defense/legion-shield-walk-frames/legion-shield-walk-0.png",
+      "sha256": "c04dab3d629e2e76a94543696ed530e3021b2b967fe038467c520200ba5ff749",
+      "bytes": 116416
+    },
+    {
+      "file": "art-source/defense/legion-shield-walk-frames/legion-shield-walk-1.png",
+      "sha256": "6fa55d92d1a130f2c598af19cc8eafa5771c4f7ed99ebd3e593c4a4b7ac5fb85",
+      "bytes": 116198
+    },
+    {
+      "file": "art-source/defense/legion-shield-walk-frames/legion-shield-walk-2.png",
+      "sha256": "c63dfd1be2abc81af961c96a64b18dc8412dadc27163bfe97c753ba928f9b045",
+      "bytes": 115886
+    },
+    {
+      "file": "art-source/defense/legion-shield-walk-frames/legion-shield-walk-3.png",
+      "sha256": "4a9fa726f56a7922cf444bb3e920e394f7a9a5dda7aa456dbde79b4663b5e7a4",
+      "bytes": 113928
+    },
+    {
+      "file": "art-source/defense/legion-shield-walk-frames/legion-shield-walk-4.png",
+      "sha256": "de75ad5ba02cfc21894d54a2059f96ac09db2a24401b7ebba50f6ff140519cb6",
+      "bytes": 115698
+    },
+    {
+      "file": "art-source/defense/legion-shield-walk-frames/legion-shield-walk-5.png",
+      "sha256": "84698f20c637a122c8ff50b0bdcf14410ab1a04264b3089fc48f7a1427a2bea9",
+      "bytes": 114864
+    },
+    {
+      "file": "art-source/defense/legion-shield-walk-frames/legion-shield-walk-6.png",
+      "sha256": "a4f96420596d5e79cd70910cfdffc2cdfb66d158f22cdab71a1de5a3aa39cf40",
+      "bytes": 116805
+    },
+    {
+      "file": "art-source/defense/legion-shield-walk-frames/legion-shield-walk-7.png",
+      "sha256": "472f3c9ab72590cf3306e77b5d087347addf99e893c5ccc1ea07f4cbae4259eb",
+      "bytes": 116472
+    }
+  ]
+}

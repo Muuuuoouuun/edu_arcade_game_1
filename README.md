@@ -11,12 +11,14 @@ Node.js 22.12 이상에서 `npm ci`, `npm run dev`로 실행합니다. 기본 �
 | `/` | 아르카나 전용 타이틀 → 마을 → 동료/성장/원정 → 전투 |
 | `/arcade.html` | 보존한 기존 교육 미니게임 허브 |
 | `/model-lab.html` | 개발용 3D 모델·동작 검토 작업실 |
+| `/rush.html` | **아르카나 러시** 시제품: 영웅 직접 조작 + 탑 건설 웨이브 방어 ([설명](docs/rush/README.md) · [엔진 조사](docs/rush/engine-research-2026-11.md) · [1시간 루프](docs/rush/loop.md)) |
 | `npm test` | 게임 규칙·캠페인·저장·모바일 입력 등 검증 |
+| `npm run smoke:rush` | 러시 시제품 브라우저 점검(데스크톱·모바일 가로 터치) |
 | `npm run build` | `dist/` 웹 빌드: 아르카나와 별도 기존 허브·작업실 |
 | `npm run build:mobile` | `dist-mobile/` 아르카나 전용 빌드 |
 | `npm run android:debug` | 아르카나 전용 웹 동기화 후 Android 디버그 APK |
 
-Android 설치판은 미니게임 진입점·코드와 제작 작업실용 GLB를 포함하지 않습니다. 모바일 렌더러는 기존 React/TypeScript 기반 2.5D 전장입니다. Three.js 실시간 모델은 웹 제작 작업실에서 검토합니다. [Android 빌드·설치 안내](docs/android-install.md)를 참고하세요.
+Android 설치판은 미니게임 진입점·코드와 제작 작업실 전용 GLB를 포함하지 않습니다. 기존 원정은 React/TypeScript 기반 2.5D 전장이며, 마을에서 진입하는 별도 변경 훈련 전장은 Three.js의 단일 실시간 3D 장면입니다. 훈련 결과는 원정 성장에 합산되지 않습니다. [Android 빌드·설치 안내](docs/android-install.md)를 참고하세요.
 
 [기본 게임 규칙 v1 — 현재 규칙·설계 결정·적용 순서](docs/arcana-game-rules-v1.md) · [적·보스 모델링과 전투 연출 설계](docs/arcana-enemy-design/README.md)
 

@@ -1,0 +1,135 @@
+{
+  "createdAt": "2026-11-12T00:19:59.708010+00:00",
+  "baseCommit": "ad6a6d0369b651d0627d5e297ea5a9039412788b",
+  "ownerBranch": "codex/arcana-regional-art-sheets-20261112",
+  "targetBranch": "codex/arcana-stage-experience-20261106",
+  "generator": {
+    "provider": "connected OpenAI image generation tool",
+    "tool": "image_gen.imagegen",
+    "successfulCalls": 4,
+    "retries": 0,
+    "modelVersion": "not exposed by tool",
+    "actualChargeUsd": null
+  },
+  "status": "concept sheets only; no new meshes, rig, animation or gameplay integration",
+  "prompts": "generation-prompts.json",
+  "files": [
+    {
+      "id": "polar-coast-cast",
+      "titleKo": "극야 해안 — 수호자·항해술사·물범",
+      "file": "polar-coast-cast.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 1956404,
+      "sha256": "ccf566d202da8dc6a23d5e0d1e6ad827bf4ad7be74c06d24cd48a0b2b4c7de26",
+      "directImageReferences": [
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-09-followup/polar-bear-refined.png",
+          "sha256": "52de0104c0711f5066ce8c05ff039b66f06f088686c4e0427587b6683a0ad967"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-06/polar-night-coast.png",
+          "sha256": "8f0fcaa3aa87f7d0f15548131fe0f8e385858a3c608d96dbe34c19c5b8fa2709"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/core-theme/core-guardians-ian-riel-bron.png",
+          "sha256": "da0000b4b052b47f56b0b30678304e6f221d1e0abec7718ea54a35e7f4a46857"
+        }
+      ]
+    },
+    {
+      "id": "sunrain-islands-cast",
+      "titleKo": "태양비 군도 — 궁수·대장장이·화산 거북",
+      "file": "sunrain-islands-cast.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 2324950,
+      "sha256": "dae9e335c09b7ab583479e785e9e679620f6683056eda23ef20d93c392045847",
+      "directImageReferences": [
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-09-followup/gecko-ranger-refined.png",
+          "sha256": "7e509269713fa6ace5653fd17f3b92618d9feccd546efa81336aeb9ecbf69037"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-06/sunrain-islands.png",
+          "sha256": "117caf3c3397f435f38550bfe262f5e949f5900736133b5662c05097aea207de"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-09/volcanic-tortoise.png",
+          "sha256": "7cd4ce643baac6ab6e47ba33d5db8e92c6abe6b2f4a5d1747a2c17c83449678d"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/core-theme/core-companions-cheongun-kar-luna.png",
+          "sha256": "162f9334462a9e1121d005cc938fceb269c33dc14f179a325ee394a1e805676e"
+        }
+      ]
+    },
+    {
+      "id": "polar-coast-environment-kit",
+      "titleKo": "극야 해안 — 지형·건축 제작 키트",
+      "file": "polar-coast-environment-kit.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 2730176,
+      "sha256": "b4f97cf52973fb99a95569a597185c47a6edffe1cc50bb5f43e7f377e260e61c",
+      "directImageReferences": [
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-06/polar-night-coast.png",
+          "sha256": "8f0fcaa3aa87f7d0f15548131fe0f8e385858a3c608d96dbe34c19c5b8fa2709"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-09/polar-battlefield.png",
+          "sha256": "9db11cad6c46da5396421f114bc87827faf562cdaae731a14f0074eaee52b9d4"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-09-followup/polar-prism-tower.png",
+          "sha256": "5a8bc55cbd7e08e155a206614b575a9008f14c69f8855c4abb40ee1372b51c34"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/core-theme/verdant-starter-theme-sheet.png",
+          "sha256": "636949d6c7f6c3aa9c56558c713aefcc8ec2d2791a4bcb73d4949afe78e683aa"
+        }
+      ]
+    },
+    {
+      "id": "sunrain-islands-environment-kit",
+      "titleKo": "태양비 군도 — 지형·건축 제작 키트",
+      "file": "sunrain-islands-environment-kit.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 3144530,
+      "sha256": "5669e872ff7605c24bdcafe5771ddda8735719a073be2cd988ba24b665e26794",
+      "directImageReferences": [
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-06/sunrain-islands.png",
+          "sha256": "117caf3c3397f435f38550bfe262f5e949f5900736133b5662c05097aea207de"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-09/tropical-battlefield.png",
+          "sha256": "cf6f9459cc20d63c793046441ebca3742632488872270796cd528eac3c90d425"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-09-followup/tropical-seed-mortar.png",
+          "sha256": "7cb547f9fadc181c5ace7772bbfafb2d43c9447700ff0771a4277c649d4c1dd9"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/core-theme/verdant-starter-theme-sheet.png",
+          "sha256": "636949d6c7f6c3aa9c56558c713aefcc8ec2d2791a4bcb73d4949afe78e683aa"
+        }
+      ]
+    }
+  ],
+  "modelingReview": [
+    "Polar bear shield/hammer handedness changes between the large neutral view and braced action view. Select the canonical hand contract from the actual mesh; do not rig from mirrored views.",
+    "Bear rear mini-view omits weapons; its shield mounting and wrist straps need an explicit real mesh assembly view.",
+    "Navigator and lava smith preserve more realistic proportions than bear/gecko. Unify head/body proportions in a shared-camera blockout while preserving their identities.",
+    "Seal flippers overlap in some views; confirm four flippers and harness clearance in a single actual model.",
+    "Gecko isolated crossbow simplifies the string and seed launch mechanism. Define the string, seed cup and projectile origin physically before animation.",
+    "Volcanic tortoise is shown at detail scale, not relative gameplay scale; side/back/top shell geometry is illustrative, not orthographic.",
+    "Environment ramps, door clearance, bridge landing heights, traversal widths and occlusion are concept targets only; no playable mesh or physics validation performed."
+  ]
+}

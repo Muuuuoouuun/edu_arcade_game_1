@@ -1,0 +1,309 @@
+{
+  "source": "art-source/defense/wood-soldier-death.blend",
+  "source_sha256": "a013c1c376a4ba80d35ba09e0ad0a4da3e3ad6d7feb4b0e84ffdf1f5dbeebf68",
+  "base_source": "art-source/defense/wood-soldier.blend",
+  "base_source_sha256": "90db5602af49e7eaf6bd69e9809872fb11e7321331d5c894b0253220f622229e",
+  "regeneration_command": "npm run models:wood-death",
+  "reference": "docs/arcana-direction-loop/model-drafts/wood-log-compare-cycle34.webp",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      317.61
+    ],
+    "crop": [
+      0,
+      0,
+      384,
+      384
+    ],
+    "orthographic_scale": 6.300000190734863
+  },
+  "clip": "wood-soldier-death",
+  "duration": 0.6333333333333333,
+  "baked_frames": [
+    1,
+    5,
+    10,
+    15,
+    20
+  ],
+  "effect_duration": 0.7,
+  "grip_parent": "arm-near",
+  "samples": [
+    {
+      "frame": 1,
+      "time": 0.0,
+      "bounds": [
+        41.521,
+        13.42,
+        244.752,
+        338.534
+      ],
+      "lowest_vertex": 0.0
+    },
+    {
+      "frame": 2,
+      "time": 0.03333,
+      "bounds": [
+        41.184,
+        13.42,
+        244.752,
+        338.534
+      ],
+      "lowest_vertex": 0.0
+    },
+    {
+      "frame": 3,
+      "time": 0.06667,
+      "bounds": [
+        40.342,
+        13.498,
+        244.773,
+        338.541
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 4,
+      "time": 0.1,
+      "bounds": [
+        39.846,
+        16.1,
+        245.474,
+        338.751
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 5,
+      "time": 0.13333,
+      "bounds": [
+        40.146,
+        22.168,
+        247.035,
+        339.197
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 6,
+      "time": 0.16667,
+      "bounds": [
+        41.396,
+        31.511,
+        249.26,
+        339.75
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 7,
+      "time": 0.2,
+      "bounds": [
+        43.745,
+        43.982,
+        251.952,
+        340.185
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 8,
+      "time": 0.23333,
+      "bounds": [
+        47.262,
+        52.706,
+        254.924,
+        340.184
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 9,
+      "time": 0.26667,
+      "bounds": [
+        51.391,
+        58.102,
+        258.699,
+        340.107
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 10,
+      "time": 0.3,
+      "bounds": [
+        54.957,
+        67.19,
+        272.214,
+        340.874
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 11,
+      "time": 0.33333,
+      "bounds": [
+        58.582,
+        79.733,
+        283.785,
+        349.888
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 12,
+      "time": 0.36667,
+      "bounds": [
+        62.184,
+        92.413,
+        292.903,
+        357.476
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 13,
+      "time": 0.4,
+      "bounds": [
+        65.563,
+        105.073,
+        299.437,
+        363.501
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 14,
+      "time": 0.43333,
+      "bounds": [
+        68.525,
+        118.633,
+        305.664,
+        368.054
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 15,
+      "time": 0.46667,
+      "bounds": [
+        70.893,
+        131.05,
+        311.218,
+        372.199
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 16,
+      "time": 0.5,
+      "bounds": [
+        72.505,
+        140.292,
+        314.501,
+        374.782
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 17,
+      "time": 0.53333,
+      "bounds": [
+        73.216,
+        144.566,
+        315.818,
+        375.86
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 18,
+      "time": 0.56667,
+      "bounds": [
+        73.237,
+        144.696,
+        315.856,
+        375.891
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 19,
+      "time": 0.6,
+      "bounds": [
+        73.237,
+        144.696,
+        315.856,
+        375.891
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 20,
+      "time": 0.63333,
+      "bounds": [
+        73.237,
+        144.696,
+        315.856,
+        375.891
+      ],
+      "lowest_vertex": 0.001
+    }
+  ],
+  "files": [
+    {
+      "file": "wood-soldier-death.glb",
+      "bytes": 665716,
+      "sha256": "e85f2576c8ef138a5ff0a9f822785a37687f520baf11b1d80f7698aaff13f359"
+    },
+    {
+      "file": "wood-soldier-death-atlas.webp",
+      "bytes": 51172,
+      "sha256": "dc7f597602a290ffcdd52ab1e06b61f60dcc6e054104883ef5e844d581e55549"
+    },
+    {
+      "file": "wood-soldier-death.png",
+      "bytes": 148340,
+      "sha256": "9a5b7c7e5652711105e66f41354519aa9164afb4529bc2c958d018e1625b98fe"
+    }
+  ],
+  "renders": [
+    {
+      "path": "art-source/defense/wood-death-frames/wood-death-0.png",
+      "sha256": "9a5b7c7e5652711105e66f41354519aa9164afb4529bc2c958d018e1625b98fe"
+    },
+    {
+      "path": "art-source/defense/wood-death-frames/wood-death-1.png",
+      "sha256": "f69fa9297e6d3797775d5bc42faba916fa7dc516dddb536ace55bca6731c6163"
+    },
+    {
+      "path": "art-source/defense/wood-death-frames/wood-death-2.png",
+      "sha256": "9606817821f383b7184e6b111a31b2817b43d7024e1269dff4320efb3c91a130"
+    },
+    {
+      "path": "art-source/defense/wood-death-frames/wood-death-3.png",
+      "sha256": "16323832a345a9b6614e3f94057d79a6f264724b5941f6ae09e8585477e022c4"
+    },
+    {
+      "path": "art-source/defense/wood-death-frames/wood-death-4.png",
+      "sha256": "458b0d2da05f85293c76409c438d780e17c44eaa3f0fb9724f15aa835acd36cc"
+    }
+  ],
+  "camera": {
+    "location": [
+      5.0,
+      -10.0,
+      6.900000095367432
+    ],
+    "rotation_euler": [
+      1.157740592956543,
+      3.3536032617575984e-08,
+      0.46364766359329224
+    ],
+    "samples": 64,
+    "view_transform": "Standard"
+  }
+}

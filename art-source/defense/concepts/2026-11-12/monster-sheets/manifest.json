@@ -1,0 +1,177 @@
+{
+  "createdAt": "2026-11-12T00:54:33.890507+00:00",
+  "baseCommit": "7b0634eac43277dcda9f421507b4ea3e6933f7d2",
+  "ownerBranch": "codex/arcana-monster-sheets-20261112",
+  "targetBranch": "codex/arcana-stage-experience-20261106",
+  "generator": {
+    "provider": "connected OpenAI image generation tool",
+    "tool": "image_gen.imagegen",
+    "successfulCalls": 6,
+    "initialCalls": 4,
+    "boundedCorrectionCalls": 2,
+    "failedCalls": 0,
+    "modelVersion": "not exposed by tool",
+    "actualChargeUsd": null
+  },
+  "status": "12 concept monsters on four selected sheets; no new model, animation, balance or game integration",
+  "prompts": "generation-prompts.json",
+  "selectedFiles": [
+    {
+      "id": "woodland-monster-roster",
+      "titleKo": "숲 몬스터 — 가시 멧돼지·포자 도약체·바위등 곰",
+      "file": "woodland-monster-roster.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 2284993,
+      "sha256": "24e06a9013b76e06ae2452fc1d5f0f194def96c5fee56df3eef1bd4fc8935359",
+      "initialImageReferences": [
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-10-29/beasts/moss-boar.png",
+          "sha256": "04d236669d7ae5c84cd23f4c9ead97f8274f2d13250efdcfd2f19365f493d7b1"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-10-29/beasts/stoneback-bear.png",
+          "sha256": "9f0799a03af53bbaabc47a6236d8d307eab755b001f2395452139e9f1428be8e"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-06/verdant-heart.png",
+          "sha256": "460b1f4e5badcac237b816b6a037d5967691f21207056e9119f7199a21b977b3"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/regional-sheets/sunrain-islands-cast.png",
+          "sha256": "dae9e335c09b7ab583479e785e9e679620f6683056eda23ef20d93c392045847"
+        }
+      ],
+      "correctionImageReferences": []
+    },
+    {
+      "id": "frost-coast-monster-roster",
+      "titleKo": "서리 해안 몬스터 — 서리 사냥개·얼음 게·설암 트롤",
+      "file": "frost-coast-monster-roster.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 2309247,
+      "sha256": "43323d4b80114bab176f560e5594923a0e8ecb1f83d615b0c9bb1dad204dca2f",
+      "initialImageReferences": [
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-09/polar-monsters.png",
+          "sha256": "25cb6b60a3ed0d3ef7e97d43be85008dddc716fffb46dc60ccbf4ec97d7f7ca6"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-10-29/western/troll-variants.png",
+          "sha256": "f2f1afbe2e2e0f758426466f4d23de55a8591bdb195c2fd1100a3794454d093a"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/nordic-sheets/nordic-viking-guardians.png",
+          "sha256": "7c7d73b97e79d79c4e0251538eac91ceb7cef2d958001eb2d4bd833aee784f2a"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/nordic-sheets/nordic-fjord-environment-kit.png",
+          "sha256": "18e4f1b6361221251fdf335751a2ca7b866d6844849db933e4aa52756bfc669a"
+        }
+      ],
+      "correctionImageReferences": []
+    },
+    {
+      "id": "raider-monster-roster",
+      "titleKo": "약탈대 몬스터 — 오크 돌격병·오우거 파쇄병·밤날개 괴수",
+      "file": "raider-monster-roster.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 2324147,
+      "sha256": "838f6af0b9c8746cf80cda91cfc3f1494f4efe703474fb36e75c50f729b7d90a",
+      "initialImageReferences": [
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-10-29/western/orc-variants.png",
+          "sha256": "1e6456d72ad7dc860b5e2a9678ec30f801dbcccaf2a026f4f65fe162ffad11e7"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-10-29/western/ogre-variants.png",
+          "sha256": "4cf938e99e348c84e05e48bba2966497e5b898e18f964fdf7b59609b16fcfc5d"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-10-29/western/vampire-variants.png",
+          "sha256": "caf0893e0908622c42bf5c6de9e05fee7adc4b6cb7d50216f53c988760f1d65f"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/nordic-sheets/nordic-viking-guardians.png",
+          "sha256": "7c7d73b97e79d79c4e0251538eac91ceb7cef2d958001eb2d4bd833aee784f2a"
+        }
+      ],
+      "correctionImageReferences": [
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/monster-sheets/drafts/raider-monster-roster-initial.png",
+          "sha256": "21f19e593b378cc89f2c57d18d954cd1d60fa3b2ab1f127bd320d9cae97b3c40"
+        }
+      ]
+    },
+    {
+      "id": "nordic-boss-monster-roster",
+      "titleKo": "북유럽 보스 — 룬석 거인·폭풍 와이번·피오르 바다뱀",
+      "file": "nordic-boss-monster-roster.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 2402905,
+      "sha256": "43fc1ab09ef78c6e6ee38312d868c2dab601851b797d95c34767199f85583b8b",
+      "initialImageReferences": [
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/nordic-sheets/nordic-fjord-environment-kit.png",
+          "sha256": "18e4f1b6361221251fdf335751a2ca7b866d6844849db933e4aa52756bfc669a"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/nordic-sheets/nordic-viking-guardians.png",
+          "sha256": "7c7d73b97e79d79c4e0251538eac91ceb7cef2d958001eb2d4bd833aee784f2a"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-10-29/western/troll-variants.png",
+          "sha256": "f2f1afbe2e2e0f758426466f4d23de55a8591bdb195c2fd1100a3794454d093a"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-06/polar-night-coast.png",
+          "sha256": "8f0fcaa3aa87f7d0f15548131fe0f8e385858a3c608d96dbe34c19c5b8fa2709"
+        }
+      ],
+      "correctionImageReferences": [
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/monster-sheets/drafts/nordic-boss-monster-roster-initial.png",
+          "sha256": "88a9b81ff65dacf537a3de6147ba837da7aaeb32c7e8c077f26d912fd6603a3e"
+        }
+      ]
+    }
+  ],
+  "supersededDrafts": [
+    {
+      "id": "raider-monster-roster",
+      "status": "superseded: separate front arms and wings conflicted with requested four-limb anatomy",
+      "file": "drafts/raider-monster-roster-initial.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 2397803,
+      "sha256": "21f19e593b378cc89f2c57d18d954cd1d60fa3b2ab1f127bd320d9cae97b3c40"
+    },
+    {
+      "id": "nordic-boss-monster-roster",
+      "status": "superseded: separate front arms and wings conflicted with requested four-limb anatomy",
+      "file": "drafts/nordic-boss-monster-roster-initial.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 2440665,
+      "sha256": "88a9b81ff65dacf537a3de6147ba837da7aaeb32c7e8c077f26d912fd6603a3e"
+    }
+  ],
+  "modelingReview": [
+    "Nightwing and Storm Wyvern were each corrected once to remove separate ordinary front arms. Use corrected selected sheets; archived drafts are not modeling authority.",
+    "Wing wrist/finger struts and membranes still need a single mesh/rig contract; illustrated views are not precise anatomy or orthographic contracts.",
+    "Ice crab leg/pincer counts and joints overlap in small views. Establish two pincers plus eight walking legs in the actual model.",
+    "Frostcliff troll and raider rear views omit held weapons; bind club/axe to defined hands and canonical grip positions.",
+    "Spore hopper sac inflation is an attack concept; projectile origin and sac deformation are unimplemented.",
+    "Monster scale cues and attack poses are proposals. No collision size, flight, water traversal, timings or damage values have been implemented or tested.",
+    "Rock plate counts, thorn arrangements and small material details vary between views. Resolve into one editable mesh before animation."
+  ]
+}

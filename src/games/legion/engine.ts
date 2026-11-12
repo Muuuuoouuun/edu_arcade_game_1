@@ -2,6 +2,8 @@ import { DEPLOY, LANES, MAX_ENEMIES, MONSTER_DEFS, POPULATION_CAP, UNIT_DEFS, WA
 import type { LegionAction, LegionEffect, LegionState, Monster, MonsterKind, Point, Soldier, UnitKind } from './types.ts';
 
 const dist = (a:Point,b:Point) => Math.hypot(a.x-b.x,a.y-b.y);
+/** A facing shield absorbs 70% of the damage from each frontal attack. */
+const SHIELD_FRONT_DAMAGE_FACTOR = .3;
 const copy = (s:LegionState):LegionState => ({...s,units:s.units.map(u=>({...u,home:{...u.home}})),enemies:s.enemies.map(e=>({...e})),effects:s.effects.map(e=>({...e,from:{...e.from},to:{...e.to}}))});
 const pathLengths=LANES.map(points=>points.slice(1).map((p,i)=>dist(points[i],p)));
 const laneLengths=pathLengths.map(parts=>parts.reduce((a,b)=>a+b,0));
@@ -15,8 +17,8 @@ function along(lane:number,progress:number):Point {
   return {...points[points.length-1]};
 }
 function move(actor:Point,to:Point,speed:number,dt:number){const d=dist(actor,to);if(d<.01)return;const amount=Math.min(1,speed*dt/d);actor.x+=(to.x-actor.x)*amount;actor.y+=(to.y-actor.y)*amount;}
-function effect(s:LegionState,kind:LegionEffect['kind'],from:Point,to:Point,color:string,material?:LegionEffect['material']){
-  s.effects.push({id:s.nextId++,kind,from:{x:from.x,y:from.y},to:{x:to.x,y:to.y},age:0,duration:kind==='death'?.7:kind==='breach'?.55:kind==='summon'?.55:.32,color,material});
+function effect(s:LegionState,kind:LegionEffect['kind'],from:Point,to:Point,color:string,material?:LegionEffect['material'],sourceId?:number){
+  s.effects.push({id:s.nextId++,kind,from:{x:from.x,y:from.y},to:{x:to.x,y:to.y},age:0,duration:kind==='death'?.7:kind==='breach'?.55:kind==='summon'?.55:.32,color,material,...(sourceId===undefined?{}:{sourceId})});
   if(s.effects.length>96)s.effects.splice(0,s.effects.length-96);
 }
 export function createLegion():LegionState {
@@ -90,10 +92,10 @@ function attack(s:LegionState,unit:Soldier,target:Monster){
     }else if(unit.kind==='beast'){
       for(const enemy of s.enemies.filter(e=>e.hp>0&&dist(e,unit)<110).slice(0,7)){damageEnemy(enemy,def.damage*1.3,'impact');enemy.slow=2;}
       effect(s,'burst',unit,unit,'#ffe18c');
-    }else{damageEnemy(target,def.damage*2,'impact');target.slow=1.5;effect(s,'slash',unit,target,'#ffe8a9');}
+    }else{damageEnemy(target,def.damage*2,'impact');target.slow=1.5;effect(s,'slash',unit,target,'#ffe8a9',undefined,unit.id);}
   }else{
     damageEnemy(target,def.damage*(unit.kind==='mage'&&(target.kind==='wood'||target.kind==='sprout')?1.2:1),unit.kind==='mage'?'fire':unit.kind==='shield'||unit.kind==='beast'?'impact':'physical');
-    effect(s,unit.kind==='shield'||unit.kind==='beast'?'slash':'shot',unit,target,unit.kind==='mage'?'#7fe6ff':unit.kind==='archer'?'#dcf69e':'#ffe6ab');
+    effect(s,unit.kind==='shield'||unit.kind==='beast'?'slash':'shot',unit,target,unit.kind==='mage'?'#7fe6ff':unit.kind==='archer'?'#dcf69e':'#ffe6ab',undefined,unit.id);
   }
 }
 function dead(s:LegionState){
@@ -133,7 +135,15 @@ export function stepLegion(s:LegionState,deltaSeconds:number):LegionState {
   for(const e of next.enemies){
     e.cooldown=Math.max(0,e.cooldown-dt);e.hit=Math.max(0,e.hit-dt);e.slow=Math.max(0,e.slow-dt);
     const target=nearest(e,next.units,e.kind==='boss'?76:48),def=MONSTER_DEFS[e.kind];
-    if(target){e.facing=target.x<e.x?-1:1;if(e.cooldown===0){e.cooldown=def.cooldown;target.hp=Math.max(0,target.hp-def.damage*(1+(next.wave-1)*.1));target.hit=.12;effect(next,'slash',e,target,'#ff8875');}}
+    if(target){e.facing=target.x<e.x?-1:1;if(e.cooldown===0){
+      e.cooldown=def.cooldown;
+      // The same horizontal facing used by the sprite and targeting determines the front.
+      // A strike at exactly the same x is treated as frontal; attacks behind bypass the guard.
+      const guarded=target.kind==='shield'&&(e.x-target.x)*target.facing>=0;
+      const damage=def.damage*(1+(next.wave-1)*.1)*(guarded?SHIELD_FRONT_DAMAGE_FACTOR:1);
+      target.hp=Math.max(0,target.hp-damage);target.hit=.12;
+      effect(next,'slash',e,target,guarded?'#9deae1':'#ff8875',guarded?'guard':undefined);
+    }}
     else{const boost=e.kind==='boss'&&e.hp<e.maxHp/2?1.4:1;e.progress+=def.speed*dt*(e.slow>0?.6:1)*boost;Object.assign(e,along(e.lane,e.progress));e.facing=1;}
     if(e.progress>=laneLengths[e.lane]){next.hp=Math.max(0,next.hp-(e.kind==='boss'?20:1));effect(next,'breach',e,e,'#ffb46d');e.progress=Infinity;}
   }

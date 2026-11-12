@@ -1,0 +1,15 @@
+{"case":"2-3 base","stage":"2-3","build":"front3","phase":"lost","hp":0,"leaks":20,"sec":111}
+{"case":"2-3 base","stage":"2-3","build":"high3","phase":"lost","hp":0,"leaks":20,"sec":158}
+{"case":"2-3 base","stage":"2-3","build":"all6","phase":"won","hp":7,"leaks":13,"sec":192}
+{"case":"2-3 blizzard range-30 (non-high)","stage":"2-3","build":"front3","phase":"lost","hp":0,"leaks":20,"sec":104}
+{"case":"2-3 blizzard range-30 (non-high)","stage":"2-3","build":"high3","phase":"lost","hp":0,"leaks":20,"sec":158}
+{"case":"2-3 blizzard range-30 (non-high)","stage":"2-3","build":"all6","phase":"won","hp":6,"leaks":14,"sec":192}
+{"case":"2-3 blizzard range-30 + enemies x0.9","stage":"2-3","build":"front3","phase":"lost","hp":0,"leaks":20,"sec":119}
+{"case":"2-3 blizzard range-30 + enemies x0.9","stage":"2-3","build":"high3","phase":"lost","hp":0,"leaks":20,"sec":179}
+{"case":"2-3 blizzard range-30 + enemies x0.9","stage":"2-3","build":"all6","phase":"won","hp":12,"leaks":8,"sec":202}
+{"case":"2-2 base","stage":"2-2","build":"front3","phase":"lost","hp":0,"leaks":20,"sec":184}
+{"case":"2-2 base","stage":"2-2","build":"high3","phase":"lost","hp":0,"leaks":20,"sec":212}
+{"case":"2-2 base","stage":"2-2","build":"all6","phase":"won","hp":20,"leaks":0,"sec":155}
+{"case":"2-2 snowbank x0.8 bottom road","stage":"2-2","build":"front3","phase":"lost","hp":0,"leaks":20,"sec":189}
+{"case":"2-2 snowbank x0.8 bottom road","stage":"2-2","build":"high3","phase":"won","hp":4,"leaks":16,"sec":219}
+{"case":"2-2 snowbank x0.8 bottom road","stage":"2-2","build":"all6","phase":"won","hp":20,"leaks":0,"sec":155}

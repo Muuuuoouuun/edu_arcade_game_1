@@ -1,3 +1,5 @@
+import { DASH_DAMAGE, DASH_HIT_RADIUS, DASH_IMPACT, distanceToSegment } from './action.ts';
+import { walkFrame, advanceFrostWolfGait, advanceEnemyGait, advanceLocomotion, advanceMageLocomotion, advancePetLocomotion, movementFacing } from './locomotion.ts';
 import { BRANCHES, ENEMIES, HERO_ORDER, STAGE_COUNT, TOWERS, getPaths, getSlots, getStage, getRegion } from './data.ts';
 import { DIFFICULTIES, getDifficulty, getWavePlan } from './difficulty.ts';
 import type { Difficulty, Branch, DefenseAction, DefenseState, Element, Enemy, EnemyKind, HeroId, Point, Tower, TowerKind, CombatAttack, Projectile, AttackSource, AttackActor, DamageProfile, Effect } from './types.ts';
@@ -42,11 +44,18 @@ export function positionOnPath(path:number,progress:number,stage=1):Point {
 }
 /** Extra battle coins for a wave cleared with no breach (design experiment: rewards clean defense). */
 export const FLAWLESS_BONUS=25;
+/** One tactical supply per wave, battle coins only; no kill streak farming. */
+export const SKILL_SUPPLY=15;
+export const SKILL_SUPPLY_KILLS=3;
+export function skillSlowSeconds(hero:HeroId,promotion:DefenseState['promotion']):number {
+  const innate=hero==='druid'?5:hero==='tao'?4:0;
+  return promotion==='control'?(innate?innate+2:4):innate;
+}
 export function createDefense(stage:number,hero:HeroId,training=0,difficulty:Difficulty='standard'):DefenseState {
   const id=Math.max(1,Math.min(STAGE_COUNT,Math.trunc(stage)||1)),data=getStage(id);
   const mode=getDifficulty(difficulty),settings=DIFFICULTIES[mode];
   const chosen=HERO_ORDER.includes(hero)?hero:'mage',position=data.region==='snow'?{x:440,y:390}:{x:440,y:355};
-  return {stage:id,difficulty:mode,phase:'prep',paused:false,speed:1,time:0,wave:0,coins:(data.region==='snow'?280:240)+settings.startingCoins,hp:20,outpostHp:12,kills:0,leaks:0,waveStartLeaks:0,enemies:[],towers:[],effects:[],attacks:[],projectiles:[],hero:chosen,heroPosition:position,heroTarget:{...position},heroVelocity:{x:0,y:0},dashCooldown:0,dashTime:0,heroFacing:-1,mercenaryPosition:{x:position.x+38,y:position.y+35},mercenaryFacing:-1,pet:chosen==='druid'?{position:{x:position.x+28,y:position.y-22},target:{x:position.x+28,y:position.y-22},facing:-1}:null,heroCooldown:0,mercenary:null,mercCooldown:0,petCooldown:0,skillCooldown:0,bossCharge:0,freeze:0,bossCycle:8,promotion:null,spawned:0,spawnTimer:0,nextId:1,training:Math.max(0,Math.min(5,Math.trunc(training)||0)),notice:data.region==='snow'?'빙판 위의 적은 빨라져요. 고지대와 화염 타워를 활용하세요.':'빛나는 건설 지점을 선택해 타워를 세우세요.',questProgress:data.questType==='hunt'?0:data.questType==='outpost'?12:20};
+  return {stage:id,difficulty:mode,phase:'prep',paused:false,speed:1,time:0,wave:0,coins:(data.region==='snow'?280:240)+settings.startingCoins,hp:20,outpostHp:12,kills:0,leaks:0,waveStartLeaks:0,enemies:[],towers:[],effects:[],attacks:[],projectiles:[],hero:chosen,heroPosition:position,heroTarget:{...position},heroVelocity:{x:0,y:0},locomotion:{hero:{distance:0,speed:0},mercenary:{distance:0,speed:0},pet:{distance:0,speed:0}},dashCooldown:0,dashTime:0,dashHitIds:[],heroFacing:-1,mercenaryPosition:{x:position.x+38,y:position.y+35},mercenaryFacing:-1,pet:chosen==='druid'?{position:{x:position.x+28,y:position.y-22},target:{x:position.x+28,y:position.y-22},facing:-1}:null,heroCooldown:0,mercenary:null,mercCooldown:0,petCooldown:0,skillCooldown:0,bossCharge:0,freeze:0,bossCycle:8,promotion:null,spawned:0,spawnTimer:0,nextId:1,training:Math.max(0,Math.min(5,Math.trunc(training)||0)),notice:data.region==='snow'?'빙판 위의 적은 빨라져요. 고지대와 화염 타워를 활용하세요.':'빛나는 건설 지점을 선택해 타워를 세우세요.',questProgress:data.questType==='hunt'?0:data.questType==='outpost'?12:20};
 }
 
 export function damageMultiplier(kind:EnemyKind,element:Element):number {
@@ -70,7 +79,10 @@ function hit(s:DefenseState,e:Enemy,amount:number,element:Element,from:Point,for
   if(e.hp<=0)return;
   const multiplier=damageMultiplier(e.kind,element);
   if(multiplier>1)s.weakHits=(s.weakHits||0)+1;
+  // Preserve the pose before a lethal impulse replaces the live knockback speed.
+  const priorBrace=e.knockVelocity??0;
   e.hp-=amount*multiplier;e.hit=.16;e.recoil=.22;
+  if(e.kind==='frostwolf'&&e.hp<=0)e.deathBraceVelocity=priorBrace;
   if(element==='fire')e.burn=Math.max(e.burn,2.5);
   if(element==='water'){e.wet=5;e.slow=2.7;}
   if(force>0&&(e.knockCooldown||0)<=0){
@@ -90,7 +102,11 @@ function reap(s:DefenseState) {
     if(merged&&!boss)mergedSum+=bounty;
     else effect(s,enemy,enemy,'physical',boss?`+${bounty} 처치!`:`+${bounty}`,'coin');
     if(boss)effect(s,enemy,enemy,'impact','','shockwave',{force:145});
-    effect(s,enemy,enemy,'physical',undefined,'death',{targetSprite:ENEMIES[enemy.kind].sprite,targetId:enemy.id,targetKind:enemy.kind,targetFacing:enemy.facing||1,force:enemy.knockVelocity||0});
+    // Snapshot presentation-only locomotion before removing the enemy; never alias its heading.
+    const ahead=enemy.kind==='frostwolf'?positionOnPath(enemy.path,enemy.progress+4,s.stage):null;
+    const braceVelocity=enemy.deathBraceVelocity??enemy.knockVelocity??0;
+    const targetWalk=ahead?{...(braceVelocity>7?{braceVelocity}:{}),heading:{...(enemy.walkHeading??{x:ahead.x-enemy.x,y:ahead.y-enemy.y})},distance:(enemy.walkDistance??enemy.progress)+enemy.id*7,...(enemy.walkCycles===undefined?{}:{cycles:enemy.walkCycles+enemy.id*7/40})}:undefined;
+    effect(s,enemy,enemy,'physical',undefined,'death',{targetSprite:ENEMIES[enemy.kind].sprite,targetId:enemy.id,targetKind:enemy.kind,targetFacing:enemy.facing||1,...(targetWalk?{targetWalk}:{}),force:enemy.knockVelocity||0});
   }
   if(merged){const last=crowd[crowd.length-1];effect(s,last,last,'physical',`+${mergedSum} ×${crowd.length}`,'coin');}
   s.enemies=s.enemies.filter(e=>e.hp>0);
@@ -103,6 +119,12 @@ function orderedTargets(s:DefenseState,from:Point,range:number) {
 }
 function ownerPosition(s:DefenseState,source:AttackSource,slot?:number):Point {
   return source==='hero'?s.heroPosition:source==='mercenary'?s.mercenaryPosition:source==='pet'?s.pet?.position||s.heroPosition:getSlots(s.stage)[slot||0];
+}
+/** Keep the last authored facing after recovery; this is presentation state only. */
+function aimLocomotion(s:DefenseState,source:AttackSource,from:Point,to:Point) {
+  if(source==='tower')return;
+  const length=distance(from,to);
+  if(length>.001)s.locomotion={...s.locomotion,[source]:{...s.locomotion[source],heading:{x:(to.x-from.x)/length,y:(to.y-from.y)/length}}};
 }
 /** Moving or dashing cancels a hero swing that has not landed; the cooldown is refunded so repositioning never costs attacks. */
 function cancelHeroWindup(s:DefenseState){
@@ -129,8 +151,10 @@ function queueAttack(s:DefenseState,source:AttackSource,actor:AttackActor,from:P
   const duration=hitAt+(melee?.28:.18);
   const facing=target.x<from.x?-1:1;
   if(source==='hero')s.heroFacing=facing;else if(source==='mercenary')s.mercenaryFacing=facing;else if(source==='pet'&&s.pet)s.pet.facing=facing;
+  const walkEntry=(actor==='barbarian'||actor==='elf'||actor==='dwarf'||actor==='mage'||actor==='tao'||actor==='druid')&&(source==='hero'||source==='mercenary')&&s.locomotion[source].speed>.5?walkFrame(s.locomotion[source].distance):undefined;
+  aimLocomotion(s,source,from,target);
   if(source==='tower'){const tower=s.towers.find(t=>t.slot===options.slot);if(tower)tower.aim={...target};}
-  s.attacks.push({id:s.nextId++,source,...(options.slot!==undefined?{sourceSlot:options.slot}:{}),actor,kind,from:{...from},to:{x:target.x,y:target.y},targetId:target.id,range,damage,element,area:options.area||0,force:options.force||0,chain:options.chain||false,pierce:options.pierce||false,splashLimit:source==='tower'?2:99,splashDamage:source==='tower'?.4:.7,elapsed:0,duration,hitAt,fired:false});
+  s.attacks.push({id:s.nextId++,source,...(walkEntry===undefined?{}:{walkEntry}),...(options.slot!==undefined?{sourceSlot:options.slot}:{}),actor,kind,from:{...from},to:{x:target.x,y:target.y},targetId:target.id,range,damage,element,area:options.area||0,force:options.force||0,chain:options.chain||false,pierce:options.pierce||false,splashLimit:source==='tower'?2:99,splashDamage:source==='tower'?.4:.7,elapsed:0,duration,hitAt,fired:false});
   return true;
 }
 function resolveHit(s:DefenseState,target:Enemy,profile:DamageProfile,from:Point,center:Point=target) {
@@ -160,6 +184,8 @@ function launch(s:DefenseState,a:CombatAttack) {
   a.from={...from};
   if(!target)return; // A completed windup cannot strike a target already defeated.
   a.to={x:target.x,y:target.y};
+  aimLocomotion(s,a.source,from,a.to);
+  if(a.source==='tower'&&(a.actor==='crossbow'||(a.actor==='cannon'&&a.element==='impact'))){const tower=s.towers.find(t=>t.slot===a.sourceSlot);if(tower)tower.aim={...a.to};}
   if(a.actor==='wolf'||a.actor==='dwarf'||a.actor==='barbarian'){
     if(target&&distance(from,target)<=a.range+22){resolveHit(s,target,a,from);if(a.actor==='wolf')target.slow=Math.max(target.slow,1.6);}
     else effect(s,from,a.to,a.element,undefined,'shockwave',{force:22});
@@ -169,7 +195,7 @@ function launch(s:DefenseState,a:CombatAttack) {
   const speed=kind==='arrow'?650:kind==='bolt'?460:390;
   const dx=a.to.x-from.x,dy=a.to.y-from.y,len=Math.max(1,Math.hypot(dx,dy));
   const duration=kind==='shell'?Math.max(.3,Math.min(.9,len/speed)):len/speed;
-  s.projectiles.push({...a,id:s.nextId++,kind,position:{...from},previous:{...from},from:{...from},to:{...a.to},velocity:{x:dx/len*speed,y:dy/len*speed},targetId:target?.id||null,elapsed:0,duration,progress:0,arcHeight:kind==='shell'?55+len*.12:0,height:0,radius:kind==='shell'?9:kind==='arrow'?5:9,speed,hitIds:[],remainingHits:a.pierce?2:1});
+  s.projectiles.push({...a,...(a.source==='tower'&&(a.actor==='crossbow'||(a.actor==='cannon'&&a.element==='impact'))?{launchAim:{...a.to}}:{}),...((a.actor==='mage'||a.actor==='elf'||a.actor==='tao'||a.actor==='druid')?{launchAim:{...a.to},sourceSize:a.source==='hero'&&s.promotion?94:84}:{}),...(a.source==='tower'?{sourceLevel:s.towers.find(t=>t.slot===a.sourceSlot)?.level}:{}),id:s.nextId++,kind,position:{...from},previous:{...from},from:{...from},to:{...a.to},velocity:{x:dx/len*speed,y:dy/len*speed},targetId:target?.id||null,elapsed:0,duration,progress:0,arcHeight:kind==='shell'?55+len*.12:0,height:0,radius:kind==='shell'?9:kind==='arrow'?5:9,speed,hitIds:[],remainingHits:a.pierce?2:1});
   if(a.source==='tower'){const tower=s.towers.find(t=>t.slot===a.sourceSlot);if(tower)tower.recoil=.24;}
 }
 function advanceAttacks(s:DefenseState,dt:number) {
@@ -241,22 +267,38 @@ function advanceHero(s:DefenseState,dt:number,combat:boolean) {
       }
     }
   }
-  if(Math.abs(s.heroPosition.x-previous.x)>.05)s.heroFacing=s.heroPosition.x<previous.x?-1:1;
+  s.heroFacing=movementFacing(s.heroFacing,previous,s.heroPosition);
 }
 function stopDash(s:DefenseState) {
   if(s.dashTime>0){s.dashTime=0;s.heroTarget={...s.heroPosition};s.heroVelocity={x:0,y:0};}
 }
 function advanceActors(s:DefenseState,dt:number,combat:boolean) {
+  const before={hero:s.heroPosition,mercenary:s.mercenaryPosition,pet:s.pet?.position},dashing=s.dashTime>0;
   advanceHero(s,dt,combat);
+  if(combat&&dashing){
+    for(const enemy of s.enemies){
+      if(enemy.hp<=0||s.dashHitIds.includes(enemy.id)||distanceToSegment(enemy,before.hero,s.heroPosition)>DASH_HIT_RADIUS)continue;
+      s.dashHitIds=[...s.dashHitIds,enemy.id];
+      hit(s,enemy,DASH_DAMAGE,'physical',s.heroPosition,DASH_IMPACT);
+    }
+    reap(s);
+  }
   const mercTarget={x:Math.min(875,s.heroPosition.x+38),y:Math.min(565,s.heroPosition.y+35)};
-  const mercX=s.mercenaryPosition.x;s.mercenaryPosition=moveTowards(s.mercenaryPosition,mercTarget,220,dt);if(Math.abs(s.mercenaryPosition.x-mercX)>.05)s.mercenaryFacing=s.mercenaryPosition.x<mercX?-1:1;
+  s.mercenaryPosition=moveTowards(s.mercenaryPosition,mercTarget,220,dt);s.mercenaryFacing=movementFacing(s.mercenaryFacing,before.mercenary,s.mercenaryPosition);
   if(s.hero==='druid'||s.mercenary==='druid'){
     const owner=s.hero==='druid'?s.heroPosition:s.mercenaryPosition;
     s.pet??={position:{x:owner.x+28,y:owner.y-22},target:{...owner},facing:-1};
     const enemy=combat?orderedTargets(s,owner,240)[0]:undefined;
     s.pet.target=enemy?{x:Math.max(20,enemy.x-28),y:Math.min(560,enemy.y+18)}:{x:Math.min(875,owner.x+28),y:Math.max(35,owner.y-22)};
-    const petX=s.pet.position.x;s.pet.position=moveTowards(s.pet.position,s.pet.target,280,dt);if(Math.abs(s.pet.position.x-petX)>.05)s.pet.facing=s.pet.position.x<petX?-1:1;
+    const petBefore=s.pet.position;s.pet.position=moveTowards(s.pet.position,s.pet.target,280,dt);s.pet.facing=movementFacing(s.pet.facing,petBefore,s.pet.position);
   }else s.pet=null;
+  // A following companion can reach its target each tick while walking; settle after travel stops.
+  s.locomotion={
+    hero:((s.hero==='mage'||s.hero==='elf'||s.hero==='dwarf'||s.hero==='tao'||s.hero==='druid'||s.hero==='barbarian')?advanceMageLocomotion:advanceLocomotion)(s.locomotion.hero,before.hero,s.heroPosition,dt,distance(s.heroPosition,s.heroTarget)>.01,dashing),
+    mercenary:s.mercenary?((s.mercenary==='mage'||s.mercenary==='elf'||s.mercenary==='dwarf'||s.mercenary==='tao'||s.mercenary==='druid'||s.mercenary==='barbarian')?advanceMageLocomotion:advanceLocomotion)(s.locomotion.mercenary,before.mercenary,s.mercenaryPosition,dt,(s.mercenary==='elf'||s.mercenary==='mage'||s.mercenary==='dwarf'||s.mercenary==='tao'||s.mercenary==='druid'||s.mercenary==='barbarian')?distance(before.mercenary,s.mercenaryPosition)>.001:distance(s.mercenaryPosition,mercTarget)>.01):{distance:0,speed:0},
+    // A faster companion can reach its moving target every frame and still be walking.
+    pet:s.pet&&before.pet?advancePetLocomotion(s.locomotion.pet,before.pet,s.pet.position,dt):{distance:0,speed:0},
+  };
 }
 function advanceEffects(s:DefenseState,dt:number) {
   s.effects=s.effects.map(e=>({...e,life:e.life-dt,age:(e.age||0)+dt})).filter(e=>e.life>0);
@@ -300,7 +342,7 @@ function applyDefenseAction(state:DefenseState,action:DefenseAction):DefenseStat
   const s=copy(state);
   if(action.type==='start-wave') {
     if(s.phase!=='prep'&&s.phase!=='intermission') return state;
-    s.phase='wave';s.wave++;s.waveStartLeaks=s.leaks;s.spawned=0;s.spawnTimer=.4;s.effects=[];s.notice=getStage(s.stage).expanded&&s.wave===4?`${s.stage===8?'서리군주':'고목왕'}가 다가옵니다. 두 거점을 지켜주세요!`:`웨이브 ${s.wave} 시작!`;
+    s.phase='wave';s.wave++;s.lastSkill=undefined;s.waveStartLeaks=s.leaks;s.spawned=0;s.spawnTimer=.4;s.effects=[];s.notice=getStage(s.stage).expanded&&s.wave===4?`${s.stage===8?'서리군주':'고목왕'}가 다가옵니다. 두 거점을 지켜주세요!`:`웨이브 ${s.wave} 시작!`;
   } else if(action.type==='build') {
     const slot=getSlots(s.stage).find(p=>p.id===action.slot),kind=TOWERS[action.kind];
     if(!slot||slot.unlock>s.stage||!kind||s.towers.some(t=>t.slot===action.slot)||s.phase==='promotion') return state;
@@ -334,27 +376,41 @@ function applyDefenseAction(state:DefenseState,action:DefenseAction):DefenseStat
     if(len<1)return state;
     const travel=Math.min(DASH_RANGE,len);
     s.heroTarget={x:s.heroPosition.x+dx/len*travel,y:s.heroPosition.y+dy/len*travel};
-    s.heroVelocity={x:dx/len*DASH_SPEED,y:dy/len*DASH_SPEED};s.dashTime=travel/DASH_SPEED;s.dashCooldown=DASH_COOLDOWN;
+    s.heroVelocity={x:dx/len*DASH_SPEED,y:dy/len*DASH_SPEED};s.dashTime=travel/DASH_SPEED;s.dashCooldown=DASH_COOLDOWN;s.dashHitIds=[];
     if(Math.abs(dx)>.01)s.heroFacing=dx<0?-1:1;
     cancelHeroWindup(s);
     effect(s,s.heroPosition,s.heroTarget,'physical',undefined,'dash',{force:travel});
-    s.notice='질주! 빠르게 방어 위치를 바꿨어요.';
+    s.notice='돌파! 경로의 적을 한 번 타격하고 밀쳐내요.';
   } else if(action.type==='promote') {
     if(s.phase!=='promotion'||s.promotion||!['power','control'].includes(action.choice)) return state;
     s.promotion=action.choice;s.phase='intermission';s.notice=action.choice==='power'?'전직 완료! 공격력과 필살기가 강해졌어요.':'전직 완료! 사거리 증가 · 필살기에 둔화 효과!';
   } else if(action.type==='skill') {
-    if(s.phase!=='wave'||s.skillCooldown>0||s.enemies.length===0) return state;
+    if(s.phase!=='wave'||s.skillCooldown>0||!s.enemies.some(e=>e.hp>0)) return state;
     const stats=heroStats(s.hero);const boost=(1+s.training*.08)*(s.promotion==='power'?1.4:1);
     const interrupt=s.bossCharge>0&&s.enemies.some(e=>e.kind==='frostboss');
     if(interrupt){s.bossCharge=0;s.bossCycle=9;effect(s,s.heroPosition,s.enemies.find(e=>e.kind==='frostboss')!,'lightning','차단!','interrupt');}
     // Manual skills remain usable during a tower freeze and can interrupt its telegraph.
     const skillPower=s.hero==='barbarian'?165:s.hero==='druid'?90:115;
-    effect(s,s.heroPosition,s.heroPosition,stats.element,undefined,'skill',{force:260});
-    for(const e of s.enemies) {
+    const targets=s.enemies.filter(e=>e.hp>0),slowSeconds=skillSlowSeconds(s.hero,s.promotion);
+    // Snapshot exactly the living targets at the instant of damage: survivors can
+    // move and lethal targets can disappear before the visual effect settles.
+    const skillTargets=targets.map(({id,x,y})=>({id,x,y}));
+    let kills=0,damage=0,weakHits=0;
+    for(const e of targets) {
+      const before=e.hp;
+      if(damageMultiplier(e.kind,stats.element)>1)weakHits++;
       hit(s,e,skillPower*boost,stats.element,s.heroPosition,s.hero==='barbarian'?220:s.hero==='dwarf'?170:0);
-      if(s.promotion==='control'||s.hero==='tao'||s.hero==='druid') e.slow=s.hero==='druid'?5:4;
+      damage+=Math.min(before,Math.max(0,before-e.hp));
+      if(e.hp<=0)kills++;
+      else e.slow=Math.max(e.slow,slowSeconds);
     }
-    s.skillCooldown=20;s.notice=interrupt?'충전 차단! 서리군주의 눈보라를 막았어요.':'필살기 발동!';reap(s);
+    const supply=kills>=SKILL_SUPPLY_KILLS&&s.skillSupplyWave!==s.wave?SKILL_SUPPLY:0;
+    if(supply){s.coins+=supply;s.skillSupplyWave=s.wave;}
+    s.lastSkill={at:s.time,hits:targets.length,kills,damage:Math.round(damage),weakHits,supply,interrupted:interrupt,slowSeconds};
+    s.skillCooldown=20;s.notice=interrupt?'충전 차단! 서리군주의 눈보라를 막았어요.':`필살기 적중 ${targets.length} · 처치 ${kills}${supply?` · 전투 보급 +${supply}`:''}`;reap(s);
+    // Add the single aggregate marker after per-target effects so the shared
+    // 100-effect cap cannot evict it during a large simultaneous hit.
+    effect(s,s.heroPosition,s.heroPosition,stats.element,undefined,'skill',{force:260,skillHero:s.hero,skillTargets,...(s.promotion?{skillMode:s.promotion}:{})});
   }
   return s;
 }
@@ -381,7 +437,16 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
   }
   const combat=state.phase==='wave';
   const mercTarget={x:Math.min(875,state.heroPosition.x+38),y:Math.min(565,state.heroPosition.y+35)};
-  if(!combat&&distance(state.heroPosition,state.heroTarget)<.01&&Math.hypot(state.heroVelocity.x,state.heroVelocity.y)<.01&&(!state.mercenary||distance(state.mercenaryPosition,mercTarget)<.01)&&(!state.pet||distance(state.pet.position,state.pet.target)<.01)&&state.effects.length===0)return state;
+  if(!combat&&distance(state.heroPosition,state.heroTarget)<.01&&Math.hypot(state.heroVelocity.x,state.heroVelocity.y)<.01&&(!state.mercenary||distance(state.mercenaryPosition,mercTarget)<.01)&&(!state.pet||distance(state.pet.position,state.pet.target)<.01)&&state.effects.length===0){
+    // Settle the last measured step without advancing an otherwise idle simulation.
+    const motion=state.locomotion,delta=Math.min(.1,dt),settlingMerc=!!motion.mercenary.settle||((state.mercenary==='elf'||state.mercenary==='mage'||state.mercenary==='dwarf'||state.mercenary==='tao'||state.mercenary==='druid'||state.mercenary==='barbarian')&&motion.mercenary.speed>.5);
+    if(!motion.hero.settle&&!settlingMerc&&motion.pet.speed<=0)return state;
+    return {...state,locomotion:{
+      hero:motion.hero.settle?advanceMageLocomotion(motion.hero,state.heroPosition,state.heroPosition,delta,false):motion.hero,
+      mercenary:settlingMerc?advanceMageLocomotion(motion.mercenary,state.mercenaryPosition,state.mercenaryPosition,delta,false):motion.mercenary,
+      pet:motion.pet.speed>0?{...motion.pet,speed:0}:motion.pet,
+    }};
+  }
   const s=copy(state),delta=Math.min(.1,dt),stage=getStage(s.stage),lengths=pathLengths(s.stage),settings=DIFFICULTIES[getDifficulty(s.difficulty)];
   const plan=battlePlan(s.stage,s.wave,s.difficulty);
   s.time+=delta;advanceEffects(s,delta);advanceActors(s,delta,combat);
@@ -391,7 +456,7 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
     const kind=plan[s.spawned],base=ENEMIES[kind];
     const path=stage.expanded&&s.spawned%3===0&&kind!=='boss'&&kind!=='frostboss'?1:0;
     const hp=Math.round(base.hp*(stage.region==='snow'?1.1+stage.order*.12:.75+s.stage*.15)*(1+(s.wave-1)*.16)*settings.enemyHp);
-    s.enemies.push({id:s.nextId++,kind,hp,maxHp:hp,progress:0,path,speed:base.speed*settings.enemySpeed,...positionOnPath(path,0,s.stage),wet:0,burn:0,slow:0,hit:0,knockVelocity:0,knockCooldown:0,recoil:0,facing:1});
+    s.enemies.push({id:s.nextId++,kind,hp,maxHp:hp,progress:0,walkDistance:0,walkSpeed:0,path,speed:base.speed*settings.enemySpeed,...positionOnPath(path,0,s.stage),wet:0,burn:0,slow:0,hit:0,knockVelocity:0,knockCooldown:0,recoil:0,facing:1});
     s.spawned++;const gap=Math.max(.85,1.45-stage.order*.09-s.wave*.05)*settings.spawnInterval;s.spawnTimer+=inSurge(s.wave,s.spawned,plan.length)?Math.max(SURGE_MIN_GAP,gap*SURGE_INTERVAL):gap;
     if(inSurge(s.wave,s.spawned,plan.length)&&s.spawned===surgeStart(plan.length))s.notice=SURGE_NOTICE;
     if(kind==='boss')s.notice='고목왕: 체력이 절반이 되면 돌진해요!';
@@ -417,9 +482,15 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
     // An impulse moves distance backwards along the road. Friction and a one-second
     // immunity window prevent stacks of cannons from pinning a body indefinitely.
     const friction=Math.exp(-6*delta),retreat=(e.knockVelocity||0)*(1-friction)/6;
+    const beforeProgress=e.progress,bracing=(e.knockVelocity||0)>7;
     e.progress=Math.max(0,e.progress+forward-retreat);
+    const previousWalk=e.walkDistance??beforeProgress;
+    const gait=advanceEnemyGait(previousWalk,beforeProgress,e.progress,delta,bracing);
+    e.walkDistance=gait.distance;e.walkSpeed=gait.speed;
     e.knockVelocity=(e.knockVelocity||0)*friction;if(e.knockVelocity<.1)e.knockVelocity=0;
-    const point=positionOnPath(e.path,e.progress,s.stage);if(Math.abs(point.x-e.x)>.01)e.facing=point.x<e.x?-1:1;e.x=point.x;e.y=point.y;
+    const point=positionOnPath(e.path,e.progress,s.stage);
+    if(e.kind==='frostwolf')Object.assign(e,advanceFrostWolfGait(e.walkCycles??0,e.walkHeading,e,point,gait.distance-previousWalk));
+    e.facing=movementFacing(e.facing??1,point,positionOnPath(e.path,e.progress+4,s.stage));e.x=point.x;e.y=point.y;
   }
   // Already airborne projectiles keep moving during a tower freeze. Newly released
   // shots start their flight next step, so damage cannot happen at shot creation.
@@ -448,7 +519,7 @@ export function stepDefense(state:DefenseState,dt:number):DefenseState {
   for(const e of escaped){
     const loss=e.kind==='boss'||e.kind==='frostboss'?8:1;
     if(e.path===1)s.outpostHp=Math.max(0,s.outpostHp-loss);else s.hp=Math.max(0,s.hp-loss);
-    s.leaks++;effect(s,e,e,'physical','돌파!','breach',{force:loss});
+    s.leaks++;effect(s,e,e,'physical','돌파!','breach',{force:loss,targetGate:e.path===1?'outpost':'village'});
   }
   s.enemies=s.enemies.filter(e=>e.progress<lengths[e.path]);
   s.questProgress=stage.questType==='hunt'?s.kills:stage.questType==='outpost'?s.outpostHp:s.hp;

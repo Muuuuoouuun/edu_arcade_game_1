@@ -1,0 +1,66 @@
+{
+  "command": "npm run models:frontier-beacon",
+  "concept": "art-source/defense/concepts/2026-10-29/castles/verdant-citadel.png",
+  "editable_meshes": 28,
+  "hinges": 4,
+  "capture_seconds": 3,
+  "camera": {
+    "position": [
+      7,
+      -9,
+      7
+    ],
+    "target": [
+      0,
+      0,
+      2.3
+    ],
+    "ortho_scale": 7.1,
+    "size": [
+      384,
+      384
+    ]
+  },
+  "files": [
+    {
+      "path": "tools/blender/build_frontier_beacon.py",
+      "bytes": 8982,
+      "sha256": "d397edc2acd1c5985887bc4f85d4a82dd2d32b9e950b424bbd0e60dd0a51a02c"
+    },
+    {
+      "path": "art-source/defense/frontier-beacon.blend",
+      "bytes": 758572,
+      "sha256": "c8f841b80acaf2db5a062a7dd564892eb59302db01bd44c9dfa5b52bb43593d6"
+    },
+    {
+      "path": "public/defense/models/frontier-beacon.glb",
+      "bytes": 55112,
+      "sha256": "890a11ea4f8357741534957c234bf54e740fe2ca29047781f6412f57bc007da8"
+    },
+    {
+      "path": "public/defense/models/frontier-beacon.png",
+      "bytes": 141367,
+      "sha256": "20cbc06601388d5f9ff292c150e82818524a9678db6867ae5a8adda60080ac71"
+    },
+    {
+      "path": "public/defense/models/frontier-beacon-atlas.webp",
+      "bytes": 27320,
+      "sha256": "0569b048448ea2236165967c25001ad403b914f7631c32078f6ddc051a2263fd"
+    },
+    {
+      "path": "art-source/defense/frontier-beacon/idle.png",
+      "bytes": 141367,
+      "sha256": "20cbc06601388d5f9ff292c150e82818524a9678db6867ae5a8adda60080ac71"
+    },
+    {
+      "path": "art-source/defense/frontier-beacon/half.png",
+      "bytes": 149124,
+      "sha256": "cd4c5c0186e2b3fde6d599a3c588c5689b833bdb8d11320e4cd3186271894124"
+    },
+    {
+      "path": "art-source/defense/frontier-beacon/claimed.png",
+      "bytes": 152578,
+      "sha256": "6bc995edbdf11b32d74eebe342d08403f3cf5a60d91e2f397498975b7eb5e91a"
+    }
+  ]
+}
