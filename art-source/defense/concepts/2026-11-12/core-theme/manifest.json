@@ -1,0 +1,111 @@
+{
+  "createdAt": "2026-11-12T00:00:05.033323+00:00",
+  "displayDateKst": "2026-11-12",
+  "baseCommit": "6c31be7f6f74c4e343354923fa5ed1c36de1337c",
+  "ownerBranch": "codex/arcana-core-theme-sheets-20261112",
+  "targetBranch": "codex/arcana-stage-experience-20261106",
+  "generator": {
+    "tool": "image_gen.imagegen",
+    "provider": "connected OpenAI image generation tool",
+    "successfulCalls": 3,
+    "retries": 0,
+    "modelVersion": "not exposed by tool",
+    "actualChargeUsd": null
+  },
+  "status": "image reference sheets only; no new mesh, blend, GLB, rig, animation, map or gameplay integration",
+  "prompts": "generation-prompts.json",
+  "files": [
+    {
+      "id": "core-guardians-ian-riel-bron",
+      "file": "core-guardians-ian-riel-bron.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 1995658,
+      "sha256": "da0000b4b052b47f56b0b30678304e6f221d1e0abec7718ea54a35e7f4a46857",
+      "directImageReferences": [
+        {
+          "repositoryPath": "public/defense/models/ian-mage.png",
+          "sha256": "aa4e8a41a483213ea4d7f222fbe8665a5621977e16d62a3d47b7966382e731b3"
+        },
+        {
+          "repositoryPath": "public/defense/models/riel-archer.png",
+          "sha256": "1268bc5fbca9d43cb45c003672e79cff71c973a2e40f85857ff51db3c4170cae"
+        },
+        {
+          "repositoryPath": "public/defense/models/dwarf-guardian.png",
+          "sha256": "ae1fc343ed92f20f47daec44a3aabb0f6fe70a6c4ebb3becaca81ad59be3b188"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-06/verdant-heart.png",
+          "sha256": "460b1f4e5badcac237b816b6a037d5967691f21207056e9119f7199a21b977b3"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/lantern-otter-engineer.png",
+          "sha256": "39f18bcb6f6e9160f7f5c00075903a19c6ee1cb25c94c74c461ae4ab5806e1c1"
+        }
+      ]
+    },
+    {
+      "id": "core-companions-cheongun-kar-luna",
+      "file": "core-companions-cheongun-kar-luna.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 2121782,
+      "sha256": "162f9334462a9e1121d005cc938fceb269c33dc14f179a325ee394a1e805676e",
+      "directImageReferences": [
+        {
+          "repositoryPath": "public/defense/models/cheongun-tao.png",
+          "sha256": "939ef5b776220632760dc937f4822073d6988e8d00cd40f6bd6a5f76ff8d418e"
+        },
+        {
+          "repositoryPath": "public/defense/models/kar-barbarian.png",
+          "sha256": "417ee8ac610023756986fd39b8ac4f43b7e3f1a30ac75502d56e7b2ed6506049"
+        },
+        {
+          "repositoryPath": "public/defense/models/luna-druid.png",
+          "sha256": "ba4e7cf71085b9b4666631712ff2217ccd10364b3771c672f04a924c6fe5e9dc"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-06/verdant-heart.png",
+          "sha256": "460b1f4e5badcac237b816b6a037d5967691f21207056e9119f7199a21b977b3"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/lantern-otter-engineer.png",
+          "sha256": "39f18bcb6f6e9160f7f5c00075903a19c6ee1cb25c94c74c461ae4ab5806e1c1"
+        }
+      ]
+    },
+    {
+      "id": "verdant-starter-theme-sheet",
+      "file": "verdant-starter-theme-sheet.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 2970192,
+      "sha256": "636949d6c7f6c3aa9c56558c713aefcc8ec2d2791a4bcb73d4949afe78e683aa",
+      "directImageReferences": [
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-06/verdant-heart.png",
+          "sha256": "460b1f4e5badcac237b816b6a037d5967691f21207056e9119f7199a21b977b3"
+        },
+        {
+          "repositoryPath": "public/defense/models/rush-town.png",
+          "sha256": "69a2990065023bd30868c8678fb3c7681e9762170c9792f950b0ab5973a15995"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/woodland-turret-family.png",
+          "sha256": "a7d014c239329fe7c28fa0edafc3d18b1a1ffb4ec56ff886a31206df7686d278"
+        }
+      ]
+    }
+  ],
+  "modelingReview": [
+    "Use current HEROES definitions and existing model identities as the authority; generated views are not exact orthographic or dimensional drawings.",
+    "Core sheet neutral poses have similar apparent heights; enforce Bron short/wide, Riel tall/slim and Ian between them in the actual shared-scale model scene.",
+    "Cheongun circular hand accessory and Luna copper tail are generated design additions, not confirmed features of the existing model; treat as optional proposals.",
+    "Mini views vary in cloth, trim and weapon proportions. Resolve these in a single editable model before rigging.",
+    "Theme is a proposed geometry kit. Gate doors, tower pads, bridge landings, ramp grade and occlusion still need real mesh and traversal validation."
+  ]
+}
