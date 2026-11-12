@@ -37,6 +37,9 @@ function bumped(k: Kingdom, u: Upgrade): Kingdom {
   return { ...k, perks: { ...k.perks, [u]: k.perks[u] + 1 } };
 }
 
+/** Town tag box size (CSS px, `.town-tag` in rush.css). */
+const TAG_SIZE = 44;
+
 export class TownScreen {
   private kingdom: Kingdom;
   private timer = 0;
@@ -45,9 +48,13 @@ export class TownScreen {
   /** Card shown: a building (picked by tapping its name tag in the 3D town) or the hero (hero button). */
   selected: Upgrade | 'hero' = 'castle';
   private $ = (id: string) => document.getElementById(id)!;
+  /** Bottom edge (page CSS px) of the top bar, re-measured only when the bar changes size (cycle 61). */
+  private barBottom = 0;
 
   constructor(private root: HTMLElement, private view: TownView) {
     this.kingdom = loadKingdom();
+    const bar = root.querySelector<HTMLElement>('.town-bar');
+    if (bar && typeof ResizeObserver !== 'undefined') new ResizeObserver(() => { this.barBottom = bar.getBoundingClientRect().bottom; }).observe(bar);
     const tags = this.$('town-tags');
     tags.innerHTML = SPOTS.map(p => {
       const row = ROWS.find(r => r.id === p.id)!;
@@ -152,18 +159,19 @@ export class TownScreen {
   /** Short message in the reward line (reused for hints). */
   private note(text: string) { const el = this.$('town-reward'); el.textContent = text; el.hidden = false; }
   /** Pin the name tags over their buildings (call every frame while the town is shown). */
-  layout(rect: { width: number; height: number }) {
+  layout(rect: { width: number; height: number; top?: number }) {
+    // A tag's foot sits on its anchor; keep its top at least 8px under the top bar (cycle 61: on some aspect ratios the
+    // castle, forge and vault tags slid under it). A pushed tag overlaps its own roof a little more.
+    const minY = this.barBottom > 0 ? this.barBottom - (rect.top ?? 0) + 8 + TAG_SIZE : -Infinity;
+    const place = (tag: HTMLElement, at: { x: number; y: number }) => {
+      tag.style.transform = `translate(${Math.round(at.x)}px, ${Math.round(Math.max(at.y, minY))}px) translate(-50%, -100%)`;
+    };
     for (const p of SPOTS) {
       const tag = this.root.querySelector<HTMLElement>(`[data-select="${p.id}"]`);
-      if (!tag) continue;
-      const at = this.view.labelAt(p.id, rect);
-      tag.style.transform = `translate(${Math.round(at.x)}px, ${Math.round(at.y)}px) translate(-50%, -100%)`;
+      if (tag) place(tag, this.view.labelAt(p.id, rect));
     }
     const flag = this.root.querySelector<HTMLElement>('[data-endless]');
-    if (flag && !flag.hidden) {
-      const at = this.view.flagLabelAt(rect);
-      flag.style.transform = `translate(${Math.round(at.x)}px, ${Math.round(at.y)}px) translate(-50%, -100%)`;
-    }
+    if (flag && !flag.hidden) place(flag, this.view.flagLabelAt(rect));
   }
   /** Replace the kingdom (e.g. after a battle reward) and persist it. */
   set(k: Kingdom) { this.kingdom = k; saveKingdom(k); this.render(); }
