@@ -313,6 +313,16 @@ export function parseKingdom(raw: string | null, now: number): Kingdom {
 }
 export const serializeKingdom = (k: Kingdom): string => JSON.stringify(k);
 
+/** Kingdom power (cycle 71): one number that every kind of growth raises, shown in town. Always computed, never saved. */
+export const POWER = { castle: 100, field: 30, perk: 60, heroLv: 40, talent: 80, star: 25, endlessWave: 10 } as const;
+export function kingdomPower(k: Kingdom): number {
+  const perks = Object.values(k.perks).reduce((a, b) => a + b, 0);
+  const heroLv = k.heroLv.ranger + k.heroLv.bron + k.heroLv.bear, talents = k.talent.ranger + k.talent.bron + k.talent.bear;
+  const stars = k.stars.reduce((a, b) => a + b, 0);
+  return k.castle * POWER.castle + (k.farm + k.mill) * POWER.field + perks * POWER.perk + heroLv * POWER.heroLv
+    + talents * POWER.talent + stars * POWER.star + k.endlessBest * POWER.endlessWave;
+}
+
 /** Kingdom goal chain (cycle 64): one goal at a time, in the order a growing kingdom meets them (castle, stages, hero,
  * forge, endless), each paying a little food, wood or shards when claimed in town. */
 export type Goal = { text: string; progress: (k: Kingdom) => [number, number]; reward: Partial<Cost> & { shards?: number } };

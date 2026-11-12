@@ -356,3 +356,20 @@ test('kingdom goals (cycle 64): one at a time, claimed only when met, paid once,
   assert.equal(parseKingdom(JSON.stringify(old), T0).goal, 0);
   assert.equal(parseKingdom(JSON.stringify({ ...old, goal: 99 }), T0).goal, 0);
 });
+
+test('kingdom power (cycle 71): a start value, and each kind of growth adds exactly its weight', async () => {
+  const { kingdomPower, POWER } = await import('./kingdom.ts');
+  const k = createKingdom(T0);
+  // castle 1, farm 1, mill 1, three heroes at Lv1: 100 + 60 + 120.
+  assert.equal(kingdomPower(k), POWER.castle + 2 * POWER.field + 3 * POWER.heroLv);
+  const rich = { ...k, castle: 3, food: 1e6, wood: 1e6, shards: 1e3 }; // castle 3 so the farm may grow
+  const p0 = kingdomPower(rich);
+  assert.equal(kingdomPower(upgrade(rich, 'castle', T0)) - p0, POWER.castle);
+  assert.equal(kingdomPower(upgrade(rich, 'farm', T0)) - p0, POWER.field);
+  assert.equal(kingdomPower(upgrade(rich, 'attack', T0)) - p0, POWER.perk);
+  assert.equal(kingdomPower(train(rich, 'ranger', T0)) - p0, POWER.heroLv);
+  assert.equal(kingdomPower({ ...rich, stars: [2, ...rich.stars.slice(1)] }) - p0, 2 * POWER.star);
+  assert.equal(kingdomPower({ ...rich, endlessBest: 7 }) - p0, 7 * POWER.endlessWave);
+  assert.equal(kingdomPower({ ...rich, talent: { ...rich.talent, bron: 2 } }) - p0, 2 * POWER.talent);
+  assert.ok(!('power' in JSON.parse(serializeKingdom(rich))), 'not saved: always computed');
+});

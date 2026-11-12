@@ -469,3 +469,12 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .boss-edge[hidden] { display: none; }
 @keyframes bossEdgePulse { to { opacity: 0.55; } }
 @media (prefers-reduced-motion: reduce) { .boss-edge { animation: none; } }
+
+/* Kingdom power (cycle 71): a small line under the town title; a rise floats a gold '+N'. */
+.town-bar h1 .town-power { position: relative; display: table; font-size: 13px; line-height: 1.1; -webkit-text-stroke-width: 3px; text-shadow: 0 2px 0 var(--outline); }
+.town-power small { font-size: 11px; color: #ffe58a; margin-right: 4px; }
+.town-power b { font-weight: 400; font-variant-numeric: tabular-nums; }
+.town-power .power-up { position: absolute; left: 100%; top: -2px; margin-left: 6px; font-style: normal; color: var(--gold); opacity: 0; pointer-events: none; }
+.town-power .power-up.show { animation: powerUp 1.4s ease-out forwards; }
+@keyframes powerUp { 0% { opacity: 0; transform: translateY(6px) scale(0.8); } 15% { opacity: 1; transform: translateY(0) scale(1.15); } 70% { opacity: 1; transform: translateY(-6px) scale(1); } 100% { opacity: 0; transform: translateY(-12px); } }
+@media (prefers-reduced-motion: reduce) { .town-power .power-up.show { animation: none; opacity: 1; } }

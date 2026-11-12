@@ -2,7 +2,7 @@
 import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
 import { FORGE, HEROES, TALENT_MAX, TALENTS, type HeroKind } from './data.ts';
-import { claimGoal, currentGoal, GOALS,
+import { kingdomPower, claimGoal, currentGoal, GOALS,
   CASTLE_MAX, DAILY_WIN, ENDLESS_STAGE, nextMilestone, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canLearnTalent, canTrain, learnTalent, talentCost, dailyReady, dayIndex, canUpgrade, chooseHero, collect, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, pending, PERK_EFFECT, rate,
   storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
@@ -48,6 +48,8 @@ export class TownScreen {
   /** Card shown: a building (picked by tapping its name tag in the 3D town) or the hero (hero button). */
   selected: Upgrade | 'hero' = 'castle';
   private $ = (id: string) => document.getElementById(id)!;
+  /** Last power shown (cycle 71): a rise shows '+N' beside it; undefined until the first render. */
+  private lastPower: number | undefined;
   /** Bottom edge (page CSS px) of the top bar, re-measured only when the bar changes size (cycle 61). */
   private barBottom = 0;
 
@@ -269,6 +271,15 @@ export class TownScreen {
       goalEl.querySelector('[data-goal-reward]')!.innerHTML = rewardHtml(cur.goal.reward);
       goalEl.setAttribute('aria-label', `목표 ${cur.index + 1}: ${cur.goal.text}, ${cur.done ? '달성, 눌러서 보상 받기' : `진행 ${cur.have}/${cur.need}`}, 보상 ${rewardText(cur.goal.reward)}`);
     }
+    // Kingdom power (cycle 71): one number for all growth; every rise floats a gold '+N' beside it.
+    const power = kingdomPower(k), up = this.$('town-power-up');
+    this.$('town-power').textContent = power.toLocaleString('en-US');
+    this.$('town-power').closest('.town-power')!.setAttribute('aria-label', `전투력 ${power}`);
+    if (this.lastPower !== undefined && power > this.lastPower) {
+      up.textContent = `+${power - this.lastPower}`;
+      up.classList.remove('show'); void up.offsetWidth; up.classList.add('show');
+    }
+    this.lastPower = power;
     this.$('res-food').textContent = String(k.food);
     this.$('res-wood').textContent = String(k.wood);
     this.$('res-shard').textContent = String(k.shards);
