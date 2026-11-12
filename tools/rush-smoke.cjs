@@ -177,7 +177,8 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     check((await mp.evaluate(() => __rush.state.stats.shots)) > shots, 'drag-aim fire');
     // Graphics quality (cycle 12): auto follows the frame rate; the pause button cycles auto -> high -> low and persists.
     const auto = await mp.evaluate(() => ({ ...__rush.quality, fps: __rush.fps }));
-    check(auto.fps < 30 ? auto.tier === 'low' : auto.fps > 50 ? auto.tier === 'high' : true, `auto quality at ${auto.fps}fps → ${auto.tier}`);
+    // The automatic drop is one-way (quality.ts), so once it has happened the tier stays low whatever the fps reads now.
+    check(auto.autoDropped ? auto.tier === 'low' : auto.fps < 30 ? auto.tier === 'low' : auto.fps > 50 ? auto.tier === 'high' : true, `auto quality at ${auto.fps}fps → ${auto.tier}${auto.autoDropped ? ' (dropped earlier)' : ''}`);
     await mp.tap('#pause');
     await mp.waitForTimeout(200);
     await mp.tap('#btn-quality');
