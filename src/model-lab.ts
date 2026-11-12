@@ -1,14 +1,18 @@
-import { AmbientLight, AnimationMixer, Box3, Color, DirectionalLight, GridHelper, Group, LoopOnce, LoopRepeat, Mesh, MeshStandardMaterial, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Scene, ShadowMaterial, SRGBColorSpace, Vector3, WebGLRenderer, ACESFilmicToneMapping, type AnimationAction, type Object3D, type Material } from 'three';
+import { AmbientLight, AnimationMixer, Box3, Color, DirectionalLight, GridHelper, Group, LoopOnce, LoopRepeat, Mesh, MeshStandardMaterial, MeshToonMaterial, PCFShadowMap, PerspectiveCamera, PlaneGeometry, Scene, ShadowMaterial, SRGBColorSpace, Vector3, WebGLRenderer, ACESFilmicToneMapping, type AnimationAction, type Object3D, type Material } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { PMREMGenerator } from 'three';
 import './model-lab.css';
+import { toonify, hullGeometry, outlineMaterial } from './rush/look';
 import { createHitClip, hitFlashStrength } from './model-lab-hit';
 import { createBronIdle } from './model-lab-motion';
 
-type Model = {id:string;name:string;kind:string;detail:string;description:string;source:string;command:string;action:string;clip?:string;asset?:string;glb?:string;static?:boolean;loop?:boolean;hold?:boolean;fitBounds?:boolean;stopVariants?:boolean;viewRotation?:number;previews?:{idle:string;walk:string}};
+type Model = {toon?:boolean;id:string;name:string;kind:string;detail:string;description:string;source:string;command:string;action:string;clip?:string;asset?:string;glb?:string;static?:boolean;loop?:boolean;hold?:boolean;fitBounds?:boolean;stopVariants?:boolean;viewRotation?:number;previews?:{idle:string;walk:string}};
 const models:Model[] = [
+ {id:'ranger-v2',name:'도마뱀 궁수 · 질감과 동작',kind:'SHARED 3D / TEXTURED',detail:'비늘 · 잎맥 · 가죽끈 · 씨앗 쇠뇌',description:'공통 제작본의 실제 색상·표면 요철 텍스처와 호흡·보행·공격을 확인합니다. Rush에 같은 모델을 연결했습니다.',source:'characters-v2/gecko-ranger/gecko-ranger.blend',command:'npm run models:characters',action:'▶ 공격 동작',clip:'gecko-seed-shot',asset:'characters-v2/gecko-ranger',toon:true,fitBounds:true,viewRotation:-1.85,previews:{idle:'ranger-idle',walk:'ranger-walk'}},
+ {id:'bron-v2',name:'브론 · 질감과 동작',kind:'SHARED 3D / TEXTURED',detail:'단조 금속 · 수염 결 · 가죽 · 망치',description:'공통 제작본의 실제 색상·표면 요철 텍스처와 호흡·보행·공격을 확인합니다. Rush에 같은 모델을 연결했습니다.',source:'characters-v2/dwarf-guardian/dwarf-guardian.blend',command:'npm run models:characters',action:'▶ 공격 동작',clip:'dwarf-hammer-attack',asset:'characters-v2/dwarf-guardian',toon:true,fitBounds:true,viewRotation:-1.85,previews:{idle:'bron-idle',walk:'bron-walk'}},
+ {id:'bear-v2',name:'눈곰 포포 · 질감과 동작',kind:'SHARED 3D / TEXTURED',detail:'털 · 갑옷 · 얼음 방패',description:'공통 제작본의 실제 색상·표면 요철 텍스처와 호흡·보행·공격을 확인합니다. Rush에 같은 모델을 연결했습니다. 포포는 전투에서 망치 대신 눈덩이를 사용합니다.',source:'characters-v2/polar-bear/polar-bear.blend',command:'npm run models:characters',action:'▶ 공격 동작',clip:'polar-bear-attack',asset:'characters-v2/polar-bear',toon:true,fitBounds:true,viewRotation:-1.85,previews:{idle:'bear-idle',walk:'bear-walk'}},
  {id:'human-guard',name:'인간 창방패병 · 제작 시제품',kind:'HUMAN / GARRISON STUDY',detail:'청록 제복 · 철투구 · 목재 방패',description:'14-A 시안을 참고해 큰 머리와 짧은 팔다리로 만든 인간 병사입니다. 호흡·보행·찌르기와 장비 결합을 살펴보세요. 기하 모델 시제품이며 캠페인 병과로 추가되지는 않았습니다.',source:'prototypes/human-guard/human-guard.blend',command:'blender -b --python tools/blender/build_human_guard.py',action:'▶ 창 찌르기',clip:'human-guard-thrust',asset:'prototypes/human-guard',viewRotation:-1.85,previews:{idle:'human-guard-idle',walk:'human-guard-walk'}},
  {id:'frontier-kar-game',name:'카르 · 전장 원본',kind:'FRONTIER / HERO',detail:'양손 망치 · 보행·강타',description:'기존 Frontier에서 가져온 카르 모델입니다. 캠페인에서 카르의 보행·강타에 연결한 원본입니다. 공격 시점은 기존 전투 엔진과 맞춥니다.',source:'frontier-kar.blend',command:'원본: Frontier bec8041',action:'▶ 망치 강타',clip:'kar-slam',asset:'prototypes/frontier-kar-game',viewRotation:-1.85},
  {id:'kar-detail-20261111',name:'카르 · 망치 디테일 시안',kind:'FRONTIER / DETAIL STUDY',detail:'자루 · 망치 끝 실루엣',description:'망치 자루와 머리 형태를 조정한 검토용 시안입니다. 게임 적용 전 손 관통과 실제 전장 크기 검증이 필요합니다.',source:'kar-detail-20261111/kar-detail.blend',command:'python3 tools/tests/check-kar-detail.py',action:'▶ 망치 강타',clip:'kar-slam',asset:'prototypes/kar-detail-20261111',viewRotation:-1.85},
@@ -126,9 +130,9 @@ let generation = 0, automatic = false, wireEnabled = false, shotAt = -Infinity, 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const scene = new Scene(), camera = new PerspectiveCamera(35,1,.05,100), loader = new GLTFLoader();
 const pivot = new Group(); scene.add(pivot);
-let currentMaterials:MeshStandardMaterial[] = [];
-const emissionLevels = new Map<MeshStandardMaterial,number>();
-const baseColors = new Map<MeshStandardMaterial,Color>(), flashColor = new Color(0xff694b);
+let currentMaterials:(MeshStandardMaterial|MeshToonMaterial)[] = [];
+const emissionLevels = new Map<MeshStandardMaterial|MeshToonMaterial,number>();
+const baseColors = new Map<MeshStandardMaterial|MeshToonMaterial,Color>(), flashColor = new Color(0xff694b);
 const parts:{object:Object3D;position:Vector3;rotation:Vector3;type:'core'|'barrel'|'bolt'|'turret'}[] = [];
 
 function materials(object:Object3D) {
@@ -245,8 +249,12 @@ async function select(index:number) {
   current.scale.setScalar(scale); current.position.set(-center.x*scale,-box.min.y*scale,-center.z*scale); pivot.add(current);
   let triangles = 0, meshes = 0;
   current.traverse(node => {if(node instanceof Mesh){node.castShadow = true;node.receiveShadow = true;meshes++;triangles += (node.geometry.index?.count??node.geometry.attributes.position.count)/3;}});
-  currentMaterials = [...materials(current)].filter((material):material is MeshStandardMaterial => material instanceof MeshStandardMaterial);
-  currentMaterials.forEach(material => {material.wireframe = wireEnabled;material.envMapIntensity = .55;emissionLevels.set(material,material.emissiveIntensity);baseColors.set(material,material.color.clone());});
+  if(model.toon){
+   const surfaces:Mesh[]=[];current.traverse(node=>{if(node instanceof Mesh)surfaces.push(node);});
+   for(const surface of surfaces){toonify(surface);surface.add(new Mesh(hullGeometry(surface.geometry),outlineMaterial(.002)));}
+  }
+  currentMaterials = [...materials(current)].filter((material):material is MeshStandardMaterial|MeshToonMaterial => material instanceof MeshStandardMaterial||material instanceof MeshToonMaterial);
+  currentMaterials.forEach(material => {material.wireframe = wireEnabled;if(material instanceof MeshStandardMaterial)material.envMapIntensity = .55;emissionLevels.set(material,material.emissiveIntensity);baseColors.set(material,material.color.clone());});
   for(const type of ['core','barrel','bolt','turret'] as const){const object = current.getObjectByName(type==='core'?'fire-core':type);if(object&&(type!=='core'||!model.clip))parts.push({object,position:object.position.clone(),rotation:new Vector3(object.rotation.x,object.rotation.y,object.rotation.z),type});}
   idleRig=model.id==='dwarf-guardian'?createBronIdle(gltf.scene):null;
   const clip = gltf.animations.find(animation => animation.name===(model.stopVariants?`${model.id}-${stopSelect.value}`:model.clip));

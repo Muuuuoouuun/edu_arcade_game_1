@@ -1,0 +1,68 @@
+{
+  "hero": "ranger",
+  "asset": "gecko-ranger",
+  "source": "art-source/defense/prototypes/gecko-ranger/gecko-ranger.blend",
+  "reference": "art-source/defense/concepts/2026-11-09/gecko-ranger.png",
+  "reference_sha256": "73650ad025b6f2e79109c84fbd461dfa7d2abcdf6f1dc8561397a706c6034ec8",
+  "generator": "tools/blender/build_character_production.py",
+  "materials": 1,
+  "texture_size": 1024,
+  "texture_maps": [
+    "color",
+    "normal",
+    "orm"
+  ],
+  "source_material_tiles": [
+    {
+      "name": "01 Gecko spring green",
+      "surface": "scales"
+    },
+    {
+      "name": "02 Warm cream throat",
+      "surface": "smooth"
+    },
+    {
+      "name": "03 Leaf forest green",
+      "surface": "leaf"
+    },
+    {
+      "name": "04 Leaf sunlit green",
+      "surface": "leaf"
+    },
+    {
+      "name": "05 Chestnut wood leather",
+      "surface": "wood"
+    },
+    {
+      "name": "06 Golden eye and brass",
+      "surface": "smooth"
+    },
+    {
+      "name": "07 Deep dark mouth pupil string",
+      "surface": "smooth"
+    },
+    {
+      "name": "08 Broad orange markings",
+      "surface": "scales"
+    },
+    {
+      "name": "09 Eye gleam",
+      "surface": "smooth"
+    }
+  ],
+  "triangles": 7948,
+  "meshes": 93,
+  "clips": [
+    "gecko-seed-shot",
+    "ranger-idle",
+    "ranger-walk"
+  ],
+  "rig": "Articulated rigid pivots, including independent leg assemblies; no deforming skin weights",
+  "glb_bytes": 891740,
+  "glb_sha256": "c4d32694f9e9e55ef19bc15f8e968dd5bdca0b52f805077bc917dd7385e4bee8",
+  "limits": [
+    "Concept-guided procedural surface textures, not a photogrammetry reconstruction",
+    "No physical-device FPS measurement",
+    "Rush retains its snowball prop and attack timing for Popo"
+  ]
+}
