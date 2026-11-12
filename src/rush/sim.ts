@@ -23,6 +23,8 @@ export interface Enemy {
   slowT?: number;
   /** Boss rally (cycle 33): seconds of roar left, and whether it has already called its minions. */
   roarT?: number; rallied?: boolean;
+  /** Shaman (cycle 59): seconds until its next heal pulse (starts at a full period). */
+  healT?: number;
 }
 export type ShotOwner = 'hero' | 'super' | 'tower' | 'enemy' | 'lob';
 export interface Shot {
@@ -53,6 +55,8 @@ export type RushEvent =
   | { type: 'telegraph'; x: number; z: number; radius: number; time: number }
   | { type: 'slam'; x: number; z: number; radius: number }
   | { type: 'roar'; x: number; z: number; radius: number; time: number }
+  /** A shaman's pulse that restored at least one ally (cycle 59). */
+  | { type: 'heal'; x: number; z: number; radius: number; count: number }
   | { type: 'summon'; x: number; z: number; count: number }
   | { type: 'coin'; value: number }
   | { type: 'build'; pad: number; level: number; branch?: TowerBranch }
@@ -547,6 +551,21 @@ function towerHit(s: RushState, target: Enemy, shot: Shot) {
   }
 }
 
+/** Shaman heal (cycle 59): on its period, every hurt living ally in range (not the shaman) gains the amount. */
+function healPulse(s: RushState, e: Enemy, heal: NonNullable<EnemyDef['heal']>) {
+  e.healT = (e.healT ?? heal.every) - STEP;
+  if (e.healT > 0) return;
+  e.healT += heal.every;
+  const amount = heal.amount * s.diff.enemyHp;
+  let count = 0;
+  for (const o of s.enemies) {
+    if (o === e || o.hp <= 0 || o.hp >= o.maxHp || dist(o, e) > heal.radius + ENEMIES[o.kind].radius) continue;
+    o.hp = Math.min(o.maxHp, o.hp + amount);
+    count++;
+  }
+  if (count) s.events.push({ type: 'heal', x: e.x, z: e.z, radius: heal.radius, count });
+}
+
 function updateEnemies(s: RushState) {
   const h = s.hero, alive = heroAlive(s), hidden = heroHidden(s);
   for (const e of s.enemies) {
@@ -587,6 +606,7 @@ function updateEnemies(s: RushState) {
       if (e.roarT === 0) rally(s, e, call!);
       continue;
     }
+    if (def.heal) healPulse(s, e, def.heal);
 
     const chase = alive && dist(e, h) <= def.aggro && (!hidden || dist(e, h) <= BUSH.reveal);
     if (e.chasing && !chase) e.wp = nearestSegmentEnd(LANES[e.lane], e);

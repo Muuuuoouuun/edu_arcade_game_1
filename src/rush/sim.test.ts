@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ECONOMY, ENEMIES, HERO, HERO_SPAWN, PADS, STEP, TOWER_LEVELS } from './data.ts';
-import { createRush, NO_MODS, padCost, rushHash, stepRush, superReady, type Command, type Enemy, type RushState } from './sim.ts';
+import { ECONOMY, ENEMIES, HERO, HERO_SPAWN, PADS, STEP, TOWER_LEVELS, type EnemyKind } from './data.ts';
+import { createRush, NO_MODS, padCost, rushHash, stepRush, superReady, type Command, type Enemy, type RushEvent, type RushState } from './sim.ts';
 import { guardBot, idleBot } from './bot.ts';
 
 const steps = (s: RushState, n: number, cmd: Command | ((s: RushState) => Command) = {}) => {
@@ -470,4 +470,27 @@ test('endless lap twists (cycle 52): swift, shields, twin in turn from lap 2; no
   assert.deepEqual(seen, ['swift']);
   assert.equal(s.diff.twist, 'swift');
   assert.equal(createRush(1, NO_MODS, stageDifficulty(10)).diff.twist, undefined);
+});
+
+test('shaman (cycle 59): its pulse heals hurt allies in range, never itself or the unhurt or the far, and reports it', () => {
+  const s = createRush(1, NO_MODS, { enemyHp: 2, enemyCount: 1, enemyDamage: 1, stage: 8 });
+  s.prepT = 999; // stay in prep: no spawns, but enemies still update
+  const mk = (id: number, kind: EnemyKind, x: number, hp: number, maxHp: number): Enemy =>
+    ({ id, kind, x, z: -12, kx: 0, kz: 0, hp, maxHp, lane: 0, wp: 1, cd: 9, flash: 0, chasing: false, facing: 0, windup: null });
+  const shaman = mk(1, 'shaman', 0, 10, 140), near = mk(2, 'brute', 2, 100, 520), full = mk(3, 'grunt', -1.5, 120, 120), far = mk(4, 'grunt', 9, 10, 120);
+  s.enemies.push(shaman, near, full, far);
+  const heal = ENEMIES.shaman.heal!;
+  let pulses: RushEvent[] = [];
+  const at = new Map(s.enemies.map(e => [e, e.x]));
+  for (let t = 0; t < heal.every + 0.05; t += STEP) {
+    for (const e of s.enemies) { e.x = at.get(e)!; e.z = -12; } // pinned: only the pulse is under test
+    stepRush(s, {});
+    pulses.push(...s.events.filter(e => e.type === 'heal'));
+  }
+  assert.equal(pulses.length, 1, 'one pulse per period');
+  assert.equal(near.hp, 100 + heal.amount * 2, 'ally in range healed by amount × stage health');
+  assert.equal(shaman.hp, 10, 'never heals itself');
+  assert.equal(full.hp, 120, 'unhurt ally unchanged');
+  assert.equal(far.hp, 10, 'ally out of range unchanged');
+  assert.deepEqual(pulses[0].type === 'heal' && [pulses[0].count, pulses[0].radius], [1, heal.radius]);
 });

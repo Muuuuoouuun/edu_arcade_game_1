@@ -537,6 +537,19 @@ export class RushView {
         { geo: new OctahedronGeometry(r * 0.32), color: TEAM.enemy, at: [r * 1.1, r * 1.6, 0] },
         ...eyes(r * 0.5, r * 2.25, r * 0.2, r * 0.13, 0xffffff, PAL.ink),
       ];
+    } else if (kind === 'shaman') {
+      // Shaman (cycle 59): yellow-green bell robe, bone mask with green eyes, and a staff taller than the body with
+      // a glowing green orb (the heal colour), held to one side: an 'i' beside a bell, unlike the skirmisher's T.
+      parts = [
+        { geo: new ConeGeometry(r * 1.0, r * 2.1, 10), color: 0x8fbf2f, at: [0, r * 1.05, 0] },
+        { geo: new CylinderGeometry(r * 1.02, r * 1.05, r * 0.2, 12), color: 0x5c7d1a, at: [0, r * 0.1, 0] },
+        { geo: new SphereGeometry(r * 0.52, 12, 10), color: 0xf3e6c8, at: [r * 0.1, r * 2.2, 0] },
+        { geo: new ConeGeometry(r * 0.66, r * 1.0, 10), color: 0x5c7d1a, at: [-r * 0.08, r * 2.75, 0], rot: [0, 0, 0.18] },
+        { geo: new CylinderGeometry(r * 0.11, r * 0.11, r * 3.6, 6), color: 0x7a4a24, at: [r * 0.5, r * 1.8, r * 0.85] },
+        { geo: new SphereGeometry(r * 0.4, 10, 8), color: 0x7dff9a, at: [r * 0.5, r * 3.75, r * 0.85] },
+        { geo: new OctahedronGeometry(r * 0.22), color: 0x3fd46a, at: [r * 0.5, r * 4.25, r * 0.85] },
+        ...eyes(r * 0.58, r * 2.25, r * 0.2, r * 0.13, 0x9dff5a, 0x1d4a0a),
+      ];
     } else if (kind === 'brute') {
       parts = [
         { geo: new BoxGeometry(r * 1.6, r * 1.5, r * 2.1), color: 0xe8842a, at: [0, r * 1.2, 0] },
@@ -578,7 +591,7 @@ export class RushView {
   }
 
   private buildBatches() {
-    const kinds: EnemyKind[] = ['grunt', 'skirmisher', 'brute', 'boss', 'shield'];
+    const kinds: EnemyKind[] = ['grunt', 'skirmisher', 'brute', 'boss', 'shield', 'shaman'];
     const per = <T,>(f: (k: EnemyKind) => T) => Object.fromEntries(kinds.map(k => [k, f(k)])) as Record<EnemyKind, T>;
     const cap = 160;
     this.batches = {
@@ -822,6 +835,8 @@ export class RushView {
         case 'telegraph': this.telegraph(ev.x, ev.z, ev.radius, ev.time); break;
         // Boss rally (cycle 33): amber, not the red of a slam, because the roar itself does no damage.
         case 'roar': this.telegraph(ev.x, ev.z, ev.radius, ev.time, 0xffb02e); break;
+        // Shaman heal (cycle 59): a green ring out to the heal radius, so the cause of the refilled bars is visible.
+        case 'heal': this.ring(ev.x, ev.z, 0x5ee87a, ev.radius, 0.55, 0.55, true); break;
         case 'lap': // endless lap (cycle 47): a wide red ink ring around the town and a shake
           this.ring(TOWN.x, TOWN.z, 0xff4d5e, 7, 0.7, 0.95, true);
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.5);
@@ -1061,5 +1076,5 @@ const CAPE: Record<HeroKind, { x: number; y: number; h: number; w: number }> = {
 };
 const BRANCH_COLOR: Record<TowerBranch, number> = { fire: 0xff7a2f, frost: 0x4fc3ff };
 const ICE = new MeshBasicMaterial({ color: 0xc4f2ff, transparent: true, opacity: 0.4, depthWrite: false });
-const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4 };
+const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4, shaman: 0x8fbf2f };
 const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };

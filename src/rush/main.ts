@@ -263,7 +263,8 @@ function start(nextMode: 'play' | 'demo') {
   stage = nextMode === 'play' ? town.stage : 1;
   const kingdom = loadKingdom();
   // Endless challenge (cycle 46): stage-10 difficulty, the five waves on a loop.
-  const diff = stage === ENDLESS_STAGE ? { ...stageDifficulty(10), endless: true } : stageDifficulty(stage);
+  // Endless keeps stage 10's numbers but reports its own stage, so endless-only groups (cycle 59: shamans) appear.
+  const diff = stage === ENDLESS_STAGE ? { ...stageDifficulty(10), stage: ENDLESS_STAGE, endless: true } : stageDifficulty(stage);
   state = createRush(seed, nextMode === 'play' ? kingdomMods(kingdom) : undefined, diff, nextMode === 'play' ? kingdom.hero : 'ranger');
   battleId = `${Date.now().toString(36)}-${seed}`;
   mode = nextMode;
@@ -427,8 +428,9 @@ if (params.has('sheet')) {
   state.crates = [];
   // ?back=1 turns the hero away from the camera, as in battle where it faces the enemies at the top.
   Object.assign(state.hero, { x: 9.4, z: 2, facing: params.has('back') ? -Math.PI / 2 : Math.PI / 2 });
-  (['grunt', 'skirmisher', 'brute', 'shield', 'boss'] as const).forEach((kind, i) => state.enemies.push({
-    id: 900 + i, kind, x: [-6.4, -4, -1.2, 1.4, 5][i], z: 2, kx: 0, kz: 0, hp: 1, maxHp: 1, lane: 0, wp: 1, cd: 0, flash: 0, chasing: false, facing: Math.PI / 2, windup: null,
+  // The shaman (cycle 59) stands at the left end so the earlier sheet positions stay comparable.
+  (['grunt', 'skirmisher', 'brute', 'shield', 'boss', 'shaman'] as const).forEach((kind, i) => state.enemies.push({
+    id: 900 + i, kind, x: [-6.4, -4, -1.2, 1.4, 5, -8.8][i], z: 2, kx: 0, kz: 0, hp: 1, maxHp: 1, lane: 0, wp: 1, cd: 0, flash: 0, chasing: false, facing: Math.PI / 2, windup: null,
     // ?frost=1 shows the frost shell (cycle 16) on every enemy.
     ...(params.has('frost') ? { slowT: 99 } : {}),
   }));
