@@ -3,10 +3,14 @@ import {
   AnimationMixer, Box3, BufferAttribute, DodecahedronGeometry, BoxGeometry, CanvasTexture, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
   DirectionalLight, Group, HemisphereLight, LoopOnce, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera, Plane,
   PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
-  Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, type AnimationAction, type BufferGeometry, type Material,
+  Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, BackSide, BufferGeometry, type AnimationAction, type Material,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+// Loaded by URL, not bundled: the shared Vite config puts every three/examples module in the first-screen 'three-tools'
+// chunk, and this one is only needed once a hero model arrives (cycle 62). The file is self-contained (no imports).
+import simplifierUrl from 'three/addons/libs/meshopt_simplifier.module.js?url';
 // Rush-only meshopt copies of the shared campaign models (decision 2026-11-11, cycle 43; made by tools/rush-glb.sh).
 import rangerGlb from './models/gecko-ranger.glb?url';
 import bronGlb from './models/dwarf-guardian.glb?url';
@@ -34,6 +38,33 @@ function toFloat32(mesh: Mesh) {
     for (let i = 0; i < a.count; i++) { f[i * 3] = a.getX(i); f[i * 3 + 1] = a.getY(i); f[i * 3 + 2] = a.getZ(i); }
     mesh.geometry.setAttribute(name, new BufferAttribute(f, 3));
   }
+}
+/** Hero ink hulls at half the triangles (cycle 62; measured in cycle 56: no visible change at battle size, a thin
+ * part's ink only starts to drop at a quarter). The simplifier is three.js's bundled meshoptimizer, fetched on demand
+ * with the first hero model so the first screen does not pay for it; without it (no WASM) hulls stay full. */
+const HULL_RATIO = 0.5;
+type Simplifier = (typeof import('three/addons/libs/meshopt_simplifier.module.js'))['MeshoptSimplifier'];
+let simplifierLoad: Promise<Simplifier | null> | null = null;
+/** ?hullSimplify=0 forces the full-hull fallback (cycle 62: checks that path). */
+const simplifierOff = new URLSearchParams(location.search).get('hullSimplify') === '0';
+function loadSimplifier(): Promise<Simplifier | null> {
+  if (simplifierOff) return Promise.resolve(null);
+  simplifierLoad ??= (import(/* @vite-ignore */ simplifierUrl) as Promise<typeof import('three/addons/libs/meshopt_simplifier.module.js')>)
+    .then(async ({ MeshoptSimplifier: m }) => { if (!m.supported) return null; await m.ready; return m; })
+    .catch(() => null);
+  return simplifierLoad;
+}
+/** The ink hull for a baked hero part: positions only, welded, then simplified (full hull when that is not possible). */
+function heroHull(geo: BufferGeometry, simplifier: Simplifier | null): BufferGeometry {
+  if (!simplifier) return hullGeometry(geo);
+  const g = new BufferGeometry();
+  g.setAttribute('position', geo.getAttribute('position').clone());
+  const welded = mergeVertices(g, 1e-5);
+  const idx = new Uint32Array(welded.index!.array), pos = welded.getAttribute('position').array as Float32Array;
+  const [out] = simplifier.simplify(idx, pos, 3, Math.floor(idx.length * HULL_RATIO / 3) * 3, 0.05, []);
+  if (out.length < 3) return hullGeometry(geo);
+  welded.setIndex(new BufferAttribute(out, 1));
+  return hullGeometry(welded);
 }
 const HERO_HEIGHT = 2.0;
 /** Yaw that turns the GLB authored front (-z) toward simulation angle 0 (+x). Verified by east/north close-up renders. */
@@ -428,7 +459,9 @@ export class RushView {
 
   private loadHeroModel(kind: HeroKind) {
     this.heroRigs.set(kind, 'loading');
-    heroLoader.load(HERO_MODELS[kind], gltf => {
+    // The simplifier downloads alongside the model; baking waits for both (cycle 62).
+    const simplifier = loadSimplifier();
+    heroLoader.load(HERO_MODELS[kind], gltf => void simplifier.then(simplifier => {
       gltf.scene.traverse(node => { if (node instanceof Mesh) toFloat32(node); });
       const model = gltf.scene, box = new Box3().setFromObject(model), size = box.getSize(new Vector3()), center = box.getCenter(new Vector3());
       const k = HERO_HEIGHT / Math.max(size.y, 0.01);
@@ -451,7 +484,7 @@ export class RushView {
         if (drop.has(mesh.name)) { mesh.removeFromParent(); continue; }
         let owner: Object3D = model;
         for (let p: Object3D | null = mesh; p && p !== model; p = p.parent) if (animated.has(p.name)) { owner = p; break; }
-        if (owner === mesh) { toonify(mesh); mesh.add(new Mesh(hullGeometry(mesh.geometry), outlineMaterial(+(0.035 / (mesh.getWorldScale(ws).x || 1)).toFixed(3)))); continue; }
+        if (owner === mesh) { toonify(mesh); mesh.add(new Mesh(heroHull(mesh.geometry, simplifier), outlineMaterial(+(0.035 / (mesh.getWorldScale(ws).x || 1)).toFixed(3)))); continue; }
         inv.copy(owner.matrixWorld).invert();
         const mat = (Array.isArray(mesh.material) ? mesh.material[0] : mesh.material) as Material & { color?: Color };
         const list = groups.get(owner) ?? [];
@@ -471,7 +504,7 @@ export class RushView {
       }
       for (const [owner, parts] of groups) {
         const geo = bakeMatrices(parts), body = new Mesh(geo, this.mats.baked);
-        body.add(new Mesh(hullGeometry(geo), outlineMaterial(+(0.035 / (owner.getWorldScale(ws).x || 1)).toFixed(3))));
+        body.add(new Mesh(heroHull(geo, simplifier), outlineMaterial(+(0.035 / (owner.getWorldScale(ws).x || 1)).toFixed(3))));
         owner.add(body);
       }
       const clip = gltf.animations[0];
@@ -483,7 +516,7 @@ export class RushView {
         shot.clampWhenFinished = false;
       }
       this.heroRigs.set(kind, { holder, mixer, shot, held });
-    }, undefined, () => { this.heroRigs.delete(kind); /* Keep the placeholder; the prototype stays playable without the model. */ });
+    }), undefined, () => { this.heroRigs.delete(kind); /* Keep the placeholder; the prototype stays playable without the model. */ });
   }
 
   /** One baked body + hull per enemy kind, shared by every instance of that kind. */
@@ -1065,7 +1098,17 @@ export class RushView {
 
   render() { this.renderer.render(this.scene, this.camera); }
   /** Renderer statistics for the debug overlay and performance notes. */
-  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroKind: this.heroKind, heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, dropped: Batch.dropped, enemyTris: Object.fromEntries([...this.enemyKits].map(([k, v]) => [k, (v.body.index ? v.body.index.count : v.body.attributes.position.count) / 3])), quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
+  /** Hero model triangles split into body and ink hull (outline meshes draw back faces), for measurement. */
+  private heroTris() {
+    const rig = this.heroRig, out = { body: 0, hull: 0 };
+    rig?.holder.traverse(o => {
+      if (!(o instanceof Mesh) || !o.visible || !(o.material as Material).visible) return; // parents drawn as nothing
+      const g = o.geometry as BufferGeometry, n = (g.index ? g.index.count : g.attributes.position.count) / 3;
+      if ((o.material as Material).side === BackSide) out.hull += n; else out.body += n;
+    });
+    return out;
+  }
+  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroKind: this.heroKind, heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, heroTris: this.heroTris(), dropped: Batch.dropped, enemyTris: Object.fromEntries([...this.enemyKits].map(([k, v]) => [k, (v.body.index ? v.body.index.count : v.body.attributes.position.count) / 3])), quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
 }
 
 /** Cape placement per hero model (shoulder height y, back offset x, height h, width w), tuned on the model sheet. */
