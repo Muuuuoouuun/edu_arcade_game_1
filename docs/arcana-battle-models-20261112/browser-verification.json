@@ -1,0 +1,98 @@
+{
+  "date": "2026-11-12",
+  "environment": "Chromium SwiftShader; desktop and emulated mobile, not device GPU",
+  "reports": [
+    {
+      "case": "desktop_campaign",
+      "checks": [
+        "build base sprite",
+        "upgrade pierce GLB",
+        "wood GLB",
+        "pause",
+        "context loss/restore",
+        "keyboard movement",
+        "single renderer"
+      ],
+      "prep": [
+        {
+          "key": "hero",
+          "model": "kar",
+          "phase": "idle",
+          "time": 0,
+          "position": [
+            440,
+            0.5,
+            409.91869112463434
+          ],
+          "heading": -1.5707963267948966
+        },
+        {
+          "key": "tower-2",
+          "model": "ballista",
+          "phase": "idle",
+          "time": 0,
+          "position": [
+            380,
+            0.5,
+            236.71361036774658
+          ],
+          "heading": 1.5707963267948966
+        }
+      ],
+      "drawCalls": 48,
+      "errors": []
+    },
+    {
+      "case": "mobile_snow_bron",
+      "checks": [
+        "GLB",
+        "touch movement",
+        "single renderer"
+      ],
+      "render": {
+        "terrainRenderer": "webgl",
+        "modelCount": "1",
+        "modelKeys": "hero",
+        "renderCalls": "67",
+        "renderTriangles": "37118",
+        "actorStates": "[{\"key\":\"hero\",\"model\":\"bron\",\"phase\":\"idle\",\"time\":0,\"position\":[400.00000719992994,0.5,484.9742360958013],\"heading\":-1.5707963267948966}]"
+      },
+      "errors": []
+    },
+    {
+      "case": "asset_failure",
+      "checks": [
+        "hero SVG fallback",
+        "independent tower GLB"
+      ],
+      "render": {
+        "terrainRenderer": "webgl",
+        "modelCount": "1",
+        "modelKeys": "tower-2",
+        "renderCalls": "26",
+        "renderTriangles": "17552",
+        "actorStates": "[{\"key\":\"tower-2\",\"model\":\"ballista\",\"phase\":\"idle\",\"time\":0,\"position\":[380,0.5,236.71361036774658],\"heading\":1.5707963267948966}]"
+      }
+    },
+    {
+      "case": "no_webgl",
+      "checks": [
+        "terrain fallback",
+        "hero SVG fallback"
+      ],
+      "canvases": 0
+    },
+    {
+      "case": "human_guard_workshop",
+      "checks": [
+        "GLB",
+        "walk",
+        "idle",
+        "thrust",
+        "return",
+        "reduced-motion"
+      ],
+      "errors": []
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { getPaths, getSlots, getStage } from './data.ts';
 import type { Point } from './types.ts';
 
@@ -133,6 +134,31 @@ export function createTerrainScene(stageId:number,mode:'battle'|'camp'='battle')
  const shadow=new THREE.MeshBasicMaterial({color:snow?'#648e91':'#466c3f',transparent:true,opacity:.2,depthWrite:false,side:THREE.DoubleSide});
  for(let i=0;i<decor.length;i++){addOval(scene,decor[i],25,10,.07,shadow);addTree(scene,decor[i],snow,i,flora);}
  return scene;
+}
+
+/** Bake static scenery by material before animated actors are added. This keeps
+ * hundreds of tiny tree/road draws from being repeated for every combat frame.
+ * Geometry remains in world space with the same material and depth behavior. */
+export function batchTerrain(scene:THREE.Scene){
+ scene.updateMatrixWorld(true);
+ const groups=new Map<string,{material:THREE.Material;meshes:THREE.Mesh[];parts:THREE.BufferGeometry[]}>();
+ const originals=new Set<THREE.BufferGeometry>();
+ scene.traverse(object=>{
+  if(!(object instanceof THREE.Mesh)||Array.isArray(object.material))return;
+  const source=object.geometry,geometry=source.index?source.toNonIndexed():source.clone();
+  geometry.applyMatrix4(object.matrixWorld);
+  const attributes=Object.keys(geometry.attributes).sort().map(name=>`${name}:${geometry.getAttribute(name).itemSize}`).join(',');
+  const key=`${object.material.uuid}/${attributes}`;
+  let group=groups.get(key);if(!group){group={material:object.material,meshes:[],parts:[]};groups.set(key,group);}
+  group.meshes.push(object);group.parts.push(geometry);originals.add(source);
+ });
+ for(const group of groups.values()){
+  const merged=mergeGeometries(group.parts,false);
+  if(merged){const mesh=new THREE.Mesh(merged,group.material);mesh.name='batched-terrain';scene.add(mesh);for(const old of group.meshes)old.removeFromParent();}
+  for(const part of group.parts)part.dispose();
+ }
+ const retained=new Set<THREE.BufferGeometry>();scene.traverse(object=>{if(object instanceof THREE.Mesh)retained.add(object.geometry);});
+ for(const geometry of originals)if(!retained.has(geometry))geometry.dispose();
 }
 
 export function disposeTerrain(scene:THREE.Scene){

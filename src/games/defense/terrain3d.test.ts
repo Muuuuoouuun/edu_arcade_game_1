@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { boardToWorld, createTerrainCamera, createTerrainScene, disposeTerrain, terrainDecor } from './terrain3d.ts';
+import { Box3, Mesh } from 'three';
+import { batchTerrain, boardToWorld, createTerrainCamera, createTerrainScene, disposeTerrain, terrainDecor } from './terrain3d.ts';
 import { getPaths, getSlots, getStage } from './data.ts';
 
 test('orthographic ground projection exactly matches existing battle and touch coordinates',()=>{
@@ -30,5 +31,17 @@ test('forest, snow and camp create genuine 3D geometry',()=>{
  for(const [stage,mode] of [[1,'battle'],[8,'battle'],[1,'camp']] as const){
   const scene=createTerrainScene(stage,mode);let meshes=0;scene.traverse(o=>{if(o.type==='Mesh')meshes++;});
   assert.ok(meshes>30,`${mode} ${stage}: ${meshes}`);disposeTerrain(scene);
+ }
+});
+
+test('static batching preserves triangles and world bounds while reducing combat draws',()=>{
+ for(const stage of [1,4,5,8]){
+  const scene=createTerrainScene(stage),bounds=new Box3().setFromObject(scene,true);
+  const count=()=>{let meshes=0,triangles=0;scene.traverse(object=>{if(object instanceof Mesh){meshes++;triangles+=(object.geometry.index?.count??object.geometry.getAttribute('position').count)/3;}});return {meshes,triangles};};
+  const before=count();batchTerrain(scene);const after=count(),actual=new Box3().setFromObject(scene,true);
+  assert.equal(after.triangles,before.triangles);
+  assert.ok(after.meshes<before.meshes/3,`${stage}: ${before.meshes} -> ${after.meshes}`);
+  assert.ok(bounds.min.distanceTo(actual.min)<1e-4);assert.ok(bounds.max.distanceTo(actual.max)<1e-4);
+  disposeTerrain(scene);
  }
 });

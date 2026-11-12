@@ -1,0 +1,63 @@
+{
+  "environment": "Chromium SwiftShader; mobile landscape emulation, not physical device",
+  "reports": [
+    {
+      "viewport": "desktop",
+      "frontier": [
+        {
+          "mode": "defense",
+          "assets": "4",
+          "terrain": "frontier-frost-forest",
+          "wood": "geometry",
+          "hero": "fallback"
+        },
+        {
+          "mode": "command",
+          "assets": "7",
+          "terrain": "frontier-frost-forest",
+          "wood": "geometry",
+          "hero": "lod"
+        },
+        {
+          "mode": "solo",
+          "assets": "5",
+          "terrain": "frontier-frost-forest",
+          "wood": "geometry",
+          "hero": "lod"
+        }
+      ],
+      "rush": "town/battle/pause/resume",
+      "legion": "place/start",
+      "errors": []
+    },
+    {
+      "viewport": "mobile",
+      "frontier": [
+        {
+          "mode": "defense",
+          "assets": "4",
+          "terrain": "frontier-frost-forest",
+          "wood": "geometry",
+          "hero": "fallback"
+        },
+        {
+          "mode": "command",
+          "assets": "7",
+          "terrain": "frontier-frost-forest",
+          "wood": "geometry",
+          "hero": "lod"
+        },
+        {
+          "mode": "solo",
+          "assets": "5",
+          "terrain": "frontier-frost-forest",
+          "wood": "geometry",
+          "hero": "lod"
+        }
+      ],
+      "rush": "town/battle/pause/resume",
+      "legion": "place/start",
+      "errors": []
+    }
+  ]
+}

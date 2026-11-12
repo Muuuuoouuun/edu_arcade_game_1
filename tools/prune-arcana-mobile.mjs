@@ -1,5 +1,6 @@
 import { readdir, rm, stat } from 'node:fs/promises';
 
+// The battle/ subdirectory contains active GLBs and is retained.
 // Only generated mobile output is pruned. Web/arcade/workshop sources stay intact.
 const output = new URL('../dist-mobile/', import.meta.url);
 await stat(new URL('index.html', output));

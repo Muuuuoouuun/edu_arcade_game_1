@@ -7,7 +7,13 @@ import './model-lab.css';
 import { createHitClip, hitFlashStrength } from './model-lab-hit';
 import { createBronIdle } from './model-lab-motion';
 
-const models = [
+type Model = {id:string;name:string;kind:string;detail:string;description:string;source:string;command:string;action:string;clip?:string;asset?:string;glb?:string;static?:boolean;loop?:boolean;hold?:boolean;fitBounds?:boolean;stopVariants?:boolean;viewRotation?:number;previews?:{idle:string;walk:string}};
+const models:Model[] = [
+ {id:'human-guard',name:'인간 창방패병 · 제작 시제품',kind:'HUMAN / GARRISON STUDY',detail:'청록 제복 · 철투구 · 목재 방패',description:'14-A 시안을 참고해 큰 머리와 짧은 팔다리로 만든 인간 병사입니다. 호흡·보행·찌르기와 장비 결합을 살펴보세요. 기하 모델 시제품이며 캠페인 병과로 추가되지는 않았습니다.',source:'prototypes/human-guard/human-guard.blend',command:'blender -b --python tools/blender/build_human_guard.py',action:'▶ 창 찌르기',clip:'human-guard-thrust',asset:'prototypes/human-guard',viewRotation:-1.85,previews:{idle:'human-guard-idle',walk:'human-guard-walk'}},
+ {id:'frontier-kar-game',name:'카르 · 전장 원본',kind:'FRONTIER / HERO',detail:'양손 망치 · 보행·강타',description:'기존 Frontier에서 가져온 카르 모델입니다. 캠페인에서 카르의 보행·강타에 연결한 원본입니다. 공격 시점은 기존 전투 엔진과 맞춥니다.',source:'frontier-kar.blend',command:'원본: Frontier bec8041',action:'▶ 망치 강타',clip:'kar-slam',asset:'prototypes/frontier-kar-game',viewRotation:-1.85},
+ {id:'kar-detail-20261111',name:'카르 · 망치 디테일 시안',kind:'FRONTIER / DETAIL STUDY',detail:'자루 · 망치 끝 실루엣',description:'망치 자루와 머리 형태를 조정한 검토용 시안입니다. 게임 적용 전 손 관통과 실제 전장 크기 검증이 필요합니다.',source:'kar-detail-20261111/kar-detail.blend',command:'python3 tools/tests/check-kar-detail.py',action:'▶ 망치 강타',clip:'kar-slam',asset:'prototypes/kar-detail-20261111',viewRotation:-1.85},
+ {id:'frontier-ballista-game',name:'발리스타 · 전장 원본',kind:'FRONTIER / TOWER',detail:'나무 · 금속 · 화살',description:'기존 Frontier의 발리스타 모델과 발사 클립입니다. 캠페인 관통 석궁 Lv.2에 연결한 원본입니다. 기단을 유지하고 상부를 조준하며 발사합니다.',source:'frontier-ballista.blend',command:'원본: Frontier bec8041',action:'▶ 발사 동작',clip:'frontier-ballista-release',asset:'prototypes/frontier-ballista-game'},
+ {id:'frontier-wood-strike-game',name:'나무 병사 · 전장 원본',kind:'FRONTIER / ENEMY',detail:'나뭇결 · 나뭇가지 · 이끼',description:'기존 Frontier 나무 병사의 공격 모델입니다. 자세와 재질을 검토하는 시안이며 캠페인에는 아직 연결되지 않았습니다.',source:'frontier-wood-strike.blend',command:'원본: Frontier bec8041',action:'▶ 공격 동작',clip:'frontier-wood-strike',asset:'prototypes/frontier-wood-strike-game'},
  {id:'rush-town',glb:new URL('./rush/models/forest-town.glb',import.meta.url).href,name:'Rush · 녹음 성채',kind:'RUSH FOREST TOWN',detail:'석조 아치 · 목재 양문 · 청록 지붕',description:'Rush 전장에서 지키는 성채입니다. 앞문의 쐐기돌과 목재 보강, 뒤쪽 보급문과 지붕을 회전하며 살펴보세요. 현재는 고정된 건물이며 파괴·피격 애니메이션은 포함하지 않습니다.',source:'rush-town.blend',command:'npm run models:rush-town',action:'고정 모형',static:true,fitBounds:true},
  {id:'legion-shield',name:'군단 방패병 · 방패 강타',kind:'LEGION SHIELD SOLDIER',detail:'청록 방패 · 주홍 목도리 · 고정된 발',description:'같은 모델이 군단 전장과 병종 카드에 사용됩니다. 방패가 타격 순간 앞으로 나가고 발을 디딘 채 회복합니다.',source:'legion-shield.blend',command:'blender -b --python tools/blender/build_legion_shield.py',action:'▶ 방패 강타',clip:'legion-shield-bash',hold:true,fitBounds:true},
  {id:'legion-shield-walk',name:'군단 방패병 · 접지 보행',kind:'LEGION SHIELD SOLDIER',detail:'남청 망토 · 교대 지지 발 · 청록 방패',description:'양 발의 지지와 회수를 실제 메시 관절로 재생합니다. 군단에서는 이동 거리에 따라 이 포즈를 사용하고 피해 시 강타가 우선합니다.',source:'legion-shield-walk.blend',command:'blender --background --python-exit-code 1 --python tools/blender/build_legion_shield_walk.py',action:'▶ 보행 재생',clip:'legion-shield-walk',loop:true,fitBounds:true},
@@ -106,6 +112,8 @@ const $ = <T extends HTMLElement>(id:string) => document.getElementById(id) as T
 const stage = $<HTMLDivElement>('model-stage'), status = $<HTMLParagraphElement>('model-loading'), fallback = $<HTMLImageElement>('model-fallback');
 const shoot = $<HTMLButtonElement>('attack-preview'), rotate = $<HTMLButtonElement>('auto-rotate'), wire = $<HTMLButtonElement>('wireframe'), reset = $<HTMLButtonElement>('reset-view');
 const idleButton=$<HTMLButtonElement>('idle-preview'),pose=$<HTMLInputElement>('pose-progress'),hit=$<HTMLButtonElement>('hit-preview');
+const clipIdle=$<HTMLButtonElement>('clip-idle-preview'),clipWalk=$<HTMLButtonElement>('clip-walk-preview');
+const previewActions=new Map<string,AnimationAction>();let previewAction:AnimationAction|null=null;
 let idleRig:ReturnType<typeof createBronIdle> = null,idleEnabled=false;
 let renderer:WebGLRenderer|null = null, controls:OrbitControls|null = null, current:Group|null = null, mixer:AnimationMixer|null = null, attackAction:AnimationAction|null = null, hitAction:AnimationAction|null = null;
 const stopLabel=document.createElement('label');stopLabel.className='lab-stop-phase';stopLabel.textContent='출발 걸음 ';stopLabel.hidden=true;
@@ -133,7 +141,7 @@ function release(object:Object3D) {
  materials(object).forEach(material => material.dispose());
 }
 // Match the dwarf render's front three-quarter view so its hammer clears the face.
-function resetView() {pivot.rotation.y = (currentModelId==='polar-bear'||currentModelId==='gecko-ranger'||currentModelId.startsWith('kar-')||currentModelId.startsWith('dwarf-')||currentModelId.startsWith('ian-')||currentModelId.startsWith('riel-')||currentModelId.startsWith('cheongun-')||currentModelId.startsWith('luna-')||currentModelId.startsWith('moonlight-'))?-1.85:0;camera.position.set(8.3,6.5,10.3);controls?.target.set(0,currentModelId==='forest-bridge'?1:2.0,0);if(controls)controls.maxDistance=22;controls?.update();fitModelView();}
+function resetView() {pivot.rotation.y = models.find(model=>model.id===currentModelId)?.viewRotation??((currentModelId==='polar-bear'||currentModelId==='gecko-ranger'||currentModelId.startsWith('kar-')||currentModelId.startsWith('dwarf-')||currentModelId.startsWith('ian-')||currentModelId.startsWith('riel-')||currentModelId.startsWith('cheongun-')||currentModelId.startsWith('luna-')||currentModelId.startsWith('moonlight-'))?-1.85:0);camera.position.set(8.3,6.5,10.3);controls?.target.set(0,currentModelId==='forest-bridge'?1:2.0,0);if(controls)controls.maxDistance=22;controls?.update();fitModelView();}
 /** A long quadruped needs its horizontal silhouette fitted on portrait displays too. */
 function fitModelView() {
  if(!current||!controls||!models.find(model=>model.id===currentModelId)?.fitBounds)return;
@@ -144,18 +152,20 @@ function fitModelView() {
  controls.maxDistance=Math.max(22,distance*1.5);controls.target.copy(center);camera.position.copy(center).addScaledVector(direction,distance);controls.update();
 }
 function stopAction() {
- attackAction?.stop();hitAction?.stop();idleRig?.restore();idleEnabled=false;idleButton.setAttribute('aria-pressed','false');$('motion-state').textContent='REST · 기본 자세';baseColors.forEach((color,material)=>material.color.copy(color));pose.value='0';$('pose-value').textContent='0%';shotAt = -Infinity; stage.dataset.action = 'idle'; shoot.textContent=models.find(model=>model.id===currentModelId)?.action??'▶ 동작 재생'; redraw = true;
+ attackAction?.stop();hitAction?.stop();previewAction?.stop();previewAction=null;clipIdle.setAttribute('aria-pressed','false');clipWalk.setAttribute('aria-pressed','false');idleRig?.restore();idleEnabled=false;idleButton.setAttribute('aria-pressed','false');$('motion-state').textContent='REST · 기본 자세';baseColors.forEach((color,material)=>material.color.copy(color));pose.value='0';$('pose-value').textContent='0%';shotAt = -Infinity; stage.dataset.action = 'idle'; shoot.textContent=models.find(model=>model.id===currentModelId)?.action??'▶ 동작 재생'; redraw = true;
 }
 function clearModel() {
  stopAction(); idleRig = null;
  mixer?.stopAllAction();
  if(mixer)mixer.uncacheRoot(mixer.getRoot());
- attackAction = null; hitAction = null; mixer = null;
+ attackAction = null; hitAction = null; mixer = null;previewActions.clear();
  if(current){pivot.remove(current);release(current);current = null;}
  parts.length = 0; currentMaterials = []; emissionLevels.clear(); baseColors.clear(); pivot.rotation.y = 0; stopAction();
 }
 function setReady(ready:boolean) {
  $('motion-review').hidden=currentModelId!=='dwarf-guardian';
+ const previews=models.find(model=>model.id===currentModelId)?.previews;
+ for(const [kind,button] of [['idle',clipIdle],['walk',clipWalk]] as const){button.hidden=!previews;button.disabled=!ready||reduced.matches||!previews||!previewActions.has(previews[kind]);}
  idleButton.disabled=!ready||!idleRig||reduced.matches;
  document.querySelectorAll<HTMLButtonElement>('[data-review-pose]').forEach(button=>{button.disabled=!ready||!attackAction;});
  $('pose-control').hidden=!ready||!attackAction;
@@ -244,6 +254,7 @@ async function select(index:number) {
    mixer = new AnimationMixer(gltf.scene); attackAction = mixer.clipAction(clip);
    attackAction.setLoop(model.loop?LoopRepeat:LoopOnce,model.loop?Infinity:1); attackAction.clampWhenFinished = true;
    const hitClip=createHitClip(model.id,gltf.scene);if(hitClip){hitAction=mixer.clipAction(hitClip);hitAction.setLoop(LoopOnce,1);}
+   if(model.previews)for(const name of Object.values(model.previews)){const animation=gltf.animations.find(item=>item.name===name);if(animation){const action=mixer.clipAction(animation);action.setLoop(LoopRepeat,Infinity);previewActions.set(name,action);}}
    if(model.stopVariants){attackAction.play();mixer.setTime(0);attackAction.paused=true;}
    mixer.addEventListener('finished',event=>{if(event.action===hitAction)stopAction();else if(model.hold){stage.dataset.action='settled';redraw=true;}else stopAction();});
   }
@@ -271,6 +282,14 @@ shoot.onclick = () => {
  if(looping)shoot.textContent='■ 보행 멈춤';
  attackAction?.reset().play();
 };
+for(const [kind,button] of [['idle',clipIdle],['walk',clipWalk]] as const){
+ button.onclick=()=>{
+  const name=models.find(model=>model.id===currentModelId)?.previews?.[kind],action=name?previewActions.get(name):undefined;
+  if(!action||reduced.matches)return;const stop=previewAction===action;stopAction();
+  if(!stop){previewAction=action;action.reset().play();button.setAttribute('aria-pressed','true');stage.dataset.action=kind==='walk'?'walking':'breathing';$('motion-state').textContent=kind==='walk'?'WALK · 보행 재생':'IDLE · 기본 호흡';}
+  redraw=true;
+ };
+}
 hit.onclick = () => {
  if(!hitAction||reduced.matches)return;
  stopAction(); stage.dataset.action = 'hit'; hitAction.reset().play(); redraw = true;
@@ -318,7 +337,7 @@ function draw(now:number) {
   elapsed += dt;
   const autoMoving = automatic&&!reduced.matches&&!!current;
   if(autoMoving)pivot.rotation.y += dt*.28;
-  const age = elapsed-shotAt, clipMoving = !!attackAction?.isRunning() || !!hitAction?.isRunning();
+  const age = elapsed-shotAt, clipMoving = !!attackAction?.isRunning() || !!hitAction?.isRunning() || !!previewAction?.isRunning();
   // Towers use procedural recoil; characters use their authored attack clips.
   const power = !attackAction&&!reduced.matches&&age<.8?Math.sin(Math.min(1,age/.8)*Math.PI)*(1-age/.8):0;
   for(const part of parts){
@@ -346,4 +365,4 @@ function draw(now:number) {
 }
 // Allow a direct preview link without accepting arbitrary asset paths.
 const requestedModel = new URLSearchParams(location.search).get('model');
-void select(requestedModel?Math.max(0,models.findIndex(model => model.id===requestedModel)):3); requestAnimationFrame(draw);
+void select(requestedModel?Math.max(0,models.findIndex(model => model.id===requestedModel)):models.findIndex(model=>model.id==='frontier-relic')); requestAnimationFrame(draw);

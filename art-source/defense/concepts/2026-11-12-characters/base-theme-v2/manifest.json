@@ -1,0 +1,159 @@
+{
+  "date": "2026-11-12",
+  "revision": "base-theme-v2",
+  "status": "visual_candidates_not_runtime_assets",
+  "style_standard": "../../../../../docs/arcana-character-art-standard.md",
+  "verification": {
+    "image_decode": "Pillow verify",
+    "visual_review": "all five generated sheets inspected",
+    "runtime_integration": false,
+    "mobile_readability_test": false
+  },
+  "sheets": [
+    {
+      "file": "01-forest-guardians.png",
+      "source": "exec-9582cb14-2146-40db-aa88-f9d91eed2ff4.png",
+      "theme": "숲·수호대",
+      "candidates": {
+        "A": "엘프 궁수",
+        "B": "숲길 창수",
+        "C": "멧돼지 방패 전사",
+        "D": "버섯 약초사"
+      },
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2430090,
+      "sha256": "c6d88c387dcf0846666cff314f5dd8572439c455a69d9cfa0ca90456fc048815",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "public/defense/arcana-keyart.webp",
+          "sha256": "ff3b560af598f2aaaddca14cfa29024f6b2b52fb6e94d76a2d0af3676ac4c019"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/01-forest-guardians.png",
+          "sha256": "d55c0f723208b746f2c584d3d1a8b1b7f4b7dbbe7e3d89ffb89afadeb6228b43"
+        }
+      ]
+    },
+    {
+      "file": "02-eastern-fortress.png",
+      "source": "exec-cb2a69ad-e36b-476b-9578-4176d0411b71.png",
+      "theme": "동방·산성",
+      "candidates": {
+        "A": "산성 창수",
+        "B": "부적술사",
+        "C": "호랑이 무투가",
+        "D": "도깨비 장인"
+      },
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2448602,
+      "sha256": "054cde0aa5c667279b4616dc3e4bc8d4ae688b622b3788445aaf21afc68a37a7",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "public/defense/arcana-keyart.webp",
+          "sha256": "ff3b560af598f2aaaddca14cfa29024f6b2b52fb6e94d76a2d0af3676ac4c019"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/02-eastern-fortress.png",
+          "sha256": "16635cd6197845f5c192d0173bf1ae036c9c227e2fc044ddbaf74f898c340040"
+        }
+      ]
+    },
+    {
+      "file": "03-polar-expedition.png",
+      "source": "exec-c019af23-66e7-4f02-9307-e83cc0ce1aec.png",
+      "theme": "설산·극지",
+      "candidates": {
+        "A": "북극곰 수호자",
+        "B": "설산 창전사",
+        "C": "늑대 정찰병",
+        "D": "드워프 탐험가"
+      },
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2595718,
+      "sha256": "c80ff4432eff9aa9459cd52aa4db7a8dee3d5bc38a9da32d38bade538f705513",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "public/defense/arcana-keyart.webp",
+          "sha256": "ff3b560af598f2aaaddca14cfa29024f6b2b52fb6e94d76a2d0af3676ac4c019"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/03-polar-expedition.png",
+          "sha256": "0dfd986b024a154330e22a7ce0df7ddd556ad1d822f3c1566e547ab6ebd9014f"
+        }
+      ]
+    },
+    {
+      "file": "04-tropical-islanders.png",
+      "source": "exec-8fcefa68-fe0b-4fe2-a7b1-af756caa15ee.png",
+      "theme": "열대·군도",
+      "candidates": {
+        "A": "도마뱀 씨앗 사수",
+        "B": "수달 잠수부",
+        "C": "큰부리새 창수",
+        "D": "거북 공병"
+      },
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2457815,
+      "sha256": "5873a7251a432bd063077f142fb6ced3fec74c2bcfd695e0034c5aaf4a6d3f1e",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "public/defense/arcana-keyart.webp",
+          "sha256": "ff3b560af598f2aaaddca14cfa29024f6b2b52fb6e94d76a2d0af3676ac4c019"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/04-tropical-islanders.png",
+          "sha256": "53fb95c699938389626ce808b2c0494f7b4749842d349392123308dacd62e826"
+        }
+      ]
+    },
+    {
+      "file": "05-twilight-borderlands.png",
+      "source": "exec-9a080ab8-bdaa-43be-887f-75fdeb0f0723.png",
+      "theme": "황혼·고딕",
+      "candidates": {
+        "A": "흡혈귀 결투가",
+        "B": "오크 지휘관",
+        "C": "트롤 약초사",
+        "D": "가고일 수호자"
+      },
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2460084,
+      "sha256": "ca2749c06249f611f6eb600c43c7bc7c9785c5bb5c2bbc654b1b3f5afa30a361",
+      "references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "public/defense/arcana-keyart.webp",
+          "sha256": "ff3b560af598f2aaaddca14cfa29024f6b2b52fb6e94d76a2d0af3676ac4c019"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/05-twilight-borderlands.png",
+          "sha256": "7b1cbfbff6ccafdd8918496389d7b30c304891fc081bc22cee4d05e9df6a60ce"
+        }
+      ]
+    }
+  ]
+}
