@@ -435,7 +435,9 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 }
 @media (orientation: landscape) and (max-width: 760px) {
   .town-bar { justify-content: flex-end; }
-  .town-bar h1 { display: none; }
+  /* Cycle 77: only the title words go; the kingdom power line stays (it is the growth number). */
+  .town-bar h1 .town-title { display: none; }
+  .town-bar h1 { flex: 0 1 auto; margin-right: auto; }
 }
 
 /* Kingdom goal (cycle 64): a small card under the top bar on the left; it glows gold when it can be claimed.
