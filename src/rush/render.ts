@@ -15,7 +15,7 @@ import simplifierUrl from 'three/addons/libs/meshopt_simplifier.module.js?url';
 import rangerGlb from './models/gecko-ranger.glb?url';
 import bronGlb from './models/dwarf-guardian.glb?url';
 import bearGlb from './models/polar-bear.glb?url';
-import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
+import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, HERO_SPAWN, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
 import { heroDef, heroHidden, heroMaxHp, lobReach, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, wallParts, type Part } from './look.ts';
 import { loadForestTown, toFloat32 } from './townModel.ts';
@@ -372,6 +372,29 @@ export class RushView {
     this.scene.add(town.root);
     // Cycle 66: the shared meshopt web copy (townModel.ts); the scene is shared with the town screen, so it is not disposed.
     loadForestTown().then(scene => { try { town.accept(scene); } catch { town.fail(); } }, () => town.fail());
+  }
+
+  /** Respawn dial (cycle 80): while the hero is down, a team-blue pie at the respawn spot fills clockwise toward the
+   * return; no text (#107 hid the toast that said when). Kept hero-sized: a wider ring slid under the castle's back
+   * towers from the battle camera. 24 pre-built wedges, so nothing is rebuilt per frame. */
+  private respawnDial: { root: Group; fill: Mesh; steps: CircleGeometry[] } | null = null;
+  private syncRespawn(downT: number, total: number) {
+    if (downT <= 0) { if (this.respawnDial) this.respawnDial.root.visible = false; return; }
+    if (!this.respawnDial) {
+      const root = new Group(), r = 0.66, top = Math.PI / 2;
+      const flat = (m: Mesh, order: number, y: number) => { m.rotation.x = -Math.PI / 2; m.position.y = y; m.renderOrder = order; root.add(m); return m; };
+      flat(new Mesh(new CircleGeometry(r, 32), basic(PAL.ink, 0.5)), 4, 0);
+      flat(new Mesh(new RingGeometry(r, r + 0.11, 32), basic(PAL.ink, 0.9)), 4, 0);
+      // Positive arc lengths only (a negative one flips the winding and is culled); the start walks clockwise from 12 o'clock.
+      const steps = Array.from({ length: 24 }, (_, i) => { const len = ((i + 1) / 24) * Math.PI * 2; return new CircleGeometry(r - 0.04, 32, top - len, len); });
+      const fill = flat(new Mesh(steps[0], basic(PAL.ally, 0.95)), 5, 0.01);
+      root.position.set(HERO_SPAWN.x, this.groundHeight(HERO_SPAWN.x, HERO_SPAWN.z) + 0.08, HERO_SPAWN.z);
+      this.scene.add(root);
+      this.respawnDial = { root, fill, steps };
+    }
+    const d = this.respawnDial, k = Math.min(23, Math.max(0, Math.ceil((1 - downT / total) * 24) - 1));
+    d.root.visible = true;
+    d.fill.geometry = d.steps[k];
   }
 
   private buildPads() {
@@ -962,6 +985,7 @@ export class RushView {
     const worldDt = held ? 0 : dt;
     this.time += worldDt;
     const h = s.hero, alive = h.downT <= 0, def = heroDef(s);
+    this.syncRespawn(h.downT, def.respawn);
     this.showHero(h.kind);
     this.syncFan(def);
     // Popo's snowball (cycle 48): in the paw only with a round loaded and not right after a throw; an empty paw = reloading.
