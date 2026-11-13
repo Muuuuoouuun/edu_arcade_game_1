@@ -342,19 +342,48 @@ test('kingdom goals (cycle 64): one at a time, claimed only when met, paid once,
   const after = claimGoal(won);
   assert.deepEqual([after.goal, after.food - won.food, won.goal], [1, GOALS[0].reward.food, 0], 'pays, moves on, leaves the input alone');
   assert.equal(claimGoal(after), after, 'the next goal (castle Lv2) is not met yet');
-  // A grown kingdom meets every goal in order: the whole chain can be claimed and then nothing is left.
+  // A grown kingdom meets every goal in order: the whole chain can be claimed; what follows is the power ladder (cycle 83).
   let grown: Kingdom = { ...k, castle: 5, farm: 5, mill: 5, perks: { ...k.perks, attack: 1, forge: 1 }, stars: k.stars.map(() => 3), heroLv: { ...k.heroLv, ranger: 2 }, endlessBest: 5 };
   const shards0 = grown.shards;
   for (let i = 0; i < GOALS.length; i++) grown = claimGoal(grown);
   assert.equal(grown.goal, GOALS.length);
-  assert.equal(currentGoal(grown), null);
-  assert.equal(claimGoal(grown), grown);
+  assert.equal(currentGoal(grown)?.goal.ladder, true, 'the chain hands over to the ladder');
+  assert.equal(claimGoal(grown), grown, 'this kingdom is still short of the first rung');
   assert.equal(grown.shards - shards0, GOALS.reduce((a, g) => a + (g.reward.shards ?? 0), 0));
   // Saves: the index round-trips; older saves start at 0; nonsense clamps to a valid start.
   assert.equal(parseKingdom(serializeKingdom({ ...k, goal: 4 }), T0).goal, 4);
   const old = JSON.parse(serializeKingdom(k)); delete old.goal;
   assert.equal(parseKingdom(JSON.stringify(old), T0).goal, 0);
-  assert.equal(parseKingdom(JSON.stringify({ ...old, goal: 99 }), T0).goal, 0);
+  for (const bad of [-1, 2.5, 'x', 1e6]) assert.equal(parseKingdom(JSON.stringify({ ...old, goal: bad }), T0).goal, 0, `goal ${bad}`);
+});
+
+test('kingdom power ladder (cycle 83): after the chain, power targets every 500 from 2,500, claimed only when met', async () => {
+  const { GOALS, POWER_LADDER, currentGoal, claimGoal, goalAt, kingdomPower } = await import('./kingdom.ts');
+  const k = createKingdom(T0);
+  // The rungs follow from the goal index alone.
+  assert.deepEqual([0, 1, 4].map(r => goalAt(GOALS.length + r)!.progress(k)[1]), [2500, 3000, 4500]);
+  assert.equal(goalAt(GOALS.length)!.text, '전투력 2,500');
+  assert.equal(goalAt(GOALS.length + POWER_LADDER.rungs), null);
+  assert.equal(goalAt(-1), null);
+  // A chain finisher near 2,000 power waits; the first rung pays its shards once met, and the next rung is 3,000.
+  let done: Kingdom = { ...k, goal: GOALS.length, castle: 5, farm: 3, mill: 3, perks: { attack: 2, towerDiscount: 1, townHp: 1, forge: 1, vault: 1 }, heroLv: { ranger: 5, bron: 2, bear: 2 }, talent: { ranger: 1, bron: 0, bear: 0 }, stars: [3, 3, 3, 3, 3, 2, 2, 1, 1, 1], endlessBest: 5 };
+  assert.equal(kingdomPower(done), 2080);
+  const wait = currentGoal(done)!;
+  assert.deepEqual([wait.have, wait.need, wait.done], [2080, 2500, false]);
+  assert.equal(claimGoal(done), done);
+  done = { ...done, talent: { ranger: 3, bron: 2, bear: 2 } }; // +480 power: 2,560
+  const paid = claimGoal(done);
+  assert.deepEqual([paid.goal, paid.shards - done.shards, kingdomPower(paid)], [GOALS.length + 1, POWER_LADDER.shards, kingdomPower(done)], 'pays shards, power itself unchanged');
+  assert.deepEqual([currentGoal(paid)!.need, currentGoal(paid)!.done], [3000, false]);
+  // A kingdom far ahead catches up one tap at a time; everything but the endless challenge reaches five rungs.
+  let max: Kingdom = { ...k, goal: GOALS.length, castle: 5, farm: 5, mill: 5, perks: { attack: 5, towerDiscount: 5, townHp: 5, forge: 5, vault: 5 }, heroLv: { ranger: 10, bron: 10, bear: 10 }, talent: { ranger: 3, bron: 3, bear: 3 }, stars: k.stars.map(() => 3) };
+  assert.equal(kingdomPower(max), 4970);
+  let taps = 0;
+  for (let next = claimGoal(max); next !== max; next = claimGoal(max)) { max = next; taps++; }
+  assert.equal(taps, 5);
+  assert.equal(currentGoal(max)!.need, 5000);
+  // Ladder rungs survive a save.
+  assert.equal(parseKingdom(serializeKingdom(max), T0).goal, GOALS.length + 5);
 });
 
 test('kingdom power (cycle 71): a start value, and each kind of growth adds exactly its weight', async () => {

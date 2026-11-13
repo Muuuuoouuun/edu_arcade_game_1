@@ -31,7 +31,7 @@ export interface Kingdom {
   shards: number;
   /** Endless challenge (cycle 46): most waves held in one run. */
   endlessBest: number;
-  /** Kingdom goal chain (cycle 64): index of the next goal to claim (GOALS.length = all done). */
+  /** Kingdom goal chain (cycle 64): index of the next goal to claim; past GOALS.length it is a power ladder rung (cycle 83). */
   goal: number;
   /** Local day number (see `dayIndex`) of the last daily first-win bonus (cycle 32); 0 = never. */
   dailyWin: number;
@@ -305,7 +305,7 @@ export function parseKingdom(raw: string | null, now: number): Kingdom {
       // Saves from before the endless challenge (cycle 46) have no record yet.
       endlessBest: count(v.endlessBest, 0, 1e6) ?? 0, rewarded,
       // Saves from before goals (cycle 64) start the chain at the first goal; ones already met can be claimed at once.
-      goal: count(v.goal, 0, GOALS.length) ?? 0,
+      goal: count(v.goal, 0, GOALS.length + POWER_LADDER.rungs) ?? 0,
     };
   } catch {
     return createKingdom(now);
@@ -325,7 +325,7 @@ export function kingdomPower(k: Kingdom): number {
 
 /** Kingdom goal chain (cycle 64): one goal at a time, in the order a growing kingdom meets them (castle, stages, hero,
  * forge, endless), each paying a little food, wood or shards when claimed in town. */
-export type Goal = { text: string; progress: (k: Kingdom) => [number, number]; reward: Partial<Cost> & { shards?: number } };
+export type Goal = { text: string; progress: (k: Kingdom) => [number, number]; reward: Partial<Cost> & { shards?: number }; ladder?: boolean };
 const starsOn = (k: Kingdom, n: number) => k.stars[n - 1] ?? 0;
 const bestHeroLv = (k: Kingdom) => Math.max(k.heroLv.ranger, k.heroLv.bron, k.heroLv.bear);
 export const GOALS: readonly Goal[] = [
@@ -342,9 +342,21 @@ export const GOALS: readonly Goal[] = [
   { text: '끝없는 도전 5웨이브', progress: k => [Math.min(5, k.endlessBest), 5], reward: { shards: 5 } },
   { text: '성 Lv 5', progress: k => [Math.min(5, k.castle), 5], reward: { shards: 8 } },
 ];
-/** The goal to work on (null once the chain is done), its progress and whether it can be claimed. */
+/** Power ladder (cycle 83): after the fixed chain the goals go on as kingdom power targets, 2,500 then every 500 more,
+ * each paying a few shards. The rung follows from the saved goal index, so nothing new is stored. A chain finisher sits
+ * near 2,000 power; everything but the endless challenge tops out at 4,970, so that is five rungs (15 shards). */
+export const POWER_LADDER = { from: 2500, step: 500, shards: 3, rungs: 1000 } as const;
+export function goalAt(index: number): Goal | null {
+  if (!Number.isInteger(index) || index < 0) return null;
+  if (index < GOALS.length) return GOALS[index];
+  const rung = index - GOALS.length;
+  if (rung >= POWER_LADDER.rungs) return null;
+  const need = POWER_LADDER.from + rung * POWER_LADDER.step;
+  return { text: `전투력 ${need.toLocaleString('en-US')}`, progress: k => [Math.min(need, kingdomPower(k)), need], reward: { shards: POWER_LADDER.shards }, ladder: true };
+}
+/** The goal to work on (null only past the end of the ladder), its progress and whether it can be claimed. */
 export function currentGoal(k: Kingdom): { index: number; goal: Goal; have: number; need: number; done: boolean } | null {
-  const goal = GOALS[k.goal];
+  const goal = goalAt(k.goal);
   if (!goal) return null;
   const [have, need] = goal.progress(k);
   return { index: k.goal, goal, have, need, done: have >= need };

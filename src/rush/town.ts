@@ -266,8 +266,12 @@ export class TownScreen {
     if (cur) {
       goalEl.classList.toggle('done', cur.done);
       goalEl.disabled = !cur.done;
-      goalEl.querySelector('[data-goal-head]')!.textContent = cur.done ? `목표 ${cur.index + 1}/${GOALS.length} · 받기` : `목표 ${cur.index + 1}/${GOALS.length}`;
-      goalEl.querySelector('[data-goal-text]')!.textContent = cur.need > 1 && !cur.done ? `${cur.goal.text} (${cur.have}/${cur.need})` : cur.goal.text;
+      // The fixed chain counts out of its length; the power ladder after it (cycle 83) has no end, so no total.
+      const head = cur.goal.ladder ? `목표 ${cur.index + 1}` : `목표 ${cur.index + 1}/${GOALS.length}`;
+      goalEl.querySelector('[data-goal-head]')!.textContent = cur.done ? `${head} · 받기` : head;
+      const n = (v: number) => v.toLocaleString('en-US');
+      goalEl.querySelector('[data-goal-text]')!.textContent = cur.goal.ladder && !cur.done ? `전투력 ${n(cur.have)}/${n(cur.need)}`
+        : cur.need > 1 && !cur.done ? `${cur.goal.text} (${cur.have}/${cur.need})` : cur.goal.text;
       goalEl.querySelector('[data-goal-reward]')!.innerHTML = rewardHtml(cur.goal.reward);
       goalEl.setAttribute('aria-label', `목표 ${cur.index + 1}: ${cur.goal.text}, ${cur.done ? '달성, 눌러서 보상 받기' : `진행 ${cur.have}/${cur.need}`}, 보상 ${rewardText(cur.goal.reward)}`);
     }
