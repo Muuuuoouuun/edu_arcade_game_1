@@ -5,6 +5,7 @@ import {
   RedFormat, Vector3, type BufferGeometry, type Material, type Mesh,
 } from 'three';
 import { mergeGeometries, toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
+import { FOREST_GROUND, type GroundPalette } from './terrainElevation.ts';
 
 /** Palette tokens. Ground stays calmer than anything you can interact with. */
 export const PAL = {
@@ -13,6 +14,61 @@ export const PAL = {
   ally: 0x2f9bff, enemy: 0xff3d55, gold: 0xffc93c, super: 0xa46bff, ink: 0x1d1433,
   cream: 0xf5e6c6, wood: 0xa8642e, woodDark: 0x6e3c1c,
 } as const;
+
+/** The two expedition regions (expedition.ts `regionOf`): stages 1-5 and the endless challenge are the forest, 6-10 the snowy mountains. */
+export type RegionName = 'forest' | 'snow';
+/** Everything in the battle scene that changes with the region. Team colours, ink and the heroes never do. */
+export interface RegionLook {
+  water: number; ground: GroundPalette;
+  hedge: number; hedgeTop: number;
+  /** Tall-grass cover: the patch underneath and three blade colours. */
+  bushBase: number; bushBlades: readonly [number, number, number];
+  /** Snow lying on the upward faces of walls and town roofs; null = none. */
+  cap: number | null;
+  /** Wall stone leans this far (0-1) toward `wallCool`. */
+  wallMix: number; wallCool: number;
+  hemiSky: number; hemiGround: number;
+  /** Multiplied into every enemy body (one shared material, set per battle). */
+  enemyTint: number;
+  /** Frost cues (slow ring, ice shell, snowball landing): pale in the forest, deeper on snow where pale would vanish. */
+  frostRing: number; ice: number; iceOpacity: number; frostFx: number;
+  /** Aim previews: white fan and pale landing ring in the forest, ink-blue on snow. */
+  aimFan: number; aimLob: number;
+  /** Falling snowflakes at full quality (0 = none). */
+  snowfall: number;
+}
+export const REGION_LOOK: Record<RegionName, RegionLook> = {
+  forest: {
+    water: PAL.water, ground: FOREST_GROUND, hedge: PAL.hedge, hedgeTop: PAL.hedgeTop,
+    bushBase: 0x4cae48, bushBlades: [0x6bd05a, 0x58c04d, 0x7ddc63],
+    cap: null, wallMix: 0, wallCool: 0xffffff, hemiSky: 0xe6f6ff, hemiGround: 0x9c8a62, enemyTint: 0xffffff,
+    frostRing: 0x8fe6ff, ice: 0xc4f2ff, iceOpacity: 0.4, frostFx: 0xc4f2ff, aimFan: 0xffffff, aimLob: 0xc4f2ff, snowfall: 0,
+  },
+  // Snowy mountains: a calm blue-grey field (never pure white, so white actors, snowballs and frost cues still show),
+  // a paler packed-snow road with a slate edge, icy water. Reference: the old campaign's snow villages, toned down.
+  snow: {
+    water: 0x86c3d6,
+    ground: {
+      plaza: 0xc6d4da, road: 0xd0dde2, roadEdge: 0x86a3b3, grass: 0xb4cbdb, grassAlt: 0xa6c0d2,
+      rock: 0x8394a8, rockAlt: 0x6f8196, rockFoot: 0x4a5d78, rim: 0xa6c0d2,
+    },
+    hedge: 0x3f7f78, hedgeTop: 0xe9f2f8,
+    bushBase: 0x89a6bd, bushBlades: [0xb9cfe0, 0xa3bdd3, 0xd6e4ef],
+    cap: 0xe9f2f8, wallMix: 0.35, wallCool: 0x8fa0c0, hemiSky: 0xe8f6ff, hemiGround: 0x8f9fb5, enemyTint: 0xeef3ff,
+    frostRing: 0x1aa0d8, ice: 0x5cc4f5, iceOpacity: 0.55, frostFx: 0x49b6e6, aimFan: 0x24406e, aimLob: 0x1f8fd0, snowfall: 140,
+  },
+};
+/** Boss body colours. Only the last stage of a region has a named boss (stage 5 elder tree king, stage 10 frost lord);
+ * every other boss wave keeps the default purple. Eyes stay enemy red in all three. */
+export interface BossLook { cape: number; trunk: number; chest: number; head: number; crown: number; arm: number; fist: number; kill: number }
+export type BossName = 'default' | RegionName;
+export const BOSS_LOOK: Record<BossName, BossLook> = {
+  default: { cape: 0x8a1f3a, trunk: 0x4b3a8a, chest: 0x6d55c4, head: 0x2a1f4d, crown: PAL.gold, arm: 0x6d55c4, fist: 0x9d83ff, kill: 0x6d55c4 },
+  // Bark and moss: dark bark trunk, mossy shoulders and arms, leaf-green fists, an autumn-amber crown.
+  forest: { cape: 0x7a2a1e, trunk: 0x5a3a22, chest: 0x7d5a34, head: 0x3a2616, crown: 0xf2b23a, arm: 0x4f7d3a, fist: 0x9ccf4a, kill: 0x7d5a34 },
+  // Ice-blue and white over dark ink-navy; the crimson cape and red eyes keep it on the enemy team.
+  snow: { cape: 0x8a1f3a, trunk: 0x232c5c, chest: 0x7fc8f0, head: 0x1a2044, crown: 0xe6f8ff, arm: 0x7fc8f0, fist: 0xf2fbff, kill: 0x7fc8f0 },
+};
 
 let gradient: DataTexture | null = null;
 /** Three hard light bands: shadow, mid, lit. */
@@ -98,6 +154,26 @@ export function wallParts(b:{x:number;z:number;w:number;d:number}):Part[] {
   }
   return parts;
 }
+/** Vertex colours bake(parts) would produce, without keeping the geometry: a second colour set for the same mesh. */
+export function bakeColors(parts: Part[]): Float32Array {
+  const g = bake(parts), out = g.getAttribute('color').array as Float32Array;
+  g.dispose();
+  return out;
+}
+/** Lean a colour toward another (in the renderer's working space). */
+export function mixHex(a: number, b: number, t: number): number { return new Color(a).lerp(new Color(b), t).getHex(); }
+/** Paint the upward faces (normal.y above `minNy`, at or above height `minY`) of a colour set: snow that settled on top.
+ * `mix` below 1 leaves some of the colour underneath showing (the town keeps its team-blue roofs under a dusting). */
+export function capColors(geo: BufferGeometry, colors: BufferAttribute, cap: number, minNy = 0.7, minY = -Infinity, mix = 1): void {
+  const n = geo.getAttribute('normal'), p = geo.getAttribute('position'), c = new Color(cap);
+  if (!n) return;
+  const old = colors as unknown as BufferAttribute;
+  for (let i = 0; i < p.count; i++) if (n.getY(i) > minNy && p.getY(i) >= minY) {
+    if (mix >= 1) colors.setXYZ(i, c.r, c.g, c.b);
+    else colors.setXYZ(i, old.getX(i) + (c.r - old.getX(i)) * mix, old.getY(i) + (c.g - old.getY(i)) * mix, old.getZ(i) + (c.b - old.getZ(i)) * mix);
+  }
+}
+
 /** Bake several coloured primitives into one vertex-coloured geometry: one draw call per object. */
 export function bake(parts: Part[]): BufferGeometry {
   const q = new Quaternion(), e = new Euler(), p = new Vector3(), s = new Vector3();

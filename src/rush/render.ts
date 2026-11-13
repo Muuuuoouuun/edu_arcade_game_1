@@ -3,7 +3,7 @@ import {
   Box3, BufferAttribute, DodecahedronGeometry, BoxGeometry, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
   DirectionalLight, Group, HemisphereLight, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera,
   PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
-  Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, BackSide, BufferGeometry, type AnimationAction, type Material, type MeshToonMaterial, type MeshStandardMaterial,
+  Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, BackSide, BufferGeometry, Points, ShaderMaterial, type AnimationAction, type Material, type MeshToonMaterial, type MeshStandardMaterial,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -17,7 +17,8 @@ import bronGlb from './models/dwarf-guardian.glb?url';
 import bearGlb from './models/polar-bear.glb?url';
 import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, HERO_SPAWN, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
 import { heroDef, heroHidden, heroMaxHp, lobReach, padInReach, superReady, wardBreakBurst, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
-import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, wallParts, type Part } from './look.ts';
+import { bake, bakeColors, bakeMatrices, BOSS_LOOK, capColors, hullGeometry, mixHex, outlineMaterial, PAL, REGION_LOOK, toon, toonify, wallParts, type BossLook, type BossName, type Part, type RegionLook, type RegionName } from './look.ts';
+import { REGIONS, regionOf } from './expedition.ts';
 import { loadForestTown, toFloat32 } from './townModel.ts';
 import { Batch } from './batch.ts';
 import { Particles } from './fx.ts';
@@ -26,7 +27,7 @@ import { TownView } from './townView.ts';
 import { TownDamage } from './townDamage.ts';
 import { battleFocus } from './battleCamera.ts';
 import { HeroMotion } from './heroMotion.ts';
-import { createGroundGeometry, createCliffGeometry, heightAt, raycastTerrain } from './terrainElevation.ts';
+import { cliffColors, createGroundGeometry, createCliffGeometry, groundColors, heightAt, raycastTerrain } from './terrainElevation.ts';
 
 export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'lob'; offset: Vec } | { kind: 'super'; offset: Vec } | null;
 
@@ -128,6 +129,18 @@ export class RushView {
   private terrainHulls: Mesh[] = [];
   private decor: Mesh[] = [];
   quality: Quality = 'high';
+  /** Region restyle (expedition merge): the view lives for the whole session, so a battle on another stage swaps
+   * colour sets on the same meshes instead of rebuilding them. `styledStage` is the stage the scene is dressed for. */
+  private styledStage = 1;
+  private region: RegionName = 'forest';
+  private regionColors: { geo: BufferGeometry; sets: Record<RegionName, BufferAttribute> }[] = [];
+  private bossColors: Record<BossName, BufferAttribute> | null = null;
+  private bossKill: number = BOSS_LOOK.default.kill;
+  private hemi = new HemisphereLight(REGION_LOOK.forest.hemiSky, REGION_LOOK.forest.hemiGround, 1.15);
+  private water: Mesh | null = null;
+  private snow: Points | null = null;
+  private snowTime = 0;
+  private get look(): RegionLook { return REGION_LOOK[this.region]; }
   private size = { w: 1, h: 1 };
   /** Model-sheet mode (?sheet=1): only characters on a flat background, for silhouette checks. */
   private sheetMode = false;
@@ -199,11 +212,13 @@ export class RushView {
     ]),
   };
   private mats = {
-    blob: basic(0x0b1a12, 0.32), allyRing: basic(TEAM.ally, 0.85), enemyRing: basic(TEAM.enemy, 0.8),
+    blob: basic(0x0b1a12, 0.32), allyRing: basic(TEAM.ally, 0.85), enemyRing: basic(TEAM.enemy, 0.8), frostRing: basic(REGION_LOOK.forest.frostRing, 0.9),
     heroBolt: basic(0x8ff7ff), towerBolt: basic(0xffe07a), enemyBolt: basic(0xff7b3a), superOrb: basic(0xc59bff), snowball: basic(0xf4fbff),
     coin: toon(PAL.gold, { emissive: 0x5a3a00, rim: 0.5 }),
     hero: toon(0xffffff, { vertexColors: true, rim: 0.34 }),
     baked: toon(0xffffff, { vertexColors: true, rim: 0.34 }), flash: basic(0xffffff),
+    // Enemy bodies only (same program as `baked`): its colour is the region tint, set once per battle.
+    enemy: toon(0xffffff, { vertexColors: true, rim: 0.34 }),
     barBg: basic(0x10161c, 0.8), barAlly: basic(0x52e07c), barEnemy: basic(0xff5160), barTown: basic(0x4fb8ff), ammo: basic(0xffa43a), ammoDim: basic(0x5b3a1a, 0.9),
   };
 
@@ -213,7 +228,7 @@ export class RushView {
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.scene.background = new Color(PAL.water);
     // Toon bands come from the key light; the sky/ground fill keeps the shadow band bright and colourful.
-    this.scene.add(new HemisphereLight(0xe6f6ff, 0x9c8a62, 1.15));
+    this.scene.add(this.hemi);
     const sun = new DirectionalLight(0xfff3dc, 2.2);
     sun.position.set(-7, 16, 9);
     this.scene.add(sun);
@@ -265,18 +280,23 @@ export class RushView {
     cliff.name='rush-rock-foundation';
     const water = new Mesh(new PlaneGeometry(240,240),toon(PAL.water,{rim:0}));
     water.rotation.x=-Math.PI/2;water.position.set(cx,-1.3,cz);
-    this.scene.add(water,cliff,ground);
+    this.scene.add(water,cliff,ground);this.water=water;
+    const snow=REGION_LOOK.snow;
+    this.regional(ground.geometry,groundColors(snow.ground));
+    this.regional(cliff.geometry,cliffColors(snow.ground));
     // Short hedge sections follow the slope without bending stone cover or changing collision bounds.
     const parts:Part[]=[];
     const hedge=(x:number,z:number,sx:number,sz:number)=>{
       const y=heightAt(x,z);
-      parts.push({geo:new BoxGeometry(sx,1,sz),color:PAL.hedge,at:[x,y+.5,z]});
-      parts.push({geo:new BoxGeometry(sx+.1,.28,sz+.1),color:PAL.hedgeTop,at:[x,y+1.08,z]});
+      parts.push({geo:new BoxGeometry(sx,1,sz),color:0,at:[x,y+.5,z]});
+      parts.push({geo:new BoxGeometry(sx+.1,.28,sz+.1),color:1,at:[x,y+1.08,z]});
     };
+    // Part colours are slots here (0 side, 1 top), filled per region.
+    const dress=(look:RegionLook)=>parts.map(p=>({...p,color:p.color?look.hedgeTop:look.hedge}));
     for(let z=ARENA.minZ;z<ARENA.maxZ;z++) {hedge(ARENA.minX-.55,z+.5,1.1,1.02);hedge(ARENA.maxX+.55,z+.5,1.1,1.02);}
     hedge(cx,ARENA.maxZ+.55,ARENA.maxX-ARENA.minX+2.2,1.1);
     hedge(cx,ARENA.minZ-.55,ARENA.maxX-ARENA.minX+2.2,1.1);
-    this.addBaked(bake(parts),.04,undefined,'terrain');
+    this.regional(this.addBaked(bake(dress(REGION_LOOK.forest)),.04,undefined,'terrain').geometry,bakeColors(dress(snow)));
     // Decorative shore props are omitted: there is now a rock drop, not a flat sandy shelf.
   }
 
@@ -305,7 +325,38 @@ export class RushView {
       if(base>low)raised.push({geo:new BoxGeometry(w.w,base-low,w.d),color:PAL.stoneFoot,at:[w.x,(base+low)/2,w.z]});
       return raised;
     });
-    this.addBaked(bake(parts), 0.05, undefined, 'terrain');
+    const geo = bake(parts), snow = REGION_LOOK.snow;
+    this.addBaked(geo, 0.05, undefined, 'terrain');
+    // Snow region: cooler stone, and snow on every upward face (the same mesh, a second colour set).
+    const cold = new BufferAttribute(bakeColors(parts.map(p => ({ ...p, color: mixHex(p.color, snow.wallCool, snow.wallMix) }))), 3);
+    if (snow.cap !== null) capColors(geo, cold, snow.cap);
+    this.regional(geo, cold);
+  }
+
+  /** Register a second (snow) colour set for a static mesh; restyle() swaps the geometry's colour attribute. */
+  private regional(geo: BufferGeometry, snow: Float32Array | BufferAttribute) {
+    this.regionColors.push({ geo, sets: { forest: geo.getAttribute('color') as BufferAttribute, snow: snow instanceof BufferAttribute ? snow : new BufferAttribute(snow, 3) } });
+  }
+
+  /** Dress the scene for a stage: region palette, snowfall, and the region boss. Runs only when the stage changes. */
+  private restyle(stage: number) {
+    this.styledStage = stage;
+    const region = regionOf(stage), look = REGION_LOOK[region];
+    this.region = region;
+    if (!this.sheetMode) (this.scene.background as Color).setHex(look.water);
+    ((this.water?.material) as MeshToonMaterial | undefined)?.color.setHex(look.water);
+    this.hemi.color.setHex(look.hemiSky); this.hemi.groundColor.setHex(look.hemiGround);
+    for (const r of this.regionColors) r.geo.setAttribute('color', r.sets[region]);
+    this.townView?.setSnow(look.cap);
+    this.mats.enemy.color.setHex(look.enemyTint);
+    this.mats.frostRing.color.setHex(look.frostRing);
+    ICE.color.setHex(look.ice); ICE.opacity = look.iceOpacity;
+    (this.aimFan.material as MeshBasicMaterial).color.setHex(look.aimFan);
+    (this.aimLob.material as MeshBasicMaterial).color.setHex(look.aimLob);
+    // Named boss on the last stage of a region; any other boss wave (and the endless challenge) keeps the default.
+    const boss: BossName = stage === REGIONS[region].stages[1] ? region : 'default';
+    if (this.bossColors) this.enemyKit('boss').body.setAttribute('color', this.bossColors[boss]);
+    this.bossKill = BOSS_LOOK[boss].kill;
   }
 
   /** Tall-grass bushes (walk-through, see-through when the hero hides) and breakable crates. */
@@ -314,13 +365,16 @@ export class RushView {
     const r = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
     // Tall grass, not a hedge: a thin patch with dense leaning blades, so it reads as walk-through.
     for (const b of BUSHES) {
-      const parts: Part[] = [{ geo: new BoxGeometry(b.w, 0.12, b.d), color: 0x4cae48, at: [0, 0.06, 0] }];
+      // Part colours are slots (0 patch, 1-3 blades), filled per region.
+      const parts: Part[] = [{ geo: new BoxGeometry(b.w, 0.12, b.d), color: 0, at: [0, 0.06, 0] }];
+      const dress = (look: RegionLook) => parts.map(p => ({ ...p, color: p.color ? look.bushBlades[p.color - 1] : look.bushBase }));
       const n = Math.round(b.w * b.d * 7);
       for (let i = 0; i < n; i++) {
         const x = (r() - 0.5) * (b.w - 0.2), z = (r() - 0.5) * (b.d - 0.2), h = 0.8 + r() * 0.5;
-        parts.push({ geo: new ConeGeometry(0.13, h, 4), color: [0x6bd05a, 0x58c04d, 0x7ddc63][i % 3], at: [x, h / 2 + 0.05, z], rot: [(r() - 0.5) * 0.5, r() * 3, (r() - 0.5) * 0.5] });
+        parts.push({ geo: new ConeGeometry(0.13, h, 4), color: 1 + i % 3, at: [x, h / 2 + 0.05, z], rot: [(r() - 0.5) * 0.5, r() * 3, (r() - 0.5) * 0.5] });
       }
-      const geo = bake(parts);
+      const geo = bake(dress(REGION_LOOK.forest));
+      this.regional(geo, bakeColors(dress(REGION_LOOK.snow)));
       const mat = toon(0xffffff, { vertexColors: true, rim: 0.3 });
       mat.transparent = true;
       const mesh = new Mesh(geo, mat);
@@ -443,6 +497,56 @@ export class RushView {
     }
   }
 
+  /** Light snowfall in the snow region: one Points draw, animated in the vertex shader (no per-frame CPU work or
+   * allocation). The flake box wraps around the camera focus, so a few flakes cover the whole arena. Half the flakes on
+   * the low tier; none under reduced motion or in the forest. Built on the first snow battle. */
+  private syncSnow(dt: number, reduced: boolean) {
+    const want = Math.round(this.look.snowfall * QUALITY[this.quality].particles);
+    const on = want > 0 && !reduced && !this.sheetMode;
+    if (!on) { if (this.snow) this.snow.visible = false; return; }
+    if (!this.snow) {
+      const n = REGION_LOOK.snow.snowfall, base = new Float32Array(n * 3);
+      let seed = 11;
+      for (let i = 0; i < base.length; i++) base[i] = (seed = (seed * 16807) % 2147483647) / 2147483647;
+      const geo = new BufferGeometry();
+      geo.setAttribute('position', new BufferAttribute(base, 3));
+      const mat = new ShaderMaterial({
+        transparent: true, depthWrite: false,
+        uniforms: { uTime: { value: 0 }, uFocus: { value: new Vector3() }, uHalfHeight: { value: 1 } },
+        vertexShader: `uniform float uTime; uniform vec3 uFocus; uniform float uHalfHeight; varying float vFade;
+          void main() {
+            vec3 box = vec3(30.0, 8.0, 24.0);
+            float r = fract(position.x * 7.31 + position.z * 3.17);
+            vec3 p = position * box;
+            p.y = mod(p.y - uTime * (1.1 + 0.9 * r), box.y);
+            p.x += sin(uTime * 0.7 + r * 6.2832) * 0.4;
+            p.xz = mod(p.xz - uFocus.xz, box.xz) - box.xz * 0.5 + uFocus.xz;
+            vFade = smoothstep(0.0, 0.8, p.y) * (0.65 + 0.35 * r);
+            vec4 mv = modelViewMatrix * vec4(p.x, p.y + uFocus.y, p.z, 1.0);
+            gl_PointSize = (0.1 + 0.07 * r) * projectionMatrix[1][1] * uHalfHeight / -mv.z;
+            gl_Position = projectionMatrix * mv;
+          }`,
+        fragmentShader: `varying float vFade;
+          void main() {
+            float d = length(gl_PointCoord - 0.5);
+            if (d > 0.5) discard;
+            gl_FragColor = vec4(1.0, 1.0, 1.0, 0.9 * vFade * smoothstep(0.5, 0.32, d));
+          }`,
+      });
+      this.snow = new Points(geo, mat);
+      this.snow.frustumCulled = false;
+      this.snow.renderOrder = 7;
+      this.scene.add(this.snow);
+    }
+    if (!this.fxPaused) this.snowTime += dt;
+    const u = (this.snow.material as ShaderMaterial).uniforms;
+    u.uTime.value = this.snowTime;
+    (u.uFocus.value as Vector3).copy(this.focus);
+    u.uHalfHeight.value = this.renderer.domElement.height / 2;
+    this.snow.geometry.setDrawRange(0, want);
+    this.snow.visible = true;
+  }
+
   /** Aim preview shape: a long narrow fan for bolts, a short wide fan for a melee swing. */
   private fanGeometry(d: HeroDef) {
     if (d.attack === 'swing') return new CircleGeometry(d.range, 20, -d.swingArc, d.swingArc * 2);
@@ -550,6 +654,27 @@ export class RushView {
       { geo: new SphereGeometry(size * 0.5, 6, 5), color: pupil, at: [x + size * 0.7, y, z] },
       { geo: new SphereGeometry(size * 0.5, 6, 5), color: pupil, at: [x + size * 0.7, y, -z] },
     ];
+    /** The boss in one colour set (look.ts `BOSS_LOOK`): same parts and order for every set, so colours can be swapped. */
+    const bossParts = (c: BossLook): Part[] => {
+      const out: Part[] = [
+        { geo: new BoxGeometry(r * 0.25, r * 2.6, r * 2.4), color: c.cape, at: [-r * 0.75, r * 1.5, 0] },
+        { geo: new CylinderGeometry(r * 0.75, r * 0.95, r * 1.9, 14), color: c.trunk, at: [0, r * 1.05, 0] },
+        { geo: new SphereGeometry(r * 0.85, 14, 12), color: c.chest, at: [0, r * 2.0, 0] },
+        { geo: new SphereGeometry(r * 0.6, 12, 10), color: c.head, at: [r * 0.2, r * 3.0, 0] },
+        { geo: new CylinderGeometry(r * 0.52, r * 0.46, r * 0.28, 10), color: c.crown, at: [r * 0.2, r * 3.55, 0] },
+        // Arms raised overhead: a tall 'Y' that never reads like the low, wide brute.
+        { geo: new BoxGeometry(r * 0.38, r * 1.3, r * 0.38), color: c.arm, at: [r * 0.3, r * 2.85, r * 0.95], rot: [0.45, 0, 0] },
+        { geo: new BoxGeometry(r * 0.38, r * 1.3, r * 0.38), color: c.arm, at: [r * 0.3, r * 2.85, -r * 0.95], rot: [-0.45, 0, 0] },
+        { geo: new SphereGeometry(r * 0.46, 12, 10), color: c.fist, at: [r * 0.3, r * 3.55, r * 1.25] },
+        { geo: new SphereGeometry(r * 0.46, 12, 10), color: c.fist, at: [r * 0.3, r * 3.55, -r * 1.25] },
+        ...eyes(r * 0.68, r * 3.05, r * 0.22, r * 0.12, 0xff4d6a, 0x5a0010),
+      ];
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        out.push({ geo: new ConeGeometry(r * 0.12, r * 0.55, 6), color: c.crown, at: [r * 0.2 + Math.cos(a) * r * 0.42, r * 3.9, Math.sin(a) * r * 0.42] });
+      }
+      return out;
+    };
     // Silhouette by role (cycle 11): grunt = small, round, club raised to one side; skirmisher = tall and thin
     // with a wide hat brim and a bow held across (a T in front view); brute = wide and low with huge fists;
     // boss = big and tall, arms raised overhead, spiked crown, cape.
@@ -618,28 +743,16 @@ export class RushView {
         ...eyes(r * 0.78, r * 2.35, r * 0.22, r * 0.13, 0xffffff, PAL.ink),
       ];
     } else {
-      parts = [
-        { geo: new BoxGeometry(r * 0.25, r * 2.6, r * 2.4), color: 0x8a1f3a, at: [-r * 0.75, r * 1.5, 0] },
-        { geo: new CylinderGeometry(r * 0.75, r * 0.95, r * 1.9, 14), color: 0x4b3a8a, at: [0, r * 1.05, 0] },
-        { geo: new SphereGeometry(r * 0.85, 14, 12), color: 0x6d55c4, at: [0, r * 2.0, 0] },
-        { geo: new SphereGeometry(r * 0.6, 12, 10), color: 0x2a1f4d, at: [r * 0.2, r * 3.0, 0] },
-        { geo: new CylinderGeometry(r * 0.52, r * 0.46, r * 0.28, 10), color: PAL.gold, at: [r * 0.2, r * 3.55, 0] },
-        // Arms raised overhead: a tall 'Y' that never reads like the low, wide brute.
-        { geo: new BoxGeometry(r * 0.38, r * 1.3, r * 0.38), color: 0x6d55c4, at: [r * 0.3, r * 2.85, r * 0.95], rot: [0.45, 0, 0] },
-        { geo: new BoxGeometry(r * 0.38, r * 1.3, r * 0.38), color: 0x6d55c4, at: [r * 0.3, r * 2.85, -r * 0.95], rot: [-0.45, 0, 0] },
-        { geo: new SphereGeometry(r * 0.46, 12, 10), color: 0x9d83ff, at: [r * 0.3, r * 3.55, r * 1.25] },
-        { geo: new SphereGeometry(r * 0.46, 12, 10), color: 0x9d83ff, at: [r * 0.3, r * 3.55, -r * 1.25] },
-        ...eyes(r * 0.68, r * 3.05, r * 0.22, r * 0.12, 0xff4d6a, 0x5a0010),
-      ];
-      for (let i = 0; i < 5; i++) {
-        const a = (i / 5) * Math.PI * 2;
-        parts.push({ geo: new ConeGeometry(r * 0.12, r * 0.55, 6), color: PAL.gold, at: [r * 0.2 + Math.cos(a) * r * 0.42, r * 3.9, Math.sin(a) * r * 0.42] });
-      }
+      parts = bossParts(BOSS_LOOK.default);
     }
     // Cycle 54 (measured in cycle 50): small enemies seen from the top-down camera look the same with half the round
     // segments, at 52-64% fewer triangles each. The boss keeps its full segments; its arms read faceted otherwise.
     const body = bake(kind === 'boss' ? parts : parts.map(p => ({ ...p, geo: fewerSegments(p.geo) })));
     kit = { body, hull: hullGeometry(body) };
+    if (kind === 'boss') this.bossColors = {
+      default: body.getAttribute('color') as BufferAttribute,
+      forest: new BufferAttribute(bakeColors(bossParts(BOSS_LOOK.forest)), 3), snow: new BufferAttribute(bakeColors(bossParts(BOSS_LOOK.snow)), 3),
+    };
     this.enemyKits.set(kind, kit);
     return kit;
   }
@@ -649,7 +762,7 @@ export class RushView {
     const per = <T,>(f: (k: EnemyKind) => T) => Object.fromEntries(kinds.map(k => [k, f(k)])) as Record<EnemyKind, T>;
     const cap = 160;
     this.batches = {
-      body: per(k => new Batch(this.scene, this.enemyKit(k).body, this.mats.baked, k === 'boss' ? 4 : cap)),
+      body: per(k => new Batch(this.scene, this.enemyKit(k).body, this.mats.enemy, k === 'boss' ? 4 : cap)),
       hull: per(k => new Batch(this.scene, this.enemyKit(k).hull, outlineMaterial(k === 'boss' ? 0.08 : 0.05), k === 'boss' ? 4 : cap)),
       flash: per(k => new Batch(this.scene, this.enemyKit(k).body, this.mats.flash, k === 'boss' ? 4 : cap)),
       // Frost shell (cycle 16): the same body, a little larger, pale ice blue and see-through. Drawn only while slowed.
@@ -657,7 +770,7 @@ export class RushView {
       ward: per(k => new Batch(this.scene, this.enemyKit(k).body, WARD, k === 'boss' ? 4 : cap, { order: 4 })),
       shadow: new Batch(this.scene, this.geo.blob, this.mats.blob, cap),
       ring: new Batch(this.scene, this.geo.ring, this.mats.enemyRing, cap),
-      frostRing: new Batch(this.scene, this.geo.ring, basic(0x8fe6ff, 0.9), cap),
+      frostRing: new Batch(this.scene, this.geo.ring, this.mats.frostRing, cap),
       // Ward floor ring (cycle 92): a cue that does not depend on body colour (the purple boss and the magenta shaman
       // change little under the shell); a little wider than the frost ring so both read when they stack.
       wardRing: new Batch(this.scene, this.geo.ring, basic(0xe070e0, 0.9), cap),
@@ -874,13 +987,13 @@ export class RushView {
           break;
         case 'kill': {
           const boss = ev.kind === 'boss';
-          fx.emit({ kind: 'shard', n: boss ? 26 : 8, color: KILL_COLOR[ev.kind], at: [ev.x, 0.8, ev.z], speed: boss ? 8 : 5.5, up: boss ? 8 : 5, size: boss ? 0.22 : 0.13, life: boss ? 0.9 : 0.55 });
+          fx.emit({ kind: 'shard', n: boss ? 26 : 8, color: boss ? this.bossKill : KILL_COLOR[ev.kind], at: [ev.x, 0.8, ev.z], speed: boss ? 8 : 5.5, up: boss ? 8 : 5, size: boss ? 0.22 : 0.13, life: boss ? 0.9 : 0.55 });
           fx.emit({ kind: 'puff', n: boss ? 8 : 3, color: 0xefe6d2, at: [ev.x, 0.6, ev.z], speed: boss ? 2.6 : 1.6, up: 1.2, size: boss ? 0.4 : 0.2, life: boss ? 0.6 : 0.38 });
           if (boss) { this.ring(ev.x, ev.z, PAL.gold, 4.2, 0.6, 0.95, true); if (!reducedMotion) this.shake = Math.max(this.shake, 0.7); }
           break;
         }
         case 'snow': // snowball landing (cycle 39): a pale ring and a puff of snow
-          this.ring(ev.x, ev.z, 0xc4f2ff, ev.radius, 0.3, 0.85);
+          this.ring(ev.x, ev.z, this.look.frostFx, ev.radius, 0.3, 0.85);
           fx.emit({ kind: 'puff', n: 6, color: 0xf4fbff, at: [ev.x, 0.4, ev.z], speed: 3, up: 1.5, size: 0.22, life: 0.4 });
           break;
         case 'splash': // fire tower
@@ -1007,6 +1120,9 @@ export class RushView {
   sync(s: RushState, dt: number, aim: AimPreview, held = false, reduced = false) {
     const worldDt = held ? 0 : dt;
     this.time += worldDt;
+    const stage = s.diff.stage ?? 1;
+    if (stage !== this.styledStage) this.restyle(stage);
+    this.syncSnow(dt, reduced);
     const h = s.hero, alive = h.downT <= 0, def = heroDef(s);
     this.syncRespawn(h.downT, def.respawn);
     this.showHero(h.kind);
