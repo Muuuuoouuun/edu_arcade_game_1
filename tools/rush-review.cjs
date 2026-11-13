@@ -24,7 +24,9 @@ fs.mkdirSync(OUT, { recursive: true });
   const kinds = (process.env.REVIEW_KINDS || 'grunt,skirmisher,brute,shield,shaman,boss').split(',');
   const scene = async (name, stage, list, opts = {}) => {
     await page.evaluate(({ stage, opts }) => {
-      const s = __rush.state; s.diff.stage = stage; s.enemies.length = 0; s.shots.length = 0;
+      // setStage (debug hook) also swaps the map layout; older builds only had the stage number.
+      if (__rush.setStage) __rush.setStage(stage); else __rush.state.diff.stage = stage;
+      const s = __rush.state; s.enemies.length = 0; s.shots.length = 0;
       s.hero.kind = opts.hero || 'ranger'; s.hero.x = opts.hx ?? 0; s.hero.z = opts.hz ?? 4.2; s.hero.facing = -Math.PI / 2;
       if (opts.towers) s.towers = s.towers.map((_, i) => opts.towers[i] ?? null);
     }, { stage, opts });
