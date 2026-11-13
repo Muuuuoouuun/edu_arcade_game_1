@@ -50,6 +50,11 @@ export const EXPEDITION: readonly ExpeditionStage[] = [
 ];
 export const expeditionStage = (stage: number): ExpeditionStage => EXPEDITION[Math.min(STAGE_COUNT, Math.max(1, stage)) - 1];
 
+/** Korean object/subject particle for a word: '탑 설계도' → '를', '성벽 보강' → '을' (by the last syllable's final consonant). */
+export const josa = (word: string, withFinal: string, without: string) => {
+  const c = word.charCodeAt(word.length - 1) - 0xac00;
+  return word + (c >= 0 && c < 11172 && c % 28 !== 0 ? withFinal : without);
+};
 /** Kingdom data still says '스테이지 N' (goal texts); the screens say the village label instead ('1-1'). */
 export const villageText = (t: string) => t.replace(/스테이지 (\d+)/g, (_, n: string) => expeditionStage(Number(n)).label);
 

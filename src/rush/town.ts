@@ -7,7 +7,7 @@ import { kingdomPower, recommendedPower, claimGoal, currentGoal, GOALS,
   storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 import { createKingdomStore } from './storage.ts';
-import { COMPANIONS, REGIONS, expeditionStage, keeperOf, regionOf, villageText, type Companion } from './expedition.ts';
+import { COMPANIONS, REGIONS, expeditionStage, josa, keeperOf, regionOf, villageText, type Companion } from './expedition.ts';
 import { MAP_NODES, ENDLESS_NODE, HOME_NODE } from './mapLayout.ts';
 
 const store = createKingdomStore(() => localStorage);
@@ -40,7 +40,7 @@ import lunaFace from './art/face-luna.webp';
 /** Expedition companions (2026-11-13 merge): portraits in the key-art style; Bron and Popo reuse their hero portraits. */
 export const COMPANION_FACE: Record<Companion, string> = { ian: ianFace, riel: rielFace, bron: bronFace, cheongun: cheongunFace, popo: bearFace, kar: karFace, luna: lunaFace };
 const ROW_NAME = (id: Upgrade) => ROWS.find(r => r.id === id)?.name ?? '';
-export const keeperNote = (c: Companion) => `${ROW_NAME(COMPANIONS[c].keeper)}을(를) 맡아요`;
+export const keeperNote = (c: Companion) => `${josa(ROW_NAME(COMPANIONS[c].keeper), '을', '를')} 맡아요`;
 /** The same kingdom one level higher in `u` (for the "now → next" preview only). */
 function bumped(k: Kingdom, u: Upgrade): Kingdom {
   if (u === 'castle' || u === 'farm' || u === 'mill') return { ...k, [u]: k[u] + 1 };
@@ -80,7 +80,7 @@ export class TownScreen {
         this.stage = g.goal.stage;
         this.render();
         const v = expeditionStage(g.goal.stage);
-        this.note(`${villageText(g.goal.text)}: ${v.label} ${v.name}을(를) 골랐어요. 출전해서 목표를 채워요`);
+        this.note(`${villageText(g.goal.text)}: ${v.label} ${josa(v.name, '을', '를')} 골랐어요. 출전해서 목표를 채워요`);
         return;
       }
       if (!g?.done) return;
@@ -272,7 +272,7 @@ export class TownScreen {
     const power = q('[data-stage-power]');
     power.textContent = rec === null ? '' : `권장 ${rec.toLocaleString('en-US')}`;
     power.className = rec === null ? '' : have >= rec ? 'ok' : 'short';
-    q('[data-letter-from]').textContent = endless ? '서리 요새의 문' : stars > 0 ? '다시 찾아가는 마을' : `${REGIONS[region].sender}의 편지`;
+    q('[data-letter-from]').textContent = endless ? '서리 요새의 문' : stars > 0 ? '다시 찾아가는 마을' : `${josa(REGIONS[region].sender, '이', '가')} 보낸 편지`;
     q('[data-letter-text]').textContent = endless ? '다섯 웨이브가 끝없이 돌아와요. 몇 웨이브까지 버틸 수 있을까요?' : stars > 0 ? `${e.name}의 길목을 다시 지켜 별을 더 모아요.` : e.story;
     q('[data-stage-foe]').textContent = endless ? '' : `마지막 웨이브 · ${e.boss}`;
     const v = endless ? undefined : e.visitor, vEl = q('[data-stage-visitor]');

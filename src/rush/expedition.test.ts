@@ -1,7 +1,7 @@
 // Expedition merge (2026-11-13): the old 원정 campaign folded into the Rush stage ladder. Run from kingdom.test.ts.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { COMPANIONS, EXPEDITION, LEGACY_GOLD_CAP, LEGACY_STAR_CAP, REGIONS, companionsOf, expeditionStage, firstClearNews, importLegacyCampaign, keeperOf, regionOf } from './expedition.ts';
+import { COMPANIONS, EXPEDITION, josa, LEGACY_GOLD_CAP, LEGACY_STAR_CAP, REGIONS, companionsOf, expeditionStage, firstClearNews, importLegacyCampaign, keeperOf, regionOf } from './expedition.ts';
 import { createKingdom, HERO_JOINS, parseKingdom, serializeKingdom } from './kingdom.ts';
 import { STAGE_COUNT } from './stages.ts';
 
@@ -61,4 +61,11 @@ test('legacy import: cleared villages become stars up to the forest end, gold an
   assert.equal(importLegacyCampaign(k, legacy({ cleared: [1], selectedHero: 'dwarf' }))!.kingdom.hero, 'ranger', 'Bron needs his stage');
   // The imported kingdom survives the save parser (a reset here would wipe the player's kingdom).
   assert.deepEqual(parseKingdom(serializeKingdom(all.kingdom), T0), all.kingdom);
+});
+
+test('expedition: particles follow the last syllable', () => {
+  assert.equal(josa('탑 설계도', '을', '를'), '탑 설계도를');
+  assert.equal(josa('성벽 보강', '을', '를'), '성벽 보강을');
+  assert.equal(josa('청록 마을의 촌장', '이', '가'), '청록 마을의 촌장이');
+  assert.equal(josa('제재소', '을', '를'), '제재소를');
 });
