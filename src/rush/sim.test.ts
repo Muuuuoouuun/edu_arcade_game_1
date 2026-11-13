@@ -708,3 +708,43 @@ test('map size and density stay where they were measured (docs/rush/map-metrics.
   // The snow field is a different shape: its outcrops close about 9% of the arena, the forest's walls about 2%.
   assert.ok(mapStats(SNOW).blocked > 100 && mapStats(FOREST).blocked < 30);
 });
+
+test('frost wolves: snow stages 7-9 only, swapped in for a few grunts, fast, and they crouch before they lunge', async () => {
+  const { ENEMIES, WAVES } = await import('./data.ts');
+  const { stageDifficulty } = await import('./stages.ts');
+  const { groupCount } = await import('./sim.ts');
+  const { regionOf } = await import('./expedition.ts');
+  const packs = WAVES.flat().filter(g => g.kind === 'wolf');
+  assert.ok(packs.length >= 2 && packs.every(g => g.count <= 4), 'a few small packs');
+  const grunts = WAVES.flat().filter(g => g.kind === 'grunt');
+  const total = (stage: number, groups: typeof packs, plain = false) => groups.reduce((sum, g) => sum + groupCount(createRush(1, undefined, { ...stageDifficulty(stage), ...(stage > 10 ? { stage } : {}) }), plain ? { ...g, less: undefined } : g), 0);
+  for (let stage = 1; stage <= 11; stage++) {
+    const n = total(stage, packs), swapped = total(stage, grunts, true) - total(stage, grunts);
+    if (stage < 7 || stage > 9) { assert.equal(n, 0, `no wolves on stage ${stage}`); assert.equal(swapped, 0, `every grunt on stage ${stage}`); }
+    else { assert.ok(n > 0 && swapped > 0, `wolves for grunts on stage ${stage}: ${n} for ${swapped}`); assert.equal(regionOf(stage), 'snow'); }
+  }
+  const wolf = ENEMIES.wolf, lunge = wolf.lunge!;
+  assert.ok(wolf.speed >= ENEMIES.grunt.speed * 1.5 && wolf.hp < ENEMIES.grunt.hp && wolf.gold > 0);
+  // A wolf north of the hero, inside its aggro and lunge range: it warns, stands still for the wind-up, then covers ground faster than it runs.
+  const s = createRush(1);
+  Object.assign(s.hero, { x: 0, z: 0 });
+  const e = enemy(s, 'wolf', 0, -2.4);
+  let warnedAt = -1, sprangAt = -1, from = { x: 0, z: 0 };
+  for (let i = 0; i < 240 && sprangAt < 0; i++) {
+    stepRush(s, {});
+    if (warnedAt < 0 && s.events.some(v => v.type === 'lunge')) { warnedAt = i; from = { x: e.x, z: e.z }; }
+    if (s.events.some(v => v.type === 'pounce')) sprangAt = i;
+  }
+  assert.ok(warnedAt >= 0 && sprangAt > warnedAt, 'warned, then sprang');
+  assert.ok(Math.abs((sprangAt - warnedAt) / 60 - lunge.windup) < 0.05, `wind-up ${(sprangAt - warnedAt) / 60}s`);
+  assert.ok(Math.hypot(e.x - from.x, e.z - from.z) < 1e-9, 'it does not move while crouched');
+  const z0 = e.z;
+  for (let i = 0; i < 6; i++) stepRush(s, {});
+  assert.ok((e.z - z0) / (6 / 60) > wolf.speed * 1.5, `dash pace ${(e.z - z0) / 0.1}`);
+  // It lands a bite and cannot lunge again straight away.
+  const hp = s.hero.hp;
+  e.cd = 0;
+  for (let i = 0; i < 60; i++) stepRush(s, {});
+  assert.ok(s.hero.hp < hp, 'the bite lands');
+  assert.ok((e.lungeCd ?? 0) > 0);
+});

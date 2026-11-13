@@ -1,7 +1,7 @@
 // Three.js view of the Arcana Rush simulation. Reads RushState, never writes it.
 import {
   Box3, BufferAttribute, DodecahedronGeometry, BoxGeometry, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
-  DataTexture, DirectionalLight, Group, HemisphereLight, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera,
+  DataTexture, DirectionalLight, Group, HemisphereLight, IcosahedronGeometry, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera,
   PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
   Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, BackSide, BufferGeometry, Points, ShaderMaterial, type AnimationAction, type Material, type MeshToonMaterial, type MeshStandardMaterial,
 } from 'three';
@@ -66,16 +66,6 @@ function heroHull(geo: BufferGeometry, simplifier: Simplifier | null): BufferGeo
 const HERO_HEIGHT = 2.0;
 /** Yaw that turns the GLB authored front (-z) toward simulation angle 0 (+x). Verified by east/north close-up renders. */
 const HERO_MODEL_YAW = -Math.PI / 2;
-/** The same sphere, cone or cylinder with half its round segments (min 6 around, 4 down); other shapes as they are. */
-function fewerSegments(geo: BufferGeometry): BufferGeometry {
-  const g = geo as BufferGeometry & { type: string; parameters?: Record<string, number> }, q = g.parameters;
-  if (!q) return geo;
-  const half = (n: number, min: number) => Math.max(min, Math.round(n / 2));
-  if (g.type === 'SphereGeometry') return new SphereGeometry(q.radius, half(q.widthSegments, 6), half(q.heightSegments, 4));
-  if (g.type === 'ConeGeometry') return new ConeGeometry(q.radius, q.height, half(q.radialSegments, 6));
-  if (g.type === 'CylinderGeometry') return new CylinderGeometry(q.radiusTop, q.radiusBottom, q.height, half(q.radialSegments, 6));
-  return geo;
-}
 /** Per-hero tweaks to a shared campaign GLB (cycle 41), applied when baking; the files stay untouched. Names are
  * GLTFLoader's (spaces → underscores). Popo's polar-bear guardian drops its hammer (handle, iron head, ivory cap)
  * and holds a snowball on the same animated node, so the attack clip becomes an overhand throw. */
@@ -120,7 +110,7 @@ export class RushView {
   private heroPlaceholder: Mesh | null = null;
   private get heroRig() { const r = this.heroKind ? this.heroRigs.get(this.heroKind) : undefined; return r && r !== 'loading' ? r : null; }
   private get heroShot() { return this.heroRig?.shot ?? null; }
-  private enemyKits = new Map<EnemyKind, { body: BufferGeometry; hull: BufferGeometry }>();
+  private enemyKits = new Map<string, { body: BufferGeometry; hull: BufferGeometry }>();
   private towerKits = new Map<string, { base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; h: number }>();
   private towers: (Group | null)[] = PADS.map(() => null);
   private towerLevels: string[] = PADS.map(() => '');
@@ -144,7 +134,6 @@ export class RushView {
   private styledStage = 1;
   private region: RegionName = 'forest';
   private regionColors: { geo: BufferGeometry; sets: Record<RegionName, BufferAttribute> }[] = [];
-  private bossColors: Record<BossName, BufferAttribute> | null = null;
   private bossKill: number = BOSS_LOOK.default.kill;
   private hemi = new HemisphereLight(REGION_LOOK.forest.hemiSky, REGION_LOOK.forest.hemiGround, 1.15);
   private water: Mesh | null = null;
@@ -346,7 +335,12 @@ export class RushView {
     (this.aimLob.material as MeshBasicMaterial).color.setHex(look.aimLob);
     // Named boss on the last stage of a region; any other boss wave (and the endless challenge) keeps the default.
     const boss: BossName = stage === REGIONS[region].stages[1] ? region : 'default';
-    if (this.bossColors) this.enemyKit('boss').body.setAttribute('color', this.bossColors[boss]);
+    // Enemy shapes for this battle: winter clothes on snow, and the named boss's own shape. Kits are baked on first use.
+    if (this.batches) for (const kind of ENEMY_KINDS) {
+      const kit = this.enemyKit(kind, kind === 'boss' ? boss : region === 'snow' ? 'snow' : 'default'), B = this.batches;
+      for (const set of [B.body, B.flash, B.ice, B.ward]) set[kind].mesh.geometry = kit.body;
+      B.hull[kind].mesh.geometry = kit.hull;
+    }
     this.bossKill = BOSS_LOOK[boss].kill;
   }
 
@@ -654,123 +648,217 @@ export class RushView {
     }), undefined, () => { this.heroRigs.delete(kind); /* Keep the placeholder; the prototype stays playable without the model. */ });
   }
 
-  /** One baked body + hull per enemy kind, shared by every instance of that kind. */
-  private enemyKit(kind: EnemyKind): { body: BufferGeometry; hull: BufferGeometry } {
-    let kit = this.enemyKits.get(kind);
+  /** One baked body + hull per enemy kind and look, shared by every instance of that kind. Looks: every kind has its
+   * forest shape; in the snow region the five raiders wear winter bits (cream fur collars, trims and boots); the boss has
+   * three shapes (unnamed, stage 5 elder tree king, stage 10 frost lord). restyle() swaps the batches' geometry per battle. */
+  private enemyKit(kind: EnemyKind, look: BossName = 'default'): { body: BufferGeometry; hull: BufferGeometry } {
+    const snow = look === 'snow' && kind !== 'wolf', key = kind === 'boss' ? (look === 'default' ? kind : `${kind}:${look}`) : snow ? `${kind}:snow` : kind;
+    let kit = this.enemyKits.get(key);
     if (kit) return kit;
-    const r = ENEMIES[kind].radius;
-    const eyes = (x: number, y: number, z: number, size: number, white: number, pupil: number): Part[] => [
-      { geo: new SphereGeometry(size, 8, 6), color: white, at: [x, y, z] },
-      { geo: new SphereGeometry(size, 8, 6), color: white, at: [x, y, -z] },
-      { geo: new SphereGeometry(size * 0.5, 6, 5), color: pupil, at: [x + size * 0.7, y, z] },
-      { geo: new SphereGeometry(size * 0.5, 6, 5), color: pupil, at: [x + size * 0.7, y, -z] },
+    // Drawn larger than the hitbox (ENEMY_SCALE): every length below is in visual radii.
+    const r = ENEMIES[kind].radius * ENEMY_SCALE[kind];
+    // Low segment counts on purpose (cycles 50 and 54): from the high camera a small enemy reads the same, and the
+    // heavy scene draws each body two to three times (body, ink hull, frost or ward shell).
+    const S = (rad: number, w = 8, h = 5) => new SphereGeometry(rad * r, w, h);
+    const X = (x: number, y: number, z: number) => new BoxGeometry(x * r, y * r, z * r);
+    const C = (rad: number, h: number, seg = 6) => new ConeGeometry(rad * r, h * r, seg);
+    const Y = (top: number, bottom: number, h: number, seg = 8, open = false) => new CylinderGeometry(top * r, bottom * r, h * r, seg, 1, open);
+    const I = (rad: number) => new IcosahedronGeometry(rad * r, 0);
+    const O = (rad: number) => new OctahedronGeometry(rad * r);
+    const P = (geo: BufferGeometry, color: number, x: number, y: number, z: number, rot?: [number, number, number], scale?: [number, number, number]): Part => ({ geo, color, at: [x * r, y * r, z * r], rot, scale });
+    /** A part and its mirror image across the body's centre line (z → -z). */
+    const pair = (make: () => BufferGeometry, color: number, x: number, y: number, z: number, rot: [number, number, number] = [0, 0, 0]): Part[] =>
+      [P(make(), color, x, y, z, rot), P(make(), color, x, y, -z, [-rot[0], -rot[1], rot[2]])];
+    /** Big eyes with pupils looking forward, and (with `brow`) two slanted brows: an angry V. */
+    const face = (x: number, y: number, z: number, size: number, white: number, pupil: number, brow?: number): Part[] => [
+      ...pair(() => I(size), white, x, y, z),
+      ...pair(() => I(size * 0.52), pupil, x + size * 0.62, y - size * 0.05, z * 0.92),
+      ...(brow === undefined ? [] : pair(() => X(size * 0.5, size * 0.32, size * 2.2), brow, x + size * 0.2, y + size * 1.12, z * 1.05, [-0.42, 0, 0])),
     ];
-    /** The boss in one colour set (look.ts `BOSS_LOOK`): same parts and order for every set, so colours can be swapped. */
-    const bossParts = (c: BossLook): Part[] => {
-      const out: Part[] = [
-        { geo: new BoxGeometry(r * 0.25, r * 2.6, r * 2.4), color: c.cape, at: [-r * 0.75, r * 1.5, 0] },
-        { geo: new CylinderGeometry(r * 0.75, r * 0.95, r * 1.9, 14), color: c.trunk, at: [0, r * 1.05, 0] },
-        { geo: new SphereGeometry(r * 0.85, 14, 12), color: c.chest, at: [0, r * 2.0, 0] },
-        { geo: new SphereGeometry(r * 0.6, 12, 10), color: c.head, at: [r * 0.2, r * 3.0, 0] },
-        { geo: new CylinderGeometry(r * 0.52, r * 0.46, r * 0.28, 10), color: c.crown, at: [r * 0.2, r * 3.55, 0] },
-        // Arms raised overhead: a tall 'Y' that never reads like the low, wide brute.
-        { geo: new BoxGeometry(r * 0.38, r * 1.3, r * 0.38), color: c.arm, at: [r * 0.3, r * 2.85, r * 0.95], rot: [0.45, 0, 0] },
-        { geo: new BoxGeometry(r * 0.38, r * 1.3, r * 0.38), color: c.arm, at: [r * 0.3, r * 2.85, -r * 0.95], rot: [-0.45, 0, 0] },
-        { geo: new SphereGeometry(r * 0.46, 12, 10), color: c.fist, at: [r * 0.3, r * 3.55, r * 1.25] },
-        { geo: new SphereGeometry(r * 0.46, 12, 10), color: c.fist, at: [r * 0.3, r * 3.55, -r * 1.25] },
-        ...eyes(r * 0.68, r * 3.05, r * 0.22, r * 0.12, 0xff4d6a, 0x5a0010),
-      ];
-      for (let i = 0; i < 5; i++) {
-        const a = (i / 5) * Math.PI * 2;
-        out.push({ geo: new ConeGeometry(r * 0.12, r * 0.55, 6), color: c.crown, at: [r * 0.2 + Math.cos(a) * r * 0.42, r * 3.9, Math.sin(a) * r * 0.42] });
-      }
-      return out;
-    };
-    // Silhouette by role (cycle 11): grunt = small, round, club raised to one side; skirmisher = tall and thin
-    // with a wide hat brim and a bow held across (a T in front view); brute = wide and low with huge fists;
-    // boss = big and tall, arms raised overhead, spiked crown, cape.
+    const FUR = 0xfff1dc, BONE = 0xfff0d2, IRON = 0x8f9bb5;
     let parts: Part[];
     if (kind === 'grunt') {
+      // Raider imp: round body, big head with horns and ears, an underbite with two fangs, a bone club raised to one side.
+      const skin = 0xd13c44, dark = 0x4a1a26;
       parts = [
-        { geo: new SphereGeometry(r * 0.82, 12, 10), color: 0xe2463f, at: [0, r * 1.0, 0], scale: [1, 0.95, 1.05] },
-        { geo: new SphereGeometry(r * 0.66, 12, 10), color: 0xc4344a, at: [r * 0.15, r * 1.95, 0] },
-        { geo: new ConeGeometry(r * 0.24, r * 0.95, 8), color: 0xfff0d2, at: [r * 0.05, r * 2.6, r * 0.5], rot: [0.75, 0, 0] },
-        { geo: new ConeGeometry(r * 0.24, r * 0.95, 8), color: 0xfff0d2, at: [r * 0.05, r * 2.6, -r * 0.5], rot: [-0.75, 0, 0] },
-        { geo: new SphereGeometry(r * 0.3, 8, 6), color: 0x6e1f2c, at: [r * 0.1, r * 0.25, r * 0.45] },
-        { geo: new SphereGeometry(r * 0.3, 8, 6), color: 0x6e1f2c, at: [r * 0.1, r * 0.25, -r * 0.45] },
-        { geo: new BoxGeometry(r * 0.26, r * 1.7, r * 0.26), color: 0xeedcb4, at: [r * 0.45, r * 1.95, r * 1.0], rot: [-0.6, 0, 0] },
-        { geo: new SphereGeometry(r * 0.5, 10, 8), color: 0xfff3dc, at: [r * 0.45, r * 2.7, r * 1.55] },
-        ...eyes(r * 0.58, r * 2.05, r * 0.24, r * 0.18, 0xffffff, PAL.ink),
+        P(S(0.85), 0xe2463f, 0, 0.95, 0, undefined, [1, 0.95, 1.08]),
+        P(Y(0.86, 0.9, 0.22, 8, true), dark, 0, 0.72, 0), P(X(0.14, 0.3, 0.34), PAL.gold, 0.88, 0.72, 0),
+        P(S(0.78, 8, 6), skin, 0.12, 1.95, 0),
+        ...pair(() => C(0.2, 0.6, 4), skin, 0.05, 1.95, 0.88, [1.35, 0, 0]),
+        ...pair(() => C(0.22, 0.8, 5), BONE, 0.05, 2.68, 0.42, [0.55, 0, 0]),
+        ...pair(() => X(0.55, 0.28, 0.4), 0x6e1f2c, 0.15, 0.14, 0.42),
+        ...face(0.7, 2.1, 0.32, 0.26, 0xffffff, PAL.ink, dark),
+        P(X(0.12, 0.16, 0.52), dark, 0.84, 1.68, 0), ...pair(() => C(0.08, 0.24, 4), 0xffffff, 0.88, 1.78, 0.17),
+        P(I(0.28), skin, 0.3, 1.45, 0.98), P(I(0.28), skin, 0.4, 1.2, -0.9),
+        P(X(0.2, 1.4, 0.2), 0x8a5a2c, 0.35, 2.0, 1.1, [0.35, 0, 0]),
+        P(I(0.46), 0xfff3dc, 0.35, 2.78, 1.4), P(C(0.1, 0.42, 4), IRON, 0.35, 3.2, 1.55, [0.35, 0, 0]),
+        P(C(0.3, 0.45, 5), IRON, 0, 1.6, 0.78, [0.8, 0, 0]),
       ];
+      if (snow) parts.push(P(Y(0.62, 0.76, 0.32), FUR, 0.05, 1.4, 0), ...pair(() => X(0.62, 0.2, 0.48), FUR, 0.15, 0.34, 0.42));
     } else if (kind === 'skirmisher') {
+      // Masked archer: thin robe, wide hat with a red feather, a bandit mask with yellow eyes, a drawn bow held across.
+      const bow = 0xffb52e;
       parts = [
-        { geo: new ConeGeometry(r * 0.62, r * 2.6, 12), color: 0x1fa6b0, at: [0, r * 1.3, 0] }, // cycle 74: teal leans cyan, off the grass
-        { geo: new SphereGeometry(r * 0.55, 12, 10), color: 0x18808a, at: [0, r * 2.75, 0] },
-        { geo: new CylinderGeometry(r * 1.0, r * 1.0, r * 0.12, 16), color: 0x1d9faa, at: [0, r * 3.2, 0] },
-        { geo: new ConeGeometry(r * 0.5, r * 2.0, 12), color: 0x166f7a, at: [-r * 0.15, r * 4.2, 0], rot: [0, 0, 0.25] },
-        { geo: new BoxGeometry(r * 0.22, r * 0.22, r * 2.8), color: 0xffb52e, at: [r * 0.75, r * 1.9, 0] },
-        { geo: new BoxGeometry(r * 0.06, r * 0.06, r * 2.6), color: 0xfff1c2, at: [r * 0.55, r * 1.9, 0] },
-        { geo: new CylinderGeometry(r * 0.22, r * 0.22, r * 1.1, 8), color: 0x7a4a24, at: [-r * 0.55, r * 2.0, r * 0.3], rot: [0.3, 0, 0] },
-        ...eyes(r * 0.48, r * 2.78, r * 0.2, r * 0.14, 0xffe14d, 0xb06a00),
+        P(C(0.75, 2.3, 8), 0x1fa6b0, 0, 1.15, 0), // cycle 74: teal leans cyan, off the grass
+        P(S(0.62), 0x2bbcc4, 0.1, 2.5, 0), P(X(0.22, 0.4, 1.06), 0x0f4a52, 0.6, 2.62, 0),
+        P(Y(0.98, 0.98, 0.12, 10), 0x1d9faa, -0.32, 2.98, 0, [0, 0, -0.2]), P(Y(0.57, 0.6, 0.18, 8, true), bow, -0.34, 3.12, 0, [0, 0, -0.2]),
+        P(C(0.55, 1.5, 8), 0x166f7a, -0.5, 3.72, 0, [0, 0, 0.25]),
+        P(C(0.13, 0.95, 4), TEAM.enemy, -0.6, 3.55, 0.5, [0.5, 0, 0.4]),
+        P(Y(0.5, 0.62, 0.28), snow ? FUR : 0x0f5a66, 0, 2.0, 0, undefined, snow ? [1.15, 1.2, 1.15] : undefined),
+        P(X(0.2, 0.22, 1.0), bow, 0.85, 1.7, 0), ...pair(() => X(0.18, 0.2, 1.1), bow, 0.61, 1.7, 1.0, [0, -0.45, 0]),
+        P(X(0.05, 0.05, 2.9), 0xfff1c2, 0.38, 1.7, 0),
+        P(X(1.1, 0.07, 0.07), 0xfff1c2, 0.9, 1.72, 0), P(C(0.14, 0.36, 4), 0xdfe6f2, 1.6, 1.72, 0, [0, 0, -Math.PI / 2]),
+        ...pair(() => X(0.7, 0.2, 0.2), 0x1fa6b0, 0.5, 1.75, 0.35),
+        P(Y(0.22, 0.22, 1.0, 6), 0x7a4a24, -0.55, 1.9, 0.3, [0.3, 0, 0]), P(X(0.3, 0.3, 0.3), TEAM.enemy, -0.55, 2.45, 0.48),
+        ...face(0.62, 2.66, 0.27, 0.21, 0xffe14d, 0x5a3200),
       ];
+      if (snow) parts.push(P(Y(1.12, 1.12, 0.16, 10), FUR, -0.3, 2.9, 0, [0, 0, -0.2]));
     } else if (kind === 'shield') {
-      // Shield-bearer (cycle 27): slate body behind a tall silver tower shield with a gold rim, facing forward (+x).
+      // Shield-bearer (cycle 27): slate soldier with a crested helmet and a spear, behind a gold-rimmed tower shield
+      // facing forward (+x). The shield stops below the eyes, so the face shows over its top edge.
+      const face1 = 0x9fb0d6, helm = 0x2f3854, steel = 0x7c869c; // cycle 74: gunmetal, the silver read as sand
       parts = [
-        { geo: new CylinderGeometry(r * 0.7, r * 0.85, r * 1.9, 12), color: 0x4f5d7e, at: [0, r * 0.95, 0] },
-        { geo: new SphereGeometry(r * 0.62, 12, 10), color: 0x6b7aa0, at: [0, r * 2.2, 0] },
-        { geo: new ConeGeometry(r * 0.66, r * 0.7, 10), color: 0x2f3854, at: [0, r * 2.75, 0] },
-        { geo: new BoxGeometry(r * 0.22, r * 2.7, r * 2.0), color: 0x7c869c, at: [r * 0.95, r * 1.45, 0] }, // cycle 74: gunmetal, the silver read as sand
-        { geo: new BoxGeometry(r * 0.26, r * 2.9, r * 0.16), color: PAL.gold, at: [r * 0.97, r * 1.45, r * 1.0] },
-        { geo: new BoxGeometry(r * 0.26, r * 2.9, r * 0.16), color: PAL.gold, at: [r * 0.97, r * 1.45, -r * 1.0] },
-        { geo: new BoxGeometry(r * 0.26, r * 0.16, r * 2.1), color: PAL.gold, at: [r * 0.97, r * 2.85, 0] },
-        { geo: new OctahedronGeometry(r * 0.32), color: TEAM.enemy, at: [r * 1.1, r * 1.6, 0] },
-        ...eyes(r * 0.5, r * 2.25, r * 0.2, r * 0.13, 0xffffff, PAL.ink),
+        P(Y(0.7, 0.85, 1.7), 0x4f5d7e, 0, 0.85, 0),
+        P(S(0.62), face1, 0.05, 2.1, 0),
+        P(C(0.68, 0.75, 8), helm, 0, 2.68, 0), P(Y(0.7, 0.7, 0.14, 8, true), PAL.gold, 0, 2.34, 0),
+        P(X(0.8, 0.42, 0.14), TEAM.enemy, -0.12, 3.0, 0),
+        P(X(0.22, 2.0, 1.9), steel, 0.95, 1.1, 0),
+        ...pair(() => X(0.26, 2.1, 0.16), PAL.gold, 0.97, 1.1, 0.95),
+        P(X(0.26, 0.16, 2.06), PAL.gold, 0.97, 2.1, 0), P(X(0.26, 0.16, 2.06), PAL.gold, 0.97, 0.1, 0),
+        P(O(0.36), TEAM.enemy, 1.1, 1.2, 0),
+        P(X(0.1, 3.6, 0.1), 0x7a4a24, 0.3, 1.8, -1.0), P(C(0.2, 0.55, 4), 0xdfe6f2, 0.3, 3.85, -1.0), P(X(0.04, 0.3, 0.5), TEAM.enemy, 0.3, 3.3, -0.72),
+        P(I(0.24), face1, 0.3, 1.5, -0.95),
+        ...pair(() => S(0.4, 6, 4), steel, 0, 1.75, 0.78),
+        ...face(0.56, 2.18, 0.25, 0.2, 0xffffff, PAL.ink, helm),
       ];
+      if (snow) parts.push(P(Y(0.6, 0.74, 0.28), FUR, 0, 1.72, 0), P(X(0.36, 0.16, 2.1), FUR, 0.97, 2.24, 0), P(Y(0.75, 0.75, 0.2, 8, true), FUR, 0, 2.36, 0));
     } else if (kind === 'shaman') {
-      // Shaman (cycle 59): bell robe, bone mask with green eyes, and a staff taller than the body with a glowing green orb
-      // (the heal colour), held to one side: an 'i' beside a bell, unlike the skirmisher's T. Cycle 68: the robe was
-      // yellow-green and measured dE 8 against the #107 grass (it vanished); magenta (hue ~304) stands off grass and path.
+      // Shaman (cycle 59): bell robe, horned bone mask with hollow green-lit eyes, and a staff taller than the body with a
+      // glowing green orb (the heal colour), held to one side: an 'i' beside a bell, unlike the skirmisher's T. Cycle 68:
+      // the robe was yellow-green and measured dE 8 against the #107 grass; magenta (hue ~304) stands off grass and path.
+      const mask = 0xf3e6c8, hood = 0x7d2f86, wood = 0x7a4a24, glow = 0x7dff9a;
       parts = [
-        { geo: new ConeGeometry(r * 1.0, r * 2.1, 10), color: 0xd65fcf, at: [0, r * 1.05, 0] },
-        { geo: new CylinderGeometry(r * 1.02, r * 1.05, r * 0.2, 12), color: 0x7d2f86, at: [0, r * 0.1, 0] },
-        { geo: new SphereGeometry(r * 0.52, 12, 10), color: 0xf3e6c8, at: [r * 0.1, r * 2.2, 0] },
-        { geo: new ConeGeometry(r * 0.66, r * 1.0, 10), color: 0x7d2f86, at: [-r * 0.08, r * 2.75, 0], rot: [0, 0, 0.18] },
-        { geo: new CylinderGeometry(r * 0.11, r * 0.11, r * 3.6, 6), color: 0x7a4a24, at: [r * 0.5, r * 1.8, r * 0.85] },
-        { geo: new SphereGeometry(r * 0.4, 10, 8), color: 0x7dff9a, at: [r * 0.5, r * 3.75, r * 0.85] },
-        { geo: new OctahedronGeometry(r * 0.22), color: 0x3fd46a, at: [r * 0.5, r * 4.25, r * 0.85] },
-        ...eyes(r * 0.58, r * 2.25, r * 0.2, r * 0.13, 0x9dff5a, 0x1d4a0a),
+        P(C(1.0, 2.1, 10), 0xd65fcf, 0, 1.05, 0), P(Y(1.02, 1.05, 0.2, 10), hood, 0, 0.1, 0),
+        P(S(0.6), mask, 0.1, 2.2, 0),
+        P(C(0.72, 1.1, 8), hood, -0.1, 2.8, 0, [0, 0, 0.18]),
+        ...pair(() => C(0.14, 0.62, 4), mask, 0.25, 2.75, 0.5, [0.7, 0, 0]),
+        ...face(0.56, 2.26, 0.23, 0.2, 0x3a1440, 0x9dff5a),
+        P(X(0.1, 0.14, 0.42), 0x3a1440, 0.66, 1.93, 0),
+        P(O(0.15), glow, 0.52, 1.58, 0), ...pair(() => O(0.13), PAL.gold, 0.44, 1.62, 0.3),
+        P(X(0.14, 3.6, 0.14), wood, 0.5, 1.8, 0.9), P(S(0.42, 6, 4), glow, 0.5, 3.8, 0.9), P(O(0.2), 0x3fd46a, 0.5, 4.38, 0.9),
+        P(C(0.1, 0.55, 4), wood, 0.5, 3.75, 1.36), P(C(0.1, 0.55, 4), wood, 0.5, 3.75, 0.44),
+        P(I(0.22), mask, 0.55, 1.7, 0.85), P(I(0.22), mask, 0.62, 1.45, -0.55),
+        ...pair(() => C(0.16, 0.6, 4), glow, -0.1, 1.95, 0.55, [1.0, 0, 0]),
       ];
+      if (snow) parts.push(P(Y(0.5, 0.72, 0.3), FUR, 0, 1.75, 0));
     } else if (kind === 'brute') {
+      // Brute: wide and low, a horned iron helmet over a jutting jaw with tusks, spiked pauldrons and huge banded fists.
+      const hide = 0xe8842a, skin = 0xf29a5c, dark = 0x5a2416, fist = 0x7a2c1c;
       parts = [
-        { geo: new BoxGeometry(r * 1.6, r * 1.5, r * 2.1), color: 0xe8842a, at: [0, r * 1.2, 0] },
-        { geo: new SphereGeometry(r * 0.85, 12, 10), color: 0xf29a5c, at: [r * 0.45, r * 0.95, 0] },
-        { geo: new BoxGeometry(r * 0.95, r * 0.8, r * 0.95), color: 0x7a2c1c, at: [r * 0.3, r * 2.25, 0] },
-        { geo: new SphereGeometry(r * 0.52, 10, 8), color: 0xb8c3d6, at: [0, r * 2.0, r * 1.05] },
-        { geo: new SphereGeometry(r * 0.52, 10, 8), color: 0xb8c3d6, at: [0, r * 2.0, -r * 1.05] },
-        { geo: new BoxGeometry(r * 0.5, r * 1.1, r * 0.5), color: 0xe8842a, at: [r * 0.3, r * 1.25, r * 1.35] },
-        { geo: new BoxGeometry(r * 0.5, r * 1.1, r * 0.5), color: 0xe8842a, at: [r * 0.3, r * 1.25, -r * 1.35] },
-        { geo: new SphereGeometry(r * 0.55, 10, 8), color: 0x7a2c1c, at: [r * 0.45, r * 0.6, r * 1.4] },
-        { geo: new SphereGeometry(r * 0.55, 10, 8), color: 0x7a2c1c, at: [r * 0.45, r * 0.6, -r * 1.4] },
-        ...eyes(r * 0.78, r * 2.35, r * 0.22, r * 0.13, 0xffffff, PAL.ink),
+        P(X(1.5, 1.5, 2.0), hide, 0, 1.25, 0), P(S(0.85), skin, 0.42, 1.0, 0),
+        P(X(1.58, 0.28, 2.08), dark, 0, 0.6, 0),
+        P(X(0.95, 0.75, 1.0), skin, 0.32, 2.3, 0), P(X(0.8, 0.36, 1.08), 0x55607a, 0.16, 2.74, 0),
+        ...pair(() => C(0.2, 0.7, 5), BONE, 0.16, 2.98, 0.62, [0.9, 0, 0]),
+        P(X(0.4, 0.3, 0.9), 0xd9763a, 0.72, 2.02, 0), ...pair(() => C(0.1, 0.38, 4), BONE, 0.9, 2.22, 0.32),
+        ...face(0.74, 2.44, 0.27, 0.21, 0xffffff, PAL.ink, dark),
+        ...pair(() => S(0.55, 6, 4), IRON, 0, 2.05, 1.08), ...pair(() => C(0.16, 0.5, 4), BONE, 0, 2.62, 1.2, [0.4, 0, 0]),
+        ...pair(() => X(0.5, 1.1, 0.5), hide, 0.3, 1.3, 1.38),
+        ...pair(() => S(0.6, 6, 4), fist, 0.5, 0.62, 1.42), ...pair(() => X(0.5, 0.34, 1.0), IRON, 0.88, 0.62, 1.42),
+        ...pair(() => X(0.7, 0.3, 0.6), dark, 0.2, 0.15, 0.5),
+      ];
+      if (snow) parts.push(P(X(0.9, 0.36, 2.4), FUR, -0.25, 2.1, 0), ...pair(() => X(0.76, 0.2, 0.66), FUR, 0.2, 0.38, 0.5));
+    } else if (kind === 'wolf') {
+      // Frost wolf (snow region): a quadruped, so its outline is long and low where every raider stands upright. Frost-blue
+      // coat with a white ruff, muzzle and tail tip (pure white would vanish on snow), ice shards along the spine, and the
+      // enemy cue twice: red eyes and a red collar.
+      const coat = 0x6fa6ee, pale = 0xf2f8ff, navy = 0x35508f;
+      parts = [
+        P(S(0.7), coat, -0.05, 0.98, 0, undefined, [1.45, 0.9, 0.95]),
+        P(S(0.62, 6, 4), pale, 0.62, 1.05, 0),
+        P(S(0.62), coat, 1.15, 1.5, 0),
+        P(X(0.62, 0.36, 0.44), pale, 1.7, 1.33, 0), P(O(0.14), PAL.ink, 2.02, 1.45, 0),
+        ...pair(() => C(0.07, 0.24, 4), 0xffffff, 1.78, 1.07, 0.15, [Math.PI, 0, 0]),
+        ...pair(() => C(0.24, 0.6, 4), navy, 1.0, 2.12, 0.34, [0.25, 0, 0]),
+        ...face(1.56, 1.68, 0.28, 0.19, 0xff4d6a, 0x5a0010, navy),
+        P(C(0.3, 1.0, 6), coat, -1.2, 1.4, 0, [0, 0, 0.9]), P(I(0.18), pale, -1.56, 1.7, 0),
+        ...pair(() => X(0.26, 0.75, 0.26), navy, 0.55, 0.37, 0.38), ...pair(() => X(0.26, 0.75, 0.26), navy, -0.7, 0.37, 0.38),
+        P(Y(0.52, 0.52, 0.18), TEAM.enemy, 0.9, 1.3, 0, [0, 0, -0.9]),
+        ...[0.25, -0.3, -0.8].map((x, i) => P(O(0.26 - i * 0.03), 0xcdf1ff, x, 1.66 - i * 0.04, 0, [0, 0, 0.3], [0.6, 1.5, 0.6])),
       ];
     } else {
-      parts = bossParts(BOSS_LOOK.default);
+      parts = this.bossParts(BOSS_LOOK[look], look, r);
     }
-    // Cycle 54 (measured in cycle 50): small enemies seen from the top-down camera look the same with half the round
-    // segments, at 52-64% fewer triangles each. The boss keeps its full segments; its arms read faceted otherwise.
-    const body = bake(kind === 'boss' ? parts : parts.map(p => ({ ...p, geo: fewerSegments(p.geo) })));
+    const body = bake(parts);
     kit = { body, hull: hullGeometry(body) };
-    if (kind === 'boss') this.bossColors = {
-      default: body.getAttribute('color') as BufferAttribute,
-      forest: new BufferAttribute(bakeColors(bossParts(BOSS_LOOK.forest)), 3), snow: new BufferAttribute(bakeColors(bossParts(BOSS_LOOK.snow)), 3),
-    };
-    this.enemyKits.set(kind, kit);
+    this.enemyKits.set(key, kit);
     return kit;
   }
 
+  /** The boss: big and tall, arms raised overhead (a 'Y' that never reads like the low, wide brute), cape, red eyes.
+   * The unnamed boss wears a gold spiked crown; the elder tree king (stage 5) grows branch antlers, a bark crown, a moss
+   * beard and roots; the frost lord (stage 10) an ice-spike crown, shoulder crystals, an icicle beard and a fur mantle. */
+  private bossParts(c: BossLook, look: BossName, r: number): Part[] {
+    type V3 = [number, number, number];
+    const P = (geo: BufferGeometry, color: number, x: number, y: number, z: number, rot?: V3, scale?: V3): Part => ({ geo, color, at: [x * r, y * r, z * r], rot, scale });
+    const both = (make: () => BufferGeometry, color: number, x: number, y: number, z: number, rot: V3 = [0, 0, 0], scale?: V3): Part[] =>
+      [P(make(), color, x, y, z, rot, scale), P(make(), color, x, y, -z, [-rot[0], -rot[1], rot[2]], scale)];
+    const cone = (rad: number, h: number, seg = 6) => new ConeGeometry(rad * r, h * r, seg), box = (x: number, y: number, z: number) => new BoxGeometry(x * r, y * r, z * r);
+    const ico = (rad: number) => new IcosahedronGeometry(rad * r, 0), oct = (rad: number) => new OctahedronGeometry(rad * r);
+    const out: Part[] = [
+      P(box(0.25, 2.6, 2.4), c.cape, -0.75, 1.5, 0),
+      P(new CylinderGeometry(r * 0.75, r * 0.95, r * 1.9, 14), c.trunk, 0, 1.05, 0),
+      P(new SphereGeometry(r * 0.85, 14, 12), c.chest, 0, 2.0, 0),
+      P(new SphereGeometry(r * 0.6, 12, 10), c.head, 0.2, 3.0, 0),
+      ...both(() => box(0.38, 1.3, 0.38), c.arm, 0.3, 2.85, 0.95, [0.45, 0, 0]),
+      ...both(() => new SphereGeometry(r * 0.46, 12, 10), c.fist, 0.3, 3.55, 1.25),
+      ...both(() => new CylinderGeometry(r * 0.27, r * 0.27, r * 0.2, 8), c.crown, 0.3, 3.2, 1.1, [0.45, 0, 0]),
+      // Face: large red eyes under a heavy angry brow, and a jaw with two fangs.
+      ...both(() => ico(0.17), 0xff4d6a, 0.64, 3.08, 0.25), ...both(() => ico(0.09), 0x5a0010, 0.76, 3.07, 0.24),
+      ...both(() => box(0.12, 0.1, 0.42), c.chest, 0.72, 3.27, 0.26, [-0.42, 0, 0]),
+      P(box(0.3, 0.2, 0.62), c.chest, 0.66, 2.72, 0), ...both(() => cone(0.07, 0.24, 4), 0xfff0d2, 0.8, 2.88, 0.2),
+      P(new CylinderGeometry(r * 0.9, r * 0.93, r * 0.22, 12, 1, true), c.head, 0, 0.9, 0), P(ico(0.24), c.crown, 0.92, 0.9, 0),
+    ];
+    const ring = (n: number, f: (a: number, i: number) => Part) => { for (let i = 0; i < n; i++) out.push(f((i / n) * Math.PI * 2, i)); };
+    if (look === 'forest') {
+      const bark = c.trunk, leaf = c.fist, amber = c.crown;
+      // Bark crown of uneven splinters, and two branching antlers with leaf tufts at the tips.
+      ring(6, (a, i) => P(cone(0.16, 0.5 + (i % 2) * 0.3, 5), bark, 0.2 + Math.cos(a) * 0.42, 3.62 + (i % 2) * 0.12, Math.sin(a) * 0.42));
+      out.push(
+        ...both(() => box(0.17, 1.2, 0.17), bark, 0.15, 4.0, 0.62, [0.75, 0, 0]),
+        ...both(() => box(0.13, 0.7, 0.13), bark, 0.15, 4.35, 0.5, [-0.2, 0, 0]),
+        ...both(() => box(0.12, 0.6, 0.12), bark, 0.3, 4.1, 0.95, [0.3, 0, -0.5]),
+        ...both(() => ico(0.24), amber, 0.15, 4.5, 1.08), ...both(() => ico(0.2), leaf, 0.15, 4.75, 0.42), ...both(() => ico(0.18), amber, 0.48, 4.4, 1.02),
+        // Leafy shoulders, a moss beard, a knot hole, and roots spreading from the foot of the trunk.
+        ...both(() => ico(0.46), c.arm, 0, 2.5, 0.92), ...both(() => ico(0.34), leaf, 0.25, 2.72, 0.7), ...both(() => ico(0.3), amber, -0.25, 2.8, 1.05),
+        P(cone(0.36, 0.8, 6), c.arm, 0.72, 2.3, 0, [Math.PI, 0, 0]),
+        P(ico(0.2), c.head, 0.82, 1.35, 0.2, undefined, [0.5, 1.3, 1]),
+      );
+      ring(6, a => P(cone(0.34, 0.75, 5), bark, Math.cos(a + 0.5) * 0.98, 0.37, Math.sin(a + 0.5) * 0.98));
+    } else if (look === 'snow') {
+      const ice = c.chest, white = c.crown;
+      // Tall ice-spike crown around one great crystal.
+      out.push(P(new CylinderGeometry(r * 0.52, r * 0.46, r * 0.24, 10), white, 0.2, 3.55, 0), P(oct(0.3), ice, 0.2, 4.35, 0, undefined, [0.65, 2.4, 0.65]));
+      ring(7, (a, i) => P(cone(0.13, 0.7 + (i % 2) * 0.45, 4), white, 0.2 + Math.cos(a) * 0.44, 3.95 + (i % 2) * 0.2, Math.sin(a) * 0.44, [Math.sin(a) * 0.25, 0, -Math.cos(a) * 0.25]));
+      out.push(
+        // Fur mantle, crystal clusters on both shoulders, an icicle beard and ice-spiked knuckles.
+        P(new CylinderGeometry(r * 0.8, r * 0.98, r * 0.42, 10), 0xfff1dc, 0, 2.52, 0),
+        ...both(() => oct(0.34), ice, 0, 2.95, 1.0, [0.5, 0, 0], [0.6, 2.0, 0.6]),
+        ...both(() => oct(0.26), white, 0.3, 2.8, 0.78, [0.15, 0, -0.3], [0.6, 1.8, 0.6]),
+        ...both(() => oct(0.24), white, -0.3, 2.85, 1.15, [0.9, 0, 0.3], [0.6, 1.8, 0.6]),
+        P(cone(0.13, 0.7, 4), white, 0.74, 2.3, 0, [Math.PI, 0, 0]), ...both(() => cone(0.1, 0.5, 4), white, 0.7, 2.4, 0.2, [Math.PI, 0, 0]),
+        ...both(() => cone(0.13, 0.5, 4), ice, 0.3, 4.1, 1.35, [0.3, 0, 0]), ...both(() => cone(0.11, 0.4, 4), ice, 0.6, 3.85, 1.4, [0.3, 0, -0.7]),
+      );
+    } else {
+      out.push(P(new CylinderGeometry(r * 0.52, r * 0.46, r * 0.28, 10), c.crown, 0.2, 3.55, 0));
+      ring(5, a => P(cone(0.12, 0.55, 6), c.crown, 0.2 + Math.cos(a) * 0.42, 3.9, Math.sin(a) * 0.42));
+      // Gold pauldrons with a spike each.
+      out.push(...both(() => new SphereGeometry(r * 0.42, 8, 6), c.crown, 0, 2.5, 0.9), ...both(() => cone(0.14, 0.5, 5), c.fist, 0, 2.95, 1.05, [0.5, 0, 0]));
+    }
+    return out;
+  }
+
   private buildBatches() {
-    const kinds: EnemyKind[] = ['grunt', 'skirmisher', 'brute', 'boss', 'shield', 'shaman'];
-    const per = <T,>(f: (k: EnemyKind) => T) => Object.fromEntries(kinds.map(k => [k, f(k)])) as Record<EnemyKind, T>;
+    const per = <T,>(f: (k: EnemyKind) => T) => Object.fromEntries(ENEMY_KINDS.map(k => [k, f(k)])) as Record<EnemyKind, T>;
     const cap = 160;
     this.batches = {
       body: per(k => new Batch(this.scene, this.enemyKit(k).body, this.mats.enemy, k === 'boss' ? 4 : cap)),
@@ -815,9 +903,10 @@ export class RushView {
     const swift = s.diff.twist === 'swift';
     all.forEach(b => b.begin());
     for (const e of s.enemies) {
-      const r = ENEMIES[e.kind].radius;
+      const r = ENEMIES[e.kind].radius * ENEMY_SCALE[e.kind];
       if (!this.onScreen(e.x, r * 2, e.z, r * 4 + 1)) continue;
-      const bob = Math.abs(Math.sin(this.time * 10 + e.id) * 0.06);
+      const wolf = e.kind === 'wolf', step = this.time * (wolf ? 16 : 10) + e.id;
+      const bob = Math.abs(Math.sin(step) * (wolf ? 0.1 : 0.06));
       // Slam wind-up crouches (wide and low); the rally roar (cycle 34) is the opposite: it swells up and trembles.
       let sx = e.windup ? 1.1 : 1, sy = e.windup ? 0.88 : 1, jx = 0;
       const roar = e.roarT ?? 0, call = ENEMIES[e.kind].summon;
@@ -826,20 +915,31 @@ export class RushView {
         sx = 1 + 0.12 * k; sy = 1 + 0.18 * k;
         jx = 0.07 * Math.sin(this.time * 70 + e.id);
       }
-      const m = this.place(e.x + jx, bob, e.z, 0, yaw(e.facing), 0, sx, sy, sx);
-      (e.flash > 0 ? B.flash : B.body)[e.kind].push(m);
+      // Walk: raiders waddle from foot to foot, the wolf gallops (nose up and down). A melee strike is a short forward
+      // jab right after the cooldown restarts. Frost wolf lunge: it crouches low and blinks white (the tell), then
+      // stretches out long while it flies.
+      let lean = 0, roll = 0, sl = 1, blink = false;
+      if (!reduced && !this.fxPaused) { if (wolf) lean = Math.sin(step) * 0.12; else if (e.kind !== 'boss') roll = Math.sin(step) * 0.09; }
+      const def = ENEMIES[e.kind], struck = def.cooldown - e.cd;
+      if (!def.shotSpeed && !e.windup && struck >= 0 && struck < 0.16) lean -= 0.32 * Math.sin((struck / 0.16) * Math.PI);
+      if ((e.lungeT ?? 0) > 0) { sy = 0.72; sl = 1.12; lean = -0.12; roll = 0; blink = Math.floor(this.time * 14) % 2 === 0; }
+      else if ((e.dashT ?? 0) > 0) { sl = 1.3; sy = 0.86; lean = 0.1; }
+      const m = this.place(e.x + jx, bob, e.z, roll, yaw(e.facing), lean, sx * sl, sy, sx, 'YXZ');
+      (e.flash > 0 || blink ? B.flash : B.body)[e.kind].push(m);
       B.hull[e.kind].push(m);
       // Frost shell; blinks in its last quarter second so the player sees the slow wearing off.
       const ice = e.slowT ?? 0;
-      if (ice > 0 && (ice > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.ice[e.kind].push(this.place(e.x, bob - 0.02, e.z, 0, yaw(e.facing), 0, sx * 1.08, sy * 1.06, sx * 1.08));
+      // The frost wolf wears neither shell: an ice-blue shell on an ice-blue wolf shows nothing, and the floor rings
+      // already carry both states for every kind. That keeps a wolf pack at two draw calls (body and outline).
+      if (!wolf && ice > 0 && (ice > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.ice[e.kind].push(this.place(e.x, bob - 0.02, e.z, roll, yaw(e.facing), lean, sx * sl * 1.08, sy * 1.06, sx * 1.08, 'YXZ'));
       // Ward shell (cycle 90): magenta while warded, blinking in its last quarter second like the frost shell.
       const ward = e.wardT ?? 0;
-      if (ward > 0 && (ward > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.ward[e.kind].push(this.place(e.x, bob - 0.02, e.z, 0, yaw(e.facing), 0, sx * 1.16, sy * 1.12, sx * 1.16));
+      if (!wolf && ward > 0 && (ward > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.ward[e.kind].push(this.place(e.x, bob - 0.02, e.z, roll, yaw(e.facing), lean, sx * sl * 1.16, sy * 1.12, sx * 1.16, 'YXZ'));
       if (this.sheetMode) continue;
-      B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.25));
-      B.ring.push(this.place(e.x, 0.03, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.15));
-      if ((e.slowT ?? 0) > 0) B.frostRing.push(this.place(e.x, 0.05, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.5)); // frost slow
-      if (ward > 0 && (ward > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.wardRing.push(this.place(e.x, 0.055, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.7)); // ward
+      B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.15));
+      B.ring.push(this.place(e.x, 0.03, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.08));
+      if ((e.slowT ?? 0) > 0) B.frostRing.push(this.place(e.x, 0.05, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.38)); // frost slow
+      if (ward > 0 && (ward > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.wardRing.push(this.place(e.x, 0.055, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.58)); // ward
       if (swift && !reduced && e.kind !== 'boss' && !e.windup) B.streak.push(this.place(e.x, bob, e.z, 0, yaw(e.facing), 0, Math.max(0.6, r))); // swift lap: readable even on small enemies
     }
     all.forEach(b => b.end());
@@ -1048,6 +1148,9 @@ export class RushView {
         case 'roar': this.telegraph(ev.x, ev.z, ev.radius, ev.time, 0xffb02e); break;
         // Shaman heal (cycle 59): a green ring out to the heal radius, so the cause of the refilled bars is visible.
         // Cycle 60: at 0.55 opacity the ink band won and it read as a grey smudge; 0.9 and a little longer reads green.
+        // Frost wolf lunge: a thin red ring under the crouching wolf while it winds up, then a snow puff as it springs.
+        case 'lunge': this.ring(ev.x, ev.z, TEAM.enemy, 0.9, ev.time, 0.9, true); break;
+        case 'pounce': fx.emit({ kind: 'puff', n: 3, color: 0xeef5fa, at: [ev.x, 0.2, ev.z], speed: 1.8, up: 0.6, size: 0.18, life: 0.3 }); break;
         case 'heal': this.ring(ev.x, ev.z, 0x5ee87a, ev.radius, 0.7, 0.9, true); break;
         case 'superReady': this.ring(this.hero.position.x, this.hero.position.z, PAL.super, 2.4, 0.5, 0.95, true); break;
         case 'lap': // endless lap (cycle 47): a wide red ink ring around the town and a shake
@@ -1369,5 +1472,9 @@ const BRANCH_COLOR: Record<TowerBranch, number> = { fire: 0xff7a2f, frost: 0x4fc
 const ICE = new MeshBasicMaterial({ color: 0xc4f2ff, transparent: true, opacity: 0.4, depthWrite: false });
 /** Ward shell (cycle 90): the shaman's magenta, see-through, a little larger than the frost shell so both can show. */
 const WARD = new MeshBasicMaterial({ color: 0xf08cf0, transparent: true, opacity: 0.42, depthWrite: false });
-const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x1fa6b0, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4, shaman: 0xd65fcf };
+const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x1fa6b0, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4, shaman: 0xd65fcf, wolf: 0x6fa6ee };
+const ENEMY_KINDS: readonly EnemyKind[] = ['grunt', 'skirmisher', 'brute', 'boss', 'shield', 'shaman', 'wolf'];
+/** Enemies are drawn larger than their hitbox so a grunt is no longer ~30 px tall on a phone; the simulation radius,
+ * spacing and hit tests are unchanged. The wolf is long rather than tall, the boss was already big. */
+export const ENEMY_SCALE: Record<EnemyKind, number> = { grunt: 1.3, skirmisher: 1.25, brute: 1.2, shield: 1.25, shaman: 1.25, boss: 1.1, wolf: 1.3 };
 const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };

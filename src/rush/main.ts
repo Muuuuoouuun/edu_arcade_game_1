@@ -625,8 +625,10 @@ if (params.has('sheet')) {
   // ?back=1 turns the hero away from the camera, as in battle where it faces the enemies at the top.
   Object.assign(state.hero, { x: 9.4, z: 2, facing: params.has('back') ? -Math.PI / 2 : Math.PI / 2 });
   // The shaman (cycle 59) stands at the left end so the earlier sheet positions stay comparable.
-  (['grunt', 'skirmisher', 'brute', 'shield', 'boss', 'shaman'] as const).forEach((kind, i) => state.enemies.push({
-    id: 900 + i, kind, x: [-6.4, -4, -1.2, 1.4, 5, -8.8][i], z: 2, kx: 0, kz: 0, hp: 1, maxHp: 1, lane: 0, wp: 1, cd: 0, flash: 0, chasing: false, facing: Math.PI / 2, windup: null,
+  // ?stage=N dresses the sheet for that stage: 6-10 show the winter clothes, 5 and 10 the named bosses.
+  if (params.has('stage')) state.diff = { ...state.diff, stage: Number(params.get('stage')) || 1 };
+  (['grunt', 'skirmisher', 'brute', 'shield', 'boss', 'shaman', 'wolf'] as const).forEach((kind, i) => state.enemies.push({
+    id: 900 + i, kind, x: [-6.4, -4, -1.2, 1.4, 5, -8.8, -11.2][i], z: 2, kx: 0, kz: 0, hp: 1, maxHp: 1, lane: 0, wp: 1, cd: 0, flash: 0, chasing: false, facing: Math.PI / 2, windup: null,
     // ?frost=1 shows the frost shell (cycle 16) on every enemy.
     ...(params.has('frost') ? { slowT: 99 } : {}),
   }));

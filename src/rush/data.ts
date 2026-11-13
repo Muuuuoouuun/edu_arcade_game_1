@@ -93,7 +93,7 @@ export function heroStats(kind: HeroKind, talent = 0): HeroDef {
 /** The default hero (kept for code that predates hero choice). */
 export const HERO = HEROES.ranger;
 
-export type EnemyKind = 'grunt' | 'skirmisher' | 'brute' | 'boss' | 'shield' | 'shaman';
+export type EnemyKind = 'grunt' | 'skirmisher' | 'brute' | 'boss' | 'shield' | 'shaman' | 'wolf';
 export type EnemyDef = {
   hp: number; speed: number; radius: number; damage: number; reach: number; cooldown: number;
   aggro: number; gold: number; knockTaken: number; shotSpeed?: number; windup?: number; slamRadius?: number;
@@ -110,6 +110,9 @@ export type EnemyDef = {
    * `duration` s. A warded enemy takes `towerShare` of tower damage; a direct hero hit breaks it, and a melee hit also
    * breaks the wards within `meleeBreak` of its target, so Bron clears a warded pack while the ranger picks wards off. */
   ward?: { every: number; radius: number; duration: number; towerShare: number; meleeBreak: number };
+  /** Frost wolf lunge: when its target is further than its bite but within `range`, it crouches for `windup` s (the
+   * tell: it stands still and blinks white), then dashes at `speed` times its pace for `time` s. Once per `cooldown` s. */
+  lunge?: { range: number; windup: number; speed: number; time: number; cooldown: number };
 };
 export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   grunt: { hp: 60, speed: 2.5, radius: 0.42, damage: 9, reach: 0.6, cooldown: 0.8, aggro: 3.2, gold: 6, knockTaken: 1 },
@@ -121,6 +124,10 @@ export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   // Heal is endless-only (cycle 90): heal and ward together dropped the maxed ranger to 3/8 at stage 10 (cycle 73).
   shaman: { hp: 70, speed: 1.8, radius: 0.45, damage: 8, reach: 0.6, cooldown: 1, aggro: 3, gold: 14, knockTaken: 1, heal: { every: 2.5, radius: 3, amount: 30, minStage: 11 },
     ward: { every: 2.5, radius: 5, duration: 4, towerShare: 0.1, meleeBreak: 2.5 } },
+  // Frost wolf (snow region monster, from the old expedition campaign): 1.6x a grunt's pace, about a third of its
+  // health, small packs that reach the gate before the wave's body. It closes the last metres with a lunge.
+  wolf: { hp: 22, speed: 4, radius: 0.38, damage: 6, reach: 0.6, cooldown: 0.8, aggro: 2.6, gold: 6, knockTaken: 1.2,
+    lunge: { range: 3.2, windup: 0.4, speed: 2.6, time: 0.35, cooldown: 3 } },
 };
 
 export type TowerLevel = { cost: number; damage: number; cooldown: number; range: number };
@@ -141,15 +148,27 @@ export const FORGE = { splashShare: 0.05, slowTime: 0.15 } as const;
 
 export const ECONOMY = { startGold: 60, waveBonus: 30, earlyBonusPerSecond: 2, prepTime: 12, coinLife: 14 } as const;
 
-/** minStage: the group only appears from that stage on (shield-bearers from stage 6, cycle 27). Shamans (cycle 59) use
+/** minStage: the group only appears from that stage on (shield-bearers from stage 6, cycle 27; frost wolves from 7, so
+ * the snow region shows a new face on each of stages 6, 7 and 8). Shamans (cycle 59) use
  * 11, the endless challenge only: in stages 8-10 they cost a maxed kingdom stage 10 wins without rewarding focus fire. */
-export type SpawnGroup = { kind: EnemyKind; count: number; lane: number; interval: number; delay: number; minStage?: number };
+export type SpawnGroup = { kind: EnemyKind; count: number; lane: number; interval: number; delay: number; minStage?: number;
+  /** The group stops appearing after this stage (frost wolves: stages 7-9, see WOLF_STAGES). */
+  maxStage?: number;
+  /** On stages `minStage`..`maxStage` this group is `count` smaller (before stage scaling): frost wolves take those
+   * places, so a wolf stage swaps some grunts for wolves instead of only adding enemies. */
+  less?: { count: number; minStage: number; maxStage: number } };
+/** Frost wolves raid stages 7-9 (2-2 'the wolf pack raid' to 2-4). Not stage 10: there the same packs dropped a maxed
+ * kingdom from 7/8 wins to 0-4/8 in every variant tried, and the frost lord's stage stays as it was tuned. Not the
+ * endless challenge either (its region is the forest). */
+const WOLF_STAGES = { minStage: 7, maxStage: 9 } as const;
+const WOLF_SWAP = { count: 1, ...WOLF_STAGES } as const;
 export const WAVES: readonly (readonly SpawnGroup[])[] = [
   [{ kind: 'grunt', count: 8, lane: 0, interval: 1.1, delay: 0 }],
   [
-    { kind: 'grunt', count: 6, lane: 1, interval: 1, delay: 0 },
-    { kind: 'grunt', count: 6, lane: 2, interval: 1, delay: 0.5 },
+    { kind: 'grunt', count: 6, lane: 1, interval: 1, delay: 0, less: WOLF_SWAP },
+    { kind: 'grunt', count: 6, lane: 2, interval: 1, delay: 0.5, less: WOLF_SWAP },
     { kind: 'brute', count: 1, lane: 0, interval: 0, delay: 6 },
+    { kind: 'wolf', count: 3, lane: 0, interval: 0.5, delay: 3, ...WOLF_STAGES },
   ],
   [
     { kind: 'grunt', count: 8, lane: 0, interval: 0.8, delay: 0 },
@@ -160,20 +179,22 @@ export const WAVES: readonly (readonly SpawnGroup[])[] = [
     { kind: 'shaman', count: 1, lane: 0, interval: 0, delay: 9, minStage: 8 },
   ],
   [
-    { kind: 'grunt', count: 10, lane: 1, interval: 0.7, delay: 0 },
-    { kind: 'grunt', count: 10, lane: 2, interval: 0.7, delay: 0 },
+    { kind: 'grunt', count: 10, lane: 1, interval: 0.7, delay: 0, less: WOLF_SWAP },
+    { kind: 'grunt', count: 10, lane: 2, interval: 0.7, delay: 0, less: WOLF_SWAP },
     { kind: 'skirmisher', count: 6, lane: 0, interval: 1.2, delay: 3 },
     { kind: 'brute', count: 3, lane: 0, interval: 3.5, delay: 6 },
     { kind: 'shield', count: 1, lane: 1, interval: 3, delay: 4, minStage: 6 },
     { kind: 'shield', count: 1, lane: 2, interval: 3, delay: 5, minStage: 6 },
     { kind: 'shaman', count: 1, lane: 1, interval: 0, delay: 7, minStage: 8 },
+    { kind: 'wolf', count: 3, lane: 0, interval: 0.5, delay: 10, ...WOLF_STAGES },
   ],
   [
     { kind: 'boss', count: 1, lane: 0, interval: 0, delay: 2 },
-    { kind: 'grunt', count: 12, lane: 1, interval: 0.9, delay: 0 },
-    { kind: 'grunt', count: 12, lane: 2, interval: 0.9, delay: 4 },
+    { kind: 'grunt', count: 12, lane: 1, interval: 0.9, delay: 0, less: WOLF_SWAP },
+    { kind: 'grunt', count: 12, lane: 2, interval: 0.9, delay: 4, less: WOLF_SWAP },
     { kind: 'skirmisher', count: 6, lane: 0, interval: 1.4, delay: 6 },
     { kind: 'shield', count: 2, lane: 0, interval: 2.5, delay: 8, minStage: 6 },
     { kind: 'shaman', count: 2, lane: 0, interval: 3, delay: 9, minStage: 8 },
+    { kind: 'wolf', count: 3, lane: 2, interval: 0.5, delay: 12, ...WOLF_STAGES },
   ],
 ];

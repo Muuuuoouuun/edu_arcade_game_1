@@ -3,7 +3,7 @@
 // so this module can run in tests, in the browser and later on an authoritative server.
 import {
   ARENA, BUSH, CRATE, ECONOMY, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WAVES,
-  type Block, heroStats, type EnemyDef, type EnemyKind, type HeroDef, type HeroKind, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
+  type Block, heroStats, type EnemyDef, type EnemyKind, type HeroDef, type HeroKind, type SpawnGroup, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
 import { heroPaceAt, inBush, mapFor, paceAt, slideAt, type MapLayout } from './maps.ts';
 
 export type Phase = 'prep' | 'wave' | 'won' | 'lost';
@@ -28,6 +28,8 @@ export interface Enemy {
   healT?: number;
   /** Ward (cycle 90): seconds of ward left on this enemy, and on a shaman the seconds until its next ward pulse. */
   wardT?: number; wardP?: number;
+  /** Frost wolf lunge: seconds of crouch left (the tell), seconds of dash left, and seconds until it may lunge again. */
+  lungeT?: number; dashT?: number; lungeCd?: number;
 }
 export type ShotOwner = 'hero' | 'super' | 'tower' | 'enemy' | 'lob';
 export interface Shot {
@@ -59,6 +61,9 @@ export type RushEvent =
   | { type: 'telegraph'; x: number; z: number; radius: number; time: number }
   | { type: 'slam'; x: number; z: number; radius: number }
   | { type: 'roar'; x: number; z: number; radius: number; time: number }
+  /** A frost wolf crouches to lunge (`time` s of warning), then one more when it springs. */
+  | { type: 'lunge'; x: number; z: number; time: number }
+  | { type: 'pounce'; x: number; z: number }
   /** A shaman's pulse that restored at least one ally (cycle 59). */
   | { type: 'heal'; x: number; z: number; radius: number; count: number }
   | { type: 'ward'; x: number; z: number; radius: number; count: number }
@@ -329,11 +334,13 @@ function waveSpawned(s: RushState) {
   return waveDef(s).every((g, i) => (s.groups[i]?.spawned ?? 0) >= groupCount(s, g));
 }
 /** Enemies in a spawn group after stage scaling. The boss stays a single boss. */
-export const groupCount = (s: RushState, g: { kind: EnemyKind; count: number; minStage?: number }) => {
-  if ((g.minStage ?? 1) > (s.diff.stage ?? 1)) return 0;
+export const groupCount = (s: RushState, g: Pick<SpawnGroup, 'kind' | 'count' | 'minStage' | 'maxStage' | 'less'>) => {
+  const stage = s.diff.stage ?? 1;
+  if ((g.minStage ?? 1) > stage || (g.maxStage ?? Infinity) < stage) return 0;
   const t = s.diff.twist;
   if (g.kind === 'boss') return g.count * (t === 'twin' ? TWIST.twinBosses : 1);
-  return Math.max(1, Math.round(g.count * s.diff.enemyCount * (t === 'shields' && g.kind === 'shield' ? TWIST.shieldCount : 1)));
+  const count = g.count - (g.less && stage >= g.less.minStage && stage <= g.less.maxStage ? g.less.count : 0);
+  return Math.max(1, Math.round(count * s.diff.enemyCount * (t === 'shields' && g.kind === 'shield' ? TWIST.shieldCount : 1)));
 };
 function spawn(s: RushState) {
   waveDef(s).forEach((g, i) => {
@@ -662,6 +669,15 @@ function updateEnemies(s: RushState) {
     }
     if (def.heal && (s.diff.stage ?? 1) >= (def.heal.minStage ?? 1)) healPulse(s, e, def.heal);
     if (def.ward) wardPulse(s, e, def.ward);
+    const lunge = def.lunge;
+    if (lunge) {
+      e.lungeCd = Math.max(0, (e.lungeCd ?? 0) - STEP);
+      if ((e.lungeT ?? 0) > 0) { // crouching: stands still, so the hero (and the towers) get a beat to answer
+        e.lungeT = Math.max(0, e.lungeT! - STEP);
+        if (e.lungeT === 0) { e.dashT = lunge.time; s.events.push({ type: 'pounce', x: e.x, z: e.z }); }
+        continue;
+      }
+    }
 
     const chase = alive && dist(e, h) <= def.aggro && (!hidden || dist(e, h) <= BUSH.reveal);
     if (e.chasing && !chase) e.wp = nearestSegmentEnd(LANES[e.lane], e);
@@ -674,15 +690,23 @@ function updateEnemies(s: RushState) {
       e.facing = Math.atan2(target.z - e.z, target.x - e.x);
       if (e.cd <= 0) attack(s, e, chase);
     } else {
+      if (lunge && gap <= lunge.range && e.lungeCd === 0 && !(e.dashT ?? 0)) {
+        e.lungeT = lunge.windup; e.lungeCd = lunge.cooldown;
+        e.facing = Math.atan2(target.z - e.z, target.x - e.x);
+        s.events.push({ type: 'lunge', x: e.x, z: e.z, time: lunge.windup });
+        continue;
+      }
+      const dash = lunge && (e.dashT ?? 0) > 0 ? lunge.speed : 1;
+      if (dash > 1) e.dashT = Math.max(0, e.dashT! - STEP);
       let goal: Vec = target;
-      if (!chase) {
+      if (!chase && dash === 1) {
         const lane = LANES[e.lane];
         if (e.wp < lane.length - 1 && dist(e, lane[e.wp]) < 1.2) e.wp++;
         goal = lane[Math.min(e.wp, lane.length - 1)];
       }
       const dx = goal.x - e.x, dz = goal.z - e.z, d = len(dx, dz);
       if (d > 1e-6) {
-        const step = Math.min(d, def.speed * pace * paceAt(s.map, e.x, e.z) * (s.diff.twist === 'swift' ? TWIST.swiftSpeed : 1) * STEP);
+        const step = Math.min(d, def.speed * pace * dash * paceAt(s.map, e.x, e.z) * (s.diff.twist === 'swift' ? TWIST.swiftSpeed : 1) * STEP);
         e.x += (dx / d) * step; e.z += (dz / d) * step;
         e.facing = Math.atan2(dz, dx);
       }
