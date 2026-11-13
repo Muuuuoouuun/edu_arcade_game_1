@@ -459,7 +459,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
  * While it shows, the reward note moves aside: right in landscape, below it in portrait. */
 .town-goal {
   position: absolute; top: calc(100% + 8px); left: 0; max-width: 230px; padding: 5px 12px 6px; border-radius: 12px;
-  border: 3px solid var(--outline); background: rgba(29, 20, 51, 0.88); color: #fff; text-align: left;
+  border: 3px solid var(--outline); background: var(--navy, rgba(26, 37, 68, 0.92)); color: #fff; text-align: left;
   display: flex; flex-direction: column; gap: 1px; line-height: 1.15; box-shadow: 0 4px 0 var(--outline); touch-action: manipulation;
 }
 .town-goal:disabled { cursor: default; opacity: 1; }
@@ -554,3 +554,75 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .result-ending .ending-sub { margin: 4px 0 0; font-size: 13px; }
 @media (prefers-reduced-motion: reduce) { .result-ending { animation: none; } }
 
+
+/* ==========================================================================================================
+   UNIFIED UI (2026-11-13, owner: "merge everything into one game"; reference docs/rush/art/ui-style-sheet.webp,
+   generated from the key art in the Brawl Stars / Clash of Clans / Kingshot tone).
+   Dialogs are parchment in a wood-and-gold frame with a blue ribbon title; buttons are chunky, riveted, navy-outlined;
+   bars over the 3D scene are deep navy. This layer only restyles; behaviour lives in main.ts / town.ts.
+   ========================================================================================================== */
+:root {
+  --outline: #1a2544;
+  --wood: #8b5226; --wood-dark: #5c3214; --trim: #f0b93a;
+  --parchment: #f8eed8; --parchment-2: #ecdab6; --paper-ink: #3b2614; --paper-muted: #7a5a3a;
+  --ribbon: #2f6fd1; --ribbon-hi: #5aa8ff; --navy: rgba(26, 37, 68, 0.92);
+}
+.card {
+  --ink: var(--paper-ink); --muted: var(--paper-muted); --line: rgba(59, 38, 20, 0.18);
+  color: var(--paper-ink);
+  background: linear-gradient(var(--parchment), var(--parchment-2));
+  border: 5px solid var(--wood);
+  box-shadow: inset 0 0 0 2px var(--trim), inset 0 0 0 5px rgba(92, 50, 20, 0.35), 0 0 0 3px var(--outline), 0 7px 0 3px var(--outline), 0 20px 60px rgba(0,0,0,0.45);
+}
+/* Title ribbon */
+.card h1 {
+  display: inline-block; padding: 2px 24px 5px; margin: -4px 0 8px; border-radius: 12px; border: 3px solid var(--outline);
+  background: linear-gradient(var(--ribbon-hi) 0 50%, var(--ribbon) 50%); color: #fff;
+  -webkit-text-stroke: 5px var(--outline); paint-order: stroke fill; text-shadow: none; box-shadow: 0 4px 0 var(--outline);
+}
+#screen-result.won h1 { color: #fff; background: linear-gradient(#7ee07a 0 50%, #3daa4a 50%); }
+#screen-result:not(.won) h1 { color: #fff; background: linear-gradient(#ff8a8a 0 50%, #d8394a 50%); }
+#screen-result.ending h1 { background: linear-gradient(#ffe58a 0 50%, #f0a81e 50%); }
+.card .eyebrow { color: var(--wood); -webkit-text-stroke-width: 0; }
+/* Buttons: chunky, glossy, riveted (two corner dots) */
+.actions > button, .setting, .collect, .hero-pick, .stage-chip, .town-up {
+  box-shadow: inset 0 2px 0 rgba(255,255,255,0.55), inset 0 -4px 0 rgba(0,0,0,0.16), 0 5px 0 var(--outline);
+}
+.actions > button { position: relative; border-radius: 14px; -webkit-text-stroke: 4px var(--outline); paint-order: stroke fill; }
+.actions > button::before, .actions > button::after {
+  content: ''; position: absolute; top: 5px; width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.75); box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+}
+.actions > button::before { left: 6px; } .actions > button::after { right: 6px; }
+.actions > button:disabled { background: linear-gradient(#c9cfd8 0 50%, #9aa3b0 50%); }
+.setting { background: linear-gradient(#7fd0ff 0 50%, #2f9bff 50%); color: #fff; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; font-weight: 700; }
+.setting-list .setting[aria-pressed="false"] { background: linear-gradient(#d6dbe3 0 50%, #a9b2bf 50%); color: #fff; }
+/* Text that was light-on-purple becomes ink-on-parchment */
+.card .howto, .card .credits ul { color: var(--paper-ink); }
+.card .howto b, .card .credits b { color: #a0521e; }
+.howto-box summary, .credits summary, .link-button { color: #a0521e; }
+.title-card .link-button, .title-card .rush-back, .title-card .howto-box summary { color: #a0521e; }
+.danger-link { color: #c8324a; }
+.result-reward .daily-note, .result-stars .best { color: #a8670a; }
+.result-stars .milestone, .town-info .talent-line { color: #7a4cc4; }
+.result-stars .stars i { color: rgba(59,38,20,0.18); }
+.town-reward, .result-reward { background: rgba(61, 170, 74, 0.14); border-color: rgba(46, 140, 60, 0.55); color: var(--paper-ink); }
+.town-row { background: rgba(255,255,255,0.55); border-color: rgba(92,50,20,0.35); }
+.town-info em { color: #b0700a; }
+.town-up:disabled { background: rgba(59,38,20,0.08); color: var(--paper-muted); }
+.collect:disabled { background: rgba(59,38,20,0.08); color: var(--paper-muted); }
+.town-card .actions, #screen-result .actions { background: linear-gradient(rgba(236,218,182,0), var(--parchment-2) 35%); }
+.howto-box[open] .howto { background: linear-gradient(var(--parchment), var(--parchment-2)); border: 4px solid var(--wood); box-shadow: inset 0 0 0 2px var(--trim), 0 0 0 3px var(--outline); }
+.howto-box[open] .note { color: var(--paper-muted); }
+.title-card { background: linear-gradient(rgba(248,238,216,0.96), rgba(236,218,182,0.96)); }
+.result-ending { color: #3a2400; }
+/* Bars and chips over the 3D scene: deep navy instead of purple */
+.town-res span, .hero-pick, .town-goal:not(.done) { background: var(--navy); }
+.stage-chip { background: linear-gradient(#3d5aa8, #22356e); }
+.stage-chip:disabled { background: rgba(26,37,68,0.45); }
+/* Portrait title: the riveted buttons are wide, so let the mode link drop to its own line instead of stacking letters. */
+.title-card .rush-back { white-space: nowrap; }
+@media (orientation: portrait) {
+  .title-card .actions { flex-wrap: wrap; justify-content: center; align-items: center; }
+  .title-card .actions > button { flex: 1 1 40%; }
+  .title-card .actions > .rush-back { flex-basis: 100%; text-align: center; }
+}
