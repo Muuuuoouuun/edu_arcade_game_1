@@ -317,8 +317,9 @@ export const serializeKingdom = (k: Kingdom): string => JSON.stringify(k);
 export const POWER = { castle: 100, field: 30, perk: 60, heroLv: 40, talent: 80, star: 25, endlessWave: 10 } as const;
 /** Recommended kingdom power per stage (cycle 89), measured: on a balanced growth path (castle 1 + L/2, the five perks
  * at L/2, hero Lv 1 + L, talent L/3) the least step L at which the guard bot wins at least 4 of seeds 1-8, counted with
- * two stars per earlier stage, rounded down to 50. Stages 1-5 need no growth; stage 6 is the first wall. */
-export const STAGE_POWER: readonly number[] = [250, 300, 350, 400, 450, 1050, 1200, 1750, 1850, 3050];
+ * two stars per earlier stage, rounded down to 50. Stages 1-5 need no growth; stage 6 is the first wall. Stages 8-9
+ * re-measured with the ward shaman (cycle 90; tools/rush-stage-power.ts). */
+export const STAGE_POWER: readonly number[] = [250, 300, 350, 400, 450, 1050, 1200, 1800, 2450, 3050];
 export const recommendedPower = (stage: number): number | null => STAGE_POWER[stage - 1] ?? null;
 export function kingdomPower(k: Kingdom): number {
   const perks = Object.values(k.perks).reduce((a, b) => a + b, 0);

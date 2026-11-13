@@ -116,7 +116,11 @@ export type EnemyDef = {
   summon?: { at: number; roar: number; count: number; kind: EnemyKind; ring: number; arc: number; minStage: number };
   /** Shaman (cycle 59): every `every` s it restores `amount` (times the stage health multiplier) to each hurt ally
    * within `radius` of it, never itself. A priority target: it keeps the brutes and shield-bearers around it alive. */
-  heal?: { every: number; radius: number; amount: number };
+  heal?: { every: number; radius: number; amount: number; minStage?: number };
+  /** Ward (cycle 90, measured in cycles 72-84): every `every` s it wards each ally within `radius` (never itself) for
+   * `duration` s. A warded enemy takes `towerShare` of tower damage; a direct hero hit breaks it, and a melee hit also
+   * breaks the wards within `meleeBreak` of its target, so Bron clears a warded pack while the ranger picks wards off. */
+  ward?: { every: number; radius: number; duration: number; towerShare: number; meleeBreak: number };
 };
 export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   grunt: { hp: 60, speed: 2.5, radius: 0.42, damage: 9, reach: 0.6, cooldown: 0.8, aggro: 3.2, gold: 6, knockTaken: 1 },
@@ -125,7 +129,9 @@ export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   shield: { hp: 90, speed: 1.9, radius: 0.5, damage: 14, reach: 0.6, cooldown: 1, aggro: 3.2, gold: 10, knockTaken: 0.6, shield: 0.25, shieldArc: 1 },
   boss: { hp: 1800, speed: 1.25, radius: 1.15, damage: 70, reach: 2.2, cooldown: 2.6, aggro: 5, gold: 0, knockTaken: 0.1, windup: 0.9, slamRadius: 2.8,
     summon: { at: 0.5, roar: 1, count: 3, kind: 'skirmisher', ring: 1.9, arc: 1.8, minStage: 6 } },
-  shaman: { hp: 70, speed: 1.8, radius: 0.45, damage: 8, reach: 0.6, cooldown: 1, aggro: 3, gold: 14, knockTaken: 1, heal: { every: 2.5, radius: 3, amount: 30 } },
+  // Heal is endless-only (cycle 90): heal and ward together dropped the maxed ranger to 3/8 at stage 10 (cycle 73).
+  shaman: { hp: 70, speed: 1.8, radius: 0.45, damage: 8, reach: 0.6, cooldown: 1, aggro: 3, gold: 14, knockTaken: 1, heal: { every: 2.5, radius: 3, amount: 30, minStage: 11 },
+    ward: { every: 2.5, radius: 5, duration: 4, towerShare: 0.1, meleeBreak: 2.5 } },
 };
 
 export type TowerLevel = { cost: number; damage: number; cooldown: number; range: number };
@@ -162,7 +168,7 @@ export const WAVES: readonly (readonly SpawnGroup[])[] = [
     { kind: 'skirmisher', count: 4, lane: 2, interval: 1.6, delay: 2 },
     { kind: 'brute', count: 2, lane: 0, interval: 4, delay: 8 },
     { kind: 'shield', count: 1, lane: 0, interval: 3, delay: 4, minStage: 6 },
-    { kind: 'shaman', count: 1, lane: 0, interval: 0, delay: 9, minStage: 11 },
+    { kind: 'shaman', count: 1, lane: 0, interval: 0, delay: 9, minStage: 8 },
   ],
   [
     { kind: 'grunt', count: 10, lane: 1, interval: 0.7, delay: 0 },
@@ -171,7 +177,7 @@ export const WAVES: readonly (readonly SpawnGroup[])[] = [
     { kind: 'brute', count: 3, lane: 0, interval: 3.5, delay: 6 },
     { kind: 'shield', count: 1, lane: 1, interval: 3, delay: 4, minStage: 6 },
     { kind: 'shield', count: 1, lane: 2, interval: 3, delay: 5, minStage: 6 },
-    { kind: 'shaman', count: 1, lane: 1, interval: 0, delay: 7, minStage: 11 },
+    { kind: 'shaman', count: 1, lane: 1, interval: 0, delay: 7, minStage: 8 },
   ],
   [
     { kind: 'boss', count: 1, lane: 0, interval: 0, delay: 2 },
@@ -179,6 +185,6 @@ export const WAVES: readonly (readonly SpawnGroup[])[] = [
     { kind: 'grunt', count: 12, lane: 2, interval: 0.9, delay: 4 },
     { kind: 'skirmisher', count: 6, lane: 0, interval: 1.4, delay: 6 },
     { kind: 'shield', count: 2, lane: 0, interval: 2.5, delay: 8, minStage: 6 },
-    { kind: 'shaman', count: 2, lane: 0, interval: 3, delay: 9, minStage: 11 },
+    { kind: 'shaman', count: 2, lane: 0, interval: 3, delay: 9, minStage: 8 },
   ],
 ];

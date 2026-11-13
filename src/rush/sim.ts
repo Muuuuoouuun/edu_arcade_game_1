@@ -25,6 +25,8 @@ export interface Enemy {
   roarT?: number; rallied?: boolean;
   /** Shaman (cycle 59): seconds until its next heal pulse (starts at a full period). */
   healT?: number;
+  /** Ward (cycle 90): seconds of ward left on this enemy, and on a shaman the seconds until its next ward pulse. */
+  wardT?: number; wardP?: number;
 }
 export type ShotOwner = 'hero' | 'super' | 'tower' | 'enemy' | 'lob';
 export interface Shot {
@@ -57,6 +59,8 @@ export type RushEvent =
   | { type: 'roar'; x: number; z: number; radius: number; time: number }
   /** A shaman's pulse that restored at least one ally (cycle 59). */
   | { type: 'heal'; x: number; z: number; radius: number; count: number }
+  | { type: 'ward'; x: number; z: number; radius: number; count: number }
+  | { type: 'wardBreak'; id: number; x: number; z: number }
   /** One ally restored by a shaman pulse, and by how much (cycle 60: a green number over it). */
   | { type: 'healed'; id: number; x: number; z: number; amount: number }
   | { type: 'summon'; x: number; z: number; count: number }
@@ -508,6 +512,14 @@ function hurtTown(s: RushState, damage: number) {
 }
 function hurtEnemy(s: RushState, e: Enemy, damage: number, owner: ShotOwner) {
   if (e.hp <= 0) return;
+  if ((e.wardT ?? 0) > 0) {
+    // Ward (cycle 90): towers only scratch it; the hero's own hit breaks it (and a melee hit, the wards around it).
+    if (owner === 'tower') damage *= wardOf(s).towerShare;
+    else if (owner === 'hero' || owner === 'super') {
+      breakWard(s, e);
+      if (heroDef(s).attack === 'swing') for (const o of s.enemies) if (o !== e && o.hp > 0 && (o.wardT ?? 0) > 0 && dist(o, e) <= wardOf(s).meleeBreak) breakWard(s, o);
+    }
+  }
   e.hp -= damage;
   e.flash = 0.12;
   s.events.push({ type: 'hit', x: e.x, z: e.z, owner, damage, id: e.id });
@@ -556,6 +568,26 @@ function towerHit(s: RushState, target: Enemy, shot: Shot) {
   }
 }
 
+/** Ward numbers live on the shaman (cycle 90); any warded enemy reads them from there. */
+const wardOf = (_s: RushState) => ENEMIES.shaman.ward!;
+function breakWard(s: RushState, e: Enemy) {
+  e.wardT = 0;
+  s.events.push({ type: 'wardBreak', id: e.id, x: e.x, z: e.z });
+}
+/** Shaman ward (cycle 90): on its period, every living ally in range (not the shaman) is warded for the duration. */
+function wardPulse(s: RushState, e: Enemy, ward: NonNullable<EnemyDef['ward']>) {
+  e.wardP = (e.wardP ?? ward.every) - STEP;
+  if (e.wardP > 0) return;
+  e.wardP += ward.every;
+  let count = 0;
+  for (const o of s.enemies) {
+    if (o === e || o.hp <= 0 || dist(o, e) > ward.radius + ENEMIES[o.kind].radius) continue;
+    o.wardT = ward.duration;
+    count++;
+  }
+  if (count) s.events.push({ type: 'ward', x: e.x, z: e.z, radius: ward.radius, count });
+}
+
 /** Shaman heal (cycle 59): on its period, every hurt living ally in range (not the shaman) gains the amount. */
 function healPulse(s: RushState, e: Enemy, heal: NonNullable<EnemyDef['heal']>) {
   e.healT = (e.healT ?? heal.every) - STEP;
@@ -582,6 +614,7 @@ function updateEnemies(s: RushState) {
     e.cd = Math.max(0, e.cd - STEP);
     const slowed = (e.slowT ?? 0) > 0;
     if (slowed) e.slowT = Math.max(0, e.slowT! - STEP);
+    if ((e.wardT ?? 0) > 0) e.wardT = Math.max(0, e.wardT! - STEP);
     const pace = slowed ? (e.kind === 'boss' ? TOWER_BRANCH.frost.bossSlow : TOWER_BRANCH.frost.slow) : 1;
     // Knockback impulse decays quickly.
     e.x += e.kx * STEP; e.z += e.kz * STEP;
@@ -613,7 +646,8 @@ function updateEnemies(s: RushState) {
       if (e.roarT === 0) rally(s, e, call!);
       continue;
     }
-    if (def.heal) healPulse(s, e, def.heal);
+    if (def.heal && (s.diff.stage ?? 1) >= (def.heal.minStage ?? 1)) healPulse(s, e, def.heal);
+    if (def.ward) wardPulse(s, e, def.ward);
 
     const chase = alive && dist(e, h) <= def.aggro && (!hidden || dist(e, h) <= BUSH.reveal);
     if (e.chasing && !chase) e.wp = nearestSegmentEnd(LANES[e.lane], e);

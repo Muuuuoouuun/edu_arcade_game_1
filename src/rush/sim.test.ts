@@ -473,7 +473,8 @@ test('endless lap twists (cycle 52): swift, shields, twin in turn from lap 2; no
 });
 
 test('shaman (cycle 59): its pulse heals hurt allies in range, never itself or the unhurt or the far, and reports it', () => {
-  const s = createRush(1, NO_MODS, { enemyHp: 2, enemyCount: 1, enemyDamage: 1, stage: 8 });
+  // Heal is endless-only since cycle 90 (stage 11 = the endless challenge); stage 8 keeps only the ward (below).
+  const s = createRush(1, NO_MODS, { enemyHp: 2, enemyCount: 1, enemyDamage: 1, stage: 11 });
   s.prepT = 999; // stay in prep: no spawns, but enemies still update
   const mk = (id: number, kind: EnemyKind, x: number, hp: number, maxHp: number): Enemy =>
     ({ id, kind, x, z: -12, kx: 0, kz: 0, hp, maxHp, lane: 0, wp: 1, cd: 9, flash: 0, chasing: false, facing: 0, windup: null });
@@ -514,3 +515,64 @@ test('boss arrival (cycle 67): exactly one bossEnter per boss, at its spawn, and
   }
   assert.equal(enters.length, 1, 'stage 1 has one boss');
 });
+
+test('ward (cycle 90): the shaman wards allies in range for a while, and from stage 8 heals no one', () => {
+  const s = createRush(1, NO_MODS, { enemyHp: 1, enemyCount: 1, enemyDamage: 1, stage: 8 });
+  s.prepT = 999;
+  const ward = ENEMIES.shaman.ward!;
+  const shaman = enemy(s, 'shaman', 0, -12), near = enemy(s, 'brute', 3, -12), far = enemy(s, 'grunt', 9, -12);
+  near.hp = 100;
+  const at = new Map(s.enemies.map(e => [e, e.x]));
+  const wards: RushEvent[] = [];
+  for (let t = 0; t < ward.every + 0.05; t += STEP) {
+    for (const e of s.enemies) { e.x = at.get(e)!; e.z = -12; }
+    stepRush(s, {});
+    wards.push(...s.events.filter(e => e.type === 'ward'));
+    assert.ok(!s.events.some(e => e.type === 'heal'), 'no heal below the endless challenge');
+  }
+  assert.equal(wards.length, 1, 'one pulse per period');
+  assert.ok((near.wardT ?? 0) > ward.duration - 0.1, 'ally in range warded for the duration');
+  assert.equal(far.wardT ?? 0, 0, 'ally out of range unwarded');
+  assert.equal(shaman.wardT ?? 0, 0, 'never wards itself');
+  assert.equal(near.hp, 100, 'no heal at stage 8');
+  shaman.hp = 0; // with the shaman gone the ward runs out
+  steps(s, Math.ceil(ward.duration / STEP) + 1);
+  assert.equal(near.wardT, 0, 'the ward wears off');
+});
+
+test('ward (cycle 90): towers only scratch a warded enemy', () => {
+  const taken = (warded: boolean) => {
+    const s = createRush(1);
+    s.towers[1] = { level: 2, cd: 0, facing: 0 };
+    const e = enemy(s, 'brute', PADS[1].x, PADS[1].z - 5);
+    for (let i = 0; i < 90; i++) { if (warded) e.wardT = 9; stepRush(s, {}); }
+    return e.maxHp - e.hp;
+  };
+  const open = taken(false), shut = taken(true);
+  assert.ok(open > 0, 'the tower hits');
+  assert.ok(Math.abs(shut - open * ENEMIES.shaman.ward!.towerShare) < 1e-6, `warded takes the tower share (${shut} vs ${open})`);
+});
+
+test('ward (cycle 90): a hero hit breaks it; the ranger breaks only its target, Bron the wards around his', () => {
+  const hitAll = (hero: 'ranger' | 'bron', dx: number, dz: number, others: [number, number][]) => {
+    const s = createRush(1, NO_MODS, undefined, hero);
+    s.prepT = 999;
+    const h = s.hero, target = enemy(s, 'brute', h.x + dx, h.z + dz);
+    const rest = others.map(([x, z]) => enemy(s, 'grunt', target.x + x, target.z + z));
+    for (const e of s.enemies) e.wardT = 9;
+    const breaks: RushEvent[] = [];
+    for (let i = 0; i < 90 && (target.wardT ?? 0) > 0; i++) { stepRush(s, { fire: { x: dx, z: dz } }); breaks.push(...s.events.filter(e => e.type === 'wardBreak')); }
+    return { target, rest, breaks };
+  };
+  const r = hitAll('ranger', 0, -4, [[1.2, 0]]);
+  assert.equal(r.target.wardT, 0, 'ranger bolt breaks the ward');
+  assert.ok(r.breaks.some(e => e.type === 'wardBreak' && e.id === r.target.id), 'and reports it');
+  assert.ok((r.rest[0].wardT ?? 0) > 0, 'a bolt breaks only what it hits');
+  // The second grunt stands 2.4 m behind the target: past Bron's 2.8 m reach from the hero, inside the 2.5 m break.
+  const b = hitAll('bron', 0, -1.1, [[0, -2.4], [5, -1]]);
+  assert.equal(b.target.wardT, 0, 'Bron breaks his target');
+  assert.equal(b.rest[0].hp, b.rest[0].maxHp, 'the second grunt is out of the swing itself');
+  assert.equal(b.rest[0].wardT, 0, 'yet its ward within 2.5 m of the target breaks');
+  assert.ok((b.rest[1].wardT ?? 0) > 0, 'but not one further away');
+});
+

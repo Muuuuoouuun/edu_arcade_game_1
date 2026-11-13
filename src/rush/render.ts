@@ -134,7 +134,7 @@ export class RushView {
   private crates = new Map<number, { mesh: Mesh; wobble: number }>();
   /** Instanced batches: draw calls stay fixed however many enemies, shots and coins are alive. */
   private batches!: {
-    body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>; flash: Record<EnemyKind, Batch>; ice: Record<EnemyKind, Batch>;
+    body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>; flash: Record<EnemyKind, Batch>; ice: Record<EnemyKind, Batch>; ward: Record<EnemyKind, Batch>;
     shadow: Batch; ring: Batch; frostRing: Batch; streak: Batch; barBg: Batch; barFill: Batch; shots: Record<Shot['owner'], Batch>; branchShots: Record<TowerBranch, Batch>; coins: Batch;
   };
   private counts = { enemies: 0, shots: 0 };
@@ -654,6 +654,7 @@ export class RushView {
       flash: per(k => new Batch(this.scene, this.enemyKit(k).body, this.mats.flash, k === 'boss' ? 4 : cap)),
       // Frost shell (cycle 16): the same body, a little larger, pale ice blue and see-through. Drawn only while slowed.
       ice: per(k => new Batch(this.scene, this.enemyKit(k).body, ICE, k === 'boss' ? 4 : cap, { order: 4 })),
+      ward: per(k => new Batch(this.scene, this.enemyKit(k).body, WARD, k === 'boss' ? 4 : cap, { order: 4 })),
       shadow: new Batch(this.scene, this.geo.blob, this.mats.blob, cap),
       ring: new Batch(this.scene, this.geo.ring, this.mats.enemyRing, cap),
       frostRing: new Batch(this.scene, this.geo.ring, basic(0x8fe6ff, 0.9), cap),
@@ -683,7 +684,7 @@ export class RushView {
     const B = this.batches, t = this.tmp;
     this.camera.updateMatrixWorld();
     this.frustum.setFromProjectionMatrix(t.m.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
-    const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), ...Object.values(B.ice), B.shadow, B.ring, B.frostRing, B.streak, B.barBg, B.barFill];
+    const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), ...Object.values(B.ice), ...Object.values(B.ward), B.shadow, B.ring, B.frostRing, B.streak, B.barBg, B.barFill];
     const swift = s.diff.twist === 'swift';
     all.forEach(b => b.begin());
     for (const e of s.enemies) {
@@ -704,6 +705,9 @@ export class RushView {
       // Frost shell; blinks in its last quarter second so the player sees the slow wearing off.
       const ice = e.slowT ?? 0;
       if (ice > 0 && (ice > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.ice[e.kind].push(this.place(e.x, bob - 0.02, e.z, 0, yaw(e.facing), 0, sx * 1.08, sy * 1.06, sx * 1.08));
+      // Ward shell (cycle 90): magenta while warded, blinking in its last quarter second like the frost shell.
+      const ward = e.wardT ?? 0;
+      if (ward > 0 && (ward > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.ward[e.kind].push(this.place(e.x, bob - 0.02, e.z, 0, yaw(e.facing), 0, sx * 1.16, sy * 1.12, sx * 1.16));
       if (this.sheetMode) continue;
       B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.25));
       B.ring.push(this.place(e.x, 0.03, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.15));
@@ -878,6 +882,12 @@ export class RushView {
           break;
         case 'block': // shield-bearer turned a bolt aside
           fx.emit({ kind: 'spark', n: 4, color: 0xe8eefc, at: [ev.x, 1.0, ev.z], speed: 4, up: 2, size: 0.16, life: 0.2 });
+          break;
+        case 'ward': // shaman ward pulse (cycle 90): a magenta ink ring over the warded circle
+          this.ring(ev.x, ev.z, 0xe070e0, ev.radius, 0.45, 0.85, true);
+          break;
+        case 'wardBreak': // a hero hit pops a ward: magenta shards
+          fx.emit({ kind: 'shard', n: 6, color: 0xf08cf0, at: [ev.x, 0.9, ev.z], speed: 4.5, up: 3.5, size: 0.12, life: 0.4 });
           break;
         case 'chill': // frost tower
           fx.emit({ kind: 'spark', n: 3, color: 0xd8f8ff, at: [ev.x, 0.9, ev.z], speed: 2.5, up: 1.5, size: 0.18, life: 0.3 });
@@ -1216,5 +1226,7 @@ const CAPE: Record<HeroKind, { x: number; y: number; h: number; w: number }> = {
 };
 const BRANCH_COLOR: Record<TowerBranch, number> = { fire: 0xff7a2f, frost: 0x4fc3ff };
 const ICE = new MeshBasicMaterial({ color: 0xc4f2ff, transparent: true, opacity: 0.4, depthWrite: false });
+/** Ward shell (cycle 90): the shaman's magenta, see-through, a little larger than the frost shell so both can show. */
+const WARD = new MeshBasicMaterial({ color: 0xf08cf0, transparent: true, opacity: 0.42, depthWrite: false });
 const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x1fa6b0, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4, shaman: 0xd65fcf };
 const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };

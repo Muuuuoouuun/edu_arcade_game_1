@@ -46,6 +46,12 @@ export function guardBot(s: RushState): Command {
     cmd.move = toward(h, GUARD);
   }
   if (threat && (!melee || Math.hypot(threat.x - h.x, threat.z - h.z) <= def.range + 0.6)) cmd.fire = 'auto';
+  // Ward first (cycle 90): a ranged hero breaks the nearest ward in range so the towers bite again.
+  if (!melee) {
+    let ward: (typeof s.enemies)[number] | null = null, best = def.range;
+    for (const e of s.enemies) { const d = Math.hypot(e.x - h.x, e.z - h.z); if (e.hp > 0 && (e.wardT ?? 0) > 0 && d <= best) { best = d; ward = e; } }
+    if (ward) cmd.fire = { x: ward.x - h.x, z: ward.z - h.z };
+  }
   if (superReady(s)) {
     if (melee) {
       const near = s.enemies.filter(e => e.hp > 0 && Math.hypot(e.x - h.x, e.z - h.z) <= def.superRadius).length;
