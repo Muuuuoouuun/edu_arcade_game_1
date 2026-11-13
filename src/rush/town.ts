@@ -7,6 +7,8 @@ import { kingdomPower, recommendedPower, claimGoal, currentGoal, GOALS,
   storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 import { createKingdomStore } from './storage.ts';
+import { COMPANIONS, REGIONS, expeditionStage, keeperOf, regionOf, villageText, type Companion } from './expedition.ts';
+import { MAP_NODES, ENDLESS_NODE, HOME_NODE } from './mapLayout.ts';
 
 const store = createKingdomStore(() => localStorage);
 export const { loadKingdom, saveKingdom, storageUnavailable } = store;
@@ -30,6 +32,15 @@ import rangerFace from './art/hero-gecko-ranger.webp';
 import bronFace from './art/hero-dwarf-guardian.webp';
 import bearFace from './art/hero-polar-bear.webp';
 const HERO_FACE: Record<HeroKind, string> = { ranger: rangerFace, bron: bronFace, bear: bearFace };
+import ianFace from './art/face-ian.webp';
+import rielFace from './art/face-riel.webp';
+import cheongunFace from './art/face-cheongun.webp';
+import karFace from './art/face-kar.webp';
+import lunaFace from './art/face-luna.webp';
+/** Expedition companions (2026-11-13 merge): portraits in the key-art style; Bron and Popo reuse their hero portraits. */
+export const COMPANION_FACE: Record<Companion, string> = { ian: ianFace, riel: rielFace, bron: bronFace, cheongun: cheongunFace, popo: bearFace, kar: karFace, luna: lunaFace };
+const ROW_NAME = (id: Upgrade) => ROWS.find(r => r.id === id)?.name ?? '';
+export const keeperNote = (c: Companion) => `${ROW_NAME(COMPANIONS[c].keeper)}을(를) 맡아요`;
 /** The same kingdom one level higher in `u` (for the "now → next" preview only). */
 function bumped(k: Kingdom, u: Upgrade): Kingdom {
   if (u === 'castle' || u === 'farm' || u === 'mill') return { ...k, [u]: k[u] + 1 };
@@ -68,14 +79,15 @@ export class TownScreen {
       if (g && !g.done && g.goal.stage && stageUnlocked(this.kingdom, g.goal.stage)) {
         this.stage = g.goal.stage;
         this.render();
-        this.note(`${g.goal.text}: 스테이지 ${g.goal.stage}을(를) 골랐어요. 출전해서 목표를 채워요`);
+        const v = expeditionStage(g.goal.stage);
+        this.note(`${villageText(g.goal.text)}: ${v.label} ${v.name}을(를) 골랐어요. 출전해서 목표를 채워요`);
         return;
       }
       if (!g?.done) return;
       this.kingdom = claimGoal(this.kingdom);
       saveKingdom(this.kingdom);
       this.render();
-      this.note(`목표 달성! ${g.goal.text} · ${rewardText(g.goal.reward)}`);
+      this.note(`목표 달성! ${villageText(g.goal.text)} · ${rewardText(g.goal.reward)}`);
     });
     const tags = this.$('town-tags');
     tags.innerHTML = SPOTS.map(p => {
@@ -97,7 +109,7 @@ export class TownScreen {
     list.innerHTML = ROWS.map(r => `
       <li class="town-row" data-id="${r.id}">
         <span class="town-icon tone-${r.tone}" aria-hidden="true">${r.badge}</span>
-        <div class="town-info"><b>${r.name} <em data-level></em></b><small data-effect></small></div>
+        <div class="town-info"><b>${r.name} <em data-level></em></b><small data-effect></small><small class="keeper" data-keeper hidden><img alt="" width="18" height="18" /><span></span></small></div>
         <button class="town-up" data-up="${r.id}" aria-label="${r.name} 강화"><span data-cost></span></button>
       </li>`).join('') + `
       <li class="town-row" data-id="hero">
@@ -145,15 +157,26 @@ export class TownScreen {
       }
       this.render();
     });
+    // Expedition map (2026-11-13 merge): the stage chips became village markers on a painted two-region map.
     const strip = this.$('stage-strip');
-    strip.innerHTML = Array.from({ length: STAGE_COUNT }, (_, i) =>
-      `<button class="stage-chip" role="radio" data-stage="${i + 1}"><b>${i + 1}</b><span data-stars></span></button>`).join('') +
+    strip.innerHTML = Array.from({ length: STAGE_COUNT }, (_, i) => {
+      const n = i + 1, e = expeditionStage(n), [x, y] = MAP_NODES[i];
+      return `<button class="map-node region-${regionOf(n)}${n === 5 || n === STAGE_COUNT ? ' boss' : ''}" role="radio" data-stage="${n}" style="--x:${x}%;--y:${y}%"><b>${e.label}</b><span data-stars></span></button>`;
+    }).join('') +
       // Endless challenge (cycle 46): opens with a star on the last stage; shows the best record instead of stars.
-      `<button class="stage-chip endless" role="radio" data-stage="${ENDLESS_STAGE}"><b>∞</b><span data-stars></span></button>`;
+      `<button class="map-node endless" role="radio" data-stage="${ENDLESS_STAGE}" style="--x:${ENDLESS_NODE[0]}%;--y:${ENDLESS_NODE[1]}%"><b>∞</b><span data-stars></span></button>`;
     strip.addEventListener('click', e => {
       const n = Number((e.target as HTMLElement).closest<HTMLElement>('[data-stage]')?.dataset.stage);
       if (n && stageUnlocked(this.kingdom, n)) { this.stage = n; this.render(); }
+      else if (n) this.mapNote(n);
     });
+    // The home castle on the map leads back to town.
+    const home = Object.assign(document.createElement('button'), { className: 'map-home', textContent: '우리 마을' });
+    home.style.cssText = `--x:${HOME_NODE[0]}%;--y:${HOME_NODE[1]}%`;
+    home.addEventListener('click', () => this.closeMap());
+    this.$('map-board').append(home);
+    this.$('btn-map').addEventListener('click', () => this.openMap());
+    this.$('map-close').addEventListener('click', () => this.closeMap());
     // Hero choice: cycle through unlocked heroes; a locked one explains how it joins.
     this.$('btn-hero').addEventListener('click', () => {
       // The hero card opens on the first tap; later taps also switch heroes.
@@ -162,7 +185,7 @@ export class TownScreen {
       // The next unlocked hero after the current one; if none, explain how the next locked one joins.
       const after = [1, 2].map(i => order[(order.indexOf(this.kingdom.hero) + i) % order.length]);
       const next = after.find(h => heroUnlocked(this.kingdom, h)), skipped = after.find(h => !heroUnlocked(this.kingdom, h));
-      const hint = (h: HeroKind) => this.note(`${HEROES[h].name}: 스테이지 ${HERO_JOINS[h]}에서 별을 얻으면 합류해요`);
+      const hint = (h: HeroKind) => { const v = expeditionStage(HERO_JOINS[h]); this.note(`${HEROES[h].name}: ${v.label} ${v.name}에서 이기면 합류해요`); };
       if (!next) { hint(after[0]); return; }
       // Passing over a hero who has not joined yet still says how they join.
       if (skipped && after.indexOf(skipped) < after.indexOf(next)) hint(skipped);
@@ -181,6 +204,22 @@ export class TownScreen {
   get current(): Kingdom { return this.kingdom; }
   /** Short message in the reward line (reused for hints). */
   private note(text: string) { const el = this.$('town-reward'); el.textContent = text; el.hidden = false; }
+  get mapOpen() { return !this.$('expedition-map').hidden; }
+  openMap() {
+    this.$('expedition-map').hidden = false;
+    this.render();
+    // Portrait phones scroll the map sideways: bring the chosen village into view.
+    this.root.querySelector<HTMLElement>(`#stage-strip [data-stage="${this.stage}"]`)?.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }
+  closeMap() { this.$('expedition-map').hidden = true; }
+  /** A locked village says what opens it. */
+  private mapNote(n: number) {
+    const t = this.$('map-board').querySelector<HTMLElement>('[data-map-note]') ?? Object.assign(document.createElement('p'), { className: 'map-note' });
+    t.dataset.mapNote = '';
+    t.textContent = n === ENDLESS_STAGE ? '서리 왕좌의 결전에서 이기면 열려요' : `${expeditionStage(n - 1).label} ${expeditionStage(n - 1).name}에서 이기면 열려요`;
+    this.$('map-board').append(t);
+    t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+  }
   /** Pin the name tags over their buildings (call every frame while the town is shown). */
   layout(rect: { width: number; height: number; top?: number }) {
     // A tag's foot sits on its anchor; keep its top at least 8px under the top bar (cycle 61: on some aspect ratios the
@@ -202,6 +241,7 @@ export class TownScreen {
 
   show(rewardText = '') {
     this.reload();
+    this.closeMap();
     this.stage = latestStage(this.kingdom);
     const note = this.$('town-reward');
     note.textContent = rewardText;
@@ -211,26 +251,66 @@ export class TownScreen {
     this.timer = window.setInterval(() => { if (!this.root.hidden) this.render(); else window.clearInterval(this.timer); }, 1000);
   }
 
+  /** Town map button and the map's letter panel for the chosen village. */
+  private renderMap(k: Kingdom) {
+    const n = this.stage, endless = n === ENDLESS_STAGE, e = expeditionStage(n), region = endless ? 'snow' : regionOf(n), stars = endless ? 0 : k.stars[n - 1];
+    const btn = this.$('btn-map');
+    btn.className = `map-open region-${region}`;
+    btn.querySelector('[data-map-region]')!.textContent = endless ? '원정 지도' : REGIONS[region].name;
+    btn.querySelector('[data-map-stage]')!.textContent = endless ? '끝없는 도전' : `${e.label} ${e.name}`;
+    btn.querySelector('[data-map-stars]')!.textContent = endless ? `최고 ${k.endlessBest}` : '★'.repeat(stars) + '☆'.repeat(3 - stars);
+    btn.setAttribute('aria-label', `원정 지도 열기. 지금 고른 곳: ${endless ? '끝없는 도전' : `${REGIONS[region].name} ${e.label} ${e.name}, 별 ${stars}개`}`);
+    const map = this.$('expedition-map');
+    map.className = `expedition-map region-${region}`;
+    if (map.hidden) return;
+    const q = <T extends HTMLElement = HTMLElement>(sel: string) => map.querySelector<T>(sel)!;
+    q('[data-region-name]').textContent = endless ? '서리 요새' : REGIONS[region].name;
+    q('[data-stage-label]').textContent = endless ? '∞' : e.label;
+    q('[data-stage-name]').textContent = endless ? '끝없는 도전' : e.name;
+    q('[data-stage-stars]').textContent = endless ? `최고 ${k.endlessBest}웨이브` : '★'.repeat(stars) + '☆'.repeat(3 - stars);
+    const rec = endless ? null : recommendedPower(n), have = kingdomPower(k);
+    const power = q('[data-stage-power]');
+    power.textContent = rec === null ? '' : `권장 ${rec.toLocaleString('en-US')}`;
+    power.className = rec === null ? '' : have >= rec ? 'ok' : 'short';
+    q('[data-letter-from]').textContent = endless ? '서리 요새의 문' : stars > 0 ? '다시 찾아가는 마을' : `${REGIONS[region].sender}의 편지`;
+    q('[data-letter-text]').textContent = endless ? '다섯 웨이브가 끝없이 돌아와요. 몇 웨이브까지 버틸 수 있을까요?' : stars > 0 ? `${e.name}의 길목을 다시 지켜 별을 더 모아요.` : e.story;
+    q('[data-stage-foe]').textContent = endless ? '' : `마지막 웨이브 · ${e.boss}`;
+    const v = endless ? undefined : e.visitor, vEl = q('[data-stage-visitor]');
+    vEl.hidden = !v;
+    if (v) {
+      q<HTMLImageElement>('[data-visitor-face]').src = COMPANION_FACE[v];
+      vEl.classList.toggle('met', stars > 0);
+      q('[data-visitor-text]').textContent = stars > 0 ? `${COMPANIONS[v].name} 합류함` : `첫 승리 때 ${COMPANIONS[v].name} 합류`;
+    }
+    (this.$('map-battle') as HTMLButtonElement).textContent = endless ? '도전' : '출전';
+  }
+
   render() {
     this.$('town-storage-warning').hidden = !storageUnavailable();
     const k = this.kingdom, now = Date.now(), wait = pending(k, now);
     if (!stageUnlocked(k, this.stage)) this.stage = latestStage(k);
     this.root.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach(chip => {
       const n = Number(chip.dataset.stage), open = stageUnlocked(k, n), stars = k.stars[n - 1];
-      chip.disabled = !open;
+      // Locked villages stay tappable (they say what opens them) but read as disabled.
+      chip.setAttribute('aria-disabled', String(!open));
+      chip.classList.toggle('locked', !open);
       chip.setAttribute('aria-checked', String(n === this.stage));
       if (n === ENDLESS_STAGE) {
-        chip.setAttribute('aria-label', open ? `끝없는 도전, 최고 ${k.endlessBest}웨이브` : '끝없는 도전, 스테이지 10에서 별을 얻으면 열림');
+        chip.setAttribute('aria-label', open ? `끝없는 도전, 최고 ${k.endlessBest}웨이브` : '끝없는 도전, 서리 왕좌의 결전에서 이기면 열림');
         chip.querySelector('[data-stars]')!.textContent = open ? `최고 ${k.endlessBest}` : '잠김';
         return;
       }
-      chip.setAttribute('aria-label', open ? `스테이지 ${n}, 별 ${stars}개` : `스테이지 ${n}, 잠김`);
-      chip.querySelector('[data-stars]')!.textContent = open ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '잠김';
+      const e = expeditionStage(n);
+      chip.setAttribute('aria-label', open ? `${e.label} ${e.name}, 별 ${stars}개` : `${e.label} ${e.name}, 잠김`);
+      chip.querySelector('[data-stars]')!.textContent = open ? '★'.repeat(stars) + '☆'.repeat(3 - stars) : '';
+      chip.classList.toggle('cleared', stars > 0);
+      chip.classList.toggle('next', open && stars === 0);
     });
+    this.renderMap(k);
     // Daily first win (cycle 32): a small badge on the battle button while today's bonus is waiting.
     // Endless never ends in a win, so it shows the next record milestone (cycle 51) instead of the daily first-win badge.
     const endless = this.stage === ENDLESS_STAGE, daily = !endless && dailyReady(k, today(now)), goal = endless ? nextMilestone(k.endlessBest) : null;
-    const label = endless ? '끝없는 도전' : `스테이지 ${this.stage}`;
+    const label = endless ? '끝없는 도전' : expeditionStage(this.stage).label;
     const badge = daily ? `<span class="daily-badge">첫 승리 <i class="res-ico shard"></i>+${DAILY_WIN.shards}</span>`
       : goal ? `<span class="daily-badge goal">목표 ${goal.waves} <i class="res-ico shard"></i>+${goal.shards}</span>` : '';
     // Recommended power (cycle 89): a pill under the button, green when the kingdom has it, orange when short.
@@ -289,9 +369,9 @@ export class TownScreen {
       goalEl.querySelector('[data-goal-head]')!.textContent = cur.done ? `${head} · 받기` : head;
       const n = (v: number) => v.toLocaleString('en-US');
       goalEl.querySelector('[data-goal-text]')!.textContent = cur.goal.ladder && !cur.done ? `전투력 ${n(cur.have)}/${n(cur.need)}`
-        : cur.need > 1 && !cur.done ? `${cur.goal.text} (${cur.have}/${cur.need})` : cur.goal.text;
+        : cur.need > 1 && !cur.done ? `${villageText(cur.goal.text)} (${cur.have}/${cur.need})` : villageText(cur.goal.text);
       goalEl.querySelector('[data-goal-reward]')!.innerHTML = rewardHtml(cur.goal.reward);
-      goalEl.setAttribute('aria-label', `목표 ${cur.index + 1}: ${cur.goal.text}, ${cur.done ? '달성, 눌러서 보상 받기' : `진행 ${cur.have}/${cur.need}`}, 보상 ${rewardText(cur.goal.reward)}`);
+      goalEl.setAttribute('aria-label', `목표 ${cur.index + 1}: ${villageText(cur.goal.text)}, ${cur.done ? '달성, 눌러서 보상 받기' : `진행 ${cur.have}/${cur.need}`}, 보상 ${rewardText(cur.goal.reward)}`);
     }
     // Kingdom power (cycle 71): one number for all growth; every rise floats a gold '+N' beside it.
     const power = kingdomPower(k), up = this.$('town-power-up');
@@ -321,6 +401,13 @@ export class TownScreen {
         ? `<i class="res-ico food"></i>${cost.food} <i class="res-ico wood"></i>${cost.wood}`
         : r.id === 'castle' || level(k, r.id) >= CASTLE_MAX ? '최대' : '성 Lv 필요';
       btn.classList.toggle('capped', !cost);
+      // Expedition companions keep the town (2026-11-13 merge): story only, the numbers above are unchanged.
+      const keeper = keeperOf(k, r.id), kEl = row.querySelector<HTMLElement>('[data-keeper]')!;
+      kEl.hidden = !keeper;
+      if (keeper) {
+        kEl.querySelector('img')!.src = COMPANION_FACE[keeper];
+        kEl.querySelector('span')!.textContent = `${COMPANIONS[keeper].name}: ${COMPANIONS[keeper].line}`;
+      }
     }
   }
 }

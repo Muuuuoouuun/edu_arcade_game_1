@@ -626,3 +626,119 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   .title-card .actions > button { flex: 1 1 40%; }
   .title-card .actions > .rush-back { flex-basis: 100%; text-align: center; }
 }
+
+/* ===== EXPEDITION (2026-11-13 merge: the old 원정 villages are Rush's ten stages, in two regions) ===== */
+/* Town dock: one map button replaces the stage chip strip. */
+.town-dock .map-open {
+  flex-basis: 100%; display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; align-items: center; column-gap: 8px;
+  max-width: 340px; margin-left: auto; padding: 5px 12px 6px 10px; min-height: 44px; text-align: left; border-radius: 14px; border: 3px solid var(--outline);
+  background: var(--navy, rgba(26,37,68,0.92)); color: #fff; box-shadow: 0 4px 0 var(--outline); cursor: pointer; touch-action: manipulation;
+}
+.map-open .region-dot { grid-row: 1 / 3; width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--outline); background: radial-gradient(circle at 35% 35%, #c8f59a, #3fa34a); }
+.map-open.region-snow .region-dot { background: radial-gradient(circle at 35% 35%, #ffffff, #8ecbe8); }
+.map-open small { font-size: 10px; color: #b9c8ec; line-height: 1.1; }
+.map-open b { grid-column: 2; font-family: var(--display); font-weight: 400; font-size: 15px; line-height: 1.15; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.map-open span { grid-column: 3; grid-row: 1 / 3; color: var(--gold); font-size: 12px; letter-spacing: -1px; }
+@media (max-height: 420px) { .town-dock .map-open { padding: 3px 10px 4px 8px; } .map-open b { font-size: 13px; } }
+
+/* The map: painted world, village markers, a parchment letter panel. Covers the town while open. */
+.expedition-map { position: absolute; inset: 0; z-index: 30; display: flex; background: #2b8fd0; pointer-events: auto; }
+.expedition-map[hidden] { display: none; }
+.map-scroll { position: relative; flex: 1; min-width: 0; height: 100%; overflow: auto; display: flex; align-items: center; justify-content: center; -webkit-overflow-scrolling: touch; }
+.map-board {
+  position: relative; flex: none; aspect-ratio: 3 / 2; height: min(100%, calc((100vw - 300px) / 1.5)); max-width: none;
+  background: url('./art/expedition-map.webp') center / cover no-repeat; box-shadow: inset 0 0 40px rgba(10, 40, 80, 0.45);
+}
+@media (max-width: 1000px) { .map-board { background-image: url('./art/expedition-map-960.webp'); } }
+.map-nodes { position: absolute; inset: 0; }
+.map-node {
+  position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); width: 46px; height: 46px; padding: 0; border-radius: 50%;
+  border: 3px solid var(--outline); background: radial-gradient(circle at 50% 35%, #ffe58a, #f0a020); color: #fff; box-shadow: 0 4px 0 var(--outline), 0 6px 10px rgba(0,0,0,0.35);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; cursor: pointer; touch-action: manipulation;
+}
+.map-node b { font-family: var(--display); font-weight: 400; font-size: 14px; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; }
+.map-node span { position: absolute; top: calc(100% + 1px); left: 50%; transform: translateX(-50%); padding: 0 4px; border-radius: 6px; background: rgba(26,37,68,0.85); color: var(--gold); font-size: 9px; letter-spacing: -1px; white-space: nowrap; }
+.map-node span:empty { display: none; }
+.map-node.region-snow { background: radial-gradient(circle at 50% 35%, #ffffff, #7fc4ea); }
+.map-node.cleared { background: radial-gradient(circle at 50% 35%, #9df07a, #2f9a3f); }
+.map-node.region-snow.cleared { background: radial-gradient(circle at 50% 35%, #d8f4ff, #3a8fd8); }
+.map-node.boss { width: 56px; height: 56px; }
+.map-node.boss::before { content: ''; position: absolute; top: -13px; left: 50%; width: 26px; height: 14px; transform: translateX(-50%); background: var(--trim, #f0b93a); border: 3px solid var(--outline); border-bottom: 0;
+  clip-path: polygon(0 100%, 0 20%, 25% 60%, 50% 0, 75% 60%, 100% 20%, 100% 100%); }
+.map-node.endless { background: radial-gradient(circle at 50% 35%, #e2ccff, #8a5ae8); }
+.map-node.next:not(.locked)::after { content: ''; position: absolute; inset: -9px; border-radius: 50%; border: 3px solid #fff; pointer-events: none; animation: nodeCall 1.4s ease-out infinite; }
+.map-node[aria-checked="true"] { box-shadow: 0 0 0 4px #fff, 0 0 0 7px var(--outline), 0 6px 12px rgba(0,0,0,0.4); z-index: 2; }
+.map-node.locked { background: radial-gradient(circle at 50% 35%, #c9cfd8, #7d8796); filter: saturate(0.4); cursor: default; }
+.map-node.locked b { opacity: 0.75; }
+@keyframes nodeCall { from { transform: scale(0.8); opacity: 1; } to { transform: scale(1.35); opacity: 0; } }
+.map-note { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); margin: 0; padding: 6px 12px; border-radius: 10px; background: rgba(26,37,68,0.92); color: #fff; font-size: 13px; white-space: nowrap; opacity: 0; pointer-events: none; }
+.map-note.show { animation: mapNote 2.4s ease forwards; }
+@keyframes mapNote { 10%, 80% { opacity: 1; } 100% { opacity: 0; } }
+
+.map-panel.card {
+  position: relative; flex: none; width: 300px; max-width: none; margin: 0; border-radius: 0; border-width: 0 0 0 5px; overflow: auto;
+  display: flex; flex-direction: column; gap: 6px; padding: calc(34px + var(--safe-t)) calc(14px + var(--safe-r)) calc(10px + var(--safe-b)) 14px; text-align: left;
+}
+.map-panel h1 { align-self: center; margin: -22px 0 4px; font-size: 20px; }
+.expedition-map.region-snow .map-panel h1 { background: linear-gradient(#bfe6ff 0 50%, #7cbbe8 50%); color: #fff; }
+.map-stage { margin: 0; font-family: var(--display); font-size: 19px; color: var(--paper-ink, #3b2614); line-height: 1.15; }
+.map-stage b { color: #a0521e; }
+.map-meta { margin: 0; display: flex; gap: 10px; align-items: center; font-size: 13px; }
+.map-meta [data-stage-stars] { color: #e0a000; letter-spacing: -1px; font-size: 16px; text-shadow: 0 1px 0 var(--outline); }
+.map-meta .ok, .map-meta .short { padding: 1px 8px; border-radius: 8px; border: 2px solid var(--outline); color: #fff; font-weight: 800; font-size: 12px; }
+.map-meta .ok { background: #3fa34a; } .map-meta .short { background: #e07a2a; }
+.map-letter { padding: 8px 10px; border-radius: 10px; border: 2px dashed rgba(139, 82, 38, 0.55); background: rgba(255, 255, 255, 0.45); }
+.map-letter small { display: block; font-size: 11px; color: var(--paper-muted, #7a5a3a); font-weight: 700; }
+.map-letter p { margin: 2px 0 0; font-size: 13px; line-height: 1.4; color: var(--paper-ink, #3b2614); }
+.map-foe { margin: 0; font-size: 12px; color: #a0322e; font-weight: 800; }
+.map-foe:empty { display: none; }
+.map-visitor { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--paper-ink, #3b2614); }
+.map-visitor[hidden] { display: none; }
+.map-visitor img { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--outline); filter: brightness(0.15) saturate(0); background: #8ecbe8; }
+.map-visitor.met img { filter: none; }
+.map-panel .actions { margin-top: auto; flex-wrap: nowrap; }
+.map-panel .actions > button { flex: 1; min-height: 44px; }
+@media (max-height: 420px) {
+  .map-panel.card { width: 260px; gap: 4px; padding-top: calc(28px + var(--safe-t)); }
+  .map-panel h1 { font-size: 17px; margin-top: -18px; }
+  .map-stage { font-size: 16px; }
+  .map-letter p { font-size: 12px; line-height: 1.3; }
+  .map-node { width: 40px; height: 40px; } .map-node.boss { width: 48px; height: 48px; }
+  .map-board { height: min(100%, calc((100vw - 260px) / 1.5)); }
+}
+@media (orientation: portrait) {
+  .expedition-map { flex-direction: column; }
+  .map-scroll { flex: 1 1 auto; justify-content: flex-start; }
+  .map-board { height: 100%; }
+  .map-panel.card { width: auto; border-width: 5px 0 0 0; padding: 26px 14px calc(10px + var(--safe-b)); max-height: 46%; }
+}
+
+/* Result: a companion arrives after a first clear; the chapter end has its own line. */
+.result-visitor { display: flex; gap: 12px; align-items: center; margin: 4px auto 6px; padding: 8px 12px; max-width: 520px; text-align: left; border-radius: 14px; border: 3px solid var(--outline); background: linear-gradient(#fff6d8, #ffe39a); }
+.result-visitor[hidden] { display: none; }
+.result-visitor img { flex: none; width: 72px; height: 72px; border-radius: 16px; border: 3px solid var(--outline); box-shadow: 0 3px 0 var(--outline); }
+.result-visitor small { display: block; font-size: 11px; font-weight: 800; color: #a0521e; }
+.result-visitor b { font-family: var(--display); font-weight: 400; font-size: 20px; color: #fff; -webkit-text-stroke: 4px var(--outline); paint-order: stroke fill; }
+.result-visitor p { margin: 2px 0; font-size: 13px; line-height: 1.35; color: var(--paper-ink, #3b2614); }
+.result-visitor em { font-style: normal; font-size: 12px; font-weight: 800; color: #2f6fd1; }
+.result-chapter { margin: 2px auto 6px; padding: 6px 12px; max-width: 520px; border-radius: 12px; background: rgba(47, 111, 209, 0.12); color: var(--paper-ink, #3b2614); }
+.result-chapter[hidden] { display: none; }
+.result-chapter b { font-family: var(--display); font-weight: 400; font-size: 18px; color: #2f6fd1; }
+.result-chapter p { margin: 2px 0 0; font-size: 13px; }
+@media (max-height: 420px) { .result-visitor { padding: 4px 10px; margin: 0 auto 2px; } .result-visitor img { width: 52px; height: 52px; } .result-visitor b { font-size: 16px; } .result-visitor p { font-size: 12px; } }
+
+/* Town card: the companion who keeps this building. */
+.town-row .keeper { display: flex; align-items: center; gap: 5px; margin-top: 2px; font-size: 11px; color: #ffe39a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.town-row .keeper[hidden] { display: none; }
+.town-row .keeper img { flex: none; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--outline); }
+.town-row .keeper span { overflow: hidden; text-overflow: ellipsis; }
+.map-home { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); padding: 3px 10px; border-radius: 10px; border: 3px solid var(--outline); background: linear-gradient(#5aa8ff 0 50%, #2f6fd1 50%); color: #fff; font-family: var(--display); font-size: 13px; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; box-shadow: 0 3px 0 var(--outline); cursor: pointer; }
+
+/* Fixes after the first expedition screenshots. */
+.town-screen .town-reward { color: #fff; }               /* the note sits on a navy pill, not on parchment */
+.result-stars small { color: #2f7a3a; }                  /* readable on parchment */
+.map-panel .actions > button { min-width: 0; padding-left: 8px; padding-right: 8px; }
+@media (max-height: 420px) {
+  #screen-result.has-news #result-stats, #screen-result.has-news .result-stars small { display: none; }
+  .result-visitor p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+}

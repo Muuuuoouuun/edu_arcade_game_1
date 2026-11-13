@@ -14,7 +14,8 @@ import { stageDifficulty, STAGE_COUNT } from './stages.ts';
 import { createMusic } from './music.ts';
 import { parseSettings, RUSH_KINGDOM_KEY, RUSH_SETTINGS_KEY, serializeSettings, type RushSettings } from './storage.ts';
 import { advanceClock, createClock, hitStopFor, tryStop } from './clock.ts';
-import { loadKingdom, saveKingdom, today, TownScreen } from './town.ts';
+import { COMPANION_FACE, keeperNote, loadKingdom, saveKingdom, today, TownScreen } from './town.ts';
+import { COMPANIONS, expeditionStage, firstClearNews, importLegacyCampaign, LEGACY_CAMPAIGN_KEY, LEGACY_IMPORT_KEY } from './expedition.ts';
 import { TownView } from './townScene.ts';
 import { addHit, POP_LIFE, popKey, type PopSlot } from './pops.ts';
 import { createFrameWatch, nextPref, parsePref, PREF_LABEL, resolveQuality, watchFrame, type QualityPref } from './quality.ts';
@@ -81,6 +82,20 @@ let battleId = '';
 let stage = 1;
 const townView = new TownView();
 const town = new TownScreen($('screen-town'), townView);
+// One front door (2026-11-13 merge): a returning 원정 player brings their villages, gold and training along, once.
+// The old save is only read, never changed; the marker is set once the import is saved (or there was nothing to bring).
+let legacyNote = '';
+try {
+  if (!localStorage.getItem(LEGACY_IMPORT_KEY)) {
+    const got = importLegacyCampaign(loadKingdom(), localStorage.getItem(LEGACY_CAMPAIGN_KEY));
+    const saved = got ? saveKingdom(got.kingdom) : true;
+    if (got && saved) {
+      const r = got.report;
+      legacyNote = `원정 기록을 가져왔어요: 마을 ${r.villages}곳 · 식량 +${r.food} · 목재 +${r.wood}${r.shards ? ` · 조각 +${r.shards}` : ''}`;
+    }
+    if (saved) localStorage.setItem(LEGACY_IMPORT_KEY, String(Date.now()));
+  }
+} catch { /* storage blocked: try again next visit */ }
 const input = new RushInput({
   surface: $('rush-surface'), stick: $('stick'), knob: $('stick-knob'),
   fire: $('fire'), superBtn: $('super'), build: $('build'), buildFrost: $('build-frost'), startWave: $('start-wave'),
@@ -306,7 +321,7 @@ function updateHud() {
   const s = state;
   setText('wave', hud.wave, s.diff.endless ? `웨이브 ${s.wave + 1}` : `웨이브 ${Math.min(s.wave + 1, WAVE_COUNT)}/${WAVE_COUNT}`);
   const lap = Math.floor(s.wave / WAVE_COUNT) + 1;
-  const where = mode === 'demo' ? '시연' : s.diff.endless ? `끝없는 도전${lap > 1 ? ` ${lap}바퀴` : ''}${s.diff.twist ? ` · ${TWIST_NAME[s.diff.twist]}` : ''}` : `스테이지 ${stage}`;
+  const where = mode === 'demo' ? '시연' : s.diff.endless ? `끝없는 도전${lap > 1 ? ` ${lap}바퀴` : ''}${s.diff.twist ? ` · ${TWIST_NAME[s.diff.twist]}` : ''}` : expeditionStage(stage).label;
   setText('waveSub', hud.waveSub, s.phase === 'prep' ? `${where} · 준비 ${Math.ceil(s.prepT)}초` : s.phase === 'wave' ? `${where} · 남은 적 ${s.enemies.length}` : where);
   setStyle('townFill', hud.townFill, 'transform', `scaleX(${s.town.hp / s.town.maxHp})`);
   setText('townHp', hud.townHp, String(Math.ceil(s.town.hp)));
@@ -371,6 +386,7 @@ function start(nextMode: 'play' | 'demo') {
   input.reset();
   input.enabled = nextMode === 'play';
   surface.classList.toggle('demo', nextMode === 'demo');
+  town.closeMap();
   showScreen(null);
   toast(nextMode === 'demo' ? '자동 시연 · 화면을 누르면 타이틀로' : '노란 원 위에서 탑을 세우고 마을을 지키세요');
   updateOrientation();
@@ -383,13 +399,20 @@ function showResult() {
   if (s.diff.endless) { showEndlessResult(); return; }
   // Campaign ending (1.0, completion C6): read before settling, so only the very first stage-10 win shows it.
   const ending = won && stage === STAGE_COUNT && (loadKingdom().stars[STAGE_COUNT - 1] ?? 0) === 0;
-  $('result-title').textContent = ending ? '캠페인 완료!' : won ? `스테이지 ${stage} 방어 성공!` : `스테이지 ${stage} 마을 함락`;
+  // Expedition (2026-11-13 merge): a first clear brings that village's companion; stage 5 closes the forest chapter.
+  const firstClear = won && (loadKingdom().stars[stage - 1] ?? 0) === 0, news = firstClear ? firstClearNews(stage) : {};
+  showVisitor(news.visitor);
+  const chapter = ending ? undefined : news.chapter;
+  $('result-chapter').hidden = !chapter;
+  $('screen-result').classList.toggle('has-news', !!(news.visitor || chapter));
+  if (chapter) { $('result-chapter').querySelector('[data-chapter-title]')!.textContent = chapter.title; $('result-chapter').querySelector('[data-chapter-text]')!.textContent = chapter.text; }
+  $('result-title').textContent = ending ? '캠페인 완료!' : won ? `${expeditionStage(stage).name} 방어 성공!` : `${expeditionStage(stage).name} 함락`;
   $('screen-result').classList.toggle('won', won);
   $('screen-result').classList.toggle('ending', ending);
   $('result-ending').hidden = !ending;
   const { kingdom, granted, reward } = settleBattle(collect(loadKingdom(), Date.now()), battleId, s, stage, today());
   $('result-stars').innerHTML = won
-    ? `<span class="stars">${'<i class="on">★</i>'.repeat(reward.stars)}${'<i>★</i>'.repeat(3 - reward.stars)}</span>${reward.newStars ? `<small>새 별 +${reward.newStars}${reward.newStars === reward.stars && stage < 10 ? ` · 스테이지 ${stage + 1} 열림` : ''}</small>` : ''}`
+    ? `<span class="stars">${'<i class="on">★</i>'.repeat(reward.stars)}${'<i>★</i>'.repeat(3 - reward.stars)}</span>${reward.newStars ? `<small>새 별 +${reward.newStars}${reward.newStars === reward.stars && stage < 10 ? ` · ${expeditionStage(stage + 1).label} ${expeditionStage(stage + 1).name} 열림` : ''}</small>` : ''}`
     : '<small>남은 마을 체력에 따라 별 1~3개를 얻어요</small>';
   const saved = granted && saveKingdom(kingdom);
   const rewardEl = $('result-reward');
@@ -413,6 +436,9 @@ function showEndlessResult() {
   $('result-title').textContent = `끝없는 도전 · 웨이브 ${reward.waves}`;
   $('screen-result').classList.remove('won', 'ending');
   $('result-ending').hidden = true;
+  showVisitor(undefined);
+  $('result-chapter').hidden = true;
+  $('screen-result').classList.remove('has-news');
   const passed = reward.milestones.map(m => `${m.waves}웨이브 돌파 <i class="res-ico shard"></i>+${m.shards}`).join(' · ');
   $('result-stars').innerHTML = (reward.newBest ? `<small class="best">새 최고 기록! ${reward.waves}웨이브</small>` : `<small>최고 기록 ${reward.best}웨이브</small>`)
     + (passed ? `<small class="milestone">기록 보상: ${passed}</small>` : '');
@@ -426,8 +452,21 @@ function showEndlessResult() {
   ].map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   window.setTimeout(() => showScreen('result'), 700);
 }
+/** The companion card on the result screen (none: hidden). */
+function showVisitor(c: keyof typeof COMPANIONS | undefined) {
+  const el = $('result-visitor');
+  el.hidden = !c;
+  if (!c) return;
+  const q = (sel: string) => el.querySelector<HTMLElement>(sel)!;
+  (q('[data-visitor-face]') as HTMLImageElement).src = COMPANION_FACE[c];
+  q('[data-visitor-head]').textContent = `새 동료 합류 · ${COMPANIONS[c].role}`;
+  q('[data-visitor-name]').textContent = COMPANIONS[c].name;
+  q('[data-visitor-line]').textContent = `“${COMPANIONS[c].greeting}”`;
+  q('[data-visitor-keeper]').textContent = c === 'bron' || c === 'popo' ? `출전 영웅으로 고를 수 있어요 · 마을의 ${keeperNote(c)}` : `마을의 ${keeperNote(c)}`;
+}
 let lastReward = '';
-$('btn-play').addEventListener('click', () => { unlockAudio(); openTown(); });
+$('btn-play').addEventListener('click', () => { unlockAudio(); openTown(legacyNote); legacyNote = ''; });
+$('map-battle').addEventListener('click', () => start('play'));
 $('btn-demo').addEventListener('click', () => start('demo'));
 $('btn-battle').addEventListener('click', () => start('play'));
 $('btn-again').addEventListener('click', () => start('play'));
@@ -489,6 +528,7 @@ function pauseForBackground() { if (mode === 'play') { paused = true; input.enab
 document.addEventListener('visibilitychange', () => { if (document.hidden) pauseForBackground(); });
 window.addEventListener(NATIVE_BACKGROUND, pauseForBackground);
 window.addEventListener('blur', pauseForBackground);
+window.addEventListener('keydown', e => { if (e.code === 'Escape' && mode === 'town' && town.mapOpen) town.closeMap(); });
 window.addEventListener('keydown', e => { if (!rendererLost && e.code === 'Escape' && mode === 'play' && !portrait.matches && !document.hidden) { paused = !paused; input.enabled = !paused; input.reset(); showScreen(paused ? 'pause' : null); } });
 
 // ---------- loop ----------

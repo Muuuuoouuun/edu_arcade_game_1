@@ -14,7 +14,7 @@ const out=process.env.ARCANA_EVIDENCE_DIR||'/tmp/arcana-recovery-entries';
   for(const [name,width,height] of [['desktop',1280,720],['mobile',844,390]]){
    const page=await browser.newPage({viewport:{width,height},hasTouch:name==='mobile'}),errors=[];
    page.on('pageerror',error=>errors.push(error.message));
-   await page.goto(base);await page.locator('.arcana-mode-picker').waitFor();
+   await page.goto(`${base}/?modes=1`);await page.locator('.arcana-mode-picker').waitFor();
    assert.equal(await page.locator('.arcana-mode-picker a[href="/frontier.html"]').count(),1);
    assert.equal(await page.locator('.arcana-mode-picker a[href="/rush.html"]').count(),1);
    await page.screenshot({path:path.join(out,`${name}-title.png`)});
@@ -33,7 +33,7 @@ const out=process.env.ARCANA_EVIDENCE_DIR||'/tmp/arcana-recovery-entries';
     modes.push({mode,...info});
     if(mode==='solo')await page.screenshot({path:path.join(out,`${name}-frontier.png`)});
    }
-   await page.goto(base);await page.locator('.arcana-mode-picker a[href="/rush.html"]').click();
+   await page.goto(`${base}/?modes=1`);await page.locator('.arcana-mode-picker a[href="/rush.html"]').click();
    await page.locator('#btn-play').click();await page.locator('#screen-town').waitFor();
    await page.locator('#btn-battle').click();
    await page.waitForFunction(()=>window.__rush?.mode==='play'&&window.__rush.state.tick>4);
@@ -42,7 +42,7 @@ const out=process.env.ARCANA_EVIDENCE_DIR||'/tmp/arcana-recovery-entries';
    await page.locator('#pause').click();const tick=await page.evaluate(()=>window.__rush.state.tick);
    await page.waitForTimeout(180);assert.equal(await page.evaluate(()=>window.__rush.state.tick),tick);
    await page.locator('#btn-resume').click();await page.waitForFunction(t=>window.__rush.state.tick>t,tick);
-   await page.goto(base);await page.locator('button.arcana-mode').click();await page.locator('.camp-legion-entry').click();
+   await page.goto(`${base}/?modes=1`);await page.locator('button.arcana-mode').click();await page.locator('.camp-legion-entry').click();
    await page.locator('[data-screen="legion"]').waitFor();
    const board=page.locator('canvas.legion-board'),rect=await board.boundingBox();
    const position={x:rect.width*.72,y:rect.height*.5};

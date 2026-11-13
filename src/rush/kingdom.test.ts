@@ -420,3 +420,4 @@ test('stage goals name their stage (1.0): the town can point an unmet goal at it
     assert.equal(g.stage, m ? Number(m[1]) : undefined, g.text);
   }
 });
+import './expedition.test.ts';
