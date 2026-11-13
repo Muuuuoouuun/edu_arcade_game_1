@@ -16,7 +16,7 @@ import rangerGlb from './models/gecko-ranger.glb?url';
 import bronGlb from './models/dwarf-guardian.glb?url';
 import bearGlb from './models/polar-bear.glb?url';
 import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, HERO_SPAWN, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
-import { heroDef, heroHidden, heroMaxHp, lobReach, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
+import { heroDef, heroHidden, heroMaxHp, lobReach, padInReach, superReady, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, wallParts, type Part } from './look.ts';
 import { loadForestTown, toFloat32 } from './townModel.ts';
 import { Batch } from './batch.ts';
@@ -103,6 +103,7 @@ export class RushView {
   private damageStages = { town: 'healthy', hero: 'healthy' };
   private hero = new Group();
   private heroFootprints: Mesh[] = [];
+  private superRing: Mesh | null = null;
   private heroBody = new Group();
   /** Team-blue cape per hero (cycle 29): the ally colour on the body itself, not only the ring underfoot. */
   private capes = new Map<HeroKind, Mesh>();
@@ -411,7 +412,11 @@ export class RushView {
   private buildHero() {
     const shadow = new Mesh(this.geo.blob, this.mats.blob); shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.02; shadow.scale.setScalar(0.62);
     const ring = new Mesh(this.geo.ring, this.mats.allyRing); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; ring.scale.setScalar(0.72);
-    this.hero.add(shadow, ring, this.heroBody);this.heroFootprints=[shadow,ring];
+    // Super-ready ring (cycle 85): the super colour around the team ring while the super is charged, so the eye on the hero
+    // sees it without looking at the button corner (the "super ready" toast is hidden since #107).
+    const charged = new Mesh(new RingGeometry(0.86, 1, 40), basic(PAL.super, 0.9)); charged.rotation.x = -Math.PI / 2; charged.position.y = 0.04; charged.visible = false;
+    this.superRing = charged;
+    this.hero.add(shadow, ring, charged, this.heroBody);this.heroFootprints=[shadow,ring];
     // Fallback body, replaced if the GLB loads.
     const placeholderGeo = bake([
       { geo: new CapsuleGeometry(0.36, 0.6, 4, 10), color: 0x3d8f5a, at: [0, 0.75, 0] },
@@ -903,6 +908,7 @@ export class RushView {
         // Shaman heal (cycle 59): a green ring out to the heal radius, so the cause of the refilled bars is visible.
         // Cycle 60: at 0.55 opacity the ink band won and it read as a grey smudge; 0.9 and a little longer reads green.
         case 'heal': this.ring(ev.x, ev.z, 0x5ee87a, ev.radius, 0.7, 0.9, true); break;
+        case 'superReady': this.ring(this.hero.position.x, this.hero.position.z, PAL.super, 2.4, 0.5, 0.95, true); break;
         case 'lap': // endless lap (cycle 47): a wide red ink ring around the town and a shake
           this.ring(TOWN.x, TOWN.z, 0xff4d5e, 7, 0.7, 0.95, true);
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.5);
@@ -995,6 +1001,17 @@ export class RushView {
     this.hero.visible = alive;
     this.hero.position.set(h.x, this.groundHeight(h.x,h.z), h.z);
     this.heroFootprints.forEach((m,i)=>this.conformDecal(m,.02+i*.01));
+    const ring = this.superRing;
+    if (ring) {
+      ring.visible = alive && superReady(s);
+      if (ring.visible) {
+        // Breathes on the super button's 0.9 s beat; steady under reduced motion.
+        const beat = reduced ? 0 : Math.sin(this.time * Math.PI * 2 / 0.9);
+        ring.scale.setScalar(0.95 * (1 + 0.07 * beat));
+        (ring.material as MeshBasicMaterial).opacity = 0.82 + 0.13 * beat;
+        this.conformDecal(ring, .04);
+      }
+    }
     this.heroBody.rotation.y = yaw(h.facing);
     this.heroRig?.motion.sync(s, h.x, h.z, worldDt, reduced, alive);
     this.setBar(this.heroBar, h.hp / heroMaxHp(s));
