@@ -44,7 +44,7 @@
           <p class="tag">직접 싸우고, 탑을 세우고, 마을을 지켜라.</p>
         </div>
         <div class="card title-card">
-          <div class="actions"><button id="btn-play" class="primary">마을로</button><button id="btn-demo">자동 시연</button></div>
+          <div class="actions"><button id="btn-play" class="primary" disabled>마을로</button><button id="btn-demo" disabled>자동 시연</button></div>
           <button id="btn-settings" class="link-button" type="button">설정</button>
           <details class="howto-box">
             <summary>조작법</summary>
@@ -53,8 +53,9 @@
               <li><b>공격</b> 공격 버튼 탭 = 자동 조준, 끌기 = 직접 조준 · 마우스 클릭</li>
               <li><b>필살기</b> 명중으로 충전, 보라 버튼 · Space</li>
               <li><b>궁수탑</b> 노란 원 위에서 건설·강화 · E</li>
+              <li><b>원정</b> 마을의 지도 단추로 청록의 숲과 서리산맥의 마을을 골라요</li>
             </ul>
-            <p class="note">전투는 5웨이브, 약 2~3분. 이기면 식량·목재로 마을을 키워 다음 전투가 강해집니다.</p>
+            <p class="note">전투는 5웨이브, 약 2~3분. 이기면 식량·목재로 마을을 키워 다음 전투가 강해지고, 처음 지킨 마을에서는 동료가 찾아옵니다.</p>
           </details>
         </div>
       </section>
@@ -134,7 +135,8 @@
             <ul>
               <li><b>게임</b> 아르카나 러시 팀</li>
               <li><b>개발 도움</b> Claude (Anthropic)</li>
-              <li><b>키아트·아이콘</b> OpenAI 이미지 생성, 게임 모델 렌더를 바탕으로</li>
+              <li><b>원정 이야기·동료</b> 아르카나 수비대 원정에서 옮겨 옴</li>
+              <li><b>키아트·아이콘·지도·동료 초상</b> OpenAI 이미지 생성, 게임 모델 렌더를 바탕으로</li>
               <li><b>글꼴</b> Bagel Fat One (SIL OFL)</li>
               <li><b>엔진</b> three.js · TypeScript · Vite</li>
             </ul>

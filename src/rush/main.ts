@@ -467,6 +467,8 @@ function showVisitor(c: keyof typeof COMPANIONS | undefined) {
 let lastReward = '';
 $('btn-play').addEventListener('click', () => { unlockAudio(); openTown(legacyNote); legacyNote = ''; });
 $('map-battle').addEventListener('click', () => start('play'));
+// The title buttons ship disabled so a tap before this script runs is not silently lost.
+for (const id of ['btn-play', 'btn-demo']) ($(id) as HTMLButtonElement).disabled = false;
 $('btn-demo').addEventListener('click', () => start('demo'));
 $('btn-battle').addEventListener('click', () => start('play'));
 $('btn-again').addEventListener('click', () => start('play'));
