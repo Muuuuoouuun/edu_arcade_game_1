@@ -295,6 +295,8 @@ export class TownView {
 
   /** Squash-and-stretch pop on a building that just levelled up. */
   bump(id: Upgrade) { const n = this.nodes.get(id); if (n) n.pop = 0.45; }
+  /** True while a building pop is running: the only motion in the island scene, so main draws every frame then (cycle 87). */
+  get animating() { for (const n of this.nodes.values()) if (n.pop > 0) return true; return false; }
 
   update(dt: number) {
     for (const n of this.nodes.values()) {

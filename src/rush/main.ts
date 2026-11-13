@@ -435,8 +435,9 @@ window.addEventListener('keydown', e => { if (!rendererLost && e.code === 'Escap
 // ---------- loop ----------
 // Menus (title, result, pause) sit over a still battlefield: redraw it every MENU_DRAW_EVERY frames (cycle 30).
 // The first menu frame, a resize and a quality change (both clear the canvas) draw at once.
+// The town island is just as still (cycle 87): the same rule, plus every frame while a building pop runs.
 const MENU_DRAW_EVERY = 4;
-let menuFrames = 0, forceDraw = true, drawnFrames = 0;
+let menuFrames = 0, townFrames = 0, forceDraw = true, drawnFrames = 0;
 function resize() {
   forceDraw = true;
   layoutStale = true;
@@ -489,9 +490,11 @@ function frame(now: number) {
     else if (seconds - townPickAt >= PRELOAD_AFTER) view.preloadHero(pick);
     // The kingdom has its own island scene; the battle scene is not drawn behind it.
     townView.update(dt);
-    view.renderer.render(townView.scene, townView.camera);
+    townFrames++;
+    if (forceDraw || townView.animating || townFrames % MENU_DRAW_EVERY === 1) { view.renderer.render(townView.scene, townView.camera); drawnFrames++; forceDraw = false; }
     town.layout(canvasRect);
   } else {
+    townFrames = 0;
     const menu = mode === 'title' || mode === 'result' || (mode === 'play' && paused);
     menuFrames = menu ? menuFrames + 1 : 0;
     if (!menu || forceDraw || menuFrames % MENU_DRAW_EVERY === 1) { view.render(); drawnFrames++; forceDraw = false; }

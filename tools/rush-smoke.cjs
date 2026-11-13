@@ -77,6 +77,9 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     check(await page.evaluate(() => __rush.kingdom.perks.attack === 1), 'kingdom persists across reload');
     check(await page.isDisabled('[data-stage="2"]'), 'stage 2 locked on a fresh kingdom');
     check(await page.isHidden('[data-endless]'), 'endless record flag tag hidden until endless opens');
+    // Cycle 87: a still town island redraws about one frame in four (every frame only during a building pop).
+    const still = await page.evaluate(() => new Promise(r => { setTimeout(() => { const d0 = __rush.drawnFrames, t0 = performance.now(); let n = 0; const f = () => { if (++n < 40) requestAnimationFrame(f); else r({ n, drawn: __rush.drawnFrames - d0, ms: Math.round(performance.now() - t0), mode: __rush.mode, q: __rush.quality.tier }); }; requestAnimationFrame(f); }, 1500); }));
+    check(still.drawn >= 6 && still.drawn <= 16, `still town redraws ${still.drawn} of ${still.n} frames (${still.ms} ms, ${still.mode}, ${still.q})`);
     check((await page.textContent('#town-goal')).includes('스테이지 1 승리') && await page.isDisabled('#town-goal'), 'fresh kingdom shows the first goal, not yet claimable');
     await page.click('#btn-hero');
     check(await page.isVisible('[data-train]'), 'hero button opens the hero card');
