@@ -135,7 +135,7 @@ export class RushView {
   /** Instanced batches: draw calls stay fixed however many enemies, shots and coins are alive. */
   private batches!: {
     body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>; flash: Record<EnemyKind, Batch>; ice: Record<EnemyKind, Batch>; ward: Record<EnemyKind, Batch>;
-    shadow: Batch; ring: Batch; frostRing: Batch; streak: Batch; barBg: Batch; barFill: Batch; shots: Record<Shot['owner'], Batch>; branchShots: Record<TowerBranch, Batch>; coins: Batch;
+    shadow: Batch; ring: Batch; frostRing: Batch; wardRing: Batch; streak: Batch; barBg: Batch; barFill: Batch; shots: Record<Shot['owner'], Batch>; branchShots: Record<TowerBranch, Batch>; coins: Batch;
   };
   private counts = { enemies: 0, shots: 0 };
   private tmp = { m: new Matrix4(), q: new Quaternion(), e: new Euler(), p: new Vector3(), s: new Vector3(), o: new Vector3() };
@@ -658,6 +658,9 @@ export class RushView {
       shadow: new Batch(this.scene, this.geo.blob, this.mats.blob, cap),
       ring: new Batch(this.scene, this.geo.ring, this.mats.enemyRing, cap),
       frostRing: new Batch(this.scene, this.geo.ring, basic(0x8fe6ff, 0.9), cap),
+      // Ward floor ring (cycle 92): a cue that does not depend on body colour (the purple boss and the magenta shaman
+      // change little under the shell); a little wider than the frost ring so both read when they stack.
+      wardRing: new Batch(this.scene, this.geo.ring, basic(0xe070e0, 0.9), cap),
       streak: new Batch(this.scene, this.geo.streak, this.mats.baked, cap),
       barBg: new Batch(this.scene, this.geo.bar, this.mats.barBg, cap, { order: 5 }),
       barFill: new Batch(this.scene, this.geo.barFill, this.mats.barEnemy, cap, { order: 5 }),
@@ -684,7 +687,7 @@ export class RushView {
     const B = this.batches, t = this.tmp;
     this.camera.updateMatrixWorld();
     this.frustum.setFromProjectionMatrix(t.m.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
-    const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), ...Object.values(B.ice), ...Object.values(B.ward), B.shadow, B.ring, B.frostRing, B.streak, B.barBg, B.barFill];
+    const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), ...Object.values(B.ice), ...Object.values(B.ward), B.shadow, B.ring, B.frostRing, B.wardRing, B.streak, B.barBg, B.barFill];
     const swift = s.diff.twist === 'swift';
     all.forEach(b => b.begin());
     for (const e of s.enemies) {
@@ -712,6 +715,7 @@ export class RushView {
       B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.25));
       B.ring.push(this.place(e.x, 0.03, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.15));
       if ((e.slowT ?? 0) > 0) B.frostRing.push(this.place(e.x, 0.05, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.5)); // frost slow
+      if (ward > 0 && (ward > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.wardRing.push(this.place(e.x, 0.055, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.7)); // ward
       if (swift && !reduced && e.kind !== 'boss' && !e.windup) B.streak.push(this.place(e.x, bob, e.z, 0, yaw(e.facing), 0, Math.max(0.6, r))); // swift lap: readable even on small enemies
     }
     all.forEach(b => b.end());
