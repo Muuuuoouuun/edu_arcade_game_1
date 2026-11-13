@@ -19,6 +19,8 @@ import { COMPANIONS, expeditionStage, firstClearNews, importLegacyCampaign, LEGA
 import { TownView } from './townScene.ts';
 import { addHit, POP_LIFE, popKey, type PopSlot } from './pops.ts';
 import { createFrameWatch, nextPref, parsePref, PREF_LABEL, resolveQuality, watchFrame, type QualityPref } from './quality.ts';
+import { mapFor } from './maps.ts';
+import { CRATE } from './data.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const params = new URLSearchParams(location.search);
@@ -636,4 +638,10 @@ else if (params.has('play')) start('play');
 
 // Read-only handle for automated browser checks.
 Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, get quality() { return { pref: qualityPref, tier: view.quality, autoDropped: frameWatch.dropped }; }, get drawnFrames() { return drawnFrames; }, get music() { return { mood: music.mood, enabled: music.enabled }; }, info: () => view.info(), enemyScreen, towerLevels: TOWER_LEVELS.length } });
+// Debug only (map checks): dress the running battle as another stage's layout, and an overhead camera on the whole arena.
+Object.assign((window as unknown as { __rush: object }).__rush, {
+  setStage(n: number) { const map = mapFor(n); state.diff.stage = n; state.map = map; state.crates = map.crates.map((c, i) => ({ id: 1 + i, x: c.x, z: c.z, hp: CRATE.hp, ...(c.gold ? { gold: c.gold } : {}) })); },
+  overhead(on: boolean) { view.overhead = on; },
+});
+if (params.has('overhead')) view.overhead = true;
 }

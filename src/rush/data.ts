@@ -12,21 +12,10 @@ export const ARENA = { minX: -15, maxX: 15, minZ: -26, maxZ: 13 } as const;
 export const TOWN = { x: 0, z: 10, radius: 2.6, hp: 1000 } as const;
 export const HERO_SPAWN: Vec = { x: 0, z: 6.1 };
 
-export const WALLS: readonly Block[] = [
-  { x: -4, z: -20, w: 2, d: 1 }, { x: 4, z: -20, w: 2, d: 1 },
-  { x: -4.5, z: -12, w: 3, d: 1 }, { x: 4.5, z: -12, w: 3, d: 1 },
-  { x: -3.2, z: -3.5, w: 1, d: 1.2 }, { x: 3.2, z: -3.5, w: 1, d: 1.2 },
-  { x: -9.5, z: 3, w: 1.2, d: 4 }, { x: 9.5, z: 3, w: 1.2, d: 4 },
-];
-
-/** Tall grass: walkable; a hero inside is hidden from enemies further than BUSH.reveal (see sim). */
-export const BUSHES: readonly Block[] = [
-  { x: -6, z: -7, w: 2.4, d: 2 }, { x: 6, z: -7, w: 2.4, d: 2 },
-  { x: -3.6, z: 1.5, w: 2, d: 1.6 }, { x: 3.6, z: 1.5, w: 2, d: 1.6 },
-];
+// Walls, tall-grass cover and crate positions are per region: see maps.ts (`RushState.map`).
+/** Cover that hides: a hero inside is hidden from enemies further than `reveal` (see sim). */
 export const BUSH = { reveal: 1.8, exposeAfterAttack: 1 } as const;
-/** Breakable wooden crates beside the lanes (never on them): cover that can be shot away. */
-export const CRATES: readonly Vec[] = [{ x: -2.2, z: -9 }, { x: 2.2, z: -9 }, { x: -8.5, z: -16 }, { x: 8.5, z: -16 }];
+/** Breakable crates beside the lanes (never on them): cover that can be shot away. */
 export const CRATE = { size: 1, hp: 120, gold: 4 } as const;
 
 /** Enemy lanes from the northern edge to the town gate. The last point sits on the town edge. */

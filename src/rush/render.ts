@@ -1,7 +1,7 @@
 // Three.js view of the Arcana Rush simulation. Reads RushState, never writes it.
 import {
   Box3, BufferAttribute, DodecahedronGeometry, BoxGeometry, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
-  DirectionalLight, Group, HemisphereLight, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera,
+  DataTexture, DirectionalLight, Group, HemisphereLight, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera,
   PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
   Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, BackSide, BufferGeometry, Points, ShaderMaterial, type AnimationAction, type Material, type MeshToonMaterial, type MeshStandardMaterial,
 } from 'three';
@@ -15,10 +15,12 @@ import simplifierUrl from 'three/addons/libs/meshopt_simplifier.module.js?url';
 import rangerGlb from './models/gecko-ranger.glb?url';
 import bronGlb from './models/dwarf-guardian.glb?url';
 import bearGlb from './models/polar-bear.glb?url';
-import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, HERO_SPAWN, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
+import { ARENA, ENEMIES, HEROES, HERO_SPAWN, PADS, TOWER_LEVELS, TOWN, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
 import { heroDef, heroHidden, heroMaxHp, lobReach, padInReach, superReady, wardBreakBurst, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, bakeColors, bakeMatrices, BOSS_LOOK, capColors, hullGeometry, mixHex, outlineMaterial, PAL, REGION_LOOK, toon, toonify, wallParts, type BossLook, type BossName, type Part, type RegionLook, type RegionName } from './look.ts';
 import { REGIONS, regionOf } from './expedition.ts';
+import { FOREST, type MapId, type MapLayout } from './maps.ts';
+import { bushParts, coverParts, crateParts, groundTexture, sceneryParts, SCENERY_LOOK } from './mapScenery.ts';
 import { loadForestTown, toFloat32 } from './townModel.ts';
 import { Batch } from './batch.ts';
 import { Particles } from './fx.ts';
@@ -27,7 +29,7 @@ import { TownView } from './townView.ts';
 import { TownDamage } from './townDamage.ts';
 import { battleFocus } from './battleCamera.ts';
 import { HeroMotion } from './heroMotion.ts';
-import { cliffColors, createGroundGeometry, createCliffGeometry, groundColors, heightAt, raycastTerrain } from './terrainElevation.ts';
+import { cliffColors, createGroundGeometry, createCliffGeometry, heightAt, raycastTerrain } from './terrainElevation.ts';
 
 export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'lob'; offset: Vec } | { kind: 'super'; offset: Vec } | null;
 
@@ -88,11 +90,13 @@ const yaw = (a: number) => -a;
 
 type Bar = { root: Group; fill: Mesh; width: number };
 type Fx = { mesh: Mesh; age: number; life: number; grow: number; fade: number; y0: number };
+/** Everything that belongs to one battlefield layout (maps.ts): built once per layout, shown while it is in play. */
+type MapKit = { root: Group; bushes: Mesh[]; crates: Map<number, { mesh: Mesh; wobble: number }>; ground: DataTexture };
 
 export class RushView {
   readonly renderer: WebGLRenderer;
   readonly scene = new Scene();
-  readonly camera = new PerspectiveCamera(42, 1, 0.5, 120);
+  readonly camera = new PerspectiveCamera(42, 1, 0.5, 160);
   private focus = new Vector3(0, 0, 4);
   private shake = 0;
   private townView: TownView | null = null;
@@ -124,7 +128,13 @@ export class RushView {
   private townBar: Bar;
   private fx: Fx[] = [];
   private particles: Particles;
-  private bushMeshes: Mesh[] = [];
+  /** Layout kits by map id; `kit` is the one in play (see useMap). */
+  private kits = new Map<MapId, MapKit>();
+  private kit: MapKit | null = null;
+  private styledMap: MapLayout | null = null;
+  private ground: Mesh | null = null;
+  /** Debug (?overhead=1 or __rush.overhead): look straight down on the whole arena to check a layout. */
+  overhead = false;
   /** Low quality hides these (cycle 12): ink hulls on walls, hedges and bushes, and the shore decor. */
   private terrainHulls: Mesh[] = [];
   private decor: Mesh[] = [];
@@ -144,7 +154,6 @@ export class RushView {
   private size = { w: 1, h: 1 };
   /** Model-sheet mode (?sheet=1): only characters on a flat background, for silhouette checks. */
   private sheetMode = false;
-  private crates = new Map<number, { mesh: Mesh; wobble: number }>();
   /** Instanced batches: draw calls stay fixed however many enemies, shots and coins are alive. */
   private batches!: {
     body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>; flash: Record<EnemyKind, Batch>; ice: Record<EnemyKind, Batch>; ward: Record<EnemyKind, Batch>;
@@ -235,8 +244,7 @@ export class RushView {
 
     this.particles = new Particles(this.scene, 360, (x,z) => this.groundHeight(x,z));
     this.buildGround();
-    this.buildWalls();
-    this.buildCover();
+    this.useMap(FOREST);
     this.buildTown();
     this.buildPads();
     this.townBar = this.makeBar(3.2, this.mats.barTown);
@@ -274,15 +282,16 @@ export class RushView {
   // ---------- static scenery ----------
   private buildGround() {
     const cx=(ARENA.minX+ARENA.maxX)/2,cz=(ARENA.minZ+ARENA.maxZ)/2;
-    const ground = new Mesh(createGroundGeometry(), toon(0xffffff,{vertexColors:true,rim:0}));
-    ground.name='rush-walkable-approach';
+    // The ground's colours come from a texture painted per layout (mapScenery.ts `groundTexture`, set in useMap):
+    // one colour per vertex smeared every edge across a metre.
+    const ground = new Mesh(createGroundGeometry(), toon(0xffffff,{rim:0}));
+    ground.name='rush-walkable-approach';this.ground=ground;
     const cliff = new Mesh(createCliffGeometry(), toon(0xffffff,{vertexColors:true,rim:.1}));
     cliff.name='rush-rock-foundation';
     const water = new Mesh(new PlaneGeometry(240,240),toon(PAL.water,{rim:0}));
     water.rotation.x=-Math.PI/2;water.position.set(cx,-1.3,cz);
     this.scene.add(water,cliff,ground);this.water=water;
     const snow=REGION_LOOK.snow;
-    this.regional(ground.geometry,groundColors(snow.ground));
     this.regional(cliff.geometry,cliffColors(snow.ground));
     // Short hedge sections follow the slope without bending stone cover or changing collision bounds.
     const parts:Part[]=[];
@@ -314,33 +323,15 @@ export class RushView {
     return mesh;
   }
 
-  private buildWalls() {
-    // The physical cover remains opaque but stone courses, end posts and teal timber
-    // make its volume legible. Every part stays within WALLS' unchanged x/z collider
-    // and below the old 1.42m top; all walls still share one baked mesh + hull.
-    const parts: Part[] = WALLS.flatMap(w => {
-      const base=heightAt(w.x,w.z),low=heightAt(w.x,w.z-w.d/2);
-      const raised=wallParts(w).map(p=>({...p,at:[p.at![0],p.at![1]+base,p.at![2]] as [number,number,number]}));
-      // A grounded footing fills the lower end of cover that straddles the ramp.
-      if(base>low)raised.push({geo:new BoxGeometry(w.w,base-low,w.d),color:PAL.stoneFoot,at:[w.x,(base+low)/2,w.z]});
-      return raised;
-    });
-    const geo = bake(parts), snow = REGION_LOOK.snow;
-    this.addBaked(geo, 0.05, undefined, 'terrain');
-    // Snow region: cooler stone, and snow on every upward face (the same mesh, a second colour set).
-    const cold = new BufferAttribute(bakeColors(parts.map(p => ({ ...p, color: mixHex(p.color, snow.wallCool, snow.wallMix) }))), 3);
-    if (snow.cap !== null) capColors(geo, cold, snow.cap);
-    this.regional(geo, cold);
-  }
-
   /** Register a second (snow) colour set for a static mesh; restyle() swaps the geometry's colour attribute. */
   private regional(geo: BufferGeometry, snow: Float32Array | BufferAttribute) {
     this.regionColors.push({ geo, sets: { forest: geo.getAttribute('color') as BufferAttribute, snow: snow instanceof BufferAttribute ? snow : new BufferAttribute(snow, 3) } });
   }
 
   /** Dress the scene for a stage: region palette, snowfall, and the region boss. Runs only when the stage changes. */
-  private restyle(stage: number) {
+  private restyle(stage: number, map: MapLayout) {
     this.styledStage = stage;
+    this.useMap(map);
     const region = regionOf(stage), look = REGION_LOOK[region];
     this.region = region;
     if (!this.sheetMode) (this.scene.background as Color).setHex(look.water);
@@ -359,51 +350,71 @@ export class RushView {
     this.bossKill = BOSS_LOOK[boss].kill;
   }
 
-  /** Tall-grass bushes (walk-through, see-through when the hero hides) and breakable crates. */
-  private buildCover() {
-    let seed = 3;
-    const r = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-    // Tall grass, not a hedge: a thin patch with dense leaning blades, so it reads as walk-through.
-    for (const b of BUSHES) {
-      // Part colours are slots (0 patch, 1-3 blades), filled per region.
-      const parts: Part[] = [{ geo: new BoxGeometry(b.w, 0.12, b.d), color: 0, at: [0, 0.06, 0] }];
-      const dress = (look: RegionLook) => parts.map(p => ({ ...p, color: p.color ? look.bushBlades[p.color - 1] : look.bushBase }));
-      const n = Math.round(b.w * b.d * 7);
-      for (let i = 0; i < n; i++) {
-        const x = (r() - 0.5) * (b.w - 0.2), z = (r() - 0.5) * (b.d - 0.2), h = 0.8 + r() * 0.5;
-        parts.push({ geo: new ConeGeometry(0.13, h, 4), color: 1 + i % 3, at: [x, h / 2 + 0.05, z], rot: [(r() - 0.5) * 0.5, r() * 3, (r() - 0.5) * 0.5] });
-      }
-      const geo = bake(dress(REGION_LOOK.forest));
-      this.regional(geo, bakeColors(dress(REGION_LOOK.snow)));
+  /** Show a layout's kit (walls, cover, crates, gates, scenery, painted ground), building it the first time. */
+  private useMap(map: MapLayout) {
+    this.styledMap = map;
+    let kit = this.kits.get(map.id);
+    if (!kit) { kit = this.buildKit(map); this.kits.set(map.id, kit); }
+    for (const k of this.kits.values()) k.root.visible = k === kit && !this.sheetMode;
+    this.kit = kit;
+    const mat = this.ground!.material as MeshToonMaterial;
+    if (mat.map !== kit.ground) { mat.map = kit.ground; mat.needsUpdate = true; }
+  }
+
+  private buildKit(map: MapLayout): MapKit {
+    const root = new Group(), spec = QUALITY[this.quality], region = REGION_LOOK[map.id];
+    root.name = `rush-map-${map.id}`;
+    const ground = groundTexture(map, region.ground, SCENERY_LOOK[map.id]);
+    ground.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
+    const inked = (geo: BufferGeometry, hullOf: BufferGeometry, width: number) => {
+      const mesh = new Mesh(geo, this.mats.baked), hull = new Mesh(hullGeometry(hullOf), outlineMaterial(width));
+      mesh.add(hull); hull.visible = spec.terrainOutlines; this.terrainHulls.push(hull);
+      root.add(mesh);
+      return mesh;
+    };
+    // Walls: every part stays inside its collider (wall.test.ts); one baked mesh and one hull for all of them.
+    const walls: Part[] = map.walls.flatMap(w => {
+      const base = heightAt(w.x, w.z), low = heightAt(w.x, w.z - w.d / 2);
+      const raised = coverParts(w, wallParts).map(p => ({ ...p, at: [p.at![0], p.at![1] + base, p.at![2]] as [number, number, number] }));
+      // A grounded footing fills the lower end of cover that straddles the ramp.
+      if (base > low) raised.push({ geo: new BoxGeometry(w.w, base - low, w.d), color: PAL.stoneFoot, at: [w.x, (base + low) / 2, w.z] });
+      return raised;
+    });
+    if (walls.length) { const g = bake(walls); inked(g, g, 0.05); }
+    // Gates, bridges and the land around the field: one mesh, ink on the gates, bridges, trees and rocks only.
+    const scenery = sceneryParts(map);
+    inked(bake(scenery.frame), bake(scenery.outlined), 0.05).name = 'rush-map-frame';
+    if (scenery.extra.length) {
+      const extra = new Mesh(bake(scenery.extra), this.mats.baked);
+      extra.name = 'rush-map-extra'; extra.visible = spec.decor; this.decor.push(extra);
+      root.add(extra);
+    }
+    // Hiding cover: walk-through, see-through when the hero hides in it.
+    const bushes = map.bushes.map((b, i) => {
+      const geo = bake(bushParts(b, map.id, 3 + i * 7));
+      const position = geo.getAttribute('position');
+      for (let k = 0; k < position.count; k++) position.setY(k, position.getY(k) + heightAt(b.x + position.getX(k), b.z + position.getZ(k)) - heightAt(b.x, b.z));
+      position.needsUpdate = true; geo.computeVertexNormals();
       const mat = toon(0xffffff, { vertexColors: true, rim: 0.3 });
       mat.transparent = true;
-      const mesh = new Mesh(geo, mat);
-      const hull = new Mesh(hullGeometry(geo), outlineMaterial(0.03));
-      mesh.add(hull);
-      this.terrainHulls.push(hull);
-      const position=geo.getAttribute('position');
-      for(let i=0;i<position.count;i++)position.setY(i,position.getY(i)+heightAt(b.x+position.getX(i),b.z+position.getZ(i))-heightAt(b.x,b.z));
-      position.needsUpdate=true;geo.computeVertexNormals();
-      // Rebuild the outline after the grass patch conforms to its ground.
-      hull.geometry.dispose();hull.geometry=hullGeometry(geo);
-      mesh.position.set(b.x, heightAt(b.x,b.z), b.z);
+      const mesh = new Mesh(geo, mat), hull = new Mesh(hullGeometry(geo), outlineMaterial(0.03));
+      mesh.add(hull); hull.visible = spec.terrainOutlines; this.terrainHulls.push(hull);
+      mesh.position.set(b.x, heightAt(b.x, b.z), b.z);
       mesh.renderOrder = 6; // drawn after the hero so the see-through state shows them
-      this.scene.add(mesh);
-      this.bushMeshes.push(mesh);
-    }
-    const crateGeo = bake([
-      { geo: new BoxGeometry(CRATE.size, CRATE.size, CRATE.size), color: 0xc98a4a, at: [0, CRATE.size / 2, 0] },
-      { geo: new BoxGeometry(CRATE.size * 1.04, CRATE.size * 0.14, CRATE.size * 1.04), color: 0x8a5428, at: [0, CRATE.size * 0.78, 0] },
-      { geo: new BoxGeometry(CRATE.size * 1.04, CRATE.size * 0.14, CRATE.size * 1.04), color: 0x8a5428, at: [0, CRATE.size * 0.22, 0] },
-    ]);
-    const crateHull = hullGeometry(crateGeo);
-    CRATES.forEach((c, i) => {
-      const mesh = new Mesh(crateGeo, this.mats.baked);
-      mesh.add(new Mesh(crateHull, outlineMaterial(0.04)));
-      mesh.position.set(c.x, heightAt(c.x,c.z), c.z);
-      this.scene.add(mesh);
-      this.crates.set(1 + i, { mesh, wobble: 0 });
+      root.add(mesh);
+      return mesh;
     });
+    const crates = new Map<number, { mesh: Mesh; wobble: number }>();
+    const crateGeo = [false, true].map(treasure => { const geo = bake(crateParts(treasure, map.id)); return { geo, hull: hullGeometry(geo) }; });
+    map.crates.forEach((c, i) => {
+      const kind = crateGeo[c.gold ? 1 : 0], mesh = new Mesh(kind.geo, this.mats.baked);
+      mesh.add(new Mesh(kind.hull, outlineMaterial(0.04)));
+      mesh.position.set(c.x, heightAt(c.x, c.z), c.z);
+      root.add(mesh);
+      crates.set(1 + i, { mesh, wobble: 0 });
+    });
+    this.scene.add(root);
+    return { root, bushes, crates, ground };
   }
 
   private buildTown() {
@@ -1020,7 +1031,7 @@ export class RushView {
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.45);
           break;
         case 'crateHit': {
-          const c = this.crates.get(ev.id);
+          const c = this.kit?.crates.get(ev.id);
           if (c) c.wobble = 0.18;
           fx.emit({ kind: 'shard', n: 3, color: 0xc98a4a, at: [ev.x, 0.7, ev.z], speed: 3, up: 3, size: 0.08, life: 0.3 });
           break;
@@ -1121,7 +1132,7 @@ export class RushView {
     const worldDt = held ? 0 : dt;
     this.time += worldDt;
     const stage = s.diff.stage ?? 1;
-    if (stage !== this.styledStage) this.restyle(stage);
+    if (stage !== this.styledStage || s.map !== this.styledMap) this.restyle(stage, s.map);
     this.syncSnow(dt, reduced);
     const h = s.hero, alive = h.downT <= 0, def = heroDef(s);
     this.syncRespawn(h.downT, def.respawn);
@@ -1159,15 +1170,16 @@ export class RushView {
     this.drawShotsAndCoins(s);
     // Cover: bushes turn see-through while the hero hides in one; broken crates disappear.
     const hiding = alive && heroHidden(s);
-    BUSHES.forEach((b, i) => {
-      const mesh = this.bushMeshes[i], mat = mesh.material as Material & { opacity: number };
+    const kit = this.kit!;
+    s.map.bushes.forEach((b, i) => {
+      const mesh = kit.bushes[i], mat = mesh.material as Material & { opacity: number };
       const inside = hiding && Math.abs(h.x - b.x) <= b.w / 2 && Math.abs(h.z - b.z) <= b.d / 2;
       mat.opacity = inside ? 0.4 : 1;
       mat.depthWrite = !inside;
       mesh.children[0].visible = !inside;
     });
     const standing = new Set(s.crates.map(c => c.id));
-    for (const [id, c] of this.crates) {
+    for (const [id, c] of kit.crates) {
       c.mesh.visible = standing.has(id);
       c.wobble = Math.max(0, c.wobble - worldDt);
       const k = Math.sin(c.wobble * 60) * c.wobble * 0.5;
@@ -1289,6 +1301,12 @@ export class RushView {
   }
 
   private updateCamera(s: RushState, dt: number) {
+    if (this.overhead) {
+      const cx = (ARENA.minX + ARENA.maxX) / 2, cz = (ARENA.minZ + ARENA.maxZ) / 2 - 2;
+      this.focus.set(cx, 0, cz);
+      this.camera.position.set(cx, 88, cz + 0.01); this.camera.lookAt(cx, 0, cz);
+      return;
+    }
     const h = s.hero, target = battleFocus(h, h.downT > 0, this.portrait);
     if (this.sheetMode) target.y = 0;
     this.focus.lerp(target, 1 - Math.exp(-6 * dt));

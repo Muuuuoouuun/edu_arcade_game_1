@@ -2,8 +2,9 @@
 // Pure TypeScript: no DOM, no clock, no Math.random. The same seed and command stream give the same state,
 // so this module can run in tests, in the browser and later on an authoritative server.
 import {
-  ARENA, BUSH, BUSHES, CRATE, CRATES, ECONOMY, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WALLS, WAVES,
+  ARENA, BUSH, CRATE, ECONOMY, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WAVES,
   type Block, heroStats, type EnemyDef, type EnemyKind, type HeroDef, type HeroKind, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
+import { heroPaceAt, inBush, mapFor, paceAt, slideAt, type MapLayout } from './maps.ts';
 
 export type Phase = 'prep' | 'wave' | 'won' | 'lost';
 
@@ -37,7 +38,8 @@ export interface Shot {
 /** branch is chosen when Lv1 becomes Lv2 and kept at Lv3. */
 export interface Tower { level: number; cd: number; facing: number; branch?: TowerBranch }
 export interface Coin { id: number; x: number; z: number; value: number; life: number }
-export interface Crate { id: number; x: number; z: number; hp: number }
+/** gold: a treasure crate's own drop (maps.ts); absent = CRATE.gold. */
+export interface Crate { id: number; x: number; z: number; hp: number; gold?: number }
 export interface GroupProgress { spawned: number; timer: number }
 
 export type RushEvent =
@@ -110,6 +112,8 @@ export const BASE_DIFFICULTY: Difficulty = { enemyHp: 1, enemyCount: 1, enemyDam
 
 export interface RushState {
   seed: number; rng: number; tick: number; t: number; phase: Phase; mods: RushMods; diff: Difficulty;
+  /** The battlefield of this stage's region (maps.ts): walls, cover, crates and zones. Never changes during a battle. */
+  map: MapLayout;
   /** Index of the current wave while fighting, or of the next wave while preparing. */
   wave: number; prepT: number; groups: GroupProgress[];
   town: { hp: number; maxHp: number }; gold: number;
@@ -158,15 +162,15 @@ function pushOut(p: Vec, r: number, b: Block): boolean {
   else if (i === 2) p.z = b.z + hz + r; else p.z = b.z - hz - r;
   return true;
 }
-function insideBlock(x: number, z: number, pad: number): boolean {
-  return WALLS.some(b => Math.abs(x - b.x) <= b.w / 2 + pad && Math.abs(z - b.z) <= b.d / 2 + pad);
+function insideBlock(s: RushState, x: number, z: number, pad: number): boolean {
+  return s.map.walls.some(b => Math.abs(x - b.x) <= b.w / 2 + pad && Math.abs(z - b.z) <= b.d / 2 + pad);
 }
 const crateBlock = (c: Crate): Block => ({ x: c.x, z: c.z, w: CRATE.size, d: CRATE.size });
 const inCrate = (s: RushState, x: number, z: number) =>
   s.crates.find(c => Math.abs(x - c.x) <= CRATE.size / 2 && Math.abs(z - c.z) <= CRATE.size / 2) ?? null;
-function confine(p: Vec, r: number, s?: RushState): void {
-  for (const b of WALLS) pushOut(p, r, b);
-  if (s) for (const c of s.crates) pushOut(p, r, crateBlock(c));
+function confine(p: Vec, r: number, s: RushState): void {
+  for (const b of s.map.walls) pushOut(p, r, b);
+  for (const c of s.crates) pushOut(p, r, crateBlock(c));
   const tr = TOWN.radius + r, dx = p.x - TOWN.x, dz = p.z - TOWN.z, d = len(dx, dz);
   if (d < tr) {
     if (d > 1e-9) { p.x = TOWN.x + (dx / d) * tr; p.z = TOWN.z + (dz / d) * tr; } else p.z = TOWN.z - tr;
@@ -177,13 +181,13 @@ function confine(p: Vec, r: number, s?: RushState): void {
 
 // ---------- creation ----------
 export function createRush(seed = 1, mods: RushMods = NO_MODS, diff: Difficulty = BASE_DIFFICULTY, heroKind: HeroKind = 'ranger'): RushState {
-  const townHp = Math.round(TOWN.hp * mods.townHp);
+  const townHp = Math.round(TOWN.hp * mods.townHp), map = mapFor(diff.stage);
   return {
-    seed, rng: seed | 0, tick: 0, t: 0, phase: 'prep', mods: { ...mods }, diff: { ...diff }, wave: 0, prepT: ECONOMY.prepTime, groups: [],
+    seed, rng: seed | 0, tick: 0, t: 0, phase: 'prep', mods: { ...mods }, diff: { ...diff }, map, wave: 0, prepT: ECONOMY.prepTime, groups: [],
     town: { hp: townHp, maxHp: townHp }, gold: ECONOMY.startGold + (mods.startGold ?? 0),
     hero: { kind: heroKind, x: HERO_SPAWN.x, z: HERO_SPAWN.z, hp: Math.round(HEROES[heroKind].hp * mods.heroHp), facing: -Math.PI / 2, ammo: HEROES[heroKind].ammoMax, reloadT: 0, fireCd: 0, superCharge: 0, downT: 0, calmT: 0, exposedUntil: 0 },
-    enemies: [], shots: [], towers: PADS.map(() => null), coins: [], nextId: 1 + CRATES.length,
-    crates: CRATES.map((c, i) => ({ id: 1 + i, x: c.x, z: c.z, hp: CRATE.hp })),
+    enemies: [], shots: [], towers: PADS.map(() => null), coins: [], nextId: 1 + map.crates.length,
+    crates: map.crates.map((c, i) => ({ id: 1 + i, x: c.x, z: c.z, hp: CRATE.hp, ...(c.gold ? { gold: c.gold } : {}) })),
     stats: { kills: 0, shots: 0, hits: 0, supers: 0, goldEarned: 0, heroDowns: 0 },
     events: [],
   };
@@ -200,7 +204,7 @@ export const superReady = (s: RushState) => s.hero.superCharge >= heroDef(s).sup
 /** Hero inside tall grass and not recently attacking: only enemies within BUSH.reveal can see them. */
 export function heroHidden(s: RushState): boolean {
   const h = s.hero;
-  return s.t >= h.exposedUntil && BUSHES.some(b => Math.abs(h.x - b.x) <= b.w / 2 && Math.abs(h.z - b.z) <= b.d / 2);
+  return s.t >= h.exposedUntil && inBush(s.map, h.x, h.z);
 }
 /** Nearest pad within reach of the hero, or -1. */
 export function padInReach(s: RushState): number {
@@ -366,8 +370,10 @@ function updateHero(s: RushState, cmd: Command) {
   const m = cmd.move;
   if (m && (m.x !== 0 || m.z !== 0)) {
     const l = len(m.x, m.z), k = Math.min(1, l) / l;
-    h.x += m.x * k * heroDef(s).speed * STEP;
-    h.z += m.z * k * heroDef(s).speed * STEP;
+    // Ground zones (maps.ts): the hero wades the forest stream slower; the snow region's ice is faster for everyone.
+    const v = heroDef(s).speed * heroPaceAt(s.map, h.x, h.z) * STEP;
+    h.x += m.x * k * v;
+    h.z += m.z * k * v;
     h.facing = Math.atan2(m.z, m.x);
   }
   confine(h, heroDef(s).radius, s);
@@ -538,7 +544,7 @@ function hurtCrate(s: RushState, c: Crate, damage: number) {
   if (c.hp > 0) { s.events.push({ type: 'crateHit', id: c.id, x: c.x, z: c.z }); return; }
   s.crates = s.crates.filter(o => o !== c);
   s.events.push({ type: 'crateBreak', id: c.id, x: c.x, z: c.z });
-  s.coins.push({ id: s.nextId++, x: c.x, z: c.z, value: CRATE.gold, life: ECONOMY.coinLife });
+  s.coins.push({ id: s.nextId++, x: c.x, z: c.z, value: c.gold ?? CRATE.gold, life: ECONOMY.coinLife });
 }
 
 // ---------- enemies ----------
@@ -625,7 +631,7 @@ function updateEnemies(s: RushState) {
     if ((e.wardT ?? 0) > 0) e.wardT = Math.max(0, e.wardT! - STEP);
     const pace = slowed ? (e.kind === 'boss' ? TOWER_BRANCH.frost.bossSlow : TOWER_BRANCH.frost.slow) : 1;
     // Knockback impulse decays quickly.
-    e.x += e.kx * STEP; e.z += e.kz * STEP;
+    if (e.kx !== 0 || e.kz !== 0) { const slide = slideAt(s.map, e.x, e.z) * STEP; e.x += e.kx * slide; e.z += e.kz * slide; }
     const decay = Math.exp(-8 * STEP);
     e.kx *= decay; e.kz *= decay;
 
@@ -676,7 +682,7 @@ function updateEnemies(s: RushState) {
       }
       const dx = goal.x - e.x, dz = goal.z - e.z, d = len(dx, dz);
       if (d > 1e-6) {
-        const step = Math.min(d, def.speed * pace * (s.diff.twist === 'swift' ? TWIST.swiftSpeed : 1) * STEP);
+        const step = Math.min(d, def.speed * pace * paceAt(s.map, e.x, e.z) * (s.diff.twist === 'swift' ? TWIST.swiftSpeed : 1) * STEP);
         e.x += (dx / d) * step; e.z += (dz / d) * step;
         e.facing = Math.atan2(dz, dx);
       }
@@ -814,7 +820,7 @@ function updateShots(s: RushState) {
       continue;
     }
     shot.x += shot.vx * STEP; shot.z += shot.vz * STEP; shot.life -= STEP;
-    if (insideBlock(shot.x, shot.z, 0) || shot.x < ARENA.minX || shot.x > ARENA.maxX || shot.z < ARENA.minZ || shot.z > ARENA.maxZ) {
+    if (insideBlock(s, shot.x, shot.z, 0) || shot.x < ARENA.minX || shot.x > ARENA.maxX || shot.z < ARENA.minZ || shot.z > ARENA.maxZ) {
       s.events.push({ type: 'spark', x: shot.x, z: shot.z });
       continue;
     }

@@ -1,21 +1,62 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WALLS } from './data.ts';
-import { wallParts } from './look.ts';
+import { ARENA, CRATE, LANES } from './data.ts';
+import { FOREST, MAPS, SNOW, inWater, onIce } from './maps.ts';
+import { bake, REGION_LOOK, wallParts } from './look.ts';
+import { bushParts, coverParts, crateParts, decorSpot, gateParts, groundPaintAt, partTriangles, SCENERY_LOOK, sceneryParts } from './mapScenery.ts';
 
-test('every stone and timber cover part remains inside the existing wall collider', () => {
-  for (const wall of WALLS) {
-    const parts = wallParts(wall);
-    assert.ok(parts.length >= 8, 'each wall has structural courses and posts');
-    for (const part of parts) {
-      const at=part.at!;
-      part.geo.computeBoundingBox();
-      const bounds=part.geo.boundingBox!;
-      const epsilon=1e-6;
-      assert.ok(at[0]+bounds.min.x>=wall.x-wall.w/2-epsilon && at[0]+bounds.max.x<=wall.x+wall.w/2+epsilon, 'mesh stays inside x collider');
-      assert.ok(at[2]+bounds.min.z>=wall.z-wall.d/2-epsilon && at[2]+bounds.max.z<=wall.z+wall.d/2+epsilon, 'mesh stays inside z collider');
-      assert.ok(at[1]+bounds.min.y>=-epsilon && at[1]+bounds.max.y<=1.42+epsilon, 'cover stays grounded and no taller than before');
-      part.geo.dispose();
+const bounds = (parts: Parameters<typeof bake>[0]) => { const g = bake(parts); g.computeBoundingBox(); const b = g.boundingBox!; g.dispose(); return b; };
+const MAX_HEIGHT = { stone: 1.42, ice: 1.42, log: 1.2, outcrop: 3 } as const;
+
+test('every cover model (stone wall, log, ice rock, outcrop) stays inside its collider', () => {
+  for (const map of Object.values(MAPS)) for (const wall of map.walls) {
+    const parts = coverParts(wall, wallParts);
+    assert.ok(parts.length >= 6, `${wall.kind}: more than a plain block`);
+    const b = bounds(parts), e = 1e-4;
+    assert.ok(b.min.x >= wall.x - wall.w / 2 - e && b.max.x <= wall.x + wall.w / 2 + e, `${map.id} ${wall.kind} at ${wall.x},${wall.z}: x ${b.min.x}..${b.max.x}`);
+    assert.ok(b.min.z >= wall.z - wall.d / 2 - e && b.max.z <= wall.z + wall.d / 2 + e, `${map.id} ${wall.kind} at ${wall.x},${wall.z}: z ${b.min.z}..${b.max.z}`);
+    assert.ok(b.min.y >= -e && b.max.y <= MAX_HEIGHT[wall.kind] + e, `${wall.kind}: height ${b.max.y}`);
+    // A solid thing looks solid: the model fills most of the collider's footprint.
+    assert.ok(b.max.x - b.min.x >= wall.w * 0.9 && b.max.z - b.min.z >= wall.d * 0.85, `${wall.kind}: fills its collider`);
+  }
+});
+
+test('crates and hiding cover: models match their footprints in both regions', () => {
+  for (const id of ['forest', 'snow'] as const) {
+    for (const treasure of [false, true]) {
+      const b = bounds(crateParts(treasure, id));
+      assert.ok(b.max.x - b.min.x <= CRATE.size + 0.02 && b.max.z - b.min.z <= CRATE.size + 0.02 && b.max.y <= CRATE.size * 1.15, `${id} crate`);
     }
+    for (const bush of MAPS[id].bushes) {
+      const b = bounds(bushParts(bush, id, 3));
+      assert.ok(b.max.x - b.min.x <= bush.w + 0.5 && b.max.z - b.min.z <= bush.d + 0.5 && b.max.y < 1.7, `${id} cover`);
+    }
+  }
+});
+
+test('painted ground: roads, the stream and the ice read as themselves; gates stand behind every lane start', () => {
+  const f = SCENERY_LOOK.forest, s = SCENERY_LOOK.snow, fp = REGION_LOOK.forest.ground, sp = REGION_LOOK.snow.ground;
+  assert.ok([fp.road, fp.roadEdge].includes(groundPaintAt(FOREST, fp, f, 0, -20)));
+  assert.ok(inWater(FOREST, 6, -9.9) && [f.water, f.waterLight].includes(groundPaintAt(FOREST, fp, f, 6, -9.9)));
+  assert.ok(onIce(SNOW, 0, -13) && [s.ice, s.iceLight].includes(groundPaintAt(SNOW, sp, s, 0, -13)));
+  assert.equal(groundPaintAt(SNOW, sp, s, 0, 10), sp.plaza);
+  // The road runs on from each lane start to its gate.
+  for (const lane of LANES) assert.ok([fp.road, fp.roadEdge].includes(groundPaintAt(FOREST, fp, f, lane[0].x, ARENA.minZ + 0.2)));
+  for (const id of ['forest', 'snow'] as const) for (const lane of LANES) {
+    const b = bounds(gateParts(lane[0], id));
+    assert.ok(b.max.z <= ARENA.minZ + 0.4 && b.max.z > ARENA.minZ - 0.2, `${id} gate front at the north edge (${b.max.z})`);
+    assert.ok(Math.abs((b.min.x + b.max.x) / 2 - lane[0].x) < 1 && b.max.y > 3, 'centred on the lane and taller than any actor');
+  }
+});
+
+test('scenery: decoration keeps off everything that is played, and stays inside the triangle budget', () => {
+  for (const map of Object.values(MAPS)) {
+    for (const lane of LANES) for (const p of lane) assert.equal(decorSpot(map, p.x, p.z), false);
+    for (const b of [...map.walls, ...map.bushes]) assert.equal(decorSpot(map, b.x, b.z), false);
+    const sc = sceneryParts(map);
+    assert.ok(sc.outlined.length > 100 && sc.extra.length > 300, `${map.id}: gates, trees and field decoration exist`);
+    // Body + ink hull of the framed set, plus the high-tier extras: under 30k triangles per region.
+    const tris = partTriangles(sc.frame) + partTriangles(sc.outlined) + partTriangles(sc.extra);
+    assert.ok(tris < 30000, `${map.id}: ${tris} scenery triangles`);
   }
 });

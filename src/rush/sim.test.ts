@@ -138,10 +138,10 @@ test('design pillars: hero alone or towers alone lose, both together win', () =>
 
 test('the rules core stays engine-free (portable to a server or another renderer)', async () => {
   const { readFile } = await import('node:fs/promises');
-  for (const file of ['sim.ts', 'data.ts', 'bot.ts', 'kingdom.ts', 'stages.ts']) {
+  for (const file of ['sim.ts', 'data.ts', 'maps.ts', 'bot.ts', 'kingdom.ts', 'stages.ts']) {
     const src = await readFile(new URL(`./${file}`, import.meta.url), 'utf8');
     const imports = [...src.matchAll(/from '([^']+)'/g)].map(m => m[1]);
-    assert.ok(imports.every(i => ['./data.ts', './sim.ts', './kingdom.ts', './stages.ts'].includes(i)), `${file} imports only rules modules: ${imports.join(', ')}`);
+    assert.ok(imports.every(i => ['./data.ts', './maps.ts', './sim.ts', './kingdom.ts', './stages.ts'].includes(i)), `${file} imports only rules modules: ${imports.join(', ')}`);
     const code = src.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
     for (const banned of ['Math.random', 'document.', 'window.', 'performance.', 'Date.now', 'requestAnimationFrame']) {
       assert.ok(!code.includes(banned), `${file} must not use ${banned}`);
@@ -150,7 +150,8 @@ test('the rules core stays engine-free (portable to a server or another renderer
 });
 
 test('tall grass hides the hero from enemies beyond 1.8 m; attacking reveals for a second', async () => {
-  const { BUSHES, BUSH } = await import('./data.ts');
+  const { BUSH } = await import('./data.ts');
+  const BUSHES = (await import('./maps.ts')).FOREST.bushes;
   const { heroHidden } = await import('./sim.ts');
   const s = createRush(1);
   const b = BUSHES[0];
@@ -173,7 +174,8 @@ test('tall grass hides the hero from enemies beyond 1.8 m; attacking reveals for
 });
 
 test('crates block movement and shots, break after enough damage and drop gold', async () => {
-  const { CRATES, CRATE } = await import('./data.ts');
+  const { CRATE } = await import('./data.ts');
+  const CRATES = (await import('./maps.ts')).FOREST.crates;
   const s = createRush(1);
   const c = CRATES[0];
   s.hero.x = c.x; s.hero.z = c.z + 3;
@@ -595,3 +597,114 @@ test('ward breaks (cycle 91): one step summarised as a count, a centre and a cov
   assert.ok(swing!.radius >= 1.2 - 1e-9, 'the radius reaches the furthest break');
 });
 
+
+// ---------- battlefield layouts (maps.ts) ----------
+test('layout follows the region: stages 6-10 fight on the snow map, everything else in the forest', async () => {
+  const { mapFor, FOREST, SNOW } = await import('./maps.ts');
+  const { regionOf } = await import('./expedition.ts');
+  for (let stage = 1; stage <= 11; stage++) assert.equal(mapFor(stage).id, regionOf(stage), `stage ${stage}`);
+  assert.equal(createRush(1).map, FOREST, 'a battle without a stage is the forest');
+  const snow = createRush(1, NO_MODS, { enemyHp: 1, enemyCount: 1, enemyDamage: 1, stage: 7 });
+  assert.equal(snow.map, SNOW);
+  assert.deepEqual(snow.crates.map(c => [c.x, c.z]), SNOW.crates.map(c => [c.x, c.z]));
+  assert.equal(snow.nextId, 1 + SNOW.crates.length);
+  // The two halves of the campaign do not share a wall, a crate spot or a zone; only the cover by the gate road.
+  const key = (b: { x: number; z: number }) => `${b.x},${b.z}`;
+  assert.equal(FOREST.walls.filter(w => SNOW.walls.some(o => key(o) === key(w) && o.kind === w.kind)).length, 0);
+  assert.equal(FOREST.crates.filter(c => SNOW.crates.some(o => key(o) === key(c))).length, 0);
+  assert.equal(FOREST.bushes.filter(c => SNOW.bushes.some(o => key(o) === key(c))).length, 2);
+  assert.ok(FOREST.stream && !SNOW.stream && SNOW.ice.length === 3 && FOREST.ice.length === 0);
+});
+
+test('layouts keep the lanes, the town, the pads and the barricade strip clear, and are mirror-symmetric', async () => {
+  const { MAPS, laneDistance, onBridge, pathDistance, onIce } = await import('./maps.ts');
+  const { ARENA, LANES, PADS, TOWN, HERO_SPAWN, CRATE } = await import('./data.ts');
+  const gap = (b: { x: number; z: number; w: number; d: number }, p: { x: number; z: number }) => Math.hypot(Math.max(0, Math.abs(p.x - b.x) - b.w / 2), Math.max(0, Math.abs(p.z - b.z) - b.d / 2));
+  /** Smallest distance from a block to any lane centre line (sampled every 10 cm along the lanes). */
+  const laneGap = (b: { x: number; z: number; w: number; d: number }) => {
+    let best = Infinity;
+    for (const lane of LANES) for (let i = 1; i < lane.length; i++) for (let u = 0; u <= 1; u += 0.1 / Math.hypot(lane[i].x - lane[i - 1].x, lane[i].z - lane[i - 1].z))
+      best = Math.min(best, gap(b, { x: lane[i - 1].x + (lane[i].x - lane[i - 1].x) * u, z: lane[i - 1].z + (lane[i].z - lane[i - 1].z) * u }));
+    return best;
+  };
+  for (const m of Object.values(MAPS)) {
+    const solids = [...m.walls, ...m.crates.map(c => ({ ...c, w: CRATE.size, d: CRATE.size }))];
+    for (const b of solids) {
+      assert.ok(b.x - b.w / 2 >= ARENA.minX && b.x + b.w / 2 <= ARENA.maxX && b.z - b.d / 2 >= ARENA.minZ && b.z + b.d / 2 <= ARENA.maxZ, `${m.id}: inside the arena`);
+      // The boss (radius 1.15) and a brute pushed aside by a crowd still pass: 1.3 m from every lane centre line.
+      assert.ok(laneGap(b) >= 1.3, `${m.id}: solid at ${b.x},${b.z} is ${laneGap(b).toFixed(2)} m from a lane`);
+      assert.ok(gap(b, TOWN) >= TOWN.radius + 1.5 && gap(b, HERO_SPAWN) >= 1.5, `${m.id}: clear of the town and the hero's start`);
+      for (const p of PADS) assert.ok(gap(b, p) >= 2, `${m.id}: clear of a tower pad`);
+      // Barricade strip: the lanes 4-9 m north of the town stay free of solid cover.
+      if (b.z + b.d / 2 > TOWN.z - 9 && b.z - b.d / 2 < TOWN.z - 4) assert.ok(laneGap(b) >= 3, `${m.id}: barricade strip`);
+    }
+    for (const list of [m.walls, m.bushes, m.crates, m.ice] as const) for (const b of list)
+      assert.ok(list.some(o => o.x === -b.x && o.z === b.z), `${m.id}: mirrored at ${b.x},${b.z}`);
+    // Every lane crosses the stream on a bridge, and every ice sheet lies on a lane.
+    if (m.stream) for (const lane of LANES) for (let z = -26; z < 8; z += 0.05) {
+      const i = lane.findIndex((p, k) => k > 0 && z >= lane[k - 1].z && z <= p.z);
+      if (i < 1) continue;
+      const u = (z - lane[i - 1].z) / (lane[i].z - lane[i - 1].z), x = lane[i - 1].x + (lane[i].x - lane[i - 1].x) * u;
+      for (const dx of [-1.2, 0, 1.2]) if (pathDistance(x + dx, z, m.stream.path) < m.stream.half) assert.ok(onBridge(m, x + dx, z), `bridge under the lane at ${x + dx},${z}`);
+    }
+    for (const b of m.ice) assert.ok(laneDistance(b.x, b.z) < 0.5 && onIce(m, b.x, b.z));
+  }
+});
+
+test('zones: the hero wades the stream slowly but crosses a bridge at full speed; ice is fast and slippery; treasure pays more', async () => {
+  const { FOREST, SNOW, ZONE, inWater, onIce } = await import('./maps.ts');
+  const { CRATE, ENEMIES } = await import('./data.ts');
+  const walk = (x: number) => { const s = createRush(1); s.hero.x = x; s.hero.z = -9.4; steps(s, 12, { move: { x: 0, z: -1 } }); return -9.4 - s.hero.z; };
+  assert.ok(inWater(FOREST, 6, -10) && !inWater(FOREST, 0, -10));
+  const bridge = walk(0), wading = walk(6);
+  assert.ok(Math.abs(bridge - HERO.speed * 0.2) < 1e-6, `bridge: full speed (${bridge.toFixed(2)} m in 0.2 s)`);
+  assert.ok(Math.abs(wading - bridge * ZONE.streamSpeed) < 1e-6, `wading is slower (${wading.toFixed(2)} m)`);
+  // Enemies keep their pace in the stream (the guard bot's forest battles are exactly the pre-region ones).
+  const f = createRush(1), wet = enemy(f, 'grunt', 6, -10), dry = enemy(f, 'grunt', 6, -6);
+  f.hero.x = 14; f.hero.z = 12; wet.wp = dry.wp = 3;
+  const wet0 = { ...wet }, dry0 = { ...dry };
+  steps(f, 10);
+  assert.ok(Math.abs(Math.hypot(wet.x - wet0.x, wet.z - wet0.z) - Math.hypot(dry.x - dry0.x, dry.z - dry0.z)) < 1e-6);
+  // Ice: ×ZONE.iceSpeed for an enemy on the sheet.
+  const s = createRush(1, NO_MODS, { enemyHp: 1, enemyCount: 1, enemyDamage: 1, stage: 6 });
+  const ice = SNOW.ice[0];
+  assert.ok(onIce(SNOW, ice.x, ice.z));
+  const onSheet = enemy(s, 'grunt', ice.x, ice.z - 1), off = enemy(s, 'grunt', ice.x, ice.z + ice.d / 2 + 3);
+  s.hero.x = 14; s.hero.z = 12; onSheet.wp = off.wp = 3;
+  const a0 = onSheet.z, b0 = off.z;
+  steps(s, 30);
+  assert.ok(Math.abs((onSheet.z - a0) / (off.z - b0) - ZONE.iceSpeed) < 1e-6, 'an enemy on ice marches at the ice factor');
+  assert.ok(Math.abs(off.z - b0 - ENEMIES.grunt.speed * 0.5) < 1e-6);
+  // The hero runs faster on the sheet, and a knocked-back enemy slides further on it than on snow.
+  const run = (z: number) => { const r = createRush(1, NO_MODS, { enemyHp: 1, enemyCount: 1, enemyDamage: 1, stage: 6 }); r.hero.x = ice.x; r.hero.z = z; steps(r, 12, { move: { x: 0, z: -1 } }); return z - r.hero.z; };
+  assert.ok(Math.abs(run(ice.z + 1) / run(ice.z + ice.d / 2 + 4) - ZONE.iceHero) < 1e-6, 'the hero is faster on ice');
+  const slide = (z: number) => { const r = createRush(1, NO_MODS, { enemyHp: 1, enemyCount: 1, enemyDamage: 1, stage: 6 }); const e = enemy(r, 'brute', ice.x, z); r.hero.x = 14; r.hero.z = 12; e.wp = 3; e.kx = 6; const x0 = e.x; steps(r, 20); return e.x - x0; };
+  assert.ok(slide(ice.z) > slide(ice.z + ice.d / 2 + 4) * 1.3, 'knockback carries further on ice');
+  // Treasure crates drop their own gold.
+  const chest = s.crates.find(c => c.gold)!;
+  assert.equal(chest.gold, ZONE.cacheGold);
+  assert.ok(ZONE.cacheGold > CRATE.gold * 3);
+  s.hero.x = chest.x; s.hero.z = chest.z + 4;
+  let volleys = 0;
+  while (s.crates.includes(chest) && volleys++ < 20) steps(s, Math.ceil(HERO.reload / STEP) + 1, { fire: { x: 0, z: -1 } });
+  assert.ok(!s.crates.includes(chest) && (s.coins.some(k => k.value === ZONE.cacheGold) || s.stats.goldEarned >= ZONE.cacheGold), 'the chest dropped the cache gold');
+});
+
+test('map size and density stay where they were measured (docs/rush/map-metrics.md)', async () => {
+  const { FOREST, SNOW, mapStats, laneTime, laneLength } = await import('./maps.ts');
+  const { ENEMIES } = await import('./data.ts');
+  for (const m of [FOREST, SNOW]) {
+    const near2 = mapStats(m, 2), near3 = mapStats(m, 3);
+    // Before the regions: 65.7% of the field within 2 m of a feature (north half 68.3%), 19 features.
+    assert.ok(near2.used >= 0.75 && near2.north >= 0.88, `${m.id}: used ${near2.used.toFixed(3)}, north ${near2.north.toFixed(3)}`);
+    assert.ok(near3.used >= 0.86 && near3.north >= 0.97, `${m.id}: within 3 m ${near3.used.toFixed(3)}, north ${near3.north.toFixed(3)}`);
+    assert.ok(near2.features >= 26, `${m.id}: ${near2.features} features`);
+    // Waves must not arrive much sooner: a grunt took 13.0 s down the centre lane and 13.7 s down a side lane.
+    const centre = laneTime(m, 0, ENEMIES.grunt.speed), side = laneTime(m, 1, ENEMIES.grunt.speed);
+    assert.ok(centre <= 13.0 + 1e-6 && centre >= 12.3 && side <= 13.7 + 1e-6 && side >= 13.0, `${m.id}: grunt arrival ${centre.toFixed(2)} / ${side.toFixed(2)} s`);
+    assert.ok(Math.abs(laneTime(m, 1, 2.5) - laneTime(m, 2, 2.5)) < 1e-9);
+  }
+  assert.ok(Math.abs(laneLength(0) - 32.4) < 0.01 && Math.abs(laneLength(1) - 34.2) < 0.05);
+  // The snow field is a different shape: its outcrops close about 9% of the arena, the forest's walls about 2%.
+  assert.ok(mapStats(SNOW).blocked > 100 && mapStats(FOREST).blocked < 30);
+});
