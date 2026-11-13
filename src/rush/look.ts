@@ -53,8 +53,8 @@ export const REGION_LOOK: Record<RegionName, RegionLook> = {
       rock: 0x8394a8, rockAlt: 0x6f8196, rockFoot: 0x4a5d78, rim: 0xa6c0d2,
     },
     hedge: 0x3f7f78, hedgeTop: 0xe9f2f8,
-    bushBase: 0x89a6bd, bushBlades: [0xb9cfe0, 0xa3bdd3, 0xd6e4ef],
-    cap: 0xe9f2f8, wallMix: 0.35, wallCool: 0x8fa0c0, hemiSky: 0xe8f6ff, hemiGround: 0x8f9fb5, enemyTint: 0xeef3ff,
+    bushBase: 0xa9bfd0, bushBlades: [0xdbe8f2, 0xc9dbe9, 0xeef5fa],
+    cap: 0xe9f2f8, wallMix: 0.35, wallCool: 0x8fa0c0, hemiSky: 0xe8f6ff, hemiGround: 0x8f9fb5, enemyTint: 0xd4deee,
     frostRing: 0x1aa0d8, ice: 0x5cc4f5, iceOpacity: 0.55, frostFx: 0x49b6e6, aimFan: 0x24406e, aimLob: 0x1f8fd0, snowfall: 140,
   },
 };
@@ -67,7 +67,7 @@ export const BOSS_LOOK: Record<BossName, BossLook> = {
   // Bark and moss: dark bark trunk, mossy shoulders and arms, leaf-green fists, an autumn-amber crown.
   forest: { cape: 0x7a2a1e, trunk: 0x5a3a22, chest: 0x7d5a34, head: 0x3a2616, crown: 0xf2b23a, arm: 0x4f7d3a, fist: 0x9ccf4a, kill: 0x7d5a34 },
   // Ice-blue and white over dark ink-navy; the crimson cape and red eyes keep it on the enemy team.
-  snow: { cape: 0x8a1f3a, trunk: 0x232c5c, chest: 0x7fc8f0, head: 0x1a2044, crown: 0xe6f8ff, arm: 0x7fc8f0, fist: 0xf2fbff, kill: 0x7fc8f0 },
+  snow: { cape: 0x8a1f3a, trunk: 0x232c5c, chest: 0x62b4ee, head: 0x1a2044, crown: 0xe6f8ff, arm: 0x62b4ee, fist: 0xf2fbff, kill: 0x62b4ee },
 };
 
 let gradient: DataTexture | null = null;
