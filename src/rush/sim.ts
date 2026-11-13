@@ -574,6 +574,14 @@ function breakWard(s: RushState, e: Enemy) {
   e.wardT = 0;
   s.events.push({ type: 'wardBreak', id: e.id, x: e.x, z: e.z });
 }
+/** Ward breaks in one step's events (cycle 91): how many, their centre and a radius covering them all, or null. One break
+ * is a ranger bolt; two or more at once is Bron clearing a pack, which the feedback makes louder. */
+export function wardBreakBurst(events: readonly RushEvent[]): { count: number; x: number; z: number; radius: number } | null {
+  const at = events.filter((e): e is Extract<RushEvent, { type: 'wardBreak' }> => e.type === 'wardBreak');
+  if (!at.length) return null;
+  const x = at.reduce((a, e) => a + e.x, 0) / at.length, z = at.reduce((a, e) => a + e.z, 0) / at.length;
+  return { count: at.length, x, z, radius: Math.max(...at.map(e => Math.hypot(e.x - x, e.z - z))) };
+}
 /** Shaman ward (cycle 90): on its period, every living ally in range (not the shaman) is warded for the duration. */
 function wardPulse(s: RushState, e: Enemy, ward: NonNullable<EnemyDef['ward']>) {
   e.wardP = (e.wardP ?? ward.every) - STEP;

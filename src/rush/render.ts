@@ -16,7 +16,7 @@ import rangerGlb from './models/gecko-ranger.glb?url';
 import bronGlb from './models/dwarf-guardian.glb?url';
 import bearGlb from './models/polar-bear.glb?url';
 import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, HERO_SPAWN, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
-import { heroDef, heroHidden, heroMaxHp, lobReach, padInReach, superReady, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
+import { heroDef, heroHidden, heroMaxHp, lobReach, padInReach, superReady, wardBreakBurst, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, wallParts, type Part } from './look.ts';
 import { loadForestTown, toFloat32 } from './townModel.ts';
 import { Batch } from './batch.ts';
@@ -839,6 +839,9 @@ export class RushView {
 
   /** Apply one simulation step's events: the effect grammar (docs/rush/art-direction.md) and animation triggers. */
   applyEvents(events: RushEvent[], reducedMotion: boolean) {
+    // Several wards broken at once (cycle 91): one magenta ink ring around the whole cleared pack.
+    const wards = wardBreakBurst(events);
+    if (wards && wards.count >= 2) this.ring(wards.x, wards.z, 0xe070e0, wards.radius + 1.2, 0.35, 0.95, true);
     const fx = this.particles, hp = this.hero.position;
     fx.density = (reducedMotion ? 0.5 : 1) * QUALITY[this.quality].particles;
     for (const ev of events) {

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ECONOMY, ENEMIES, HERO, HERO_SPAWN, PADS, STEP, TOWER_LEVELS, type EnemyKind } from './data.ts';
-import { createRush, NO_MODS, padCost, rushHash, stepRush, superReady, type Command, type Enemy, type RushEvent, type RushState } from './sim.ts';
+import { createRush, NO_MODS, padCost, rushHash, stepRush, superReady, wardBreakBurst, type Command, type Enemy, type RushEvent, type RushState } from './sim.ts';
 import { guardBot, idleBot } from './bot.ts';
 
 const steps = (s: RushState, n: number, cmd: Command | ((s: RushState) => Command) = {}) => {
@@ -574,5 +574,24 @@ test('ward (cycle 90): a hero hit breaks it; the ranger breaks only its target, 
   assert.equal(b.rest[0].hp, b.rest[0].maxHp, 'the second grunt is out of the swing itself');
   assert.equal(b.rest[0].wardT, 0, 'yet its ward within 2.5 m of the target breaks');
   assert.ok((b.rest[1].wardT ?? 0) > 0, 'but not one further away');
+});
+
+test('ward breaks (cycle 91): one step summarised as a count, a centre and a covering radius', () => {
+  const firstBreak = (hero: 'ranger' | 'bron', dx: number, dz: number, others: [number, number][]) => {
+    const s = createRush(1, NO_MODS, undefined, hero);
+    s.prepT = 999;
+    const target = enemy(s, 'brute', s.hero.x + dx, s.hero.z + dz);
+    for (const [x, z] of others) enemy(s, 'grunt', target.x + x, target.z + z);
+    for (const e of s.enemies) e.wardT = 9;
+    for (let i = 0; i < 90; i++) { stepRush(s, { fire: { x: dx, z: dz } }); const b = wardBreakBurst(s.events); if (b) return b; }
+    return null;
+  };
+  assert.equal(wardBreakBurst([]), null, 'no breaks, no burst');
+  const bolt = firstBreak('ranger', 0, -4, [[1.2, 0]]);
+  assert.equal(bolt?.count, 1, 'a ranger bolt breaks one ward');
+  assert.equal(bolt?.radius, 0);
+  const swing = firstBreak('bron', 0, -1.1, [[0, -2.4], [0.8, 0.6]]);
+  assert.ok(swing && swing.count >= 2, `Bron's swing clears several at once (${swing?.count})`);
+  assert.ok(swing!.radius >= 1.2 - 1e-9, 'the radius reaches the furthest break');
 });
 

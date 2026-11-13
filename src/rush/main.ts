@@ -1,7 +1,7 @@
 // Arcana Rush prototype bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
 import { ECONOMY, ENEMIES, HEROES, TOWER_LEVELS, type HeroKind } from './data.ts';
-import { createRush, padCost, padInReach, stepRush, superReady, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
+import { createRush, padCost, padInReach, stepRush, superReady, wardBreakBurst, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
 import { RushInput } from './input.ts';
@@ -200,6 +200,9 @@ function toast(text: string, cls = '', seconds = 1.6) {
 }
 function feedback(events: RushEvent[]) {
   view.applyEvents(events, reducedMotion);
+  // Ward breaks (cycle 91): a glassy crack instead of the plain hit thud; a buzz only when one swing clears several.
+  const wards = wardBreakBurst(events);
+  if (wards) { playCombatSound('freeze'); if (wards.count >= 2) playHaptic('skill', feedbackEnabled); }
   for (const ev of events) {
     const sound = SOUND[ev.type];
     if (sound) playCombatSound(sound);
