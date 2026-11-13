@@ -21,7 +21,7 @@
 
 - **실행 수단**: claude.ai 예약 작업이 1시간마다 이 클라우드 세션을 깨운다. 세션이 종료·보관되면 루프도 멈춘다. 진행 상태의 기준은 저장소의 [회차 기록](cycles/)이다.
 - **브랜치**: `claude/confident-knuth-qc16ui`에 커밋하고 push한다. **PR은 사용자가 요청할 때만** 만든다. 병합하지 않는다.
-- **범위**: `src/rush/`, `docs/rush/`, `tools/rush-*`, `rush.html`만 바꾼다. 1.0 완성 작업(2026-11-13)부터는 고정 주소가 필요한 설치 파일(매니페스트·아이콘)을 둘 `public/rush/`도 쓴다(새 파일만). 기존 아르카나 캠페인(`src/components/`, `src/games/`, `src/ArcanaApp.tsx` 등)과 저장 키는 수정하지 않는다. 공용 `src/lib/`를 바꿔야 하면 그 회차에 `npm test` 전체를 통과시킨다.
+- **범위**: `src/rush/`, `docs/rush/`, `tools/rush-*`, `rush.html`만 바꾼다. **통합(2026-11-13, 사용자 ‘원정까지 러시로 흡수’)부터**: 사이트 입구 `index.html`(러시로 바로 감)과 옛 모드 점검 `tools/check-arcana-entries.cjs`(`/?modes=1`)도 범위다. 원정 내용은 러시 `expedition.ts`로 옮겼고, 옛 원정 저장은 읽기만 한다. 1.0 완성 작업(2026-11-13)부터는 고정 주소가 필요한 설치 파일(매니페스트·아이콘)을 둘 `public/rush/`도 쓴다(새 파일만). 기존 아르카나 캠페인(`src/components/`, `src/games/`, `src/ArcanaApp.tsx` 등)과 저장 키는 수정하지 않는다. 공용 `src/lib/`를 바꿔야 하면 그 회차에 `npm test` 전체를 통과시킨다.
 - **시간**: 한 회차는 45분 안에 끝낸다. 넘으면 진행분을 커밋하고, 기록에 **미완료**로 남긴 뒤 멈춘다. 다음 회차가 이어받는다.
 
 ## 레인 순환
