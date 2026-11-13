@@ -402,3 +402,13 @@ test('kingdom power (cycle 71): a start value, and each kind of growth adds exac
   assert.equal(kingdomPower({ ...rich, talent: { ...rich.talent, bron: 2 } }) - p0, 2 * POWER.talent);
   assert.ok(!('power' in JSON.parse(serializeKingdom(rich))), 'not saved: always computed');
 });
+
+test('recommended stage power (cycle 89): one per stage, rising, a new kingdom already meets stage 1', async () => {
+  const { STAGE_POWER, recommendedPower, kingdomPower } = await import('./kingdom.ts');
+  const { STAGE_COUNT } = await import('./stages.ts');
+  assert.equal(STAGE_POWER.length, STAGE_COUNT);
+  for (let i = 1; i < STAGE_POWER.length; i++) assert.ok(STAGE_POWER[i] > STAGE_POWER[i - 1], `stage ${i + 1} above stage ${i}`);
+  assert.ok(STAGE_POWER[0] <= kingdomPower(createKingdom(T0)), 'a fresh kingdom is ready for stage 1');
+  assert.equal(recommendedPower(1), STAGE_POWER[0]);
+  assert.equal(recommendedPower(STAGE_COUNT + 1), null, 'endless has no recommendation');
+});

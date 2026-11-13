@@ -376,6 +376,15 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   white-space: nowrap; box-shadow: 0 2px 0 var(--outline); pointer-events: none;
 }
 .daily-badge .res-ico { width: 10px; height: 10px; margin: 0 1px 0 3px; border-width: 1.5px; vertical-align: 0; }
+/* Recommended power (cycle 89): hangs from the bottom edge of the battle button, clear of the top-right daily badge. */
+.power-pill {
+  position: absolute; bottom: -11px; left: 50%; transform: translateX(-50%); padding: 0 7px 1px; border-radius: 9px;
+  border: 2px solid var(--outline); color: #fff; font-size: 11px; line-height: 1.3; white-space: nowrap; pointer-events: none;
+}
+.power-pill.ok { background: #2f9e5a; }
+.power-pill.short { background: #e5772a; }
+/* Short landscape phones: the button sits on the screen's bottom edge, so the pill tucks up onto its lower rim. */
+@media (max-height: 420px) { .power-pill { bottom: -5px; font-size: 10px; line-height: 1.15; padding: 0 6px; } }
 .result-reward .daily-note { display: block; margin-top: 3px; font-size: 13px; color: #ffe58a; }
 
 /* Boss rally callout (cycle 35): pinned under the roaring boss, amber like its warning circle */

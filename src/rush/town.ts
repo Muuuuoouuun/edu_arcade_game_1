@@ -2,7 +2,7 @@
 import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
 import { FORGE, HEROES, TALENT_MAX, TALENTS, type HeroKind } from './data.ts';
-import { kingdomPower, claimGoal, currentGoal, GOALS,
+import { kingdomPower, recommendedPower, claimGoal, currentGoal, GOALS,
   CASTLE_MAX, DAILY_WIN, ENDLESS_STAGE, nextMilestone, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canLearnTalent, canTrain, learnTalent, talentCost, dailyReady, dayIndex, canUpgrade, chooseHero, collect, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, pending, PERK_EFFECT, rate,
   storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
@@ -222,8 +222,12 @@ export class TownScreen {
     const label = endless ? '끝없는 도전' : `스테이지 ${this.stage}`;
     const badge = daily ? `<span class="daily-badge">첫 승리 <i class="res-ico shard"></i>+${DAILY_WIN.shards}</span>`
       : goal ? `<span class="daily-badge goal">목표 ${goal.waves} <i class="res-ico shard"></i>+${goal.shards}</span>` : '';
-    this.$('btn-battle').innerHTML = `${label} 출전${badge}`;
-    this.$('btn-battle').setAttribute('aria-label', `${label} 출전${daily ? ', 오늘의 첫 승리 보상 대기 중' : goal ? `, 다음 목표 ${goal.waves}웨이브, 조각 ${goal.shards}개` : ''}`);
+    // Recommended power (cycle 89): a pill under the button, green when the kingdom has it, orange when short.
+    const rec = endless ? null : recommendedPower(this.stage), have = kingdomPower(k), ready = rec !== null && have >= rec;
+    const fmt = (v: number) => v.toLocaleString('en-US');
+    const pill = rec === null ? '' : `<span class="power-pill ${ready ? 'ok' : 'short'}">권장 ${fmt(rec)}</span>`;
+    this.$('btn-battle').innerHTML = `${label} 출전${badge}${pill}`;
+    this.$('btn-battle').setAttribute('aria-label', `${label} 출전${daily ? ', 오늘의 첫 승리 보상 대기 중' : goal ? `, 다음 목표 ${goal.waves}웨이브, 조각 ${goal.shards}개` : ''}${rec === null ? '' : `, 권장 전투력 ${fmt(rec)}, 지금 ${fmt(have)}`}`);
     this.$('hero-name').textContent = `${HEROES[k.hero].name} Lv${k.heroLv[k.hero]}`;
     const heroRow = this.root.querySelector<HTMLElement>('[data-id="hero"]')!;
     const lv = k.heroLv[k.hero], g = heroGrowth(lv), tc = trainCost(k, k.hero), trainBtn = heroRow.querySelector<HTMLButtonElement>('[data-train]')!;
