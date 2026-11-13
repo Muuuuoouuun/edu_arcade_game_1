@@ -59,4 +59,9 @@ test('music score (1.0, completion C4): moods, tempos, drums only where they bel
   for (const mood of ['battle', 'boss'] as const) assert.ok(voices(mood).has('kick') && voices(mood).has('snare'), `${mood} drives with kick and snare`);
   assert.equal(musicBar('battle', 0).tempo, musicBar('boss', 0).tempo, 'battle and boss share a tempo so a boss arrival stays in step');
   assert.ok(musicBar('town', 0).tempo < musicBar('battle', 0).tempo, 'town is slower than battle');
+  // Mix (95, tools/rush-audio-check.cjs): combat music sits about 10.5 dB under the calm moods so the shared combat
+  // effects clear its RMS by 6 dB or more.
+  const { MOOD_LEVEL } = await import('./music.ts');
+  assert.ok(20 * Math.log10(MOOD_LEVEL.town / MOOD_LEVEL.battle) >= 10, 'battle music at least 10 dB under town');
+  assert.equal(MOOD_LEVEL.battle, MOOD_LEVEL.boss, 'boss keeps the battle level so the switch is seamless');
 });

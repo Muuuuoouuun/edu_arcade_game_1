@@ -56,7 +56,7 @@
 - **실기기 대신 측정한 것**
   - 진동: `tools/rush-haptics-check.cjs`. 켜면 웨이브 시작에 `[30,50,50]`, 끄면 0회다.
   - 성능 대리: `tools/rush-perf-check.cjs`. CPU 4배 느리게 해서 적 50의 전투가 주 스레드 한 프레임에 약 7.5~13 ms다(60fps 예산 16.7 ms 안). GPU 비용은 소프트웨어 렌더라 재지 못한다.
-  - 소리·음악: `tools/rush-audio-check.cjs`. 결과는 [completion.md](completion.md) C11에 있다.
+  - 소리·음악: `tools/rush-audio-check.cjs`. 템포가 설계와 같고, 클리핑이 없고, 끄면 무음이다. 전투 효과음은 음악보다 6 dB 넘게 위다(측정으로 찾아 전투 음악을 10.5 dB 낮춤). 자세한 값은 [completion.md](completion.md) C11에 있다.
   - 실제 손맛·귀로 듣는 느낌은 실기기에서 마지막으로 확인한다(백로그 9).
 - 끝없는 도전은 점수 모드다. 다 키운 봇도 3~8웨이브에서 진다. 쉽게 하려면 막(보호막)이 지렛대다(C8).
 

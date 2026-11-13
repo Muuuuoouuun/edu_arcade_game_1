@@ -223,6 +223,10 @@ const TICK_MS = 25;
 const LOOKAHEAD = 0.12;
 const CROSSFADE = 0.6;
 const DEFAULT_VOLUME = 0.12;
+/** Per-mood level (95, measured by tools/rush-audio-check.cjs): the combat effects peak around -32..-40 dBFS from the
+ * shared sound.ts, which rush may not change, so battle and boss music sit about 10.5 dB under the calm moods. That puts
+ * every combat sound at least 6 dB over the battle music's RMS; title and town have no combat effects to clear. */
+export const MOOD_LEVEL: Readonly<Record<'title' | 'town' | 'battle' | 'boss', number>> = { title: 1, town: 1, battle: 0.3, boss: 0.3 };
 const SILENT = 0.0001;
 const PLAY_MOODS: readonly PlayMood[] = ['title', 'town', 'battle', 'boss'];
 
@@ -451,7 +455,7 @@ export function createMusic(opts?: { volume?: number }): Music {
 
   function fadeBuses(target: PlayMood | null, at: number) {
     if (!buses) return;
-    for (const m of PLAY_MOODS) ramp(buses[m].gain, m === target ? 1 : 0, at, CROSSFADE);
+    for (const m of PLAY_MOODS) ramp(buses[m].gain, m === target ? MOOD_LEVEL[m] : 0, at, CROSSFADE);
   }
 
   /** Bring the audio in line with the requested mood. Call after any state change. */
