@@ -30,7 +30,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .rush-render-card a { color:#fff4c5; }
 
 /* Chunky display type with a thick ink outline: readable over any part of the battlefield. */
-.hud-wave b, .hud-gold b, .hud-town b, .toast, .card h1, .actions > button, .hud-pill, .hud-build, .btn-super .label, .pop, .eyebrow {
+.hud-wave b, .hud-gold b, .hud-town b, .toast, .card h1, .title-logo h1, .actions > button, .hud-pill, .hud-build, .btn-super .label, .pop, .eyebrow {
   font-family: var(--display); font-weight: 400; letter-spacing: 0.01em;
   -webkit-text-stroke: 4px var(--outline); paint-order: stroke fill; text-shadow: 0 3px 0 var(--outline);
 }
@@ -489,3 +489,33 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .town-power .power-up.show { animation: powerUp 1.4s ease-out forwards; }
 @keyframes powerUp { 0% { opacity: 0; transform: translateY(6px) scale(0.8); } 15% { opacity: 1; transform: translateY(0) scale(1.15); } 70% { opacity: 1; transform: translateY(-6px) scale(1); } 100% { opacity: 0; transform: translateY(-12px); } }
 @media (prefers-reduced-motion: reduce) { .town-power .power-up.show { animation: none; opacity: 1; } }
+
+/* 1.0 title (completion C1): key art fills the screen; logo over the sky, a compact card along the bottom. */
+.title-screen {
+  display: flex; flex-direction: column; justify-content: space-between; align-items: center; gap: 10px;
+  background: linear-gradient(rgba(20,12,40,0) 55%, rgba(20,12,40,0.55)), url('./art/key-art.webp') center 62% / cover no-repeat, #2b6fb8;
+  padding: calc(14px + var(--safe-t, 0px)) 16px calc(14px + var(--safe-b, 0px));
+}
+@media (max-width: 1000px) { .title-screen { background-image: linear-gradient(rgba(20,12,40,0) 55%, rgba(20,12,40,0.55)), url('./art/key-art-960.webp'); } }
+/* Portrait phones get their own composition (all three heroes in a tall frame). */
+@media (orientation: portrait) { .title-screen { background-image: linear-gradient(rgba(20,12,40,0) 60%, rgba(20,12,40,0.5)), url('./art/key-art-portrait.webp'); background-position: center 70%; } }
+.title-logo { text-align: center; }
+.title-logo h1 { margin: 0; font-size: clamp(40px, 8vw, 76px); line-height: 1.05; color: #fff; -webkit-text-stroke: 8px var(--outline); paint-order: stroke fill; text-shadow: 0 6px 0 var(--outline), 0 10px 24px rgba(0,0,0,0.35); }
+.title-logo .eyebrow { font-size: clamp(12px, 1.6vw, 16px); }
+.title-logo .tag { margin: 4px 0 0; color: #fff; font-weight: 600; text-shadow: 0 2px 0 var(--outline), 0 0 8px rgba(0,0,0,0.6); }
+.title-card { position: relative; overflow: visible; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px 14px; width: auto; max-width: 100%; padding: 10px 16px; background: linear-gradient(rgba(58,42,110,0.92), rgba(38,26,74,0.92)); }
+.title-card .actions { flex-wrap: nowrap; }
+.howto-box { text-align: left; }
+.howto-box summary { cursor: pointer; color: var(--gold); font-weight: 700; list-style: none; padding: 4px 2px; text-decoration: underline; text-underline-offset: 3px; }
+.howto-box summary::-webkit-details-marker { display: none; }
+/* The controls open as a panel above the card, so the card itself stays one row and the heroes stay in view. */
+.howto-box[open] > :not(summary) { position: absolute; left: 0; right: 0; bottom: calc(100% + 8px); }
+.howto-box[open] .howto { margin: 0; padding: 12px 14px 40px; background: linear-gradient(#3a2a6e, #261a4a); border: 3px solid var(--outline); border-radius: 16px; }
+.howto-box[open] .note { bottom: calc(100% + 18px); padding: 0 16px; margin: 0; }
+@media (max-height: 420px) {
+  .title-logo h1 { font-size: 38px; -webkit-text-stroke-width: 6px; }
+  .title-logo .tag { font-size: 13px; }
+  .title-card { padding: 6px 12px; }
+  .title-card .actions > button { padding: 7px 18px; font-size: 17px; }
+}
+

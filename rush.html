@@ -4,8 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <meta name="theme-color" content="#12261c" />
-    <title>아르카나 러시 · 프로토타입</title>
-    <link rel="icon" type="image/svg+xml" href="/arcana-mark.svg" />
+    <title>아르카나 러시</title>
+    <!-- 1.0 (completion C2): rush's own icon and an installable web app manifest (files in public/rush/). -->
+    <link rel="icon" type="image/png" sizes="64x64" href="/rush/favicon-64.png" />
+    <link rel="apple-touch-icon" href="/rush/apple-touch-icon.png" />
+    <link rel="manifest" href="/rush/rush.webmanifest" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="아르카나 러시" />
   </head>
   <body>
     <main id="rush">
@@ -30,19 +36,25 @@
       <button id="super" class="btn-super" aria-label="필살기: 탭하면 자동, 끌면 조준"><span id="super-ring" class="ring"></span><span class="label">필살</span></button>
       <button id="fire" class="btn-fire" aria-label="공격: 탭하면 자동 조준, 끌면 직접 조준"><span class="glyph">➶</span><span class="ammo"><i></i><i></i><i></i></span></button>
 
-      <section id="screen-title" class="screen">
-        <div class="card">
-          <p class="eyebrow">PROTOTYPE v0 · ARCANA RUSH</p>
+      <section id="screen-title" class="screen title-screen">
+        <!-- 1.0 title (completion C1): generated key art behind, logo in the sky, a compact action card at the bottom. -->
+        <div class="title-logo">
+          <p class="eyebrow">ARCANA RUSH</p>
           <h1>아르카나 러시</h1>
           <p class="tag">직접 싸우고, 탑을 세우고, 마을을 지켜라.</p>
-          <ul class="howto">
-            <li><b>이동</b> 왼쪽 화면 끌기 · WASD</li>
-            <li><b>공격</b> 공격 버튼 탭 = 자동 조준, 끌기 = 직접 조준 · 마우스 클릭</li>
-            <li><b>필살기</b> 명중으로 충전, 보라 버튼 · Space</li>
-            <li><b>궁수탑</b> 노란 원 위에서 건설·강화 · E</li>
-          </ul>
+        </div>
+        <div class="card title-card">
           <div class="actions"><button id="btn-play" class="primary">마을로</button><button id="btn-demo">자동 시연</button><a class="rush-back" href="/index.html">모드 선택</a></div>
-          <p class="note">전투는 5웨이브, 약 2~3분. 이기면 식량·목재로 마을을 키워 다음 전투가 강해집니다.</p>
+          <details class="howto-box">
+            <summary>조작법</summary>
+            <ul class="howto">
+              <li><b>이동</b> 왼쪽 화면 끌기 · WASD</li>
+              <li><b>공격</b> 공격 버튼 탭 = 자동 조준, 끌기 = 직접 조준 · 마우스 클릭</li>
+              <li><b>필살기</b> 명중으로 충전, 보라 버튼 · Space</li>
+              <li><b>궁수탑</b> 노란 원 위에서 건설·강화 · E</li>
+            </ul>
+            <p class="note">전투는 5웨이브, 약 2~3분. 이기면 식량·목재로 마을을 키워 다음 전투가 강해집니다.</p>
+          </details>
         </div>
       </section>
       <section id="screen-town" class="screen town-screen" hidden>

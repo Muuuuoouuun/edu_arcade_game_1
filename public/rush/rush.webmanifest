@@ -1,0 +1,17 @@
+{
+  "name": "아르카나 러시",
+  "short_name": "아르카나 러시",
+  "description": "직접 싸우고, 탑을 세우고, 마을을 지켜라. 마을을 키우는 PvE 수비 액션.",
+  "lang": "ko",
+  "start_url": "/rush.html",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#12261c",
+  "theme_color": "#12261c",
+  "icons": [
+    { "src": "/rush/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/rush/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/rush/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
