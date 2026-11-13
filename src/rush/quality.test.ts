@@ -42,3 +42,21 @@ test('quality preference cycles, parses safely and resolves', () => {
   assert.ok(QUALITY.low.pixelRatio < QUALITY.high.pixelRatio);
   assert.ok(!QUALITY.low.terrainOutlines && QUALITY.high.terrainOutlines);
 });
+
+test('music score (1.0, completion C4): moods, tempos, drums only where they belong, a 16-bar loop', async () => {
+  const { musicBar } = await import('./music.ts');
+  const moods = ['title', 'town', 'battle', 'boss'] as const;
+  for (const mood of moods) {
+    for (let bar = 0; bar < 16; bar++) {
+      const b = musicBar(mood, bar);
+      assert.ok(b.notes.every(n => n.t >= 0 && n.t < 4 && n.t + n.dur <= 4 + 1e-9), `${mood} ${bar}: notes stay in the bar`);
+      assert.ok(b.notes.every((n, i) => i === 0 || b.notes[i - 1].t <= n.t), `${mood} ${bar}: sorted`);
+      assert.deepEqual(musicBar(mood, bar + 16), b, `${mood}: a 16-bar loop`);
+    }
+  }
+  const voices = (mood: typeof moods[number]) => new Set(Array.from({ length: 16 }, (_, b) => musicBar(mood, b).notes.map(n => n.voice)).flat());
+  assert.ok(!voices('town').has('kick') && !voices('town').has('snare') && !voices('town').has('hat'), 'town is calm: no drums');
+  for (const mood of ['battle', 'boss'] as const) assert.ok(voices(mood).has('kick') && voices(mood).has('snare'), `${mood} drives with kick and snare`);
+  assert.equal(musicBar('battle', 0).tempo, musicBar('boss', 0).tempo, 'battle and boss share a tempo so a boss arrival stays in step');
+  assert.ok(musicBar('town', 0).tempo < musicBar('battle', 0).tempo, 'town is slower than battle');
+});

@@ -59,9 +59,20 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await page.goto(BASE + '?seed=5');
     await page.evaluate(() => localStorage.removeItem('arcana-rush:kingdom:v1'));
     await page.reload();
+    // 1.0 front door (completion C1-C4): no prototype label, an install manifest, settings that persist, music moods.
+    check(!(await page.textContent('#screen-title')).includes('PROTOTYPE') && (await page.title()) === '아르카나 러시', 'title has no prototype label');
+    check(await page.evaluate(() => !!document.querySelector('link[rel="manifest"][href="/rush/rush.webmanifest"]')), 'install manifest linked');
+    await page.click('#btn-settings');
+    await page.click('#set-music');
+    const off = await page.evaluate(() => ({ music: __rush.music.enabled, saved: JSON.parse(localStorage.getItem('arcana-rush:settings:v1') || '{}').music }));
+    await page.click('#set-music');
+    await page.click('#set-close');
+    check(off.music === false && off.saved === false && await page.evaluate(() => __rush.music.enabled) && await page.isVisible('#screen-title'), 'settings: music toggle saves and returns to the title');
+    check(await page.evaluate(() => __rush.music.mood === 'title'), 'title music mood');
     await page.click('#btn-play');
     await page.waitForTimeout(300);
     check(await page.isVisible('#screen-town'), 'title → town screen');
+    check(await page.evaluate(() => __rush.music.mood === 'town'), 'town music mood');
     await page.screenshot({ path: `${OUT}/desktop-town.png` });
     await page.click('[data-select="attack"]');
     check(await page.isVisible('[data-up="attack"]'), 'tapping a building tag shows its card');
@@ -94,6 +105,8 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
 
     // 3. Desktop controls: keyboard movement per sim tick, build on a pad, mouse fire.
     await page.click('#btn-battle');
+    await page.waitForTimeout(200);
+    check(await page.evaluate(() => __rush.music.mood === 'battle' || __rush.music.mood === 'boss'), 'battle music mood');
     await page.waitForTimeout(300);
     check(await page.evaluate(() => __rush.state.mods.damage > 1 && __rush.state.mods.heroHp > 1 && __rush.state.hero.hp > 420), 'battle starts with kingdom and hero-level modifiers');
     const t0 = await page.evaluate(() => ({ tick: __rush.state.tick, x: __rush.state.hero.x }));

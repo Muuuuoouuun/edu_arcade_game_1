@@ -45,6 +45,7 @@
         </div>
         <div class="card title-card">
           <div class="actions"><button id="btn-play" class="primary">마을로</button><button id="btn-demo">자동 시연</button><a class="rush-back" href="/index.html">모드 선택</a></div>
+          <button id="btn-settings" class="link-button" type="button">설정</button>
           <details class="howto-box">
             <summary>조작법</summary>
             <ul class="howto">
@@ -66,7 +67,7 @@
             <span><i class="res-ico wood"></i><b id="res-wood">0</b></span>
             <span title="영웅 조각"><i class="res-ico shard"></i><b id="res-shard">0</b></span>
           </div>
-          <button id="btn-hero" class="hero-pick" aria-label="출전 영웅 바꾸기"><small>영웅</small><b id="hero-name">도마뱀 궁수</b></button>
+          <button id="btn-hero" class="hero-pick" aria-label="출전 영웅 바꾸기"><img id="hero-face" class="hero-face" alt="" width="34" height="34" /><span class="hero-pick-text"><small>영웅</small><b id="hero-name">도마뱀 궁수</b></span></button>
           <button id="btn-collect" class="collect"><small>수확</small><b id="collect-amount"></b></button>
           <button id="town-goal" class="town-goal" hidden><small data-goal-head></small><b data-goal-text></b><span data-goal-reward></span></button>
           <p id="town-reward" class="town-reward" hidden></p>
@@ -84,6 +85,10 @@
         <div class="card">
           <p class="eyebrow">RESULT</p>
           <h1 id="result-title">결과</h1>
+          <div id="result-ending" class="result-ending" hidden>
+            <p class="ending-line">아르카나 마을을 끝까지 지켜 냈어요!</p>
+            <p class="ending-sub">캠페인 완료 · 끝없는 도전이 열렸어요. 마을의 <b>∞</b> 칩에서 기록에 도전하세요.</p>
+          </div>
           <p id="result-stars" class="result-stars" aria-live="polite"></p>
           <p id="result-reward" class="result-reward" hidden></p>
           <dl id="result-stats" class="stats"></dl>
@@ -93,8 +98,32 @@
       <section id="screen-pause" class="screen" hidden>
         <div class="card small">
           <h1>일시정지</h1>
-          <div class="settings"><button id="btn-quality" class="setting" aria-label="그래픽 품질 바꾸기">그래픽: 자동</button></div>
+          <div class="settings"><button id="btn-quality" class="setting" aria-label="그래픽 품질 바꾸기">그래픽: 자동</button><button id="btn-pause-settings" class="setting">설정</button></div>
           <div class="actions"><button id="btn-resume" class="primary">계속</button><button id="btn-quit">타이틀로</button></div>
+        </div>
+      </section>
+      <section id="screen-settings" class="screen" hidden>
+        <!-- 1.0 settings (completion C3): saved in arcana-rush:settings:v1; reset clears only the kingdom save. -->
+        <div class="card small settings-card">
+          <h1>설정</h1>
+          <div class="setting-list">
+            <button id="set-sfx" class="setting" aria-pressed="true">효과음: 켬</button>
+            <button id="set-music" class="setting" aria-pressed="true">배경 음악: 켬</button>
+            <button id="set-haptics" class="setting" aria-pressed="true">진동: 켬</button>
+            <button id="btn-quality-2" class="setting" aria-label="그래픽 품질 바꾸기">그래픽: 자동</button>
+          </div>
+          <details class="credits">
+            <summary>만든 이들</summary>
+            <ul>
+              <li><b>게임</b> 아르카나 러시 팀</li>
+              <li><b>개발 도움</b> Claude (Anthropic)</li>
+              <li><b>키아트·아이콘</b> OpenAI 이미지 생성, 게임 모델 렌더를 바탕으로</li>
+              <li><b>글꼴</b> Bagel Fat One (SIL OFL)</li>
+              <li><b>엔진</b> three.js · TypeScript · Vite</li>
+            </ul>
+          </details>
+          <button id="set-reset" class="danger-link" type="button">진행 초기화</button>
+          <div class="actions"><button id="set-close" class="primary">닫기</button></div>
         </div>
       </section>
       <div id="orientation-gate" class="orientation-gate" role="dialog" aria-modal="true" aria-labelledby="orientation-title" hidden tabindex="-1"><span aria-hidden="true">↻</span><h2 id="orientation-title">가로로 돌려 주세요</h2><p>전투는 멈춰 있어요. 회전 후 직접 재개할 수 있어요.</p></div>

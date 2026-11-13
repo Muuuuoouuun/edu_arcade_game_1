@@ -341,6 +341,12 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .hero-pick b { font-family: var(--display); font-weight: 400; font-size: 15px; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; }
 .hero-pick.has-more b::after { content: ' ⇄'; color: var(--gold); -webkit-text-stroke: 0; }
 @media (max-height: 420px) { .hero-pick b { font-size: 13px; } }
+/* Hero portraits (1.0, completion C5) */
+.hero-pick { flex-direction: row; align-items: center; gap: 6px; padding-left: 4px; }
+.hero-pick-text { display: flex; flex-direction: column; align-items: flex-start; }
+.hero-face { width: 34px; height: 34px; border-radius: 10px; border: 2px solid var(--outline); background: radial-gradient(circle at 50% 35%, #7fd0ff, #2f9bff); object-fit: cover; flex: none; }
+.hero-face-icon { padding: 0; object-fit: cover; background: radial-gradient(circle at 50% 35%, #7fd0ff, #2f9bff); }
+@media (max-height: 420px) { .hero-face { width: 28px; height: 28px; } }
 
 /* Model sheet (?sheet=1): characters only. */
 #rush.sheet .hud-top, #rush.sheet .btn-fire, #rush.sheet .btn-super, #rush.sheet .hud-pill, #rush.sheet .hud-build, #rush.sheet .toast { display: none; }
@@ -518,4 +524,33 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   .title-card { padding: 6px 12px; }
   .title-card .actions > button { padding: 7px 18px; font-size: 17px; }
 }
+
+/* 1.0 settings (completion C3) */
+.link-button { background: none; border: 0; padding: 4px 2px; color: var(--gold); font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.setting-list { display: grid; gap: 8px; margin: 10px 0 12px; }
+.setting-list .setting[aria-pressed="false"] { background: #2a2140; color: var(--muted); }
+.credits { text-align: left; margin: 0 0 10px; }
+.credits summary { cursor: pointer; text-align: center; color: var(--gold); font-weight: 700; padding: 4px; }
+.credits ul { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 4px; font-size: 13px; color: #e3ece6; }
+.credits b { display: inline-block; min-width: 84px; color: var(--gold); font-weight: 600; }
+.danger-link { display: block; margin: 0 auto 12px; background: none; border: 0; color: #ff8a98; font: inherit; font-size: 14px; text-decoration: underline; cursor: pointer; }
+.danger-link.armed { color: #fff; background: #c8324a; border-radius: 10px; padding: 6px 12px; text-decoration: none; }
+.settings-card { max-height: 100%; overflow: auto; }
+.settings .setting + .setting { margin-left: 8px; }
+@media (max-height: 420px) {
+  .settings-card { padding: 8px 14px; }
+  .settings-card h1 { font-size: 24px; -webkit-text-stroke-width: 4px; }
+  .setting-list { grid-template-columns: 1fr 1fr; gap: 6px; margin: 6px 0 8px; }
+  .setting-list .setting { padding: 6px 10px; font-size: 13.5px; white-space: nowrap; }
+  .credits { margin-bottom: 4px; }
+  .danger-link { margin-bottom: 6px; }
+  .settings-card .actions > button { padding: 6px 18px; font-size: 17px; }
+}
+
+/* 1.0 ending (completion C6): the first stage 10 win, once. */
+#screen-result.ending { background: linear-gradient(rgba(20,12,40,0.25), rgba(20,12,40,0.7)), url('./art/key-art-960.webp') center 62% / cover no-repeat; }
+.result-ending { margin: 4px 0 8px; padding: 10px 12px; border-radius: 14px; background: linear-gradient(#ffe58a, #ffc93c); color: #3a2400; border: 3px solid var(--outline); box-shadow: 0 4px 0 var(--outline); animation: tagUp 0.9s ease-in-out 2; }
+.result-ending .ending-line { margin: 0; font-family: var(--display); font-size: 20px; }
+.result-ending .ending-sub { margin: 4px 0 0; font-size: 13px; }
+@media (prefers-reduced-motion: reduce) { .result-ending { animation: none; } }
 

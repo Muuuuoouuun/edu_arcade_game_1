@@ -93,3 +93,14 @@ test('battle and endless rewards are each paid once when storage fails then reco
   assert.equal(settleBattle(restored, 'battle-1', battle, 1).granted, false);
   assert.equal(settleEndless(restored, 'endless-1', endless).granted, false);
 });
+
+test('rush settings (1.0): defaults, field-by-field fallback, round trip', async () => {
+  const { parseSettings, serializeSettings, DEFAULT_SETTINGS } = await import('./storage.ts');
+  assert.deepEqual(parseSettings(null), DEFAULT_SETTINGS);
+  assert.deepEqual(parseSettings('not json'), DEFAULT_SETTINGS);
+  assert.deepEqual(parseSettings('{"music":false,"sfx":"loud"}'), { sfx: true, music: false, haptics: true }, 'a bad field falls back alone');
+  const fallback = { sfx: false, music: true, haptics: false };
+  assert.deepEqual(parseSettings(null, fallback), fallback, 'first run follows the given fallback');
+  const s = { sfx: false, music: false, haptics: true };
+  assert.deepEqual(parseSettings(serializeSettings(s)), s);
+});

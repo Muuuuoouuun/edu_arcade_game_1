@@ -65,3 +65,17 @@ export function createKingdomStore(getStorage: () => KingdomStorage) {
 
   return { loadKingdom, saveKingdom, storageUnavailable: () => unavailable };
 }
+
+/** Rush's own settings (1.0, completion C3): effects, music and vibration, saved apart from the kingdom. */
+export const RUSH_SETTINGS_KEY = 'arcana-rush:settings:v1';
+export type RushSettings = { sfx: boolean; music: boolean; haptics: boolean };
+export const DEFAULT_SETTINGS: RushSettings = { sfx: true, music: true, haptics: true };
+/** Unknown, broken or partial saves fall back field by field, so one bad value never resets the rest. */
+export function parseSettings(raw: string | null, fallback: RushSettings = DEFAULT_SETTINGS): RushSettings {
+  let v: unknown = null;
+  try { v = JSON.parse(raw ?? 'null'); } catch { v = null; }
+  const o = (v && typeof v === 'object' ? v : {}) as Partial<Record<keyof RushSettings, unknown>>;
+  const pick = (key: keyof RushSettings) => (typeof o[key] === 'boolean' ? o[key] as boolean : fallback[key]);
+  return { sfx: pick('sfx'), music: pick('music'), haptics: pick('haptics') };
+}
+export const serializeSettings = (s: RushSettings) => JSON.stringify({ sfx: s.sfx, music: s.music, haptics: s.haptics });

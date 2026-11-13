@@ -1,4 +1,4 @@
-// Arcana Rush prototype bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
+// Arcana Rush bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
 import { ECONOMY, ENEMIES, HEROES, TOWER_LEVELS, type HeroKind } from './data.ts';
 import { createRush, padCost, padInReach, stepRush, superReady, wardBreakBurst, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
@@ -10,7 +10,9 @@ import { readSaved } from '../lib/storage.ts';
 import { playHaptic } from '../lib/haptic.ts';
 import { NATIVE_BACKGROUND } from '../lib/nativeEvents.ts';
 import { collect, ENDLESS_STAGE, kingdomMods, settleBattle, settleEndless } from './kingdom.ts';
-import { stageDifficulty } from './stages.ts';
+import { stageDifficulty, STAGE_COUNT } from './stages.ts';
+import { createMusic } from './music.ts';
+import { parseSettings, RUSH_KINGDOM_KEY, RUSH_SETTINGS_KEY, serializeSettings, type RushSettings } from './storage.ts';
 import { advanceClock, createClock, hitStopFor, tryStop } from './clock.ts';
 import { loadKingdom, saveKingdom, today, TownScreen } from './town.ts';
 import { TownView } from './townScene.ts';
@@ -19,13 +21,25 @@ import { createFrameWatch, nextPref, parsePref, PREF_LABEL, resolveQuality, watc
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const params = new URLSearchParams(location.search);
-// A separate entry page must honour the same settings selected on the mode screen.
-let feedbackEnabled = readSaved().sound;
-setSound(feedbackEnabled);
+// Rush's own settings (1.0, completion C3): effects, music, vibration. The first run follows the arcade mode screen's
+// sound choice; after that the rush settings screen owns them.
+const settingsFallback = (): RushSettings => ({ sfx: readSaved().sound, music: true, haptics: true });
+let settings: RushSettings = (() => { try { return parseSettings(localStorage.getItem(RUSH_SETTINGS_KEY), settingsFallback()); } catch { return settingsFallback(); } })();
+let feedbackEnabled = settings.haptics;
+setSound(settings.sfx);
+// Procedural music (completion C4, src/rush/music.ts): starts on the first gesture, follows the screen each frame.
+const music = createMusic();
+music.setEnabled(settings.music);
+for (const type of ['pointerdown', 'keydown'] as const) window.addEventListener(type, () => music.unlock(), { passive: true });
+function applySettings() {
+  feedbackEnabled = settings.haptics;
+  setSound(settings.sfx);
+  music.setEnabled(settings.music);
+}
 window.addEventListener('storage', event => {
-  if (event.key !== 'playground:v1' && event.key !== null) return;
-  feedbackEnabled = readSaved().sound;
-  setSound(feedbackEnabled);
+  if (event.key !== RUSH_SETTINGS_KEY) return;
+  settings = parseSettings(event.newValue, settings);
+  applySettings();
 });
 const speed = Math.min(8, Math.max(0.25, Number(params.get('speed')) || 1));
 const debug = params.has('debug');
@@ -327,9 +341,9 @@ function updateHud() {
 }
 
 // ---------- screens ----------
-function showScreen(id: 'title' | 'town' | 'result' | 'pause' | null) {
+function showScreen(id: 'title' | 'town' | 'result' | 'pause' | 'settings' | null) {
   if(rendererLost)return;
-  for (const s of ['title', 'town', 'result', 'pause']) $(`screen-${s}`).hidden = s !== id;
+  for (const s of ['title', 'town', 'result', 'pause', 'settings']) $(`screen-${s}`).hidden = s !== id;
   surface.classList.toggle('in-menu', id !== null);
   surface.classList.toggle('in-town', id === 'town');
 }
@@ -367,8 +381,12 @@ function showResult() {
   mode = 'result';
   input.enabled = false;
   if (s.diff.endless) { showEndlessResult(); return; }
-  $('result-title').textContent = won ? `스테이지 ${stage} 방어 성공!` : `스테이지 ${stage} 마을 함락`;
+  // Campaign ending (1.0, completion C6): read before settling, so only the very first stage-10 win shows it.
+  const ending = won && stage === STAGE_COUNT && (loadKingdom().stars[STAGE_COUNT - 1] ?? 0) === 0;
+  $('result-title').textContent = ending ? '캠페인 완료!' : won ? `스테이지 ${stage} 방어 성공!` : `스테이지 ${stage} 마을 함락`;
   $('screen-result').classList.toggle('won', won);
+  $('screen-result').classList.toggle('ending', ending);
+  $('result-ending').hidden = !ending;
   const { kingdom, granted, reward } = settleBattle(collect(loadKingdom(), Date.now()), battleId, s, stage, today());
   $('result-stars').innerHTML = won
     ? `<span class="stars">${'<i class="on">★</i>'.repeat(reward.stars)}${'<i>★</i>'.repeat(3 - reward.stars)}</span>${reward.newStars ? `<small>새 별 +${reward.newStars}${reward.newStars === reward.stars && stage < 10 ? ` · 스테이지 ${stage + 1} 열림` : ''}</small>` : ''}`
@@ -393,7 +411,8 @@ function showResult() {
 function showEndlessResult() {
   const s = state, { kingdom, granted, reward } = settleEndless(collect(loadKingdom(), Date.now()), battleId, s);
   $('result-title').textContent = `끝없는 도전 · 웨이브 ${reward.waves}`;
-  $('screen-result').classList.remove('won');
+  $('screen-result').classList.remove('won', 'ending');
+  $('result-ending').hidden = true;
   const passed = reward.milestones.map(m => `${m.waves}웨이브 돌파 <i class="res-ico shard"></i>+${m.shards}`).join(' · ');
   $('result-stars').innerHTML = (reward.newBest ? `<small class="best">새 최고 기록! ${reward.waves}웨이브</small>` : `<small>최고 기록 ${reward.best}웨이브</small>`)
     + (passed ? `<small class="milestone">기록 보상: ${passed}</small>` : '');
@@ -418,15 +437,50 @@ $('pause').addEventListener('click', () => { if (mode === 'play') { paused = tru
 $('btn-resume').addEventListener('click', () => { if (portrait.matches || document.hidden) return; paused = false; input.enabled = mode === 'play'; input.reset(); showScreen(null); });
 function qualityLabel() {
   const auto = qualityPref === 'auto' ? `(${PREF_LABEL[view.quality]})` : '';
-  $('btn-quality').textContent = `그래픽: ${PREF_LABEL[qualityPref]}${auto}`;
+  for (const id of ['btn-quality', 'btn-quality-2']) $(id).textContent = `그래픽: ${PREF_LABEL[qualityPref]}${auto}`;
 }
 function applyQuality() { view.setQuality(resolveQuality(qualityPref, frameWatch.dropped)); qualityLabel(); forceDraw = true; }
-$('btn-quality').addEventListener('click', () => {
+function cycleQuality() {
   qualityPref = nextPref(qualityPref);
   if (!pinnedQuality) try { localStorage.setItem(QUALITY_KEY, qualityPref); } catch { /* private mode: keep it for this session */ }
   applyQuality();
-});
+}
+$('btn-quality').addEventListener('click', cycleQuality);
+$('btn-quality-2').addEventListener('click', cycleQuality);
 qualityLabel();
+// Settings screen (1.0, completion C3): opened from the title or the pause card, returns where it came from.
+let settingsBack: 'title' | 'pause' = 'title', resetArmedUntil = 0, resetTimer = 0;
+function settingsLabels() {
+  for (const [id, key, name] of [['set-sfx', 'sfx', '효과음'], ['set-music', 'music', '배경 음악'], ['set-haptics', 'haptics', '진동']] as const) {
+    $(id).textContent = `${name}: ${settings[key] ? '켬' : '끔'}`;
+    $(id).setAttribute('aria-pressed', String(settings[key]));
+  }
+}
+function disarmReset() { resetArmedUntil = 0; window.clearTimeout(resetTimer); $('set-reset').classList.remove('armed'); $('set-reset').textContent = '진행 초기화'; }
+function openSettings(from: 'title' | 'pause') { settingsBack = from; settingsLabels(); qualityLabel(); disarmReset(); showScreen('settings'); }
+$('btn-settings').addEventListener('click', () => openSettings('title'));
+$('btn-pause-settings').addEventListener('click', () => openSettings('pause'));
+$('set-close').addEventListener('click', () => { disarmReset(); showScreen(settingsBack); });
+for (const [id, key] of [['set-sfx', 'sfx'], ['set-music', 'music'], ['set-haptics', 'haptics']] as const) {
+  $(id).addEventListener('click', () => {
+    settings = { ...settings, [key]: !settings[key] };
+    try { localStorage.setItem(RUSH_SETTINGS_KEY, serializeSettings(settings)); } catch { /* private mode: this session only */ }
+    applySettings();
+    settingsLabels();
+  });
+}
+// Reset needs a second press within 4 s; it clears only the kingdom save (settings stay) and reloads.
+$('set-reset').addEventListener('click', () => {
+  if (Date.now() < resetArmedUntil) {
+    try { localStorage.removeItem(RUSH_KINGDOM_KEY); } catch { /* nothing saved to clear */ }
+    location.reload();
+    return;
+  }
+  resetArmedUntil = Date.now() + 4000;
+  $('set-reset').classList.add('armed');
+  $('set-reset').textContent = '한 번 더 누르면 마을이 지워져요';
+  resetTimer = window.setTimeout(disarmReset, 4000);
+});
 $('btn-quit').addEventListener('click', () => { paused = false; mode = 'title'; showScreen('title'); });
 $('rush-surface').addEventListener('pointerdown', () => { if (mode === 'demo') { mode = 'title'; showScreen('title'); } });
 function pauseForBackground() { if (mode === 'play') { paused = true; input.enabled = false; input.reset(); showScreen('pause'); } }
@@ -485,6 +539,8 @@ function frame(now: number) {
   // Rendering keeps real time (camera settles, effects fade); during a hit-stop the world pose holds still.
   view.fxPaused = state.tick >= freezeAt;
   view.sync(state, running ? dt : 0, mode === 'play' ? input.aim : null, stopped, reducedMotion);
+  // Music follows the screen; a living boss turns battle music to the boss mood (same tempo, so it stays in step).
+  music.setMood(mode === 'town' ? 'town' : mode === 'play' || mode === 'demo' ? (state.enemies.some(e => e.kind === 'boss' && e.hp > 0) ? 'boss' : 'battle') : 'title');
   if (mode === 'town') {
     // The chosen hero's model downloads while the player is still in town (cycle 42), not at the start of the battle.
     // Only once the choice has held for PRELOAD_AFTER s: cycling past Bron must not start his 1.3 MB download.
@@ -535,5 +591,5 @@ if (params.has('sheet')) {
 else if (params.has('play')) start('play');
 
 // Read-only handle for automated browser checks.
-Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, get quality() { return { pref: qualityPref, tier: view.quality, autoDropped: frameWatch.dropped }; }, get drawnFrames() { return drawnFrames; }, info: () => view.info(), enemyScreen, towerLevels: TOWER_LEVELS.length } });
+Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, get quality() { return { pref: qualityPref, tier: view.quality, autoDropped: frameWatch.dropped }; }, get drawnFrames() { return drawnFrames; }, get music() { return { mood: music.mood, enabled: music.enabled }; }, info: () => view.info(), enemyScreen, towerLevels: TOWER_LEVELS.length } });
 }

@@ -26,6 +26,10 @@ const ROWS: Row[] = [
   { id: 'forge', name: '대장간', badge: '철', tone: 'forge', label: '화염 범위·냉기 시간', value: k => `+${pct(FORGE.splashShare * k.perks.forge)}·+${(FORGE.slowTime * k.perks.forge).toFixed(2)}초` },
   { id: 'vault', name: '금고', badge: '금', tone: 'vault', label: '전투 시작 골드', value: k => `+${VAULT_GOLD * k.perks.vault}G` },
 ];
+import rangerFace from './art/hero-gecko-ranger.webp';
+import bronFace from './art/hero-dwarf-guardian.webp';
+import bearFace from './art/hero-polar-bear.webp';
+const HERO_FACE: Record<HeroKind, string> = { ranger: rangerFace, bron: bronFace, bear: bearFace };
 /** The same kingdom one level higher in `u` (for the "now → next" preview only). */
 function bumped(k: Kingdom, u: Upgrade): Kingdom {
   if (u === 'castle' || u === 'farm' || u === 'mill') return { ...k, [u]: k[u] + 1 };
@@ -90,7 +94,7 @@ export class TownScreen {
         <button class="town-up" data-up="${r.id}" aria-label="${r.name} 강화"><span data-cost></span></button>
       </li>`).join('') + `
       <li class="town-row" data-id="hero">
-        <span class="town-icon tone-hero" aria-hidden="true">영</span>
+        <img class="town-icon tone-hero hero-face-icon" data-hero-face alt="" width="38" height="38" />
         <div class="town-info"><b><span data-hero-name></span> <em data-level></em></b><small data-effect></small><small class="talent-line" data-talent-effect></small></div>
         <div class="hero-ups">
           <button class="town-up" data-train aria-label="영웅 훈련"><span data-cost></span></button>
@@ -229,6 +233,9 @@ export class TownScreen {
     this.$('btn-battle').innerHTML = `${label} 출전${badge}${pill}`;
     this.$('btn-battle').setAttribute('aria-label', `${label} 출전${daily ? ', 오늘의 첫 승리 보상 대기 중' : goal ? `, 다음 목표 ${goal.waves}웨이브, 조각 ${goal.shards}개` : ''}${rec === null ? '' : `, 권장 전투력 ${fmt(rec)}, 지금 ${fmt(have)}`}`);
     this.$('hero-name').textContent = `${HEROES[k.hero].name} Lv${k.heroLv[k.hero]}`;
+    // Hero portraits (1.0, completion C5): cut from the same Blender renders the in-game models come from.
+    (this.$('hero-face') as HTMLImageElement).src = HERO_FACE[k.hero];
+    this.root.querySelector<HTMLImageElement>('[data-hero-face]')!.src = HERO_FACE[k.hero];
     const heroRow = this.root.querySelector<HTMLElement>('[data-id="hero"]')!;
     const lv = k.heroLv[k.hero], g = heroGrowth(lv), tc = trainCost(k, k.hero), trainBtn = heroRow.querySelector<HTMLButtonElement>('[data-train]')!;
     const growth = (x: { hp: number; damage: number }) => x.hp === x.damage ? `+${pct(x.hp - 1)}` : `체력 +${pct(x.hp - 1)} · 공격 +${pct(x.damage - 1)}`;
