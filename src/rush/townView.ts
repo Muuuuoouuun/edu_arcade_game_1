@@ -64,8 +64,9 @@ export class TownView {
     const body = this.body, plain = this.plain;
     if (body && plain && cap !== null && (!this.capped || cap !== this.cap)) {
       this.capped = plain.clone();
-      // Above the plinth only, and a dusting (60%): the roofs stay team blue underneath.
-      capColors(body.geometry, this.capped, cap, .35, 1.3, .6);
+      // Above the plinth only, and a light dusting (30%): at 60% the near-flat castle roof went grey and lost the fixed
+      // team blue (art direction rule 5), so the main session lowered it after looking at the stage-6 screenshots.
+      capColors(body.geometry, this.capped, cap, .35, 1.3, .3);
     }
     this.cap = cap;
     if (body && plain) body.geometry.setAttribute('color', cap !== null && this.capped ? this.capped : plain);

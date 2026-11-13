@@ -141,3 +141,31 @@ test('hero training pays off: Lv10 wins clearly more of stages 7-8, but stage 10
     for (const seed of [1, 2, 3, 4]) assert.equal(playHero(seed, 10, hero, lv(10)).phase, 'lost', `${hero} Lv10 alone, stage 10 seed ${seed}`);
   }
 });
+
+test('region look: the forest keeps the pre-region colours, snow is a calm light ground with the same tokens', async () => {
+  const { REGION_LOOK, BOSS_LOOK, PAL } = await import('./look.ts');
+  const { FOREST_GROUND, groundColorAt, groundColors, cliffColors, createGroundGeometry, createCliffGeometry } = await import('./terrainElevation.ts');
+  const { regionOf } = await import('./expedition.ts');
+  const { forest, snow } = REGION_LOOK;
+  assert.deepEqual(Object.keys(snow).sort(), Object.keys(forest).sort());
+  assert.deepEqual(Object.keys(snow.ground).sort(), Object.keys(forest.ground).sort());
+  // Forest = the look every stage had before: same ground numbers, no snow, no tint, pale frost cues.
+  assert.equal(forest.ground, FOREST_GROUND);
+  assert.deepEqual([forest.ground.grass, forest.ground.grassAlt, forest.ground.road, forest.ground.roadEdge, forest.ground.plaza], [0x779958, 0x678b50, 0xcdb383, 0xa99a69, 0xcfc19c]);
+  assert.deepEqual([forest.water, forest.cap, forest.enemyTint, forest.snowfall, forest.frostRing, forest.ice, forest.iceOpacity], [PAL.water, null, 0xffffff, 0, 0x8fe6ff, 0xc4f2ff, 0.4]);
+  assert.equal(groundColorAt(-14, -3), groundColorAt(-14, -3, FOREST_GROUND));
+  // Stages 1-5 and the endless challenge (11) are forest; 6-10 snow.
+  assert.deepEqual([1, 5, 6, 10, 11].map(regionOf), ['forest', 'forest', 'snow', 'snow', 'forest']);
+  // Snow ground: light but never white, and low in saturation (calmer than actors).
+  const hsl = (hex: number) => { const r = (hex >> 16) / 255, g = ((hex >> 8) & 255) / 255, b = (hex & 255) / 255, max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2; return { l, s: max === min ? 0 : (max - min) / (1 - Math.abs(2 * l - 1)) }; };
+  for (const key of ['grass', 'grassAlt', 'road', 'plaza'] as const) { const c = hsl(snow.ground[key]); assert.ok(c.l > 0.6 && c.l < 0.9 && c.s < 0.45, `${key} ${JSON.stringify(c)}`); }
+  assert.ok(snow.snowfall > 0 && snow.cap !== null);
+  // Colour sets line up with the meshes they are swapped onto.
+  assert.equal(groundColors(snow.ground).length, createGroundGeometry().getAttribute('color').array.length);
+  assert.equal(cliffColors(snow.ground).length, createCliffGeometry().getAttribute('color').array.length);
+  assert.deepEqual([...groundColors(FOREST_GROUND)], [...createGroundGeometry().getAttribute('color').array]);
+  assert.deepEqual([...cliffColors(FOREST_GROUND)], [...createCliffGeometry().getAttribute('color').array]);
+  // Bosses: three colour sets with the same slots.
+  assert.deepEqual(Object.keys(BOSS_LOOK.snow).sort(), Object.keys(BOSS_LOOK.default).sort());
+  assert.deepEqual(Object.keys(BOSS_LOOK.forest).sort(), Object.keys(BOSS_LOOK.default).sort());
+});

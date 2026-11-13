@@ -54,7 +54,7 @@ export const REGION_LOOK: Record<RegionName, RegionLook> = {
     },
     hedge: 0x3f7f78, hedgeTop: 0xe9f2f8,
     bushBase: 0xa9bfd0, bushBlades: [0xdbe8f2, 0xc9dbe9, 0xeef5fa],
-    cap: 0xe9f2f8, wallMix: 0.35, wallCool: 0x8fa0c0, hemiSky: 0xe8f6ff, hemiGround: 0x8f9fb5, enemyTint: 0xccd8ea,
+    cap: 0xe9f2f8, wallMix: 0.35, wallCool: 0x8fa0c0, hemiSky: 0xe8f6ff, hemiGround: 0x8f9fb5, enemyTint: 0xc4d2e6,
     frostRing: 0x1aa0d8, ice: 0x5cc4f5, iceOpacity: 0.55, frostFx: 0x49b6e6, aimFan: 0x24406e, aimLob: 0x1f8fd0, snowfall: 140,
   },
 };
