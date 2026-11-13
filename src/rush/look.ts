@@ -49,12 +49,12 @@ export const REGION_LOOK: Record<RegionName, RegionLook> = {
   snow: {
     water: 0x86c3d6,
     ground: {
-      plaza: 0xc6d4da, road: 0xd0dde2, roadEdge: 0x86a3b3, grass: 0xb4cbdb, grassAlt: 0xa6c0d2,
-      rock: 0x8394a8, rockAlt: 0x6f8196, rockFoot: 0x4a5d78, rim: 0xa6c0d2,
+      plaza: 0xc6d4da, road: 0xd0dde2, roadEdge: 0x86a3b3, grass: 0xb8cfde, grassAlt: 0xadc6d7,
+      rock: 0x8394a8, rockAlt: 0x6f8196, rockFoot: 0x4a5d78, rim: 0xadc6d7,
     },
     hedge: 0x3f7f78, hedgeTop: 0xe9f2f8,
     bushBase: 0xa9bfd0, bushBlades: [0xdbe8f2, 0xc9dbe9, 0xeef5fa],
-    cap: 0xe9f2f8, wallMix: 0.35, wallCool: 0x8fa0c0, hemiSky: 0xe8f6ff, hemiGround: 0x8f9fb5, enemyTint: 0xd4deee,
+    cap: 0xe9f2f8, wallMix: 0.35, wallCool: 0x8fa0c0, hemiSky: 0xe8f6ff, hemiGround: 0x8f9fb5, enemyTint: 0xccd8ea,
     frostRing: 0x1aa0d8, ice: 0x5cc4f5, iceOpacity: 0.55, frostFx: 0x49b6e6, aimFan: 0x24406e, aimLob: 0x1f8fd0, snowfall: 140,
   },
 };
