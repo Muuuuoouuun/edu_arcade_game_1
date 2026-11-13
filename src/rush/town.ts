@@ -64,6 +64,13 @@ export class TownScreen {
     // Kingdom goal (cycle 64): a met goal glows; a tap pays its reward and shows the next one.
     this.$('town-goal').addEventListener('click', () => {
       const g = currentGoal(this.kingdom);
+      // An unmet stage goal points at its stage (1.0): the stage row selects it and the note says what to do.
+      if (g && !g.done && g.goal.stage && stageUnlocked(this.kingdom, g.goal.stage)) {
+        this.stage = g.goal.stage;
+        this.render();
+        this.note(`${g.goal.text}: 스테이지 ${g.goal.stage}을(를) 골랐어요. 출전해서 목표를 채워요`);
+        return;
+      }
       if (!g?.done) return;
       this.kingdom = claimGoal(this.kingdom);
       saveKingdom(this.kingdom);
@@ -276,7 +283,7 @@ export class TownScreen {
     goalEl.hidden = !cur;
     if (cur) {
       goalEl.classList.toggle('done', cur.done);
-      goalEl.disabled = !cur.done;
+      goalEl.disabled = !cur.done && !(cur.goal.stage && stageUnlocked(k, cur.goal.stage));
       // The fixed chain counts out of its length; the power ladder after it (cycle 83) has no end, so no total.
       const head = cur.goal.ladder ? `목표 ${cur.index + 1}` : `목표 ${cur.index + 1}/${GOALS.length}`;
       goalEl.querySelector('[data-goal-head]')!.textContent = cur.done ? `${head} · 받기` : head;

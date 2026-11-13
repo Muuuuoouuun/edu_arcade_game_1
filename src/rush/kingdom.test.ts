@@ -412,3 +412,11 @@ test('recommended stage power (cycle 89): one per stage, rising, a new kingdom a
   assert.equal(recommendedPower(1), STAGE_POWER[0]);
   assert.equal(recommendedPower(STAGE_COUNT + 1), null, 'endless has no recommendation');
 });
+
+test('stage goals name their stage (1.0): the town can point an unmet goal at it', async () => {
+  const { GOALS } = await import('./kingdom.ts');
+  for (const g of GOALS) {
+    const m = g.text.match(/^스테이지 (\d+)/);
+    assert.equal(g.stage, m ? Number(m[1]) : undefined, g.text);
+  }
+});

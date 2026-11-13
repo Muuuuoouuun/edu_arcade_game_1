@@ -331,20 +331,21 @@ export function kingdomPower(k: Kingdom): number {
 
 /** Kingdom goal chain (cycle 64): one goal at a time, in the order a growing kingdom meets them (castle, stages, hero,
  * forge, endless), each paying a little food, wood or shards when claimed in town. */
-export type Goal = { text: string; progress: (k: Kingdom) => [number, number]; reward: Partial<Cost> & { shards?: number }; ladder?: boolean };
+/** `stage`: the stage a goal is about (1.0): tapping the unmet goal in town selects it, so '3 stars on stage 5' points at stage 5. */
+export type Goal = { text: string; progress: (k: Kingdom) => [number, number]; reward: Partial<Cost> & { shards?: number }; ladder?: boolean; stage?: number };
 const starsOn = (k: Kingdom, n: number) => k.stars[n - 1] ?? 0;
 const bestHeroLv = (k: Kingdom) => Math.max(k.heroLv.ranger, k.heroLv.bron, k.heroLv.bear);
 export const GOALS: readonly Goal[] = [
-  { text: '스테이지 1 승리', progress: k => [Math.min(1, starsOn(k, 1)), 1], reward: { food: 60 } },
+  { text: '스테이지 1 승리', stage: 1, progress: k => [Math.min(1, starsOn(k, 1)), 1], reward: { food: 60 } },
   { text: '성 Lv 2', progress: k => [Math.min(2, k.castle), 2], reward: { wood: 60 } },
   { text: '농장 Lv 2', progress: k => [Math.min(2, k.farm), 2], reward: { food: 80 } },
-  { text: '스테이지 3에서 별', progress: k => [Math.min(1, starsOn(k, 3)), 1], reward: { shards: 2 } },
+  { text: '스테이지 3에서 별', stage: 3, progress: k => [Math.min(1, starsOn(k, 3)), 1], reward: { shards: 2 } },
   { text: '공격 강화 Lv 1', progress: k => [Math.min(1, k.perks.attack), 1], reward: { wood: 80 } },
   { text: '영웅 Lv 2', progress: k => [Math.min(2, bestHeroLv(k)), 2], reward: { shards: 2 } },
   { text: '성 Lv 3', progress: k => [Math.min(3, k.castle), 3], reward: { food: 150, wood: 150 } },
-  { text: '스테이지 5에서 별 3개', progress: k => [starsOn(k, 5), 3], reward: { shards: 3 } },
+  { text: '스테이지 5에서 별 3개', stage: 5, progress: k => [starsOn(k, 5), 3], reward: { shards: 3 } },
   { text: '대장간 Lv 1', progress: k => [Math.min(1, k.perks.forge), 1], reward: { shards: 3 } },
-  { text: '스테이지 10에서 별', progress: k => [Math.min(1, starsOn(k, 10)), 1], reward: { shards: 5 } },
+  { text: '스테이지 10에서 별', stage: 10, progress: k => [Math.min(1, starsOn(k, 10)), 1], reward: { shards: 5 } },
   { text: '끝없는 도전 5웨이브', progress: k => [Math.min(5, k.endlessBest), 5], reward: { shards: 5 } },
   { text: '성 Lv 5', progress: k => [Math.min(5, k.castle), 5], reward: { shards: 8 } },
 ];

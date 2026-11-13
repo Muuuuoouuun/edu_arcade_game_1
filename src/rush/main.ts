@@ -459,6 +459,8 @@ function settingsLabels() {
 function disarmReset() { resetArmedUntil = 0; window.clearTimeout(resetTimer); $('set-reset').classList.remove('armed'); $('set-reset').textContent = '진행 초기화'; }
 function openSettings(from: 'title' | 'pause') { settingsBack = from; settingsLabels(); qualityLabel(); disarmReset(); showScreen('settings'); }
 $('btn-settings').addEventListener('click', () => openSettings('title'));
+// The standalone app (1.0, tools/rush-app) has no arcade to go back to: drop the mode-select link there.
+if ((window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.()) document.querySelector('.rush-back')?.remove();
 $('btn-pause-settings').addEventListener('click', () => openSettings('pause'));
 $('set-close').addEventListener('click', () => { disarmReset(); showScreen(settingsBack); });
 for (const [id, key] of [['set-sfx', 'sfx'], ['set-music', 'music'], ['set-haptics', 'haptics']] as const) {

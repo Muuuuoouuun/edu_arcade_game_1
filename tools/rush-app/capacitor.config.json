@@ -1,0 +1,7 @@
+{
+  "appId": "io.github.muuuuoouuun.arcanarush",
+  "appName": "아르카나 러시",
+  "webDir": "www",
+  "backgroundColor": "#12261c",
+  "android": { "backgroundColor": "#12261c" }
+}
