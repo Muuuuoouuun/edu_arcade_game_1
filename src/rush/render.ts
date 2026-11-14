@@ -522,6 +522,8 @@ export class RushView {
     if (scenery.extra.length) {
       const extra = new Mesh(bake(scenery.extra), this.mats.baked);
       extra.name = 'rush-map-extra'; extra.visible = spec.decor; decor.push(extra);
+      // Cycle 100: flowers, tufts and pebbles are too small and low for a visible shadow; one shadow draw saved.
+      extra.userData.noCast = true;
       root.add(extra);
     }
     // Hiding cover: walk-through, see-through when the hero hides in it.
@@ -536,6 +538,7 @@ export class RushView {
       mesh.add(hull); hull.visible = spec.terrainOutlines; hulls.push(hull);
       mesh.position.set(b.x, heightAt(b.x, b.z), b.z);
       mesh.renderOrder = 6; // drawn after the hero so the see-through state shows them
+      mesh.userData.noCast = true; // cycle 100: grass on grass casts no shadow worth a draw (six per layout)
       root.add(mesh);
       return mesh;
     });
@@ -1760,6 +1763,22 @@ export class RushView {
       if (!(o instanceof Mesh) || !o.visible || !(o.material as Material).visible) return; // parents drawn as nothing
       const g = o.geometry as BufferGeometry, n = (g.index ? g.index.count : g.attributes.position.count) / 3;
       if ((o.material as Material).side === BackSide) out.hull += n; else out.body += n;
+    });
+    return out;
+  }
+  /** Debug (cycle 100): the visible meshes that cast into the shadow map, grouped by name (or the parent's name),
+   * with their triangles and instance count. Read-only. */
+  shadowCasters() {
+    const out: Record<string, { meshes: number; tris: number; instances: number }> = {};
+    this.scene.traverseVisible(o => {
+      const m = o as Mesh;
+      if (!m.isMesh || !m.castShadow) return;
+      const g = m.geometry as BufferGeometry, tris = (g.index ? g.index.count : g.attributes.position.count) / 3;
+      const inst = (m as unknown as { isInstancedMesh?: boolean; count: number }).isInstancedMesh ? (m as unknown as { count: number }).count : 1;
+      if (inst === 0) return;
+      const key = o.name || o.parent?.name || o.userData.kind || 'unnamed';
+      const e = out[key] ?? (out[key] = { meshes: 0, tris: 0, instances: 0 });
+      e.meshes++; e.tris += tris * inst; e.instances += inst;
     });
     return out;
   }

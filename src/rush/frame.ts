@@ -154,7 +154,8 @@ const roleOf = (m: Material | Material[]): ToonRole | undefined => (Array.isArra
 /** Decide who casts and who receives, from the material alone, so every lane's meshes take part without a flag at each
  * creation site: solid toon meshes cast and receive; flat scenery (ground, rock skirt) only receives; instanced actors
  * and everything under `actors` (the hero) only cast, so characters stay bright wherever they stand. Ink hulls, effects
- * and HUD quads (basic materials) do neither. `userData.noShadow` on an object opts it out. Cheap enough to run every
+ * and HUD quads (basic materials) do neither. `userData.noShadow` on an object opts it out; `userData.noCast` keeps it
+ * receiving but not casting. Cheap enough to run every
  * frame (a few hundred property writes), which also covers towers, models and props added later. */
 export function markShadows(root: Object3D, actors?: Object3D | null): void { visitShadows(root, false, actors ?? null); }
 function visitShadows(o: Object3D, actor: boolean, actors: Object3D | null): void {
@@ -162,7 +163,8 @@ function visitShadows(o: Object3D, actor: boolean, actors: Object3D | null): voi
   if (mesh.isMesh && !o.userData.noShadow) {
     const role = roleOf(mesh.material);
     if (role) {
-      mesh.castShadow = role === 'solid';
+      // `userData.noCast` (cycle 100): receives but does not cast (walk-through grass, small field decoration).
+      mesh.castShadow = role === 'solid' && !o.userData.noCast;
       mesh.receiveShadow = !actor && !(mesh as InstancedMesh).isInstancedMesh;
     }
   }
