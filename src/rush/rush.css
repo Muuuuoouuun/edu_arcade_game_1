@@ -752,3 +752,8 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   .hud-build.demolish.below-split { top: calc(166px + var(--safe-t)); }
   .hud-build.demolish:active { transform: translateY(2px); }
 }
+
+/* Cycle 98: the effect line of a town card may wrap (two lines; three on a narrow portrait card) instead of ending in
+   an ellipsis: the walls and forge cards now also say what they do for the lane barricades. */
+.town-info small[data-effect] { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.25; overflow-wrap: anywhere; }
+@media (orientation: portrait) { .town-info small[data-effect] { -webkit-line-clamp: 4; } }

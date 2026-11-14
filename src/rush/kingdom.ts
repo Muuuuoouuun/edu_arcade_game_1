@@ -2,7 +2,7 @@
 // Principles taken from kingdom-builder games: the castle is the hub and caps everything else, resource
 // buildings produce over (offline) time, and permanent upgrades change the next battle.
 import { WAVE_COUNT, type RushMods, type RushState } from './sim.ts';
-import { TALENT_MAX, type HeroKind } from './data.ts';
+import { BARRICADE, TALENT_MAX, type HeroKind } from './data.ts';
 import { STAGE_COUNT, starBonus, starsFor, stageRewardMul } from './stages.ts';
 
 export type Resource = 'food' | 'wood';
@@ -173,6 +173,14 @@ export function learnTalent(k: Kingdom, hero: HeroKind): Kingdom {
   next.talent[hero]++;
   return next;
 }
+
+/** What the kingdom adds to a barricade (cycle 98, shown on the town cards): its health grows with the town-health
+ * perk (BARRICADE.masonry times that perk's share), a spiked one's spike damage with the forge. The same numbers as
+ * sim.ts `barricadeMaxHp` and `barricadeSpike` (kingdom.test.ts ties them together). */
+export const barricadeGrowth = (k: Pick<Kingdom, 'perks'>): { hp: number; spike: number } => ({
+  hp: BARRICADE.masonry * PERK_EFFECT.townHp * k.perks.townHp,
+  spike: BARRICADE.spikeForge * k.perks.forge,
+});
 
 /** Battle modifiers from permanent upgrades and the chosen hero's level. */
 export const kingdomMods = (k: Kingdom): RushMods => {

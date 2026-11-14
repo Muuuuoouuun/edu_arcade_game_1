@@ -420,4 +420,20 @@ test('stage goals name their stage (1.0): the town can point an unmet goal at it
     assert.equal(g.stage, m ? Number(m[1]) : undefined, g.text);
   }
 });
+test('barricade growth shown in town equals what the battle gives (walls → health, forge → spikes)', async () => {
+  const { barricadeGrowth, kingdomMods, createKingdom } = await import('./kingdom.ts');
+  const { barricadeMaxHp, barricadeSpike, createRush } = await import('./sim.ts');
+  const { BARRICADE_LEVELS } = await import('./data.ts');
+  for (let lv = 0; lv <= 5; lv++) {
+    const k = { ...createKingdom(T0), castle: 5, perks: { attack: 0, towerDiscount: 0, townHp: lv, forge: lv, vault: 0 } };
+    const s = createRush(1, kingdomMods(k)), g = barricadeGrowth(k);
+    for (let level = 0; level < BARRICADE_LEVELS.length; level++) {
+      assert.equal(barricadeMaxHp(s, level), Math.round(BARRICADE_LEVELS[level].hp * (1 + g.hp)), `health at walls Lv${lv}, barricade level ${level}`);
+    }
+    assert.equal(barricadeSpike(s, 1), BARRICADE_LEVELS[1].spike + g.spike, `spikes at forge Lv${lv}`);
+    assert.equal(barricadeSpike(s, 0), 0, 'a plain barricade has no spikes');
+  }
+  assert.deepEqual(barricadeGrowth(createKingdom(T0)), { hp: 0, spike: 0 });
+});
+
 import './expedition.test.ts';

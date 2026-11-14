@@ -2,7 +2,7 @@
 import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
 import { FORGE, HEROES, TALENT_MAX, TALENTS, type HeroKind } from './data.ts';
-import { kingdomPower, recommendedPower, claimGoal, currentGoal, GOALS,
+import { barricadeGrowth, kingdomPower, recommendedPower, claimGoal, currentGoal, GOALS,
   CASTLE_MAX, DAILY_WIN, ENDLESS_STAGE, nextMilestone, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canLearnTalent, canTrain, learnTalent, talentCost, dailyReady, dayIndex, canUpgrade, chooseHero, collect, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, pending, PERK_EFFECT, rate,
   storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
@@ -24,8 +24,9 @@ const ROWS: Row[] = [
   { id: 'mill', name: '제재소', badge: '목', tone: 'wood', label: '목재 분당', value: k => String(rate(k).wood) },
   { id: 'attack', name: '영웅 공격', badge: '공', tone: 'attack', label: '화살·필살기', value: k => `+${pct(PERK_EFFECT.attack * k.perks.attack)}` },
   { id: 'towerDiscount', name: '탑 설계도', badge: '탑', tone: 'tower', label: '탑 비용', value: k => `−${pct(PERK_EFFECT.towerDiscount * k.perks.towerDiscount)}` },
-  { id: 'townHp', name: '성벽 보강', badge: '벽', tone: 'wall', label: '마을 체력', value: k => `+${pct(PERK_EFFECT.townHp * k.perks.townHp)}` },
-  { id: 'forge', name: '대장간', badge: '철', tone: 'forge', label: '화염 범위·냉기 시간', value: k => `+${pct(FORGE.splashShare * k.perks.forge)}·+${(FORGE.slowTime * k.perks.forge).toFixed(2)}초` },
+  // Cycle 98: both perks also grow the lane barricades (health with the walls, spike damage with the forge).
+  { id: 'townHp', name: '성벽 보강', badge: '벽', tone: 'wall', label: '마을·방벽 체력', value: k => `+${pct(PERK_EFFECT.townHp * k.perks.townHp)}·+${pct(barricadeGrowth(k).hp)}` },
+  { id: 'forge', name: '대장간', badge: '철', tone: 'forge', label: '화염·냉기·가시', value: k => `+${pct(FORGE.splashShare * k.perks.forge)}·+${(FORGE.slowTime * k.perks.forge).toFixed(2)}초·+${barricadeGrowth(k).spike}` },
   { id: 'vault', name: '금고', badge: '금', tone: 'vault', label: '전투 시작 골드', value: k => `+${VAULT_GOLD * k.perks.vault}G` },
 ];
 import rangerFace from './art/hero-gecko-ranger.webp';
