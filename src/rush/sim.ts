@@ -3,7 +3,7 @@
 // so this module can run in tests, in the browser and later on an authoritative server.
 import {
   ARENA, BUSH, CRATE, ECONOMY, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WAVES,
-  BARRICADE, BARRICADES, BARRICADE_LEVELS, FROST_HOWL, TOWER_CAP, type Block, heroStats, type EnemyDef, type EnemyKind, type HeroDef, type HeroKind, type SpawnGroup, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
+  BARRICADE, BARRICADES, BARRICADE_LEVELS, FROST_HOWL, TOWER_CAP, TOWER_REFUND, type Block, heroStats, type EnemyDef, type EnemyKind, type HeroDef, type HeroKind, type SpawnGroup, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
 import { heroPaceAt, inBush, mapFor, paceAt, slideAt, type MapLayout } from './maps.ts';
 
 export type Phase = 'prep' | 'wave' | 'won' | 'lost';
@@ -76,6 +76,8 @@ export type RushEvent =
   /** One ally restored by a shaman pulse, and by how much (cycle 60: a green number over it). */
   | { type: 'healed'; id: number; x: number; z: number; amount: number }
   | { type: 'summon'; x: number; z: number; count: number }
+  /** A tower taken down by the hero; `refund` gold came back. */
+  | { type: 'demolish'; pad: number; refund: number }
   /** The frost lord's howl (last stage): barricades shattered, towers frozen for `time` s. */
   | { type: 'howl'; x: number; z: number; time: number }
   | { type: 'coin'; value: number }
@@ -150,6 +152,8 @@ export interface Command {
   super?: Vec | 'auto';
   /** true builds or upgrades; a branch name also picks fire or frost when Lv1 becomes Lv2 (true → fire). */
   build?: boolean | TowerBranch;
+  /** Take down the tower on the pad in reach for a part refund (TOWER_REFUND). */
+  demolish?: boolean;
   startWave?: boolean;
 }
 
@@ -307,6 +311,15 @@ export function padCost(s: RushState, pad: number): number | null {
   if (!tower && towersFull(s)) return null;
   const next = tower ? tower.level + 1 : 0;
   return next < TOWER_LEVELS.length ? Math.round(TOWER_LEVELS[next].cost * s.mods.towerCost) : null;
+}
+/** Gold returned for taking down the tower on a pad (null: no tower there): TOWER_REFUND of what it cost at this
+ * kingdom's tower prices, level by level. */
+export function towerRefund(s: RushState, pad: number): number | null {
+  const tower = s.towers[pad];
+  if (!tower) return null;
+  let spent = 0;
+  for (let l = 0; l <= tower.level; l++) spent += Math.round(TOWER_LEVELS[l].cost * s.mods.towerCost);
+  return Math.round(spent * TOWER_REFUND);
 }
 export function nearestEnemy(s: RushState, from: Vec, range: number): Enemy | null {
   let best: Enemy | null = null, bestD = range;
@@ -482,6 +495,7 @@ function updateHero(s: RushState, cmd: Command) {
   if (cmd.fire && h.ammo >= 1 && h.fireCd <= 0) fire(s, cmd.fire);
   if (cmd.super && superReady(s)) castSuper(s, cmd.super);
   if (cmd.build) build(s, cmd.build);
+  if (cmd.demolish) demolish(s);
 }
 
 /** Lob reach (cycle 40): a hand-aimed snowball lands as far out as aimed, between LOB_MIN and the hero's range. */
@@ -575,6 +589,16 @@ function castSuper(s: RushState, aim: Vec | 'auto') {
     damage: heroDef(s).superDamage * s.mods.damage, life: heroDef(s).superTravel, radius: heroDef(s).superRadius, target: 0, tx: point.x, tz: point.z,
   });
   s.stats.supers++;
+}
+
+function demolish(s: RushState) {
+  const site = siteInReach(s);
+  if (!site || site.kind !== 'tower') return;
+  const refund = towerRefund(s, site.i);
+  if (refund === null) return;
+  s.towers[site.i] = null;
+  s.gold += refund;
+  s.events.push({ type: 'demolish', pad: site.i, refund });
 }
 
 function build(s: RushState, choice: boolean | TowerBranch) {

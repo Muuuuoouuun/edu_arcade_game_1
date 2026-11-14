@@ -744,3 +744,11 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   #screen-result.has-news #result-stats, #screen-result.has-news .result-stars small { display: none; }
   .result-visitor p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 }
+
+/* Take a tower down (2026-11-14): a small second pill beside the build button; never in the way of the main action. */
+.hud-build.demolish { bottom: calc(126px + var(--safe-b)); min-height: 36px; padding: 5px 12px; font-size: 14px; background: linear-gradient(#e8d5b0 0 50%, #c9a26a 50%); }
+@media (orientation:landscape) {
+  .hud-build.demolish { left: calc(12px + var(--safe-l)); top: calc(114px + var(--safe-t)); bottom: auto; transform: none; min-height: 36px; font-size: 13px; padding: 5px 10px; }
+  .hud-build.demolish.below-split { top: calc(166px + var(--safe-t)); }
+  .hud-build.demolish:active { transform: translateY(2px); }
+}

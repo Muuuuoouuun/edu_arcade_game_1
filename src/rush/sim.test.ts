@@ -946,3 +946,27 @@ test('outposts: six pads but only TOWER_CAP towers; an empty pad offers nothing 
   for (let i = 0; i < 60 * 60 * 3 && b.phase !== 'won' && b.phase !== 'lost'; i++) stepRush(b, guardBot(b));
   assert.ok(b.towers.slice(HOME_PADS).every(t => !t));
 });
+
+test('demolish: a tower comes down for 60% of what it cost and frees a place under the cap', async () => {
+  const { TOWER_CAP, TOWER_REFUND } = await import('./data.ts');
+  const { padCost, towerRefund, towersFull } = await import('./sim.ts');
+  const s = createRush(1);
+  s.gold = 0;
+  for (let i = 0; i < TOWER_CAP; i++) s.towers[i] = { level: 0, cd: 0, facing: 0 };
+  s.towers[0] = { level: 2, cd: 0, facing: 0, branch: 'fire' };
+  const spent = TOWER_LEVELS.reduce((a, l) => a + l.cost, 0);
+  assert.equal(towerRefund(s, 0), Math.round(spent * TOWER_REFUND));
+  assert.equal(towerRefund(s, PADS.length - 1), null, 'no tower, nothing to take down');
+  assert.ok(towersFull(s) && padCost(s, PADS.length - 1) === null);
+  Object.assign(s.hero, { x: PADS[0].x, z: PADS[0].z });
+  stepRush(s, { demolish: true });
+  assert.equal(s.towers[0], null);
+  assert.equal(s.gold, Math.round(spent * TOWER_REFUND));
+  assert.ok(s.events.some(e => e.type === 'demolish' && e.pad === 0));
+  assert.ok(!towersFull(s) && padCost(s, PADS.length - 1) !== null, 'the outpost can be built now');
+  // Away from any tower the command does nothing.
+  Object.assign(s.hero, { x: 0, z: -10 });
+  const gold = s.gold;
+  stepRush(s, { demolish: true });
+  assert.equal(s.gold, gold);
+});

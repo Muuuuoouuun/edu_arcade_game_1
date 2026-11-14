@@ -122,7 +122,7 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await page.waitForTimeout(200);
     check(await page.isVisible('#build'), 'build button appears on a pad');
     await page.keyboard.press('KeyE');
-    await page.waitForTimeout(300);
+    await page.waitForFunction(() => __rush.state.towers[0] !== null, null, { timeout: 3000 }).catch(() => {}); // few frames a second under software GL
     check(await page.evaluate(() => __rush.state.towers[0] !== null), 'tower built with E');
     // Lv2 choice (cycle 15): with enough gold the build button splits; R picks frost.
     await page.evaluate(() => { __rush.state.gold += 500; });

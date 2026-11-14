@@ -68,7 +68,10 @@ function heroHull(geo: BufferGeometry, simplifier: Simplifier | null): BufferGeo
   welded.setIndex(new BufferAttribute(out, 1));
   return hullGeometry(welded);
 }
-const HERO_HEIGHT = 2.0;
+/** Hero model height in metres. Raised from 2.0 with the rebuilt heroes (2026-11-14): the enemies had grown 1.1-1.3x
+ * and a brute stood taller than the hero; at 2.4 the new faces read at phone size and the hero is the largest ally on
+ * the field. Visual only: the simulation radius, reach and hit tests are unchanged. */
+const HERO_HEIGHT = 2.4;
 /** Yaw that turns the GLB authored front (-z) toward simulation angle 0 (+x). Verified by east/north close-up renders. */
 const HERO_MODEL_YAW = -Math.PI / 2;
 /** Per-hero tweaks to a shared campaign GLB (cycle 41), applied when baking; the files stay untouched. Names are
@@ -1371,6 +1374,13 @@ export class RushView {
         case 'coin':
           fx.emit({ kind: 'spark', n: 3, color: PAL.gold, at: [hp.x, 1.6, hp.z], speed: 1.5, up: 3, size: 0.14, life: 0.35 });
           break;
+        case 'demolish': { // a tower taken down: dust and planks where it stood
+          const p = PADS[ev.pad];
+          this.ring(p.x, p.z, 0xc9a26a, 1.6, 0.35, 0.8);
+          fx.emit({ kind: 'puff', n: 10, color: 0xe8d5b0, at: [p.x, 0.5, p.z], speed: 2.8, up: 1, size: 0.3, life: 0.5 });
+          fx.emit({ kind: 'shard', n: 8, color: 0x9a6a3a, at: [p.x, 1.2, p.z], speed: 3.2, up: 4, size: 0.13, life: 0.5 });
+          break;
+        }
         case 'build': {
           // Build or level up: a gold ink ring, dust, and chips in the new branch colour (the tower itself pops, see syncDefences).
           const p = PADS[ev.pad], c = ev.branch ? BRANCH_TRIM[ev.branch] : PAL.gold;

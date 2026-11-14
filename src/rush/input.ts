@@ -11,7 +11,7 @@ const AIM_RADIUS = 70;
 
 type Elements = {
   surface: HTMLElement; stick: HTMLElement; knob: HTMLElement;
-  fire: HTMLElement; superBtn: HTMLElement; build: HTMLElement; buildFrost: HTMLElement; startWave: HTMLElement;
+  fire: HTMLElement; superBtn: HTMLElement; build: HTMLElement; buildFrost: HTMLElement; demolish: HTMLElement; startWave: HTMLElement;
 };
 type ButtonDrag = { id: number; cx: number; cy: number; v: Vec; aimed: boolean };
 
@@ -77,6 +77,7 @@ export class RushInput {
     this.bindAimButton(el.superBtn, 'super', on);
     on(el.build, 'click', () => { this.pending.build = true; });
     on(el.buildFrost, 'click', () => { this.pending.build = 'frost'; });
+    on(el.demolish, 'click', () => { this.pending.demolish = true; });
     on(el.startWave, 'click', () => { this.pending.startWave = true; });
 
     on(window, 'keydown', e => {
@@ -86,6 +87,7 @@ export class RushInput {
       if (e.code === 'Space') { this.queueSuperAtMouse(); e.preventDefault(); }
       else if (e.code === 'KeyE' || e.code === 'KeyB') this.pending.build = true;
       else if (e.code === 'KeyR') this.pending.build = 'frost'; // Lv1 → Lv2: E picks fire, R picks frost
+      else if (e.code === 'KeyX') this.pending.demolish = true; // take the tower here down for a part refund
       else if (e.code === 'Enter') this.pending.startWave = true;
       else if (e.code === 'KeyJ' || e.code === 'KeyF') this.pending.fire = 'auto';
     });

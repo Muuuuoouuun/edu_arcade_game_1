@@ -1,7 +1,7 @@
 // Arcana Rush bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
 import { ECONOMY, ENEMIES, HEROES, TOWER_CAP, TOWER_LEVELS, type HeroKind } from './data.ts';
-import { barricadeOrder, createRush, padCost, siteInReach, stepRush, superReady, wardBreakBurst, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
+import { barricadeOrder, createRush, padCost, siteInReach, stepRush, towerRefund, superReady, wardBreakBurst, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
 import { RushInput } from './input.ts';
@@ -100,7 +100,7 @@ try {
 } catch { /* storage blocked: try again next visit */ }
 const input = new RushInput({
   surface: $('rush-surface'), stick: $('stick'), knob: $('stick-knob'),
-  fire: $('fire'), superBtn: $('super'), build: $('build'), buildFrost: $('build-frost'), startWave: $('start-wave'),
+  fire: $('fire'), superBtn: $('super'), build: $('build'), buildFrost: $('build-frost'), demolish: $('demolish'), startWave: $('start-wave'),
 }, (x, y) => view.groundPoint(x, y, canvas.getBoundingClientRect()), () => state.hero);
 let rendererLost=false;
 canvas.addEventListener('webglcontextlost',event=>{
@@ -278,7 +278,7 @@ function feedback(events: RushEvent[]) {
 // ---------- HUD ----------
 const hud = {
   wave: $('wave-label'), waveSub: $('wave-sub'), townFill: $('town-fill'), townHp: $('town-hp'), gold: $('gold'),
-  startWave: $<HTMLButtonElement>('start-wave'), build: $<HTMLButtonElement>('build'), buildFrost: $<HTMLButtonElement>('build-frost'), fire: $('fire'), superBtn: $('super'),
+  startWave: $<HTMLButtonElement>('start-wave'), build: $<HTMLButtonElement>('build'), buildFrost: $<HTMLButtonElement>('build-frost'), demolish: $<HTMLButtonElement>('demolish'), fire: $('fire'), superBtn: $('super'),
   ammo: [...document.querySelectorAll<HTMLElement>('#fire .ammo i')], superRing: $('super-ring'), debug: $('debug'),
 };
 const last: Record<string, string> = {};
@@ -345,6 +345,11 @@ function updateHud() {
   setFlag('buildFrostHidden', hud.buildFrost, 'hidden', buildHidden || !choose);
   hud.build.classList.toggle('fire', choose);
   hud.build.classList.toggle('split-l', choose);
+  // Standing on a tower: a small second button takes it down for a part refund, so it can go up on another pad.
+  const refund = pad >= 0 ? towerRefund(s, pad) : null;
+  setFlag('demolishHidden', hud.demolish, 'hidden', buildHidden || refund === null);
+  hud.demolish.classList.toggle('below-split', choose);
+  if (refund !== null) setText('demolish', hud.demolish, `철거 +${refund}G`);
   // Barricade site (defence lane): the same button builds, adds spikes or repairs (green when it repairs).
   const order = wall >= 0 ? barricadeOrder(s, wall) : null;
   hud.build.classList.toggle('repair', order?.action === 'repair');

@@ -34,6 +34,9 @@ export const PADS: readonly Vec[] = [
 ];
 export const HOME_PADS = 4;
 export const TOWER_CAP = 4;
+/** Taking a tower down returns this share of everything spent on it, so a tower can be moved to another pad (the
+ * cap frees a place) at a price. */
+export const TOWER_REFUND = 0.6;
 export const PAD_REACH = 1.8;
 
 /** Barricades (defence lane, 2026-11-13): one build site per lane, an arc across the field in front of the tall grass,
