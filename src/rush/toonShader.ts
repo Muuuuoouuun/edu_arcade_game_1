@@ -183,6 +183,10 @@ export function patchOutline(shader: Shader, width: number): void {
 		oPos = instanceMatrix * oPos;
 		oScale *= length( instanceMatrix[ 0 ].xyz );
 	#endif
+	#ifdef USE_BATCHING
+		oPos = batchingMatrix * oPos; // cycle 111: the multi-draw enemy outlines (BatchedMesh) sit where their instance is
+		oScale *= length( batchingMatrix[ 0 ].xyz );
+	#endif
 	float oMin = outlineView.y * - ( modelViewMatrix * oPos ).z / ( projectionMatrix[ 1 ][ 1 ] * outlineView.x );
 	vec3 transformed = vec3( position ) + normal * max( outlineWidth, oMin / max( oScale, 0.0001 ) );`);
 }

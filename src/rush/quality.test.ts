@@ -96,6 +96,9 @@ test('frame look: the toon shader patches still fit the installed three.js', asy
   const hull = { uniforms: {}, vertexShader: ShaderLib.basic.vertexShader, fragmentShader: ShaderLib.basic.fragmentShader };
   patchOutline(hull, 0.05);
   assert.ok(hull.vertexShader.includes('outlineView') && !hull.vertexShader.includes('#include <begin_vertex>'), 'outline keeps a minimum screen thickness');
+  // Cycle 111: instanced and multi-draw (BatchedMesh) outlines measure depth and scale where each instance stands.
+  assert.ok(hull.vertexShader.includes('oPos = instanceMatrix * oPos') && hull.vertexShader.includes('oPos = batchingMatrix * oPos'), 'per-instance minimum thickness for both batch kinds');
+  assert.ok(hull.vertexShader.indexOf('#include <batching_vertex>') < hull.vertexShader.indexOf('batchingMatrix * oPos'), 'the batching matrix is declared before the outline uses it');
 });
 
 test('frame look: shadow box, light table and who casts', async () => {

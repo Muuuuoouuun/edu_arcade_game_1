@@ -3,11 +3,11 @@ import {
   Box3, BufferAttribute, DodecahedronGeometry, BoxGeometry, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
   DataTexture, DirectionalLight, Group, HemisphereLight, IcosahedronGeometry, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera,
   PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
-  Matrix4, Object3D, Quaternion, Euler, Frustum, InstancedMesh, Sphere, BackSide, BufferGeometry, Points, ShaderMaterial, type AnimationAction, type Material, type MeshToonMaterial, type MeshStandardMaterial,
+  Matrix4, Object3D, Quaternion, Euler, Frustum, InstancedMesh, Skeleton, SkinnedMesh, Float32BufferAttribute, Uint16BufferAttribute, type Bone, Sphere, BackSide, BufferGeometry, Points, ShaderMaterial, type AnimationAction, type Material, type MeshToonMaterial, type MeshStandardMaterial,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 // Loaded by URL, not bundled: the shared Vite config puts every three/examples module in the first-screen 'three-tools'
 // chunk, and this one is only needed once a hero model arrives (cycle 62). The file is self-contained (no imports).
 import simplifierUrl from 'three/addons/libs/meshopt_simplifier.module.js?url';
@@ -837,7 +837,30 @@ export class RushView {
         held.add(new Mesh(hullGeometry(geo), outlineMaterial(+(0.035 / (propNode.getWorldScale(ws).x || 1)).toFixed(3))));
         propNode.add(held);
       }
-      for (const [owner, parts] of groups) {
+      if (groups.size > 1 && new URLSearchParams(location.search).get('heroskin') !== '0') {
+        // Cycle 111: every animated part in one skinned body and one skinned hull. Each part's vertices ride one bone (the
+        // part's animated node) at full weight, so the clips move them exactly as before, in one draw each (and one
+        // shadow draw) instead of a body and hull per part. ?heroskin=0 keeps the per-part meshes.
+        const bones = [...groups.keys()], bodies: BufferGeometry[] = [], hulls: BufferGeometry[] = [];
+        model.updateMatrixWorld(true);
+        const modelInv = new Matrix4().copy(model.matrixWorld).invert(), toModel = new Matrix4();
+        bones.forEach((owner, i) => {
+          const geo = bakeMatrices(groups.get(owner)!, !!material.map), hull = heroHull(geo, simplifier);
+          toModel.multiplyMatrices(modelInv, owner.matrixWorld);
+          for (const g of [geo, hull]) {
+            g.applyMatrix4(toModel);
+            const n = g.attributes.position.count, index = new Uint16Array(n * 4), weight = new Float32Array(n * 4);
+            for (let v = 0; v < n; v++) { index[v * 4] = i; weight[v * 4] = 1; }
+            g.setAttribute('skinIndex', new Uint16BufferAttribute(index, 4));
+            g.setAttribute('skinWeight', new Float32BufferAttribute(weight, 4));
+          }
+          bodies.push(geo); hulls.push(hull);
+        });
+        const skeleton = new Skeleton(bones as Bone[]);
+        const body = new SkinnedMesh(mergeGeometries(bodies), material);
+        const hull = new SkinnedMesh(mergeGeometries(hulls), outlineMaterial(+(0.035 / (model.getWorldScale(ws).x || 1)).toFixed(3)));
+        for (const m of [body, hull]) { m.name = `hero-${kind}-${m === body ? 'body' : 'ink'}`; m.frustumCulled = false; model.add(m); m.bind(skeleton); }
+      } else for (const [owner, parts] of groups) {
         const geo = bakeMatrices(parts, !!material.map), body = new Mesh(geo, material);
         body.add(new Mesh(heroHull(geo, simplifier), outlineMaterial(+(0.035 / (owner.getWorldScale(ws).x || 1)).toFixed(3))));
         owner.add(body);
