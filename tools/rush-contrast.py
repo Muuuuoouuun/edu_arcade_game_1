@@ -105,7 +105,9 @@ def boxes(name):
         box = [int(cx - h * 0.8), int(cy - h), int(cx + h * 0.8), int(cy + h * 0.9)]
         box = [max(0, box[0]), max(0, box[1]), min(E.width, box[2]), min(E.height, box[3])]
         yield p['kind'], box, E, p['y'] * p['dpr'] + (p['y'] - p['hy']) * p['dpr'] * 0.86
+import os
 for st in (sys.argv[2:] or ['s2', 's3', 's7', 's8']):
+    if not os.path.exists(f'{d}/{st}plain.png'): continue  # e.g. only the boss scenes were captured (ONLY=s10boss)
     P = Image.open(f'{d}/{st}plain.png').convert('RGB'); F = Image.open(f'{d}/{st}frost.png').convert('RGB'); W = Image.open(f'{d}/{st}ward.png').convert('RGB')
     for kind, box, E, foot in boxes(st + 'plain'):
         plain, bg = main_color(E, P, box); frost, _ = main_color(E, F, box); ward, _ = main_color(E, W, box)

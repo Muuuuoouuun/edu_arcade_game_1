@@ -68,8 +68,10 @@ export const BOSS_LOOK: Record<BossName, BossLook> = {
   default: { cape: 0x8a1f3a, trunk: 0x4b3a8a, chest: 0x6d55c4, head: 0x2a1f4d, crown: PAL.gold, arm: 0x6d55c4, fist: 0x9d83ff, kill: 0x6d55c4 },
   // Bark and moss: dark bark trunk, mossy shoulders and arms, leaf-green fists, an autumn-amber crown.
   forest: { cape: 0x7a2a1e, trunk: 0x5a3a22, chest: 0x7d5a34, head: 0x3a2616, crown: 0xf2b23a, arm: 0x4f7d3a, fist: 0x9ccf4a, kill: 0x7d5a34 },
-  // Ice-blue and white over dark ink-navy; the crimson cape and red eyes keep it on the enemy team.
-  snow: { cape: 0x8a1f3a, trunk: 0x232c5c, chest: 0x62b4ee, head: 0x1a2044, crown: 0xe6f8ff, arm: 0x62b4ee, fist: 0xf2fbff, kill: 0x62b4ee },
+  // Deep ice teal and mid ice blue over dark ink-navy; the crimson cape and red eyes keep it on the enemy team. Cycle 112:
+  // the ice-blue arms (0x62b4ee) and white fists and crown matched the snow. Over the same body area, pixels at dE >= 30
+  // from the floor rose 40% -> 56% (median dE 22.7 -> 33.5); the deeper ice also sits further from the ally blue (26 -> 38).
+  snow: { cape: 0x8a1f3a, trunk: 0x232c5c, chest: 0x1f7aa0, head: 0x1a2044, crown: 0x6cc6e8, arm: 0x1f7aa0, fist: 0x6cc6e8, kill: 0x62b4ee },
 };
 
 /** How a toon material takes part in the shadow pass (frame.ts `markShadows`): `solid` casts and receives,
