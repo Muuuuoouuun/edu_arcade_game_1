@@ -180,8 +180,9 @@ export class RushView {
   /** Instanced batches: draw calls stay fixed however many enemies, shots and coins are alive. */
   private batches!: {
     body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>;
-    /** Spike (cycle 108): every kind's body in one multi-draw, when the browser has WEBGL_multi_draw. */
-    bodyAll: KindBatch | null; flash: Record<EnemyKind, Batch>; ice: Record<EnemyKind, Batch>; ward: Record<EnemyKind, Batch>;
+    /** With WEBGL_multi_draw: every kind in one multi-draw per layer (cycle 108 bodies; cycle 110 outlines of all but the
+     * boss, whose ink is thicker, frost and ward shells, hit flash). Null: the per-kind batches draw everything. */
+    multi: { body: KindBatch; hull: KindBatch; flash: KindBatch; ice: KindBatch; ward: KindBatch } | null; flash: Record<EnemyKind, Batch>; ice: Record<EnemyKind, Batch>; ward: Record<EnemyKind, Batch>;
     shadow: Batch; ring: Batch; frostRing: Batch; wardRing: Batch; streak: Batch; barBg: Batch; barFill: Batch; shots: Record<Shot['owner'], Batch>; branchShots: Record<TowerBranch, Batch>; coins: Batch;
   };
   private counts = { enemies: 0, shots: 0 };
@@ -313,6 +314,7 @@ export class RushView {
     if (this.water) { (this.water.material as Material).dispose(); this.water.material = this.waterMat; }
     // A hit flash swaps the body batch for a white one: it must keep casting, or the shadow blinks with every hit.
     for (const b of Object.values(this.batches.flash)) b.mesh.castShadow = true;
+    if (this.batches.multi) this.batches.multi.flash.mesh.castShadow = true;
     // Speed lines are an effect, not a body.
     this.batches.streak.mesh.userData.noShadow = true;
     // Glow sources for the finishing pass: shots, status floor rings, the super-ready ring (shockwaves: ring()).
@@ -1082,12 +1084,19 @@ export class RushView {
       },
       branchShots: { fire: new Batch(this.scene, this.geo.bolt, basic(BRANCH_COLOR.fire), 120), frost: new Batch(this.scene, this.geo.bolt, basic(0xbff3ff), 120) },
       coins: new Batch(this.scene, this.geo.coin, this.mats.coin, 160),
-      bodyAll: null,
+      multi: null,
     };
     if (this.renderer.extensions.has('WEBGL_multi_draw') && new URLSearchParams(location.search).get('multidraw') !== '0') {
-      const geos = ENEMY_KINDS.map(k => this.enemyKit(k).body);
-      const verts = geos.reduce((a, g) => a + g.attributes.position.count, 0), idx = geos.reduce((a, g) => a + (g.index ? g.index.count : 0), 0);
-      this.batches.bodyAll = new KindBatch(this.scene, this.mats.enemy, 6 * cap, verts * 2, idx * 2);
+      // Sized for the default shapes, twice over for the snow outfits and named bosses added on first use (they grow).
+      const size = (geos: BufferGeometry[]) => [geos.reduce((a, g) => a + g.attributes.position.count, 0) * 2, geos.reduce((a, g) => a + (g.index ? g.index.count : 0), 0) * 2] as const;
+      const [bv, bi] = size(ENEMY_KINDS.map(k => this.enemyKit(k).body)), [hv, hi] = size(ENEMY_KINDS.map(k => this.enemyKit(k).hull));
+      this.batches.multi = {
+        body: new KindBatch(this.scene, this.mats.enemy, 6 * cap, bv, bi),
+        hull: new KindBatch(this.scene, outlineMaterial(0.05), 6 * cap, hv, hi),
+        flash: new KindBatch(this.scene, this.mats.flash, 2 * cap, bv, bi),
+        ice: new KindBatch(this.scene, ICE, 2 * cap, bv, bi, 4),
+        ward: new KindBatch(this.scene, WARD, 2 * cap, bv, bi, 4),
+      };
     }
     // Names for the debug counts (shadowCasters, tallyDraws; cycle 107): 'batch:body.grunt', 'batch:shots.hero', ...
     const nameAll = (o: unknown, path: string): void => {
@@ -1110,7 +1119,8 @@ export class RushView {
     const B = this.batches, t = this.tmp;
     this.camera.updateMatrixWorld();
     this.frustum.setFromProjectionMatrix(t.m.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
-    B.bodyAll?.begin();
+    const multi = B.multi;
+    if (multi) for (const k of Object.values(multi)) k.begin();
     const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), ...Object.values(B.ice), ...Object.values(B.ward), B.shadow, B.ring, B.frostRing, B.wardRing, B.streak, B.barBg, B.barFill];
     const swift = s.diff.twist === 'swift';
     all.forEach(b => b.begin());
@@ -1137,18 +1147,24 @@ export class RushView {
       if ((e.lungeT ?? 0) > 0) { sy = 0.72; sl = 1.12; lean = -0.12; roll = 0; blink = Math.floor(this.time * 14) % 2 === 0; }
       else if ((e.dashT ?? 0) > 0) { sl = 1.3; sy = 0.86; lean = 0.1; }
       const m = this.place(e.x + jx, bob, e.z, roll, yaw(e.facing), lean, sx * sl, sy, sx, 'YXZ');
-      if (e.flash > 0 || blink) B.flash[e.kind].push(m);
-      else if (B.bodyAll) B.bodyAll.push(B.body[e.kind].mesh.geometry, m);
-      else B.body[e.kind].push(m);
-      B.hull[e.kind].push(m);
+      const flashing = e.flash > 0 || blink;
+      if (multi) (flashing ? multi.flash : multi.body).push(B.body[e.kind].mesh.geometry, m);
+      else (flashing ? B.flash : B.body)[e.kind].push(m);
+      if (multi && e.kind !== 'boss') multi.hull.push(B.hull[e.kind].mesh.geometry, m); else B.hull[e.kind].push(m);
       // Frost shell; blinks in its last quarter second so the player sees the slow wearing off.
       const ice = e.slowT ?? 0;
       // The frost wolf wears neither shell: an ice-blue shell on an ice-blue wolf shows nothing, and the floor rings
       // already carry both states for every kind. That keeps a wolf pack at two draw calls (body and outline).
-      if (!wolf && ice > 0 && (ice > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.ice[e.kind].push(this.place(e.x, bob - 0.02, e.z, roll, yaw(e.facing), lean, sx * sl * 1.08, sy * 1.06, sx * 1.08, 'YXZ'));
+      if (!wolf && ice > 0 && (ice > 0.25 || Math.floor(this.time * 16) % 2 === 0)) {
+        const mi = this.place(e.x, bob - 0.02, e.z, roll, yaw(e.facing), lean, sx * sl * 1.08, sy * 1.06, sx * 1.08, 'YXZ');
+        if (multi) multi.ice.push(B.body[e.kind].mesh.geometry, mi); else B.ice[e.kind].push(mi);
+      }
       // Ward shell (cycle 90): magenta while warded, blinking in its last quarter second like the frost shell.
       const ward = e.wardT ?? 0;
-      if (!wolf && ward > 0 && (ward > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.ward[e.kind].push(this.place(e.x, bob - 0.02, e.z, roll, yaw(e.facing), lean, sx * sl * 1.16, sy * 1.12, sx * 1.16, 'YXZ'));
+      if (!wolf && ward > 0 && (ward > 0.25 || Math.floor(this.time * 16) % 2 === 0)) {
+        const mw = this.place(e.x, bob - 0.02, e.z, roll, yaw(e.facing), lean, sx * sl * 1.16, sy * 1.12, sx * 1.16, 'YXZ');
+        if (multi) multi.ward.push(B.body[e.kind].mesh.geometry, mw); else B.ward[e.kind].push(mw);
+      }
       if (this.sheetMode) continue;
       if (this.bodyOnly) continue; // debug (cycle 109): no blob, rings or streak, so only the body differs from the floor
       B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.15));
@@ -1166,7 +1182,7 @@ export class RushView {
       if (f > 0 && (f > 0.6 || Math.floor(this.time * 12) % 2 === 0)) B.frostRing.push(this.place(PADS[i].x, 0.06, PADS[i].z, -Math.PI / 2, 0, 0, 1.55));
     });
     all.forEach(b => b.end());
-    B.bodyAll?.end();
+    if (multi) for (const k of Object.values(multi)) k.end();
     this.counts.enemies = s.enemies.length;
   }
 
@@ -1772,7 +1788,7 @@ export class RushView {
   /** Model sheet: hide everything but character bodies, outlines and the hero on a flat background. */
   sheet() {
     this.sheetMode = true;
-    const keep = new Set<Object3D>([this.hero, ...(this.batches.bodyAll ? [this.batches.bodyAll.mesh] : []), ...Object.values(this.batches.body).map(b => b.mesh), ...Object.values(this.batches.hull).map(b => b.mesh), ...Object.values(this.batches.flash).map(b => b.mesh)]);
+    const keep = new Set<Object3D>([this.hero, ...(this.batches.multi ? [this.batches.multi.body.mesh, this.batches.multi.hull.mesh, this.batches.multi.flash.mesh] : []), ...Object.values(this.batches.body).map(b => b.mesh), ...Object.values(this.batches.hull).map(b => b.mesh), ...Object.values(this.batches.flash).map(b => b.mesh)]);
     for (const o of this.scene.children) if (!keep.has(o) && !(o instanceof HemisphereLight) && !(o instanceof DirectionalLight)) o.visible = false;
     this.hero.children.filter(c => c !== this.heroBody).forEach(c => (c.visible = false));
     this.scene.background = new Color(0x2b3a55);
@@ -1828,7 +1844,7 @@ export class RushView {
     if (this.rig.shadows && this.rig.follow(this.camera, this.focus)) {
       markShadows(this.scene, this.hero);
       if (this.bodyOnly) for (const b of [...Object.values(this.batches.body), ...Object.values(this.batches.flash)]) b.mesh.castShadow = false;
-      if (this.bodyOnly && this.batches.bodyAll) this.batches.bodyAll.mesh.castShadow = false;
+      if (this.bodyOnly && this.batches.multi) { this.batches.multi.body.mesh.castShadow = false; this.batches.multi.flash.mesh.castShadow = false; }
     }
     // Glow passes only while something that glows is on screen: a shot, a status ring, a shockwave, the super ring.
     let glowing = this.fx.length > 0 || !!this.superRing?.visible;

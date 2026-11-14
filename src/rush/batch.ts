@@ -61,9 +61,10 @@ export class KindBatch {
   private maxVerts: number;
   private maxIndices: number;
 
-  constructor(scene: Scene, mat: Material, capacity: number, maxVerts: number, maxIndices: number) {
+  constructor(scene: Scene, mat: Material, capacity: number, maxVerts: number, maxIndices: number, order?: number) {
     this.capacity = capacity; this.maxVerts = maxVerts; this.maxIndices = maxIndices;
     this.mesh = new BatchedMesh(capacity, maxVerts, maxIndices, mat);
+    if (order !== undefined) this.mesh.renderOrder = order;
     this.mesh.frustumCulled = false;
     this.mesh.perObjectFrustumCulled = false; // the caller culls per enemy already
     this.mesh.sortObjects = false;
