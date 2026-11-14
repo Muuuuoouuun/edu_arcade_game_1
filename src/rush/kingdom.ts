@@ -333,7 +333,10 @@ export const POWER = { castle: 100, field: 30, perk: 60, heroLv: 40, talent: 80,
  * 5 of 8 there against 8 of 8 on stage 9, but both pass the 4-of-8 rule at L6. */
 /** Cycle 99: the frost lord's howl now freezes the hero for 3 s instead of hitting towers and barricades; stage 10
  * re-measured 2500 -> 2550 (growth step L6 wins 3/8 there, L7 5/8; stage 9 stays L6 at 8/8). */
-export const STAGE_POWER: readonly number[] = [250, 300, 350, 400, 450, 1050, 1100, 1750, 2450, 2550];
+/** Cycle 105: the same rule over seeds 1-40 (win at least half), since single seeds of 1-8 flip with small rule changes.
+ * Two stages move: 7 is 1100 -> 1200 (step L2 wins 18/40, L3 40/40) and 10 is 2550 -> 3050 (L7 wins 18/40, L8 34/40);
+ * the other eight are unchanged. Campaign tool, 8 seeds: 12 -> 15 battles, 45 -> 55 min, stage 10 losses 1 -> 0. */
+export const STAGE_POWER: readonly number[] = [250, 300, 350, 400, 450, 1050, 1200, 1750, 2450, 3050];
 export const recommendedPower = (stage: number): number | null => STAGE_POWER[stage - 1] ?? null;
 export function kingdomPower(k: Kingdom): number {
   const perks = Object.values(k.perks).reduce((a, b) => a + b, 0);

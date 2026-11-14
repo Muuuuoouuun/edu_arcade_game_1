@@ -1,7 +1,9 @@
 // Recommended stage power (cycle 89): for each stage, the least step L on a balanced growth path at which the guard bot
-// (ranger) wins at least 4 of seeds 1-8, and that kingdom's power with two stars per earlier stage. STAGE_POWER in
+// (ranger) wins at least half of seeds 1-N, and that kingdom's power with two stars per earlier stage. STAGE_POWER in
 // src/rush/kingdom.ts is this column rounded down to 50; rerun after any balance change.
-// Usage: node --experimental-strip-types tools/rush-stage-power.ts [stage ...]   (default: all stages; a few minutes)
+// Usage: node --experimental-strip-types tools/rush-stage-power.ts [--seeds=N] [stage ...]   (default: all stages, N 8)
+//   N was 8 until cycle 105; single seeds flip with small rule changes, so 40 (cycle 105) gives the steadier answer
+//   (stage 10's step L7 won 4+ of 8 but 18 of 40).
 import { createRush, stepRush } from '../src/rush/sim.ts';
 import { guardBot } from '../src/rush/bot.ts';
 import { STAGE_COUNT, stageDifficulty } from '../src/rush/stages.ts';
@@ -16,18 +18,19 @@ function growth(L: number): Kingdom {
     talent: { ranger: Math.min(3, Math.floor(L / 3)), bron: 0, bear: 0 },
   };
 }
-const stages = process.argv.slice(2).map(Number).filter(n => n >= 1 && n <= STAGE_COUNT);
+const N = Number(process.argv.find(a => a.startsWith('--seeds='))?.slice(8) ?? 8);
+const stages = process.argv.slice(2).filter(a => !a.startsWith('--')).map(Number).filter(n => n >= 1 && n <= STAGE_COUNT);
 for (const stage of stages.length ? stages : Array.from({ length: STAGE_COUNT }, (_, i) => i + 1)) {
   const tried: string[] = [];
   for (let L = 0; L <= 10; L++) {
     const k = growth(L), mods = kingdomMods(k);
-    const wins = [1, 2, 3, 4, 5, 6, 7, 8].filter(seed => {
+    const wins = Array.from({ length: N }, (_, i) => i + 1).filter(seed => {
       const s = createRush(seed, mods, stageDifficulty(stage), 'ranger');
       while (s.phase !== 'won' && s.phase !== 'lost' && s.tick < 60 * 60 * 8) stepRush(s, guardBot(s));
       return s.phase === 'won';
     }).length;
     const power = kingdomPower({ ...k, stars: k.stars.map((_, i) => (i < stage - 1 ? 2 : 0)) });
-    tried.push(`L${L} ${wins}/8`);
-    if (wins >= 4) { console.log(`stage ${stage}: L${L}, power ${power}, recommended ${Math.floor(power / 50) * 50} (${tried.join(', ')})`); break; }
+    tried.push(`L${L} ${wins}/${N}`);
+    if (wins * 2 >= N) { console.log(`stage ${stage}: L${L}, power ${power}, recommended ${Math.floor(power / 50) * 50} (${tried.join(', ')})`); break; }
   }
 }
