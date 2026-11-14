@@ -15,7 +15,7 @@ import simplifierUrl from 'three/addons/libs/meshopt_simplifier.module.js?url';
 import rangerGlb from './models/gecko-ranger.glb?url';
 import bronGlb from './models/dwarf-guardian.glb?url';
 import bearGlb from './models/polar-bear.glb?url';
-import { ARENA, BARRICADES, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, TOWER_LEVELS, TOWN, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
+import { ARENA, BARRICADES, ENEMIES, FROST_HOWL, HEROES, HERO_SPAWN, LANES, PADS, TOWER_LEVELS, TOWN, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
 import { barricadeMaxHp, barricadeOrder, heroDef, heroHidden, heroMaxHp, lobReach, padCost, siteInReach, superReady, wardBreakBurst, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { BRANCH_TRIM, DEF, barricadeParts, barricadeState, chevronParts, padParts, siteParts, towerParts, type BarricadeState } from './defenceModels.ts';
 import { bake, bakeColors, bakeMatrices, BOSS_LOOK, capColors, hullGeometry, mixHex, outlineMaterial, PAL, REGION_LOOK, toon, toonify, wallParts, type BossLook, type BossName, type Part, type RegionLook, type RegionName } from './look.ts';
@@ -1102,6 +1102,9 @@ export class RushView {
       if (ward > 0 && (ward > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.wardRing.push(this.place(e.x, 0.055, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.58)); // ward
       if (swift && !reduced && e.kind !== 'boss' && !e.windup) B.streak.push(this.place(e.x, bob, e.z, 0, yaw(e.facing), 0, Math.max(0.6, r))); // swift lap: readable even on small enemies
     }
+    // The hero held by the howl stands in a wide frost ring, blinking as it ends (cycle 99).
+    const hf = s.hero.frozenT ?? 0;
+    if (hf > 0 && (hf > 0.6 || Math.floor(this.time * 12) % 2 === 0)) B.frostRing.push(this.place(s.hero.x, 0.07, s.hero.z, -Math.PI / 2, 0, 0, 1.75));
     // Towers frozen by the frost lord's howl stand in a frost ring (the same cue as a slowed enemy), blinking as it ends.
     s.towers.forEach((tw, i) => {
       const f = tw?.frozen ?? 0;
@@ -1345,7 +1348,8 @@ export class RushView {
           break;
         case 'howl': { // the frost lord's howl: a wide ice ring from the boss, and ice bursts on every tower
           this.ring(ev.x, ev.z, 0x9fe6ff, 16, 0.9, 0.95, true);
-          this.towers.forEach((tw, i) => { if (tw) fx.emit({ kind: 'puff', n: 8, color: 0xd8f6ff, at: [PADS[i].x, 1.4, PADS[i].z], speed: 2.4, up: 1.2, size: 0.28, life: 0.6 }); });
+          this.towers.forEach((tw, i) => { if (tw && FROST_HOWL.towerFreeze > 0) fx.emit({ kind: 'puff', n: 8, color: 0xd8f6ff, at: [PADS[i].x, 1.4, PADS[i].z], speed: 2.4, up: 1.2, size: 0.28, life: 0.6 }); });
+          if (FROST_HOWL.heroFreeze > 0) fx.emit({ kind: 'shard', n: 14, color: 0xd8f6ff, at: [hp.x, 1.2, hp.z], speed: 3, up: 3, size: 0.16, life: 0.6 });
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.6);
           break;
         }

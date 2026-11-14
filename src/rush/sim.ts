@@ -13,6 +13,8 @@ export interface Hero {
   x: number; z: number; hp: number; facing: number;
   ammo: number; reloadT: number; fireCd: number;
   superCharge: number; downT: number; calmT: number;
+  /** Seconds the frost lord's howl still holds the hero in ice (cycle 99): no moving, shooting or building. */
+  frozenT?: number;
   /** Game time until which the hero stays visible even inside a bush (attacking reveals). */
   exposedUntil: number;
 }
@@ -78,7 +80,7 @@ export type RushEvent =
   | { type: 'summon'; x: number; z: number; count: number }
   /** A tower taken down by the hero; `refund` gold came back. */
   | { type: 'demolish'; pad: number; refund: number }
-  /** The frost lord's howl (last stage): barricades shattered, towers frozen for `time` s. */
+  /** The frost lord's howl (last stage): the hero (and, if set, towers) frozen for `time` s (FROST_HOWL). */
   | { type: 'howl'; x: number; z: number; time: number }
   | { type: 'coin'; value: number }
   | { type: 'build'; pad: number; level: number; branch?: TowerBranch }
@@ -471,6 +473,7 @@ function updateHero(s: RushState, cmd: Command) {
     }
     return;
   }
+  if (h.frozenT) { h.frozenT = Math.max(0, h.frozenT - STEP); return; }
   // Movement
   const m = cmd.move;
   if (m && (m.x !== 0 || m.z !== 0)) {
@@ -912,12 +915,13 @@ function rally(s: RushState, boss: Enemy, call: NonNullable<EnemyDef['summon']>)
   s.events.push({ type: 'summon', x: boss.x, z: boss.z, count: call.count });
   // The frost lord's howl: the last stage's boss also breaks the barricades and freezes the towers.
   if (s.diff.stage === FROST_HOWL.stage && !s.diff.endless) {
-    for (let i = 0; i < BARRICADES.length; i++) {
+    if (FROST_HOWL.barricade > 0) for (let i = 0; i < BARRICADES.length; i++) {
       const b = s.barricades[i];
       if (b && b.hp > 0) hurtBarricade(s, i, barricadeMaxHp(s, b.level) * FROST_HOWL.barricade, null);
     }
-    for (const t of s.towers) if (t) t.frozen = FROST_HOWL.towerFreeze;
-    s.events.push({ type: 'howl', x: boss.x, z: boss.z, time: FROST_HOWL.towerFreeze });
+    for (const t of s.towers) if (t && FROST_HOWL.towerFreeze > 0) t.frozen = FROST_HOWL.towerFreeze;
+    if (FROST_HOWL.heroFreeze > 0 && s.hero.downT <= 0) s.hero.frozenT = FROST_HOWL.heroFreeze;
+    s.events.push({ type: 'howl', x: boss.x, z: boss.z, time: Math.max(FROST_HOWL.towerFreeze, FROST_HOWL.heroFreeze) });
   }
 }
 

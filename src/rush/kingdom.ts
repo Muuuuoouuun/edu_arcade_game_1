@@ -331,7 +331,9 @@ export const POWER = { castle: 100, field: 30, perk: 60, heroLv: 40, talent: 80,
  * lord's howl on 10): 7 fell 1200 -> 1100, 8 fell 1800 -> 1750 and 10 fell 3050 -> 2500, because barricades hold the
  * waves in front of the towers. Stage 10 sits one rounding step above stage 9: at the same growth step the bot wins
  * 5 of 8 there against 8 of 8 on stage 9, but both pass the 4-of-8 rule at L6. */
-export const STAGE_POWER: readonly number[] = [250, 300, 350, 400, 450, 1050, 1100, 1750, 2450, 2500];
+/** Cycle 99: the frost lord's howl now freezes the hero for 3 s instead of hitting towers and barricades; stage 10
+ * re-measured 2500 -> 2550 (growth step L6 wins 3/8 there, L7 5/8; stage 9 stays L6 at 8/8). */
+export const STAGE_POWER: readonly number[] = [250, 300, 350, 400, 450, 1050, 1100, 1750, 2450, 2550];
 export const recommendedPower = (stage: number): number | null => STAGE_POWER[stage - 1] ?? null;
 export function kingdomPower(k: Kingdom): number {
   const perks = Object.values(k.perks).reduce((a, b) => a + b, 0);
