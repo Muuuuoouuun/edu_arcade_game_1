@@ -23,7 +23,7 @@ import { REGIONS, regionOf } from './expedition.ts';
 import { FOREST, GATES, type MapLayout } from './maps.ts';
 import { bushParts, coverParts, crateParts, groundTexture, sceneryParts, SCENERY_LOOK } from './mapScenery.ts';
 import { loadForestTown, toFloat32 } from './townModel.ts';
-import { Batch } from './batch.ts';
+import { Batch, KindBatch } from './batch.ts';
 import { Particles } from './fx.ts';
 import { QUALITY, type Quality } from './quality.ts';
 import { TownView } from './townView.ts';
@@ -179,7 +179,9 @@ export class RushView {
   private sheetMode = false;
   /** Instanced batches: draw calls stay fixed however many enemies, shots and coins are alive. */
   private batches!: {
-    body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>; flash: Record<EnemyKind, Batch>; ice: Record<EnemyKind, Batch>; ward: Record<EnemyKind, Batch>;
+    body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>;
+    /** Spike (cycle 108): every kind's body in one multi-draw, when the browser has WEBGL_multi_draw. */
+    bodyAll: KindBatch | null; flash: Record<EnemyKind, Batch>; ice: Record<EnemyKind, Batch>; ward: Record<EnemyKind, Batch>;
     shadow: Batch; ring: Batch; frostRing: Batch; wardRing: Batch; streak: Batch; barBg: Batch; barFill: Batch; shots: Record<Shot['owner'], Batch>; branchShots: Record<TowerBranch, Batch>; coins: Batch;
   };
   private counts = { enemies: 0, shots: 0 };
@@ -1080,10 +1082,16 @@ export class RushView {
       },
       branchShots: { fire: new Batch(this.scene, this.geo.bolt, basic(BRANCH_COLOR.fire), 120), frost: new Batch(this.scene, this.geo.bolt, basic(0xbff3ff), 120) },
       coins: new Batch(this.scene, this.geo.coin, this.mats.coin, 160),
+      bodyAll: null,
     };
+    if (this.renderer.extensions.has('WEBGL_multi_draw') && new URLSearchParams(location.search).get('multidraw') !== '0') {
+      const geos = ENEMY_KINDS.map(k => this.enemyKit(k).body);
+      const verts = geos.reduce((a, g) => a + g.attributes.position.count, 0), idx = geos.reduce((a, g) => a + (g.index ? g.index.count : 0), 0);
+      this.batches.bodyAll = new KindBatch(this.scene, this.mats.enemy, 6 * cap, verts * 2, idx * 2);
+    }
     // Names for the debug counts (shadowCasters, tallyDraws; cycle 107): 'batch:body.grunt', 'batch:shots.hero', ...
     const nameAll = (o: unknown, path: string): void => {
-      if (o instanceof Batch) o.mesh.name = `batch:${path}`;
+      if (o instanceof Batch || o instanceof KindBatch) o.mesh.name = `batch:${path}`;
       else if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) nameAll(v, path ? `${path}.${k}` : k);
     };
     nameAll(this.batches, '');
@@ -1102,6 +1110,7 @@ export class RushView {
     const B = this.batches, t = this.tmp;
     this.camera.updateMatrixWorld();
     this.frustum.setFromProjectionMatrix(t.m.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
+    B.bodyAll?.begin();
     const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), ...Object.values(B.ice), ...Object.values(B.ward), B.shadow, B.ring, B.frostRing, B.wardRing, B.streak, B.barBg, B.barFill];
     const swift = s.diff.twist === 'swift';
     all.forEach(b => b.begin());
@@ -1128,7 +1137,9 @@ export class RushView {
       if ((e.lungeT ?? 0) > 0) { sy = 0.72; sl = 1.12; lean = -0.12; roll = 0; blink = Math.floor(this.time * 14) % 2 === 0; }
       else if ((e.dashT ?? 0) > 0) { sl = 1.3; sy = 0.86; lean = 0.1; }
       const m = this.place(e.x + jx, bob, e.z, roll, yaw(e.facing), lean, sx * sl, sy, sx, 'YXZ');
-      (e.flash > 0 || blink ? B.flash : B.body)[e.kind].push(m);
+      if (e.flash > 0 || blink) B.flash[e.kind].push(m);
+      else if (B.bodyAll) B.bodyAll.push(B.body[e.kind].mesh.geometry, m);
+      else B.body[e.kind].push(m);
       B.hull[e.kind].push(m);
       // Frost shell; blinks in its last quarter second so the player sees the slow wearing off.
       const ice = e.slowT ?? 0;
@@ -1154,6 +1165,7 @@ export class RushView {
       if (f > 0 && (f > 0.6 || Math.floor(this.time * 12) % 2 === 0)) B.frostRing.push(this.place(PADS[i].x, 0.06, PADS[i].z, -Math.PI / 2, 0, 0, 1.55));
     });
     all.forEach(b => b.end());
+    B.bodyAll?.end();
     this.counts.enemies = s.enemies.length;
   }
 
@@ -1759,7 +1771,7 @@ export class RushView {
   /** Model sheet: hide everything but character bodies, outlines and the hero on a flat background. */
   sheet() {
     this.sheetMode = true;
-    const keep = new Set<Object3D>([this.hero, ...Object.values(this.batches.body).map(b => b.mesh), ...Object.values(this.batches.hull).map(b => b.mesh), ...Object.values(this.batches.flash).map(b => b.mesh)]);
+    const keep = new Set<Object3D>([this.hero, ...(this.batches.bodyAll ? [this.batches.bodyAll.mesh] : []), ...Object.values(this.batches.body).map(b => b.mesh), ...Object.values(this.batches.hull).map(b => b.mesh), ...Object.values(this.batches.flash).map(b => b.mesh)]);
     for (const o of this.scene.children) if (!keep.has(o) && !(o instanceof HemisphereLight) && !(o instanceof DirectionalLight)) o.visible = false;
     this.hero.children.filter(c => c !== this.heroBody).forEach(c => (c.visible = false));
     this.scene.background = new Color(0x2b3a55);

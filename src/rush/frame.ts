@@ -179,7 +179,8 @@ function visitShadows(o: Object3D, actor: boolean, actors: Object3D | null): voi
     if (role) {
       // `userData.noCast` (cycle 100): receives but does not cast (walk-through grass, small field decoration).
       mesh.castShadow = role === 'solid' && !o.userData.noCast;
-      mesh.receiveShadow = !actor && (!(mesh as InstancedMesh).isInstancedMesh || !!o.userData.receive);
+      const batched = (mesh as InstancedMesh).isInstancedMesh || (mesh as unknown as { isBatchedMesh?: boolean }).isBatchedMesh;
+      mesh.receiveShadow = !actor && (!batched || !!o.userData.receive);
     }
   }
   const kids = o.children;

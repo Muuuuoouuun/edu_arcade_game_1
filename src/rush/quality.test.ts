@@ -166,3 +166,20 @@ test('music score (1.0, completion C4): moods, tempos, drums only where they bel
   assert.ok(20 * Math.log10(MOOD_LEVEL.town / MOOD_LEVEL.battle) >= 10, 'battle music at least 10 dB under town');
   assert.equal(MOOD_LEVEL.battle, MOOD_LEVEL.boss, 'boss keeps the battle level so the switch is seamless');
 });
+
+test('kind batch (cycle 108): several shapes refilled per frame in one batched mesh; unused instances hide', async () => {
+  const { Scene, BoxGeometry, SphereGeometry, MeshBasicMaterial, Matrix4 } = await import('three');
+  const { KindBatch } = await import('./batch.ts');
+  const scene = new Scene(), box = new BoxGeometry(1, 1, 1), ball = new SphereGeometry(0.5, 8, 6);
+  const kb = new KindBatch(scene, new MeshBasicMaterial(), 8, 10, 10); // too small on purpose: it grows on first use
+  const m = new Matrix4();
+  kb.begin(); kb.push(box, m.makeTranslation(1, 0, 0)); kb.push(ball, m.makeTranslation(2, 0, 0)); kb.push(box, m.makeTranslation(3, 0, 0)); kb.end();
+  assert.equal(kb.size, 3);
+  assert.ok(kb.mesh.visible && [0, 1, 2].every(i => kb.mesh.getVisibleAt(i)), 'three instances drawn');
+  assert.equal(kb.mesh.getGeometryIdAt(0), kb.mesh.getGeometryIdAt(2), 'one geometry entry per shape');
+  assert.notEqual(kb.mesh.getGeometryIdAt(0), kb.mesh.getGeometryIdAt(1));
+  kb.begin(); kb.push(ball, m.identity()); kb.end();
+  assert.ok(kb.mesh.getVisibleAt(0) && !kb.mesh.getVisibleAt(1) && !kb.mesh.getVisibleAt(2), 'a smaller frame hides the rest');
+  kb.begin(); kb.end();
+  assert.equal(kb.mesh.visible, false, 'an empty frame costs no draw');
+});
