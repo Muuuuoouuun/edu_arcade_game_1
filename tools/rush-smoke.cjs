@@ -130,12 +130,14 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     check(await page.isVisible('#build-frost'), 'Lv1 tower offers fire and frost');
     await page.screenshot({ path: `${OUT}/desktop-branch-choice.png` });
     await page.keyboard.press('KeyR');
-    await page.waitForTimeout(300);
+    // Wait for the result, not a fixed delay: with real shadows the software-rendered desktop run draws few frames a second.
+    await page.waitForFunction(() => __rush.state.towers[0]?.level === 1 && document.getElementById('build-frost')?.hidden !== false, null, { timeout: 3000 }).catch(() => {});
+    await page.waitForTimeout(150);
     check(await page.evaluate(() => __rush.state.towers[0]?.level === 1 && __rush.state.towers[0]?.branch === 'frost') && !(await page.isVisible('#build-frost')), 'R upgrades to a frost tower');
     await page.click('#start-wave');
     await page.mouse.move(640, 200);
     await page.mouse.down(); await page.mouse.up();
-    await page.waitForTimeout(300);
+    await page.waitForFunction(() => __rush.state.stats.shots >= 1, null, { timeout: 3000 }).catch(() => {});
     check(await page.evaluate(() => __rush.state.stats.shots >= 1), 'mouse click fires');
     check(await page.evaluate(() => new Promise(done => { const until = performance.now() + 1500; const look = () => __rush.info().heroAnim ? done(true) : performance.now() > until ? done(false) : requestAnimationFrame(look); look(); })), 'hero shoot clip plays on the baked model');
     await page.screenshot({ path: `${OUT}/desktop-play.png` });

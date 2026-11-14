@@ -609,7 +609,7 @@ function frame(now: number) {
     // The kingdom has its own island scene; the battle scene is not drawn behind it.
     townView.update(dt);
     townFrames++;
-    if (forceDraw || townView.animating || townFrames % MENU_DRAW_EVERY === 1) { view.renderer.render(townView.scene, townView.camera); drawnFrames++; forceDraw = false; }
+    if (forceDraw || townView.animating || townFrames % MENU_DRAW_EVERY === 1) { view.draw(townView.scene, townView.camera); drawnFrames++; forceDraw = false; }
     town.layout(canvasRect);
   } else {
     townFrames = 0;

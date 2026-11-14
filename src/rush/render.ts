@@ -31,6 +31,10 @@ import { TownDamage } from './townDamage.ts';
 import { battleFocus } from './battleCamera.ts';
 import { HeroMotion } from './heroMotion.ts';
 import { cliffColors, createGroundGeometry, createCliffGeometry, heightAt, raycastTerrain } from './terrainElevation.ts';
+// Frame-level look (lights, shadows, water, finishing pass): everything below marked "frame" belongs to it.
+import { applyToonLight, FRAME_LOOK, markShadows, setOutlineViewport, setShadowQuality, setSurfaceDetail, setSurfaceTime, setWaterLook, SunRig, waterMaterial, type FrameLook } from './frame.ts';
+import { PostFX } from './post.ts';
+import { glow, setGlowMask } from './toonShader.ts';
 
 export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'lob'; offset: Vec } | { kind: 'super'; offset: Vec } | null;
 
@@ -137,6 +141,14 @@ export class RushView {
   private terrainHulls: Mesh[] = [];
   private decor: Mesh[] = [];
   quality: Quality = 'high';
+  // ---- frame: key light and shadow box, stylised water, finishing pass, and the clock that moves water and clouds ----
+  private rig = new SunRig(this.scene);
+  private post = new PostFX();
+  private waterMat = waterMaterial({ x: (ARENA.minX + ARENA.maxX) / 2, z: (ARENA.minZ + ARENA.maxZ) / 2, hx: (ARENA.maxX - ARENA.minX) / 2 + 1.1, hz: (ARENA.maxZ - ARENA.minZ) / 2 + 1.1, r: 0 });
+  private surfaceTime = 0;
+  private drawnAt = 0;
+  private bufferSize = new Vector2();
+  private glowBatches: Batch[] = [];
   /** Region restyle (expedition merge): the view lives for the whole session, so a battle on another stage swaps
    * colour sets on the same meshes instead of rebuilding them. `styledStage` is the stage the scene is dressed for. */
   private styledStage = 1;
@@ -235,9 +247,9 @@ export class RushView {
     this.scene.background = new Color(PAL.water);
     // Toon bands come from the key light; the sky/ground fill keeps the shadow band bright and colourful.
     this.scene.add(this.hemi);
-    const sun = new DirectionalLight(0xfff3dc, 2.2);
-    sun.position.set(-7, 16, 9);
-    this.scene.add(sun);
+    // The key light is `this.rig` (frame.ts): colour per region, shadow box following the camera on the high tier.
+    this.renderer.shadowMap.enabled = true; // costs nothing until a light casts (high tier only)
+    this.renderer.info.autoReset = false; // one frame is several passes; draw() resets the counters itself
 
     this.particles = new Particles(this.scene, 360, (x,z) => this.groundHeight(x,z));
     this.buildGround();
@@ -274,6 +286,58 @@ export class RushView {
     this.aimLob = new Mesh(this.geo.ring, basic(0xc4f2ff, 0.85));
     this.aimLob.rotation.x = -Math.PI / 2;
     for (const m of [this.aimFan, this.aimRing, this.aimLine, this.aimLob]) { m.visible = false; m.renderOrder = 2; this.scene.add(m); }
+    this.dressFrame();
+  }
+
+  // ---------- frame: light, shadows, water, finishing pass ----------
+  /** Once, after the scene is built: swap in the stylised water and fix the few shadow exceptions. */
+  private dressFrame() {
+    // The water plane is built with the terrain; only its material changes (`color` still takes the region's water).
+    if (this.water) { (this.water.material as Material).dispose(); this.water.material = this.waterMat; }
+    // A hit flash swaps the body batch for a white one: it must keep casting, or the shadow blinks with every hit.
+    for (const b of Object.values(this.batches.flash)) b.mesh.castShadow = true;
+    // Speed lines are an effect, not a body.
+    this.batches.streak.mesh.userData.noShadow = true;
+    // Glow sources for the finishing pass: shots, status floor rings, the super-ready ring (shockwaves: ring()).
+    // Not the frost and ward shells: a glowing shell washed the body colour out.
+    for (const m of [this.mats.heroBolt, this.mats.towerBolt, this.mats.enemyBolt, this.mats.superOrb, this.mats.frostRing]) glow(m);
+    glow(this.mats.snowball, 0.5);
+    for (const b of [...Object.values(this.batches.branchShots), this.batches.wardRing]) glow(b.mesh.material as Material);
+    if (this.superRing) glow(this.superRing.material as Material);
+    this.glowBatches = [...Object.values(this.batches.shots), ...Object.values(this.batches.branchShots), this.batches.frostRing, this.batches.wardRing];
+    this.fitFrame();
+  }
+  /** After a resize or a tier change: outline viewport, shadow map, surface detail, and the finishing pass targets. */
+  private fitFrame() {
+    const spec = QUALITY[this.quality], buf = this.renderer.getDrawingBufferSize(this.bufferSize);
+    setOutlineViewport(buf.y);
+    const shadows = this.sheetMode ? 0 : spec.shadowMap;
+    setShadowQuality(shadows);
+    setSurfaceDetail(spec.surfaceDetail);
+    // Below pixel ratio 2 the scene target is multisampled (as the canvas was); at 2 and above FXAA does the edges.
+    if (spec.post) this.post.setSize(buf.x, buf.y, this.renderer.getPixelRatio() < 2); else this.post.dispose();
+    this.post.vignette = this.sheetMode ? 0 : 1;
+    // Blob discs under actors stand in for shadows on the low tier only: with real shadows they move to a layer the
+    // camera does not draw.
+    this.scene.traverse(o => { if ((o as Mesh).material === this.mats.blob) o.layers.set(shadows > 0 ? 1 : 0); });
+  }
+  private get frameLook(): FrameLook { return FRAME_LOOK[this.region]; }
+  /** What the frame pipeline is doing right now (for checks): real shadows, finishing pass. */
+  frameInfo() { return { shadows: this.rig.shadows, post: this.post.ready }; }
+  /** Draw any scene through the frame pipeline (the town island shares it): shadow pass and scene, then the finishing
+   * pass on the high tier. `look`: light colours and grade of the scene's region. `glowing`: a glow source is on screen
+   * (the town has none, so its frames skip the glow passes). */
+  draw(scene: Scene, camera: PerspectiveCamera, look: FrameLook = FRAME_LOOK.forest, glowing = false) {
+    const now = performance.now(), dt = Math.min(0.1, Math.max(0, (now - this.drawnAt) / 1000));
+    this.drawnAt = now;
+    // Water and cloud shadows keep their own clock: they move in menus, and hold with `fxPaused` for matched captures.
+    if (!this.fxPaused) this.surfaceTime += dt;
+    setSurfaceTime(this.surfaceTime);
+    applyToonLight(look);
+    this.post.setGrade(look.grade);
+    this.renderer.info.reset();
+    setGlowMask(this.post.ready);
+    if (this.post.ready) this.post.render(this.renderer, scene, camera, glowing); else this.renderer.render(scene, camera);
   }
 
   // ---------- static scenery ----------
@@ -1097,6 +1161,7 @@ export class RushView {
     this.renderer.setSize(this.size.w, this.size.h, false);
     for (const h of this.terrainHulls) h.visible = spec.terrainOutlines;
     for (const d of this.decor) d.visible = spec.decor;
+    this.fitFrame();
   }
 
   resize(width: number, height: number) {
@@ -1108,6 +1173,7 @@ export class RushView {
     this.zoom = short >= 720 ? 1 : short <= 420 ? 0.8 : 0.8 + ((short - 420) / 300) * 0.2;
     this.camera.fov = this.portrait ? 46 : 32;
     this.camera.updateProjectionMatrix();
+    this.fitFrame();
   }
 
   /** Apply one simulation step's events: the effect grammar (docs/rush/art-direction.md) and animation triggers. */
@@ -1276,7 +1342,7 @@ export class RushView {
 
   private ring(x: number, z: number, color: number, radius: number, life: number, opacity: number, ink = false) {
     const add = (geo: RingGeometry, c: number, order: number) => {
-      const mesh = new Mesh(geo, basic(c, opacity));
+      const mesh = new Mesh(geo, geo === this.geo.ring ? glow(basic(c, opacity)) : basic(c, opacity)); // frame: coloured band glows
       mesh.rotation.x = -Math.PI / 2;
       mesh.position.set(x, 0.06, z);
       mesh.scale.setScalar(radius * 0.3);
@@ -1578,6 +1644,7 @@ export class RushView {
     for (const o of this.scene.children) if (!keep.has(o) && !(o instanceof HemisphereLight) && !(o instanceof DirectionalLight)) o.visible = false;
     this.hero.children.filter(c => c !== this.heroBody).forEach(c => (c.visible = false));
     this.scene.background = new Color(0x2b3a55);
+    this.fitFrame();
   }
 
   /** Screen point → ground point (for mouse aim). */
@@ -1593,7 +1660,16 @@ export class RushView {
     return { x: (v.x + 1) / 2 * rect.width, y: (1 - v.y) / 2 * rect.height, visible: v.z < 1 && Math.abs(v.x) < 1.2 && Math.abs(v.y) < 1.2 };
   }
 
-  render() { this.renderer.render(this.scene, this.camera); }
+  render() {
+    const look = this.frameLook;
+    this.rig.setLook(look);
+    setWaterLook(this.waterMat, look);
+    if (this.rig.shadows) { markShadows(this.scene, this.hero); this.rig.follow(this.camera, this.focus); }
+    // Glow passes only while something that glows is on screen: a shot, a status ring, a shockwave, the super ring.
+    let glowing = this.fx.length > 0 || !!this.superRing?.visible;
+    for (let i = 0; !glowing && i < this.glowBatches.length; i++) glowing = this.glowBatches[i].size > 0;
+    this.draw(this.scene, this.camera, look, glowing);
+  }
   /** Renderer statistics for the debug overlay and performance notes. */
   /** Hero model triangles split into body and ink hull (outline meshes draw back faces), for measurement. */
   private heroTris() {

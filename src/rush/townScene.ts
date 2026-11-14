@@ -1,10 +1,11 @@
 // 3D kingdom view: an island town whose buildings grow in three visual stages with their levels.
 // Shares the battle renderer; owns its own scene and camera. View-only — rules live in kingdom.ts.
 import {
-  BoxGeometry, Color, ConeGeometry, CylinderGeometry, DirectionalLight, Group, HemisphereLight, Mesh, OctahedronGeometry,
+  BoxGeometry, Color, ConeGeometry, CylinderGeometry, Group, HemisphereLight, Mesh, OctahedronGeometry,
   PerspectiveCamera, PlaneGeometry, Scene, SphereGeometry, Vector3, type BufferGeometry,
 } from 'three';
 import { bake, hullGeometry, outlineMaterial, PAL, toon, type Part } from './look.ts';
+import { FRAME_LOOK, markShadows, setWaterLook, SunRig, waterMaterial } from './frame.ts';
 import type { Kingdom, Upgrade } from './kingdom.ts';
 import { ENDLESS_MILESTONES, ENDLESS_STAGE, stageUnlocked, level } from './kingdom.ts';
 import { castleScale, loadTownCastle, townCastleGeometry, type TownCastleLoader } from './townCastle.ts';
@@ -196,18 +197,22 @@ export class TownView {
   private kingdom: Kingdom | null = null;
   castleModel: 'loading' | 'ready' | 'fallback' = 'loading';
   private flag = { group: new Group(), stage: -2 };
+  private rig = new SunRig(this.scene, true);
+  /** Frames for which the still shadow map is redrawn: after a building changes, and while one pops. */
+  private shadowStale = 3;
 
   constructor(loadCastle: TownCastleLoader = loadTownCastle) {
     this.scene.background = new Color(PAL.water);
     this.scene.add(new HemisphereLight(0xe6f6ff, 0x9c8a62, 1.15));
-    const sun = new DirectionalLight(0xfff3dc, 2.2);
-    sun.position.set(-7, 16, 9);
-    this.scene.add(sun);
-    const water = new Mesh(new PlaneGeometry(200, 200), toon(PAL.water, { rim: 0 }));
+    // Same key light, shadows and water as the battle (frame.ts). The island is still, so its shadow box is fixed.
+    this.rig.setLook(FRAME_LOOK.forest);
+    const sea = waterMaterial({ x: 0, z: 0, hx: 0, hz: 0, r: 11.9 });
+    sea.color.setHex(PAL.water); setWaterLook(sea, FRAME_LOOK.forest);
+    const water = new Mesh(new PlaneGeometry(200, 200), sea);
     water.rotation.x = -Math.PI / 2; water.position.y = -0.5;
-    const sand = new Mesh(new CylinderGeometry(11.5, 12, 0.6, 40), toon(0xf0c98a, { rim: 0 }));
+    const sand = new Mesh(new CylinderGeometry(11.5, 12, 0.6, 40), toon(0xf0c98a, { rim: 0, ground: true }));
     sand.position.y = -0.32;
-    const grass = new Mesh(new CylinderGeometry(10.3, 10.5, 0.3, 40), toon(0x86d35a, { rim: 0 }));
+    const grass = new Mesh(new CylinderGeometry(10.3, 10.5, 0.3, 40), toon(0x86d35a, { rim: 0, ground: true }));
     grass.position.y = -0.14;
     this.scene.add(water, sand, grass);
     // Paths from the castle to each building, and trees around the rim (decoration only).
@@ -281,6 +286,7 @@ export class TownView {
         node.group.add(new Mesh(kit.body, this.baked), new Mesh(kit.hull, outlineMaterial(0.05)));
       }
       node.stage = stage;
+      this.shadowStale = 3;
     }
     const fs = flagStage(k);
     if (fs !== this.flag.stage) {
@@ -290,6 +296,7 @@ export class TownView {
         this.flag.group.add(new Mesh(body, this.baked), new Mesh(hullGeometry(body), outlineMaterial(0.05)));
       }
       this.flag.stage = fs;
+      this.shadowStale = 3;
     }
   }
 
@@ -299,6 +306,11 @@ export class TownView {
   get animating() { for (const n of this.nodes.values()) if (n.pop > 0) return true; return false; }
 
   update(dt: number) {
+    if (this.rig.shadows) {
+      markShadows(this.scene); this.rig.cover(0, 0, -1, 15);
+      if (this.animating) this.shadowStale = 2;
+      if (this.shadowStale > 0) { this.shadowStale--; this.rig.refresh(); }
+    }
     for (const n of this.nodes.values()) {
       if (n.pop <= 0) { n.group.scale.set(1, 1, 1); continue; }
       n.pop = Math.max(0, n.pop - dt);

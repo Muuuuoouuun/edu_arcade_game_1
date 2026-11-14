@@ -1,11 +1,13 @@
 // Render tone ("look") for Arcana Rush: bright toon shading, rim light, ink outlines and baked multi-part meshes.
 // Art direction: docs/rush/art-direction.md. Our own palette and shapes; reference games are principles only.
 import {
-  BackSide, BoxGeometry, BufferAttribute, Color, DataTexture, Euler, Matrix4, MeshBasicMaterial, MeshToonMaterial, NearestFilter, Quaternion,
-  RedFormat, Vector3, type BufferGeometry, type Material, type Mesh,
+  BackSide, BoxGeometry, BufferAttribute, Color, Euler, Matrix4, MeshBasicMaterial, MeshToonMaterial, Quaternion,
+  Vector3, type BufferGeometry, type Material, type Mesh,
 } from 'three';
 import { mergeGeometries, toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
 import { FOREST_GROUND, type GroundPalette } from './terrainElevation.ts';
+import { patchOutline, patchToon, toonDetail, trackToon } from './toonShader.ts';
+export { glow } from './toonShader.ts';
 
 /** Palette tokens. Ground stays calmer than anything you can interact with. */
 export const PAL = {
@@ -70,48 +72,33 @@ export const BOSS_LOOK: Record<BossName, BossLook> = {
   snow: { cape: 0x8a1f3a, trunk: 0x232c5c, chest: 0x62b4ee, head: 0x1a2044, crown: 0xe6f8ff, arm: 0x62b4ee, fist: 0xf2fbff, kill: 0x62b4ee },
 };
 
-let gradient: DataTexture | null = null;
-/** Three hard light bands: shadow, mid, lit. */
-function toonGradient(): DataTexture {
-  if (gradient) return gradient;
-  gradient = new DataTexture(new Uint8Array([105, 185, 255]), 3, 1, RedFormat);
-  gradient.minFilter = gradient.magFilter = NearestFilter;
-  gradient.generateMipmaps = false;
-  gradient.needsUpdate = true;
-  return gradient;
-}
-
-/** Toon material with an optional fresnel rim that lifts silhouettes off the ground. */
-export function toon(color: number | Color = 0xffffff, opts: { vertexColors?: boolean; rim?: number; emissive?: number } = {}): MeshToonMaterial {
-  const m = new MeshToonMaterial({ color, gradientMap: toonGradient(), vertexColors: !!opts.vertexColors, emissive: opts.emissive ?? 0x000000 });
-  const rim = opts.rim ?? 0.32;
-  if (rim > 0) {
-    m.onBeforeCompile = shader => {
-      shader.uniforms.rimStrength = { value: rim };
-      shader.fragmentShader = 'uniform float rimStrength;\n' + shader.fragmentShader.replace(
-        '#include <opaque_fragment>',
-        'float rimF = 1.0 - clamp( dot( normal, normalize( vViewPosition ) ), 0.0, 1.0 );\n' +
-        'outgoingLight += vec3( 1.0, 0.97, 0.9 ) * rimStrength * pow( rimF, 2.6 );\n#include <opaque_fragment>',
-      );
-    };
-    m.customProgramCacheKey = () => `toon-rim-${rim}`;
-  }
+/** How a toon material takes part in the shadow pass (frame.ts `markShadows`): `solid` casts and receives,
+ * `ground` and `flat` only receive. Stored in `material.userData.toon`, so it survives `Material.clone()`. */
+export type ToonRole = 'solid' | 'ground' | 'flat';
+/** Toon material: three flat light bands (shade, mid, lit) with the shade in a cool tint, cast shadows as one clean
+ * step, and a fresnel rim that lifts silhouettes off the ground (shader in toonShader.ts). `rim: 0` marks flat scenery
+ * (ground, water): it receives shadows but casts none, and with vertex colours (or `ground: true`) it also gets the
+ * painted ground detail on the high tier. A clone must copy `onBeforeCompile` and `customProgramCacheKey` (three does not). */
+export function toon(color: number | Color = 0xffffff, opts: { vertexColors?: boolean; rim?: number; emissive?: number; ground?: boolean } = {}): MeshToonMaterial {
+  const m = new MeshToonMaterial({ color, vertexColors: !!opts.vertexColors, emissive: opts.emissive ?? 0x000000 });
+  const rim = opts.rim ?? 0.32, ground = opts.ground ?? (rim === 0 && !!opts.vertexColors);
+  m.userData.toon = (ground ? 'ground' : rim === 0 ? 'flat' : 'solid') satisfies ToonRole;
+  m.onBeforeCompile = shader => patchToon(shader, rim, ground);
+  m.customProgramCacheKey = () => `rush-toon-${rim}${toonDetail() ? (ground ? '-detail-ground' : '-detail') : ''}`;
+  trackToon(m);
   return m;
 }
 
 const outlineCache = new Map<string, MeshBasicMaterial>();
-/** Inverted-hull ink outline: back faces pushed out along smoothed normals (object units). */
+/** Inverted-hull ink outline: back faces pushed out along smoothed normals (object units), with a minimum thickness
+ * in screen pixels (toonShader.ts `OUTLINE_VIEW`) so thin hulls stay whole at low pixel ratios. */
 export function outlineMaterial(width: number, color: number = PAL.ink): MeshBasicMaterial {
   const key = `${width}:${color}`;
   let m = outlineCache.get(key);
   if (m) return m;
   m = new MeshBasicMaterial({ color, side: BackSide });
-  m.onBeforeCompile = shader => {
-    shader.uniforms.outlineWidth = { value: width };
-    shader.vertexShader = 'uniform float outlineWidth;\n' + shader.vertexShader.replace(
-      '#include <begin_vertex>', 'vec3 transformed = vec3( position ) + normal * outlineWidth;');
-  };
-  m.customProgramCacheKey = () => `outline-${width}`;
+  m.onBeforeCompile = shader => patchOutline(shader, width);
+  m.customProgramCacheKey = () => `rush-outline-${width}`;
   outlineCache.set(key, m);
   return m;
 }
