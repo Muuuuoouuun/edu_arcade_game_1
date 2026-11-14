@@ -3,7 +3,7 @@
 // so this module can run in tests, in the browser and later on an authoritative server.
 import {
   ARENA, BUSH, CRATE, ECONOMY, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WAVES,
-  type Block, heroStats, type EnemyDef, type EnemyKind, type HeroDef, type HeroKind, type SpawnGroup, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
+  BARRICADE, BARRICADES, BARRICADE_LEVELS, type Block, heroStats, type EnemyDef, type EnemyKind, type HeroDef, type HeroKind, type SpawnGroup, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
 import { heroPaceAt, inBush, mapFor, paceAt, slideAt, type MapLayout } from './maps.ts';
 
 export type Phase = 'prep' | 'wave' | 'won' | 'lost';
@@ -36,9 +36,13 @@ export interface Shot {
   id: number; owner: ShotOwner; x: number; z: number; vx: number; vz: number;
   damage: number; life: number; radius: number; target: number; tx: number; tz: number;
   branch?: TowerBranch;
+  /** An enemy shot aimed at this barricade site (it hits the barricade, not the hero or town behind). */
+  wall?: number;
 }
 /** branch is chosen when Lv1 becomes Lv2 and kept at Lv3. */
 export interface Tower { level: number; cd: number; facing: number; branch?: TowerBranch }
+/** A built barricade (index = BARRICADES site). hp 0 = rubble: it stops blocking and can be rebuilt at its level. */
+export interface Barricade { level: number; hp: number }
 export interface Coin { id: number; x: number; z: number; value: number; life: number }
 /** gold: a treasure crate's own drop (maps.ts); absent = CRATE.gold. */
 export interface Crate { id: number; x: number; z: number; hp: number; gold?: number }
@@ -73,6 +77,12 @@ export type RushEvent =
   | { type: 'summon'; x: number; z: number; count: number }
   | { type: 'coin'; value: number }
   | { type: 'build'; pad: number; level: number; branch?: TowerBranch }
+  /** A barricade built (level 0), upgraded to spikes (level 1) or repaired / rebuilt from rubble (repair). */
+  | { type: 'barricade'; slot: number; level: number; repair: boolean }
+  | { type: 'barricadeHit'; slot: number; x: number; z: number; damage: number; spiked: boolean }
+  | { type: 'barricadeBreak'; slot: number; x: number; z: number }
+  /** An enemy fell at a standing barricade: its gold goes straight to the purse (no coin to fetch out front). */
+  | { type: 'loot'; x: number; z: number; value: number }
   | { type: 'splash'; x: number; z: number; radius: number }
   | { type: 'chill'; x: number; z: number }
   | { type: 'snow'; x: number; z: number; radius: number }
@@ -123,6 +133,8 @@ export interface RushState {
   wave: number; prepT: number; groups: GroupProgress[];
   town: { hp: number; maxHp: number }; gold: number;
   hero: Hero; enemies: Enemy[]; shots: Shot[]; towers: (Tower | null)[]; coins: Coin[]; crates: Crate[];
+  /** One per BARRICADES site; null = nothing built there yet. */
+  barricades: (Barricade | null)[];
   nextId: number;
   stats: { kills: number; shots: number; hits: number; supers: number; goldEarned: number; heroDowns: number };
   events: RushEvent[];
@@ -173,9 +185,48 @@ function insideBlock(s: RushState, x: number, z: number, pad: number): boolean {
 const crateBlock = (c: Crate): Block => ({ x: c.x, z: c.z, w: CRATE.size, d: CRATE.size });
 const inCrate = (s: RushState, x: number, z: number) =>
   s.crates.find(c => Math.abs(x - c.x) <= CRATE.size / 2 && Math.abs(z - c.z) <= CRATE.size / 2) ?? null;
+/** Each barricade site's frame: `d` the lane direction there (the way enemies walk), `u` across it (the length axis). */
+export const BARRICADE_FRAMES: readonly { u: Vec; d: Vec }[] = BARRICADES.map(b => {
+  const lane = LANES[b.lane];
+  let best = 0, bestD = Infinity;
+  for (let i = 0; i < lane.length - 1; i++) {
+    const a = lane[i], c = lane[i + 1], ax = c.x - a.x, az = c.z - a.z;
+    const t = clamp(((b.x - a.x) * ax + (b.z - a.z) * az) / (ax * ax + az * az), 0, 1);
+    const d = len(a.x + ax * t - b.x, a.z + az * t - b.z);
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  const a = lane[best], c = lane[best + 1], l = len(c.x - a.x, c.z - a.z), d = { x: (c.x - a.x) / l, z: (c.z - a.z) / l };
+  return { d, u: { x: -d.z, z: d.x } };
+});
+/** A point in a barricade's frame (along its length, along its lane) and the nearest point of its box there. */
+function barricadeLocal(slot: number, p: Vec) {
+  const b = BARRICADES[slot], f = BARRICADE_FRAMES[slot], dx = p.x - b.x, dz = p.z - b.z;
+  const lu = dx * f.u.x + dz * f.u.z, ld = dx * f.d.x + dz * f.d.z;
+  return { lu, ld, cu: clamp(lu, -BARRICADE.length / 2, BARRICADE.length / 2), cd: clamp(ld, -BARRICADE.depth / 2, BARRICADE.depth / 2) };
+}
+/** Distance from a point to a barricade's box (0 inside). */
+export function barricadeGap(slot: number, p: Vec): number {
+  const l = barricadeLocal(slot, p);
+  return len(l.lu - l.cu, l.ld - l.cd);
+}
+/** Push a circle out of a barricade's box. */
+function pushOutBarricade(p: Vec, r: number, slot: number): void {
+  const l = barricadeLocal(slot, p), b = BARRICADES[slot], f = BARRICADE_FRAMES[slot];
+  let du = l.lu - l.cu, dd = l.ld - l.cd, d = len(du, dd), u = l.lu, w = l.ld;
+  if (d >= r) return;
+  if (d > 1e-9) { u = l.cu + (du / d) * r; w = l.cd + (dd / d) * r; } else {
+    // Centre inside: leave by the nearest face (behind it, toward the town, on a tie).
+    const hu = BARRICADE.length / 2, hd = BARRICADE.depth / 2, exits = [hu - l.lu, l.lu + hu, hd - l.ld, l.ld + hd];
+    const i = exits.indexOf(Math.min(...exits));
+    if (i === 0) u = hu + r; else if (i === 1) u = -hu - r; else if (i === 2) w = hd + r; else w = -hd - r;
+  }
+  p.x = b.x + f.u.x * u + f.d.x * w; p.z = b.z + f.u.z * u + f.d.z * w;
+}
+export const barricadeStanding = (s: RushState, slot: number) => (s.barricades[slot]?.hp ?? 0) > 0;
 function confine(p: Vec, r: number, s: RushState): void {
   for (const b of s.map.walls) pushOut(p, r, b);
   for (const c of s.crates) pushOut(p, r, crateBlock(c));
+  for (let i = 0; i < BARRICADES.length; i++) if (barricadeStanding(s, i)) pushOutBarricade(p, r, i);
   const tr = TOWN.radius + r, dx = p.x - TOWN.x, dz = p.z - TOWN.z, d = len(dx, dz);
   if (d < tr) {
     if (d > 1e-9) { p.x = TOWN.x + (dx / d) * tr; p.z = TOWN.z + (dz / d) * tr; } else p.z = TOWN.z - tr;
@@ -191,7 +242,7 @@ export function createRush(seed = 1, mods: RushMods = NO_MODS, diff: Difficulty 
     seed, rng: seed | 0, tick: 0, t: 0, phase: 'prep', mods: { ...mods }, diff: { ...diff }, map, wave: 0, prepT: ECONOMY.prepTime, groups: [],
     town: { hp: townHp, maxHp: townHp }, gold: ECONOMY.startGold + (mods.startGold ?? 0),
     hero: { kind: heroKind, x: HERO_SPAWN.x, z: HERO_SPAWN.z, hp: Math.round(HEROES[heroKind].hp * mods.heroHp), facing: -Math.PI / 2, ammo: HEROES[heroKind].ammoMax, reloadT: 0, fireCd: 0, superCharge: 0, downT: 0, calmT: 0, exposedUntil: 0 },
-    enemies: [], shots: [], towers: PADS.map(() => null), coins: [], nextId: 1 + map.crates.length,
+    enemies: [], shots: [], towers: PADS.map(() => null), barricades: BARRICADES.map(() => null), coins: [], nextId: 1 + map.crates.length,
     crates: map.crates.map((c, i) => ({ id: 1 + i, x: c.x, z: c.z, hp: CRATE.hp, ...(c.gold ? { gold: c.gold } : {}) })),
     stats: { kills: 0, shots: 0, hits: 0, supers: 0, goldEarned: 0, heroDowns: 0 },
     events: [],
@@ -216,6 +267,34 @@ export function padInReach(s: RushState): number {
   let best = -1, bestD = PAD_REACH;
   PADS.forEach((p, i) => { const d = dist(p, s.hero); if (d <= bestD) { best = i; bestD = d; } });
   return best;
+}
+/** Build sites: the tower pads and the barricade sites, picked by one build button. */
+export type Site = { kind: 'tower' | 'barricade'; i: number };
+/** Nearest build site (pad or barricade) within reach of a point, or null. */
+export function siteNear(at: Vec): Site | null {
+  let best: Site | null = null, bestD = PAD_REACH;
+  PADS.forEach((p, i) => { const d = dist(p, at); if (d <= bestD) { best = { kind: 'tower', i }; bestD = d; } });
+  BARRICADES.forEach((p, i) => { const d = dist(p, at); if (d <= bestD) { best = { kind: 'barricade', i }; bestD = d; } });
+  return best;
+}
+export const siteInReach = (s: RushState): Site | null => siteNear(s.hero);
+/** A barricade's health grows with the kingdom's town-health perk (masonry), its spikes with the forge. */
+export const barricadeMaxHp = (s: RushState, level: number) => Math.round(BARRICADE_LEVELS[level].hp * (1 + BARRICADE.masonry * (s.mods.townHp - 1)));
+export const barricadeSpike = (s: RushState, level: number) => (BARRICADE_LEVELS[level].spike > 0 ? BARRICADE_LEVELS[level].spike + BARRICADE.spikeForge * s.mods.forge : 0);
+/** What the build button does at a barricade site, and its cost; null = nothing to do (spiked and unhurt).
+ * Empty → build; rubble → rebuild at its level; Lv1 → spikes (also back to full health), unless only a repair is
+ * affordable on a hurt one; spiked and hurt → repair. A repair costs by the health missing. */
+export function barricadeOrder(s: RushState, slot: number): { action: 'build' | 'upgrade' | 'repair'; cost: number } | null {
+  const b = s.barricades[slot];
+  if (!b) return { action: 'build', cost: BARRICADE_LEVELS[0].cost };
+  const missing = 1 - b.hp / barricadeMaxHp(s, b.level), hurt = missing > 0;
+  const repair = { action: 'repair' as const, cost: Math.max(BARRICADE.repairMin, Math.round(BARRICADE_LEVELS[b.level].cost * BARRICADE.repair * missing)) };
+  if (b.hp <= 0) return repair;
+  if (b.level + 1 < BARRICADE_LEVELS.length) {
+    const up = { action: 'upgrade' as const, cost: BARRICADE_LEVELS[b.level + 1].cost };
+    return hurt && s.gold < up.cost && s.gold >= repair.cost ? repair : up;
+  }
+  return hurt ? repair : null;
 }
 /** Cost of building or upgrading the given pad, or null when maxed. */
 export function padCost(s: RushState, pad: number): number | null {
@@ -493,8 +572,10 @@ function castSuper(s: RushState, aim: Vec | 'auto') {
 }
 
 function build(s: RushState, choice: boolean | TowerBranch) {
-  const pad = padInReach(s);
-  if (pad < 0) return;
+  const site = siteInReach(s);
+  if (!site) return;
+  if (site.kind === 'barricade') { buildBarricade(s, site.i); return; }
+  const pad = site.i;
   const cost = padCost(s, pad);
   if (cost === null || s.gold < cost) return;
   s.gold -= cost;
@@ -504,6 +585,26 @@ function build(s: RushState, choice: boolean | TowerBranch) {
     if (tower.level === 1) tower.branch = choice === 'frost' ? 'frost' : 'fire';
   } else s.towers[pad] = { level: 0, cd: 0, facing: -Math.PI / 2 };
   s.events.push({ type: 'build', pad, level: s.towers[pad]!.level, branch: s.towers[pad]!.branch });
+}
+
+function buildBarricade(s: RushState, slot: number) {
+  const order = barricadeOrder(s, slot);
+  if (!order || s.gold < order.cost) return;
+  s.gold -= order.cost;
+  const b = s.barricades[slot];
+  const level = order.action === 'build' ? 0 : order.action === 'upgrade' ? b!.level + 1 : b!.level;
+  s.barricades[slot] = { level, hp: barricadeMaxHp(s, level) };
+  s.events.push({ type: 'barricade', slot, level, repair: order.action === 'repair' });
+}
+/** Damage a barricade. A melee attacker (given) takes the spike damage of a spiked one; at 0 it falls to rubble. */
+function hurtBarricade(s: RushState, slot: number, damage: number, attacker: Enemy | null) {
+  const b = s.barricades[slot];
+  if (!b || b.hp <= 0) return;
+  b.hp = Math.max(0, b.hp - damage);
+  const at = BARRICADES[slot], spike = attacker ? barricadeSpike(s, b.level) : 0;
+  s.events.push({ type: 'barricadeHit', slot, x: at.x, z: at.z, damage, spiked: spike > 0 });
+  if (spike > 0) hurtEnemy(s, attacker!, spike, 'tower');
+  if (b.hp <= 0) s.events.push({ type: 'barricadeBreak', slot, x: at.x, z: at.z });
 }
 
 function hurtHero(s: RushState, damage: number) {
@@ -564,6 +665,33 @@ function nearestSegmentEnd(lane: readonly Vec[], p: Vec): number {
     if (d < bestD) { bestD = d; best = i + 1; }
   }
   return best;
+}
+
+/** Barricade site per lane (-1 = none), and the lane point just past each site (where the march toward it ends). */
+const SITE_OF_LANE = LANES.map((_, lane) => BARRICADES.findIndex(b => b.lane === lane));
+const SITE_WP = BARRICADES.map(b => nearestSegmentEnd(LANES[b.lane], b));
+/** The barricade site holding this enemy: the one on its lane, standing, and not yet walked past (its back face). */
+function heldBy(s: RushState, e: Enemy): number {
+  const slot = SITE_OF_LANE[e.lane] ?? -1;
+  if (slot < 0 || !barricadeStanding(s, slot) || !holders[slot].has(e.id)) return -1;
+  return slot;
+}
+/** Per barricade, the enemies it holds this step: the `BARRICADE.hold` nearest of its lane that have not walked past
+ * it (ties: lower id). A short palisade in an open field stops a few at a time; the rest of a horde spills round. */
+const holders: Set<number>[] = BARRICADES.map(() => new Set());
+function pickHolders(s: RushState) {
+  BARRICADES.forEach((_, slot) => {
+    const set = holders[slot];
+    set.clear();
+    if (!barricadeStanding(s, slot)) return;
+    const lane = BARRICADES[slot].lane, front: { id: number; gap: number }[] = [];
+    for (const e of s.enemies) {
+      if (e.hp <= 0 || e.lane !== lane || barricadeLocal(slot, e).ld >= BARRICADE.depth / 2 + ENEMIES[e.kind].radius) continue;
+      front.push({ id: e.id, gap: barricadeGap(slot, e) });
+    }
+    front.sort((a, b) => a.gap - b.gap || a.id - b.id);
+    for (let i = 0; i < Math.min(BARRICADE.hold, front.length); i++) set.add(front[i].id);
+  });
 }
 
 /** A tower bolt lands: plain damage, plus the branch effect (fire splash or frost slow). */
@@ -628,6 +756,7 @@ function healPulse(s: RushState, e: Enemy, heal: NonNullable<EnemyDef['heal']>) 
 
 function updateEnemies(s: RushState) {
   const h = s.hero, alive = heroAlive(s), hidden = heroHidden(s);
+  pickHolders(s);
   for (const e of s.enemies) {
     if (e.hp <= 0) continue;
     const def = ENEMIES[e.kind];
@@ -648,6 +777,8 @@ function updateEnemies(s: RushState) {
         const r = def.slamRadius ?? 2;
         if (alive && dist(h, e.windup) <= r + heroDef(s).radius) hurtHero(s, def.damage * s.diff.enemyDamage);
         if (dist(TOWN, e.windup) <= r + TOWN.radius) hurtTown(s, def.damage * s.diff.enemyDamage);
+        const slam = e.windup;
+        for (let i = 0; i < BARRICADES.length; i++) if (barricadeGap(i, slam) <= r) hurtBarricade(s, i, def.damage * s.diff.enemyDamage, null);
         s.events.push({ type: 'slam', x: e.windup.x, z: e.windup.z, radius: r });
         e.windup = null;
         e.cd = def.cooldown;
@@ -679,16 +810,18 @@ function updateEnemies(s: RushState) {
       }
     }
 
-    const chase = alive && dist(e, h) <= def.aggro && (!hidden || dist(e, h) <= BUSH.reveal);
+    let chase = alive && dist(e, h) <= def.aggro && (!hidden || dist(e, h) <= BUSH.reveal);
+    // Held by its lane's barricade: a hero behind it is out of reach for melee, and for a shooter not yet in range.
+    const wall = heldBy(s, e);
+    if (chase && wall >= 0 && barricadeLocal(wall, h).ld > 0 && !(def.shotSpeed && dist(e, h) - heroDef(s).radius - def.radius <= def.reach)) chase = false;
     if (e.chasing && !chase) e.wp = nearestSegmentEnd(LANES[e.lane], e);
     e.chasing = chase;
-    const target: Vec = chase ? h : TOWN;
-    const targetR = chase ? heroDef(s).radius : TOWN.radius;
-    const gap = dist(e, target) - targetR - def.radius;
+    const target: Vec = chase ? h : wall >= 0 ? BARRICADES[wall] : TOWN;
+    const gap = chase || wall < 0 ? dist(e, target) - (chase ? heroDef(s).radius : TOWN.radius) - def.radius : barricadeGap(wall, e) - def.radius;
 
     if (gap <= def.reach) {
       e.facing = Math.atan2(target.z - e.z, target.x - e.x);
-      if (e.cd <= 0) attack(s, e, chase);
+      if (e.cd <= 0) attack(s, e, chase, wall);
     } else {
       if (lunge && gap <= lunge.range && e.lungeCd === 0 && !(e.dashT ?? 0)) {
         e.lungeT = lunge.windup; e.lungeCd = lunge.cooldown;
@@ -702,7 +835,8 @@ function updateEnemies(s: RushState) {
       if (!chase && dash === 1) {
         const lane = LANES[e.lane];
         if (e.wp < lane.length - 1 && dist(e, lane[e.wp]) < 1.2) e.wp++;
-        goal = lane[Math.min(e.wp, lane.length - 1)];
+        // Past the last lane point before a standing barricade, walk straight at it (it sits on the lane).
+        goal = wall >= 0 && e.wp >= SITE_WP[wall] ? BARRICADES[wall] : lane[Math.min(e.wp, lane.length - 1)];
       }
       const dx = goal.x - e.x, dz = goal.z - e.z, d = len(dx, dz);
       if (d > 1e-6) {
@@ -748,7 +882,8 @@ function rally(s: RushState, boss: Enemy, call: NonNullable<EnemyDef['summon']>)
   s.events.push({ type: 'summon', x: boss.x, z: boss.z, count: call.count });
 }
 
-function attack(s: RushState, e: Enemy, atHero: boolean) {
+/** `wall` 0 or more: not at the hero, the enemy is held by that barricade and strikes it instead of the town. */
+function attack(s: RushState, e: Enemy, atHero: boolean, wall = -1) {
   const def = ENEMIES[e.kind];
   e.cd = def.cooldown;
   if (e.kind === 'boss') {
@@ -758,16 +893,20 @@ function attack(s: RushState, e: Enemy, atHero: boolean) {
     s.events.push({ type: 'telegraph', x: point.x, z: point.z, radius: def.slamRadius ?? 2, time: def.windup ?? 0.8 });
     return;
   }
+  const onWall = !atHero && wall >= 0;
   if (def.shotSpeed) {
-    const target = atHero ? s.hero : TOWN;
+    const target = atHero ? s.hero : onWall ? BARRICADES[wall] : TOWN;
     const dx = target.x - e.x, dz = target.z - e.z, d = len(dx, dz) || 1;
     s.shots.push({
       id: s.nextId++, owner: 'enemy', x: e.x, z: e.z, vx: (dx / d) * def.shotSpeed, vz: (dz / d) * def.shotSpeed,
       damage: def.damage * s.diff.enemyDamage, life: (def.reach + 2) / def.shotSpeed, radius: 0.22, target: 0, tx: 0, tz: 0,
+      ...(onWall ? { wall } : {}),
     });
     return;
   }
-  if (atHero) hurtHero(s, def.damage * s.diff.enemyDamage); else hurtTown(s, def.damage * s.diff.enemyDamage);
+  if (atHero) hurtHero(s, def.damage * s.diff.enemyDamage);
+  else if (onWall) hurtBarricade(s, wall, def.damage * s.diff.enemyDamage, e);
+  else hurtTown(s, def.damage * s.diff.enemyDamage);
 }
 
 // ---------- towers ----------
@@ -863,7 +1002,10 @@ function updateShots(s: RushState) {
         break;
       }
     } else {
-      if (heroAlive(s) && dist(s.hero, shot) <= heroDef(s).radius + shot.radius) { hurtHero(s, shot.damage); hit = true; }
+      // A shot aimed at a barricade lands on it; others fly over barricades.
+      const wall = shot.wall ?? -1;
+      if (wall >= 0 && barricadeStanding(s, wall) && barricadeGap(wall, shot) <= shot.radius) { hurtBarricade(s, wall, shot.damage, null); hit = true; }
+      else if (heroAlive(s) && dist(s.hero, shot) <= heroDef(s).radius + shot.radius) { hurtHero(s, shot.damage); hit = true; }
       else if (dist(TOWN, shot) <= TOWN.radius + shot.radius) { hurtTown(s, shot.damage); hit = true; }
     }
     if (!hit && shot.life > 0) keep.push(shot);
@@ -893,7 +1035,10 @@ function reap(s: RushState) {
     s.stats.kills++;
     s.events.push({ type: 'kill', x: e.x, z: e.z, kind: e.kind });
     const gold = ENEMIES[e.kind].gold;
-    if (gold > 0) {
+    // Killed while held at a barricade: the defenders behind it take the gold at once. Out there a coin would mostly
+    // expire unfetched, which made every barricade cost far more than its price (measured: ~40% of battle gold lost).
+    if (gold > 0 && heldBy(s, e) >= 0) { addGold(s, gold); s.events.push({ type: 'loot', x: e.x, z: e.z, value: gold }); }
+    else if (gold > 0) {
       const p = { x: e.x + (rand(s) - 0.5) * 0.8, z: e.z + (rand(s) - 0.5) * 0.8 };
       confine(p, 0.2, s);
       s.coins.push({ id: s.nextId++, x: p.x, z: p.z, value: gold, life: ECONOMY.coinLife });
@@ -909,5 +1054,6 @@ export function rushHash(s: RushState): string {
     s.tick, s.phase, s.wave, s.gold, r(s.town.hp), r(s.hero.x), r(s.hero.z), r(s.hero.hp), s.hero.ammo, s.hero.superCharge,
     s.enemies.map(e => [e.id, e.kind, r(e.x), r(e.z), r(e.hp)]), s.shots.length, s.coins.map(c => [c.id, r(c.x), r(c.z)]),
     s.towers.map(t => (t ? `${t.level}${t.branch ?? ''}` : -1)), s.crates.map(c => [c.id, Math.round(c.hp)]), s.stats,
+    s.barricades.map(b => (b ? [b.level, r(b.hp)] : -1)),
   ]);
 }

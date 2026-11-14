@@ -1,7 +1,7 @@
 // Arcana Rush bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
 import { ECONOMY, ENEMIES, HEROES, TOWER_LEVELS, type HeroKind } from './data.ts';
-import { createRush, padCost, padInReach, stepRush, superReady, wardBreakBurst, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
+import { barricadeOrder, createRush, padCost, siteInReach, stepRush, superReady, wardBreakBurst, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
 import { RushInput } from './input.ts';
@@ -218,7 +218,7 @@ function updateCallout() {
 // ---------- events → feedback ----------
 // A melee swing sounds like an impact rather than a bowstring.
 const SOUND: Partial<Record<RushEvent['type'], CombatSoundKind>> = {
-  bossEnter: 'cannon', fire: 'arrow', swing: 'slash', burst: 'skill', slam: 'cannon', roar: 'surge', lap: 'surge', summon: 'cast', townHit: 'breach', heroDown: 'breach', build: 'cast', waveStart: 'surge', superReady: 'freeze',
+  bossEnter: 'cannon', fire: 'arrow', swing: 'slash', burst: 'skill', slam: 'cannon', roar: 'surge', lap: 'surge', summon: 'cast', townHit: 'breach', heroDown: 'breach', build: 'cast', barricade: 'cast', waveStart: 'surge', superReady: 'freeze',
 };
 /** Endless lap twists (cycle 52), as the player reads them. */
 const TWIST_NAME: Record<LapTwist, string> = { swift: '빠른 걸음', shields: '방패 행렬', twin: '쌍둥이 보스' };
@@ -243,6 +243,7 @@ function feedback(events: RushEvent[]) {
     else if (ev.type === 'block') { playCombatSound('cannon'); pop('막힘', ev.x, ev.z, 'blocked', 2.1); } // a heavier clank than a flesh hit
     else if (ev.type === 'heroHit') pop(String(Math.round(ev.damage)), state.hero.x, state.hero.z, 'hurt', 2.2);
     else if (ev.type === 'coin') pop(`+${ev.value}`, state.hero.x, state.hero.z, 'gold', 2.4);
+    else if (ev.type === 'loot') pop(`+${ev.value}`, ev.x, ev.z, 'gold', 2.4);
     else if (ev.type === 'burst') playHaptic('skill', feedbackEnabled);
     else if (ev.type === 'heroDown') { playHaptic('breach', feedbackEnabled); toast(`쓰러졌다! ${HEROES[state.hero.kind].respawn}초 뒤 마을에서 복귀`, 'bad'); }
     else if (ev.type === 'superReady') toast('필살기 준비 완료!', 'super');
@@ -267,6 +268,9 @@ function feedback(events: RushEvent[]) {
       box.classList.remove('lap-flash'); void box.offsetWidth; box.classList.add('lap-flash');
     }
     else if (ev.type === 'build') toast(ev.level === 0 ? '궁수탑 건설!' : `${ev.branch ? BRANCH_NAME[ev.branch] : '궁수'}탑 Lv${ev.level + 1}`, 'good');
+    else if (ev.type === 'barricade') toast(ev.repair ? '방벽 수리!' : ev.level ? '가시 방벽!' : '방벽 건설!', 'good');
+    else if (ev.type === 'barricadeBreak') { playCombatSound('breach'); playHaptic('cast', feedbackEnabled); }
+    else if (ev.type === 'barricadeHit' && ev.spiked) playCombatSound('impact');
     else if (ev.type === 'won' || ev.type === 'lost') showResult();
   }
 }
@@ -331,15 +335,23 @@ function updateHud() {
   const bonus = Math.floor(s.prepT) * ECONOMY.earlyBonusPerSecond;
   setFlag('startWaveHidden', hud.startWave, 'hidden', s.phase !== 'prep' || mode !== 'play');
   setText('startWave', hud.startWave, `웨이브 시작 +${bonus}G`);
-  const pad = s.hero.downT > 0 ? -1 : padInReach(s);
+  const site = s.hero.downT > 0 ? null : siteInReach(s);
+  const pad = site?.kind === 'tower' ? site.i : -1, wall = site?.kind === 'barricade' ? site.i : -1;
   const cost = pad >= 0 ? padCost(s, pad) : null;
-  const buildHidden = pad < 0 || mode !== 'play';
+  const buildHidden = !site || mode !== 'play';
   setFlag('buildHidden', hud.build, 'hidden', buildHidden);
   // Lv1 → Lv2 is a choice (cycle 15): the build button splits into fire and frost.
   const tower = pad >= 0 ? s.towers[pad] : null, choose = !!tower && tower.level === 0 && cost !== null;
   setFlag('buildFrostHidden', hud.buildFrost, 'hidden', buildHidden || !choose);
   hud.build.classList.toggle('fire', choose);
   hud.build.classList.toggle('split-l', choose);
+  // Barricade site (defence lane): the same button builds, adds spikes or repairs (green when it repairs).
+  const order = wall >= 0 ? barricadeOrder(s, wall) : null;
+  hud.build.classList.toggle('repair', order?.action === 'repair');
+  if (wall >= 0) {
+    setText('build', hud.build, !order ? '최대 강화' : order.action === 'build' ? `방벽 ${order.cost}G` : order.action === 'upgrade' ? `가시 방벽 · ${order.cost}G` : `수리 · ${order.cost}G`);
+    setFlag('buildDisabled', hud.build, 'disabled', !order || s.gold < order.cost);
+  }
   if (pad >= 0) {
     const level = tower ? tower.level + 1 : 0, branch = tower?.branch ? BRANCH_NAME[tower.branch] : '';
     setText('build', hud.build, cost === null ? '최대 강화' : level === 0 ? `궁수탑 건설 ${cost}G` : choose ? `화염 Lv2 · ${cost}G` : `${branch} Lv${level + 1} · ${cost}G`);
@@ -429,6 +441,7 @@ function showResult() {
     ['도달 웨이브', `${s.wave + 1}/${WAVE_COUNT}`], ['전투 시간', `${Math.floor(s.t / 60)}:${String(Math.floor(s.t % 60)).padStart(2, '0')}`],
     ['처치', `${s.stats.kills}`], ['명중률', `${accuracy}%`], ['필살기', `${s.stats.supers}회`], ['마을 체력', `${Math.ceil(s.town.hp)}`],
     ['획득 골드', `${s.stats.goldEarned}G`], ['궁수탑', towers],
+    ...(s.barricades.some(Boolean) ? [['방벽', `${s.barricades.filter(b => b && b.hp > 0).length}/${s.barricades.filter(Boolean).length} 버팀`]] : []),
   ].map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   window.setTimeout(() => showScreen('result'), 700);
 }

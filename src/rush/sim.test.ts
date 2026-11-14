@@ -748,3 +748,121 @@ test('frost wolves: snow stages 7-9 only, swapped in for a few grunts, fast, and
   assert.ok(s.hero.hp < hp, 'the bite lands');
   assert.ok((e.lungeCd ?? 0) > 0);
 });
+
+// ---------- barricades (defence lane, 2026-11-13) ----------
+test('barricade sites: each sits on its lane, clear of pads, cover, crates, the town and each other', async () => {
+  const { BARRICADE, BARRICADES, LANES, PAD_REACH, TOWN, ARENA } = await import('./data.ts');
+  // Every battlefield layout (maps.ts): the sites are the same on all of them, the cover and crates are not.
+  const { FOREST, SNOW } = await import('./maps.ts');
+  const onSegment = (p: { x: number; z: number }, a: { x: number; z: number }, b: { x: number; z: number }) => {
+    const ax = b.x - a.x, az = b.z - a.z, t = Math.max(0, Math.min(1, ((p.x - a.x) * ax + (p.z - a.z) * az) / (ax * ax + az * az)));
+    return Math.hypot(a.x + ax * t - p.x, a.z + az * t - p.z);
+  };
+  const near = (p: { x: number; z: number }, b: { x: number; z: number; w: number; d: number }, pad: number) => Math.abs(p.x - b.x) <= b.w / 2 + pad && Math.abs(p.z - b.z) <= b.d / 2 + pad;
+  assert.equal(new Set(BARRICADES.map(b => b.lane)).size, BARRICADES.length, 'one site per lane');
+  for (const [i, b] of BARRICADES.entries()) {
+    const lane = LANES[b.lane];
+    assert.ok(Math.min(...lane.slice(1).map((p, k) => onSegment(b, lane[k], p))) < 0.05, `site ${i} lies on lane ${b.lane}`);
+    for (const p of PADS) assert.ok(Math.hypot(p.x - b.x, p.z - b.z) >= 2 * PAD_REACH, `site ${i} reach does not overlap a pad`);
+    const half = BARRICADE.length / 2; // the box turned any way still fits in this circle
+    for (const map of [FOREST, SNOW]) {
+      for (const w of [...map.walls, ...map.bushes]) assert.ok(!near(b, w, half), `site ${i} clear of walls and tall grass (${map.id})`);
+      for (const c of map.crates) assert.ok(Math.hypot(c.x - b.x, c.z - b.z) > half + 1, `site ${i} clear of crates (${map.id})`);
+    }
+    assert.ok(Math.hypot(TOWN.x - b.x, TOWN.z - b.z) > Math.max(...PADS.map(p => Math.hypot(TOWN.x - p.x, TOWN.z - p.z))), `site ${i} further out than every pad`);
+    assert.ok(b.x - half > ARENA.minX && b.x + half < ARENA.maxX);
+    for (const o of BARRICADES) if (o !== b) assert.ok(Math.hypot(o.x - b.x, o.z - b.z) >= 2 * PAD_REACH);
+  }
+});
+
+test('barricades are built, spiked and repaired from the build button, priced by the health missing', async () => {
+  const { BARRICADE, BARRICADES, BARRICADE_LEVELS } = await import('./data.ts');
+  const { barricadeOrder } = await import('./sim.ts');
+  const s = createRush(1);
+  const site = BARRICADES[0];
+  s.hero.x = site.x; s.hero.z = site.z + 1.2;
+  steps(s, 1, { build: true });
+  assert.deepEqual(s.barricades[0], { level: 0, hp: BARRICADE_LEVELS[0].hp });
+  assert.equal(s.gold, ECONOMY.startGold - BARRICADE_LEVELS[0].cost);
+  assert.ok(s.events.some(e => e.type === 'barricade' && e.slot === 0 && e.level === 0 && !e.repair));
+  assert.equal(s.towers.filter(Boolean).length, 0, 'no tower bought');
+  s.gold = 1000;
+  steps(s, 1, { build: 'frost' }); // any build press; the branch means nothing here
+  assert.deepEqual(s.barricades[0], { level: 1, hp: BARRICADE_LEVELS[1].hp });
+  assert.equal(barricadeOrder(s, 0), null, 'spiked and unhurt: nothing to do');
+  s.barricades[0]!.hp = BARRICADE_LEVELS[1].hp / 2;
+  const half = Math.round(BARRICADE_LEVELS[1].cost * BARRICADE.repair * 0.5);
+  assert.deepEqual(barricadeOrder(s, 0), { action: 'repair', cost: half });
+  steps(s, 1, { build: true });
+  assert.equal(s.barricades[0]!.hp, BARRICADE_LEVELS[1].hp);
+  assert.equal(s.gold, 1000 - BARRICADE_LEVELS[1].cost - half);
+  s.barricades[0]!.hp = 0;
+  assert.deepEqual(barricadeOrder(s, 0), { action: 'repair', cost: Math.round(BARRICADE_LEVELS[1].cost * BARRICADE.repair) }, 'rubble is rebuilt at its level');
+  // A hurt Lv1: spikes when affordable (back to full health too), else the cheaper repair.
+  s.barricades[1] = { level: 0, hp: 60 };
+  assert.equal(barricadeOrder(s, 1)?.action, 'upgrade');
+  s.gold = BARRICADE_LEVELS[1].cost - 1;
+  assert.equal(barricadeOrder(s, 1)?.action, 'repair');
+});
+
+test('enemies on a lane stop at its barricade and break it before the town; other lanes walk on', async () => {
+  const { BARRICADES, BARRICADE_LEVELS, LANES } = await import('./data.ts');
+  const s = createRush(1);
+  s.prepT = 999;
+  s.hero.downT = 999; // out of the way
+  s.barricades[0] = { level: 0, hp: BARRICADE_LEVELS[0].hp };
+  const start = LANES[0][2];
+  const pack = [0, 1, 2].map(i => { const e = enemy(s, 'grunt', start.x + (i - 1) * 0.5, start.z); e.wp = 3; e.cd = 0; e.hp = e.maxHp = 9999; return e; });
+  const side = enemy(s, 'grunt', LANES[1][2].x, LANES[1][2].z); side.lane = 1; side.wp = 3; side.cd = 0; side.hp = side.maxHp = 9999;
+  let hits = 0, broke = false;
+  for (let i = 0; i < 60 * 60 && !broke; i++) {
+    stepRush(s, {});
+    for (const e of s.events) { if (e.type === 'barricadeHit') hits++; if (e.type === 'barricadeBreak') broke = true; }
+    if (!broke) assert.ok(pack.every(e => e.z < BARRICADES[0].z), 'the pack stays in front of it');
+  }
+  assert.ok(hits > 0 && broke, `the pack wore it down (${hits} hits)`);
+  assert.ok(s.town.hp < s.town.maxHp, 'the side-lane grunt reached the town meanwhile');
+  steps(s, 60 * 10);
+  assert.ok(pack.some(e => e.z > BARRICADES[0].z + 1), 'after the break they walk on');
+  assert.equal(s.barricades[0]!.hp, 0, 'rubble stays until rebuilt');
+});
+
+test('a held melee enemy cannot reach a hero behind the barricade; spikes bite back; a shooter shoots the barricade', async () => {
+  const { BARRICADES, BARRICADE_LEVELS, BARRICADE } = await import('./data.ts');
+  const s = createRush(1);
+  s.prepT = 999;
+  const b = BARRICADES[0];
+  s.barricades[0] = { level: 1, hp: BARRICADE_LEVELS[1].hp };
+  s.hero.x = b.x; s.hero.z = b.z + BARRICADE.depth / 2 + 0.6; // right behind it, within the grunt's aggro range
+  const grunt = enemy(s, 'grunt', b.x + 0.2, b.z - BARRICADE.depth / 2 - 0.5); grunt.wp = 3; grunt.cd = 0;
+  const heroHp = s.hero.hp;
+  steps(s, 120);
+  assert.equal(s.hero.hp, heroHp, 'the grunt never reached the hero');
+  assert.ok(grunt.z < b.z, 'it stays on its side');
+  assert.ok(s.barricades[0]!.hp < BARRICADE_LEVELS[1].hp, 'it hit the barricade instead');
+  assert.ok(grunt.hp < grunt.maxHp, `spikes hurt the grunt (${grunt.hp}/${grunt.maxHp})`);
+  // With the hero out of its reach, a shooter shoots the barricade; spikes do not reach it.
+  const t = createRush(1);
+  t.prepT = 999;
+  t.barricades[0] = { level: 1, hp: BARRICADE_LEVELS[1].hp };
+  t.hero.x = 6; t.hero.z = 8;
+  const archer = enemy(t, 'skirmisher', b.x, b.z - 6.5); archer.wp = 3; archer.cd = 0;
+  let aimed = false;
+  for (let i = 0; i < 240; i++) { stepRush(t, {}); if (t.shots.some(sh => sh.owner === 'enemy' && sh.wall === 0)) aimed = true; }
+  assert.ok(aimed && t.barricades[0]!.hp < BARRICADE_LEVELS[1].hp, 'the archer shot the barricade');
+  assert.equal(archer.hp, archer.maxHp, 'no spikes for a shooter');
+});
+
+test('a standing barricade blocks the hero; its rubble does not', async () => {
+  const { BARRICADES, BARRICADE } = await import('./data.ts');
+  const s = createRush(1);
+  const b = BARRICADES[0];
+  s.barricades[0] = { level: 0, hp: 100 };
+  s.hero.x = b.x; s.hero.z = b.z + 3;
+  steps(s, 90, { move: { x: 0, z: -1 } });
+  assert.ok(s.hero.z >= b.z + BARRICADE.depth / 2 + HERO.radius - 1e-6, `stopped at it (z ${s.hero.z.toFixed(2)})`);
+  s.barricades[0]!.hp = 0;
+  steps(s, 90, { move: { x: 0, z: -1 } });
+  assert.ok(s.hero.z < b.z - 1, 'walks over the rubble');
+});
+

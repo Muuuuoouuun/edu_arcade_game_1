@@ -30,6 +30,26 @@ export const PADS: readonly Vec[] = [
 ];
 export const PAD_REACH = 1.8;
 
+/** Barricades (defence lane, 2026-11-13): one build site per lane, an arc across the field in front of the tall grass,
+ * further out than the tower pads (the side ones a little further, clear of what a Lv3 tower hides from the camera). Enemies walking that lane stop at a standing barricade and attack it like the town;
+ * melee enemies cannot reach a hero behind it (ranged ones still shoot one in reach). Built, upgraded and repaired from
+ * the same build button as towers. Each site sits on its lane (sim.test.ts checks it). */
+export const BARRICADES: readonly (Vec & { lane: number })[] = [
+  { x: 0, z: 1.4, lane: 0 }, { x: -6.3, z: -0.6, lane: 1 }, { x: 6.3, z: -0.6, lane: 2 },
+];
+/** Lv1 wooden palisade; Lv2 adds iron spikes that hurt every melee attacker per blow (as tower damage, so a ward blunts it).
+ * Health grows by BARRICADE.masonry times the kingdom's town-health perk (Lv5: twice) and spikes gain BARRICADE.spikeForge per
+ * forge level (sim.ts): with no kingdom behind it a barricade is a speed bump, with one it holds. */
+export type BarricadeLevel = { cost: number; hp: number; spike: number };
+export const BARRICADE_LEVELS: readonly BarricadeLevel[] = [
+  { cost: 40, hp: 180, spike: 0 },
+  { cost: 60, hp: 280, spike: 10 },
+];
+/** length and depth: the solid box (across the lane, along it) for movement and attack reach, as wide and deep as the
+ * model. hold: how many of its lane's enemies it stops at once (the nearest); the rest of a horde walks round it. repair: share of the level's cost to restore full health, scaled by the health missing (rubble = the whole
+ * share, rebuilt at its level); never below repairMin. */
+export const BARRICADE = { length: 2.4, depth: 0.8, repair: 0.75, repairMin: 5, hold: 6, spikeForge: 3, masonry: 2 } as const;
+
 export type HeroKind = 'ranger' | 'bron' | 'bear';
 export type HeroDef = {
   name: string; attack: 'bolts' | 'swing' | 'lob';

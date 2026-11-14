@@ -15,8 +15,9 @@ import simplifierUrl from 'three/addons/libs/meshopt_simplifier.module.js?url';
 import rangerGlb from './models/gecko-ranger.glb?url';
 import bronGlb from './models/dwarf-guardian.glb?url';
 import bearGlb from './models/polar-bear.glb?url';
-import { ARENA, ENEMIES, HEROES, HERO_SPAWN, PADS, TOWER_LEVELS, TOWN, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
-import { heroDef, heroHidden, heroMaxHp, lobReach, padInReach, superReady, wardBreakBurst, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
+import { ARENA, BARRICADES, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, TOWER_LEVELS, TOWN, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
+import { barricadeMaxHp, barricadeOrder, heroDef, heroHidden, heroMaxHp, lobReach, padCost, siteInReach, superReady, wardBreakBurst, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
+import { BRANCH_TRIM, DEF, barricadeParts, barricadeState, chevronParts, padParts, siteParts, towerParts, type BarricadeState } from './defenceModels.ts';
 import { bake, bakeColors, bakeMatrices, BOSS_LOOK, capColors, hullGeometry, mixHex, outlineMaterial, PAL, REGION_LOOK, toon, toonify, wallParts, type BossLook, type BossName, type Part, type RegionLook, type RegionName } from './look.ts';
 import { REGIONS, regionOf } from './expedition.ts';
 import { FOREST, type MapId, type MapLayout } from './maps.ts';
@@ -111,10 +112,17 @@ export class RushView {
   private get heroRig() { const r = this.heroKind ? this.heroRigs.get(this.heroKind) : undefined; return r && r !== 'loading' ? r : null; }
   private get heroShot() { return this.heroRig?.shot ?? null; }
   private enemyKits = new Map<string, { body: BufferGeometry; hull: BufferGeometry }>();
-  private towerKits = new Map<string, { base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; h: number }>();
+  private towerKits = new Map<string, { base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; headY: number; height: number }>();
   private towers: (Group | null)[] = PADS.map(() => null);
   private towerLevels: string[] = PADS.map(() => '');
-  private padRings: Mesh[] = [];
+  /** Defence feedback per tower: build pop (s left), recoil after a shot, last cooldown seen (a jump = it fired), idle fx timer. */
+  private towerFx = PADS.map(() => ({ pop: 0, recoil: 0, cd: 0, idle: Math.random() }));
+  /** Build-site rings: pads first, then barricade sites (same order as siteInReach kinds). */
+  private siteRings: Mesh[] = [];
+  /** Barricades (defence lane): one group per site, its geometry swapped by level, damage state and region. */
+  private barricadeKits = new Map<string, { body: BufferGeometry; hull: BufferGeometry }>();
+  private barricadeViews: { root: Group; body: Mesh; hull: Mesh; key: string; wobble: number; pop: number }[] = [];
+  private chevrons!: { body: Batch; hull: Batch };
   private townBar: Bar;
   private fx: Fx[] = [];
   private particles: Particles;
@@ -457,15 +465,34 @@ export class RushView {
     d.fill.geometry = d.steps[k];
   }
 
+  /** Build sites (defence lane): stone slabs under the tower pads and marker stakes at the barricade sites, baked into one
+   * mesh; a build ring per site (gold = affordable, pale = not yet, green = a barricade to repair); the barricade views;
+   * and the "can upgrade" chevrons (two instanced draws for all of them). */
   private buildPads() {
-    for (const p of PADS) {
+    const parts: Part[] = [];
+    PADS.forEach(p => parts.push(...padParts(p.x, heightAt(p.x, p.z), p.z)));
+    BARRICADES.forEach(b => parts.push(...siteParts(b.x, heightAt(b.x, b.z), b.z, siteAngle(b))));
+    const geo = bake(parts), snow = bakeColors(parts.map(coolPart)), snowAttr = new BufferAttribute(snow, 3);
+    capColors(geo, snowAttr, REGION_LOOK.snow.cap ?? 0xffffff, 0.7, -Infinity, 0.6);
+    this.regional(this.addBaked(geo, 0.035, undefined, 'terrain').geometry, snowAttr);
+    for (const p of [...PADS, ...BARRICADES]) {
       const ring = new Mesh(this.geo.ring, basic(0xffe48a, 0.8));
-      ring.rotation.x = -Math.PI / 2; ring.position.set(p.x, heightAt(p.x,p.z)+0.03, p.z); ring.scale.setScalar(1.05);
-      const disc = new Mesh(this.geo.disc, basic(0x143b39, 0.6));
-      disc.rotation.x = -Math.PI / 2; disc.position.set(p.x, heightAt(p.x,p.z)+0.02, p.z); disc.scale.setScalar(0.95);
-      this.scene.add(ring, disc);
-      this.padRings.push(ring);
+      ring.rotation.x = -Math.PI / 2; ring.position.set(p.x, heightAt(p.x,p.z)+0.2, p.z); ring.scale.setScalar(1.12);
+      ring.renderOrder = 2;
+      this.scene.add(ring);
+      this.siteRings.push(ring);
     }
+    BARRICADES.forEach(b => {
+      const root = new Group(), body = new Mesh(undefined, this.mats.baked), hull = new Mesh(undefined, outlineMaterial(0.045));
+      root.add(body, hull);
+      root.position.set(b.x, heightAt(b.x, b.z), b.z);
+      root.rotation.y = siteAngle(b);
+      root.visible = false;
+      this.scene.add(root);
+      this.barricadeViews.push({ root, body, hull, key: '', wobble: 0, pop: 0 });
+    });
+    const chevron = bake(chevronParts());
+    this.chevrons = { body: new Batch(this.scene, chevron, this.mats.baked, 8, { order: 5 }), hull: new Batch(this.scene, hullGeometry(chevron), outlineMaterial(0.04), 8, { order: 5 }) };
   }
 
   private buildHero() {
@@ -996,38 +1023,51 @@ export class RushView {
     B.coins.end();
   }
 
-  /** Watchtower per level, baked: a static base and a rotating crossbow head. Open top keeps the head visible. */
-  private towerKit(level: number, branch?: TowerBranch): { base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; h: number } {
-    const key = `${level}${branch ?? ''}`;
+  /** Tower per level and branch (defenceModels.ts), baked: a static base and a rotating crossbow head. Lv1 wood, Lv2 stone
+   * with the branch crown (fire braziers, frost crystals), Lv3 a tall stone tower with banners and a roofed turret. On
+   * snow, wood and stone cool down and upward faces carry snow, like the walls (one kit per region). */
+  private towerKit(level: number, branch?: TowerBranch) {
+    const key = `${level}${branch ?? ''}:${this.region}`;
     let kit = this.towerKits.get(key);
     if (kit) return kit;
-    // Lv2+ wear their branch colour (cycle 15): fire orange with a flame, frost sky-blue with a crystal.
-    const trim = branch ? BRANCH_COLOR[branch] : PAL.ally, h = 1.0 + level * 0.3;
-    const parts: Part[] = [
-      { geo: new CylinderGeometry(0.5, 0.68, h, 8), color: 0xece0c4, at: [0, h / 2, 0] },
-      { geo: new CylinderGeometry(0.54, 0.54, 0.18, 8), color: trim, at: [0, h * 0.62, 0] },
-      { geo: new CylinderGeometry(0.74, 0.6, 0.24, 8), color: PAL.wood, at: [0, h + 0.12, 0] },
-    ];
-    for (let i = 0; i < level; i++) parts.push({ geo: new OctahedronGeometry(0.14), color: PAL.gold, at: [(i - (level - 1) / 2) * 0.34, h * 0.62, -0.6] });
-    if (branch === 'fire') parts.push({ geo: new ConeGeometry(0.2, 0.5, 6), color: 0xffb02e, at: [0, h + 0.5, -0.62] }, { geo: new ConeGeometry(0.12, 0.3, 6), color: 0xff4d1f, at: [0, h + 0.42, -0.62] });
-    if (branch === 'frost') parts.push({ geo: new OctahedronGeometry(0.24), color: 0xd8f8ff, at: [0, h + 0.5, -0.62], scale: [0.8, 1.4, 0.8] });
-    const base = bake(parts);
-    const head = bake([
-      { geo: new BoxGeometry(0.9, 0.2, 0.22), color: PAL.woodDark, at: [0.2, 0, 0] },
-      { geo: new BoxGeometry(0.16, 0.14, 1.15), color: trim, at: [0.5, 0, 0] },
-      { geo: new BoxGeometry(0.72, 0.07, 0.07), color: 0xfff1a8, at: [0.45, 0.13, 0] },
-    ]);
-    kit = { base, baseHull: hullGeometry(base), head, headHull: hullGeometry(head), h };
+    const t = towerParts(level, branch), base = this.regionBake(t.base), head = this.regionBake(t.head, false);
+    kit = { base, baseHull: hullGeometry(base), head, headHull: hullGeometry(head), headY: t.headY, height: t.height };
     this.towerKits.set(key, kit);
     return kit;
   }
-  private makeTower(level: number, branch?: TowerBranch): Group {
-    const kit = this.towerKit(level, branch), g = new Group(), head = new Group();
-    g.add(new Mesh(kit.base, this.mats.baked), new Mesh(kit.baseHull, outlineMaterial(0.05)));
-    head.name = 'head'; head.position.y = kit.h + 0.44;
-    head.add(new Mesh(kit.head, this.mats.baked), new Mesh(kit.headHull, outlineMaterial(0.04)));
-    g.add(head);
+  /** Bake defence parts for the current region: as authored in the forest; on snow, building materials cool down and
+   * (with `cap`) their upward faces carry snow. Coals, flames, ice, gold and team cloth never do. */
+  private regionBake(parts: Part[], cap = true): BufferGeometry {
+    if (this.region !== 'snow') return bake(parts);
+    const geo = bake(parts.map(coolPart));
+    if (!cap) return geo;
+    const mask = bakeColors(parts.map(p => ({ ...p, color: COOLED.has(p.color) ? 0xffffff : 0 })));
+    const n = geo.getAttribute('normal'), c = geo.getAttribute('color') as BufferAttribute, snow = new Color(REGION_LOOK.snow.cap ?? 0xffffff), k = 0.7;
+    for (let i = 0; i < c.count; i++) if (mask[i * 3] > 0.5 && n.getY(i) > 0.75)
+      c.setXYZ(i, c.getX(i) + (snow.r - c.getX(i)) * k, c.getY(i) + (snow.g - c.getY(i)) * k, c.getZ(i) + (snow.b - c.getZ(i)) * k);
+    return geo;
+  }
+  /** `mirror`: the base is flipped east-west (the Lv3 turret then stands on the middle-lane side of a west pad). */
+  private makeTower(level: number, branch?: TowerBranch, mirror = false): Group {
+    const kit = this.towerKit(level, branch), g = new Group(), head = new Group(), body = new Group(), shell = new Group();
+    body.name = 'body';
+    shell.add(new Mesh(kit.base, this.mats.baked), new Mesh(kit.baseHull, outlineMaterial(0.05)));
+    if (mirror) shell.scale.x = -1; // three.js flips the face winding for a mirrored matrix, so the ink hull still works
+    body.add(shell);
+    head.name = 'head'; head.position.y = kit.headY;
+    const bow = new Group(); bow.name = 'bow';
+    bow.add(new Mesh(kit.head, this.mats.baked), new Mesh(kit.headHull, outlineMaterial(0.04)));
+    head.add(bow);
+    body.add(head);
+    g.add(body);
+    g.userData.height = kit.height;
     return g;
+  }
+  private barricadeKit(level: number, state: BarricadeState) {
+    const key = `${level}:${state}:${this.region}`;
+    let kit = this.barricadeKits.get(key);
+    if (!kit) { const body = this.regionBake(barricadeParts(level, state)); kit = { body, hull: hullGeometry(body) }; this.barricadeKits.set(key, kit); }
+    return kit;
   }
 
   private makeBar(width: number, fillMat: Material): Bar {
@@ -1188,11 +1228,37 @@ export class RushView {
           fx.emit({ kind: 'spark', n: 3, color: PAL.gold, at: [hp.x, 1.6, hp.z], speed: 1.5, up: 3, size: 0.14, life: 0.35 });
           break;
         case 'build': {
-          const p = PADS[ev.pad];
-          this.ring(p.x, p.z, 0xffd166, 1.8, 0.45, 0.9);
+          // Build or level up: a gold ink ring, dust, and chips in the new branch colour (the tower itself pops, see syncDefences).
+          const p = PADS[ev.pad], c = ev.branch ? BRANCH_TRIM[ev.branch] : PAL.gold;
+          this.ring(p.x, p.z, 0xffd166, 1.8 + ev.level * 0.3, 0.45, 0.9, ev.level > 0);
           fx.emit({ kind: 'puff', n: 8, color: 0xf0d9a8, at: [p.x, 0.3, p.z], speed: 2.5, up: 0.8, size: 0.26, life: 0.45 });
+          fx.emit({ kind: 'shard', n: 6 + ev.level * 3, color: c, at: [p.x, 1.4 + ev.level * 0.4, p.z], speed: 3.5, up: 5, size: 0.12, life: 0.55 });
           break;
         }
+        case 'barricade': {
+          const p = BARRICADES[ev.slot], v = this.barricadeViews[ev.slot];
+          if (v) v.pop = ev.repair ? POP_TIME * 0.6 : POP_TIME;
+          this.ring(p.x, p.z, ev.repair ? 0x7fe08a : 0xffd166, 2.0, 0.45, 0.9, !ev.repair);
+          fx.emit({ kind: 'puff', n: 6, color: 0xf0d9a8, at: [p.x, 0.3, p.z], speed: 2.5, up: 0.8, size: 0.24, life: 0.45 });
+          fx.emit({ kind: ev.repair ? 'spark' : 'shard', n: 6, color: ev.repair ? 0x9df0a8 : ev.level ? DEF.steel : DEF.plank, at: [p.x, 0.9, p.z], speed: 3, up: 4, size: 0.12, life: 0.5 });
+          break;
+        }
+        case 'barricadeHit': {
+          const v = this.barricadeViews[ev.slot];
+          if (v) v.wobble = 0.16;
+          fx.emit({ kind: 'shard', n: 2, color: DEF.plank, at: [ev.x, 0.7, ev.z], speed: 2.5, up: 2.5, size: 0.08, life: 0.3 });
+          if (ev.spiked) fx.emit({ kind: 'spark', n: 2, color: 0xffffff, at: [ev.x, 0.6, ev.z], speed: 3, up: 1, size: 0.13, life: 0.16 });
+          break;
+        }
+        case 'loot': // gold taken at a barricade: coins hop up from where it fell
+          fx.emit({ kind: 'spark', n: reducedMotion ? 2 : 4, color: PAL.gold, at: [ev.x, 0.8, ev.z], speed: 1.5, up: 4, size: 0.16, life: 0.5 });
+          break;
+        case 'barricadeBreak': // splinters, dust and a brown ink ring; a little shake
+          this.ring(ev.x, ev.z, DEF.plank, 2.2, 0.4, 0.9, true);
+          fx.emit({ kind: 'shard', n: 14, color: DEF.wood, at: [ev.x, 0.6, ev.z], speed: 5, up: 5, size: 0.14, life: 0.6 });
+          fx.emit({ kind: 'puff', n: 5, color: 0xe8c99a, at: [ev.x, 0.4, ev.z], speed: 2, up: 1, size: 0.3, life: 0.5 });
+          if (!reducedMotion) this.shake = Math.max(this.shake, 0.3);
+          break;
       }
     }
   }
@@ -1288,23 +1354,7 @@ export class RushView {
       const k = Math.sin(c.wobble * 60) * c.wobble * 0.5;
       c.mesh.rotation.set(k * 0.4, 0, k);
     }
-    // Towers
-    s.towers.forEach((t, i) => {
-      const key = t ? `${t.level}${t.branch ?? ''}` : '';
-      if (key !== this.towerLevels[i]) {
-        if (this.towers[i]) this.scene.remove(this.towers[i]!);
-        this.towers[i] = t ? this.makeTower(t.level, t.branch) : null;
-        if (this.towers[i]) { this.towers[i]!.position.set(PADS[i].x, this.groundHeight(PADS[i].x,PADS[i].z), PADS[i].z); this.scene.add(this.towers[i]!); }
-        this.towerLevels[i] = key;
-      }
-      if (t && this.towers[i]) this.towers[i]!.getObjectByName('head')!.rotation.y = yaw(t.facing);
-    });
-    const reach = alive ? padInReach(s) : -1;
-    if (!this.sheetMode) this.padRings.forEach((ring, i) => {
-      (ring.material as MeshBasicMaterial).opacity = i === reach ? reduced ? 0.9 : 0.8 + Math.sin(this.time * 8) * 0.15 : 0.72;
-      ring.scale.setScalar(i === reach ? 1.15 : 1.05);
-      ring.visible = !towerMaxed(s, i) || i === reach;
-    });
+    this.syncDefences(s, worldDt, alive, reduced);
     this.setBar(this.townBar, s.town.hp / s.town.maxHp);
     this.syncDamage(s, reduced);
     this.updateAim(s, aim);
@@ -1315,6 +1365,92 @@ export class RushView {
     this.townHeroTarget.set(h.x, this.groundHeight(h.x,h.z)+1, h.z);
     this.townView?.update(this.camera, alive && !this.sheetMode ? this.townHeroTarget : undefined,
       this.renderer.domElement.width, this.renderer.domElement.height);
+  }
+
+  /** Towers, barricades, build rings and upgrade chevrons (defence lane). */
+  private syncDefences(s: RushState, dt: number, alive: boolean, reduced: boolean) {
+    const fx = this.particles;
+    s.towers.forEach((t, i) => {
+      const look = t ? `${t.level}${t.branch ?? ''}` : '', key = `${look}:${this.region}`, f = this.towerFx[i], pad = PADS[i];
+      if (key !== this.towerLevels[i]) {
+        // A new level or branch pops up (squash and stretch); a region change alone just swaps the kit.
+        if (look && look !== this.towerLevels[i].split(':')[0]) f.pop = POP_TIME;
+        if (this.towers[i]) this.scene.remove(this.towers[i]!);
+        this.towers[i] = t ? this.makeTower(t.level, t.branch, pad.x < 0) : null;
+        if (this.towers[i]) { this.towers[i]!.position.set(pad.x, this.groundHeight(pad.x, pad.z), pad.z); this.scene.add(this.towers[i]!); }
+        this.towerLevels[i] = key;
+        f.cd = t?.cd ?? 0;
+      }
+      const g = this.towers[i];
+      if (!t || !g) return;
+      const head = g.getObjectByName('head')!, bow = g.getObjectByName('bow')!, body = g.getObjectByName('body')!;
+      head.rotation.y = yaw(t.facing);
+      // A shot: the cooldown jumps back up. The bow kicks back and a puff in the branch colour leaves the muzzle.
+      if (t.cd > f.cd + 0.05 && dt > 0 && !this.fxPaused) {
+        f.recoil = 0.14;
+        const tip = 1.0 + t.level * 0.25, y = (g.userData.height as number) + 0.4;
+        fx.emit({ kind: 'puff', n: 2, color: t.branch === 'fire' ? 0xffb02e : t.branch === 'frost' ? 0xd8f6ff : 0xfff1c2, at: [pad.x + Math.cos(t.facing) * tip, y, pad.z + Math.sin(t.facing) * tip], speed: 1.4, up: 0.4, size: 0.13, life: 0.22, dir: t.facing, cone: 0.5 });
+      }
+      f.cd = t.cd;
+      f.recoil = Math.max(0, f.recoil - dt);
+      bow.position.x = -0.22 * (f.recoil / 0.14);
+      f.pop = Math.max(0, f.pop - dt);
+      const k = popScale(f.pop);
+      body.scale.set(1 + (k - 1) * 0.6, k, 1 + (k - 1) * 0.6);
+      // Branch life: embers rise off the fire crown, ice glints off the frost one (instanced particles, no draw calls).
+      if (t.branch && !reduced && !this.sheetMode && !this.fxPaused && (f.idle -= dt) <= 0) {
+        f.idle = t.branch === 'fire' ? 0.28 : 0.55;
+        const a = Math.random() * Math.PI * 2, r = 0.55 + t.level * 0.1, y = (g.userData.height as number) + 0.55;
+        fx.emit(t.branch === 'fire'
+          ? { kind: 'spark', n: 1, color: Math.random() < 0.5 ? 0xffb02e : 0xff6a2a, at: [pad.x + Math.cos(a) * r, y, pad.z + Math.sin(a) * r], speed: 0.3, up: 2.2, size: 0.09, life: 0.6 }
+          : { kind: 'spark', n: 1, color: 0xe6fbff, at: [pad.x + Math.cos(a) * r, y, pad.z + Math.sin(a) * r], speed: 0.2, up: 0.6, size: 0.11, life: 0.45 });
+      }
+    });
+    // Barricades: level, damage state (intact, cracked, rubble) and region pick the kit; a hit wobbles it, a build pops it.
+    s.barricades.forEach((b, i) => {
+      const v = this.barricadeViews[i];
+      if (!v) return;
+      v.root.visible = !!b && !this.sheetMode;
+      if (!b) { v.key = ''; return; }
+      const key = `${b.level}:${barricadeState(b.hp, barricadeMaxHp(s, b.level))}:${this.region}`;
+      if (key !== v.key) {
+        const kit = this.barricadeKit(b.level, barricadeState(b.hp, barricadeMaxHp(s, b.level)));
+        v.body.geometry = kit.body; v.hull.geometry = kit.hull; v.key = key;
+      }
+      v.wobble = Math.max(0, v.wobble - dt);
+      v.pop = Math.max(0, v.pop - dt);
+      const w = Math.sin(v.wobble * 60) * v.wobble * 0.35, k = popScale(v.pop);
+      v.root.rotation.set(w * 0.5, siteAngle(BARRICADES[i]), w);
+      v.root.scale.set(1 + (k - 1) * 0.4, k, 1 + (k - 1) * 0.4);
+    });
+    // Build rings: gold = you can afford it here, pale = not yet, green = a barricade to repair; the one in reach pulses.
+    const here = alive ? siteInReach(s) : null, gold = s.gold;
+    const C = this.chevrons;
+    C.body.begin(); C.hull.begin();
+    const chevron = (x: number, y: number, z: number) => {
+      const t = this.tmp, bob = reduced ? 0 : Math.sin(this.time * 4 + x) * 0.12;
+      t.m.compose(t.p.set(x, y + bob + this.groundHeight(x, z), z), this.camera.quaternion, t.s.set(1, 1, 1));
+      C.body.push(t.m); C.hull.push(t.m);
+    };
+    this.siteRings.forEach((ring, j) => {
+      const tower = j < PADS.length, i = tower ? j : j - PADS.length;
+      const inReach = !!here && (here.kind === 'tower') === tower && here.i === i;
+      let cost: number | null, repair = false;
+      if (tower) cost = padCost(s, i);
+      else { const o = barricadeOrder(s, i); cost = o ? o.cost : null; repair = o?.action === 'repair'; }
+      ring.visible = !this.sheetMode && (cost !== null || inReach);
+      if (!ring.visible) return;
+      const can = cost !== null && cost <= gold, mat = ring.material as MeshBasicMaterial;
+      mat.color.setHex(repair ? 0x6fe08a : can ? 0xffd34a : 0xfff0b8);
+      const pulse = inReach && !reduced ? Math.sin(this.time * 8) : 0;
+      mat.opacity = inReach ? 0.85 + pulse * 0.12 : can ? 0.85 : 0.42;
+      ring.scale.setScalar((tower ? 1.12 : 1.4) * (inReach ? 1.08 + pulse * 0.03 : 1));
+      // Chevron over a standing defence whose next level is affordable (not over empty sites: the ring says that).
+      if (!can || repair || this.sheetMode) return;
+      if (tower && s.towers[i]) chevron(PADS[i].x, (this.towers[i]?.userData.height as number ?? 2) + 1.05, PADS[i].z);
+      else if (!tower && s.barricades[i]) chevron(BARRICADES[i].x, 1.85, BARRICADES[i].z);
+    });
+    C.body.end(); C.hull.end();
   }
 
   private updateAim(s: RushState, aim: AimPreview) {
@@ -1477,4 +1613,23 @@ const ENEMY_KINDS: readonly EnemyKind[] = ['grunt', 'skirmisher', 'brute', 'boss
 /** Enemies are drawn larger than their hitbox so a grunt is no longer ~30 px tall on a phone; the simulation radius,
  * spacing and hit tests are unchanged. The wolf is long rather than tall, the boss was already big. */
 export const ENEMY_SCALE: Record<EnemyKind, number> = { grunt: 1.3, skirmisher: 1.25, brute: 1.2, shield: 1.25, shaman: 1.25, boss: 1.1, wolf: 1.3 };
-const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };
+/** Build pop (squash and stretch) length and its height scale over time left. */
+const POP_TIME = 0.45;
+const popScale = (left: number) => { if (left <= 0) return 1; const p = 1 - left / POP_TIME; return 1 - 0.4 * (1 - p) ** 2 * Math.cos(p * Math.PI * 2.5); };
+/** Barricade yaw: its front (local -z) faces up its lane, toward the enemies. */
+function siteAngle(b: Vec & { lane: number }): number {
+  const lane = LANES[b.lane];
+  let best = 0, bestD = Infinity;
+  for (let i = 0; i < lane.length - 1; i++) {
+    const a = lane[i], c = lane[i + 1], ax = c.x - a.x, az = c.z - a.z;
+    const t = Math.min(1, Math.max(0, ((b.x - a.x) * ax + (b.z - a.z) * az) / (ax * ax + az * az)));
+    const d = Math.hypot(a.x + ax * t - b.x, a.z + az * t - b.z);
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  const a = lane[best], c = lane[best + 1];
+  return Math.atan2(c.x - a.x, c.z - a.z);
+}
+/** Snow region: building materials (wood, stone, earth, steel) lean toward the cool wall stone; fire, ice, gold and
+ * team colours stay as they are so the branch and the side still read. */
+const COOLED = new Set<number>([DEF.wood, DEF.woodDark, DEF.plank, DEF.tip, DEF.stone, DEF.stoneAlt, DEF.stoneFoot, DEF.stoneCap, DEF.mortar, DEF.earth, DEF.iron, DEF.steel, 0xb87436]);
+const coolPart = (p: Part): Part => (COOLED.has(p.color) ? { ...p, color: mixHex(p.color, REGION_LOOK.snow.wallCool, REGION_LOOK.snow.wallMix) } : p);
