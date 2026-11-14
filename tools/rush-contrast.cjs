@@ -19,8 +19,18 @@ for (const [stage, z] of [[2, 1.5], [3, -0.6], [7, 1.5], [8, -0.6]]) {
   SCENES[`s${stage}frost`] = { stage, list: row(z).map(e => [...e, { slowT: 99 }]) };
   SCENES[`s${stage}ward`] = { stage, list: row(z).map(e => [...e, { wardT: 99 }]) };
 }
-SCENES.s5boss = { stage: 5, list: [['boss', 0, 2.2]] };
-SCENES.s10boss = { stage: 10, list: [['boss', 0, 2.2]] };
+// Mid-field row (cycle 106): z -8, where the fights happen, with the hero 3.5 m south of it so the battle camera centres
+// the row; near the town (the rows above) the camera is pulled toward the town and the field row sits on the top edge.
+for (const stage of [2, 3, 7, 8]) {
+  const hero = { x: 0, z: -4.5 };
+  SCENES[`s${stage}midplain`] = { stage, hero, list: row(-8) };
+  SCENES[`s${stage}midfrost`] = { stage, hero, list: row(-8).map(e => [...e, { slowT: 99 }]) };
+  SCENES[`s${stage}midward`] = { stage, hero, list: row(-8).map(e => [...e, { wardT: 99 }]) };
+}
+// Bosses: before cycle 106 at z 2.2 in front of the town, cut by the top edge and covered by the hero; now mid-field,
+// the hero beside them.
+SCENES.s5boss = { stage: 5, hero: { x: 4, z: -4 }, list: [['boss', 0, -8]] };
+SCENES.s10boss = { stage: 10, hero: { x: 4, z: -4 }, list: [['boss', 0, -8]] };
 if (process.env.ONLY) {
   const pre = process.env.ONLY.split(',');
   for (const k of Object.keys(SCENES)) if (!pre.some(p => k.startsWith(p))) delete SCENES[k];
@@ -35,7 +45,7 @@ if (process.env.ONLY) {
   await page.goto(`${BASE}/rush.html?demo=1&seed=3&speed=8&freeze=300&quality=${Q}&shadowEvery=1`);
   await page.waitForFunction(() => window.__rush && __rush.frozen, null, { timeout: 180000 });
   for (const [name, sc] of Object.entries(SCENES)) {
-    await page.evaluate(stage => { __rush.setStage(stage); const s = __rush.state; s.enemies.length = 0; s.shots.length = 0; s.hero.kind = 'ranger'; s.hero.x = 0; s.hero.z = 4.2; s.hero.facing = -Math.PI / 2; }, sc.stage);
+    await page.evaluate(([stage, hero]) => { __rush.setStage(stage); const s = __rush.state; s.enemies.length = 0; s.shots.length = 0; s.hero.kind = 'ranger'; s.hero.x = hero.x; s.hero.z = hero.z; s.hero.facing = -Math.PI / 2; }, [sc.stage, sc.hero || { x: 0, z: 4.2 }]);
     await page.waitForTimeout(1500);
     await page.screenshot({ path: `${OUT}/${name}-empty.png`, timeout: 180000 });
     await page.evaluate(list => { const s = __rush.state; let id = 6000; for (const [kind, x, z, extra] of list) s.enemies.push({ id: id++, kind, x, z, kx: 0, kz: 0, hp: 1, maxHp: 1, lane: 0, wp: 1, cd: 99, flash: 0, chasing: false, facing: Math.PI / 2, windup: null, ...(extra || {}) }); }, sc.list);

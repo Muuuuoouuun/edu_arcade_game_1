@@ -1,6 +1,6 @@
 # Contrast measurement (cycles 74, 92, 102): CIELAB ΔE between each enemy's main colour and the floor under it, and of the
 # frost and ward floor cues against the floor, from the frames tools/rush-contrast.cjs takes.
-# Usage: python3 tools/rush-contrast.py <outDir> [stage prefixes, default s2 s3 s7 s8]
+# Usage: python3 tools/rush-contrast.py <outDir> [stage prefixes, default s2 s3 s7 s8; mid-field rows: s7mid s8mid ...]
 # Method: enemy pixels are those that differ from the empty frame; ink (L < 20) is left out; the largest of three
 # k-means clusters is the main colour. Criterion (art-direction.md): main vs floor >= 30; cues clearly above 15.
 import json, sys, math, random
@@ -77,6 +77,6 @@ for name in ['s5boss', 's10boss']:
     try:
         A = Image.open(f'{d}/{name}.png').convert('RGB')
         for kind, box, E, foot in boxes(name):
-            m, bg = main_color(E, A, box)
-            if kind == 'boss': print(name, 'boss main', [round(v) for v in m], 'vs floor', round(math.dist(m, bg), 1))
+            m, bg = main_color(E, A, box); sh, md = stand_out(E, A, box)
+            if kind == 'boss': print(name, f'boss stands out {sh * 100:.0f}% med {md:.1f} | main', [round(v) for v in m], 'vs floor', round(math.dist(m, bg), 1))
     except FileNotFoundError: pass
