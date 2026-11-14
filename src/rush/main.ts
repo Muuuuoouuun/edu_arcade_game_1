@@ -657,6 +657,7 @@ Object.assign(window, { __rush: { get state() { return state; }, get mode() { re
 Object.assign((window as unknown as { __rush: object }).__rush, {
   setStage(n: number) { const map = mapFor(n); state.diff.stage = n; state.map = map; state.crates = map.crates.map((c, i) => ({ id: 1 + i, x: c.x, z: c.z, hp: CRATE.hp, ...(c.gold ? { gold: c.gold } : {}) })); },
   overhead(on: boolean) { view.overhead = on; },
+  kits: () => view.kitCount,
 });
 if (params.has('overhead')) view.overhead = true;
 }

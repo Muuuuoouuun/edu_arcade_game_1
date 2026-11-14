@@ -6,7 +6,7 @@ import {
   OctahedronGeometry, RGBAFormat, SRGBColorSpace, SphereGeometry, type BufferGeometry,
 } from 'three';
 import { ARENA, CRATE, HERO_SPAWN, LANES, PADS, TOWN, type Block, type Vec } from './data.ts';
-import { GATES, inBush, laneDistance, onBridge, pathDistance, type MapId, type MapLayout, type Wall } from './maps.ts';
+import { GATES, inBush, laneDistance, onBridge, pathDistance, type MapId, type MapLayout, type Prop, type Wall } from './maps.ts';
 import { heightAt, type GroundPalette } from './terrainElevation.ts';
 import { PAL, type Part } from './look.ts';
 
@@ -19,7 +19,7 @@ export interface SceneryLook {
 }
 export const SCENERY_LOOK: Record<MapId, SceneryLook> = {
   forest: {
-    water: 0x55b3cf, waterLight: 0x8ed3e2, bank: 0x8c7b4f, ice: 0, iceLight: 0, iceRim: 0, dot: 0x8fb466,
+    water: 0x55b3cf, waterLight: 0x8ed3e2, bank: 0x8c7b4f, ice: 0xc3e2ee, iceLight: 0xeaf6fb, iceRim: 0x8fbdd2, dot: 0x8fb466,
     trunk: 0x7a4a26, leaves: [0x3f9a4a, 0x57b552, 0x2f8444], pine: 0x2f7a4f, pineDark: 0x25653f, snowCap: null,
     rock: 0x8d968c, rockDark: 0x6c776f, land: 0x5f8749, landEdge: 0x4b6f3d, far: 0x2f7044, farCap: 0x3f8a4f,
     gateStone: 0x8f9488, gateStoneDark: 0x636a63, gateTrim: 0x4f8a45, gateDark: 0x191228,
@@ -132,6 +132,40 @@ export function coverParts(b: Wall, stone: (b: Block) => Part[]): Part[] {
     for (let i = 0; i < 4; i++) parts.push({ geo: G.blob, color: i % 2 ? 0x5f9a4a : 0x79b356, at: along((r() - 0.5) * (len - 0.8), rad * 1.9, (r() - 0.5) * rad * 0.6), scale: [0.24, 0.1, 0.2] });
     return parts;
   }
+  if (b.kind === 'logpile') {
+    // Sawmill stack: three logs below, two above, lying along the long side, between two stakes.
+    const alongX = b.w >= b.d, len = (alongX ? b.w : b.d) - 0.1, dep = alongX ? b.d : b.w, rad = dep / 6 - 0.005;
+    const rot: [number, number, number] = alongX ? [0, 0, Math.PI / 2] : [Math.PI / 2, 0, 0];
+    const at = (o: number, y: number, q: number): [number, number, number] => [b.x + (alongX ? o : q), y, b.z + (alongX ? q : o)];
+    const parts: Part[] = [];
+    const log = (q: number, y: number, k: number) => {
+      const l = len - 0.1 - r() * 0.3, o = (r() - 0.5) * (len - l);
+      parts.push({ geo: G.log, color: k % 2 ? 0x8a5a30 : 0x9a6a3a, at: at(o, y, q), rot, scale: [rad, l - 0.06, rad] });
+      parts.push({ geo: G.log, color: 0xe2c08a, at: at(o, y, q), rot, scale: [rad * 0.78, l, rad * 0.78] });
+    };
+    for (let i = 0; i < 3; i++) log((i - 1) * rad * 2, rad, i);
+    for (let i = 0; i < 2; i++) log((i - 0.5) * rad * 2, rad * 2.72, i + 1);
+    log(0, rad * 4.44, 0);
+    for (const e of [-1, 1]) for (const q of [-1, 1]) parts.push({ geo: G.post, color: 0x6e4424, at: at(e * (len / 2 - 0.3), 0.55, q * (dep / 2 - 0.07)), scale: [0.06, 1.1, 0.06] });
+    return parts;
+  }
+  if (b.kind === 'menhir' || b.kind === 'pillar') {
+    // A standing stone (rough, mossy or snow-capped) or a tall ice pillar on a plinth; both fill their square collider.
+    const pillar = b.kind === 'pillar', m = Math.min(b.w, b.d), h = pillar ? 2.5 : 1.7;
+    const parts: Part[] = [box(b.x, 0.11, b.z, b.w, 0.22, b.d, pillar ? 0x4f6283 : 0x6c776f)];
+    if (pillar) {
+      parts.push({ geo: G.crystal, color: 0x45a3e0, at: [b.x, 0.22 + h / 2, b.z], scale: [m / 2 - 0.08, h, m / 2 - 0.08], rot: [0, 0.3, 0] });
+      parts.push({ geo: G.crystal, color: 0x8fd0ee, at: [b.x + m * 0.12, 0.22 + h * 0.32, b.z + m * 0.16], scale: [m * 0.2, h * 0.64, m * 0.2], rot: [0, 1.1, 0] });
+      parts.push(box(b.x, 0.27, b.z, b.w - 0.1, 0.1, b.d - 0.1, 0x6a7f9a), { geo: G.blob, color: 0xe6f0f7, at: [b.x - m * 0.22, 0.34, b.z + m * 0.24], scale: [m * 0.2, 0.08, m * 0.16] });
+      parts.push({ geo: G.crystal, color: 0xdff1fb, at: [b.x, 0.22 + h + 0.04, b.z], scale: [(m / 2 - 0.08) * 0.46, 0.09, (m / 2 - 0.08) * 0.46], rot: [0, 0.3, 0] });
+    } else {
+      parts.push({ geo: G.mesa, color: 0x8d968c, at: [b.x, 0.22 + h / 2, b.z], scale: [m / 2 - 0.06, h, m / 2 - 0.1], rot: [0, r() * 0.4, 0] });
+      parts.push({ geo: G.mesa, color: 0xa9b0a4, at: [b.x, 0.22 + h + 0.03, b.z], scale: [(m / 2 - 0.06) * 0.78, 0.06, (m / 2 - 0.1) * 0.78] });
+      parts.push({ geo: G.blob, color: 0x79b356, at: [b.x - m * 0.1, 0.22 + h + 0.06, b.z], scale: [m * 0.2, 0.06, m * 0.16] });
+      parts.push(box(b.x, 0.22 + h * 0.55, b.z + m / 2 - 0.14, m * 0.3, 0.08, 0.06, 0x5f6a63), box(b.x, 0.22 + h * 0.72, b.z + m / 2 - 0.17, m * 0.2, 0.08, 0.06, 0x5f6a63));
+    }
+    return parts;
+  }
   if (b.kind === 'ice') {
     // Ice rock: a low stone base with a row of blue crystals, snow on the tips.
     const alongX = b.w >= b.d, len = alongX ? b.w : b.d, dep = alongX ? b.d : b.w, n = Math.max(2, Math.round(len / 0.62));
@@ -146,20 +180,23 @@ export function coverParts(b: Wall, stone: (b: Block) => Part[]): Part[] {
   }
   // Rock outcrop: a low footing that fills the collider, then two tapering rock masses; snow lies in patches and
   // boulders and ice crystals sit on the south ledge, so it reads as a crag and not as a building.
-  const parts: Part[] = [box(b.x, 0.3, b.z, b.w, 0.6, b.d, 0x4f6283), box(b.x, 0.62, b.z, b.w - 0.06, 0.05, b.d - 0.06, 0x6a7f9a)];
+  const parts: Part[] = [box(b.x, 0.16, b.z, b.w, 0.32, b.d, 0x4f6283), box(b.x, 0.34, b.z, b.w - 0.06, 0.05, b.d - 0.06, 0x6a7f9a)];
   const mass = (cx: number, cz: number, w: number, d: number, y: number, h: number, side: number, top: number, turn: number) => {
     // An 8-sided tapered prism turned by `turn`; its widest corner stays inside w × d.
     parts.push({ geo: G.mesa, color: side, at: [cx, y + h / 2, cz], scale: [w / 2, h, d / 2], rot: [0, turn, 0] });
     parts.push({ geo: G.mesa, color: top, at: [cx, y + h + 0.03, cz], scale: [w / 2 * 0.8, 0.06, d / 2 * 0.8], rot: [0, turn, 0] });
     parts.push({ geo: G.mesa, color: 0xdce9f2, at: [cx - w * 0.06, y + h + 0.09, cz - d * 0.1], scale: [w / 2 * 0.56, 0.07, d / 2 * 0.5], rot: [0, turn + 0.3, 0] });
   };
-  const m = Math.min(b.w, b.d);
-  mass(b.x, b.z - b.d * 0.06, m * 0.96 * (b.w / m) * 0.92, m * 0.96 * (b.d / m) * 0.82, 0.6, 1.0, 0x5c7190, 0x7c91aa, 0);
-  mass(b.x + (r() - 0.5) * b.w * 0.2, b.z - b.d * 0.14, b.w * 0.56, b.d * 0.5, 1.6, 0.9, 0x6a7f9a, 0x8da1b8, 0);
+  const m = Math.min(b.w, b.d), squarish = Math.max(b.w, b.d) / m < 1.4;
+  mass(b.x, b.z - b.d * 0.06, m * 0.96 * (b.w / m) * 0.92, m * 0.96 * (b.d / m) * 0.82, 0.34, 1.2, 0x5c7190, 0x7c91aa, squarish ? 0.2 : 0);
+  mass(b.x + (r() - 0.5) * b.w * 0.2, b.z - b.d * 0.14, b.w * 0.54, b.d * 0.5, 1.54, 0.95, 0x6a7f9a, 0x8da1b8, squarish ? 0.5 : 0);
   const edge = (k: number): [number, number] => [b.x + (r() - 0.5) * (b.w - 1.6), b.z + b.d / 2 - 0.42 - k * 0.3];
-  for (let i = 0; i < 4; i++) { const [x, z] = edge(r()); parts.push({ geo: G.crystal, color: i % 2 ? 0x45a3e0 : 0x6cbcec, at: [x, 0.6 + 0.4, z], scale: [0.3, 0.8, 0.3], rot: [0, r() * 3, 0] }); }
-  for (let i = 0; i < 4; i++) { const [x, z] = edge(r()); parts.push({ geo: G.rock, color: i % 2 ? 0x5c7190 : 0x44587a, at: [x, 0.6 + 0.2, z], scale: [0.4, 0.3, 0.34], rot: [0, r() * 3, 0] }); }
-  for (const cx of [-1, 1]) for (const cz of [-1, 1]) parts.push({ geo: G.rock, color: 0x5c7190, at: [b.x + cx * (b.w / 2 - 0.62), 0.85, b.z + cz * (b.d / 2 - 0.62) - (cz > 0 ? 0.5 : 0)], scale: [0.6, 0.5, 0.6], rot: [0, r() * 3, 0] });
+  for (let i = 0; i < 4; i++) { const [x, z] = edge(r()); parts.push({ geo: G.crystal, color: i % 2 ? 0x45a3e0 : 0x6cbcec, at: [x, 0.34 + 0.4, z], scale: [0.3, 0.8, 0.3], rot: [0, r() * 3, 0] }); }
+  for (let i = 0; i < 4; i++) { const [x, z] = edge(r()); parts.push({ geo: G.rock, color: i % 2 ? 0x5c7190 : 0x44587a, at: [x, 0.34 + 0.2, z], scale: [0.4, 0.3, 0.34], rot: [0, r() * 3, 0] }); }
+  // Boulders all round the footing break up its straight edges.
+  const rim = (x: number, z: number) => { const k = 0.42 + r() * 0.14; parts.push({ geo: G.rock, color: r() < 0.5 ? 0x5c7190 : 0x4f6283, at: [x, 0.34 + k * 0.45, z], scale: [k, k * 0.8, k], rot: [r(), r() * 3, r()] }); };
+  for (let x = -b.w / 2 + 0.6; x <= b.w / 2 - 0.6 + 1e-6; x += (b.w - 1.2) / Math.max(1, Math.round((b.w - 1.2) / 1.25))) rim(b.x + x, b.z - b.d / 2 + 0.6);
+  for (let z = -b.d / 2 + 1.7; z <= b.d / 2 - 0.6 + 1e-6; z += (b.d - 2.3) / Math.max(1, Math.round((b.d - 2.3) / 1.25))) { rim(b.x - b.w / 2 + 0.6, b.z + z); rim(b.x + b.w / 2 - 0.6, b.z + z); }
   return parts;
 }
 
@@ -193,14 +230,20 @@ export function crateParts(treasure: boolean, id: MapId): Part[] {
     parts.push(box(0, s * 0.99, 0, s * 0.1, s * 0.04, s * 1.0, 0xa56a36, [0, 0.72, 0]));
     if (snow) parts.push({ geo: G.blob, color: 0xe6f0f7, at: [0.06, s * 1.0, -0.08], scale: [s * 0.36, s * 0.07, s * 0.28] });
   } else {
-    parts.push(box(0, s * 0.3, 0, s, s * 0.6, s * 0.78, 0x7a4424));
-    parts.push({ geo: G.lid, color: 0x9a5a2c, at: [0, s * 0.6, 0], rot: [0, 0, Math.PI / 2], scale: [s * 0.39, s * 0.98, s * 0.39] });
-    for (const x of [-0.36, 0, 0.36]) {
-      parts.push(box(x * s, s * 0.3, 0, s * 0.1, s * 0.62, s * 0.8, PAL.gold));
-      parts.push({ geo: G.lid, color: PAL.gold, at: [x * s, s * 0.6, 0], rot: [0, 0, Math.PI / 2], scale: [s * 0.41, s * 0.1, s * 0.41] });
+    // A chest, not a barrel: a wide flat-fronted box, a low arched lid with a gold rim all round the seam, gold
+    // corner straps and a big lock plate on the front; coins show through the gap under the lid.
+    const w = s, d = s * 0.72, h = s * 0.5;
+    parts.push(box(0, h / 2, 0, w * 0.96, h, d, 0x7a4424));
+    parts.push(box(0, h + 0.035, 0, w, 0.07, d + 0.04, PAL.gold));
+    parts.push(box(0, h + 0.09, 0, w * 0.9, 0.05, d * 0.86, 0xfff0a8));
+    parts.push({ geo: G.lid, color: 0x9a5a2c, at: [0, h + 0.12, 0], rot: [0, 0, Math.PI / 2], scale: [d * 0.5, w * 0.96, d * 0.5 * 0.62] });
+    for (const x of [-0.42, 0.42]) {
+      parts.push(box(x * w, h / 2, 0, w * 0.1, h + 0.02, d + 0.04, PAL.gold));
+      parts.push({ geo: G.lid, color: PAL.gold, at: [x * w, h + 0.12, 0], rot: [0, 0, Math.PI / 2], scale: [d * 0.52, w * 0.1, d * 0.52 * 0.62] });
     }
-    parts.push(box(0, s * 0.56, s * 0.4, s * 0.2, s * 0.22, s * 0.06, 0xfff0a8));
-    if (snow) parts.push({ geo: G.blob, color: 0xf1f7fb, at: [0.1, s * 0.98, -0.05], scale: [0.3, 0.07, 0.2] });
+    parts.push(box(0, h * 0.72, d / 2 + 0.02, w * 0.24, h * 0.5, 0.06, PAL.gold), box(0, h * 0.66, d / 2 + 0.05, w * 0.08, h * 0.2, 0.04, 0x5a3410));
+    parts.push(box(0, 0.05, 0, w, 0.1, d + 0.04, 0x5a3410));
+    if (snow) parts.push({ geo: G.blob, color: 0xf1f7fb, at: [0.1, s * 0.86, -0.05], scale: [0.26, 0.06, 0.16] });
   }
   return parts;
 }
@@ -228,7 +271,7 @@ function rock(parts: Part[], look: SceneryLook, x: number, y: number, z: number,
 
 /** Enemy gate behind a lane start, on the field's north edge. Forest: a ruined stone arch grown over by a dark
  * thicket. Snow: an arch of ice. Both: a black mouth and an enemy-red banner, so the lane's origin reads at a glance. */
-export function gateParts(g: Vec, id: MapId): Part[] {
+export function gateParts(g: Vec, id: MapId, size = 1): Part[] {
   const look = SCENERY_LOOK[id], z = ARENA.minZ - 0.62, x = g.x, parts: Part[] = [];
   // The mouth: darker than anything on the field, covering the hedge behind it.
   parts.push(box(x, 1.45, z - 0.1, 3.5, 2.9, 1.5, look.gateDark));
@@ -264,7 +307,13 @@ export function gateParts(g: Vec, id: MapId): Part[] {
   parts.push(box(x, 2.82, z + 0.76, 1.5, 0.14, 0.12, 0x5a1522));
   parts.push({ geo: G.gem, color: 0x2a0d18, at: [x, 2.2, z + 0.8], scale: [0.3, 0.36, 0.04] });
   for (const side of [-1, 1]) parts.push({ geo: G.blade, color: 0x2a0d18, at: [x + side * 0.3, 2.55, z + 0.8], scale: [0.1, 0.34, 0.03], rot: [0, 0, -side * 0.5] });
-  return parts;
+  if (size === 1) return parts;
+  // A larger gate grows up, sideways and back from its front edge, so it never reaches further onto the field.
+  const front = z + 0.84;
+  return parts.map(p => {
+    const sc = p.scale ?? 1, k = typeof sc === 'number' ? [sc, sc, sc] : sc;
+    return { ...p, at: [x + (p.at![0] - x) * size, p.at![1] * size, front + (p.at![2] - front) * size] as [number, number, number], scale: [k[0] * size, k[1] * size, k[2] * size] as [number, number, number] };
+  });
 }
 
 function bridgeParts(b: Block): Part[] {
@@ -277,6 +326,52 @@ function bridgeParts(b: Block): Part[] {
   return parts;
 }
 
+/** A stage's signature prop (maps.ts `Prop`): small scenery that never blocks. */
+export function propParts(p: Prop, id: MapId): Part[] {
+  const y = heightAt(p.x, p.z), t = p.turn ?? 0, c = Math.cos(t), sn = Math.sin(t), snow = id === 'snow';
+  const at = (dx: number, dy: number, dz: number): [number, number, number] => [p.x + dx * c - dz * sn, y + dy, p.z + dx * sn + dz * c];
+  const turn: [number, number, number] = [0, -t, 0];
+  switch (p.kind) {
+    case 'signpost': return [
+      { geo: G.post, color: 0x7a4a26, at: at(0, 0.6, 0), scale: [0.07, 1.2, 0.07] },
+      { geo: G.box, color: 0xd9b26a, at: at(0.12, 1.02, 0.03), scale: [0.62, 0.2, 0.05], rot: turn }, { geo: G.box, color: 0xc49a55, at: at(-0.1, 0.76, 0.03), scale: [0.5, 0.17, 0.05], rot: turn },
+    ];
+    case 'fence': return [
+      ...[-0.8, 0, 0.8].map(o => ({ geo: G.post, color: 0x7a4a26, at: at(o, 0.3, 0), scale: [0.07, 0.6, 0.07] as [number, number, number] })),
+      { geo: G.box, color: 0xa8713c, at: at(0, 0.44, 0), scale: [1.8, 0.08, 0.05], rot: turn }, { geo: G.box, color: 0xa8713c, at: at(0, 0.24, 0), scale: [1.8, 0.08, 0.05], rot: turn },
+    ];
+    case 'stump': return [
+      { geo: G.log, color: 0x8a5a30, at: at(0, 0.16, 0), scale: [0.3, 0.32, 0.3] }, { geo: G.log, color: 0xe2c08a, at: at(0, 0.33, 0), scale: [0.25, 0.03, 0.25] },
+      { geo: G.box, color: 0x6e4424, at: at(0.3, 0.06, 0.1), scale: [0.24, 0.1, 0.1], rot: [0, 0.6, 0] },
+    ];
+    case 'sawhorse': return [
+      { geo: G.box, color: 0xa8713c, at: at(0, 0.5, 0), scale: [1.3, 0.1, 0.12], rot: turn },
+      ...[-0.5, 0.5].flatMap(o => [-1, 1].map(q => ({ geo: G.box, color: 0x7a4a26, at: at(o, 0.25, q * 0.14), scale: [0.07, 0.56, 0.07] as [number, number, number], rot: [q * 0.35, -t, 0] as [number, number, number] }))),
+      { geo: G.log, color: 0x9a6a3a, at: at(0, 0.66, 0), scale: [0.13, 1.0, 0.13], rot: [0, -t, Math.PI / 2] }, { geo: G.box, color: 0xcfd6dc, at: at(0.1, 0.86, 0), scale: [0.5, 0.26, 0.02], rot: turn },
+    ];
+    case 'brazier': return [
+      { geo: G.post, color: snow ? 0x4f6283 : 0x636a63, at: at(0, 0.4, 0), scale: [0.16, 0.8, 0.16] }, { geo: G.crystal, color: snow ? 0x6a7f9a : 0x8f9488, at: at(0, 0.9, 0), scale: [0.36, 0.26, 0.36], rot: [Math.PI, 0, 0] },
+      { geo: G.gem, color: snow ? 0x5cc4f5 : 0xff9a2e, at: at(0, 1.22, 0), scale: [0.24, 0.36, 0.24] }, { geo: G.gem, color: snow ? 0xdff4fc : 0xffe07a, at: at(0, 1.2, 0), scale: [0.13, 0.26, 0.13], rot: [0, 0.8, 0] },
+    ];
+    case 'snowpatch': return [
+      { geo: G.blob, color: 0xe1ecf4, at: at(0, 0.03, 0), scale: [0.9, 0.09, 0.62], rot: [0, 0.4, 0] }, { geo: G.blob, color: 0xeef5fa, at: at(0.5, 0.05, 0.3), scale: [0.5, 0.1, 0.4] },
+      { geo: G.blob, color: 0xd3e2ec, at: at(-0.6, 0.03, -0.25), scale: [0.42, 0.07, 0.34] },
+    ];
+    case 'bones': return [
+      { geo: G.log, color: 0xe9e2cf, at: at(0, 0.07, 0), scale: [0.05, 0.7, 0.05], rot: [0, -t, Math.PI / 2] }, { geo: G.log, color: 0xe9e2cf, at: at(0.1, 0.07, 0.2), scale: [0.045, 0.5, 0.045], rot: [0, 0.9 - t, Math.PI / 2] },
+      ...[-0.36, 0.36].map(o => ({ geo: G.ball, color: 0xf3eedf, at: at(o, 0.08, 0), scale: 0.09 })), { geo: G.ball, color: 0xf3eedf, at: at(-0.4, 0.13, 0.42), scale: [0.17, 0.14, 0.15] as [number, number, number] },
+    ];
+    case 'footprint': return [
+      { geo: G.gem, color: 0x7fe9ff, at: at(0, 0.03, 0), scale: [0.15, 0.02, 0.19] },
+      ...[-0.13, 0, 0.13].map(o => ({ geo: G.gem, color: 0xc8f6ff, at: at(o, 0.03, -0.24 + Math.abs(o) * 0.3), scale: [0.055, 0.02, 0.07] as [number, number, number] })),
+    ];
+    case 'banner': return [
+      { geo: G.post, color: 0x4f6283, at: at(0, 1.0, 0), scale: [0.07, 2.0, 0.07] }, { geo: G.box, color: 0x4f6283, at: at(0.3, 1.9, 0), scale: [0.7, 0.07, 0.07], rot: turn },
+      { geo: G.box, color: 0x8fd0ee, at: at(0.34, 1.42, 0.02), scale: [0.5, 0.9, 0.04], rot: turn }, { geo: G.gem, color: 0xeaf6fb, at: at(0.34, 1.5, 0.06), scale: [0.14, 0.2, 0.03], rot: turn },
+    ];
+  }
+}
+
 /** True when a decoration may stand at (x, z): off the roads, the town, the pads, the hero's start and every element. */
 export function decorSpot(map: MapLayout, x: number, z: number, wet = false): boolean {
   if (laneDistance(x, z) < 2.1 || Math.hypot(x - TOWN.x, z - TOWN.z) < TOWN.radius + 2.6 || Math.hypot(x - HERO_SPAWN.x, z - HERO_SPAWN.z) < 1.5) return false;
@@ -284,6 +379,7 @@ export function decorSpot(map: MapLayout, x: number, z: number, wet = false): bo
   if (PADS.some(p => Math.hypot(x - p.x, z - p.z) < 1.9)) return false;
   if (map.walls.some(b => Math.abs(x - b.x) < b.w / 2 + 0.45 && Math.abs(z - b.z) < b.d / 2 + 0.45)) return false;
   if (map.crates.some(c => Math.hypot(x - c.x, z - c.z) < 1.2) || inBush(map, x, z)) return false;
+  if (map.props.some(q => Math.hypot(x - q.x, z - q.z) < 1)) return false;
   if (map.ice.some(b => Math.abs(x - b.x) < b.w / 2 + 0.3 && Math.abs(z - b.z) < b.d / 2 + 0.3)) return false;
   if (map.stream) {
     if (map.stream.bridges.some(b => Math.abs(x - b.x) < b.w / 2 + 0.3 && Math.abs(z - b.z) < b.d / 2 + 0.6)) return false;
@@ -301,7 +397,7 @@ export interface Scenery {
 }
 /** Everything static around and on a layout that is not cover. Deterministic (seeded), so captures match. */
 export function sceneryParts(map: MapLayout): Scenery {
-  const look = SCENERY_LOOK[map.id], snow = map.id === 'snow', r = rng(snow ? 77 : 41);
+  const look = SCENERY_LOOK[map.id], snow = map.id === 'snow', r = rng((snow ? 77 : 41) + map.stage * 13);
   const land: Part[] = [], outlined: Part[] = [], extra: Part[] = [];
   const north = ARENA.minZ - 1.1, west = ARENA.minX - 1.1, east = ARENA.maxX + 1.1;
 
@@ -318,11 +414,12 @@ export function sceneryParts(map: MapLayout): Scenery {
     land.push({ geo: G.log, color: look.rockDark, at: [x, -0.75, z], scale: [rad, 1.3, rad * 0.85] });
     land.push({ geo: G.log, color: look.land, at: [x, -0.05, z], scale: [rad * 0.93, 0.14, rad * 0.78] });
   }
-  for (const g of GATES) outlined.push(...gateParts(g, map.id));
+  GATES.forEach((g, i) => outlined.push(...gateParts(g, map.id, i === 0 ? map.gateScale ?? 1 : 1)));
+  for (const p of map.props) outlined.push(...propParts(p, map.id));
   for (const b of map.stream?.bridges ?? []) outlined.push(...bridgeParts(b));
 
   // First row of trees right behind the north hedge and on the islets (inked), further rows only at full quality.
-  const gateGap = (x: number) => GATES.some(g => Math.abs(x - g.x) < 3.9);
+  const gateGap = (x: number) => GATES.some((g, i) => Math.abs(x - g.x) < 3.9 * (i === 0 ? map.gateScale ?? 1 : 1));
   for (let x = -27; x <= 27; x += 2.3 + r() * 1.2) {
     if (gateGap(x)) continue;
     tree(outlined, look, x, 0, north - 1.6 - r() * 1.4, 1.05 + r() * 0.5, snow || r() < 0.3, r);

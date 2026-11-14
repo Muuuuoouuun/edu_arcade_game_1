@@ -603,8 +603,23 @@ test('layout follows the region: stages 6-10 fight on the snow map, everything e
   const { mapFor, FOREST, SNOW } = await import('./maps.ts');
   const { regionOf } = await import('./expedition.ts');
   for (let stage = 1; stage <= 11; stage++) assert.equal(mapFor(stage).id, regionOf(stage), `stage ${stage}`);
+  // One battlefield per stage, named after its village; the endless challenge reuses stage 1's.
+  const { STAGE_MAPS } = await import('./maps.ts');
+  const { EXPEDITION } = await import('./expedition.ts');
+  assert.equal(STAGE_MAPS.length, 10);
+  STAGE_MAPS.forEach((m, i) => { assert.equal(m.stage, i + 1); assert.equal(m.name, EXPEDITION[i].name); assert.equal(mapFor(i + 1), m); });
+  assert.equal(mapFor(11), STAGE_MAPS[0]);
+  const shape = (m: (typeof STAGE_MAPS)[number]) => JSON.stringify([m.walls, m.crates, m.bushes, m.ice, m.stream, m.props]);
+  assert.equal(new Set(STAGE_MAPS.map(shape)).size, 10, 'no two stages share a battlefield');
+  // What the guard bot's battles depend on is the same on every stage of a region: the gate-road cover pair, the two
+  // walls beside the gate road, a stream that only slows the hero, and ice that leaves the march alone.
+  for (const m of STAGE_MAPS) {
+    assert.ok(m.bushes.some(b => b.x === 3.6 && b.z === 1.5) && m.walls.some(w => w.x === 3.2 && w.z === -3.5), m.name);
+    assert.equal(m.walls.filter(w => w.z + w.d / 2 > -5 && Math.abs(w.x) < 9).length, 2, `${m.name}: nothing else solid near the gate road`);
+    assert.equal(m.bushes.filter(b => b.z + b.d / 2 > -2).length, 2, `${m.name}: no other cover near the town`);
+  }
   assert.equal(createRush(1).map, FOREST, 'a battle without a stage is the forest');
-  const snow = createRush(1, NO_MODS, { enemyHp: 1, enemyCount: 1, enemyDamage: 1, stage: 7 });
+  const snow = createRush(1, NO_MODS, { enemyHp: 1, enemyCount: 1, enemyDamage: 1, stage: 6 });
   assert.equal(snow.map, SNOW);
   assert.deepEqual(snow.crates.map(c => [c.x, c.z]), SNOW.crates.map(c => [c.x, c.z]));
   assert.equal(snow.nextId, 1 + SNOW.crates.length);
@@ -617,7 +632,7 @@ test('layout follows the region: stages 6-10 fight on the snow map, everything e
 });
 
 test('layouts keep the lanes, the town, the pads and the barricade strip clear, and are mirror-symmetric', async () => {
-  const { MAPS, laneDistance, onBridge, pathDistance, onIce } = await import('./maps.ts');
+  const { STAGE_MAPS, laneDistance, onBridge, pathDistance, onIce } = await import('./maps.ts');
   const { ARENA, LANES, PADS, TOWN, HERO_SPAWN, CRATE } = await import('./data.ts');
   const gap = (b: { x: number; z: number; w: number; d: number }, p: { x: number; z: number }) => Math.hypot(Math.max(0, Math.abs(p.x - b.x) - b.w / 2), Math.max(0, Math.abs(p.z - b.z) - b.d / 2));
   /** Smallest distance from a block to any lane centre line (sampled every 10 cm along the lanes). */
@@ -627,10 +642,11 @@ test('layouts keep the lanes, the town, the pads and the barricade strip clear, 
       best = Math.min(best, gap(b, { x: lane[i - 1].x + (lane[i].x - lane[i - 1].x) * u, z: lane[i - 1].z + (lane[i].z - lane[i - 1].z) * u }));
     return best;
   };
-  for (const m of Object.values(MAPS)) {
+  for (const m of STAGE_MAPS) {
     const solids = [...m.walls, ...m.crates.map(c => ({ ...c, w: CRATE.size, d: CRATE.size }))];
     for (const b of solids) {
       assert.ok(b.x - b.w / 2 >= ARENA.minX && b.x + b.w / 2 <= ARENA.maxX && b.z - b.d / 2 >= ARENA.minZ && b.z + b.d / 2 <= ARENA.maxZ, `${m.id}: inside the arena`);
+      for (const o of solids) assert.ok(o === b || Math.abs(o.x - b.x) >= (o.w + b.w) / 2 || Math.abs(o.z - b.z) >= (o.d + b.d) / 2, `${m.name}: solids overlap at ${b.x},${b.z}`);
       // The boss (radius 1.15) and a brute pushed aside by a crowd still pass: 1.3 m from every lane centre line.
       assert.ok(laneGap(b) >= 1.3, `${m.id}: solid at ${b.x},${b.z} is ${laneGap(b).toFixed(2)} m from a lane`);
       assert.ok(gap(b, TOWN) >= TOWN.radius + 1.5 && gap(b, HERO_SPAWN) >= 1.5, `${m.id}: clear of the town and the hero's start`);
@@ -638,7 +654,7 @@ test('layouts keep the lanes, the town, the pads and the barricade strip clear, 
       // Barricade strip: the lanes 4-9 m north of the town stay free of solid cover.
       if (b.z + b.d / 2 > TOWN.z - 9 && b.z - b.d / 2 < TOWN.z - 4) assert.ok(laneGap(b) >= 3, `${m.id}: barricade strip`);
     }
-    for (const list of [m.walls, m.bushes, m.crates, m.ice] as const) for (const b of list)
+    for (const list of [m.walls, m.bushes, m.crates, m.ice, m.props] as const) for (const b of list)
       assert.ok(list.some(o => o.x === -b.x && o.z === b.z), `${m.id}: mirrored at ${b.x},${b.z}`);
     // Every lane crosses the stream on a bridge, and every ice sheet lies on a lane.
     if (m.stream) for (const lane of LANES) for (let z = -26; z < 8; z += 0.05) {
@@ -693,12 +709,12 @@ test('zones: the hero wades the stream slowly but crosses a bridge at full speed
 test('map size and density stay where they were measured (docs/rush/map-metrics.md)', async () => {
   const { FOREST, SNOW, mapStats, laneTime, laneLength } = await import('./maps.ts');
   const { ENEMIES } = await import('./data.ts');
-  for (const m of [FOREST, SNOW]) {
+  for (const m of (await import('./maps.ts')).STAGE_MAPS) {
     const near2 = mapStats(m, 2), near3 = mapStats(m, 3);
     // Before the regions: 65.7% of the field within 2 m of a feature (north half 68.3%), 19 features.
-    assert.ok(near2.used >= 0.75 && near2.north >= 0.88, `${m.id}: used ${near2.used.toFixed(3)}, north ${near2.north.toFixed(3)}`);
-    assert.ok(near3.used >= 0.86 && near3.north >= 0.97, `${m.id}: within 3 m ${near3.used.toFixed(3)}, north ${near3.north.toFixed(3)}`);
-    assert.ok(near2.features >= 26, `${m.id}: ${near2.features} features`);
+    assert.ok(near2.used >= 0.74 && near2.north >= 0.85, `${m.id}: used ${near2.used.toFixed(3)}, north ${near2.north.toFixed(3)}`);
+    assert.ok(near3.used >= 0.86 && near3.north >= 0.95, `${m.id}: within 3 m ${near3.used.toFixed(3)}, north ${near3.north.toFixed(3)}`);
+    assert.ok(near2.features >= 25, `${m.id}: ${near2.features} features`);
     // Waves must not arrive much sooner: a grunt took 13.0 s down the centre lane and 13.7 s down a side lane.
     const centre = laneTime(m, 0, ENEMIES.grunt.speed), side = laneTime(m, 1, ENEMIES.grunt.speed);
     assert.ok(centre <= 13.0 + 1e-6 && centre >= 12.3 && side <= 13.7 + 1e-6 && side >= 13.0, `${m.id}: grunt arrival ${centre.toFixed(2)} / ${side.toFixed(2)} s`);

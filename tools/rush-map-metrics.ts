@@ -2,11 +2,11 @@
 // important ones). "old" is the single layout every stage had before the regions, kept here as the reference.
 // Usage: node --experimental-strip-types tools/rush-map-metrics.ts
 import { ARENA, ENEMIES, HEROES, HERO_SPAWN, LANES } from '../src/rush/data.ts';
-import { FOREST, SNOW, laneLength, laneTime, mapStats, nearestFeature, type MapLayout } from '../src/rush/maps.ts';
+import { STAGE_MAPS, laneLength, laneTime, mapStats, nearestFeature, type MapLayout } from '../src/rush/maps.ts';
 import { viewFootprint } from '../src/rush/battleCamera.ts';
 
 const OLD: MapLayout = {
-  id: 'forest', name: 'old (one layout for all stages)', stream: null, ice: [],
+  id: 'forest', name: 'old (one layout for all stages)', stage: 0, signature: '-', props: [], stream: null, ice: [],
   walls: [[-4, -20, 2, 1], [4, -20, 2, 1], [-4.5, -12, 3, 1], [4.5, -12, 3, 1], [-3.2, -3.5, 1, 1.2], [3.2, -3.5, 1, 1.2], [-9.5, 3, 1.2, 4], [9.5, 3, 1.2, 4]].map(([x, z, w, d]) => ({ x, z, w, d, kind: 'stone' as const })),
   bushes: [{ x: -6, z: -7, w: 2.4, d: 2 }, { x: 6, z: -7, w: 2.4, d: 2 }, { x: -3.6, z: 1.5, w: 2, d: 1.6 }, { x: 3.6, z: 1.5, w: 2, d: 1.6 }],
   crates: [{ x: -2.2, z: -9 }, { x: 2.2, z: -9 }, { x: -8.5, z: -16 }, { x: 8.5, z: -16 }],
@@ -21,9 +21,9 @@ const emptiest = (m: MapLayout) => {
   }
   return best;
 };
-for (const m of [OLD, FOREST, SNOW]) {
+for (const m of [OLD, ...STAGE_MAPS]) {
   const s3 = mapStats(m, 3), s2 = mapStats(m, 2), e = emptiest(m);
-  console.log(`\n## ${m.name}`);
+  console.log(`\n## ${m.stage ? `stage ${m.stage} ` : ''}${m.name}\nsignature: ${m.signature}; props ${m.props.length}`);
   console.log(`arena ${s3.area} m2 (30 x 39), walkable ${f1(s3.walkable)} m2, closed by walls ${f1(s3.blocked)} m2`);
   console.log(`elements: walls ${m.walls.length}, cover ${m.bushes.length}, crates ${m.crates.length} (treasure ${m.crates.filter(c => c.gold).length}), ice ${m.ice.length}, stream ${m.stream ? 1 : 0}, bridges ${m.stream?.bridges.length ?? 0}, gates 3 -> ${s3.features}`);
   console.log(`used ground within 3 m of a feature: ${pct(s3.used)} (north half ${pct(s3.north)}); within 2 m: ${pct(s2.used)} (north half ${pct(s2.north)})`);
@@ -39,3 +39,9 @@ for (const [name, w, h] of [['phone landscape 915x412', 915, 412], ['desktop 128
     const f = viewFootprint(hero, w, h);
     console.log(`${name}, ${where}: sees z ${f1(f.north)}..${f1(f.south)}, ground ${f1(f.area)} m2, in arena ${f1(f.inArena)} m2 = ${pct(f.share)} of the arena`);
   }
+
+console.log('\n| stage | village | features | props | used 2 m (north) | used 3 m (north) | closed m2 | empty r |\n| ---: | --- | ---: | ---: | --- | --- | ---: | ---: |');
+for (const m of [OLD, ...STAGE_MAPS]) {
+  const a = mapStats(m, 2), b = mapStats(m, 3);
+  console.log(`| ${m.stage || '-'} | ${m.name} | ${a.features} | ${m.props.length} | ${pct(a.used)} (${pct(a.north)}) | ${pct(b.used)} (${pct(b.north)}) | ${f1(a.blocked)} | ${f1(emptiest(m).r)} |`);
+}

@@ -10,7 +10,7 @@ import { CRATE } from '../src/rush/data.ts';
 
 /** --map=old: the single layout every stage had before the regions, as a reference. --map=forest|snow: force one. */
 const OLD: MapLayout = {
-  id: 'forest', name: 'old', stream: null, ice: [],
+  id: 'forest', name: 'old', stage: 0, signature: '-', props: [], stream: null, ice: [],
   walls: [[-4, -20, 2, 1], [4, -20, 2, 1], [-4.5, -12, 3, 1], [4.5, -12, 3, 1], [-3.2, -3.5, 1, 1.2], [3.2, -3.5, 1, 1.2], [-9.5, 3, 1.2, 4], [9.5, 3, 1.2, 4]].map(([x, z, w, d]) => ({ x, z, w, d, kind: 'stone' as const })),
   bushes: [{ x: -6, z: -7, w: 2.4, d: 2 }, { x: 6, z: -7, w: 2.4, d: 2 }, { x: -3.6, z: 1.5, w: 2, d: 1.6 }, { x: 3.6, z: 1.5, w: 2, d: 1.6 }],
   crates: [{ x: -2.2, z: -9 }, { x: 2.2, z: -9 }, { x: -8.5, z: -16 }, { x: 8.5, z: -16 }],

@@ -20,7 +20,7 @@ import { barricadeMaxHp, barricadeOrder, heroDef, heroHidden, heroMaxHp, lobReac
 import { BRANCH_TRIM, DEF, barricadeParts, barricadeState, chevronParts, padParts, siteParts, towerParts, type BarricadeState } from './defenceModels.ts';
 import { bake, bakeColors, bakeMatrices, BOSS_LOOK, capColors, hullGeometry, mixHex, outlineMaterial, PAL, REGION_LOOK, toon, toonify, wallParts, type BossLook, type BossName, type Part, type RegionLook, type RegionName } from './look.ts';
 import { REGIONS, regionOf } from './expedition.ts';
-import { FOREST, type MapId, type MapLayout } from './maps.ts';
+import { FOREST, GATES, type MapLayout } from './maps.ts';
 import { bushParts, coverParts, crateParts, groundTexture, sceneryParts, SCENERY_LOOK } from './mapScenery.ts';
 import { loadForestTown, toFloat32 } from './townModel.ts';
 import { Batch } from './batch.ts';
@@ -86,7 +86,7 @@ const yaw = (a: number) => -a;
 type Bar = { root: Group; fill: Mesh; width: number };
 type Fx = { mesh: Mesh; age: number; life: number; grow: number; fade: number; y0: number };
 /** Everything that belongs to one battlefield layout (maps.ts): built once per layout, shown while it is in play. */
-type MapKit = { root: Group; bushes: Mesh[]; crates: Map<number, { mesh: Mesh; wobble: number }>; ground: DataTexture };
+type MapKit = { root: Group; bushes: Mesh[]; crates: Map<number, { mesh: Mesh; wobble: number }>; ground: DataTexture; hulls: Mesh[]; decor: Mesh[]; used: number };
 
 export class RushView {
   readonly renderer: WebGLRenderer;
@@ -130,8 +130,13 @@ export class RushView {
   private townBar: Bar;
   private fx: Fx[] = [];
   private particles: Particles;
-  /** Layout kits by map id; `kit` is the one in play (see useMap). */
-  private kits = new Map<MapId, MapKit>();
+  /** Layout kits, one per stage layout; `kit` is the one in play. Only the last few used are kept (see useMap). */
+  private kits = new Map<MapLayout, MapKit>();
+  private kitUse = 0;
+  /** Lane cues (render only): chevrons near the town on lanes with enemies on the way, and puffs at the gates. */
+  private laneCues: { mesh: Mesh; steps: BufferGeometry[] }[] = [];
+  private gateSeen = 0;
+  private gateBattle: RushState | null = null;
   private kit: MapKit | null = null;
   private styledMap: MapLayout | null = null;
   private ground: Mesh | null = null;
@@ -254,6 +259,7 @@ export class RushView {
     this.particles = new Particles(this.scene, 360, (x,z) => this.groundHeight(x,z));
     this.buildGround();
     this.useMap(FOREST);
+    this.buildLaneCues();
     this.buildTown();
     this.buildPads();
     this.townBar = this.makeBar(3.2, this.mats.barTown);
@@ -416,25 +422,85 @@ export class RushView {
     this.bossKill = BOSS_LOOK[boss].kill;
   }
 
-  /** Show a layout's kit (walls, cover, crates, gates, scenery, painted ground), building it the first time. */
+  /** Show a layout's kit (walls, cover, crates, gates, scenery, painted ground), building it the first time.
+   * Each stage has its own layout, so only the three most recently used kits are kept; older ones are disposed. */
   private useMap(map: MapLayout) {
     this.styledMap = map;
-    let kit = this.kits.get(map.id);
-    if (!kit) { kit = this.buildKit(map); this.kits.set(map.id, kit); }
+    let kit = this.kits.get(map);
+    if (!kit) { kit = this.buildKit(map); this.kits.set(map, kit); }
+    kit.used = ++this.kitUse;
+    for (const [layout, k] of [...this.kits].sort((a, b) => b[1].used - a[1].used).slice(3)) { this.disposeKit(k); this.kits.delete(layout); }
     for (const k of this.kits.values()) k.root.visible = k === kit && !this.sheetMode;
     this.kit = kit;
     const mat = this.ground!.material as MeshToonMaterial;
     if (mat.map !== kit.ground) { mat.map = kit.ground; mat.needsUpdate = true; }
   }
+  private disposeKit(kit: MapKit) {
+    this.scene.remove(kit.root);
+    kit.root.traverse(o => { if (o instanceof Mesh) o.geometry.dispose(); });
+    for (const b of kit.bushes) (b.material as Material).dispose();
+    kit.ground.dispose();
+  }
+  /** Kits in memory (debug info). */
+  get kitCount() { return this.kits.size; }
+
+  /** Lane cues. Chevrons: on each lane, just north of the barricade strip, up to three enemy-red chevrons point at the
+   * town while enemies are on their way down that lane; more of them light as the nearest one comes closer. In the
+   * world, no text. Built once; one draw call per lane that has enemies coming. */
+  private buildLaneCues() {
+    const bar = (k: number, side: number): Part => ({ geo: new BoxGeometry(0.95, 0.02, 0.24), color: PAL.enemy, at: [-k * 0.8 - 0.3, 0, side * 0.3], rot: [0, side * 0.72, 0] });
+    const steps = [1, 2, 3].map(n => bake(Array.from({ length: n }, (_, i) => 2 - i).flatMap(k => [bar(k, 1), bar(k, -1)])));
+    for (const lane of LANES) {
+      // Walk back 6.3 m from the lane's end at the town edge.
+      let left = 6.3, i = lane.length - 1, x = lane[i].x, z = lane[i].z, angle = 0;
+      for (; i > 0; i--) {
+        const a = lane[i - 1], dx = x - a.x, dz = z - a.z, d = Math.hypot(dx, dz);
+        angle = Math.atan2(dz, dx);
+        if (d >= left) { x -= (dx / d) * left; z -= (dz / d) * left; break; }
+        left -= d; x = a.x; z = a.z;
+      }
+      const mesh = new Mesh(steps[0], basic(PAL.enemy, 0.8));
+      mesh.position.set(x, heightAt(x, z) + 0.05, z); mesh.rotation.y = yaw(angle);
+      mesh.renderOrder = 2; mesh.visible = false;
+      this.scene.add(mesh);
+      this.laneCues.push({ mesh, steps });
+    }
+  }
+  private syncLaneCues(s: RushState, reduced: boolean) {
+    // New enemies at a lane start: dust (snow in the snow region) bursts out of that lane's gate.
+    if (this.gateBattle !== s) { this.gateBattle = s; this.gateSeen = 0; }
+    let seen = this.gateSeen;
+    const puffed = new Set<number>();
+    for (const e of s.enemies) {
+      if (e.id <= this.gateSeen) continue;
+      seen = Math.max(seen, e.id);
+      const g = GATES[e.lane];
+      if (!g || puffed.has(e.lane) || Math.hypot(e.x - g.x, e.z - g.z) > 2.5 || this.sheetMode) continue;
+      puffed.add(e.lane);
+      const snow = this.region === 'snow';
+      this.particles.emit({ kind: 'puff', n: e.kind === 'boss' ? 9 : 4, color: snow ? 0xeaf3f9 : 0xd9c79a, at: [g.x, 0.5, ARENA.minZ + 0.5], speed: 2.6, up: 1.4, size: e.kind === 'boss' ? 0.34 : 0.24, life: 0.55, dir: Math.PI / 2, cone: 1.3 });
+      this.particles.emit({ kind: 'shard', n: 3, color: PAL.enemy, at: [g.x, 2.0, ARENA.minZ + 0.2], speed: 2.5, up: 2, size: 0.09, life: 0.4, dir: Math.PI / 2, cone: 1.2 });
+    }
+    this.gateSeen = seen;
+    // Chevrons: 1 = an enemy is on this lane, 2 = past the middle of the field, 3 = close.
+    const near = LANES.map(() => -Infinity);
+    for (const e of s.enemies) if (e.hp > 0 && !e.chasing && e.z < this.laneCues[e.lane]?.mesh.position.z - 0.5) near[e.lane] = Math.max(near[e.lane], e.z);
+    this.laneCues.forEach((cue, i) => {
+      cue.mesh.visible = near[i] > -Infinity && !this.sheetMode;
+      if (!cue.mesh.visible) return;
+      cue.mesh.geometry = cue.steps[near[i] > -9 ? 2 : near[i] > -17 ? 1 : 0];
+      (cue.mesh.material as MeshBasicMaterial).opacity = reduced ? 0.8 : 0.6 + 0.3 * Math.sin(this.time * 6 - i);
+    });
+  }
 
   private buildKit(map: MapLayout): MapKit {
-    const root = new Group(), spec = QUALITY[this.quality], region = REGION_LOOK[map.id];
+    const root = new Group(), spec = QUALITY[this.quality], region = REGION_LOOK[map.id], hulls: Mesh[] = [], decor: Mesh[] = [];
     root.name = `rush-map-${map.id}`;
     const ground = groundTexture(map, region.ground, SCENERY_LOOK[map.id]);
     ground.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
     const inked = (geo: BufferGeometry, hullOf: BufferGeometry, width: number) => {
       const mesh = new Mesh(geo, this.mats.baked), hull = new Mesh(hullGeometry(hullOf), outlineMaterial(width));
-      mesh.add(hull); hull.visible = spec.terrainOutlines; this.terrainHulls.push(hull);
+      mesh.add(hull); hull.visible = spec.terrainOutlines; hulls.push(hull);
       root.add(mesh);
       return mesh;
     };
@@ -452,7 +518,7 @@ export class RushView {
     inked(bake(scenery.frame), bake(scenery.outlined), 0.05).name = 'rush-map-frame';
     if (scenery.extra.length) {
       const extra = new Mesh(bake(scenery.extra), this.mats.baked);
-      extra.name = 'rush-map-extra'; extra.visible = spec.decor; this.decor.push(extra);
+      extra.name = 'rush-map-extra'; extra.visible = spec.decor; decor.push(extra);
       root.add(extra);
     }
     // Hiding cover: walk-through, see-through when the hero hides in it.
@@ -464,7 +530,7 @@ export class RushView {
       const mat = toon(0xffffff, { vertexColors: true, rim: 0.3 });
       mat.transparent = true;
       const mesh = new Mesh(geo, mat), hull = new Mesh(hullGeometry(geo), outlineMaterial(0.03));
-      mesh.add(hull); hull.visible = spec.terrainOutlines; this.terrainHulls.push(hull);
+      mesh.add(hull); hull.visible = spec.terrainOutlines; hulls.push(hull);
       mesh.position.set(b.x, heightAt(b.x, b.z), b.z);
       mesh.renderOrder = 6; // drawn after the hero so the see-through state shows them
       root.add(mesh);
@@ -480,7 +546,7 @@ export class RushView {
       crates.set(1 + i, { mesh, wobble: 0 });
     });
     this.scene.add(root);
-    return { root, bushes, crates, ground };
+    return { root, bushes, crates, ground, hulls, decor, used: 0 };
   }
 
   private buildTown() {
@@ -1161,6 +1227,7 @@ export class RushView {
     this.renderer.setSize(this.size.w, this.size.h, false);
     for (const h of this.terrainHulls) h.visible = spec.terrainOutlines;
     for (const d of this.decor) d.visible = spec.decor;
+    for (const k of this.kits.values()) { for (const h of k.hulls) h.visible = spec.terrainOutlines; for (const d of k.decor) d.visible = spec.decor; }
     this.fitFrame();
   }
 
@@ -1413,6 +1480,7 @@ export class RushView {
       seg.quaternion.copy(this.camera.quaternion);
     });
     this.drawEnemies(s, reduced);
+    this.syncLaneCues(s, reduced);
     this.drawShotsAndCoins(s);
     // Cover: bushes turn see-through while the hero hides in one; broken crates disappear.
     const hiding = alive && heroHidden(s);
