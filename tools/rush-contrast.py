@@ -2,6 +2,7 @@
 # frost and ward floor cues against the floor, from the frames tools/rush-contrast.cjs takes.
 # Usage: python3 tools/rush-contrast.py <outDir> [stage prefixes, default s2 s3 s7 s8; mid-field rows: s7mid s8mid ...]
 # Method: enemy pixels are those that differ from the empty frame; ink (L < 20) is left out; the largest of three
+# (cycle 109: 'BODY' lines measure the whole body from the body-only frame, no enemy shadow/blob/ring; prefer them)
 # k-means clusters is the main colour. Criterion (art-direction.md): main vs floor >= 30; cues clearly above 15.
 import json, sys, math, random
 from PIL import Image
@@ -56,6 +57,46 @@ def ring_color(E, P, A, box, foot):
     # the most saturated half of the added pixels = the ring (the rest is the shell's pale fringe over the floor)
     b = med(back); order = sorted(range(len(cue)), key=lambda i: -math.hypot(cue[i][1] - b[1], cue[i][2] - b[2]))[:max(8, len(cue) // 2)]
     return med([cue[i] for i in order]), b
+def body_window(pts, i, wide=False):
+    """Cycle 109: the screen window for enemy i, halfway to its row neighbours, from well above its head to just below
+    its feet (device px). Whole-body measurement uses every masked pixel in it instead of the small head box."""
+    p = pts[i]; dpr = p['dpr']; fx, fy = p['x'] * dpr, p['y'] * dpr
+    xs = sorted(q['x'] * dpr for q in pts)
+    left = max([x for x in xs if x < fx - 1], default=None); right = min([x for x in xs if x > fx + 1], default=None)
+    half = 420 if wide else 200
+    x0 = (left + fx) / 2 if left is not None else fx - half; x1 = (right + fx) / 2 if right is not None else fx + half
+    return [int(x0), int(fy - (560 if wide else 360)), int(x1), int(fy + 40)]
+def body_stand_out(E, B, win, E2=None):
+    """Share of the body's non-ink pixels with ΔE >= 30 to the floor under them, median ΔE, and the pixel count. Body
+    pixels: the body-only frame differs from the empty frame (no enemy shadow, blob or ring is drawn there)."""
+    ds = []
+    x0, y0, x1, y1 = max(0, win[0]), max(0, win[1]), min(E.width, win[2]), min(E.height, win[3])
+    for x in range(x0, x1, 2):
+        for y in range(y0, y1, 2):
+            a, e = B.getpixel((x, y)), E.getpixel((x, y))
+            if E2 is not None:
+                e2 = E2.getpixel((x, y))
+                if sum(abs(e[i] - e2[i]) for i in range(3)) > 30: continue  # moves on its own (water, camera drift)
+            if sum(abs(a[i] - e[i]) for i in range(3)) > 60:
+                la = lab(a)
+                if la[0] >= 20: ds.append(math.dist(la, lab(e)))
+    if len(ds) < 20: return None, None, len(ds)
+    ds.sort()
+    return sum(1 for d in ds if d >= 30) / len(ds), ds[len(ds) // 2], len(ds)
+def body_rows(st):
+    """One line per enemy: whole-body stand-out, plain and frosted (needs the -body frames, cycle 109)."""
+    try:
+        E = Image.open(f'{d}/{st}plain-empty.png').convert('RGB')
+        try: E2 = Image.open(f'{d}/{st}plain-empty2.png').convert('RGB')
+        except FileNotFoundError: E2 = None
+        BP = Image.open(f'{d}/{st}plain-body.png').convert('RGB'); BF = Image.open(f'{d}/{st}frost-body.png').convert('RGB')
+    except FileNotFoundError: return
+    pts = json.load(open(f'{d}/{st}plain-pts.json'))
+    for i, p in enumerate(pts):
+        win = body_window(pts, i)
+        sh, md, n = body_stand_out(E, BP, win, E2); fsh, fmd, fn = body_stand_out(E, BF, win, E2)
+        S = lambda share, medv, n: f'{share * 100:4.0f}% med {medv:5.1f} ({n:5d} px)' if share is not None else '            n/a'
+        print(f"{st} {p['kind']:10s} BODY stands out {S(sh, md, n)} | frosted {S(fsh, fmd, fn)}")
 def boxes(name):
     E = Image.open(f'{d}/{name}-empty.png').convert('RGB')
     for p in json.load(open(f'{d}/{name}-pts.json')):
@@ -73,6 +114,17 @@ for st in (sys.argv[2:] or ['s2', 's3', 's7', 's8']):
         sh, md = stand_out(E, P, box); fsh, fmd = stand_out(E, F, box)
         S = lambda share, medv: f'{share * 100:4.0f}% med {medv:5.1f}' if share is not None else '        n/a'
         print(f"{st} {kind:10s} floorL {bg[0]:4.0f} | stands out {S(sh, md)} | frosted stands out {S(fsh, fmd)} | main vs floor {D(plain,bg)} | frost main vs floor {D(frost,bg)} vs plain {D(frost,plain)} | ward main vs floor {D(ward,bg)} vs plain {D(ward,plain)} vs frost {D(ward,frost)} | frost floor cue vs floor {D(fr,fbg)} | ward floor cue vs floor {D(wr,wbg)}")
+for st in (sys.argv[2:] or ['s2', 's3', 's7', 's8']): body_rows(st)
+for name in ['s5boss', 's10boss']:
+    try:
+        E = Image.open(f'{d}/{name}-empty.png').convert('RGB'); B = Image.open(f'{d}/{name}-body.png').convert('RGB')
+        try: E2 = Image.open(f'{d}/{name}-empty2.png').convert('RGB')
+        except FileNotFoundError: E2 = None
+        pts = json.load(open(f'{d}/{name}-pts.json'))
+        for i, p in enumerate(pts):
+            sh, md, n = body_stand_out(E, B, body_window(pts, i, wide=True), E2)
+            if sh is not None: print(name, f'BODY stands out {sh * 100:.0f}% med {md:.1f} ({n} px)')
+    except FileNotFoundError: pass
 for name in ['s5boss', 's10boss']:
     try:
         A = Image.open(f'{d}/{name}.png').convert('RGB')

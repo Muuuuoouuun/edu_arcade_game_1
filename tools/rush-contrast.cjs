@@ -44,15 +44,27 @@ if (process.env.ONLY) {
   // shadowEvery=1: every captured frame has its own shadow map (no half-drawn frame between the two shots).
   await page.goto(`${BASE}/rush.html?demo=1&seed=3&speed=8&freeze=300&quality=${Q}&shadowEvery=1`);
   await page.waitForFunction(() => window.__rush && __rush.frozen, null, { timeout: 180000 });
+  let first = true;
   for (const [name, sc] of Object.entries(SCENES)) {
     await page.evaluate(([stage, hero]) => { __rush.setStage(stage); const s = __rush.state; s.enemies.length = 0; s.shots.length = 0; s.hero.kind = 'ranger'; s.hero.x = hero.x; s.hero.z = hero.z; s.hero.facing = -Math.PI / 2; }, [sc.stage, sc.hero || { x: 0, z: 4.2 }]);
-    await page.waitForTimeout(1500);
+    // The camera eases toward the hero; under software GL the first jump from the demo view takes a few seconds (cycle 109:
+    // a drifting camera made every edge differ).
+    await page.waitForTimeout(first ? 6000 : 1500); first = false;
     await page.screenshot({ path: `${OUT}/${name}-empty.png`, timeout: 180000 });
+    // A second empty frame: pixels that change on their own (water, a still-moving camera) are left out of the body mask.
+    await page.waitForTimeout(1200);
+    await page.screenshot({ path: `${OUT}/${name}-empty2.png`, timeout: 180000 });
     await page.evaluate(list => { const s = __rush.state; let id = 6000; for (const [kind, x, z, extra] of list) s.enemies.push({ id: id++, kind, x, z, kx: 0, kz: 0, hp: 1, maxHp: 1, lane: 0, wp: 1, cd: 99, flash: 0, chasing: false, facing: Math.PI / 2, windup: null, ...(extra || {}) }); }, sc.list);
     await page.waitForTimeout(1200);
     const pts = await page.evaluate(() => __rush.enemyScreen().map(e => { const en = __rush.state.enemies.find(x => x.id === e.id); return { kind: en.kind, x: e.pts[0].x, y: e.pts[0].y, hx: e.pts[1].x, hy: e.pts[1].y, dpr: devicePixelRatio }; }));
     await page.screenshot({ path: `${OUT}/${name}.png`, timeout: 180000 });
     fs.writeFileSync(`${OUT}/${name}-pts.json`, JSON.stringify(pts));
+    // Body-only frame (cycle 109): no enemy shadows, foot blobs or floor rings, so the difference from the empty frame is
+    // the body (and its shell) alone; rush-contrast.py measures whole bodies from it.
+    await page.evaluate(() => __rush.bodyOnly(true));
+    await page.waitForTimeout(700);
+    await page.screenshot({ path: `${OUT}/${name}-body.png`, timeout: 180000 });
+    await page.evaluate(() => __rush.bodyOnly(false));
   }
   console.log('scenes', Object.keys(SCENES).length, 'errors:', JSON.stringify(errs.slice(0, 5)));
   await browser.close();

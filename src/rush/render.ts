@@ -1150,6 +1150,7 @@ export class RushView {
       const ward = e.wardT ?? 0;
       if (!wolf && ward > 0 && (ward > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.ward[e.kind].push(this.place(e.x, bob - 0.02, e.z, roll, yaw(e.facing), lean, sx * sl * 1.16, sy * 1.12, sx * 1.16, 'YXZ'));
       if (this.sheetMode) continue;
+      if (this.bodyOnly) continue; // debug (cycle 109): no blob, rings or streak, so only the body differs from the floor
       B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.15));
       B.ring.push(this.place(e.x, 0.03, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.08));
       if ((e.slowT ?? 0) > 0) B.frostRing.push(this.place(e.x, 0.05, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.38)); // frost slow
@@ -1791,6 +1792,9 @@ export class RushView {
     return { x: (v.x + 1) / 2 * rect.width, y: (1 - v.y) / 2 * rect.height, visible: v.z < 1 && Math.abs(v.x) < 1.2 && Math.abs(v.y) < 1.2 };
   }
 
+  /** Debug (cycle 109, contrast measurement only): true stops enemies casting shadows and hides their foot blobs and floor
+   * rings, so an enemy frame minus the empty frame is the body (with any shell) alone. */
+  bodyOnly = false;
   /** Debug (cycle 107): set by tallyDraws(); the next render() counts every draw call by pass and name. */
   private tallyNext = false;
   lastTally: Record<string, number> | null = null;
@@ -1821,7 +1825,11 @@ export class RushView {
     this.rig.setLook(look);
     setWaterLook(this.waterMat, look);
     // Cycle 101: the caster/receiver walk runs only on frames whose shadow map is redrawn.
-    if (this.rig.shadows && this.rig.follow(this.camera, this.focus)) markShadows(this.scene, this.hero);
+    if (this.rig.shadows && this.rig.follow(this.camera, this.focus)) {
+      markShadows(this.scene, this.hero);
+      if (this.bodyOnly) for (const b of [...Object.values(this.batches.body), ...Object.values(this.batches.flash)]) b.mesh.castShadow = false;
+      if (this.bodyOnly && this.batches.bodyAll) this.batches.bodyAll.mesh.castShadow = false;
+    }
     // Glow passes only while something that glows is on screen: a shot, a status ring, a shockwave, the super ring.
     let glowing = this.fx.length > 0 || !!this.superRing?.visible;
     for (let i = 0; !glowing && i < this.glowBatches.length; i++) glowing = this.glowBatches[i].size > 0;
