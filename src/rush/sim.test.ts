@@ -866,3 +866,37 @@ test('a standing barricade blocks the hero; its rubble does not', async () => {
   assert.ok(s.hero.z < b.z - 1, 'walks over the rubble');
 });
 
+
+test("frost lord's howl: on the last stage the boss's roar also shatters barricades and freezes towers for a while", async () => {
+  const { stageDifficulty } = await import('./stages.ts');
+  const { FROST_HOWL } = await import('./data.ts');
+  const call = ENEMIES.boss.summon!, roarTicks = Math.round(call.roar / STEP);
+  const setup = (stage: number) => {
+    const s = createRush(1, NO_MODS, stageDifficulty(stage));
+    Object.assign(s.hero, { x: 9, z: 9 });
+    const b = enemy(s, 'boss', 0, -8);
+    b.hp = Math.floor(b.maxHp * call.at);
+    s.barricades[0] = { level: 0, hp: 180 };
+    s.towers[0] = { level: 0, cd: 0, facing: 0 };
+    return s;
+  };
+  const run = (s: RushState, n: number) => { const seen: string[] = []; for (let i = 0; i < n; i++) { stepRush(s, {}); seen.push(...s.events.map(e => e.type)); } return seen; };
+  const last = setup(FROST_HOWL.stage), seen = run(last, roarTicks + 2);
+  assert.ok(seen.includes('howl') && seen.includes('barricadeBreak'), 'the howl comes with the summon');
+  assert.equal(last.barricades[0]!.hp, 0, 'the barricade is rubble');
+  assert.ok((last.towers[0]!.frozen ?? 0) > FROST_HOWL.towerFreeze - 0.1, 'the tower is frozen');
+  // A frozen tower does not fire, even with a grunt beside it; it thaws after the freeze.
+  const towerShots = () => last.shots.filter(x => x.owner === 'tower').length;
+  const g = enemy(last, 'grunt', PADS[0].x + 2, PADS[0].z - 2);
+  g.hp = g.maxHp = 1e6; // stays alive for the whole check
+  const hold = () => { g.x = PADS[0].x + 2; g.z = PADS[0].z - 2; stepRush(last, {}); return towerShots(); }; // and in range
+  let fired = 0;
+  for (let i = 0; i < 60; i++) fired += hold();
+  assert.equal(fired, 0, 'no shot while frozen');
+  for (let i = 0; i < Math.round(FROST_HOWL.towerFreeze / STEP); i++) fired += hold();
+  assert.ok(!last.towers[0]!.frozen && fired > 0, 'thawed and firing again');
+  // Stage 9's boss only calls its minions.
+  const ninth = setup(FROST_HOWL.stage - 1), seen9 = run(ninth, roarTicks + 2);
+  assert.ok(seen9.includes('summon') && !seen9.includes('howl'));
+  assert.ok(ninth.barricades[0]!.hp > 0 && !ninth.towers[0]!.frozen);
+});

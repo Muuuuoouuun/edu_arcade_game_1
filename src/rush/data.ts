@@ -50,6 +50,12 @@ export const BARRICADE_LEVELS: readonly BarricadeLevel[] = [
  * share, rebuilt at its level); never below repairMin. */
 export const BARRICADE = { length: 2.4, depth: 0.8, repair: 0.75, repairMin: 5, hold: 6, spikeForge: 3, masonry: 2 } as const;
 
+/** The frost lord's howl (2026-11-14, last stage only): when the boss of stage `stage` ends its roar it also knocks
+ * `barricade` of every standing barricade's full health off it and freezes every tower for `towerFreeze` s. Measured:
+ * barricades had made the last stage as easy as stage 9 (2,500 against 2,450); the howl gives the finale its own
+ * moment and its step back (tools/rush-stage-power.ts). */
+export const FROST_HOWL = { stage: 10, barricade: 1, towerFreeze: 4 } as const;
+
 export type HeroKind = 'ranger' | 'bron' | 'bear';
 export type HeroDef = {
   name: string; attack: 'bolts' | 'swing' | 'lob';

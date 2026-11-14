@@ -3,7 +3,7 @@
 // so this module can run in tests, in the browser and later on an authoritative server.
 import {
   ARENA, BUSH, CRATE, ECONOMY, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WAVES,
-  BARRICADE, BARRICADES, BARRICADE_LEVELS, type Block, heroStats, type EnemyDef, type EnemyKind, type HeroDef, type HeroKind, type SpawnGroup, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
+  BARRICADE, BARRICADES, BARRICADE_LEVELS, FROST_HOWL, type Block, heroStats, type EnemyDef, type EnemyKind, type HeroDef, type HeroKind, type SpawnGroup, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
 import { heroPaceAt, inBush, mapFor, paceAt, slideAt, type MapLayout } from './maps.ts';
 
 export type Phase = 'prep' | 'wave' | 'won' | 'lost';
@@ -40,7 +40,8 @@ export interface Shot {
   wall?: number;
 }
 /** branch is chosen when Lv1 becomes Lv2 and kept at Lv3. */
-export interface Tower { level: number; cd: number; facing: number; branch?: TowerBranch }
+/** `frozen`: seconds the frost lord's howl still holds this tower (it neither turns nor fires). */
+export interface Tower { level: number; cd: number; facing: number; branch?: TowerBranch; frozen?: number }
 /** A built barricade (index = BARRICADES site). hp 0 = rubble: it stops blocking and can be rebuilt at its level. */
 export interface Barricade { level: number; hp: number }
 export interface Coin { id: number; x: number; z: number; value: number; life: number }
@@ -75,6 +76,8 @@ export type RushEvent =
   /** One ally restored by a shaman pulse, and by how much (cycle 60: a green number over it). */
   | { type: 'healed'; id: number; x: number; z: number; amount: number }
   | { type: 'summon'; x: number; z: number; count: number }
+  /** The frost lord's howl (last stage): barricades shattered, towers frozen for `time` s. */
+  | { type: 'howl'; x: number; z: number; time: number }
   | { type: 'coin'; value: number }
   | { type: 'build'; pad: number; level: number; branch?: TowerBranch }
   /** A barricade built (level 0), upgraded to spikes (level 1) or repaired / rebuilt from rubble (repair). */
@@ -880,6 +883,15 @@ function rally(s: RushState, boss: Enemy, call: NonNullable<EnemyDef['summon']>)
     });
   }
   s.events.push({ type: 'summon', x: boss.x, z: boss.z, count: call.count });
+  // The frost lord's howl: the last stage's boss also breaks the barricades and freezes the towers.
+  if (s.diff.stage === FROST_HOWL.stage && !s.diff.endless) {
+    for (let i = 0; i < BARRICADES.length; i++) {
+      const b = s.barricades[i];
+      if (b && b.hp > 0) hurtBarricade(s, i, barricadeMaxHp(s, b.level) * FROST_HOWL.barricade, null);
+    }
+    for (const t of s.towers) if (t) t.frozen = FROST_HOWL.towerFreeze;
+    s.events.push({ type: 'howl', x: boss.x, z: boss.z, time: FROST_HOWL.towerFreeze });
+  }
 }
 
 /** `wall` 0 or more: not at the hero, the enemy is held by that barricade and strikes it instead of the town. */
@@ -913,6 +925,7 @@ function attack(s: RushState, e: Enemy, atHero: boolean, wall = -1) {
 function updateTowers(s: RushState) {
   s.towers.forEach((tower, i) => {
     if (!tower) return;
+    if (tower.frozen) { tower.frozen = Math.max(0, tower.frozen - STEP); return; }
     tower.cd = Math.max(0, tower.cd - STEP);
     if (tower.cd > 0) return;
     const lvl = TOWER_LEVELS[tower.level], pad = PADS[i];
@@ -1053,7 +1066,7 @@ export function rushHash(s: RushState): string {
   return JSON.stringify([
     s.tick, s.phase, s.wave, s.gold, r(s.town.hp), r(s.hero.x), r(s.hero.z), r(s.hero.hp), s.hero.ammo, s.hero.superCharge,
     s.enemies.map(e => [e.id, e.kind, r(e.x), r(e.z), r(e.hp)]), s.shots.length, s.coins.map(c => [c.id, r(c.x), r(c.z)]),
-    s.towers.map(t => (t ? `${t.level}${t.branch ?? ''}` : -1)), s.crates.map(c => [c.id, Math.round(c.hp)]), s.stats,
+    s.towers.map(t => (t ? `${t.level}${t.branch ?? ''}${t.frozen ? `f${r(t.frozen)}` : ''}` : -1)), s.crates.map(c => [c.id, Math.round(c.hp)]), s.stats,
     s.barricades.map(b => (b ? [b.level, r(b.hp)] : -1)),
   ]);
 }

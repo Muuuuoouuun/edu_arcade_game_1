@@ -969,6 +969,11 @@ export class RushView {
       if (ward > 0 && (ward > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.wardRing.push(this.place(e.x, 0.055, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.58)); // ward
       if (swift && !reduced && e.kind !== 'boss' && !e.windup) B.streak.push(this.place(e.x, bob, e.z, 0, yaw(e.facing), 0, Math.max(0.6, r))); // swift lap: readable even on small enemies
     }
+    // Towers frozen by the frost lord's howl stand in a frost ring (the same cue as a slowed enemy), blinking as it ends.
+    s.towers.forEach((tw, i) => {
+      const f = tw?.frozen ?? 0;
+      if (f > 0 && (f > 0.6 || Math.floor(this.time * 12) % 2 === 0)) B.frostRing.push(this.place(PADS[i].x, 0.06, PADS[i].z, -Math.PI / 2, 0, 0, 1.55));
+    });
     all.forEach(b => b.end());
     this.counts.enemies = s.enemies.length;
   }
@@ -1202,6 +1207,12 @@ export class RushView {
           fx.emit({ kind: 'puff', n: 12, color: 0xe8c99a, at: [ev.x, 0.4, ev.z], speed: 4, up: 1, size: 0.3, life: 0.5 });
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.35);
           break;
+        case 'howl': { // the frost lord's howl: a wide ice ring from the boss, and ice bursts on every tower
+          this.ring(ev.x, ev.z, 0x9fe6ff, 16, 0.9, 0.95, true);
+          this.towers.forEach((tw, i) => { if (tw) fx.emit({ kind: 'puff', n: 8, color: 0xd8f6ff, at: [PADS[i].x, 1.4, PADS[i].z], speed: 2.4, up: 1.2, size: 0.28, life: 0.6 }); });
+          if (!reducedMotion) this.shake = Math.max(this.shake, 0.6);
+          break;
+        }
         case 'slam':
           this.ring(ev.x, ev.z, 0xff5d73, ev.radius, 0.35, 0.95, true);
           fx.emit({ kind: 'puff', n: 10, color: 0xe8c99a, at: [ev.x, 0.3, ev.z], speed: 3.5, up: 0.8, size: 0.28, life: 0.45 });
