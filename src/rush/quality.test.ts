@@ -121,7 +121,8 @@ test('frame look: shadow box, light table and who casts', async () => {
   const wall = new Mesh(box, toon(0xffffff, { vertexColors: true })), hull = new Mesh(box, new MeshBasicMaterial());
   const ground = new Mesh(box, toon(0xffffff, { vertexColors: true, rim: 0 })), enemy = new InstancedMesh(box, toon(), 2), part = new Mesh(box, toon());
   const streak = new InstancedMesh(box, toon(), 2); streak.userData.noShadow = true;
-  hero.add(part); wall.add(hull); root.add(wall, ground, enemy, hero, streak);
+  const crates = new InstancedMesh(box, toon(0xffffff, { vertexColors: true }), 2); crates.userData.receive = true;
+  hero.add(part); wall.add(hull); root.add(wall, ground, enemy, hero, streak, crates);
   markShadows(root, hero);
   assert.deepEqual([wall.castShadow, wall.receiveShadow], [true, true], 'scenery casts and receives');
   assert.deepEqual([hull.castShadow, hull.receiveShadow], [false, false], 'ink hulls do neither');
@@ -129,6 +130,7 @@ test('frame look: shadow box, light table and who casts', async () => {
   assert.deepEqual([enemy.castShadow, enemy.receiveShadow], [true, false], 'instanced actors cast but stay bright');
   assert.deepEqual([part.castShadow, part.receiveShadow], [true, false], 'the hero casts but stays bright');
   assert.deepEqual([streak.castShadow, streak.receiveShadow], [false, false], 'opted-out effects');
+  assert.deepEqual([crates.castShadow, crates.receiveShadow], [true, true], 'instanced props (crates, cycle 103) opt in to receive');
 });
 
 test('frame look: glow sources only touch alpha while the finishing pass is on', async () => {

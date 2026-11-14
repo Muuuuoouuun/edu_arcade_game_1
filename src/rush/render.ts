@@ -3,7 +3,7 @@ import {
   Box3, BufferAttribute, DodecahedronGeometry, BoxGeometry, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
   DataTexture, DirectionalLight, Group, HemisphereLight, IcosahedronGeometry, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera,
   PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
-  Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, BackSide, BufferGeometry, Points, ShaderMaterial, type AnimationAction, type Material, type MeshToonMaterial, type MeshStandardMaterial,
+  Matrix4, Object3D, Quaternion, Euler, Frustum, InstancedMesh, Sphere, BackSide, BufferGeometry, Points, ShaderMaterial, type AnimationAction, type Material, type MeshToonMaterial, type MeshStandardMaterial,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -89,7 +89,13 @@ const yaw = (a: number) => -a;
 type Bar = { root: Group; fill: Mesh; width: number };
 type Fx = { mesh: Mesh; age: number; life: number; grow: number; fade: number; y0: number };
 /** Everything that belongs to one battlefield layout (maps.ts): built once per layout, shown while it is in play. */
-type MapKit = { root: Group; bushes: Mesh[]; crates: Map<number, { mesh: Mesh; wobble: number }>; ground: DataTexture; hulls: Mesh[]; decor: Mesh[]; used: number };
+/** A crate in a layout kit: where it stands, its kind (0 plain, 1 treasure) and how much hit wobble is left. */
+type KitCrate = { x: number; y: number; z: number; kind: 0 | 1; wobble: number };
+type MapKit = {
+  root: Group; bushes: Mesh[]; ground: DataTexture; hulls: Mesh[]; decor: Mesh[]; used: number;
+  /** Cycle 103: crates are drawn as one instanced body and hull per kind; `shown` is the bitmask of crate ids last written. */
+  crates: Map<number, KitCrate>; crateBatches: { body: InstancedMesh; hull: InstancedMesh }[]; shown: number;
+};
 
 export class RushView {
   readonly renderer: WebGLRenderer;
@@ -440,7 +446,7 @@ export class RushView {
   }
   private disposeKit(kit: MapKit) {
     this.scene.remove(kit.root);
-    kit.root.traverse(o => { if (o instanceof Mesh) o.geometry.dispose(); });
+    kit.root.traverse(o => { if (o instanceof Mesh) o.geometry.dispose(); if (o instanceof InstancedMesh) o.dispose(); });
     for (const b of kit.bushes) (b.material as Material).dispose();
     kit.ground.dispose();
   }
@@ -542,17 +548,43 @@ export class RushView {
       root.add(mesh);
       return mesh;
     });
-    const crates = new Map<number, { mesh: Mesh; wobble: number }>();
-    const crateGeo = [false, true].map(treasure => { const geo = bake(crateParts(treasure, map.id)); return { geo, hull: hullGeometry(geo) }; });
-    map.crates.forEach((c, i) => {
-      const kind = crateGeo[c.gold ? 1 : 0], mesh = new Mesh(kind.geo, this.mats.baked);
-      mesh.add(new Mesh(kind.hull, outlineMaterial(0.04)));
-      mesh.position.set(c.x, heightAt(c.x, c.z), c.z);
-      root.add(mesh);
-      crates.set(1 + i, { mesh, wobble: 0 });
+    // Crates (cycle 103): one instanced body and one instanced hull per kind (plain, treasure), so six crates cost four
+    // draws and two shadow draws instead of twelve and six. Hits wobble and breaks remove them through the instance
+    // matrices (syncCrates).
+    const crates = new Map<number, KitCrate>();
+    map.crates.forEach((c, i) => crates.set(1 + i, { x: c.x, y: heightAt(c.x, c.z), z: c.z, kind: c.gold ? 1 : 0, wobble: 0 }));
+    const crateBatches = [false, true].map(treasure => {
+      const geo = bake(crateParts(treasure, map.id)), n = Math.max(1, map.crates.filter(c => !!c.gold === treasure).length);
+      const body = new InstancedMesh(geo, this.mats.baked, n), hull = new InstancedMesh(hullGeometry(geo), outlineMaterial(0.04), n);
+      body.userData.receive = true; // a prop, not an actor: it takes tower and wall shadows like the walls do
+      for (const m of [body, hull]) { m.name = `rush-crates-${treasure ? 'gold' : 'plain'}`; m.count = 0; m.visible = false; m.frustumCulled = false; root.add(m); }
+      return { body, hull };
     });
     this.scene.add(root);
-    return { root, bushes, crates, ground, hulls, decor, used: 0 };
+    return { root, bushes, crates, crateBatches, shown: -1, ground, hulls, decor, used: 0 };
+  }
+
+  /** Write the standing crates that are on screen into their kind's instanced body and hull, only when that set changed
+   * or one wobbles. Per-instance culling as for the enemy batches: most crates are off screen in a battle view, and a
+   * kind with none on screen costs no draw at all (separate meshes were frustum-culled the same way). */
+  private syncCrates(s: RushState, kit: MapKit, worldDt: number) {
+    let mask = 0, moving = false;
+    for (const c of s.crates) { const k = kit.crates.get(c.id); if (k && this.onScreen(k.x, 0.5, k.z, 1.5)) mask |= 1 << c.id; }
+    for (const c of kit.crates.values()) if (c.wobble > 0) { moving = true; c.wobble = Math.max(0, c.wobble - worldDt); }
+    if (mask === kit.shown && !moving) return;
+    kit.shown = mask;
+    const fill = [0, 0], { m, q, e, p, s: one } = this.tmp;
+    one.set(1, 1, 1);
+    for (const [id, c] of kit.crates) {
+      if (!(mask & (1 << id))) continue;
+      const k = Math.sin(c.wobble * 60) * c.wobble * 0.5;
+      m.compose(p.set(c.x, c.y, c.z), q.setFromEuler(e.set(k * 0.4, 0, k)), one);
+      const b = kit.crateBatches[c.kind], i = fill[c.kind]++;
+      b.body.setMatrixAt(i, m); b.hull.setMatrixAt(i, m);
+    }
+    kit.crateBatches.forEach((b, kind) => {
+      for (const mesh of [b.body, b.hull]) { mesh.count = fill[kind]; mesh.visible = fill[kind] > 0; mesh.instanceMatrix.needsUpdate = true; }
+    });
   }
 
   private buildTown() {
@@ -1509,13 +1541,7 @@ export class RushView {
       mat.depthWrite = !inside;
       mesh.children[0].visible = !inside;
     });
-    const standing = new Set(s.crates.map(c => c.id));
-    for (const [id, c] of kit.crates) {
-      c.mesh.visible = standing.has(id);
-      c.wobble = Math.max(0, c.wobble - worldDt);
-      const k = Math.sin(c.wobble * 60) * c.wobble * 0.5;
-      c.mesh.rotation.set(k * 0.4, 0, k);
-    }
+    this.syncCrates(s, kit, worldDt);
     this.syncDefences(s, worldDt, alive, reduced);
     this.setBar(this.townBar, s.town.hp / s.town.maxHp);
     this.syncDamage(s, reduced);
