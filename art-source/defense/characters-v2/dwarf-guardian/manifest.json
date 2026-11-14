@@ -30,6 +30,10 @@
       "surface": "cloth"
     },
     {
+      "name": "Eye / gleam catchlight",
+      "surface": "smooth"
+    },
+    {
       "name": "Eye / obsidian pupil",
       "surface": "smooth"
     },
@@ -86,16 +90,16 @@
       "surface": "metal"
     }
   ],
-  "triangles": 23190,
-  "meshes": 157,
+  "triangles": 12094,
+  "meshes": 161,
   "clips": [
     "dwarf-hammer-attack",
     "bron-idle",
     "bron-walk"
   ],
   "rig": "Articulated rigid pivots, including independent leg assemblies; no deforming skin weights",
-  "glb_bytes": 1935780,
-  "glb_sha256": "4d2ad53caee422698ecc88fe4931afddcc443781e6ea60f6e9be92cd3596c7ee",
+  "glb_bytes": 2751000,
+  "glb_sha256": "b0bce7e7206deac799a9aedd064251a2daefe366f4fc71467b771adcc6ac902a",
   "limits": [
     "Concept-guided procedural surface textures, not a photogrammetry reconstruction",
     "No physical-device FPS measurement",

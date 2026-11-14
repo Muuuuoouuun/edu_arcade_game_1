@@ -2,6 +2,9 @@
 
 Blender 4.3: blender -b -t 4 --python-exit-code 1 --python tools/blender/build_character_production.py -- --hero all
 Analytic material atlases are authored here; reference illustrations are never projected onto geometry.
+The hero pass in tools/blender/enhance_heroes.py (proportions, faces, accents, painted occlusion bake) runs by default;
+--legacy rebuilds the previous delivery for comparisons. Also runs with the bpy 5.x module:
+python tools/blender/build_character_production.py -- --hero all
 """
 import argparse, hashlib, json, math, struct, sys, zlib
 from pathlib import Path
@@ -9,6 +12,8 @@ import bpy
 import bmesh
 import numpy as np
 from mathutils import Vector
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+import enhance_heroes
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'art-source/defense/characters-v2'
@@ -18,7 +23,7 @@ CONFIG = {
  'bron': ('dwarf-guardian', 'art-source/defense/dwarf.blend', 'dwarf-guardian', 'dwarf-hammer-attack', 25, 'public/defense/atlas.png'),
  'bear': ('polar-bear', 'art-source/defense/prototypes/polar-bear/polar-bear.blend', 'polar-bear-guardian', 'polar-bear-attack', 25, 'art-source/defense/concepts/2026-11-09/polar-bear-guardian.png'),
 }
-p = argparse.ArgumentParser(); p.add_argument('--hero', choices=['all', *CONFIG], default='all'); p.add_argument('--skip-render', action='store_true'); p.add_argument('--samples', type=int, default=64)
+p = argparse.ArgumentParser(); p.add_argument('--hero', choices=['all', *CONFIG], default='all'); p.add_argument('--skip-render', action='store_true'); p.add_argument('--samples', type=int, default=64); p.add_argument('--legacy', action='store_true', help='skip the hero pass (previous delivery)')
 args = p.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
 
 def png(path, rgb):
@@ -92,6 +97,11 @@ def make_atlas(materials, folder):
             sep=nodes.new('ShaderNodeSeparateColor');links.new(node.outputs['Color'],sep.inputs['Color']);links.new(sep.outputs['Green'],bs.inputs['Roughness']);links.new(sep.outputs['Blue'],bs.inputs['Metallic'])
     return m,grid,cell,pad
 
+def action_fcurves(action):
+    """F-curves of an action in Blender 4.3 (flat) and 4.4+/5.x (layered actions with slot channel bags)."""
+    if hasattr(action,'fcurves'):return list(action.fcurves)
+    return [fc for layer in action.layers for strip in layer.strips for bag in strip.channelbags for fc in bag.fcurves]
+
 def parent_keep(obj,parent):
     bpy.context.view_layer.update(); matrix=obj.matrix_world.copy();obj.parent=parent;obj.matrix_world=matrix
 
@@ -105,6 +115,7 @@ def build(kind):
     slug,source,root_name,attack_name,last,reference=CONFIG[kind];folder=OUT/slug;folder.mkdir(parents=True,exist_ok=True);PUBLIC.mkdir(parents=True,exist_ok=True)
     bpy.ops.wm.open_mainfile(filepath=str(ROOT/source));scene=bpy.context.scene;scene.frame_set(1);bpy.context.view_layer.update();root=bpy.data.objects[root_name];col=root.users_collection[0]
     root['delivery']='Arcana shared character v2: textured, articulated idle/walk/attack';root['reference']=reference
+    if not args.legacy:enhance_heroes.enhance(kind,root,col)
     body=bpy.data.objects['body'];head=bpy.data.objects['head']
     old_objects=[root,*root.children_recursive];mats=sorted({m for o in old_objects if o.type=='MESH' for m in o.data.materials if m},key=lambda m:m.name)
     # Readable, physically modeled seams. These are attached to the same pivots as the source costume.
@@ -151,6 +162,9 @@ def build(kind):
                 uv.data[loop].uv=((column*cell+pad+u*(cell-2*pad))/1024,1-(row*cell+pad+(1-v)*(cell-2*pad))/1024)
             face.material_index=0
         mesh.materials.clear();mesh.materials.append(atlas)
+    if not args.legacy:
+        meshes=[o for o in [root,*root.children_recursive] if o.type=='MESH']
+        atlas=enhance_heroes.bake_painted_atlas(meshes,atlas,folder,png,srgb,head=head)
     nodes=[o for o in [root,*root.children_recursive] if o.type=='EMPTY'];rest={o:(o.location.copy(),o.rotation_euler.copy(),o.scale.copy()) for o in nodes}
     # Preserve the source attack in a named NLA track, then create two independent looping clips.
     attack_actions={o:o.animation_data.action for o in nodes if o.animation_data and o.animation_data.action}
@@ -178,7 +192,7 @@ def build(kind):
                 elif o==head:o.rotation_euler.z+=.018*math.sin(t*math.tau)
                 elif o.name=='curled-tail':o.rotation_euler.z+=.045*math.sin(t*math.tau)
                 o.keyframe_insert(data_path='location',frame=frame);o.keyframe_insert(data_path='rotation_euler',frame=frame);o.keyframe_insert(data_path='scale',frame=frame)
-            for fc in action.fcurves:
+            for fc in action_fcurves(action):
                 for key in fc.keyframe_points:key.interpolation='LINEAR'
             track(o,action,f'{kind}-{mode}',end)
             for attr,value in zip(['location','rotation_euler','scale'],rest[o]):setattr(o,attr,value.copy())
@@ -221,6 +235,16 @@ def build(kind):
         shutil.copyfile(folder/'three-quarter.png',PUBLIC/f'{slug}.png')
         for view in ['front','side','back','three-quarter']:
             shutil.copyfile(folder/f'{view}.png',PUBLIC/f'{slug}-{view}.png')
+        # Town portrait (src/rush/art/hero-<asset>.webp): head and shoulders from the three-quarter direction, 192 px,
+        # transparent, from the same delivery geometry as the battle model.
+        pts=[o.matrix_world@Vector(c) for o in head.children_recursive if o.type=='MESH' for c in o.bound_box]
+        top=max(p.z for p in pts);mid=sum(pts,Vector())/len(pts);size=2.6
+        target=Vector((mid.x,mid.y,top-size*.36));direction=(Vector((7,10,6))-Vector((0,0,1.75))).normalized()
+        camera.data.ortho_scale=size;camera.location=target+direction*10;camera.rotation_euler=(target-camera.location).to_track_quat('-Z','Y').to_euler()
+        scene.render.resolution_x=scene.render.resolution_y=192;scene.cycles.samples=max(args.samples,96)
+        scene.render.image_settings.file_format='WEBP';scene.render.image_settings.quality=90
+        scene.render.filepath=str(ROOT/f'src/rush/art/hero-{slug}.webp');bpy.ops.render.render(write_still=True)
+        scene.render.image_settings.file_format='PNG';scene.render.resolution_x=scene.render.resolution_y=640
     # Save with idle active, all atlas images packed; the generator restores all tracks for export.
     bpy.context.preferences.filepaths.save_version=0;bpy.ops.wm.save_as_mainfile(filepath=str(folder/f'{slug}.blend'))
     meshes=[o for o in root.children_recursive if o.type=='MESH'];triangles=0
