@@ -1081,6 +1081,14 @@ export class RushView {
       branchShots: { fire: new Batch(this.scene, this.geo.bolt, basic(BRANCH_COLOR.fire), 120), frost: new Batch(this.scene, this.geo.bolt, basic(0xbff3ff), 120) },
       coins: new Batch(this.scene, this.geo.coin, this.mats.coin, 160),
     };
+    // Names for the debug counts (shadowCasters, tallyDraws; cycle 107): 'batch:body.grunt', 'batch:shots.hero', ...
+    const nameAll = (o: unknown, path: string): void => {
+      if (o instanceof Batch) o.mesh.name = `batch:${path}`;
+      else if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) nameAll(v, path ? `${path}.${k}` : k);
+    };
+    nameAll(this.batches, '');
+    // Coins lie flat on the ground: their shadow is invisible but cost a shadow-map draw (cycle 107 count).
+    this.batches.coins.mesh.userData.noCast = true;
   }
 
   /** Matrix from position, Euler rotation (order) and scale; reuses scratch objects. */
@@ -1771,7 +1779,32 @@ export class RushView {
     return { x: (v.x + 1) / 2 * rect.width, y: (1 - v.y) / 2 * rect.height, visible: v.z < 1 && Math.abs(v.x) < 1.2 && Math.abs(v.y) < 1.2 };
   }
 
+  /** Debug (cycle 107): set by tallyDraws(); the next render() counts every draw call by pass and name. */
+  private tallyNext = false;
+  lastTally: Record<string, number> | null = null;
+  tallyDraws() { this.tallyNext = true; }
   render() {
+    if (this.tallyNext) {
+      // Count every renderBufferDirect of this frame: shadow map (depth materials), main camera, or other (post, glow).
+      this.tallyNext = false;
+      const r = this.renderer, plain = r.renderBufferDirect, tally: Record<string, number> = {};
+      r.renderBufferDirect = (camera, scene, geometry, material, object, group) => {
+        const pass = (material as { isMeshDepthMaterial?: boolean; isMeshDistanceMaterial?: boolean }).isMeshDepthMaterial || (material as { isMeshDistanceMaterial?: boolean }).isMeshDistanceMaterial ? 'shadow'
+          : camera === this.camera ? 'main' : 'other';
+        const inst = (object as unknown as { isInstancedMesh?: boolean }).isInstancedMesh ? ' [inst]' : '';
+        const name = object.name || object.parent?.name || (object.parent?.parent?.name ? object.parent.parent.name + '/part' : '')
+          || `${(material as Material).type}:${geometry.type}${inst}${(material as Material).side === BackSide ? ' ink' : ''}`;
+        const key = `${pass} ${name}`;
+        tally[key] = (tally[key] ?? 0) + 1;
+        plain.call(r, camera, scene, geometry, material, object, group);
+      };
+      try { this.renderFrame(); } finally { r.renderBufferDirect = plain; }
+      this.lastTally = tally;
+      return;
+    }
+    this.renderFrame();
+  }
+  private renderFrame() {
     const look = this.frameLook;
     this.rig.setLook(look);
     setWaterLook(this.waterMat, look);
