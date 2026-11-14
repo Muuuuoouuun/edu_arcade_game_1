@@ -1,6 +1,6 @@
 // Arcana Rush bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
-import { ECONOMY, ENEMIES, HEROES, TOWER_LEVELS, type HeroKind } from './data.ts';
+import { ECONOMY, ENEMIES, HEROES, TOWER_CAP, TOWER_LEVELS, type HeroKind } from './data.ts';
 import { barricadeOrder, createRush, padCost, siteInReach, stepRush, superReady, wardBreakBurst, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
@@ -354,7 +354,8 @@ function updateHud() {
   }
   if (pad >= 0) {
     const level = tower ? tower.level + 1 : 0, branch = tower?.branch ? BRANCH_NAME[tower.branch] : '';
-    setText('build', hud.build, cost === null ? '최대 강화' : level === 0 ? `궁수탑 건설 ${cost}G` : choose ? `화염 Lv2 · ${cost}G` : `${branch} Lv${level + 1} · ${cost}G`);
+    // An empty pad with every allowed tower already standing: the button says so (six pads, TOWER_CAP towers).
+    setText('build', hud.build, cost === null ? (tower ? '최대 강화' : `궁수탑 ${TOWER_CAP}/${TOWER_CAP}`) : level === 0 ? `궁수탑 건설 ${cost}G` : choose ? `화염 Lv2 · ${cost}G` : `${branch} Lv${level + 1} · ${cost}G`);
     setFlag('buildDisabled', hud.build, 'disabled', cost === null || s.gold < cost);
     if (choose) { setText('buildFrost', hud.buildFrost, `냉기 Lv2 · ${cost}G`); setFlag('buildFrostDisabled', hud.buildFrost, 'disabled', s.gold < cost!); }
   }

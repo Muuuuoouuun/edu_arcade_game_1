@@ -57,7 +57,7 @@ const pair = <T extends Vec>(list: readonly T[]): T[] => list.flatMap(b => [{ ..
  * mossy walls give cover, and a ruin in the north holds two treasure crates between the lanes. */
 export const FOREST: MapLayout = {
   id: 'forest', name: '숲 가장자리', stage: 1, signature: 'stream with three bridges, ruin with a treasure cache, signposts at the forest edge',
-  props: pair<Prop>([{ x: 4.4, z: -4.6, kind: 'signpost' }, { x: 11.6, z: -3.4, kind: 'fence' }, { x: 6.4, z: -12.2, kind: 'fence', turn: 0.5 }, { x: 4.6, z: -16.6, kind: 'signpost' }]),
+  props: pair<Prop>([{ x: 4.4, z: -4.6, kind: 'signpost' }, { x: 11.9, z: -6.3, kind: 'fence' }, { x: 6.4, z: -12.2, kind: 'fence', turn: 0.5 }, { x: 4.6, z: -16.6, kind: 'signpost' }]),
   walls: [
     ...pair<Wall>([
       { x: 4, z: -20, w: 2, d: 1, kind: 'stone' },
@@ -83,7 +83,7 @@ export const FOREST: MapLayout = {
  * footing for the hero, long slides for anything knocked back), frosted reeds hide the hero further out, and the treasure sits in the lee of each outcrop. */
 export const SNOW: MapLayout = {
   id: 'snow', name: '눈꽃 고갯길', stage: 6, signature: 'two crags split the north into three canyons, ice sheets on every lane',
-  props: pair<Prop>([{ x: 5.2, z: -13.6, kind: 'banner' }, { x: 10.8, z: -4.4, kind: 'snowpatch' }, { x: 5.4, z: -17.4, kind: 'snowpatch' }]),
+  props: pair<Prop>([{ x: 5.2, z: -13.6, kind: 'banner' }, { x: 12.6, z: -6.2, kind: 'snowpatch' }, { x: 5.4, z: -17.4, kind: 'snowpatch' }]),
   walls: [
     ...pair<Wall>([
       { x: 6.7, z: -22.6, w: 6.2, d: 6.8, kind: 'outcrop' },
@@ -121,7 +121,7 @@ export const STAGE_MAPS: readonly MapLayout[] = [
     bushes: pair([{ x: 6, z: -6.6, w: 2.4, d: 2 }, NEAR_BUSH, { x: 9.2, z: -17.6, w: 2, d: 2 }]),
     crates: pair<CrateSpot>([{ x: 2.4, z: -12.2 }, { x: 8.6, z: -14.2 }, chest(7.8, -20.6)]),
     stream: FOREST.stream, ice: [],
-    props: pair<Prop>([{ x: 7.4, z: -11.6, kind: 'stump' }, { x: 9.6, z: -12.6, kind: 'stump' }, { x: 3.4, z: -16, kind: 'stump' }, { x: 8.6, z: -19.6, kind: 'stump' }, { x: 11.4, z: -2.6, kind: 'stump' }, { x: 7.6, z: -15.8, kind: 'sawhorse' }, { x: 3.2, z: -21.6, kind: 'sawhorse', turn: 1.2 }]),
+    props: pair<Prop>([{ x: 7.4, z: -11.6, kind: 'stump' }, { x: 9.6, z: -12.6, kind: 'stump' }, { x: 3.4, z: -16, kind: 'stump' }, { x: 8.6, z: -19.6, kind: 'stump' }, { x: 12.9, z: -5.2, kind: 'stump' }, { x: 7.6, z: -15.8, kind: 'sawhorse' }, { x: 3.2, z: -21.6, kind: 'sawhorse', turn: 1.2 }]),
   },
   {
     id: 'forest', name: '서리 낀 옛길', stage: 3, signature: 'old road: milestones along the centre lane, frost creeping onto the roads in the north, no stream',
@@ -153,7 +153,7 @@ export const STAGE_MAPS: readonly MapLayout[] = [
       bridges: [{ x: 0, z: -11, w: 3.6, d: 5 }, { x: -11.6, z: -11, w: 4.8, d: 5.4 }, { x: 11.6, z: -11, w: 4.8, d: 5.4 }],
     },
     ice: [],
-    props: pair<Prop>([{ x: 2.7, z: -7.8, kind: 'brazier' }, { x: 2.7, z: -14.2, kind: 'brazier' }, { x: 8.6, z: -14.6, kind: 'brazier' }, { x: 11.6, z: -3.2, kind: 'signpost' }]),
+    props: pair<Prop>([{ x: 2.7, z: -7.8, kind: 'brazier' }, { x: 2.7, z: -14.2, kind: 'brazier' }, { x: 8.6, z: -14.6, kind: 'brazier' }, { x: 12.6, z: -6.0, kind: 'signpost' }]),
   },
   SNOW,
   {

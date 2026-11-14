@@ -1,5 +1,5 @@
 // Scripted players for balance checks and the in-browser demo. They only issue Commands, like a person would.
-import { BARRICADE, BARRICADES, PADS, STEP, TOWN, type TowerBranch, type Vec } from './data.ts';
+import { BARRICADE, BARRICADES, HOME_PADS, PADS, STEP, TOWN, type TowerBranch, type Vec } from './data.ts';
 import { BARRICADE_FRAMES, barricadeMaxHp, barricadeOrder, barricadeStanding, bestSuperPoint, heroAlive, heroDef, nearestEnemy, padCost, siteNear, superReady, type Command, type RushState, type Site } from './sim.ts';
 
 const GUARD: Vec = { x: 0, z: 2.5 };
@@ -51,7 +51,8 @@ type Goal = { at: Vec; site: Site; build: Command['build'] };
 function spendGoal(s: RushState): Goal | null {
   const h = s.hero;
   let goal: Goal | null = null, best = Infinity;
-  for (let i = 0; i < PADS.length; i++) {
+  // The bot keeps to the home pads (its measured build order); the outposts are a choice for a player.
+  for (let i = 0; i < HOME_PADS; i++) {
     const pad = PADS[i], cost = padCost(s, i);
     if (cost === null || cost > s.gold) continue;
     const score = cost * 10 + Math.hypot(pad.x - h.x, pad.z - h.z);
@@ -61,7 +62,7 @@ function spendGoal(s: RushState): Goal | null {
   if (heroDef(s).attack === 'swing' && !BOT_WALLS.melee) return goal;
   const built = s.towers.filter(Boolean).length, strong = s.towers.filter(t => t && t.level >= 1).length;
   // Towers come first: a barricade is paid only from gold beyond the next tower buy (`reserve` times its cost).
-  const next = Math.min(...PADS.map((_, i) => padCost(s, i) ?? Infinity)), keep = Number.isFinite(next) ? next * BOT_WALLS.reserve : 0;
+  const next = Math.min(...PADS.slice(0, HOME_PADS).map((_, i) => padCost(s, i) ?? Infinity)), keep = Number.isFinite(next) ? next * BOT_WALLS.reserve : 0;
   for (let i = 0; i < BARRICADES.length; i++) {
     const at = BARRICADES[i], order = barricadeOrder(s, i), b = s.barricades[i];
     if (!order || order.cost + keep > s.gold || built < BOT_WALLS.after[i]) continue;

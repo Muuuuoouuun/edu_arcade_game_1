@@ -3,7 +3,7 @@
 // so this module can run in tests, in the browser and later on an authoritative server.
 import {
   ARENA, BUSH, CRATE, ECONOMY, ENEMIES, HEROES, HERO_SPAWN, LANES, PADS, PAD_REACH, STEP, TOWER_LEVELS, TOWER_SHOT_SPEED, TOWN, WAVES,
-  BARRICADE, BARRICADES, BARRICADE_LEVELS, FROST_HOWL, type Block, heroStats, type EnemyDef, type EnemyKind, type HeroDef, type HeroKind, type SpawnGroup, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
+  BARRICADE, BARRICADES, BARRICADE_LEVELS, FROST_HOWL, TOWER_CAP, type Block, heroStats, type EnemyDef, type EnemyKind, type HeroDef, type HeroKind, type SpawnGroup, type Vec, TOWER_BRANCH, type TowerBranch, FORGE } from './data.ts';
 import { heroPaceAt, inBush, mapFor, paceAt, slideAt, type MapLayout } from './maps.ts';
 
 export type Phase = 'prep' | 'wave' | 'won' | 'lost';
@@ -300,8 +300,11 @@ export function barricadeOrder(s: RushState, slot: number): { action: 'build' | 
   return hurt ? repair : null;
 }
 /** Cost of building or upgrading the given pad, or null when maxed. */
+/** Whether every tower allowed at once already stands (an empty pad then offers nothing). */
+export const towersFull = (s: RushState) => s.towers.reduce((n, t) => n + (t ? 1 : 0), 0) >= TOWER_CAP;
 export function padCost(s: RushState, pad: number): number | null {
   const tower = s.towers[pad];
+  if (!tower && towersFull(s)) return null;
   const next = tower ? tower.level + 1 : 0;
   return next < TOWER_LEVELS.length ? Math.round(TOWER_LEVELS[next].cost * s.mods.towerCost) : null;
 }

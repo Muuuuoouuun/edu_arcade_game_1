@@ -767,7 +767,7 @@ test('frost wolves: snow stages 7-9 only, swapped in for a few grunts, fast, and
 
 // ---------- barricades (defence lane, 2026-11-13) ----------
 test('barricade sites: each sits on its lane, clear of pads, cover, crates, the town and each other', async () => {
-  const { BARRICADE, BARRICADES, LANES, PAD_REACH, TOWN, ARENA } = await import('./data.ts');
+  const { BARRICADE, BARRICADES, HOME_PADS, LANES, PAD_REACH, TOWN, ARENA } = await import('./data.ts');
   // Every battlefield layout (maps.ts): the sites are the same on all of them, the cover and crates are not.
   const { FOREST, SNOW } = await import('./maps.ts');
   const onSegment = (p: { x: number; z: number }, a: { x: number; z: number }, b: { x: number; z: number }) => {
@@ -785,7 +785,7 @@ test('barricade sites: each sits on its lane, clear of pads, cover, crates, the 
       for (const w of [...map.walls, ...map.bushes]) assert.ok(!near(b, w, half), `site ${i} clear of walls and tall grass (${map.id})`);
       for (const c of map.crates) assert.ok(Math.hypot(c.x - b.x, c.z - b.z) > half + 1, `site ${i} clear of crates (${map.id})`);
     }
-    assert.ok(Math.hypot(TOWN.x - b.x, TOWN.z - b.z) > Math.max(...PADS.map(p => Math.hypot(TOWN.x - p.x, TOWN.z - p.z))), `site ${i} further out than every pad`);
+    assert.ok(Math.hypot(TOWN.x - b.x, TOWN.z - b.z) > Math.max(...PADS.slice(0, HOME_PADS).map(p => Math.hypot(TOWN.x - p.x, TOWN.z - p.z))), `site ${i} further out than every home pad`);
     assert.ok(b.x - half > ARENA.minX && b.x + half < ARENA.maxX);
     for (const o of BARRICADES) if (o !== b) assert.ok(Math.hypot(o.x - b.x, o.z - b.z) >= 2 * PAD_REACH);
   }
@@ -915,4 +915,34 @@ test("frost lord's howl: on the last stage the boss's roar also shatters barrica
   const ninth = setup(FROST_HOWL.stage - 1), seen9 = run(ninth, roarTicks + 2);
   assert.ok(seen9.includes('summon') && !seen9.includes('howl'));
   assert.ok(ninth.barricades[0]!.hp > 0 && !ninth.towers[0]!.frozen);
+});
+
+test('outposts: six pads but only TOWER_CAP towers; an empty pad offers nothing once they all stand; the bot keeps home', async () => {
+  const { HOME_PADS, TOWER_CAP, LANES } = await import('./data.ts');
+  const { padCost, towersFull } = await import('./sim.ts');
+  const { guardBot } = await import('./bot.ts');
+  assert.ok(PADS.length > TOWER_CAP && HOME_PADS === TOWER_CAP);
+  // Each outpost stands beside one side lane, within a Lv1 tower's range of it and out of range of the other lanes.
+  const laneGap = (p: { x: number; z: number }, lane: readonly { x: number; z: number }[]) => Math.min(...lane.slice(1).map((b, k) => {
+    const a = lane[k], ax = b.x - a.x, az = b.z - a.z, t = Math.max(0, Math.min(1, ((p.x - a.x) * ax + (p.z - a.z) * az) / (ax * ax + az * az)));
+    return Math.hypot(a.x + ax * t - p.x, a.z + az * t - p.z);
+  }));
+  for (const p of PADS.slice(HOME_PADS)) {
+    const gaps = LANES.map(l => laneGap(p, l)).sort((a, b) => a - b);
+    assert.ok(gaps[0] > 1.5 && gaps[0] < TOWER_LEVELS[0].range, `outpost near its lane (${gaps[0].toFixed(1)} m)`);
+    assert.ok(gaps[1] > TOWER_LEVELS[TOWER_LEVELS.length - 1].range, `and out of range of the next lane (${gaps[1].toFixed(1)} m)`);
+  }
+  const s = createRush(1);
+  s.gold = 9999;
+  for (let i = 0; i < TOWER_CAP - 1; i++) s.towers[i] = { level: 0, cd: 0, facing: 0 };
+  assert.ok(!towersFull(s) && padCost(s, PADS.length - 1) !== null, 'room for one more: an outpost can be built');
+  Object.assign(s.hero, { x: PADS[PADS.length - 1].x, z: PADS[PADS.length - 1].z });
+  stepRush(s, { build: true });
+  assert.ok(s.towers[PADS.length - 1], 'built at the outpost');
+  assert.ok(towersFull(s) && padCost(s, TOWER_CAP - 1) === null, 'the last home pad now offers nothing');
+  assert.ok(padCost(s, 0) !== null, 'standing towers still upgrade');
+  // The guard bot never builds on an outpost.
+  const b = createRush(3);
+  for (let i = 0; i < 60 * 60 * 3 && b.phase !== 'won' && b.phase !== 'lost'; i++) stepRush(b, guardBot(b));
+  assert.ok(b.towers.slice(HOME_PADS).every(t => !t));
 });

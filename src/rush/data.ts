@@ -25,9 +25,15 @@ export const LANES: readonly (readonly Vec[])[] = [
   [{ x: 13, z: -24 }, { x: 12.5, z: -12 }, { x: 7, z: -2 }, { x: 2.2, z: 7.6 }],
 ];
 
+/** Tower pads. The first HOME_PADS guard the town where the lanes meet. The last two are outposts (2026-11-14): out
+ * beside the side lanes, by their barricades, where a tower meets one lane's wave early but cannot see the other
+ * lanes or the gate. TOWER_CAP towers may stand at once, so with six pads where they go is a choice. */
 export const PADS: readonly Vec[] = [
   { x: -4.6, z: 5.2 }, { x: 4.6, z: 5.2 }, { x: -7.8, z: 9.6 }, { x: 7.8, z: 9.6 },
+  { x: -10.6, z: -2.6 }, { x: 10.6, z: -2.6 },
 ];
+export const HOME_PADS = 4;
+export const TOWER_CAP = 4;
 export const PAD_REACH = 1.8;
 
 /** Barricades (defence lane, 2026-11-13): one build site per lane, an arc across the field in front of the tall grass,
