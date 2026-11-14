@@ -1749,7 +1749,8 @@ export class RushView {
     const look = this.frameLook;
     this.rig.setLook(look);
     setWaterLook(this.waterMat, look);
-    if (this.rig.shadows) { markShadows(this.scene, this.hero); this.rig.follow(this.camera, this.focus); }
+    // Cycle 101: the caster/receiver walk runs only on frames whose shadow map is redrawn.
+    if (this.rig.shadows && this.rig.follow(this.camera, this.focus)) markShadows(this.scene, this.hero);
     // Glow passes only while something that glows is on screen: a shot, a status ring, a shockwave, the super ring.
     let glowing = this.fx.length > 0 || !!this.superRing?.visible;
     for (let i = 0; !glowing && i < this.glowBatches.length; i++) glowing = this.glowBatches[i].size > 0;

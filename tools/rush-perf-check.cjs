@@ -1,13 +1,14 @@
 // Usage: start a server first (npx vite --port 3141), then: node tools/rush-perf-check.cjs   (PORT=... to change). A proxy, not a device claim.
 // Performance proxy (1.0): main-thread script/task time per frame with the CPU throttled 4x (CDP), phone landscape, auto quality.
 // QUALITY=high|low pins the tier (auto drops to low within seconds under software GL, so auto mostly measures low).
+// QUERY='a=1&b=2' appends debug URL parameters (cycle 101: QUERY=shadowEvery=1 for an A/B).
 const { chromium, devices } = require('playwright');
 (async () => {
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const ctx = await browser.newContext({ ...devices['Pixel 7 landscape'] }); const page = await ctx.newPage();
   const cdp = await ctx.newCDPSession(page);
   await cdp.send('Performance.enable');
-  await page.goto('http://127.0.0.1:' + (process.env.PORT || 3141) + '/rush.html?seed=3' + (process.env.QUALITY ? '&quality=' + process.env.QUALITY : ''));
+  await page.goto('http://127.0.0.1:' + (process.env.PORT || 3141) + '/rush.html?seed=3' + (process.env.QUALITY ? '&quality=' + process.env.QUALITY : '') + (process.env.QUERY ? '&' + process.env.QUERY : ''));
   await page.waitForSelector('#btn-play', { state: 'visible', timeout: 120000 });
   const metrics = async () => Object.fromEntries((await cdp.send('Performance.getMetrics')).metrics.map(m => [m.name, m.value]));
   const sample = async (label, seconds) => {

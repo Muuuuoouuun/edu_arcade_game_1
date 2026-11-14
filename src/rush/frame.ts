@@ -74,6 +74,10 @@ export const snapToTexel = (v: number, half: number, mapSize: number) => { const
 const rigs = new Set<SunRig>();
 /** Real shadows on or off for every rig (0 = off: blob shadows only). */
 export function setShadowQuality(mapSize: number): void { for (const r of rigs) r.setShadows(mapSize); }
+/** Cycle 101: a following rig redraws its shadow map (and moves its shadow box with it) once every this many frames.
+ * 2 halves the shadow pass; a shadow is then at most one frame behind its caster (9 cm for the hero at full run). */
+let shadowEvery = 2;
+export function setShadowEvery(n: number): void { shadowEvery = Math.max(1, Math.round(n) || 1); }
 
 /** The key light of one scene, with a square orthographic shadow box that follows a focus point. */
 export class SunRig {
@@ -86,6 +90,8 @@ export class SunRig {
   private ray = new Vector3();
   private corners = [{ x: 0, z: 0 }, { x: 0, z: 0 }, { x: 0, z: 0 }, { x: 0, z: 0 }];
 
+  /** Frames since the shadow map was last drawn (following rigs only). */
+  private skipped = 0;
   /** `still`: a scene that rarely changes (the town island). Its shadow map is drawn only after `refresh()`. */
   constructor(scene: Scene, still = false) {
     // The same basis three builds for the shadow camera (lookAt with +y up).
@@ -96,7 +102,9 @@ export class SunRig {
     s.camera.near = 4; s.camera.far = 80;
     // The ground never casts, so it cannot shadow itself; the small biases only keep walls and towers clean.
     s.bias = -0.0004; s.normalBias = 0.035;
-    s.autoUpdate = !still;
+    // Drawn on demand: a still rig after refresh(), a following rig every `shadowEvery` frames from follow().
+    s.autoUpdate = false;
+    s.needsUpdate = !still;
     scene.add(this.sun, this.sun.target);
     rigs.add(this);
   }
@@ -118,8 +126,13 @@ export class SunRig {
   /** Fixed shadow box (the town island): centre and half-size in metres. */
   cover(cx: number, cy: number, cz: number, half: number) { this.place(cx, cy, cz, half); }
   /** Shadow box around what a perspective camera sees of the ground plane at height `focus.y`. */
-  follow(camera: PerspectiveCamera, focus: Vector3) {
-    if (!this.shadows) return;
+  follow(camera: PerspectiveCamera, focus: Vector3): boolean {
+    if (!this.shadows) return false;
+    // Between redraws the box stays where its map was drawn: moving it alone would read the old map through a new
+    // matrix and slide every shadow for a frame. Returns whether this frame redraws (callers skip their own prep).
+    if (++this.skipped < shadowEvery && this.half > 0) return false;
+    this.skipped = 0;
+    this.sun.shadow.needsUpdate = true;
     let i = 0;
     for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]] as const) {
       this.ray.set(sx, sy, 0.5).unproject(camera).sub(camera.position).normalize();
@@ -132,6 +145,7 @@ export class SunRig {
     const want = shadowHalfExtent(this.corners, focus);
     const half = want > this.half || want < this.half - 2 ? want : this.half;
     this.place(focus.x, focus.y, focus.z, half);
+    return true;
   }
   private place(cx: number, cy: number, cz: number, half: number) {
     if (!this.shadows) return;

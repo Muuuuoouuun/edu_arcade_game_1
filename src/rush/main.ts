@@ -21,6 +21,7 @@ import { addHit, POP_LIFE, popKey, type PopSlot } from './pops.ts';
 import { createFrameWatch, nextPref, parsePref, PREF_LABEL, resolveQuality, watchFrame, type QualityPref } from './quality.ts';
 import { mapFor } from './maps.ts';
 import { CRATE } from './data.ts';
+import { setShadowEvery } from './frame.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const params = new URLSearchParams(location.search);
@@ -48,6 +49,8 @@ const speed = Math.min(8, Math.max(0.25, Number(params.get('speed')) || 1));
 const debug = params.has('debug');
 /** ?freeze=N stops the simulation at tick N (rendering continues) for matched before/after screenshots. */
 const freezeAt = Number(params.get('freeze')) || Infinity;
+// Debug (cycle 101): ?shadowEvery=N redraws the high-tier shadow map every N frames (default 2; 1 = every frame).
+if (params.has('shadowEvery')) setShadowEvery(Number(params.get('shadowEvery')));
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 /** Graphics quality (cycle 12): saved preference, or ?quality=high|low to pin one run for matched captures. */
 const QUALITY_KEY = 'arcana-rush:quality:v1';
