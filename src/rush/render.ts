@@ -413,6 +413,31 @@ export class RushView {
   }
 
   /** Register a second (snow) colour set for a static mesh; restyle() swaps the geometry's colour attribute. */
+  /** Cycle 122: two static baked terrain meshes (same material, each with its region colour sets) become one body; their
+   * ink hulls keep their own widths and move onto the merged body. Leaves both as they are if anything does not fit. */
+  private mergeTerrain(a: Mesh | undefined, b: Mesh) {
+    if (!a) return;
+    const ea = this.regionColors.find(r => r.geo === a.geometry), eb = this.regionColors.find(r => r.geo === b.geometry);
+    if (!ea || !eb || !a.position.equals(b.position)) return;
+    const geo = mergeGeometries([a.geometry, b.geometry]);
+    if (!geo) return;
+    const join = (x: BufferAttribute, y: BufferAttribute) => {
+      const out = new Float32Array((x.count + y.count) * 3); out.set(x.array as Float32Array, 0); out.set(y.array as Float32Array, x.count * 3);
+      return new BufferAttribute(out, 3);
+    };
+    const sets = { forest: join(ea.sets.forest, eb.sets.forest), snow: join(ea.sets.snow, eb.sets.snow) };
+    geo.setAttribute('color', sets[this.region]);
+    this.regionColors = this.regionColors.filter(r => r !== ea && r !== eb);
+    this.regionColors.push({ geo, sets });
+    const mesh = new Mesh(geo, this.mats.baked);
+    mesh.name = 'rush-terrain';
+    mesh.position.copy(a.position);
+    for (const old of [a, b]) {
+      for (const hull of [...old.children]) mesh.add(hull);
+      this.scene.remove(old); old.geometry.dispose();
+    }
+    this.scene.add(mesh);
+  }
   private regional(geo: BufferGeometry, snow: Float32Array | BufferAttribute) {
     this.regionColors.push({ geo, sets: { forest: geo.getAttribute('color') as BufferAttribute, snow: snow instanceof BufferAttribute ? snow : new BufferAttribute(snow, 3) } });
   }
@@ -688,7 +713,9 @@ export class RushView {
     BARRICADES.forEach(b => parts.push(...siteParts(b.x, heightAt(b.x, b.z), b.z, siteAngle(b))));
     const geo = bake(parts), snow = bakeColors(parts.map(coolPart)), snowAttr = new BufferAttribute(snow, 3);
     capColors(geo, snowAttr, REGION_LOOK.snow.cap ?? 0xffffff, 0.7, -Infinity, 0.6);
-    this.regional(this.addBaked(geo, 0.035, undefined, 'terrain', 'rush-build-sites').geometry, snowAttr);
+    const sitesMesh = this.addBaked(geo, 0.035, undefined, 'terrain', 'rush-build-sites');
+    this.regional(sitesMesh.geometry, snowAttr);
+    this.mergeTerrain(this.scene.getObjectByName('rush-hedge') as Mesh | undefined, sitesMesh);
     const sites = [...PADS, ...BARRICADES].length;
     const near = new Mesh(this.geo.ring, basic(0xffe48a, 0.8)); near.name = 'site-ring-near';
     near.rotation.x = -Math.PI / 2; near.renderOrder = 2; near.visible = false;
