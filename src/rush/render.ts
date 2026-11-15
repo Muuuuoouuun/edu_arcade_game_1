@@ -1009,6 +1009,9 @@ export class RushView {
     } else if (kind === 'brute') {
       // Brute: wide and low, a horned iron helmet over a jutting jaw with tusks, spiked pauldrons and huge banded fists.
       const hide = 0xe8842a, skin = 0xf29a5c, dark = 0x5a2416, fist = 0x7a2c1c;
+      // Cycle 117: on snow the pauldrons and fist bands are a darker iron; the light IRON under the cool snow tint matched
+      // the snow lanes (the frosted brute was the weakest kind on snow).
+      const iron = snow ? 0x4a536c : IRON;
       parts = [
         P(X(1.5, 1.5, 2.0), hide, 0, 1.25, 0), P(S(0.85), skin, 0.42, 1.0, 0),
         P(X(1.58, 0.28, 2.08), dark, 0, 0.6, 0),
@@ -1016,9 +1019,9 @@ export class RushView {
         ...pair(() => C(0.2, 0.7, 5), BONE, 0.16, 2.98, 0.62, [0.9, 0, 0]),
         P(X(0.4, 0.3, 0.9), 0xd9763a, 0.72, 2.02, 0), ...pair(() => C(0.1, 0.38, 4), BONE, 0.9, 2.22, 0.32),
         ...face(0.74, 2.44, 0.27, 0.21, 0xffffff, PAL.ink, dark),
-        ...pair(() => S(0.55, 6, 4), IRON, 0, 2.05, 1.08), ...pair(() => C(0.16, 0.5, 4), BONE, 0, 2.62, 1.2, [0.4, 0, 0]),
+        ...pair(() => S(0.55, 6, 4), iron, 0, 2.05, 1.08), ...pair(() => C(0.16, 0.5, 4), BONE, 0, 2.62, 1.2, [0.4, 0, 0]),
         ...pair(() => X(0.5, 1.1, 0.5), hide, 0.3, 1.3, 1.38),
-        ...pair(() => S(0.6, 6, 4), fist, 0.5, 0.62, 1.42), ...pair(() => X(0.5, 0.34, 1.0), IRON, 0.88, 0.62, 1.42),
+        ...pair(() => S(0.6, 6, 4), fist, 0.5, 0.62, 1.42), ...pair(() => X(0.5, 0.34, 1.0), iron, 0.88, 0.62, 1.42),
         ...pair(() => X(0.7, 0.3, 0.6), dark, 0.2, 0.15, 0.5),
       ];
       if (snow) parts.push(P(X(0.9, 0.36, 2.4), FUR, -0.25, 2.1, 0), ...pair(() => X(0.76, 0.2, 0.66), FUR, 0.2, 0.38, 0.5));
