@@ -4,28 +4,40 @@
 // Usage: node --experimental-strip-types tools/rush-stage-power.ts [--seeds=N] [stage ...]   (default: all stages, N 8)
 //   N was 8 until cycle 105; single seeds flip with small rule changes, so 40 (cycle 105) gives the steadier answer
 //   (stage 10's step L7 won 4+ of 8 but 18 of 40).
+// --hero=bron|bear (cycle 130): the same path with that hero levelled and fighting; stages before it joins are skipped.
+// --set=bear.lobSlow=0.6 (cycle 130, repeatable): try a hero stat in this run only; the game data is not changed.
 import { createRush, stepRush } from '../src/rush/sim.ts';
 import { guardBot } from '../src/rush/bot.ts';
 import { STAGE_COUNT, stageDifficulty } from '../src/rush/stages.ts';
-import { createKingdom, kingdomMods, kingdomPower, type Kingdom } from '../src/rush/kingdom.ts';
+import { createKingdom, HERO_JOINS, kingdomMods, kingdomPower, type Kingdom } from '../src/rush/kingdom.ts';
+import { HEROES, type HeroKind } from '../src/rush/data.ts';
+
+const HERO = (process.argv.find(a => a.startsWith('--hero='))?.slice(7) ?? 'ranger') as HeroKind;
+for (const a of process.argv.filter(a => a.startsWith('--set='))) {
+  const [path, value] = a.slice(6).split('='), [hero, stat] = path.split('.') as [HeroKind, string];
+  (HEROES[hero] as unknown as Record<string, number>)[stat] = Number(value);
+  console.log(`set ${hero}.${stat} = ${value}`);
+}
 
 function growth(L: number): Kingdom {
   const k = createKingdom(0), castle = Math.min(5, 1 + Math.floor(L / 2)), perk = Math.min(castle, Math.floor(L / 2));
   return {
     ...k, castle, farm: castle, mill: castle,
     perks: { attack: perk, towerDiscount: perk, townHp: perk, forge: perk, vault: perk },
-    heroLv: { ranger: Math.min(2 * castle, 1 + L), bron: 1, bear: 1 },
-    talent: { ranger: Math.min(3, Math.floor(L / 3)), bron: 0, bear: 0 },
+    hero: HERO,
+    heroLv: { ranger: 1, bron: 1, bear: 1, [HERO]: Math.min(2 * castle, 1 + L) },
+    talent: { ranger: 0, bron: 0, bear: 0, [HERO]: Math.min(3, Math.floor(L / 3)) },
   };
 }
 const N = Number(process.argv.find(a => a.startsWith('--seeds='))?.slice(8) ?? 8);
 const stages = process.argv.slice(2).filter(a => !a.startsWith('--')).map(Number).filter(n => n >= 1 && n <= STAGE_COUNT);
 for (const stage of stages.length ? stages : Array.from({ length: STAGE_COUNT }, (_, i) => i + 1)) {
+  if (stage <= HERO_JOINS[HERO]) continue; // the hero joins once stage HERO_JOINS has a star
   const tried: string[] = [];
   for (let L = 0; L <= 10; L++) {
     const k = growth(L), mods = kingdomMods(k);
     const wins = Array.from({ length: N }, (_, i) => i + 1).filter(seed => {
-      const s = createRush(seed, mods, stageDifficulty(stage), 'ranger');
+      const s = createRush(seed, mods, stageDifficulty(stage), HERO);
       while (s.phase !== 'won' && s.phase !== 'lost' && s.tick < 60 * 60 * 8) stepRush(s, guardBot(s));
       return s.phase === 'won';
     }).length;
