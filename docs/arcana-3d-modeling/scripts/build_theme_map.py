@@ -6,6 +6,8 @@ and from the engine's zone constants, so a render at the battle camera lies 1:1 
 Run (Blender 5.2 bpy module):
   python build_theme_map.py -- --data <repo>/src/games/defense/data.ts --stage 4 --views battle,beauty --out <dir>
 Options: --size 1350 --samples 64 --gate (add the theme gate set) --glb --blend --seed 7
+         --tex <dir>  CC0 texture detail layers (fetch_textures.py); --hd  static-backdrop detail
+                      (finer terrain, curb stones, denser grass) - no real-time budget applies to a pre-render.
 Draft / production candidate: nothing here is wired into the game.
 """
 import sys, os, math, random, argparse, json
@@ -13,14 +15,15 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy, bmesh
 import numpy as np
 from mathutils import Vector, Matrix
-from arcana_bpy import (MB, SIN60, add_obj, area, battle_camera, camera, collection, mat, read_board, render, reset_scene,
-                        rot, setup_render, srgb, stats, sun, trs, vcol_mat)
+from arcana_bpy import (MB, SIN60, TexLib, add_obj, apply_detail, area, battle_camera, camera, collection, layered_ground_mat, mat,
+                        read_board, render, reset_scene, rot, setup_render, srgb, stats, sun, trs, vcol_mat)
 
 ap = argparse.ArgumentParser()
 ap.add_argument('--data', required=True); ap.add_argument('--stage', type=int, default=1); ap.add_argument('--out', required=True)
 ap.add_argument('--views', default='battle'); ap.add_argument('--size', type=int, default=1350); ap.add_argument('--samples', type=int, default=64)
 ap.add_argument('--gate', action='store_true'); ap.add_argument('--glb', action='store_true'); ap.add_argument('--blend', action='store_true')
 ap.add_argument('--seed', type=int, default=7)
+ap.add_argument('--tex', default=''); ap.add_argument('--hd', action='store_true')
 args = ap.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 
 THEME = 'snow' if args.stage >= 5 else 'forest'
@@ -31,7 +34,10 @@ PATHS = board['paths'][:2 if EXPANDED else 1]
 SLOTS = [s for s in board['slots'] if s['unlock'] <= args.stage]
 HERO = (440, 390) if SNOW else (440, 355)                 # createDefense() start position
 VILLAGES = [(850, 318)] + ([(852, 131)] if EXPANDED else [])  # where the game layer draws the village sprites
-MARGIN = 150
+MARGIN = 260 if args.hd else 150                # the backdrop view needs ~210 board px on each side (wide phones)
+AF = ((900 + 2 * MARGIN) * (600 + 2 * MARGIN)) / (1200 * 900)   # scatter counts follow the ground area
+LIB = TexLib(args.tex) if args.tex else None
+TEX = bool(LIB and LIB.has('leafy_grass'))
 rng = random.Random(args.seed * 1000 + args.stage)
 nrng = np.random.default_rng(args.seed * 77 + args.stage)
 
@@ -124,11 +130,32 @@ SLOT_PTS = [(s['x'], s['y']) for s in SLOTS]
 GATES = [(900, 300)] + ([(900, 115)] if EXPANDED else [])
 
 
+TERRACE_H = .28
+
+
+def terrace_mask(X, Y, d=None):
+    """1 on the raised meadow, 0 on the road level. Keeps clear of roads, build pads, the river / ice band, the
+    gate aprons and the board edge belt, so nothing the game places sits on a cliff."""
+    d = path_dist(X, Y) if d is None else d
+    t = smooth(50, 60, d) * smooth(46, 58, pts_dist(X, Y, SLOT_PTS))
+    lb, rb = band_edges(Y)
+    t = t * (1 - smooth(lb - 40, lb - 26, X) * (1 - smooth(rb + 26, rb + 40, X)))
+    for (gx, gy) in GATES:
+        t = t * smooth(120, 150, np.hypot((X - gx) * .8, Y - gy))
+    for (vx, vy) in VILLAGES:
+        t = t * smooth(70, 90, np.hypot(X - vx, Y - vy))
+    t = t * smooth(55, 70, np.hypot(X - HERO[0], Y - HERO[1]))
+    t = t * smooth(.38, .46, fbm(X, Y, 140, 2, 55))          # not every gap is raised: meadows come in patches
+    return t
+
+
 def height_field(X, Y):
     d = path_dist(X, Y); band = band_mask(X, Y)
     h = .045 * (fbm(X, Y, 120, 4, 1) - .5) + .012 * (fbm(X, Y, 22, 3, 2) - .5)
     m = outside(X, Y)
     hills = smooth(15, 150, m) * (.30 + .55 * fbm(X, Y, 160, 3, 3))
+    if args.hd:                                              # the backdrop shows 210 px past each side edge: keep it walkable-looking
+        hills = smooth(225, 330, np.maximum(np.maximum(-X, X - 900), 0)) * (.30 + .55 * fbm(X, Y, 160, 3, 3))
     for (gx, gy) in GATES:                                   # keep the gate apron flat
         hills = hills * smooth(110, 190, np.hypot((X - gx) * .8, Y - gy))
     h = h + hills
@@ -138,6 +165,8 @@ def height_field(X, Y):
     plat = plat * smooth(24, 44, d)
     h = h + .26 * plat
     h = h * (1 - .92 * (1 - smooth(22, 46, d)))             # roads stay level
+    if args.hd:                                             # raised meadows between the roads, stepped by rock cliffs
+        h = h + TERRACE_H * terrace_mask(X, Y, d)
     if SNOW:
         h = h + .05 * smooth(.55, .8, fbm(X, Y, 55, 3, 11)) * smooth(40, 70, d)    # wind drifts
         h = h * (1 - band) + (-.035) * band
@@ -163,7 +192,7 @@ def lin3(c):
 
 
 def build_terrain():
-    step = 5
+    step = 2.5 if args.hd else 5
     xs = np.arange(-MARGIN, 900 + MARGIN + 1, step, dtype=float); ys = np.arange(-MARGIN, 600 + MARGIN + 1, step, dtype=float)
     X, Y = np.meshgrid(xs, ys)
     H, d, band, plat = height_field(X, Y)
@@ -187,7 +216,7 @@ def build_terrain():
     col = col + (dc - col) * road[..., None]
     col = col + (lin3(PAL['edge']) - col) * (rim * (.55 if not SNOW else .5))[..., None]
     rut = np.exp(-((d - 8.5) / 2.2) ** 2) * road
-    col = col + (lin3(PAL['rut']) - col) * (rut * .6)[..., None]
+    col = col + (lin3(PAL['rut']) - col) * (rut * (.6 if not TEX else (.35 if SNOW else 0.0)))[..., None]   # paved road: no ruts
     # river bed / under-ice
     col = col + (lin3(PAL['bed']) - col) * band[..., None]
     if SNOW:
@@ -202,7 +231,20 @@ def build_terrain():
     me.polygons.foreach_set('use_smooth', [True] * len(me.polygons))
     attr = me.color_attributes.new('Col', 'FLOAT_COLOR', 'POINT')
     attr.data.foreach_set('color', np.concatenate([np.clip(col, 0, 1).reshape(-1, 3), np.ones((ny * nx, 1))], axis=1).ravel())
-    me.materials.append(vcol_mat('Ground / painted vertex colour', 'Col', rough=.92 if not SNOW else .78, bump=.25 if not SNOW else .12, bump_scale=90))
+    if TEX:   # detail-layer weights: R road, G rock, B river bed / under-ice, A outer floor
+        mk = me.color_attributes.new('Mask', 'FLOAT_COLOR', 'POINT')
+        wr = np.clip(1 - smooth(16, 26, d), 0, 1); wk = np.clip(rock, 0, 1) * (1 - wr); wb = np.clip(band, 0, 1) * (1 - wr)
+        wa = np.clip(smooth(20, 120, m), 0, 1) * (1 - wr) * (1 - wk)
+        mk.data.foreach_set('color', np.stack([wr, wk, wb, wa], axis=-1).reshape(-1).astype(float))
+        if SNOW:
+            layers = [('snow_02', .9, .55, .1, None, 1.0), ('grey_stone_path', .85, .5, .15, 'R', 1.3), ('rock_face_03', .9, .65, .2, 'G', 1.2),
+                      ('snow_02', 1.6, .3, .0, 'B', .3), ('snow_02', 1.3, .5, .1, 'A', 1.0)]
+        else:
+            layers = [('leafy_grass', .55, .62, .35, None, 1.0), ('stone_pathway', .8, .62, .45, 'R', 1.6), ('rock_face_03', .9, .7, .25, 'G', 1.3),
+                      ('river_small_rocks', .45, .8, .3, 'B', 1.0), ('forest_ground_04', .7, .6, .3, 'A', 1.0)]
+        me.materials.append(layered_ground_mat('Ground / palette x CC0 detail', LIB, layers, rough=.9 if not SNOW else .75, bump=.55, bump_dist=.02))
+    else:
+        me.materials.append(vcol_mat('Ground / painted vertex colour', 'Col', rough=.92 if not SNOW else .78, bump=.25 if not SNOW else .12, bump_scale=90))
     add_obj(me, coll=C_TERRAIN)
     return xs, ys, H
 
@@ -279,6 +321,23 @@ M = dict(
     door=mat('Wood / gate door', '#7a5230', .8, bump=.4, bump_scale=140), dark=mat('Shadow / opening', '#1c2320', 1.0), rope=mat('Rope / hemp', '#b99a63', .9),
     thatch=mat('Roof / snowy timber', '#6c4a33', .85), fur=mat('Cloth / hide', '#8c6d4c', .95),
 )
+
+
+if TEX:
+    _det = lambda key, *a, **k: [apply_detail(x, LIB, *a, **k) for x in (M[key] if isinstance(M[key], list) else [M[key]])]
+    _det('trunk', 'bark_brown_02', .28, detail=.75, chroma=.25, bump=.6); _det('trunk_l', 'bark_brown_02', .28, detail=.7, chroma=.2, bump=.5)
+    for k in ('wood', 'wood_d', 'door', 'thatch'):
+        _det(k, 'weathered_brown_planks', .45, detail=.7, chroma=.2, bump=.5)
+    for k in ('rock', 'rock_d'):
+        _det(k, 'rock_face_03', .7, detail=.7, chroma=.2, bump=.7, bump_dist=.04)
+    _det('rock_top', 'snow_02' if SNOW else 'mossy_rock', .5, detail=.55, chroma=.25, bump=.4)
+    for k in ('stone', 'stone_d'):
+        _det(k, 'white_sandstone_blocks_02', 1.3, detail=.75, chroma=.2, bump=.7, bump_dist=.03)
+    _det('stone_l', 'rock_tile_floor', .45, detail=.6, chroma=.1, bump=.5)
+    _det('roof', 'roof_slates_02', .45, detail=.8, chroma=.0, bump=.8); _det('roof_l', 'roof_slates_02', .45, detail=.6, chroma=.0, bump=.5)
+    _det('snow', 'snow_02', .5, detail=.45, chroma=.0, bump=.3)
+    for k in ('leaf', 'pine', 'bush', 'maple'):   # foliage: blade/leaf grain as mottling
+        _det(k, 'leafy_grass', .22, detail=.45, chroma=.12, bump=.35, bump_dist=.015)
 
 
 def top_tone(b, verts, m, nz=.5):
@@ -628,7 +687,7 @@ if SNOW:
     T_A = [tree_conifer(s, True) for s in (1, 2, 3, 4)]; T_B = [tree_bare(s) for s in (11, 12)]; T_C = []
 else:
     T_A = [tree_conifer(s, False) for s in (1, 2, 3)]; T_B = [tree_broad(s, M['leaf']) for s in (21, 22, 23, 24)]; T_C = [tree_broad(31, M['maple'])]
-X, Y, D, B, S, O = candidates(9000)
+X, Y, D, B, S, O = candidates(int(9000 * AF))
 n_border = n_inner = 0
 for x, y, d, bm_, sd, o in zip(X, Y, D, B, S, O):
     border = o < 44                                       # forest belt hugging the board edge and the margins
@@ -671,11 +730,35 @@ for (px, py) in HIGH:                                      # cliff stones around
         a = k * 2 * math.pi / 14 + rng.uniform(-.15, .15); rr = rng.uniform(47, 58); x, y = px + math.cos(a) * rr, py + math.sin(a) * rr
         if float(path_dist(np.array([x]), np.array([y]))[0]) > 30:
             place(rng.choice(ROCKS[:4]), x, y, rng.uniform(.07, .11), coll=C_PROPS, zoff=-.04)
+if args.hd:                                                 # boulders along the terrace cliffs
+    X, Y, D, B, S, O = candidates(30000, -20, 920, -20, 620)
+    tm = terrace_mask(X, Y, D); n_cliff = 0
+    for x, y, t in zip(X, Y, tm):
+        if .15 < t < .85 and free(x, y, 7):
+            big = rng.random() < .3
+            place(rng.choice(ROCKS[4:] if big else ROCKS[:4]), x, y, rng.uniform(.09, .15) * (.8 if big else 1), coll=C_PROPS, zoff=-.06)
+            occupied.append((x, y, 8)); n_cliff += 1
+            if n_cliff >= 900:
+                break
 if not SNOW:                                               # cascade ledge + stepping stones in the river
     for xb in range(650, 740, 11):
         place(rng.choice(ROCKS[:4]), xb + rng.uniform(-3, 3), 52 + rng.uniform(-4, 4), rng.uniform(.06, .1), coll=C_PROPS, zoff=.2)
     for (xb, yb) in ((668, 150), (712, 205), (680, 330), (716, 520), (672, 560)):
         place(rng.choice(ROCKS[:4]), xb, yb, rng.uniform(.05, .08), coll=C_PROPS, zoff=.17)
+
+if args.hd:   # curb stones lining both road edges (the approved stills' stone-edged paths)
+    CURB = [rock(s) for s in (91, 92, 93)]
+    for pts in EPATHS:
+        for (ax, ay), (bx, by) in zip(pts, pts[1:]):
+            L = math.hypot(bx - ax, by - ay); nx, ny = -(by - ay) / L, (bx - ax) / L
+            for t in np.arange(0, L, 9.0):
+                for side in (-1, 1):
+                    x = ax + (bx - ax) * t / L + nx * side * rng.uniform(22, 26); y = ay + (by - ay) * t / L + ny * side * rng.uniform(22, 26)
+                    if rng.random() < .38 or float(path_dist(np.array([x]), np.array([y]))[0]) < 20:
+                        continue
+                    if float(band_mask(np.array([x]), np.array([y]))[0]) > .02 or float(pts_dist(np.array([x]), np.array([y]), SLOT_PTS)[0]) < 38 or not clear_of_sets(x, y):
+                        continue
+                    place(rng.choice(CURB), x, y, rng.uniform(.045, .07), coll=C_PROPS, zoff=-.012)
 
 # small flora -------------------------------------------------------------
 BUSH = [bush(s, M['bush']) for s in (51, 52, 53)] if not SNOW else [drift(s) for s in (51, 52, 53)]
@@ -691,7 +774,7 @@ for x, y, d, bm_, sd, o in zip(X, Y, D, B, S, O):
     occupied.append((x, y, 9)); n_b += 1
 
 TUFT = [tuft(s, M['dry'] if SNOW else M['grass']) for s in (61, 62, 63, 64)]
-X, Y, D, B, S, O = candidates(12000 if not SNOW else 5000)
+X, Y, D, B, S, O = candidates(int((12000 if not SNOW else 5000) * (3 if args.hd else 1) * AF))
 n_t = 0
 for x, y, d, bm_, sd, o in zip(X, Y, D, B, S, O):
     if d < 27 or bm_ > .02 or sd < 30 or o < -110:
@@ -699,13 +782,13 @@ for x, y, d, bm_, sd, o in zip(X, Y, D, B, S, O):
     if SNOW and rng.random() < .55:
         continue
     place(rng.choice(TUFT), x, y, rng.uniform(.8, 1.6)); n_t += 1
-    if n_t >= (3200 if not SNOW else 700):
+    if n_t >= (3200 if not SNOW else 700) * (3 if args.hd else 1) * AF:
         break
 
 n_f = 0
 if not SNOW:
     FLOWER = [flower(i) for i in range(4)]; MUSH = mushroom(); REED = [reeds(s) for s in (71, 72, 73)]
-    for _ in range(46):                                    # flower drifts
+    for _ in range(46 * (2 if args.hd else 1)):            # flower drifts
         cx, cy = rng.uniform(20, 880), rng.uniform(20, 580); kind = rng.randrange(4)
         for _ in range(rng.randint(5, 11)):
             x, y = cx + rng.gauss(0, 13), cy + rng.gauss(0, 13)
@@ -783,6 +866,8 @@ centre = W(450, 300)
 cams = {
     'battle': battle_camera(coll=C_STUDIO),
     'wide': battle_camera(margin=120, coll=C_STUDIO),
+    # game backdrop: the board plus 210 px each side (844 x 390 landscape shows ~1300 board px) and 20 px top/bottom
+    'backdrop': battle_camera(margin=210, coll=C_STUDIO),
     'beauty': camera('Beauty / south-west 3-4', centre + Vector((-5.4, -9.4, 6.6)), centre + Vector((.5, .2, 0)), lens=40, coll=C_STUDIO),
     'close': camera('Close / gate and crossing', W(585, 690, 0) + Vector((0, 0, 2.5)), W(800, 330, .2), lens=46, coll=C_STUDIO),
 }
@@ -793,6 +878,8 @@ info = {'theme': THEME, 'stage': args.stage, 'expanded': EXPANDED, 'slots': len(
 for view in [v for v in args.views.split(',') if v]:
     if view in ('beauty', 'close'):
         scene.render.resolution_x, scene.render.resolution_y = args.size, round(args.size * 9 / 16)
+    elif view == 'backdrop':
+        scene.render.resolution_x, scene.render.resolution_y = args.size, round(args.size * 640 / 1320)
     elif view == 'wide':
         scene.render.resolution_x, scene.render.resolution_y = args.size, round(args.size * (600 + 240) / (900 + 240))
         cams['wide'].data.ortho_scale = (900 + 240) / 100

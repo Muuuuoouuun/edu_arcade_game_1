@@ -7,7 +7,7 @@ Angle contract (see ../README.md):
                     (23.5 deg elevation, 35 deg yaw) - the shared camera of tools/blender/build_dwarf.py.
   * turnaround    : the sprite elevation at yaw 0 / 90 / 180 for front, side and back checks.
 """
-import bpy, bmesh, math, re, json
+import bpy, bmesh, math, re, json, os
 from mathutils import Vector, Matrix, noise
 
 SIN60 = math.sin(math.pi / 3)
@@ -71,6 +71,137 @@ def vcol_mat(name, attribute='Col', rough=.9, bump=0.0, bump_scale=60.0, rough_a
         b = nt.nodes.new('ShaderNodeBump'); b.inputs['Strength'].default_value = bump
         nt.links.new(n.outputs['Fac'], b.inputs['Height']); nt.links.new(b.outputs['Normal'], p.inputs['Normal'])
     _MATS[name] = m
+    return m
+
+
+# ---------------------------------------------------------------- CC0 texture detail layers
+class TexLib:
+    """CC0 photo textures used as a *detail layer*: they modulate the art-directed palette colour (value + a little
+    chroma) and drive a bump from their height map. The palette stays the stylised game look; the photo only adds
+    material grain (blades, flagstone joints, bark furrows, plank grain). Box projection on object coordinates, so
+    the procedural meshes need no UVs."""
+
+    def __init__(self, folder):
+        self.folder = folder; self._img = {}; self._mean = {}
+
+    def has(self, tid):
+        return self.folder and os.path.exists(self._path(tid, 'diff'))
+
+    def _path(self, tid, kind):
+        return os.path.join(self.folder, f'{tid}_{kind}.jpg')
+
+    def image(self, tid, kind):
+        key = (tid, kind)
+        if key not in self._img:
+            im = bpy.data.images.load(self._path(tid, kind), check_existing=True)
+            if kind != 'diff':
+                im.colorspace_settings.name = 'Non-Color'
+            self._img[key] = im
+        return self._img[key]
+
+    def mean(self, tid):
+        """Mean linear RGB of the colour map (so the detail factor averages to 1 and keeps the palette value)."""
+        if tid not in self._mean:
+            from PIL import Image
+            import numpy as np
+            a = np.asarray(Image.open(self._path(tid, 'diff')).convert('RGB').resize((96, 96)), dtype=float) / 255.0
+            lin = np.where(a <= .04045, a / 12.92, ((a + .055) / 1.055) ** 2.4)
+            self._mean[tid] = tuple(float(v) for v in lin.reshape(-1, 3).mean(0))
+        return self._mean[tid]
+
+
+def _n(nt, kind, **inputs):
+    node = nt.nodes.new(kind)
+    for k, v in inputs.items():
+        node.inputs[k].default_value = v
+    return node
+
+
+def detail_layer(nt, lib, tid, tile, coord_socket, detail=.7, chroma=.3, blend=.25, rot_deg=0.0):
+    """Returns (colour-multiplier socket, height socket) for one texture. `tile` = world units per texture repeat."""
+    mp = nt.nodes.new('ShaderNodeMapping'); mp.inputs['Scale'].default_value = (1 / tile, 1 / tile, 1 / tile)
+    mp.inputs['Rotation'].default_value = (0, 0, math.radians(rot_deg))
+    nt.links.new(coord_socket, mp.inputs['Vector'])
+    out = []
+    for kind in ('diff', 'disp'):
+        t = nt.nodes.new('ShaderNodeTexImage'); t.image = lib.image(tid, kind); t.projection = 'BOX'; t.projection_blend = blend
+        t.interpolation = 'Cubic' if kind == 'disp' else 'Linear'
+        nt.links.new(mp.outputs['Vector'], t.inputs['Vector']); out.append(t)
+    diff, disp = out
+    mr, mg, mb = lib.mean(tid); ml = .2126 * mr + .7152 * mg + .0722 * mb
+    # value ratio: luminance / mean luminance
+    bw = nt.nodes.new('ShaderNodeRGBToBW'); nt.links.new(diff.outputs['Color'], bw.inputs['Color'])
+    ratio = _n(nt, 'ShaderNodeMath'); ratio.operation = 'DIVIDE'; ratio.inputs[1].default_value = max(ml, 1e-3)
+    nt.links.new(bw.outputs['Val'], ratio.inputs[0])
+    comb = nt.nodes.new('ShaderNodeCombineXYZ')
+    for k in ('X', 'Y', 'Z'):
+        nt.links.new(ratio.outputs[0], comb.inputs[k])
+    # chroma ratio: rgb / mean rgb (keeps the stones' and blades' own colour shifts)
+    cr = nt.nodes.new('ShaderNodeVectorMath'); cr.operation = 'DIVIDE'; cr.inputs[1].default_value = (max(mr, 1e-3), max(mg, 1e-3), max(mb, 1e-3))
+    nt.links.new(diff.outputs['Color'], cr.inputs[0])
+    mix_c = nt.nodes.new('ShaderNodeMix'); mix_c.data_type = 'VECTOR'; mix_c.inputs['Factor'].default_value = chroma
+    nt.links.new(comb.outputs['Vector'], mix_c.inputs[4]); nt.links.new(cr.outputs['Vector'], mix_c.inputs[5])
+    # toward 1 by (1 - detail)
+    mix_d = nt.nodes.new('ShaderNodeMix'); mix_d.data_type = 'VECTOR'; mix_d.inputs['Factor'].default_value = detail
+    mix_d.inputs[4].default_value = (1, 1, 1); nt.links.new(mix_c.outputs[1], mix_d.inputs[5])
+    return mix_d.outputs[1], disp.outputs['Color']
+
+
+def apply_detail(m, lib, tid, tile, detail=.7, chroma=.3, bump=.45, bump_dist=.02, blend=.3):
+    """Rewire a mat() material: Base Color = palette colour x detail layer, Normal = bump from the height map."""
+    if not lib or not lib.has(tid):
+        return m
+    nt = m.node_tree; p = nt.nodes.get('Principled BSDF')
+    base = tuple(p.inputs['Base Color'].default_value)[:3]
+    for l in list(p.inputs['Normal'].links):
+        nt.links.remove(l)
+    tc = nt.nodes.new('ShaderNodeTexCoord')
+    col, hgt = detail_layer(nt, lib, tid, tile, tc.outputs['Object'], detail, chroma, blend)
+    mul = nt.nodes.new('ShaderNodeVectorMath'); mul.operation = 'MULTIPLY'; mul.inputs[1].default_value = base
+    nt.links.new(col, mul.inputs[0]); nt.links.new(mul.outputs['Vector'], p.inputs['Base Color'])
+    if bump:
+        b = _n(nt, 'ShaderNodeBump', Strength=bump, Distance=bump_dist); nt.links.new(hgt, b.inputs['Height']); nt.links.new(b.outputs['Normal'], p.inputs['Normal'])
+    return m
+
+
+def layered_ground_mat(name, lib, layers, vcol='Col', mask='Mask', rough=.9, bump=.6, bump_dist=.03):
+    """Terrain material: vertex-colour palette x a blend of texture detail layers.
+    `layers` = [(tid, tile, detail, chroma, weight_channel, bump_weight)], weight_channel in None (= the rest),
+    'R','G','B','A' of the `mask` colour attribute (road, rock, river bed, outer floor)."""
+    m = bpy.data.materials.new(name); m.use_nodes = True
+    nt = m.node_tree; p = nt.nodes.get('Principled BSDF'); p.inputs['Roughness'].default_value = rough
+    a = nt.nodes.new('ShaderNodeVertexColor'); a.layer_name = vcol
+    mk = nt.nodes.new('ShaderNodeVertexColor'); mk.layer_name = mask
+    sep = nt.nodes.new('ShaderNodeSeparateColor'); nt.links.new(mk.outputs['Color'], sep.inputs['Color'])
+    chan = {'R': sep.outputs['Red'], 'G': sep.outputs['Green'], 'B': sep.outputs['Blue'], 'A': mk.outputs['Alpha']}
+    tc = nt.nodes.new('ShaderNodeTexCoord')
+    # weight of the base layer = 1 - sum(other weights)
+    total = None
+    for (_, _, _, _, ch, _) in layers:
+        if ch:
+            if total is None:
+                total = chan[ch]
+            else:
+                s = _n(nt, 'ShaderNodeMath'); s.operation = 'ADD'; nt.links.new(total, s.inputs[0]); nt.links.new(chan[ch], s.inputs[1]); total = s.outputs[0]
+    rest = _n(nt, 'ShaderNodeMath'); rest.operation = 'SUBTRACT'; rest.use_clamp = True; rest.inputs[0].default_value = 1.0
+    nt.links.new(total, rest.inputs[1])
+    col_acc = hgt_acc = None
+    for (tid, tile, detail, chroma, ch, bw) in layers:
+        if not lib.has(tid):
+            continue
+        col, hgt = detail_layer(nt, lib, tid, tile, tc.outputs['Object'], detail, chroma)
+        w = chan[ch] if ch else rest.outputs[0]
+        sc = nt.nodes.new('ShaderNodeVectorMath'); sc.operation = 'SCALE'; nt.links.new(col, sc.inputs[0]); nt.links.new(w, sc.inputs['Scale'])
+        hb = _n(nt, 'ShaderNodeMath'); hb.operation = 'MULTIPLY'; nt.links.new(hgt, hb.inputs[0]); nt.links.new(w, hb.inputs[1])
+        hs = _n(nt, 'ShaderNodeMath'); hs.operation = 'MULTIPLY'; hs.inputs[1].default_value = bw; nt.links.new(hb.outputs[0], hs.inputs[0])
+        if col_acc is None:
+            col_acc, hgt_acc = sc.outputs['Vector'], hs.outputs[0]
+        else:
+            ad = nt.nodes.new('ShaderNodeVectorMath'); ad.operation = 'ADD'; nt.links.new(col_acc, ad.inputs[0]); nt.links.new(sc.outputs['Vector'], ad.inputs[1]); col_acc = ad.outputs['Vector']
+            ah = _n(nt, 'ShaderNodeMath'); ah.operation = 'ADD'; nt.links.new(hgt_acc, ah.inputs[0]); nt.links.new(hs.outputs[0], ah.inputs[1]); hgt_acc = ah.outputs[0]
+    mul = nt.nodes.new('ShaderNodeVectorMath'); mul.operation = 'MULTIPLY'
+    nt.links.new(a.outputs['Color'], mul.inputs[0]); nt.links.new(col_acc, mul.inputs[1]); nt.links.new(mul.outputs['Vector'], p.inputs['Base Color'])
+    b = _n(nt, 'ShaderNodeBump', Strength=bump, Distance=bump_dist); nt.links.new(hgt_acc, b.inputs['Height']); nt.links.new(b.outputs['Normal'], p.inputs['Normal'])
     return m
 
 

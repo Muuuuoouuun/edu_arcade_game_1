@@ -1,0 +1,331 @@
+{
+ "source": "Poly Haven (https://polyhaven.com), all assets CC0 1.0",
+ "textures": [
+  {
+   "id": "leafy_grass",
+   "name": "Leafy Grass",
+   "role": "forest ground: grass",
+   "resolution": "2k",
+   "authors": [
+    "Charlotte Baglioni"
+   ],
+   "license": "CC0 1.0 (Poly Haven)",
+   "page": "https://polyhaven.com/a/leafy_grass",
+   "files": {
+    "diff": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/leafy_grass/leafy_grass_diff_2k.jpg",
+     "md5": "8014f4dace676a62ed71b3dd76119dae",
+     "bytes": 4766204
+    },
+    "disp": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/leafy_grass/leafy_grass_disp_2k.jpg",
+     "md5": "9c0a5f6c375be590bda0c28e2c1dfa2a",
+     "bytes": 2545281
+    }
+   }
+  },
+  {
+   "id": "stone_pathway",
+   "name": "Stone Pathway",
+   "role": "forest road: warm flagstones",
+   "resolution": "2k",
+   "authors": [
+    "Amal Kumar"
+   ],
+   "license": "CC0 1.0 (Poly Haven)",
+   "page": "https://polyhaven.com/a/stone_pathway",
+   "files": {
+    "diff": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/stone_pathway/stone_pathway_diff_2k.jpg",
+     "md5": "f174b498b663f2bec5e116da4e786847",
+     "bytes": 2776151
+    },
+    "disp": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/stone_pathway/stone_pathway_disp_2k.jpg",
+     "md5": "18180398a2b8ddedee69973effc2b550",
+     "bytes": 1089217
+    }
+   }
+  },
+  {
+   "id": "rock_face_03",
+   "name": "Rock Face 03",
+   "role": "rock faces, cliff stones, slopes",
+   "resolution": "2k",
+   "authors": [
+    "Dario Barresi",
+    "Rico Cilliers"
+   ],
+   "license": "CC0 1.0 (Poly Haven)",
+   "page": "https://polyhaven.com/a/rock_face_03",
+   "files": {
+    "diff": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_face_03/rock_face_03_diff_2k.jpg",
+     "md5": "657add9e8a8dffaeed19bdfc58078b59",
+     "bytes": 3814362
+    },
+    "disp": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rock_face_03/rock_face_03_disp_2k.jpg",
+     "md5": "e7629af66fe9420fe3e73b937f3eba40",
+     "bytes": 798149
+    }
+   }
+  },
+  {
+   "id": "forest_ground_04",
+   "name": "Forest Ground 04",
+   "role": "forest floor outside the board",
+   "resolution": "1k",
+   "authors": [
+    "Rico Cilliers",
+    "Rob Tuytel"
+   ],
+   "license": "CC0 1.0 (Poly Haven)",
+   "page": "https://polyhaven.com/a/forest_ground_04",
+   "files": {
+    "diff": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/forest_ground_04/forest_ground_04_diff_1k.jpg",
+     "md5": "6ad9df4d731a238299806f739a26af83",
+     "bytes": 1113899
+    },
+    "disp": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/forest_ground_04/forest_ground_04_disp_1k.jpg",
+     "md5": "bc4bc69e809d50f2a662f5a48bd2a2aa",
+     "bytes": 223545
+    }
+   }
+  },
+  {
+   "id": "river_small_rocks",
+   "name": "River Small Rocks",
+   "role": "river bed",
+   "resolution": "1k",
+   "authors": [
+    "Rico Cilliers",
+    "Rob Tuytel"
+   ],
+   "license": "CC0 1.0 (Poly Haven)",
+   "page": "https://polyhaven.com/a/river_small_rocks",
+   "files": {
+    "diff": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/river_small_rocks/river_small_rocks_diff_1k.jpg",
+     "md5": "723ee7172c9d0e98d286473ef443033c",
+     "bytes": 1028735
+    },
+    "disp": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/river_small_rocks/river_small_rocks_disp_1k.jpg",
+     "md5": "dfdb9451b4b470841b81a78590e01021",
+     "bytes": 267156
+    }
+   }
+  },
+  {
+   "id": "mossy_rock",
+   "name": "Mossy Rock",
+   "role": "moss tops of rocks (forest)",
+   "resolution": "1k",
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "license": "CC0 1.0 (Poly Haven)",
+   "page": "https://polyhaven.com/a/mossy_rock",
+   "files": {
+    "diff": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/mossy_rock/mossy_rock_diff_1k.jpg",
+     "md5": "a57fbbf55269eb64f8d40708fe3af26c",
+     "bytes": 1124438
+    },
+    "disp": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/mossy_rock/mossy_rock_disp_1k.jpg",
+     "md5": "3c07ecfc79abd1591c57e29e2e68fcb0",
+     "bytes": 208904
+    }
+   }
+  },
+  {
+   "id": "snow_02",
+   "name": "Snow 02",
+   "role": "snow ground, snow caps",
+   "resolution": "2k",
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "license": "CC0 1.0 (Poly Haven)",
+   "page": "https://polyhaven.com/a/snow_02",
+   "files": {
+    "diff": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/snow_02/snow_02_diff_2k.jpg",
+     "md5": "5541e5601951b071691238ddc70632c0",
+     "bytes": 1314409
+    },
+    "disp": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/snow_02/snow_02_disp_2k.jpg",
+     "md5": "c7c8e7848b76819012cbac660a90a61c",
+     "bytes": 432399
+    }
+   }
+  },
+  {
+   "id": "grey_stone_path",
+   "name": "Grey Stone Path",
+   "role": "snow road: cold cobbles",
+   "resolution": "2k",
+   "authors": [
+    "Amal Kumar"
+   ],
+   "license": "CC0 1.0 (Poly Haven)",
+   "page": "https://polyhaven.com/a/grey_stone_path",
+   "files": {
+    "diff": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/grey_stone_path/grey_stone_path_diff_2k.jpg",
+     "md5": "686579822b7b6c1c4600a738156328d4",
+     "bytes": 3569941
+    },
+    "disp": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/grey_stone_path/grey_stone_path_disp_2k.jpg",
+     "md5": "9699f989583b74ed6144a4a5424bc065",
+     "bytes": 1151457
+    }
+   }
+  },
+  {
+   "id": "bark_brown_02",
+   "name": "Bark Brown 02",
+   "role": "tree trunks, palisade logs",
+   "resolution": "1k",
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "license": "CC0 1.0 (Poly Haven)",
+   "page": "https://polyhaven.com/a/bark_brown_02",
+   "files": {
+    "diff": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/bark_brown_02/bark_brown_02_diff_1k.jpg",
+     "md5": "6669cca520594bdca19f94084984ab72",
+     "bytes": 659592
+    },
+    "disp": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/bark_brown_02/bark_brown_02_disp_1k.jpg",
+     "md5": "88dbb65ff3ade168ab5bea53b035cf82",
+     "bytes": 176442
+    }
+   }
+  },
+  {
+   "id": "pine_bark",
+   "name": "Pine Bark",
+   "role": "conifer trunks",
+   "resolution": "1k",
+   "authors": [
+    "Dimitrios Savva"
+   ],
+   "license": "CC0 1.0 (Poly Haven)",
+   "page": "https://polyhaven.com/a/pine_bark",
+   "files": {
+    "diff": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/pine_bark/pine_bark_diff_1k.jpg",
+     "md5": "7bb38cccfc647aeaf2f5b6488c815e75",
+     "bytes": 837641
+    },
+    "disp": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/pine_bark/pine_bark_disp_1k.jpg",
+     "md5": "965ea98b37678a38fc6287c1beb1bc61",
+     "bytes": 422426
+    }
+   }
+  },
+  {
+   "id": "weathered_brown_planks",
+   "name": "Weathered Brown Planks",
+   "role": "bridge, fences, crates, doors",
+   "resolution": "1k",
+   "authors": [
+    "Dimitrios Savva",
+    "Rico Cilliers"
+   ],
+   "license": "CC0 1.0 (Poly Haven)",
+   "page": "https://polyhaven.com/a/weathered_brown_planks",
+   "files": {
+    "diff": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/weathered_brown_planks/weathered_brown_planks_diff_1k.jpg",
+     "md5": "e2fbdf7ed402e272e33e3f7ba707cf69",
+     "bytes": 226049
+    },
+    "disp": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/weathered_brown_planks/weathered_brown_planks_disp_1k.jpg",
+     "md5": "63aa40e247c2a0098ad43ed81904261f",
+     "bytes": 111030
+    }
+   }
+  },
+  {
+   "id": "white_sandstone_blocks_02",
+   "name": "White Sandstone Blocks 02",
+   "role": "gate walls and towers, build-pad rims",
+   "resolution": "1k",
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "license": "CC0 1.0 (Poly Haven)",
+   "page": "https://polyhaven.com/a/white_sandstone_blocks_02",
+   "files": {
+    "diff": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/white_sandstone_blocks_02/white_sandstone_blocks_02_diff_1k.jpg",
+     "md5": "5a31e6268c764ffccc358420e3aa3fb5",
+     "bytes": 910262
+    },
+    "disp": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/white_sandstone_blocks_02/white_sandstone_blocks_02_disp_1k.jpg",
+     "md5": "0b8d29cf968356f8e2ef89db6bc3d8e0",
+     "bytes": 283262
+    }
+   }
+  },
+  {
+   "id": "rock_tile_floor",
+   "name": "Rock Tile Floor",
+   "role": "build-pad floor",
+   "resolution": "1k",
+   "authors": [
+    "Charlotte Baglioni"
+   ],
+   "license": "CC0 1.0 (Poly Haven)",
+   "page": "https://polyhaven.com/a/rock_tile_floor",
+   "files": {
+    "diff": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_tile_floor/rock_tile_floor_diff_1k.jpg",
+     "md5": "970954d7d45f8c9ccf3051b33577d735",
+     "bytes": 1132879
+    },
+    "disp": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/rock_tile_floor/rock_tile_floor_disp_1k.jpg",
+     "md5": "5737152d1773a9311412d1a5894b2524",
+     "bytes": 425367
+    }
+   }
+  },
+  {
+   "id": "roof_slates_02",
+   "name": "Roof Slates 02",
+   "role": "teal roof tiles (tinted)",
+   "resolution": "1k",
+   "authors": [
+    "Rob Tuytel"
+   ],
+   "license": "CC0 1.0 (Poly Haven)",
+   "page": "https://polyhaven.com/a/roof_slates_02",
+   "files": {
+    "diff": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/roof_slates_02/roof_slates_02_diff_1k.jpg",
+     "md5": "d7683ac63f6d46159790186f2e19919f",
+     "bytes": 515626
+    },
+    "disp": {
+     "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/1k/roof_slates_02/roof_slates_02_disp_1k.jpg",
+     "md5": "c45b66d086fa06a8abd280cd71b9faf6",
+     "bytes": 180954
+    }
+   }
+  }
+ ]
+}
