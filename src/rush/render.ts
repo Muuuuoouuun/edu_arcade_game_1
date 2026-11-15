@@ -131,7 +131,11 @@ export class RushView {
   /** Defence feedback per tower: build pop (s left), recoil after a shot, last cooldown seen (a jump = it fired), idle fx timer. */
   private towerFx = PADS.map(() => ({ pop: 0, recoil: 0, cd: 0, idle: Math.random() }));
   /** Build-site rings: pads first, then barricade sites (same order as siteInReach kinds). */
-  private siteRings: Mesh[] = [];
+  /** Build-site rings (cycle 118): affordable and not-yet rings in two instanced draws (they differ only in opacity; the
+   * colour is per instance), and the ring in reach as its own mesh so its opacity can pulse. */
+  private siteRingSets!: { strong: Batch; faint: Batch; near: Mesh; at: Vector3[] };
+  private ringTurn = new Quaternion().setFromEuler(new Euler(-Math.PI / 2, 0, 0));
+  private ringColor = new Color();
   /** Barricades (defence lane): one group per site, its geometry swapped by level, damage state and region. */
   private barricadeKits = new Map<string, { body: BufferGeometry; hull: BufferGeometry }>();
   private barricadeViews: { root: Group; body: Mesh; hull: Mesh; key: string; wobble: number; pop: number }[] = [];
@@ -650,13 +654,16 @@ export class RushView {
     const geo = bake(parts), snow = bakeColors(parts.map(coolPart)), snowAttr = new BufferAttribute(snow, 3);
     capColors(geo, snowAttr, REGION_LOOK.snow.cap ?? 0xffffff, 0.7, -Infinity, 0.6);
     this.regional(this.addBaked(geo, 0.035, undefined, 'terrain', 'rush-build-sites').geometry, snowAttr);
-    for (const p of [...PADS, ...BARRICADES]) {
-      const ring = new Mesh(this.geo.ring, basic(0xffe48a, 0.8)); ring.name = 'site-ring';
-      ring.rotation.x = -Math.PI / 2; ring.position.set(p.x, heightAt(p.x,p.z)+0.2, p.z); ring.scale.setScalar(1.12);
-      ring.renderOrder = 2;
-      this.scene.add(ring);
-      this.siteRings.push(ring);
-    }
+    const sites = [...PADS, ...BARRICADES].length;
+    const near = new Mesh(this.geo.ring, basic(0xffe48a, 0.8)); near.name = 'site-ring-near';
+    near.rotation.x = -Math.PI / 2; near.renderOrder = 2; near.visible = false;
+    this.scene.add(near);
+    this.siteRingSets = {
+      strong: new Batch(this.scene, this.geo.ring, basic(0xffffff, 0.85), sites, { colors: true, order: 2 }),
+      faint: new Batch(this.scene, this.geo.ring, basic(0xffffff, 0.42), sites, { colors: true, order: 2 }),
+      near, at: [...PADS, ...BARRICADES].map(p => new Vector3(p.x, heightAt(p.x, p.z) + 0.2, p.z)),
+    };
+    this.siteRingSets.strong.mesh.name = 'site-rings'; this.siteRingSets.faint.mesh.name = 'site-rings-faint';
     BARRICADES.forEach(b => {
       const root = new Group(), body = new Mesh(undefined, this.mats.baked), hull = new Mesh(undefined, outlineMaterial(0.045));
       root.add(body, hull); root.name = 'barricade';
@@ -1716,24 +1723,33 @@ export class RushView {
       t.m.compose(t.p.set(x, y + bob + this.groundHeight(x, z), z), this.camera.quaternion, t.s.set(1, 1, 1));
       C.body.push(t.m); C.hull.push(t.m);
     };
-    this.siteRings.forEach((ring, j) => {
+    const R = this.siteRingSets;
+    R.strong.begin(); R.faint.begin(); R.near.visible = false;
+    R.at.forEach((at, j) => {
       const tower = j < PADS.length, i = tower ? j : j - PADS.length;
       const inReach = !!here && (here.kind === 'tower') === tower && here.i === i;
       let cost: number | null, repair = false;
       if (tower) cost = padCost(s, i);
       else { const o = barricadeOrder(s, i); cost = o ? o.cost : null; repair = o?.action === 'repair'; }
-      ring.visible = !this.sheetMode && (cost !== null || inReach);
-      if (!ring.visible) return;
-      const can = cost !== null && cost <= gold, mat = ring.material as MeshBasicMaterial;
-      mat.color.setHex(repair ? 0x6fe08a : can ? 0xffd34a : 0xfff0b8);
+      if (this.sheetMode || (cost === null && !inReach)) return;
+      const can = cost !== null && cost <= gold, colour = repair ? 0x6fe08a : can ? 0xffd34a : 0xfff0b8;
       const pulse = inReach && !reduced ? Math.sin(this.time * 8) : 0;
-      mat.opacity = inReach ? 0.85 + pulse * 0.12 : can ? 0.85 : 0.42;
-      ring.scale.setScalar((tower ? 1.12 : 1.4) * (inReach ? 1.08 + pulse * 0.03 : 1));
+      const size = (tower ? 1.12 : 1.4) * (inReach ? 1.08 + pulse * 0.03 : 1);
+      if (inReach) {
+        const mat = R.near.material as MeshBasicMaterial;
+        mat.color.setHex(colour); mat.opacity = 0.85 + pulse * 0.12;
+        R.near.position.copy(at); R.near.scale.setScalar(size); R.near.visible = true;
+      } else {
+        const t = this.tmp;
+        t.m.compose(t.p.copy(at), this.ringTurn, t.s.set(size, size, size));
+        (can ? R.strong : R.faint).push(t.m, this.ringColor.setHex(colour));
+      }
       // Chevron over a standing defence whose next level is affordable (not over empty sites: the ring says that).
       if (!can || repair || this.sheetMode) return;
       if (tower && s.towers[i]) chevron(PADS[i].x, (this.towers[i]?.userData.height as number ?? 2) + 1.05, PADS[i].z);
       else if (!tower && s.barricades[i]) chevron(BARRICADES[i].x, 1.85, BARRICADES[i].z);
     });
+    R.strong.end(); R.faint.end();
     C.body.end(); C.hull.end();
   }
 
