@@ -765,3 +765,16 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .result-next .short { color: #b4471b; }
 .result-next .ok { color: #2c7a3a; }
 @media (max-height: 420px) { .result-next { margin-top: 4px; padding: 3px 10px; font-size: 13px; } .result-next .head { display: inline; } .result-next .head::after { content: ' · '; } }
+
+/* Cycle 133: on a short landscape phone a first win (companion card + bonus line) pushed the next-step line under the
+   sticky buttons on every phone tried (Pixel 7, iPhone 12, Galaxy S9+, iPhone SE). The companion's greeting and the
+   bonus breakdown give way first; the name, role and what they keep in town stay. */
+@media (max-height: 420px) {
+  #screen-result.has-news .result-visitor p, #screen-result.has-news .result-reward .daily-note { display: none; }
+  #screen-result.has-news .result-visitor img { width: 40px; height: 40px; border-radius: 12px; }
+  #screen-result.has-news .result-stars { margin-top: 0; }
+  #screen-result.has-news .result-stars .stars { font-size: 22px; }
+  #screen-result.has-news h1 { font-size: 24px; margin-bottom: 4px; padding: 0 18px 3px; }
+  #screen-result.has-news .result-reward { margin-top: 2px; padding: 2px 10px; }
+  #screen-result.has-news .result-visitor em { margin-left: 8px; } /* with the greeting gone it follows the name */
+}
