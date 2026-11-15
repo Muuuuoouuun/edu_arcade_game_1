@@ -1616,7 +1616,7 @@ export class RushView {
 
   /** `held` = hit-stop: the world pose (walk bob, coin spin, hero clip) holds; effects and camera keep moving. */
   sync(s: RushState, dt: number, aim: AimPreview, held = false, reduced = false) {
-    const worldDt = held ? 0 : dt;
+    const worldDt = held || this.poseHold ? 0 : dt;
     this.time += worldDt;
     const stage = s.diff.stage ?? 1;
     if (stage !== this.styledStage || s.map !== this.styledMap) this.restyle(stage, s.map);
@@ -1874,7 +1874,7 @@ export class RushView {
     }
     const h = s.hero, target = battleFocus(h, h.downT > 0, this.portrait);
     if (this.sheetMode) target.y = 0;
-    this.focus.lerp(target, 1 - Math.exp(-6 * dt));
+    if (this.snapNext) { this.focus.copy(target); this.snapNext = false; } else this.focus.lerp(target, 1 - Math.exp(-6 * dt));
     const height = (this.portrait ? 30 : 23) * this.zoom, back = (this.portrait ? 14 : 12.5) * this.zoom;
     this.camera.position.set(this.focus.x, this.focus.y + height, this.focus.z + back);
     if (this.shake > 0) {
@@ -1912,6 +1912,11 @@ export class RushView {
   /** Debug (cycle 109, contrast measurement only): true stops enemies casting shadows and hides their foot blobs and floor
    * rings, so an enemy frame minus the empty frame is the body (with any shell) alone. */
   bodyOnly = false;
+  /** Debug (cycle 120, matched captures): the world pose holds (enemy bob, walk, coin spin, hero clip), as in a hit-stop. */
+  poseHold = false;
+  /** Debug (cycle 120): the next frame puts the camera focus on its target at once instead of easing toward it. */
+  private snapNext = false;
+  snapCamera() { this.snapNext = true; }
   /** Debug (cycle 114, contrast measurement only): true draws enemy bodies, shells and flashes in flat magenta and hides
    * their outlines, so a frame gives each enemy's shape however close its colours are to the floor. */
   maskMode = false;

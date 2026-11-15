@@ -44,9 +44,13 @@ if (process.env.ONLY) {
   // shadowEvery=1: every captured frame has its own shadow map (no half-drawn frame between the two shots).
   await page.goto(`${BASE}/rush.html?demo=1&seed=3&speed=8&freeze=300&quality=${Q}&shadowEvery=1`);
   await page.waitForFunction(() => window.__rush && __rush.frozen, null, { timeout: 180000 });
+  // Matched captures (cycle 120): the world pose holds (enemy bob, hero clip) and the camera snaps to the hero, so the
+  // empty, body and mask frames line up. STILL=0 turns this off (the cycles 102-119 behaviour).
+  const still = process.env.STILL !== '0';
+  if (still) await page.evaluate(() => __rush.holdPose(true));
   let first = true;
   for (const [name, sc] of Object.entries(SCENES)) {
-    await page.evaluate(([stage, hero]) => { __rush.setStage(stage); const s = __rush.state; s.enemies.length = 0; s.shots.length = 0; s.hero.kind = 'ranger'; s.hero.x = hero.x; s.hero.z = hero.z; s.hero.facing = -Math.PI / 2; }, [sc.stage, sc.hero || { x: 0, z: 4.2 }]);
+    await page.evaluate(([stage, hero, still]) => { __rush.setStage(stage); const s = __rush.state; s.enemies.length = 0; s.shots.length = 0; s.hero.kind = 'ranger'; s.hero.x = hero.x; s.hero.z = hero.z; s.hero.facing = -Math.PI / 2; if (still) __rush.snapCamera(); }, [sc.stage, sc.hero || { x: 0, z: 4.2 }, still]);
     // The camera eases toward the hero; under software GL the first jump from the demo view takes a few seconds (cycle 109:
     // a drifting camera made every edge differ).
     await page.waitForTimeout(first ? 6000 : 1500); first = false;
