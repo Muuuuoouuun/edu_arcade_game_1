@@ -41,6 +41,8 @@ import lunaFace from './art/face-luna.webp';
 /** Expedition companions (2026-11-13 merge): portraits in the key-art style; Bron and Popo reuse their hero portraits. */
 export const COMPANION_FACE: Record<Companion, string> = { ian: ianFace, riel: rielFace, bron: bronFace, cheongun: cheongunFace, popo: bearFace, kar: karFace, luna: lunaFace };
 const ROW_NAME = (id: Upgrade) => ROWS.find(r => r.id === id)?.name ?? '';
+/** Town row name of an upgrade (cycle 129: the result screen's next step names it). */
+export const upgradeName = ROW_NAME;
 export const keeperNote = (c: Companion) => `${josa(ROW_NAME(COMPANIONS[c].keeper), '을', '를')} 맡아요`;
 /** The same kingdom one level higher in `u` (for the "now → next" preview only). */
 function bumped(k: Kingdom, u: Upgrade): Kingdom {

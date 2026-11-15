@@ -394,3 +394,39 @@ export function claimGoal(k: Kingdom): Kingdom {
   next.goal = k.goal + 1;
   return next;
 }
+
+// ---------- next step (cycle 129) ----------
+/** One thing to do in town before the next battle. */
+export type StepAction = { kind: 'upgrade'; id: Upgrade } | { kind: 'train'; hero: HeroKind } | { kind: 'talent'; hero: HeroKind };
+export interface NextStep {
+  /** The stage aimed at, its recommended power and the kingdom's power now. */
+  target: number; need: number; have: number;
+  /** The suggested action and the power it adds; null when nothing is left to raise. */
+  action: StepAction | null; gain: number;
+  /** What is still missing to pay for it (all zero: it can be done now). */
+  short: Cost & { shards: number };
+}
+const UPGRADES: readonly Upgrade[] = ['castle', 'farm', 'mill', 'attack', 'towerDiscount', 'townHp', 'forge', 'vault'];
+/** Result screen (cycle 129): power against the target stage's recommendation and one action in town. Among the actions
+ * the kingdom can pay for now, the one adding the most power (the cheaper on a tie); when none is affordable, the one
+ * with the least missing (a shard counts as 30 food or wood). Null when the target has no recommendation. */
+export function nextStep(k: Kingdom, target: number): NextStep | null {
+  const need = recommendedPower(target);
+  if (need === null) return null;
+  const options: { action: StepAction; gain: number; cost: Cost & { shards: number } }[] = [];
+  for (const id of UPGRADES) {
+    const c = upgradeCost(k, id);
+    if (c) options.push({ action: { kind: 'upgrade', id }, gain: id === 'castle' ? POWER.castle : id === 'farm' || id === 'mill' ? POWER.field : POWER.perk, cost: { ...c, shards: 0 } });
+  }
+  const t = trainCost(k, k.hero);
+  if (t) options.push({ action: { kind: 'train', hero: k.hero }, gain: POWER.heroLv, cost: t });
+  const tc = talentCost(k, k.hero);
+  if (tc?.ready) options.push({ action: { kind: 'talent', hero: k.hero }, gain: POWER.talent, cost: { food: 0, wood: 0, shards: tc.shards } });
+  const shortOf = (c: Cost & { shards: number }) => ({ food: Math.max(0, c.food - k.food), wood: Math.max(0, c.wood - k.wood), shards: Math.max(0, c.shards - k.shards) });
+  const weight = (c: Cost & { shards: number }) => c.food + c.wood + 30 * c.shards;
+  const have = kingdomPower(k);
+  const ready = options.filter(o => weight(shortOf(o.cost)) === 0).sort((a, b) => b.gain - a.gain || weight(a.cost) - weight(b.cost));
+  const pick = ready[0] ?? [...options].sort((a, b) => weight(shortOf(a.cost)) - weight(shortOf(b.cost)) || b.gain - a.gain)[0];
+  return pick ? { target, need, have, action: pick.action, gain: pick.gain, short: shortOf(pick.cost) }
+    : { target, need, have, action: null, gain: 0, short: { food: 0, wood: 0, shards: 0 } };
+}

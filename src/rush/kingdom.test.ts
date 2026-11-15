@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   battleReward, canUpgrade, collect, createKingdom, grantReward, heroMaxLevel, kingdomMods, parseKingdom, pending, RATE_PER_LEVEL, settleBattle,
   serializeKingdom, STORAGE_MINUTES, train, trainCost, upgrade, upgradeCost, type Kingdom,
+  nextStep, kingdomPower, recommendedPower, POWER,
 } from './kingdom.ts';
 import { createRush, heroMaxHp, padCost, stepRush, WAVE_COUNT } from './sim.ts';
 import { HERO, PADS, TOWER_LEVELS, TOWN } from './data.ts';
@@ -437,3 +438,30 @@ test('barricade growth shown in town equals what the battle gives (walls → hea
 });
 
 import './expedition.test.ts';
+
+test('result next step (cycle 129): the biggest affordable power gain, else the least missing, and none past the last stage', () => {
+  const start = createKingdom(T0);
+  // A new kingdom (120 food, 120 wood) can just pay for castle Lv2 (120/120), the biggest gain.
+  const s0 = nextStep(start, 1)!;
+  assert.equal(s0.need, recommendedPower(1));
+  assert.equal(s0.have, kingdomPower(start));
+  assert.deepEqual(s0.action, { kind: 'upgrade', id: 'castle' });
+  assert.deepEqual(s0.short, { food: 0, wood: 0, shards: 0 });
+  // Rich: the castle adds the most power and is affordable.
+  const r = nextStep(rich(start), 6)!;
+  assert.deepEqual(r.action, { kind: 'upgrade', id: 'castle' });
+  assert.equal(r.gain, POWER.castle);
+  assert.deepEqual(r.short, { food: 0, wood: 0, shards: 0 });
+  // Broke: nothing affordable, so the pick names what is missing.
+  const poor = nextStep({ ...start, food: 0, wood: 0 }, 2)!;
+  assert.ok(poor.action);
+  assert.ok(poor.short.food + poor.short.wood > 0);
+  // Castle maxed and nothing else affordable except hero training: training is suggested.
+  const capped: Kingdom = { ...start, castle: 5, farm: 5, mill: 5, perks: { attack: 5, towerDiscount: 5, townHp: 5, forge: 5, vault: 5 }, food: 1e6, wood: 1e6 };
+  assert.deepEqual(nextStep(capped, 10)!.action, { kind: 'train', hero: 'ranger' });
+  // Everything maxed: no action left.
+  const done: Kingdom = { ...capped, heroLv: { ranger: 10, bron: 10, bear: 10 }, talent: { ranger: 3, bron: 3, bear: 3 } };
+  assert.equal(nextStep(done, 10)!.action, null);
+  // No recommendation past stage 10.
+  assert.equal(nextStep(start, 11), null);
+});

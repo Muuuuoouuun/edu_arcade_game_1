@@ -757,3 +757,11 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
    an ellipsis: the walls and forge cards now also say what they do for the lane barricades. */
 .town-info small[data-effect] { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.25; overflow-wrap: anywhere; }
 @media (orientation: portrait) { .town-info small[data-effect] { -webkit-line-clamp: 4; } }
+
+/* Next battle (cycle 129): recommended power for the stage to aim at and one thing to raise in town. */
+.result-next { margin: 8px 0 0; padding: 6px 12px; border-radius: 12px; text-align: center; font-size: 14px; line-height: 1.4; color: var(--paper-ink); background: rgba(160, 82, 30, 0.08); border: 2px dashed rgba(160, 82, 30, 0.35); }
+.result-next .head { display: block; font-weight: 700; }
+.result-next b, .result-next .gain { white-space: nowrap; }
+.result-next .short { color: #b4471b; }
+.result-next .ok { color: #2c7a3a; }
+@media (max-height: 420px) { .result-next { margin-top: 4px; padding: 3px 10px; font-size: 13px; } .result-next .head { display: inline; } .result-next .head::after { content: ' · '; } }

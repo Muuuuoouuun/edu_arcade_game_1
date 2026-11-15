@@ -1,6 +1,6 @@
 // Arcana Rush bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
-import { ECONOMY, ENEMIES, HEROES, TOWER_CAP, TOWER_LEVELS, type HeroKind } from './data.ts';
+import { ECONOMY, ENEMIES, HEROES, TALENTS, TOWER_CAP, TOWER_LEVELS, type HeroKind } from './data.ts';
 import { barricadeOrder, createRush, padCost, siteInReach, stepRush, towerRefund, superReady, wardBreakBurst, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
@@ -9,12 +9,12 @@ import { playCombatSound, setSound, unlockAudio, type CombatSoundKind } from '..
 import { readSaved } from '../lib/storage.ts';
 import { playHaptic } from '../lib/haptic.ts';
 import { NATIVE_BACKGROUND } from '../lib/nativeEvents.ts';
-import { collect, ENDLESS_STAGE, kingdomMods, settleBattle, settleEndless } from './kingdom.ts';
+import { collect, ENDLESS_STAGE, kingdomMods, nextStep, settleBattle, settleEndless, type NextStep } from './kingdom.ts';
 import { stageDifficulty, STAGE_COUNT } from './stages.ts';
 import { createMusic } from './music.ts';
 import { parseSettings, RUSH_KINGDOM_KEY, RUSH_SETTINGS_KEY, serializeSettings, type RushSettings } from './storage.ts';
 import { advanceClock, createClock, hitStopFor, tryStop } from './clock.ts';
-import { COMPANION_FACE, keeperNote, loadKingdom, saveKingdom, today, TownScreen } from './town.ts';
+import { COMPANION_FACE, keeperNote, loadKingdom, saveKingdom, today, TownScreen, upgradeName } from './town.ts';
 import { COMPANIONS, expeditionStage, firstClearNews, importLegacyCampaign, LEGACY_CAMPAIGN_KEY, LEGACY_IMPORT_KEY } from './expedition.ts';
 import { TownView } from './townScene.ts';
 import { addHit, POP_LIFE, popKey, type PopSlot } from './pops.ts';
@@ -445,6 +445,8 @@ function showResult() {
     ? `<span class="stars">${'<i class="on">★</i>'.repeat(reward.stars)}${'<i>★</i>'.repeat(3 - reward.stars)}</span>${reward.newStars ? `<small>새 별 +${reward.newStars}${reward.newStars === reward.stars && stage < 10 ? ` · ${expeditionStage(stage + 1).label} ${expeditionStage(stage + 1).name} 열림` : ''}</small>` : ''}`
     : '<small>남은 마을 체력에 따라 별 1~3개를 얻어요</small>';
   const saved = granted && saveKingdom(kingdom);
+  // Cycle 129: after a loss the same stage, after a win the next one; none after the last stage.
+  showNextStep(won ? (stage < STAGE_COUNT ? nextStep(kingdom, stage + 1) : null) : nextStep(kingdom, stage), won);
   const rewardEl = $('result-reward');
   rewardEl.hidden = !granted;
   const shardText = reward.shards ? ` <i class="res-ico shard"></i>조각 +${reward.shards}` : '';
@@ -461,12 +463,25 @@ function showResult() {
   ].map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   window.setTimeout(() => showScreen('result'), 700);
 }
+/** Result screen next step (cycle 129): the target stage's recommended power against the kingdom's, and one thing to do
+ * in town (kingdom.ts nextStep). */
+function showNextStep(step: NextStep | null, won = false) {
+  const el = $('result-next');
+  el.hidden = !step;
+  if (!step) return;
+  const fmt = (v: number) => v.toLocaleString('en-US'), a = step.action, ready = step.have >= step.need;
+  const name = !a ? '' : a.kind === 'upgrade' ? `${upgradeName(a.id)} 올리기` : a.kind === 'train' ? `${HEROES[a.hero].name} 훈련` : `${HEROES[a.hero].name} ${TALENTS[a.hero].name} 배우기`;
+  const miss = ([['식량', step.short.food], ['목재', step.short.wood], ['조각', step.short.shards]] as const).filter(([, v]) => v > 0).map(([k, v]) => `${k} ${fmt(v)}`).join(' · ');
+  const todo = !a ? '마을이 다 자랐어요' : `${!ready ? '할 일' : won ? '준비됐어요 · 더 든든하게' : '전투력은 충분해요 · 더 든든하게'}: <b>${name}</b> <span class="gain">${miss ? `(${miss} 더 모으기)` : `→ 전투력 +${step.gain}`}</span>`;
+  el.innerHTML = `<span class="head">다음 판 · ${expeditionStage(step.target).name} 권장 ${fmt(step.need)} · <span class="${ready ? 'ok' : 'short'}">지금 ${fmt(step.have)}</span></span>${todo}`;
+}
 /** Endless challenge result (cycle 46): waves held, best record, rewards. */
 function showEndlessResult() {
   const s = state, { kingdom, granted, reward } = settleEndless(collect(loadKingdom(), Date.now()), battleId, s);
   $('result-title').textContent = `끝없는 도전 · 웨이브 ${reward.waves}`;
   $('screen-result').classList.remove('won', 'ending');
   $('result-ending').hidden = true;
+  showNextStep(null);
   showVisitor(undefined);
   $('result-chapter').hidden = true;
   $('screen-result').classList.remove('has-news');
