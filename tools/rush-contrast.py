@@ -112,6 +112,8 @@ def body_rows(st):
         BP = Image.open(f'{d}/{st}plain-body.png').convert('RGB'); BF = Image.open(f'{d}/{st}frost-body.png').convert('RGB')
         try: MP = Image.open(f'{d}/{st}plain-mask.png').convert('RGB'); MF = Image.open(f'{d}/{st}frost-mask.png').convert('RGB')
         except FileNotFoundError: MP = MF = None
+        try: BW = Image.open(f'{d}/{st}ward-body.png').convert('RGB'); MW = Image.open(f'{d}/{st}ward-mask.png').convert('RGB')
+        except FileNotFoundError: BW = MW = None
     except FileNotFoundError: return
     pts = json.load(open(f'{d}/{st}plain-pts.json'))
     for i, p in enumerate(pts):
@@ -121,7 +123,8 @@ def body_rows(st):
         print(f"{st} {p['kind']:10s} BODY stands out {S(sh, md, n)} | frosted {S(fsh, fmd, fn)}")
         if MP is not None:
             sh, md, n = shape_stand_out(E, BP, MP, win, E2); fsh, fmd, fn = shape_stand_out(E, BF, MF, win, E2)
-            print(f"{st} {p['kind']:10s} SHAPE stands out {S(sh, md, n)} | frosted {S(fsh, fmd, fn)}")
+            ward = f" | warded {S(*shape_stand_out(E, BW, MW, win, E2))}" if MW is not None else ''
+            print(f"{st} {p['kind']:10s} SHAPE stands out {S(sh, md, n)} | frosted {S(fsh, fmd, fn)}{ward}")
 def boxes(name):
     E = Image.open(f'{d}/{name}-empty.png').convert('RGB')
     for p in json.load(open(f'{d}/{name}-pts.json')):
