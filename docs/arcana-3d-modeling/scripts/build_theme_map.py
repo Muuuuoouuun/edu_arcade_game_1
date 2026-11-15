@@ -770,9 +770,10 @@ if args.sets:
         gx, gy = ax - (bx - ax) / L * 26, ay - (by - ay) / L * 26
         add_obj(SG, loc=W(gx, gy, 0), rz=math.atan2(-(by - ay), bx - ax) + math.pi, coll=C_SET, scale=1.15)
         occupied.append((gx, gy, 70))
-    for (hx, hy) in ((835, 470), (820, 520), (840, 215), (800, 560), (830, 60)):   # one forge house beside the village
+    for (hx, hy) in ((835, 470), (820, 520), (840, 215), (800, 560), (830, 60), (760, 60), (600, 560)):   # one forge house beside the village
         if (float(path_dist(np.array([float(hx)]), np.array([float(hy)]))[0]) > 78 and float(pts_dist(np.array([float(hx)]), np.array([float(hy)]), SLOT_PTS)[0]) > 78
-                and float(band_mask(np.array([float(hx)]), np.array([float(hy)]))[0]) < .02):
+                and float(band_mask(np.array([float(hx)]), np.array([float(hy)]))[0]) < .02
+                and all(math.hypot(hx - vx, hy - vy) > 125 for vx, vy in VILLAGES)):     # the game draws its own gates there
             o = add_obj(house(), loc=W(hx, hy, hz(hx, hy)), rz=math.radians(-18), coll=C_SET, scale=1.0)
             occupied.append((hx, hy, 62)); break
 occupied += [(HERO[0], HERO[1], 46)] + [(vx, vy, 60) for vx, vy in VILLAGES]

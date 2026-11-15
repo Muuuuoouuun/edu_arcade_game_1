@@ -27,7 +27,9 @@ const modes = (process.env.MODES || 'now,glb').split(',');
       const b = page.locator('[role="dialog"] button.defense-primary, button:has-text("출전"), button:has-text("출발")').first();
       if (await b.count()) { await b.click({ force: true }); await page.waitForTimeout(1000); } else break;
     }
-    await page.waitForTimeout(4500);
+    await page.waitForTimeout(2500);
+    for (let i = 0; i < 3; i++) { const d = page.locator('[role="dialog"] button.defense-primary').first(); if (await d.count() && await d.isVisible()) { await d.click(); await page.waitForTimeout(700); } else break; }
+    await page.waitForTimeout(2500);
     if (process.env.WAVE) {
       const pad = page.locator('.def-build-pad').nth(2);
       if (await pad.count()) { const r = await pad.boundingBox(); await page.touchscreen.tap(r.x + r.width / 2, r.y + r.height / 2); await page.waitForTimeout(600); const buy = page.locator('.tactical-towers button:not([disabled])').first(); if (await buy.count()) { await buy.click(); await page.waitForTimeout(500); } }

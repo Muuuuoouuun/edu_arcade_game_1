@@ -1,0 +1,189 @@
+{
+ "contract": {
+  "units": "glTF metres, Y up. Board px = metres x 100. glTF origin = board (0, 600) on the road level.",
+  "to_terrain3d": "scene.scale = 100; scene.position.z = 600 / sin60  ->  matches boardToWorld() in src/games/defense/terrain3d.ts",
+  "camera": "authored for the 60 deg orthographic battle camera; ground depth is stretched by 1/sin60 like the game",
+  "coverage_board_px": {
+   "ground_mesh": {
+    "x": [
+     -260,
+     1160
+    ],
+    "y": [
+     -260,
+     860
+    ]
+   },
+   "trees_rocks": {
+    "x": [
+     -232,
+     1132
+    ],
+    "y": [
+     -45,
+     695
+    ]
+   }
+  },
+  "ground": "one relief mesh (10 px grid) + a water / ice sheet, both mapped to a single baked texture: grass blades, flowers, curb stones, bank pebbles, flagstone joints and the sun shadows of every tree, rock, bridge and pad are in that texture",
+  "not_included": "village gates, towers, units, effects, build-pad buttons (the game draws them). Build-pad daises ARE included.",
+  "materials": "UV-mapped base-colour textures (palette x CC0 detail, 256 px tiles); normal maps on rock, stone block, roof tile, plank, bark, door"
+ },
+ "source": "docs/arcana-3d-modeling/scripts/build_theme_map.py (Blender 5.2.3). Textures: CC0 1.0, Poly Haven - ../textures/credits.json",
+ "variants": [
+  {
+   "id": "forest-single",
+   "stages": [
+    1,
+    2,
+    3
+   ],
+   "glb": "battlefield-forest-single.glb",
+   "height": "battlefield-forest-single.height.json",
+   "blend": "battlefield-forest-single.blend",
+   "blend_bytes": 2462960,
+   "bytes": 3268588,
+   "sha256": "7998007af093b625da2a265f2d8b94e955407542264cf04f565fc4030c40f5e3",
+   "stats": {
+    "triangles": 125272,
+    "nodes": 478,
+    "meshes": 35,
+    "materials": 38,
+    "textures": 29,
+    "texture_bytes": 1465334,
+    "extensions": [
+     "KHR_materials_emissive_strength",
+     "EXT_texture_webp"
+    ]
+   },
+   "ground_texture_px": [
+    2048,
+    1865
+   ],
+   "max_ground_height_px": 26.9,
+   "terrace_px": 12.0,
+   "baked_scene": {
+    "trees": 461,
+    "rocks": 46,
+    "tufts": 21206,
+    "flowers": 506
+   },
+   "source_triangles": 1272720
+  },
+  {
+   "id": "forest-expanded",
+   "stages": [
+    4
+   ],
+   "glb": "battlefield-forest-expanded.glb",
+   "height": "battlefield-forest-expanded.height.json",
+   "blend": "battlefield-forest-expanded.blend",
+   "blend_bytes": 2486736,
+   "bytes": 3480016,
+   "sha256": "9f7c10d7191e6a746b7e8e57951f79928f0a51442f8a0f1c90f9b863349056c9",
+   "stats": {
+    "triangles": 123366,
+    "nodes": 445,
+    "meshes": 38,
+    "materials": 38,
+    "textures": 29,
+    "texture_bytes": 1478550,
+    "extensions": [
+     "KHR_materials_emissive_strength",
+     "EXT_texture_webp"
+    ]
+   },
+   "ground_texture_px": [
+    2048,
+    1865
+   ],
+   "max_ground_height_px": 26.9,
+   "terrace_px": 12.0,
+   "baked_scene": {
+    "trees": 438,
+    "rocks": 46,
+    "tufts": 21206,
+    "flowers": 526
+   },
+   "source_triangles": 1257988
+  },
+  {
+   "id": "snow-single",
+   "stages": [
+    5,
+    6,
+    7
+   ],
+   "glb": "battlefield-snow-single.glb",
+   "height": "battlefield-snow-single.height.json",
+   "blend": "battlefield-snow-single.blend",
+   "blend_bytes": 2103631,
+   "bytes": 2732000,
+   "sha256": "bebda4a37d499a917305ac7d6fc07af7c147c52c0426bcaa206444c98a054163",
+   "stats": {
+    "triangles": 137400,
+    "nodes": 467,
+    "meshes": 34,
+    "materials": 30,
+    "textures": 20,
+    "texture_bytes": 929828,
+    "extensions": [
+     "KHR_materials_clearcoat",
+     "KHR_materials_emissive_strength",
+     "EXT_texture_webp"
+    ]
+   },
+   "ground_texture_px": [
+    2048,
+    1865
+   ],
+   "max_ground_height_px": 30.7,
+   "terrace_px": 12.0,
+   "baked_scene": {
+    "trees": 417,
+    "rocks": 46,
+    "tufts": 4639,
+    "flowers": 0
+   },
+   "source_triangles": 920908
+  },
+  {
+   "id": "snow-expanded",
+   "stages": [
+    8
+   ],
+   "glb": "battlefield-snow-expanded.glb",
+   "height": "battlefield-snow-expanded.height.json",
+   "blend": "battlefield-snow-expanded.blend",
+   "blend_bytes": 2122478,
+   "bytes": 2856028,
+   "sha256": "be439ab66e2bb747115abd37cd38e463acf65a5c8259648c6864c375dbc32897",
+   "stats": {
+    "triangles": 137858,
+    "nodes": 447,
+    "meshes": 36,
+    "materials": 30,
+    "textures": 20,
+    "texture_bytes": 945306,
+    "extensions": [
+     "KHR_materials_clearcoat",
+     "KHR_materials_emissive_strength",
+     "EXT_texture_webp"
+    ]
+   },
+   "ground_texture_px": [
+    2048,
+    1865
+   ],
+   "max_ground_height_px": 30.7,
+   "terrace_px": 12.0,
+   "baked_scene": {
+    "trees": 411,
+    "rocks": 46,
+    "tufts": 4639,
+    "flowers": 0
+   },
+   "source_triangles": 919534
+  }
+ ]
+}
