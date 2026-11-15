@@ -402,7 +402,9 @@ function start(nextMode: 'play' | 'demo') {
   // Endless challenge (cycle 46): stage-10 difficulty, the five waves on a loop.
   // Endless keeps stage 10's numbers but reports its own stage, so endless-only groups (cycle 59: shamans) appear.
   const diff = stage === ENDLESS_STAGE ? { ...stageDifficulty(10), stage: ENDLESS_STAGE, endless: true } : stageDifficulty(stage);
-  state = createRush(seed, nextMode === 'play' ? kingdomMods(kingdom) : undefined, diff, nextMode === 'play' ? kingdom.hero : 'ranger');
+  // Debug (cycle 113): ?hero=bron|bear picks the demo's hero, as on the model sheet; the default demo shows the ranger.
+  const demoHero = (['bron', 'bear'] as const).find(h => h === params.get('hero')) ?? 'ranger';
+  state = createRush(seed, nextMode === 'play' ? kingdomMods(kingdom) : undefined, diff, nextMode === 'play' ? kingdom.hero : demoHero);
   battleId = `${Date.now().toString(36)}-${seed}`;
   mode = nextMode;
   paused = false;
