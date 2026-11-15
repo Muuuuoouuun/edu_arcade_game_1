@@ -971,3 +971,32 @@ test('demolish: a tower comes down for 60% of what it cost and frees a place und
   stepRush(s, { demolish: true });
   assert.equal(s.gold, gold);
 });
+
+test('fire tap buffer (cycle 131): a tap between shots waits and fires; nothing fires after the buffer runs out', async () => {
+  const { FireBuffer, FIRE_BUFFER } = await import('./fireBuffer.ts');
+  // A thumb tapping the fire button every `every` s for `tapFor` s; no enemies, so 'auto' fires where the hero faces.
+  const run = (buffered: boolean, every: number, tapFor: number, total = 3) => {
+    const s = createRush(1, NO_MODS, undefined, 'ranger'), buf = new FireBuffer(), shots: number[] = [];
+    const n = Math.round(every / STEP);
+    for (let i = 0; i * STEP < total; i++) {
+      const tap = i * STEP < tapFor - 1e-9 && i % n === 0 ? 'auto' as const : undefined;
+      const before = s.stats.shots;
+      stepRush(s, buffered ? { fire: buf.take(tap, s.t) } : { fire: tap });
+      if (buffered) buf.settle(s.stats.shots > before);
+      if (s.stats.shots > before) shots.push(s.t);
+    }
+    return shots;
+  };
+  // Three taps 0.25 s apart with three arrows: the middle tap lands inside the 0.32 s gap and used to vanish.
+  assert.equal(run(false, 0.25, 0.75).length, 2);
+  assert.equal(run(true, 0.25, 0.75).length, 3);
+  // Mashing every 0.2 s: the quiver still caps the shots, but the burst comes out on the gap, not every other tap.
+  const plain = run(false, 0.2, 2), held = run(true, 0.2, 2);
+  assert.equal(held.length, plain.length);
+  assert.ok(held[2] < plain[2] - 0.1, `third arrow ${plain[2].toFixed(2)} → ${held[2].toFixed(2)} s`);
+  // Nothing fires once the last tap is older than the buffer.
+  assert.ok(Math.max(...held) <= 1.8 + FIRE_BUFFER + 2 * STEP, `last shot ${Math.max(...held).toFixed(2)} s`);
+  // No taps, no shots; one tap, one shot.
+  assert.equal(run(true, 0.2, 0).length, 0);
+  assert.equal(run(true, 10, 1).length, 1);
+});

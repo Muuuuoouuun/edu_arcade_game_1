@@ -4,6 +4,7 @@
 import { HERO, HEROES, type HeroKind, type Vec } from './data.ts';
 import type { Command } from './sim.ts';
 import type { AimPreview } from './render.ts';
+import { FireBuffer } from './fireBuffer.ts';
 
 const DEADZONE = 14;
 const STICK_RADIUS = 56;
@@ -27,6 +28,8 @@ export class RushInput {
   private mouse: Vec | null = null;
   private mouseActive = false;
   private pending: Command = {};
+  /** Cycle 131: a fire tap that lands between shots waits a moment instead of vanishing. */
+  private fireBuffer = new FireBuffer();
   private cleanups: (() => void)[] = [];
 
   constructor(private el: Elements, private groundPoint: (x: number, y: number) => Vec | null, private heroPos: () => Vec & { kind: HeroKind }) {
@@ -158,15 +161,19 @@ export class RushInput {
     return { x, z };
   }
 
-  /** Called once per sim step. One-shot actions are consumed by the first step that sees them. */
-  command(): Command {
-    if (!this.enabled) { this.pending = {}; return {}; }
+  /** Called once per sim step. One-shot actions are consumed by the first step that sees them, except fire: with the
+   * game time `t`, a fire tap is offered again on later steps (fireBuffer.ts) until settleFire(true) or it expires. */
+  command(t?: number): Command {
+    if (!this.enabled) { this.pending = {}; this.fireBuffer.reset(); return {}; }
     const km = this.keyMove();
     const move = km.x || km.z ? km : this.stickVec;
     const cmd: Command = { ...this.pending, move };
     this.pending = {};
+    if (t !== undefined) { const fire = this.fireBuffer.take(cmd.fire, t); if (fire) cmd.fire = fire; else delete cmd.fire; }
     return cmd;
   }
+  /** After the step: whether the hero fired (a held tap is then spent). */
+  settleFire(fired: boolean) { this.fireBuffer.settle(fired); }
 
   /** Refresh the aim preview for rendering (once per frame). */
   refreshAim() {
@@ -184,7 +191,7 @@ export class RushInput {
   }
 
   reset() {
-    this.pending = {}; this.fireDrag = this.superDrag = null; this.aim = null;
+    this.pending = {}; this.fireBuffer.reset(); this.fireDrag = this.superDrag = null; this.aim = null;
     this.keys.clear(); this.stickId = null; this.stickVec = { x: 0, z: 0 };
     this.el.stick.classList.remove('active'); this.el.fire.classList.remove('pressed'); this.el.superBtn.classList.remove('pressed');
     this.mouse = null; this.mouseActive = false;

@@ -616,8 +616,10 @@ function frame(now: number) {
     const r = advanceClock(clock, seconds, speed);
     clock = r.clock;
     for (let i = 0; i < Math.min(r.steps, 40) && state.tick < freezeAt; i++) {
-      const cmd = mode === 'demo' ? guardBot(state) : input.command();
+      const cmd = mode === 'demo' ? guardBot(state) : input.command(state.t);
+      const shotsBefore = state.stats.shots;
       stepRush(state, cmd);
+      if (mode !== 'demo') input.settleFire(state.stats.shots > shotsBefore);
       feedback(state.events);
       // A big moment freezes the world for a beat; the rest of this frame's steps are dropped, not replayed.
       const next = tryStop(clock, seconds, state.tick, hitStopFor(state.events), reducedMotion ? 0 : 1);
