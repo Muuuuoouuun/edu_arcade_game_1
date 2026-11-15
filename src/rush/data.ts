@@ -109,6 +109,9 @@ export const HEROES: Record<HeroKind, HeroDef> = {
     ...COMMON,
   },
 };
+/** How each hero fights, in a few words (cycle 136): shown on the town's hero button and on a joining hero's card, so
+ * the choice is made knowing the difference. Display only. */
+export const HERO_ROLE: Record<HeroKind, string> = { ranger: '원거리 · 부채꼴 화살', bron: '근접 망치 · 튼튼함', bear: '범위 눈덩이 · 느리게' };
 /** Hero talents (cycle 45): one per hero, Lv0-3, bought with shards. Each level adds `per` to one HeroDef stat.
  * Tuned with the bot: a longer bolt range or a wider swing gained nothing there, so the ranger narrows its fan
  * (more of the three bolts land on one target) and Bron reaches further. */

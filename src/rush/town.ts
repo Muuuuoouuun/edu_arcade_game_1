@@ -1,7 +1,7 @@
 // Town (kingdom) screen: storage + DOM. Rules live in kingdom.ts.
 import { STAGE_COUNT } from './stages.ts';
 import { SPOTS, type TownView } from './townScene.ts';
-import { FORGE, HEROES, TALENT_MAX, TALENTS, type HeroKind } from './data.ts';
+import { FORGE, HERO_ROLE, HEROES, TALENT_MAX, TALENTS, type HeroKind } from './data.ts';
 import { barricadeGrowth, kingdomPower, recommendedPower, claimGoal, currentGoal, GOALS,
   CASTLE_MAX, DAILY_WIN, ENDLESS_STAGE, nextMilestone, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canLearnTalent, canTrain, learnTalent, talentCost, dailyReady, dayIndex, canUpgrade, chooseHero, collect, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, pending, PERK_EFFECT, rate,
   storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
@@ -331,6 +331,7 @@ export class TownScreen {
     this.$('btn-battle').innerHTML = `${label} 출전${badge}${pill}`;
     this.$('btn-battle').setAttribute('aria-label', `${label} 출전${daily ? ', 오늘의 첫 승리 보상 대기 중' : goal ? `, 다음 목표 ${goal.waves}웨이브, 조각 ${goal.shards}개` : ''}${rec === null ? '' : `, 권장 전투력 ${fmt(rec)}, 지금 ${fmt(have)}`}`);
     this.$('hero-name').textContent = `${HEROES[k.hero].name} Lv${k.heroLv[k.hero]}`;
+    this.$('hero-role').textContent = `영웅 · ${HERO_ROLE[k.hero]}`;
     // Hero portraits (1.0, completion C5): cut from the same Blender renders the in-game models come from.
     (this.$('hero-face') as HTMLImageElement).src = HERO_FACE[k.hero];
     this.root.querySelector<HTMLImageElement>('[data-hero-face]')!.src = HERO_FACE[k.hero];

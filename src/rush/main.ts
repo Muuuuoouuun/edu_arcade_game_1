@@ -1,6 +1,6 @@
 // Arcana Rush bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
-import { ECONOMY, ENEMIES, HEROES, TALENTS, TOWER_CAP, TOWER_LEVELS, type HeroKind } from './data.ts';
+import { ECONOMY, ENEMIES, HERO_ROLE, HEROES, TALENTS, TOWER_CAP, TOWER_LEVELS, type HeroKind } from './data.ts';
 import { barricadeOrder, createRush, padCost, siteInReach, stepRush, towerRefund, superReady, wardBreakBurst, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
@@ -510,7 +510,10 @@ function showVisitor(c: keyof typeof COMPANIONS | undefined) {
   q('[data-visitor-head]').textContent = `새 동료 합류 · ${COMPANIONS[c].role}`;
   q('[data-visitor-name]').textContent = COMPANIONS[c].name;
   q('[data-visitor-line]').textContent = `“${COMPANIONS[c].greeting}”`;
-  q('[data-visitor-keeper]').textContent = c === 'bron' || c === 'popo' ? `출전 영웅으로 고를 수 있어요 · 마을의 ${keeperNote(c)}` : `마을의 ${keeperNote(c)}`;
+  // Cycle 136: a joining hero also says how they fight (HERO_ROLE), so the town's hero choice is an informed one.
+  const role = c === 'bron' ? HERO_ROLE.bron : c === 'popo' ? HERO_ROLE.bear : '';
+  // Short on purpose: one line on a 320 px tall phone, or the next-step line slips under the buttons (cycle 133).
+  q('[data-visitor-keeper]').textContent = role ? `출전 영웅: ${role} · 마을의 ${keeperNote(c)}` : `마을의 ${keeperNote(c)}`;
 }
 let lastReward = '';
 let lastSuggest: Upgrade | 'hero' | null = null;
