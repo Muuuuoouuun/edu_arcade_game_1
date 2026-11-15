@@ -104,9 +104,11 @@ def shape_stand_out(E, B, M, win, E2=None, kind=None):
     x0, y0, x1, y1 = max(0, win[0]), max(0, win[1]), min(E.width, win[2]), min(E.height, win[3])
     for x in range(x0, x1, 2):
         for y in range(y0, y1, 2):
-            mp = M.getpixel((x, y))
+            mp, e = M.getpixel((x, y)), E.getpixel((x, y))
             if (mask_kind(mp) != kind) if kind else not is_mask(mp): continue
-            a, e = B.getpixel((x, y)), E.getpixel((x, y))
+            # Only what the enemy drew: sand paths match the boss orange and water the wolf cyan in the empty frame too.
+            if kind and sum(abs(mp[i] - e[i]) for i in range(3)) <= 60: continue
+            a = B.getpixel((x, y))
             if E2 is not None and sum(abs(e[i] - E2.getpixel((x, y))[i]) for i in range(3)) > 30: continue
             la = lab(a)
             if la[0] >= 20: ds.append(math.dist(la, lab(e)))
