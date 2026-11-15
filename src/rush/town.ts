@@ -65,6 +65,9 @@ export class TownScreen {
   stage = 1;
   /** Card shown: a building (picked by tapping its name tag in the 3D town) or the hero (hero button). */
   selected: Upgrade | 'hero' = 'castle';
+  /** Cycle 135: what the result screen suggested (nextStep), marked '추천' in town until it is raised; `from` is its
+   * level then (a building's level, or the hero's level plus talent). */
+  private suggested: { id: Upgrade | 'hero'; from: number } | null = null;
   private $ = (id: string) => document.getElementById(id)!;
   /** Last power shown (cycle 71): a rise shows '+N' beside it; undefined until the first render. */
   private lastPower: number | undefined;
@@ -242,10 +245,13 @@ export class TownScreen {
   set(k: Kingdom) { this.kingdom = k; saveKingdom(k); this.render(); }
   reload() { this.kingdom = loadKingdom(); }
 
-  show(rewardText = '') {
+  /** `suggest` (cycle 135): the town action the result screen named; that building (or the hero card) opens selected. */
+  show(rewardText = '', suggest: Upgrade | 'hero' | null = null) {
     this.reload();
     this.closeMap();
     this.stage = latestStage(this.kingdom);
+    this.suggested = suggest ? { id: suggest, from: this.suggestLevel(suggest) } : null;
+    if (suggest) this.selected = suggest;
     const note = this.$('town-reward');
     note.textContent = rewardText;
     note.hidden = !rewardText;
@@ -253,6 +259,8 @@ export class TownScreen {
     window.clearInterval(this.timer);
     this.timer = window.setInterval(() => { if (!this.root.hidden) this.render(); else window.clearInterval(this.timer); }, 1000);
   }
+
+  private suggestLevel(id: Upgrade | 'hero') { const k = this.kingdom; return id === 'hero' ? k.heroLv[k.hero] + k.talent[k.hero] : level(k, id); }
 
   /** Town map button and the map's letter panel for the chosen village. */
   private renderMap(k: Kingdom) {
@@ -348,8 +356,13 @@ export class TownScreen {
     this.$('btn-hero').classList.toggle('can', canTrain(k, k.hero));
     this.$('btn-hero').classList.toggle('has-more', heroUnlocked(k, 'bron') || heroUnlocked(k, 'bear'));
     this.view.sync(k);
+    // The suggestion's mark stays until that thing is raised, even if another building is picked meanwhile.
+    if (this.suggested && this.suggestLevel(this.suggested.id) > this.suggested.from) this.suggested = null;
+    const sug = this.suggested?.id ?? null;
+    this.$('btn-hero').classList.toggle('suggested', sug === 'hero');
     for (const r of ROWS) {
       const tag = this.root.querySelector<HTMLElement>(`[data-select="${r.id}"]`)!;
+      tag.classList.toggle('suggested', r.id === sug);
       tag.querySelector('[data-tag-level]')!.textContent = String(level(k, r.id));
       tag.setAttribute('aria-label', `${r.name} Lv ${level(k, r.id)}${canUpgrade(k, r.id) ? ', 강화 가능' : ''}`);
       tag.classList.toggle('can', canUpgrade(k, r.id));

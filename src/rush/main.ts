@@ -9,7 +9,7 @@ import { playCombatSound, setSound, unlockAudio, type CombatSoundKind } from '..
 import { readSaved } from '../lib/storage.ts';
 import { playHaptic } from '../lib/haptic.ts';
 import { NATIVE_BACKGROUND } from '../lib/nativeEvents.ts';
-import { collect, ENDLESS_STAGE, kingdomMods, nextStep, settleBattle, settleEndless, type NextStep } from './kingdom.ts';
+import { collect, ENDLESS_STAGE, kingdomMods, nextStep, settleBattle, settleEndless, type NextStep, type Upgrade } from './kingdom.ts';
 import { stageDifficulty, STAGE_COUNT } from './stages.ts';
 import { createMusic } from './music.ts';
 import { parseSettings, RUSH_KINGDOM_KEY, RUSH_SETTINGS_KEY, serializeSettings, type RushSettings } from './storage.ts';
@@ -388,12 +388,12 @@ function showScreen(id: 'title' | 'town' | 'result' | 'pause' | 'settings' | nul
   surface.classList.toggle('in-menu', id !== null);
   surface.classList.toggle('in-town', id === 'town');
 }
-function openTown(rewardText = '') {
+function openTown(rewardText = '', suggest: Upgrade | 'hero' | null = null) {
   mode = 'town';
   paused = false;
   input.enabled = false;
   showScreen('town');
-  town.show(rewardText);
+  town.show(rewardText, suggest);
 }
 function start(nextMode: 'play' | 'demo') {
   if(rendererLost)return;
@@ -468,6 +468,8 @@ function showResult() {
 function showNextStep(step: NextStep | null, won = false) {
   const el = $('result-next');
   el.hidden = !step;
+  // Cycle 135: '마을로' opens town on the suggested building (or the hero card for training and talents).
+  lastSuggest = !step?.action ? null : step.action.kind === 'upgrade' ? step.action.id : 'hero';
   if (!step) return;
   const fmt = (v: number) => v.toLocaleString('en-US'), a = step.action, ready = step.have >= step.need;
   const name = !a ? '' : a.kind === 'upgrade' ? `${upgradeName(a.id)} 올리기` : a.kind === 'train' ? `${HEROES[a.hero].name} 훈련` : `${HEROES[a.hero].name} ${TALENTS[a.hero].name} 배우기`;
@@ -511,6 +513,7 @@ function showVisitor(c: keyof typeof COMPANIONS | undefined) {
   q('[data-visitor-keeper]').textContent = c === 'bron' || c === 'popo' ? `출전 영웅으로 고를 수 있어요 · 마을의 ${keeperNote(c)}` : `마을의 ${keeperNote(c)}`;
 }
 let lastReward = '';
+let lastSuggest: Upgrade | 'hero' | null = null;
 $('btn-play').addEventListener('click', () => { unlockAudio(); openTown(legacyNote); legacyNote = ''; });
 $('map-battle').addEventListener('click', () => start('play'));
 // The title buttons ship disabled so a tap before this script runs is not silently lost.
@@ -518,7 +521,7 @@ for (const id of ['btn-play', 'btn-demo']) ($(id) as HTMLButtonElement).disabled
 $('btn-demo').addEventListener('click', () => start('demo'));
 $('btn-battle').addEventListener('click', () => start('play'));
 $('btn-again').addEventListener('click', () => start('play'));
-$('btn-town').addEventListener('click', () => { openTown(lastReward); lastReward = ''; });
+$('btn-town').addEventListener('click', () => { openTown(lastReward, lastSuggest); lastReward = ''; lastSuggest = null; });
 $('btn-town-title').addEventListener('click', () => { mode = 'title'; showScreen('title'); });
 $('pause').addEventListener('click', () => { if (mode === 'play') { paused = true; input.enabled = false; input.reset(); showScreen('pause'); } });
 $('btn-resume').addEventListener('click', () => { if (portrait.matches || document.hidden) return; paused = false; input.enabled = mode === 'play'; input.reset(); showScreen(null); });

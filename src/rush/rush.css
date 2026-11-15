@@ -778,3 +778,10 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   #screen-result.has-news .result-reward { margin-top: 2px; padding: 2px 10px; }
   #screen-result.has-news .result-visitor em { margin-left: 8px; } /* with the greeting gone it follows the name */
 }
+
+/* Cycle 135: the building (or hero card) the result screen suggested carries a small '추천' ribbon until it is raised. */
+.town-tag.suggested::before, .hero-pick.suggested::before {
+  content: '추천'; position: absolute; left: 50%; top: -17px; transform: translateX(-50%); z-index: 1; padding: 1px 6px; border-radius: 8px;
+  border: 2px solid var(--outline); background: #ff8a3d; color: #fff; font-size: 10px; font-weight: 800; line-height: 12px; white-space: nowrap; pointer-events: none;
+}
+.hero-pick.suggested { position: relative; }
