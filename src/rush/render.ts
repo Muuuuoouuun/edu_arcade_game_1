@@ -535,10 +535,23 @@ export class RushView {
       if (base > low) raised.push({ geo: new BoxGeometry(w.w, base - low, w.d), color: PAL.stoneFoot, at: [w.x, (base + low) / 2, w.z] });
       return raised;
     });
-    if (walls.length) { const g = bake(walls); inked(g, g, 0.05).name = 'rush-walls'; }
     // Gates, bridges and the land around the field: one mesh, ink on the gates, bridges, trees and rocks only.
-    const scenery = sceneryParts(map);
-    inked(bake(scenery.frame), bake(scenery.outlined), 0.05).name = 'rush-map-frame';
+    const scenery = sceneryParts(map), frame = bake(scenery.frame), outlined = bake(scenery.outlined);
+    // Cycle 121: the walls join the frame (same material, same ink width; the frame is always on screen, so no culling
+    // is lost): one body, one hull and one shadow draw instead of two each.
+    const wallGeo = walls.length ? bake(walls) : null;
+    const body = wallGeo ? mergeGeometries([wallGeo, frame]) : frame;
+    if (body) {
+      const mesh = new Mesh(body, this.mats.baked), hullGeo = wallGeo ? mergeGeometries([hullGeometry(wallGeo), hullGeometry(outlined)]) : hullGeometry(outlined);
+      const hull = new Mesh(hullGeo ?? hullGeometry(outlined), outlineMaterial(0.05));
+      mesh.add(hull); hull.visible = spec.terrainOutlines; hulls.push(hull);
+      mesh.name = 'rush-map-frame';
+      root.add(mesh);
+      if (!hullGeo && wallGeo) inked(wallGeo, wallGeo, 0.05).name = 'rush-walls';
+    } else {
+      if (wallGeo) inked(wallGeo, wallGeo, 0.05).name = 'rush-walls';
+      inked(frame, outlined, 0.05).name = 'rush-map-frame';
+    }
     if (scenery.extra.length) {
       const extra = new Mesh(bake(scenery.extra), this.mats.baked);
       extra.name = 'rush-map-extra'; extra.visible = spec.decor; decor.push(extra);
