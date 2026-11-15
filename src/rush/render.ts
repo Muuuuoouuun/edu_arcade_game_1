@@ -303,6 +303,7 @@ export class RushView {
     this.aimLine.rotation.x = -Math.PI / 2;
     this.aimLob = new Mesh(this.geo.ring, basic(0xc4f2ff, 0.85));
     this.aimLob.rotation.x = -Math.PI / 2;
+    this.aimFan.name = 'aim-fan'; this.aimRing.name = 'aim-ring'; this.aimLine.name = 'aim-line'; this.aimLob.name = 'aim-lob';
     for (const m of [this.aimFan, this.aimRing, this.aimLine, this.aimLob]) { m.visible = false; m.renderOrder = 2; this.scene.add(m); }
     this.dressFrame();
   }
@@ -369,7 +370,7 @@ export class RushView {
     const cliff = new Mesh(createCliffGeometry(), toon(0xffffff,{vertexColors:true,rim:.1}));
     cliff.name='rush-rock-foundation';
     const water = new Mesh(new PlaneGeometry(240,240),toon(PAL.water,{rim:0}));
-    water.rotation.x=-Math.PI/2;water.position.set(cx,-1.3,cz);
+    water.rotation.x=-Math.PI/2;water.position.set(cx,-1.3,cz);water.name='rush-water';
     this.scene.add(water,cliff,ground);this.water=water;
     const snow=REGION_LOOK.snow;
     this.regional(cliff.geometry,cliffColors(snow.ground));
@@ -385,13 +386,14 @@ export class RushView {
     for(let z=ARENA.minZ;z<ARENA.maxZ;z++) {hedge(ARENA.minX-.55,z+.5,1.1,1.02);hedge(ARENA.maxX+.55,z+.5,1.1,1.02);}
     hedge(cx,ARENA.maxZ+.55,ARENA.maxX-ARENA.minX+2.2,1.1);
     hedge(cx,ARENA.minZ-.55,ARENA.maxX-ARENA.minX+2.2,1.1);
-    this.regional(this.addBaked(bake(dress(REGION_LOOK.forest)),.04,undefined,'terrain').geometry,bakeColors(dress(snow)));
+    this.regional(this.addBaked(bake(dress(REGION_LOOK.forest)),.04,undefined,'terrain','rush-hedge').geometry,bakeColors(dress(snow)));
     // Decorative shore props are omitted: there is now a rock drop, not a flat sandy shelf.
   }
 
   /** Add a baked static mesh with its ink hull. */
-  private addBaked(geo: BufferGeometry, outline: number, at?: Vec, role?: 'terrain' | 'decor'): Mesh {
+  private addBaked(geo: BufferGeometry, outline: number, at?: Vec, role?: 'terrain' | 'decor', name = ''): Mesh {
     const mesh = new Mesh(geo, this.mats.baked);
+    mesh.name = name;
     if (outline > 0) {
       const hull = new Mesh(hullGeometry(geo), outlineMaterial(outline));
       mesh.add(hull);
@@ -525,7 +527,7 @@ export class RushView {
       if (base > low) raised.push({ geo: new BoxGeometry(w.w, base - low, w.d), color: PAL.stoneFoot, at: [w.x, (base + low) / 2, w.z] });
       return raised;
     });
-    if (walls.length) { const g = bake(walls); inked(g, g, 0.05); }
+    if (walls.length) { const g = bake(walls); inked(g, g, 0.05).name = 'rush-walls'; }
     // Gates, bridges and the land around the field: one mesh, ink on the gates, bridges, trees and rocks only.
     const scenery = sceneryParts(map);
     inked(bake(scenery.frame), bake(scenery.outlined), 0.05).name = 'rush-map-frame';
@@ -545,6 +547,7 @@ export class RushView {
       const mat = toon(0xffffff, { vertexColors: true, rim: 0.3 });
       mat.transparent = true;
       const mesh = new Mesh(geo, mat), hull = new Mesh(hullGeometry(geo), outlineMaterial(0.03));
+      mesh.name = 'rush-bush';
       mesh.add(hull); hull.visible = spec.terrainOutlines; hulls.push(hull);
       mesh.position.set(b.x, heightAt(b.x, b.z), b.z);
       mesh.renderOrder = 6; // drawn after the hero so the see-through state shows them
@@ -646,9 +649,9 @@ export class RushView {
     BARRICADES.forEach(b => parts.push(...siteParts(b.x, heightAt(b.x, b.z), b.z, siteAngle(b))));
     const geo = bake(parts), snow = bakeColors(parts.map(coolPart)), snowAttr = new BufferAttribute(snow, 3);
     capColors(geo, snowAttr, REGION_LOOK.snow.cap ?? 0xffffff, 0.7, -Infinity, 0.6);
-    this.regional(this.addBaked(geo, 0.035, undefined, 'terrain').geometry, snowAttr);
+    this.regional(this.addBaked(geo, 0.035, undefined, 'terrain', 'rush-build-sites').geometry, snowAttr);
     for (const p of [...PADS, ...BARRICADES]) {
-      const ring = new Mesh(this.geo.ring, basic(0xffe48a, 0.8));
+      const ring = new Mesh(this.geo.ring, basic(0xffe48a, 0.8)); ring.name = 'site-ring';
       ring.rotation.x = -Math.PI / 2; ring.position.set(p.x, heightAt(p.x,p.z)+0.2, p.z); ring.scale.setScalar(1.12);
       ring.renderOrder = 2;
       this.scene.add(ring);
@@ -656,7 +659,7 @@ export class RushView {
     }
     BARRICADES.forEach(b => {
       const root = new Group(), body = new Mesh(undefined, this.mats.baked), hull = new Mesh(undefined, outlineMaterial(0.045));
-      root.add(body, hull);
+      root.add(body, hull); root.name = 'barricade';
       root.position.set(b.x, heightAt(b.x, b.z), b.z);
       root.rotation.y = siteAngle(b);
       root.visible = false;
@@ -670,9 +673,11 @@ export class RushView {
   private buildHero() {
     const shadow = new Mesh(this.geo.blob, this.mats.blob); shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.02; shadow.scale.setScalar(0.62);
     const ring = new Mesh(this.geo.ring, this.mats.allyRing); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; ring.scale.setScalar(0.72);
+    shadow.name = 'hero-blob'; ring.name = 'hero-ring';
     // Super-ready ring (cycle 85): the super colour around the team ring while the super is charged, so the eye on the hero
     // sees it without looking at the button corner (the "super ready" toast is hidden since #107).
     const charged = new Mesh(new RingGeometry(0.86, 1, 40), basic(PAL.super, 0.9)); charged.rotation.x = -Math.PI / 2; charged.position.y = 0.04; charged.visible = false;
+    charged.name = 'hero-super-ring';
     this.superRing = charged;
     this.hero.add(shadow, ring, charged, this.heroBody);this.heroFootprints=[shadow,ring];
     // Fallback body, replaced if the GLB loads.
@@ -693,7 +698,7 @@ export class RushView {
         { geo: new BoxGeometry(0.08, 0.1, c.w * 1.02), color: 0x1f6fd0, at: [c.x - c.h * 0.22, c.y - c.h + 0.04, 0], rot: [0, 0, -0.22] },
         { geo: new BoxGeometry(0.16, 0.08, c.w * 0.9), color: PAL.gold, at: [c.x + 0.05, c.y + 0.02, 0] },
       ]);
-      const cape = new Mesh(geo, this.mats.hero);
+      const cape = new Mesh(geo, this.mats.hero); cape.name = 'hero-cape';
       cape.add(new Mesh(hullGeometry(geo), outlineMaterial(0.035)));
       cape.visible = false;
       this.heroBody.add(cape);
@@ -1286,7 +1291,7 @@ export class RushView {
   /** `mirror`: the base is flipped east-west (the Lv3 turret then stands on the middle-lane side of a west pad). */
   private makeTower(level: number, branch?: TowerBranch, mirror = false): Group {
     const kit = this.towerKit(level, branch), g = new Group(), head = new Group(), body = new Group(), shell = new Group();
-    body.name = 'body';
+    g.name = 'tower'; body.name = 'body';
     shell.add(new Mesh(kit.base, this.mats.baked), new Mesh(kit.baseHull, outlineMaterial(0.05)));
     if (mirror) shell.scale.x = -1; // three.js flips the face winding for a mirrored matrix, so the ink hull still works
     body.add(shell);
@@ -1851,8 +1856,12 @@ export class RushView {
         const pass = (material as { isMeshDepthMaterial?: boolean; isMeshDistanceMaterial?: boolean }).isMeshDepthMaterial || (material as { isMeshDistanceMaterial?: boolean }).isMeshDistanceMaterial ? 'shadow'
           : camera === this.camera ? 'main' : 'other';
         const inst = (object as unknown as { isInstancedMesh?: boolean }).isInstancedMesh ? ' [inst]' : '';
-        const name = object.name || object.parent?.name || (object.parent?.parent?.name ? object.parent.parent.name + '/part' : '')
-          || `${(material as Material).type}:${geometry.type}${inst}${(material as Material).side === BackSide ? ' ink' : ''}`;
+        // Named ancestors (cycle 115: any depth): the outermost and the nearest, '/part' when the drawn object has no name.
+        const names: string[] = [];
+        for (let o: Object3D | null = object; o && o !== this.scene; o = o.parent) if (o.name) names.push(o.name);
+        const name = names.length ? (names.length > 1 ? `${names[names.length - 1]}>${names[0]}` : names[0]) + (object.name ? '' : '/part')
+          : pass === 'other' ? 'post-pass' // glow and finishing passes draw full-screen quads outside the scene
+          : `${(material as Material).type}:${geometry.type}${inst}${(material as Material).side === BackSide ? ' ink' : ''}`;
         const key = `${pass} ${name}`;
         tally[key] = (tally[key] ?? 0) + 1;
         plain.call(r, camera, scene, geometry, material, object, group);
