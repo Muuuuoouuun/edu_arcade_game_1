@@ -1247,8 +1247,10 @@ export class RushView {
     const B = this.batches, t = this.tmp;
     this.camera.updateMatrixWorld();
     this.frustum.setFromProjectionMatrix(t.m.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
-    const multi = B.multi;
-    if (multi) for (const k of Object.values(multi)) k.begin();
+    const batched = B.multi;
+    if (batched) for (const k of Object.values(batched)) k.begin();
+    // Mask frames (cycle 126) draw through the per-kind batches, each in its own colour; the shared batches stay empty.
+    const multi = this.maskMode ? null : batched;
     const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), ...Object.values(B.ice), ...Object.values(B.ward), B.shadow, B.ring, B.frostRing, B.wardRing, B.streak, B.barBg, B.barFill];
     const swift = s.diff.twist === 'swift';
     all.forEach(b => b.begin());
@@ -1310,7 +1312,7 @@ export class RushView {
       if (f > 0 && (f > 0.6 || Math.floor(this.time * 12) % 2 === 0)) B.frostRing.push(this.place(PADS[i].x, 0.06, PADS[i].z, -Math.PI / 2, 0, 0, 1.55));
     });
     all.forEach(b => b.end());
-    if (multi) for (const k of Object.values(multi)) k.end();
+    if (batched) for (const k of Object.values(batched)) k.end();
     this.counts.enemies = s.enemies.length;
   }
 
@@ -1960,7 +1962,8 @@ export class RushView {
   /** Debug (cycle 114, contrast measurement only): true draws enemy bodies, shells and flashes in flat magenta and hides
    * their outlines, so a frame gives each enemy's shape however close its colours are to the floor. */
   maskMode = false;
-  private maskMat = new MeshBasicMaterial({ color: 0xff00ff, toneMapped: false });
+  /** Cycle 126: one flat colour per kind (MASK_COLOR), so a big neighbour's body or shell never counts as another enemy. */
+  private maskMats = Object.fromEntries(ENEMY_KINDS.map(k => [k, new MeshBasicMaterial({ color: MASK_COLOR[k], toneMapped: false })])) as Record<EnemyKind, MeshBasicMaterial>;
   /** Debug (cycle 107): set by tallyDraws(); the next render() counts every draw call by pass and name. */
   private tallyNext = false;
   lastTally: Record<string, number> | null = null;
@@ -1994,14 +1997,13 @@ export class RushView {
   /** Debug (cycle 114): one frame with the enemy layers swapped to the flat mask material and their outlines hidden. */
   private renderMask() {
     const B = this.batches, multi = B.multi;
-    const fill = [...Object.values(B.body), ...Object.values(B.flash), ...Object.values(B.ice), ...Object.values(B.ward)].map(b => b.mesh as Mesh)
-      .concat(multi ? [multi.body.mesh, multi.flash.mesh, multi.ice.mesh, multi.ward.mesh] : []);
+    const fill = ENEMY_KINDS.flatMap(k => [B.body[k], B.flash[k], B.ice[k], B.ward[k]].map(b => ({ mesh: b.mesh as Mesh, mat: this.maskMats[k] })));
     const ink = [...Object.values(B.hull).map(b => b.mesh as Mesh), ...(multi ? [multi.hull.mesh] : [])];
-    const mats = fill.map(m => m.material), seen = ink.map(m => m.visible);
-    fill.forEach(m => { m.material = this.maskMat; });
+    const mats = fill.map(f => f.mesh.material), seen = ink.map(m => m.visible);
+    fill.forEach(f => { f.mesh.material = f.mat; });
     ink.forEach(m => { m.visible = false; });
     try { this.renderFrame(); } finally {
-      fill.forEach((m, i) => { m.material = mats[i]; });
+      fill.forEach((f, i) => { f.mesh.material = mats[i]; });
       ink.forEach((m, i) => { m.visible = seen[i]; });
     }
   }
@@ -2070,6 +2072,8 @@ const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x1
 const ENEMY_KINDS: readonly EnemyKind[] = ['grunt', 'skirmisher', 'brute', 'boss', 'shield', 'shaman', 'wolf'];
 /** Enemies are drawn larger than their hitbox so a grunt is no longer ~30 px tall on a phone; the simulation radius,
  * spacing and hit tests are unchanged. The wolf is long rather than tall, the boss was already big. */
+/** Debug mask colours per kind (cycle 126, contrast measurement; tools/rush-contrast.py MASK_RGB must match). */
+export const MASK_COLOR: Record<EnemyKind, number> = { grunt: 0xff0000, skirmisher: 0x00ff00, brute: 0x0000ff, shield: 0xffff00, shaman: 0xff00ff, wolf: 0x00ffff, boss: 0xff8000 };
 export const ENEMY_SCALE: Record<EnemyKind, number> = { grunt: 1.3, skirmisher: 1.25, brute: 1.2, shield: 1.25, shaman: 1.25, boss: 1.1, wolf: 1.3 };
 /** Build pop (squash and stretch) length and its height scale over time left. */
 const POP_TIME = 0.45;

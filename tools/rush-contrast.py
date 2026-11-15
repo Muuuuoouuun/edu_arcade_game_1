@@ -3,7 +3,8 @@
 # Usage: python3 tools/rush-contrast.py <outDir> [stage prefixes, default s2 s3 s7 s8; mid-field rows: s7mid s8mid ...]
 # Method: enemy pixels are those that differ from the empty frame; ink (L < 20) is left out; the largest of three
 # (cycle 109: 'BODY' lines measure the whole body from the body-only frame, no enemy shadow/blob/ring; cycle 114: 'SHAPE'
-# lines take the body area from a flat-magenta mask frame, so floor-coloured parts still count; prefer SHAPE)
+# lines take the body area from a flat-colour mask frame (cycle 126: one colour per kind), so floor-coloured parts
+# still count and a neighbour's spill does not; prefer SHAPE)
 # k-means clusters is the main colour. Criterion (art-direction.md): main vs floor >= 30; cues clearly above 15.
 import json, sys, math, random
 from PIL import Image
@@ -88,14 +89,23 @@ def is_mask(c):
     """A pixel of the cycle 114 shape mask: flat magenta (#ff00ff, allowing for the finishing pass)."""
     r, g, b = c
     return r > 150 and b > 150 and g < 0.45 * min(r, b)
-def shape_stand_out(E, B, M, win, E2=None):
+# Cycle 126: the mask frame draws each kind in its own flat colour (render.ts MASK_COLOR), so an enemy's body is the
+# pixels of its colour only; a big neighbour's body or shell spilling into the window no longer counts.
+MASK_RGB = {'grunt': (255, 0, 0), 'skirmisher': (0, 255, 0), 'brute': (0, 0, 255), 'shield': (255, 255, 0),
+            'shaman': (255, 0, 255), 'wolf': (0, 255, 255), 'boss': (255, 128, 0)}
+def mask_kind(c):
+    for k, m in MASK_RGB.items():
+        if max(abs(c[0] - m[0]), abs(c[1] - m[1]), abs(c[2] - m[2])) <= 70: return k
+    return None
+def shape_stand_out(E, B, M, win, E2=None, kind=None):
     """Cycle 114: like body_stand_out, but the body is every magenta pixel of the mask frame, so parts as pale as the
     floor count as body instead of dropping out of the mask."""
     ds = []
     x0, y0, x1, y1 = max(0, win[0]), max(0, win[1]), min(E.width, win[2]), min(E.height, win[3])
     for x in range(x0, x1, 2):
         for y in range(y0, y1, 2):
-            if not is_mask(M.getpixel((x, y))): continue
+            mp = M.getpixel((x, y))
+            if (mask_kind(mp) != kind) if kind else not is_mask(mp): continue
             a, e = B.getpixel((x, y)), E.getpixel((x, y))
             if E2 is not None and sum(abs(e[i] - E2.getpixel((x, y))[i]) for i in range(3)) > 30: continue
             la = lab(a)
@@ -122,8 +132,11 @@ def body_rows(st):
         S = lambda share, medv, n: f'{share * 100:4.0f}% med {medv:5.1f} ({n:5d} px)' if share is not None else '            n/a'
         print(f"{st} {p['kind']:10s} BODY stands out {S(sh, md, n)} | frosted {S(fsh, fmd, fn)}")
         if MP is not None:
-            sh, md, n = shape_stand_out(E, BP, MP, win, E2); fsh, fmd, fn = shape_stand_out(E, BF, MF, win, E2)
-            ward = f" | warded {S(*shape_stand_out(E, BW, MW, win, E2))}" if MW is not None else ''
+            # The kind's own colour marks its body, so the window can be wide (the boss reaches past the halfway line).
+            k = p['kind']; wide = body_window(pts, i, wide=True); wide = [wide[0], win[1], wide[2], win[3]]
+            wide = [min(wide[0], int(p['x'] * p['dpr']) - 300), wide[1], max(wide[2], int(p['x'] * p['dpr']) + 300), wide[3]]
+            sh, md, n = shape_stand_out(E, BP, MP, wide, E2, k); fsh, fmd, fn = shape_stand_out(E, BF, MF, wide, E2, k)
+            ward = f" | warded {S(*shape_stand_out(E, BW, MW, wide, E2, k))}" if MW is not None else ''
             print(f"{st} {p['kind']:10s} SHAPE stands out {S(sh, md, n)} | frosted {S(fsh, fmd, fn)}{ward}")
 def boxes(name):
     E = Image.open(f'{d}/{name}-empty.png').convert('RGB')
@@ -156,7 +169,7 @@ for name in ['s5boss', 's10boss']:
             if sh is not None: print(name, f'BODY stands out {sh * 100:.0f}% med {md:.1f} ({n} px)')
             try:
                 M = Image.open(f'{d}/{name}-mask.png').convert('RGB')
-                sh, md, n = shape_stand_out(E, B, M, body_window(pts, i, wide=True), E2)
+                sh, md, n = shape_stand_out(E, B, M, body_window(pts, i, wide=True), E2, p['kind'])
                 if sh is not None: print(name, f'SHAPE stands out {sh * 100:.0f}% med {md:.1f} ({n} px)')
             except FileNotFoundError: pass
     except FileNotFoundError: pass
