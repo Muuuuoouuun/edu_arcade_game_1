@@ -87,6 +87,9 @@ export class KindBatch {
     return id;
   }
 
+  /** Cycle 128: register shapes before the first instance. An empty BatchedMesh has no vertex attributes, so the shader
+   * warm-up would compile a variant the batch never draws. */
+  prepare(geos: BufferGeometry[]) { for (const g of geos) this.idOf(g); }
   begin() { this.n = 0; }
   push(geo: BufferGeometry, matrix: Matrix4) {
     if (this.n >= this.capacity) { Batch.dropped++; return; }

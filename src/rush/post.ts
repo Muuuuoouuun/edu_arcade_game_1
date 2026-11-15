@@ -5,7 +5,7 @@
 // The low tier never builds any of this: it draws straight to the canvas as before.
 import {
   BufferAttribute, BufferGeometry, Mesh, OrthographicCamera, Scene, ShaderMaterial, SRGBColorSpace, Vector2, Vector3, Vector4, WebGLRenderTarget,
-  type Camera, type WebGLRenderer,
+  type Camera, type Object3D, type WebGLRenderer,
 } from 'three';
 
 /** Colour finish of one region (frame.ts `FRAME_LOOK`). */
@@ -147,6 +147,18 @@ export class PostFX {
     this.quad.material = material;
     renderer.setRenderTarget(to);
     renderer.render(this.quadScene, this.camera);
+  }
+  /** Cycle 128: compile the scene's materials and the finishing passes now, each for the target it is drawn into (the
+   * program key changes with the target), so the first glow or the first enemy does not compile mid-battle. */
+  warm(renderer: WebGLRenderer, scene: Scene, camera: Camera, root: Object3D = scene) {
+    const target = this.target;
+    renderer.setRenderTarget(target);
+    renderer.compile(root, camera, scene);
+    if (target && root === scene) {
+      for (const m of [this.prefilter, this.blur]) { this.quad.material = m; renderer.compile(this.quadScene, this.camera); }
+      renderer.setRenderTarget(null);
+      this.quad.material = this.final; renderer.compile(this.quadScene, this.camera);
+    }
   }
   /** `glow`: whether any glow source is on screen; without one the three quarter-size passes are skipped. */
   render(renderer: WebGLRenderer, scene: Scene, camera: Camera, glow = true) {

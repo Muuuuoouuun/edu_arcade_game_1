@@ -364,8 +364,17 @@ export class RushView {
     this.post.setGrade(look.grade);
     this.renderer.info.reset();
     setGlowMask(this.post.ready);
+    if (this.warmQueue.length && scene === this.scene) for (const root of this.warmQueue.splice(0)) this.post.warm(this.renderer, scene, camera, root);
     if (this.post.ready) this.post.render(this.renderer, scene, camera, glowing); else this.renderer.render(scene, camera);
   }
+  /** Cycle 128: the next battle frame first compiles every material under `root` (hidden ones too; the whole battle
+   * scene and the finishing passes by default), so nothing compiles when the first wave or glow appears. The hero model
+   * loads after the battle starts and queues its own root. ?warm=0 turns it off for comparison. */
+  private warmQueue: Object3D[] = [];
+  private warmOn = new URLSearchParams(location.search).get('warm') !== '0';
+  warmShaders(root: Object3D = this.scene) { if (this.warmOn) this.warmQueue.push(root); }
+  /** Debug (cycle 128): the cache key of every live shader program, oldest first. */
+  programKeys() { return (this.renderer.info.programs ?? []).map(p => p.cacheKey); }
 
   // ---------- static scenery ----------
   private buildGround() {
@@ -969,6 +978,7 @@ export class RushView {
       }
       const motion = new HeroMotion(model, gltf.animations, kind);
       this.heroRigs.set(kind, { holder, shot: motion.shot, held, motion, material });
+      this.warmShaders(holder);
     }), undefined, () => { this.heroRigs.delete(kind); /* Keep the placeholder; the prototype stays playable without the model. */ });
   }
 
@@ -1225,6 +1235,9 @@ export class RushView {
         ice: new KindBatch(this.scene, ICE, 2 * cap, bv, bi, 4),
         ward: new KindBatch(this.scene, WARD, 2 * cap, bv, bi, 4),
       };
+      const m = this.batches.multi, bodies = ENEMY_KINDS.map(k => this.enemyKit(k).body);
+      for (const b of [m.body, m.flash, m.ice, m.ward]) b.prepare(bodies);
+      m.hull.prepare(ENEMY_KINDS.map(k => this.enemyKit(k).hull));
     }
     // Names for the debug counts (shadowCasters, tallyDraws; cycle 107): 'batch:body.grunt', 'batch:shots.hero', ...
     const nameAll = (o: unknown, path: string): void => {

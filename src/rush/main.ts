@@ -416,6 +416,8 @@ function start(nextMode: 'play' | 'demo') {
   surface.classList.toggle('demo', nextMode === 'demo');
   town.closeMap();
   showScreen(null);
+  // Cycle 128: compile every battle material on the first frame, not when the first wave or glow appears.
+  view.warmShaders();
   toast(nextMode === 'demo' ? '자동 시연 · 화면을 누르면 타이틀로' : '노란 원 위에서 탑을 세우고 마을을 지키세요');
   updateOrientation();
 }
@@ -707,6 +709,7 @@ Object.assign((window as unknown as { __rush: object }).__rush, {
   setStage(n: number) { const map = mapFor(n); state.diff.stage = n; state.map = map; state.crates = map.crates.map((c, i) => ({ id: 1 + i, x: c.x, z: c.z, hp: CRATE.hp, ...(c.gold ? { gold: c.gold } : {}) })); },
   overhead(on: boolean) { view.overhead = on; },
   kits: () => view.kitCount,
+  programKeys: () => view.programKeys(),
 });
 if (params.has('overhead')) view.overhead = true;
 }
