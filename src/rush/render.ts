@@ -1834,6 +1834,10 @@ export class RushView {
   /** Debug (cycle 109, contrast measurement only): true stops enemies casting shadows and hides their foot blobs and floor
    * rings, so an enemy frame minus the empty frame is the body (with any shell) alone. */
   bodyOnly = false;
+  /** Debug (cycle 114, contrast measurement only): true draws enemy bodies, shells and flashes in flat magenta and hides
+   * their outlines, so a frame gives each enemy's shape however close its colours are to the floor. */
+  maskMode = false;
+  private maskMat = new MeshBasicMaterial({ color: 0xff00ff, toneMapped: false });
   /** Debug (cycle 107): set by tallyDraws(); the next render() counts every draw call by pass and name. */
   private tallyNext = false;
   lastTally: Record<string, number> | null = null;
@@ -1857,7 +1861,22 @@ export class RushView {
       this.lastTally = tally;
       return;
     }
+    if (this.maskMode) { this.renderMask(); return; }
     this.renderFrame();
+  }
+  /** Debug (cycle 114): one frame with the enemy layers swapped to the flat mask material and their outlines hidden. */
+  private renderMask() {
+    const B = this.batches, multi = B.multi;
+    const fill = [...Object.values(B.body), ...Object.values(B.flash), ...Object.values(B.ice), ...Object.values(B.ward)].map(b => b.mesh as Mesh)
+      .concat(multi ? [multi.body.mesh, multi.flash.mesh, multi.ice.mesh, multi.ward.mesh] : []);
+    const ink = [...Object.values(B.hull).map(b => b.mesh as Mesh), ...(multi ? [multi.hull.mesh] : [])];
+    const mats = fill.map(m => m.material), seen = ink.map(m => m.visible);
+    fill.forEach(m => { m.material = this.maskMat; });
+    ink.forEach(m => { m.visible = false; });
+    try { this.renderFrame(); } finally {
+      fill.forEach((m, i) => { m.material = mats[i]; });
+      ink.forEach((m, i) => { m.visible = seen[i]; });
+    }
   }
   private renderFrame() {
     const look = this.frameLook;

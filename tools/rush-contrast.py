@@ -2,7 +2,8 @@
 # frost and ward floor cues against the floor, from the frames tools/rush-contrast.cjs takes.
 # Usage: python3 tools/rush-contrast.py <outDir> [stage prefixes, default s2 s3 s7 s8; mid-field rows: s7mid s8mid ...]
 # Method: enemy pixels are those that differ from the empty frame; ink (L < 20) is left out; the largest of three
-# (cycle 109: 'BODY' lines measure the whole body from the body-only frame, no enemy shadow/blob/ring; prefer them)
+# (cycle 109: 'BODY' lines measure the whole body from the body-only frame, no enemy shadow/blob/ring; cycle 114: 'SHAPE'
+# lines take the body area from a flat-magenta mask frame, so floor-coloured parts still count; prefer SHAPE)
 # k-means clusters is the main colour. Criterion (art-direction.md): main vs floor >= 30; cues clearly above 15.
 import json, sys, math, random
 from PIL import Image
@@ -83,6 +84,25 @@ def body_stand_out(E, B, win, E2=None):
     if len(ds) < 20: return None, None, len(ds)
     ds.sort()
     return sum(1 for d in ds if d >= 30) / len(ds), ds[len(ds) // 2], len(ds)
+def is_mask(c):
+    """A pixel of the cycle 114 shape mask: flat magenta (#ff00ff, allowing for the finishing pass)."""
+    r, g, b = c
+    return r > 150 and b > 150 and g < 0.45 * min(r, b)
+def shape_stand_out(E, B, M, win, E2=None):
+    """Cycle 114: like body_stand_out, but the body is every magenta pixel of the mask frame, so parts as pale as the
+    floor count as body instead of dropping out of the mask."""
+    ds = []
+    x0, y0, x1, y1 = max(0, win[0]), max(0, win[1]), min(E.width, win[2]), min(E.height, win[3])
+    for x in range(x0, x1, 2):
+        for y in range(y0, y1, 2):
+            if not is_mask(M.getpixel((x, y))): continue
+            a, e = B.getpixel((x, y)), E.getpixel((x, y))
+            if E2 is not None and sum(abs(e[i] - E2.getpixel((x, y))[i]) for i in range(3)) > 30: continue
+            la = lab(a)
+            if la[0] >= 20: ds.append(math.dist(la, lab(e)))
+    if len(ds) < 20: return None, None, len(ds)
+    ds.sort()
+    return sum(1 for d in ds if d >= 30) / len(ds), ds[len(ds) // 2], len(ds)
 def body_rows(st):
     """One line per enemy: whole-body stand-out, plain and frosted (needs the -body frames, cycle 109)."""
     try:
@@ -90,6 +110,8 @@ def body_rows(st):
         try: E2 = Image.open(f'{d}/{st}plain-empty2.png').convert('RGB')
         except FileNotFoundError: E2 = None
         BP = Image.open(f'{d}/{st}plain-body.png').convert('RGB'); BF = Image.open(f'{d}/{st}frost-body.png').convert('RGB')
+        try: MP = Image.open(f'{d}/{st}plain-mask.png').convert('RGB'); MF = Image.open(f'{d}/{st}frost-mask.png').convert('RGB')
+        except FileNotFoundError: MP = MF = None
     except FileNotFoundError: return
     pts = json.load(open(f'{d}/{st}plain-pts.json'))
     for i, p in enumerate(pts):
@@ -97,6 +119,9 @@ def body_rows(st):
         sh, md, n = body_stand_out(E, BP, win, E2); fsh, fmd, fn = body_stand_out(E, BF, win, E2)
         S = lambda share, medv, n: f'{share * 100:4.0f}% med {medv:5.1f} ({n:5d} px)' if share is not None else '            n/a'
         print(f"{st} {p['kind']:10s} BODY stands out {S(sh, md, n)} | frosted {S(fsh, fmd, fn)}")
+        if MP is not None:
+            sh, md, n = shape_stand_out(E, BP, MP, win, E2); fsh, fmd, fn = shape_stand_out(E, BF, MF, win, E2)
+            print(f"{st} {p['kind']:10s} SHAPE stands out {S(sh, md, n)} | frosted {S(fsh, fmd, fn)}")
 def boxes(name):
     E = Image.open(f'{d}/{name}-empty.png').convert('RGB')
     for p in json.load(open(f'{d}/{name}-pts.json')):
@@ -126,6 +151,11 @@ for name in ['s5boss', 's10boss']:
         for i, p in enumerate(pts):
             sh, md, n = body_stand_out(E, B, body_window(pts, i, wide=True), E2)
             if sh is not None: print(name, f'BODY stands out {sh * 100:.0f}% med {md:.1f} ({n} px)')
+            try:
+                M = Image.open(f'{d}/{name}-mask.png').convert('RGB')
+                sh, md, n = shape_stand_out(E, B, M, body_window(pts, i, wide=True), E2)
+                if sh is not None: print(name, f'SHAPE stands out {sh * 100:.0f}% med {md:.1f} ({n} px)')
+            except FileNotFoundError: pass
     except FileNotFoundError: pass
 for name in ['s5boss', 's10boss']:
     try:

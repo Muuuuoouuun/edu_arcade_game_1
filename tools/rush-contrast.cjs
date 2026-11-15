@@ -64,7 +64,12 @@ if (process.env.ONLY) {
     await page.evaluate(() => __rush.bodyOnly(true));
     await page.waitForTimeout(700);
     await page.screenshot({ path: `${OUT}/${name}-body.png`, timeout: 180000 });
-    await page.evaluate(() => __rush.bodyOnly(false));
+    // Shape mask (cycle 114): the same frame with the enemies in flat magenta and no outlines; rush-contrast.py takes the
+    // body area from it, so parts as pale as the floor still count as body.
+    await page.evaluate(() => __rush.maskMode(true));
+    await page.waitForTimeout(700);
+    await page.screenshot({ path: `${OUT}/${name}-mask.png`, timeout: 180000 });
+    await page.evaluate(() => { __rush.maskMode(false); __rush.bodyOnly(false); });
   }
   console.log('scenes', Object.keys(SCENES).length, 'errors:', JSON.stringify(errs.slice(0, 5)));
   await browser.close();
