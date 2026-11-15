@@ -6,7 +6,7 @@ Silhouette follows the in-game concept (boulder body, moss, glowing eyes, oversi
 actual Blender geometry without image inputs. Output is a baked 2.5D sprite atlas (walk-a, walk-b, hit),
 not a runtime 3D model. Native facing is screen-right.
 """
-import argparse, json, math, subprocess, sys
+import argparse, hashlib, json, math, subprocess, sys
 from pathlib import Path
 import bpy
 from bpy_extras.object_utils import world_to_camera_view
@@ -33,8 +33,8 @@ def material(name,color,rough=.8,emission=0):
  n.inputs['Base Color'].default_value=(*color,1);n.inputs['Roughness'].default_value=rough
  n.inputs['Emission Color'].default_value=(*color,1);n.inputs['Emission Strength'].default_value=emission
  return m
-ROCK=material('rock',(.34,.32,.28),.9);ROCK_DARK=material('rock shadow',(.19,.18,.16),.95);ROCK_WARM=material('rock warm',(.4,.32,.22),.9)
-MOSS=material('moss',(.12,.32,.03),.85);EYE=material('ember eye',(1,.2,.02),.3,9)
+ROCK=material('rock',(.37,.35,.31),.9);ROCK_DARK=material('rock shadow',(.17,.16,.14),.95);ROCK_WARM=material('rock warm',(.42,.35,.26),.9)
+MOSS=material('moss',(.12,.32,.03),.85);MOSS_LIGHT=material('moss tips',(.22,.42,.045),.9);EYE=material('ember eye',(1,.17,.015),.35,1.8)
 
 def parent_to(o,parent):
  o.parent=parent
@@ -53,16 +53,23 @@ def rock(name,loc,scale,mat,parent,seed=0):
  o.data.materials.append(ROCK_WARM if mat is ROCK and seed%3==0 else mat)
  bpy.ops.object.shade_flat();parent_to(o,parent);return o
 def moss(name,loc,r,parent):
- return rock(name,loc,(r,r*.9,r*.45),MOSS,parent,seed=len(name))
+ # Broad overlapping pads, grouped on the body/limb rather than floating decoration.
+ base=rock(name,loc,(r,r*.9,r*.35),MOSS,parent,seed=len(name))
+ for i,(dx,dy,dz) in enumerate(((-.42,-.30,.12),(.38,.24,.13))):
+  rock(f'{name}-lobe-{i}',(loc[0]+r*dx,loc[1]+r*dy,loc[2]+r*dz),(r*.55,r*.5,r*.25),MOSS_LIGHT,parent,seed=i)
+ return base
 
 root=pivot('golem-root',(0,0,0))
 hips=rock('hips',(0,0,1.45),(.95,.9,.65),ROCK_DARK,root,1)
-torso=rock('torso',(.15,0,2.4),(1.25,1.15,1.0),ROCK,root,2)
+torso=rock('torso',(.15,0,2.4),(1.38,1.22,1.0),ROCK,root,2)
 rock('chest-plate',(.45,0,2.5),(.6,.75,.7),ROCK,root,3)
 head=pivot('head',(.55,0,3.25),root)
-rock('head-rock',(0,0,0),(.62,.58,.55),ROCK,head,4);rock('brow',(.5,0,.2),(.22,.5,.12),ROCK_DARK,head,5)
-for n,y in (('eye-near',-.22),('eye-far',.22)):
- e=rock(n,(.62,y,.04),(.27,.27,.2),EYE,head,6)
+rock('head-rock',(0,0,0),(.66,.62,.55),ROCK,head,4)
+# A solid socket and overhanging brow separate two readable embers at game scale.
+rock('eye-socket',(.57,0,.045),(.20,.52,.23),ROCK_DARK,head,4)
+rock('brow',(.58,0,.22),(.25,.54,.13),ROCK_DARK,head,5)
+for n,y in (('eye-near',-.25),('eye-far',.25)):
+ rock(n,(.74,y,.055),(.13,.14,.105),EYE,head,6)
 moss('moss-torso',(-.1,.1,3.3),.6,root);moss('moss-shoulder',(.2,-1.2,3.35),.45,root);moss('moss-knee',(.55,-.8,.9),.35,root);moss('moss-hips',(.1,-.1,1.95),.55,root);moss('moss-back',(-.95,0,2.7),.7,root);moss('moss-chest',(.7,-.5,2.7),.45,root)
 legs={};arms={}
 for side,y in (('near',-.7),('far',.7)):
@@ -70,8 +77,12 @@ for side,y in (('near',-.7),('far',.7)):
  rock(f'thigh-{side}',(0,0,-.5),(.62,.58,.66),ROCK,leg,7);rock(f'shin-{side}',(.05,0,-1.0),(.55,.52,.5),ROCK_DARK,leg,8)
  rock(f'foot-{side}',(.3,0,-1.3),(.8,.6,.28),ROCK,leg,9);moss(f'moss-leg-{side}',(.05,0,-.15),.3,leg)
  arm=pivot(f'arm-{side}',(.1,y*1.7,2.9),root);arms[side]=arm
- rock(f'shoulder-{side}',(0,0,0),(.7,.65,.65),ROCK,arm,10);rock(f'forearm-{side}',(.1,0,-.85),(.52,.5,.6),ROCK_DARK,arm,11)
- rock(f'fist-{side}',(.2,0,-1.55),(.85,.75,.78) if side=='near' else (.72,.65,.68),ROCK,arm,12);moss(f'moss-arm-{side}',(0,0,.4),.3,arm)
+ rock(f'shoulder-{side}',(0,0,0),(.84,.79,.67),ROCK,arm,10);rock(f'forearm-{side}',(.1,0,-.85),(.52,.5,.6),ROCK_DARK,arm,11)
+ rock(f'fist-{side}',(.2,0,-1.55),(.98,.84,.78) if side=='near' else (.82,.72,.68),ROCK,arm,12)
+ # Three separate knuckle stones ride the articulated arm through every pose.
+ for i,dx in enumerate((-.34,0,.34)):
+  rock(f'knuckle-{side}-{i}',(.2+dx,-.68 if side=='near' else -.57,-1.38),(.24,.24,.25),ROCK_WARM,arm,16+i)
+ moss(f'moss-arm-{side}',(0,0,.4),.3,arm)
 for n,a in (('near',arms['near']),('far',arms['far'])):pass
 
 # Pose rotations about Y (screen-pitch): negative swings forward, positive back.
@@ -90,22 +101,29 @@ for nm,loc,en,sz in (('key',(5,-5,8),300,3),('fill',(-6,-3,3),110,4),('rim',(-2,
  o.rotation_euler=(Vector((0,0,1.2))-o.location).to_track_quat('-Z','Y').to_euler()
 bpy.context.view_layer.update()
 ground=world_to_camera_view(scene,camera,Vector((0,0,0)))
-frames=[]
+frames=[];bounds=[]
 for name,pose in POSES.items():
  for s in ('near','far'):
   legs[s].rotation_euler=(0,math.radians(pose['leg'][s]),0);arms[s].rotation_euler=(0,math.radians(pose['arm'][s]),0)
  head.rotation_euler=(0,math.radians(pose['head']),0)
  root.rotation_euler=(0,math.radians(pose['lean']),0);root.location=pose['loc']
  bpy.context.view_layer.update()
+ # Camera bounds must remain inside the combat crop while the bottom/ground anchor stays fixed.
+ coords=[world_to_camera_view(scene,camera,obj.matrix_world@v.co) for obj in COL.objects if obj.type=='MESH' for v in obj.data.vertices]
+ box=[min(v.x*opts.size for v in coords),min((1-v.y)*opts.size for v in coords),max(v.x*opts.size for v in coords),max((1-v.y)*opts.size for v in coords)]
+ assert box[0]>=22*opts.size/384 and box[1]>=60*opts.size/384 and box[2]<=362*opts.size/384 and box[3]<=323*opts.size/384,(name,box)
+ bounds.append({'pose':name,'bounds':[round(v,3) for v in box]})
  f=FRAMES/f'stone-golem-{name}.png';frames.append(f)
  if not opts.skip_render:
   scene.render.filepath=str(f);bpy.ops.render.render(write_still=True)
+bpy.context.preferences.filepaths.save_version=0
 bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE/'stone-golem.blend'))
 atlas=OUT/'stone-golem-atlas.webp'
 if not opts.skip_render:
  subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y',*sum((['-i',str(f)] for f in frames),[]),'-filter_complex','hstack=inputs=3','-frames:v','1','-c:v','libwebp','-quality','88','-compression_level','6',str(atlas)],check=True)
 dg=bpy.context.evaluated_depsgraph_get()
 tris=sum(len(o.evaluated_get(dg).to_mesh().polygons) for o in COL.objects if o.type=='MESH')
-manifest={'id':'stone-golem','source':'art-source/defense/stone-golem.blend','generator':'tools/blender/build_golem.py','blender':bpy.app.version_string,'kind':'baked 2.5D sprite atlas (not a GLB)','nativeFacing':1,'frame':{'width':opts.size,'height':opts.size,'ground':[round(ground.x*opts.size,2),round((1-ground.y)*opts.size,2)],'orthographic_scale':cam_data.ortho_scale},'atlas':{'file':'stone-golem-atlas.webp','poses':list(POSES),'width':opts.size*3,'height':opts.size},'render':{'engine':'Cycles CPU','samples':opts.samples,'transparent':True},'mesh_objects':sum(o.type=='MESH' for o in COL.objects),'evaluated_polygons':tris}
+hashfile=lambda f:hashlib.sha256(f.read_bytes()).hexdigest()
+manifest={'id':'stone-golem','reference':'public/defense/monster-models.webp','regeneration_command':'blender --python-exit-code 1 -b --python tools/blender/build_golem.py --','bounds':bounds,'source':'art-source/defense/stone-golem.blend','generator':'tools/blender/build_golem.py','blender':bpy.app.version_string,'kind':'baked 2.5D sprite atlas (not a GLB)','nativeFacing':1,'frame':{'width':opts.size,'height':opts.size,'ground':[round(ground.x*opts.size,2),round((1-ground.y)*opts.size,2)],'orthographic_scale':cam_data.ortho_scale},'atlas':{'file':'stone-golem-atlas.webp','poses':list(POSES),'width':opts.size*3,'height':opts.size},'render':{'engine':'Cycles CPU','samples':opts.samples,'transparent':True},'mesh_objects':sum(o.type=='MESH' for o in COL.objects),'evaluated_polygons':tris,'source_sha256':hashfile(SOURCE/'stone-golem.blend'),**({'renders':[{'path':str(f.relative_to(ROOT) if f.is_relative_to(ROOT) else f),'sha256':hashfile(f)} for f in frames],'atlas_sha256':hashfile(atlas)} if not opts.skip_render else {})}
 (OUT/'stone-golem.json').write_text(json.dumps(manifest,indent=1)+'\n')
 print(json.dumps(manifest))

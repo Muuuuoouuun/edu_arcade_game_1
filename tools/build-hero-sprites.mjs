@@ -8,9 +8,10 @@ import path from 'node:path';
 
 const directory = fileURLToPath(new URL('../public/defense/models/', import.meta.url));
 const digest = file => createHash('sha256').update(readFileSync(file)).digest('hex');
-const modelPath = path.join(directory, 'dwarf-model.json');
+const walking = process.argv.includes('--walk');
+const modelPath = path.join(directory, walking ? 'dwarf-walk-model.json' : 'dwarf-model.json');
 const model = JSON.parse(readFileSync(modelPath, 'utf8'));
-const poses = ['idle', 'windup', 'strike', 'recover'];
+const poses = walking ? Array.from({length:8},(_,i)=>`walk-${i}`) : ['idle', 'windup', 'strike', 'recover'];
 // Matches the campaign's common frame and groundY contract in art.ts.
 // Alpha bounds alone cannot catch a camera shift between model iterations.
 if (model.frame?.width !== 640 || model.frame?.height !== 640 ||
@@ -20,7 +21,7 @@ if (model.frame?.width !== 640 || model.frame?.height !== 640 ||
   throw new Error('Dwarf camera/facing contract changed: update the game mapping before exporting sprites.');
 }
 if (!poses.every(pose => model.poses?.some(frame => frame.name === pose && frame.file === `dwarf-${pose}.png`))) {
-  throw new Error('Regenerate all four dwarf poses before exporting a complete game set.');
+  throw new Error('Regenerate all expected dwarf poses before exporting a complete game set.');
 }
 const files = [];
 for (const pose of poses) {
@@ -50,8 +51,8 @@ for (const pose of poses) {
     source_bytes: statSync(source).size, bytes: statSync(destination).size,
     source_sha256: digest(source), sha256: digest(destination) });
 }
-writeFileSync(path.join(directory, 'hero-sprites.json'), JSON.stringify({
-  purpose: 'Four baked poses of the editable dwarf model; activate as one complete set in battle.',
+writeFileSync(path.join(directory, walking ? 'dwarf-walk-sprites.json' : 'hero-sprites.json'), JSON.stringify({
+  purpose: walking ? 'Eight baked walk poses; enable only with the complete dwarf idle/attack set.' : 'Four baked poses of the editable dwarf model; activate as one complete set in battle.',
   encoding: 'WebP quality 88; shared transparent 640px camera, no resize or individual pose cropping.',
   model_metadata_sha256: digest(modelPath), ground: model.frame.ground, nativeFacing: model.nativeFacing,
   files,

@@ -1,0 +1,3746 @@
+{
+  "generator": "tools/blender/build_ian_entry.py",
+  "command": "npm run models:ian-entry",
+  "source_cast_sha256": "eda0afda0a6d52bcdd59310c14fd9e58c83e1bc266dc0069e3b02c3aa44a148f",
+  "source_walk_sha256": "b2d2c1029680b111c6867f62d2bfd8236ee46c34386e4ce8afdcb5ccd1caab7f",
+  "reference": "art-source/defense/atlases/ranged-motion.png",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      330
+    ],
+    "orthographic_scale": 6.8
+  },
+  "delivery_frame": {
+    "width": 192,
+    "height": 192,
+    "ground": [
+      96,
+      165
+    ],
+    "columns": 16,
+    "rows": 1
+  },
+  "duration_seconds": 0.33,
+  "transition_seconds": 0.1,
+  "hit_at": 0.15,
+  "samples_seconds": [
+    0.04,
+    0.08
+  ],
+  "entry_checks": [
+    {
+      "entry": 0,
+      "first_leg": "left-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 1,
+      "first_leg": "left-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 2,
+      "first_leg": "left-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 3,
+      "first_leg": "left-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 4,
+      "first_leg": "right-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 5,
+      "first_leg": "right-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 6,
+      "first_leg": "right-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 7,
+      "first_leg": "right-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    }
+  ],
+  "files": [
+    {
+      "file": "art-source/defense/ian-entry.blend",
+      "bytes": 3358876,
+      "sha256": "99e288d47691112bc2ddcfd9649fd29bebd99d51b5a1fbf977d0ce4ed5e6c45e"
+    },
+    {
+      "file": "public/defense/models/ian-entry.glb",
+      "bytes": 1470932,
+      "sha256": "89d55ccb0df22fd2032e84131de71323e26f23d091a3d879e5de1ac574341de4"
+    },
+    {
+      "file": "public/defense/models/ian-entry.png",
+      "bytes": 123755,
+      "sha256": "cce57432f4e48bab56e448a99f0990942fe2626060b7f26d3dea7fc3a1f34727"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-0-0.png",
+      "bytes": 113021,
+      "sha256": "4e249aca6cf66cd4c10808b652827b2ff35f17b77ca8f468c90874a31057389f"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-0-1.png",
+      "bytes": 111503,
+      "sha256": "faf698fc41ebc600abbb0f545ec0fb5274e3985c2a9c01692da27ba770463768"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-1-0.png",
+      "bytes": 112206,
+      "sha256": "f57d40bc6338d9f52633f6114fa96cbe235fbe6913eded1df62296aa76c1fc97"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-1-1.png",
+      "bytes": 111273,
+      "sha256": "504373f0e5d96e32b7c57521b3dfaf7d5d70a1df82796095e0f349da2d2be5b4"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-2-0.png",
+      "bytes": 111566,
+      "sha256": "962522aa0c2dab7ca32e842c5634d069b53cd3b3e5e71c1102dd9871fe260ee5"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-2-1.png",
+      "bytes": 111241,
+      "sha256": "b7c4313ebd2f36eaf0abf9ffbf9795699f5e8e0aadd3e9fcc2144b0dffca1c40"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-3-0.png",
+      "bytes": 111848,
+      "sha256": "891164fcf619d60e56d991cc9d5525c43705af5bd67fc4fb45ba05c434bb4990"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-3-1.png",
+      "bytes": 111101,
+      "sha256": "44eff1fa3b145271d1817bad09a1c50b77341d05fff24c75b1d44ea1e8c6a1ea"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-4-0.png",
+      "bytes": 112224,
+      "sha256": "f2845a99e6234ffbebd026fe0dd457f9c87e9f4320b25d147175eee546f087c3"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-4-1.png",
+      "bytes": 110706,
+      "sha256": "fbe3c16ed839c3c297efbf9a1dfc268a44ebed529455415f766c6b92728ff8dc"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-5-0.png",
+      "bytes": 111891,
+      "sha256": "14efbba1f6f9122714b501c55098397b94cc5cebe3f1550d6929b7ce53378c2c"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-5-1.png",
+      "bytes": 110492,
+      "sha256": "26f1060d65b2c2fc59e5fee71d91a388ec8df831a6ece5674662723c25e064a9"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-6-0.png",
+      "bytes": 111690,
+      "sha256": "92a5092305b6bcfcf99ea0a6ee71fec3193b2517cff1007f797133d69a40e66b"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-6-1.png",
+      "bytes": 110473,
+      "sha256": "2548b3e8d7e216780d98abe7d8b672e00dd3f89cb102f318955b7a3fa525060b"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-7-0.png",
+      "bytes": 112374,
+      "sha256": "81171aa39289b908346cdf63bed5b164e10a864571875cbb797b797fae7c51cc"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-0-7-1.png",
+      "bytes": 110694,
+      "sha256": "0af35955fc7628a63b7f81ecf2e2fcb8c598884461c87e80fefe2ac41ce0c60c"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-0-0.png",
+      "bytes": 123755,
+      "sha256": "cce57432f4e48bab56e448a99f0990942fe2626060b7f26d3dea7fc3a1f34727"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-0-1.png",
+      "bytes": 123938,
+      "sha256": "145169a2af16f7200b72e7fa38cc7816fa30eb99d77e51d3128e302f6ebb68e1"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-1-0.png",
+      "bytes": 123531,
+      "sha256": "d6897df20b09f6d347ad07515335a7842c25f8b1554f616d02b72ad48e77f224"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-1-1.png",
+      "bytes": 123838,
+      "sha256": "7aed95db3224a02e7b2e4710a7d399b43efd7faf2058f907dc04a4fae91869d8"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-2-0.png",
+      "bytes": 123969,
+      "sha256": "939a3e499a3975d3fc2d96ab0caa78c7ebb406ddb8eba023959d15ea419ca117"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-2-1.png",
+      "bytes": 123960,
+      "sha256": "112252854b6c63c3661bd7bb929e8864c057268e774c3a7314bf20e32b3686a6"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-3-0.png",
+      "bytes": 123537,
+      "sha256": "e42f85c15a09e1d2dfb9561a5e90efcd501a1fa00b2be9d426d384b72a8d493d"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-3-1.png",
+      "bytes": 123687,
+      "sha256": "81dfa8707729183fb64a63516df9d0d31d05fa8ed54bd7583e3c8f791a2ff1d2"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-4-0.png",
+      "bytes": 124166,
+      "sha256": "aee7e8fdabfd2b78d95705f516a503006846ba6bbc3dcd49b82ed4e196391276"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-4-1.png",
+      "bytes": 123752,
+      "sha256": "bde8ea4e6c1d90c89a2528d0da8612a47563624d061a2297e22666af14804541"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-5-0.png",
+      "bytes": 124175,
+      "sha256": "4969adef4bec9719bfbe8dd37f5dd6aa0466a90a6c5cd9db818cd206ee12c623"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-5-1.png",
+      "bytes": 123576,
+      "sha256": "67517ec6bf77e87878a1503199e48afb832af5409763e7c8228af2bd2d73d983"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-6-0.png",
+      "bytes": 123902,
+      "sha256": "0942407670be0df90a7a396187b08829658e1c92ff738bdcbfe853f4b0885efb"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-6-1.png",
+      "bytes": 123581,
+      "sha256": "0644c707280347cd1968c823c0f18d537c30364d444f66c0b55f977389821c84"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-7-0.png",
+      "bytes": 123511,
+      "sha256": "a438b74850f12c3ac8408ab212d77654dc7730b9b469b8f49268773d1bbe83bc"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-1-7-1.png",
+      "bytes": 123425,
+      "sha256": "7ce1aca0d5e8b6a38e6ef27d492873166399058c4ee1fd3cea69df6fc71a1176"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-0-0.png",
+      "bytes": 121547,
+      "sha256": "06121b020f0ba4e6b4b55e29201bac691ab470e37d0b310d9321d4eba484a86c"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-0-1.png",
+      "bytes": 121681,
+      "sha256": "79e78f228c7fbcabc68dc34fd12619a9ff029f84a1bc2f71504bd7d8646f3501"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-1-0.png",
+      "bytes": 121453,
+      "sha256": "55a5f11b6b68fce84740c7564c3f660cb3e187ab5c830a8b09d885ecf6a8b5b0"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-1-1.png",
+      "bytes": 122057,
+      "sha256": "1382a6fc154b2a84674a964627d75c6152731d27e704d1f12c98a6d6a8cb2716"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-2-0.png",
+      "bytes": 121556,
+      "sha256": "8bb75379168dd851693a206ada765bc5f8d0d88319de07e54ad4aa97fa555029"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-2-1.png",
+      "bytes": 121885,
+      "sha256": "620897d95ac8db1f7b4726966f17791829e3bbbe440af8174e11a1459e60af48"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-3-0.png",
+      "bytes": 121171,
+      "sha256": "adebb4ed03b34a2a55b1d1f4588efc483bd2d08b30f781dca3301f475178ed9b"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-3-1.png",
+      "bytes": 121909,
+      "sha256": "382c5ce212ef22bb16f0c7f716bcd1a8bfa0f61062f0289759ce1ddcad238b9a"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-4-0.png",
+      "bytes": 121678,
+      "sha256": "b8455c74cce9ed344d9f6c7b51873122e232e1eb12cd943389f8846e459d8c04"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-4-1.png",
+      "bytes": 121771,
+      "sha256": "b806ca745f9bfba66af7e542cb30aef60a9f824e8711a9d118e628ff5cde26d5"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-5-0.png",
+      "bytes": 121666,
+      "sha256": "69c5f71853c5e06cd5de6f3cb592de672912f5a54aacd0618c595cdf1f529c70"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-5-1.png",
+      "bytes": 121776,
+      "sha256": "86029c5de678c376e4ffe7df1dd3421fa69741c3c5f1dcf534457e0a27dc0453"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-6-0.png",
+      "bytes": 121725,
+      "sha256": "4f85a84f1b0001138b15aa3044dfb8d204e1d4886a21245c7ba22357de3091c9"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-6-1.png",
+      "bytes": 121751,
+      "sha256": "f79b04a6262f85a94d9e7718ae96ee4079d4b8af0d5682be9e3d5b361868efad"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-7-0.png",
+      "bytes": 121150,
+      "sha256": "25093e04deb2bbd21613342f4d91e532ddd2200087ace11d3008f6f29988ea2c"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-2-7-1.png",
+      "bytes": 121690,
+      "sha256": "2009949b6e8c8278f25e92ff141c5b111fcc863f1e1b62a4abe688ee4f6602da"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-0-0.png",
+      "bytes": 121020,
+      "sha256": "384bc06c80965091fc19dd37cdd0c5e90e8d90a934279e71be1906017022ff36"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-0-1.png",
+      "bytes": 120594,
+      "sha256": "b27f314c5578b8eae2af8790d6c4b7f82c66e5a44aa2b7983b9c42ba19870d3b"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-1-0.png",
+      "bytes": 120904,
+      "sha256": "4d048eea4f8c1734a5dbd0c8043492ac57f895c0e11dc7e04ac3209e68defb4f"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-1-1.png",
+      "bytes": 120712,
+      "sha256": "55716317968e5c9095a703a9ed141511fb6158cbeb31c6bf468d67ebd381deb8"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-2-0.png",
+      "bytes": 120854,
+      "sha256": "30eea4fc4b4637184b4a06922f1c305b360ff3d6104b18aa4aab4be911e8d467"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-2-1.png",
+      "bytes": 120547,
+      "sha256": "abb394f39b59dccad3b5ea7b5d472444153cf99a80a0bbf55b4c6459805fe45b"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-3-0.png",
+      "bytes": 120430,
+      "sha256": "932c130aee0e8fed8e78d3b53870f326c03d49469e54e287d7e36ef1dd48673c"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-3-1.png",
+      "bytes": 120564,
+      "sha256": "e9565de5cb29c8da0859516cba12fb65d8c821f354eb8694813938af4bb2fdbb"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-4-0.png",
+      "bytes": 120639,
+      "sha256": "53a3d1008875a9a95d29753a11c065f1accfd6c4ede420fe413f1b40048b7402"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-4-1.png",
+      "bytes": 120877,
+      "sha256": "8eb91911d6bd125363b5be2043d9a200bca0a8142b2128c71de4718aa0a3b310"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-5-0.png",
+      "bytes": 120661,
+      "sha256": "9dca281aed69cff58376e3e897bb6452629086fcd3ba08fe48fe8f1c40a63c8e"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-5-1.png",
+      "bytes": 120832,
+      "sha256": "8b1d26cf35c9f6ad306d2e8814190c7ecc806dc1c082fb74beab113268fc484c"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-6-0.png",
+      "bytes": 120586,
+      "sha256": "670f5a4dac9163a9cb88b55c37926b1f96ce9f1e927abcebe8021cbc4f425ef4"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-6-1.png",
+      "bytes": 120833,
+      "sha256": "fd543577487d878109088495e35f3d2e170e79f1dcdf02f4cded20bc2ff4040c"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-7-0.png",
+      "bytes": 120445,
+      "sha256": "c4434ecf5c467b5871dae540dba38298609b8df0c1359e496e5fa3a024767ae9"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-3-7-1.png",
+      "bytes": 120887,
+      "sha256": "c7eaa7f082a26ce59049c0607ec030d1ac0a53ce52ad6a95fab2ce63e6bea4b1"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-0-0.png",
+      "bytes": 110413,
+      "sha256": "b7a7b65373fd99c91fac62b977a150a484536e96f148577436323f04920e6af5"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-0-1.png",
+      "bytes": 109979,
+      "sha256": "9cb53b17c160a008603cfb4c8d0464fe61d23a41eba4147e8f940978054de43d"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-1-0.png",
+      "bytes": 109978,
+      "sha256": "5efef628940ab36236126f07ac86419f909d30b9d8edb7b7d6e85d43c426e2cd"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-1-1.png",
+      "bytes": 109992,
+      "sha256": "0ac0e7546c1045def75f9add82e8950318247507eb2fec345f42b1458878afd9"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-2-0.png",
+      "bytes": 109925,
+      "sha256": "a66502778dc2ec23570d3c101d21aa34d6a462f97aed6231f65b9ca0e9abec11"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-2-1.png",
+      "bytes": 109987,
+      "sha256": "01d8df3d1692265b279370d690c1f6ec2cbb5e0e1b14423026721180397995f3"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-3-0.png",
+      "bytes": 110055,
+      "sha256": "dee7e53091c9942f0fecb62eae1c9d4ec156a71e996beb1d7669011ee1ca996a"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-3-1.png",
+      "bytes": 109841,
+      "sha256": "dbaac871d117c80d1981094cf5309487ccb1f06609358ab51a0e02d0c38a53b2"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-4-0.png",
+      "bytes": 110670,
+      "sha256": "8c58b0b909e70730a60187c168e11ba95167af7f5970b4e767ae3c6d93caa625"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-4-1.png",
+      "bytes": 110477,
+      "sha256": "1405ed93fd2baf519ebebc2ff732d06207aea7ca74185e51e15ecd8bb8620bab"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-5-0.png",
+      "bytes": 109963,
+      "sha256": "025e2f38829eb322153f4c87722c3e71498af43844240917fc9e2b8e2613b5fd"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-5-1.png",
+      "bytes": 110450,
+      "sha256": "ecda39d233957b6a1ac4bac8b3efdf4a316cdfb2ffdf70b971fb8bdc19b72a9e"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-6-0.png",
+      "bytes": 109618,
+      "sha256": "e88058afc15378b3aef2fe4c91fcbc25211f3a62c85575ae2a0dca2df5637898"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-6-1.png",
+      "bytes": 110429,
+      "sha256": "8a1f68acf15faa79cbb530cde3f50f59ec59bada4c37a850763652ad9a58d07c"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-7-0.png",
+      "bytes": 110198,
+      "sha256": "2abc870471dd0ef34a6ecc4635a83803990924dbb957072a06bf3a8fbb711126"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-4-7-1.png",
+      "bytes": 110387,
+      "sha256": "6e3b515a226b5665aea50a4b738b935f69d25fa93dcd97085848c90a9f832e5e"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-0-0.png",
+      "bytes": 116276,
+      "sha256": "3be06c5751045f63d098eab35dfb95ec62efab3c31985c9e05cf15736c96bb48"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-0-1.png",
+      "bytes": 115947,
+      "sha256": "641f58cf67468dae2e65bf3bc7bdac97fd1d7bf8f61c51b3f609e26ebafce652"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-1-0.png",
+      "bytes": 116532,
+      "sha256": "47f38f05b6492a025f052075429648037f7dc8e071c2dde6f3e8065ec5590bfe"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-1-1.png",
+      "bytes": 115949,
+      "sha256": "23d46ae544afa35d768d3b0706f37db2363b0ec01e3e3c41a8e55424b0f40d0a"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-2-0.png",
+      "bytes": 116690,
+      "sha256": "8863558327dd2509883a1f567fbb4edfb5bae8832f27351b40779482dcb32724"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-2-1.png",
+      "bytes": 115887,
+      "sha256": "503cce1c8fe5a4e44fbafc933e548b76eb869bcdd3afdec601c111705cb0840b"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-3-0.png",
+      "bytes": 116778,
+      "sha256": "79037c2efc6659fa320bf3f1a4ee81101d9a66a621251d0fc673342e3c39479f"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-3-1.png",
+      "bytes": 116028,
+      "sha256": "c3c53256e7dc25e7b9d2be856ce745140f139ae1466b9af48e4ddf59ba710b7e"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-4-0.png",
+      "bytes": 116033,
+      "sha256": "7b237ba80ab7e9183b23df39d86ae71d195c5e5caa5417db0164f1525ce08992"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-4-1.png",
+      "bytes": 115774,
+      "sha256": "be49ac6ec28c053f0e98efa024ff6c49cf1d7a8ff0df4a2e47de109bb3f37b34"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-5-0.png",
+      "bytes": 116370,
+      "sha256": "1d91ed0cd0b3227693cdf424bbc176bad1e89e9c9bf8065cfcccc261d5fb752f"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-5-1.png",
+      "bytes": 116141,
+      "sha256": "f85d91d19a820bce700596f644b5f71529ab77e632004fb0f6196408a4f0c205"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-6-0.png",
+      "bytes": 116632,
+      "sha256": "e2a8af43ac7c3e82f1c1f84955427f4cde73a933ddd8a67f2c214bfa4c55e62a"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-6-1.png",
+      "bytes": 116147,
+      "sha256": "b93b4b1f597828fe70d2bc24aef503e19ef75ac1c3057d1e5f1076e5380ff8f5"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-7-0.png",
+      "bytes": 116986,
+      "sha256": "c542a197badd1f04f50357de7e3379cfd63903b15fba4428af69926f5e82669c"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-5-7-1.png",
+      "bytes": 116111,
+      "sha256": "0da9c8985a944137b14c0ec621e4fd3ffcb6e66adc908c6bc335555c6312d304"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-0-0.png",
+      "bytes": 115273,
+      "sha256": "128573cae6481a19358ea9b6d3ae61da29abe0ccfd3f6d7a82b8515772e233e0"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-0-1.png",
+      "bytes": 115736,
+      "sha256": "e6f53cfda5ecb13cc60670dfa22ba75e23a6a13e6dfd090560d6d1f5db0d3c1f"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-1-0.png",
+      "bytes": 115277,
+      "sha256": "b75940ec15bf071a57681204c27c5152dd6aa6ce308fb35ef185c7476c7be091"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-1-1.png",
+      "bytes": 115724,
+      "sha256": "798e029fe6910fb2c59bceaf819cec5effd95841b4302a50429ed1a1481e6cba"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-2-0.png",
+      "bytes": 115744,
+      "sha256": "68002e5a3ec176d74139d51f4e74dd6b5a71337cf9d17a3c40ebc961b8c8eb36"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-2-1.png",
+      "bytes": 115789,
+      "sha256": "514e8422276b840213101cab5577a3b9264edfb544f0ed0ab8e4b10f9bf08e74"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-3-0.png",
+      "bytes": 115744,
+      "sha256": "e9aed036c3be1773bb72141b3c7c7eb695cbb8ed0c4d8726d3dba9d0b03c9c20"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-3-1.png",
+      "bytes": 115847,
+      "sha256": "143bca2ba7a6ae2e63afe900bda6ac1d475f24529ea2c2ff49df76c016ac2853"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-4-0.png",
+      "bytes": 115080,
+      "sha256": "85dbe7d7daaed510bae455db905765cedba6e49c4610ead3eab42fb0f710d539"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-4-1.png",
+      "bytes": 115372,
+      "sha256": "69f1adbce0497138b0580f6f0f9e6a8874403700c5cbb8bf40a266446d53dd32"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-5-0.png",
+      "bytes": 115222,
+      "sha256": "2bfb44733b8fc9307e31e9429a40a34ac4150c250966fdac8a9b5c18f9db3642"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-5-1.png",
+      "bytes": 115306,
+      "sha256": "c560fc82313902251e615ba57b7412e5f967c6b49081ffde0f503f8703d4fe0e"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-6-0.png",
+      "bytes": 115593,
+      "sha256": "0305cb31335b470affd1285daa90ddee19279bbcde1bb832fce88dfa239387fb"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-6-1.png",
+      "bytes": 115665,
+      "sha256": "46dcfc11fbf4ce96c8a774b75cb2a901f6c05c50d74804a17349228e2103b172"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-7-0.png",
+      "bytes": 115857,
+      "sha256": "789319689c0d2a6f35364bb358f69236f5d3a4bcb12bc73acd148d0dad33311d"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-6-7-1.png",
+      "bytes": 115581,
+      "sha256": "645e8b4218e2df621fa6e2cbe5506c7da602a8d636c87a2559ebf46fb3216653"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-0-0.png",
+      "bytes": 114400,
+      "sha256": "11289c3d497076e8afd28f4d3a190e999b056879f5ab695600502633e5f76853"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-0-1.png",
+      "bytes": 115591,
+      "sha256": "d0226d40777f5c93691af29164a6dc43e586da34ef9e9fac68993e0c6d1dab76"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-1-0.png",
+      "bytes": 114771,
+      "sha256": "1e05d8295b1cc59273319432b6d3a86584a0ebf35233f14b825b5c3faaf2ca3d"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-1-1.png",
+      "bytes": 115621,
+      "sha256": "5fbe674f7c0edcc065fd7eef1130bdbe022975244ee7bc3d137efd0eb1a310b0"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-2-0.png",
+      "bytes": 115359,
+      "sha256": "7e2272442e575af09e2944a9d777f036e7183a837e15a27049964457f862647f"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-2-1.png",
+      "bytes": 115797,
+      "sha256": "8e651d6effc8948ad04191c1e6be4e68f388bd8d0fc24af6376437d1c0f0dab5"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-3-0.png",
+      "bytes": 115318,
+      "sha256": "bde98ee684d477f8d24bfe0f5e9f339125f1eb3e35624e3d6dce2866a9360f8b"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-3-1.png",
+      "bytes": 115801,
+      "sha256": "598a1d032bc1cd76b9d0058a5928655ce49908b7f5a50cc24164ca6f890fe1c3"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-4-0.png",
+      "bytes": 114209,
+      "sha256": "92b8ab5611b07e85a705315cc3012ca1a2df49f14a4b3b7f33c4af1e075d4b64"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-4-1.png",
+      "bytes": 115317,
+      "sha256": "88aa161bafabe92513176d3885bd94f42722f76a00b853ca8109ad08d2f2b1ee"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-5-0.png",
+      "bytes": 114799,
+      "sha256": "8341b87924a95973a08d3e69cb114951f5a403c910079e3e9de599876ea69d24"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-5-1.png",
+      "bytes": 115374,
+      "sha256": "6d35f880fe3293da2f164b4a4fc833c12aa8774ff77bd7a44fe6d6903110dfcf"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-6-0.png",
+      "bytes": 115184,
+      "sha256": "8053073988622905024fdf7c8ef223b868843d07d5b5a7c93dc418d955940232"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-6-1.png",
+      "bytes": 115458,
+      "sha256": "0626fc41d15e1c4d7572746d27e2fcd84cf29025bc622f18e867373f4eb40f3d"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-7-0.png",
+      "bytes": 115329,
+      "sha256": "1798ae032e78fbee460a4db58f915f70a78213f62d97ffc3afee72155881ef9c"
+    },
+    {
+      "file": "art-source/defense/ian-entry-frames/ian-entry-7-7-1.png",
+      "bytes": 115556,
+      "sha256": "f5c096e3b7663fa45414b3ac117bbe26332cc8216c67b28a7740a83884c387f6"
+    },
+    {
+      "file": "public/defense/models/ian-entry-0-atlas.webp",
+      "bytes": 59062,
+      "sha256": "77b15db95251e54c08c30dd3ab004ec7879e112e968e98bc049beb5b6541b97c"
+    },
+    {
+      "file": "public/defense/models/ian-entry-1-atlas.webp",
+      "bytes": 78226,
+      "sha256": "65761a6fa41c6b38eca5a7c252e64a6324e3931967eb7d629e3ed7a332cd786c"
+    },
+    {
+      "file": "public/defense/models/ian-entry-2-atlas.webp",
+      "bytes": 71148,
+      "sha256": "dbfc41948ef5a219608e357e2f0f9339123326e888a4c685f8cd397b49f71472"
+    },
+    {
+      "file": "public/defense/models/ian-entry-3-atlas.webp",
+      "bytes": 70884,
+      "sha256": "440850a8a849e38c3e038b74a8d0565cc524499c285602eaa8e671c9712c1413"
+    },
+    {
+      "file": "public/defense/models/ian-entry-4-atlas.webp",
+      "bytes": 56570,
+      "sha256": "95d7603a7c9a794dee0812ee3f72b760b4bb35e42500a79741d601f5cf998609"
+    },
+    {
+      "file": "public/defense/models/ian-entry-5-atlas.webp",
+      "bytes": 60082,
+      "sha256": "256176847ebeb247b3af634cf91d0503085462ff995fa59c6643c4fafd3e1004"
+    },
+    {
+      "file": "public/defense/models/ian-entry-6-atlas.webp",
+      "bytes": 56506,
+      "sha256": "2d65f64122ebf6c7eacb53703c15f2818a1419f14dcc4bd3b4202242d8c46207"
+    },
+    {
+      "file": "public/defense/models/ian-entry-7-atlas.webp",
+      "bytes": 56458,
+      "sha256": "7b7ef7b344ce41d00e43c8cc8e48752e1558cc43cb43efbb282cd7ce7f24aa4f"
+    },
+    {
+      "file": "src/games/defense/mageEntrySockets.ts",
+      "bytes": 5134,
+      "sha256": "7a24619b454479264e1fc9a2847218e432a739a932aac48a70231ca9941270a4"
+    }
+  ],
+  "clips": [
+    {
+      "name": "ian-entry-0",
+      "entry": 0,
+      "duration": 0.33
+    },
+    {
+      "name": "ian-entry-1",
+      "entry": 1,
+      "duration": 0.33
+    },
+    {
+      "name": "ian-entry-2",
+      "entry": 2,
+      "duration": 0.33
+    },
+    {
+      "name": "ian-entry-3",
+      "entry": 3,
+      "duration": 0.33
+    },
+    {
+      "name": "ian-entry-4",
+      "entry": 4,
+      "duration": 0.33
+    },
+    {
+      "name": "ian-entry-5",
+      "entry": 5,
+      "duration": 0.33
+    },
+    {
+      "name": "ian-entry-6",
+      "entry": 6,
+      "duration": 0.33
+    },
+    {
+      "name": "ian-entry-7",
+      "entry": 7,
+      "duration": 0.33
+    }
+  ],
+  "directions": [
+    {
+      "direction": 0,
+      "yaw": 0.960070013999939,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            147.30984497070312,
+            110.2533187866211,
+            237.99276733398438,
+            340.8861083984375
+          ],
+          "socket": [
+            213.88327026367188,
+            117.17825317382812
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            145.55580139160156,
+            106.76152038574219,
+            240.66810607910156,
+            342.5606384277344
+          ],
+          "socket": [
+            194.68951416015625,
+            116.220703125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            147.30984497070312,
+            108.90376281738281,
+            237.9927520751953,
+            340.3528137207031
+          ],
+          "socket": [
+            211.619384765625,
+            116.11587524414062
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            145.64480590820312,
+            106.61233520507812,
+            240.66810607910156,
+            342.5606384277344
+          ],
+          "socket": [
+            194.32345581054688,
+            116.11617279052734
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            147.30984497070312,
+            107.86727142333984,
+            237.9927520751953,
+            340.13189697265625
+          ],
+          "socket": [
+            210.6786346435547,
+            115.1982421875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            145.8599090576172,
+            106.47200775146484,
+            240.66810607910156,
+            342.5606384277344
+          ],
+          "socket": [
+            194.17178344726562,
+            115.99433898925781
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            147.30984497070312,
+            108.90376281738281,
+            237.9927520751953,
+            340.3528137207031
+          ],
+          "socket": [
+            211.619384765625,
+            116.11587524414062
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            146.07530212402344,
+            106.61233520507812,
+            240.66810607910156,
+            342.5606384277344
+          ],
+          "socket": [
+            194.32345581054688,
+            116.11617279052734
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            147.30984497070312,
+            111.32281494140625,
+            237.9927520751953,
+            342.5606689453125
+          ],
+          "socket": [
+            213.88327026367188,
+            118.24774932861328
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            146.16461181640625,
+            107.4225082397461,
+            240.66810607910156,
+            339.8511657714844
+          ],
+          "socket": [
+            194.68951416015625,
+            116.8816909790039
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            147.30984497070312,
+            111.04193115234375,
+            237.9927520751953,
+            342.5606384277344
+          ],
+          "socket": [
+            216.13583374023438,
+            117.67927551269531
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            146.07530212402344,
+            107.30362701416016,
+            240.66810607910156,
+            339.8511657714844
+          ],
+          "socket": [
+            195.05560302734375,
+            116.71808624267578
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            147.30984497070312,
+            110.44789123535156,
+            237.9927520751953,
+            342.5606384277344
+          ],
+          "socket": [
+            217.0653076171875,
+            116.96614837646484
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            145.8599090576172,
+            107.17586517333984,
+            240.66810607910156,
+            339.8511657714844
+          ],
+          "socket": [
+            195.2072296142578,
+            116.57180786132812
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            147.30984497070312,
+            111.04193115234375,
+            237.9927520751953,
+            342.5606384277344
+          ],
+          "socket": [
+            216.13583374023438,
+            117.67927551269531
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            145.64480590820312,
+            107.30362701416016,
+            240.66810607910156,
+            339.8511657714844
+          ],
+          "socket": [
+            195.05560302734375,
+            116.71808624267578
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            0.0972418,
+            -0.7775192
+          ],
+          [
+            0.0801758,
+            -0.7797348
+          ],
+          [
+            0.0098538,
+            -0.7832431
+          ]
+        ],
+        [
+          [
+            0.0845289,
+            -0.7840461
+          ],
+          [
+            0.0718814,
+            -0.7836272
+          ],
+          [
+            0.0085127,
+            -0.7836261
+          ]
+        ],
+        [
+          [
+            0.0792312,
+            -0.7894078
+          ],
+          [
+            0.0684347,
+            -0.7869892
+          ],
+          [
+            0.007957,
+            -0.7840725
+          ]
+        ],
+        [
+          [
+            0.0845289,
+            -0.7840461
+          ],
+          [
+            0.0718814,
+            -0.7836272
+          ],
+          [
+            0.0085127,
+            -0.7836261
+          ]
+        ],
+        [
+          [
+            0.0972418,
+            -0.7775192
+          ],
+          [
+            0.0801758,
+            -0.7758164
+          ],
+          [
+            0.0098538,
+            -0.7808214
+          ]
+        ],
+        [
+          [
+            0.1098332,
+            -0.7800709
+          ],
+          [
+            0.0884287,
+            -0.7778992
+          ],
+          [
+            0.0111951,
+            -0.7814208
+          ]
+        ],
+        [
+          [
+            0.1150094,
+            -0.7837879
+          ],
+          [
+            0.0918341,
+            -0.780512
+          ],
+          [
+            0.0117506,
+            -0.7819567
+          ]
+        ],
+        [
+          [
+            0.1098332,
+            -0.7800709
+          ],
+          [
+            0.0884287,
+            -0.7778992
+          ],
+          [
+            0.0111951,
+            -0.7814208
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 1,
+      "yaw": -0.23171095550060272,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            123.66966247558594,
+            114.46426391601562,
+            263.30401611328125,
+            343.86962890625
+          ],
+          "socket": [
+            239.6422576904297,
+            135.95535278320312
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            124.14425659179688,
+            115.14488983154297,
+            263.8345031738281,
+            344.513671875
+          ],
+          "socket": [
+            232.06399536132812,
+            127.7673568725586
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            123.18889617919922,
+            113.70137786865234,
+            262.8232421875,
+            342.0450744628906
+          ],
+          "socket": [
+            238.32382202148438,
+            133.9254913330078
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            124.06710815429688,
+            115.0224609375,
+            263.75732421875,
+            344.513671875
+          ],
+          "socket": [
+            231.85137939453125,
+            127.50652313232422
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.98974609375,
+            112.89383697509766,
+            262.62408447265625,
+            342.0849304199219
+          ],
+          "socket": [
+            237.77659606933594,
+            132.60595703125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            124.03515625,
+            114.8928451538086,
+            263.7253723144531,
+            344.513671875
+          ],
+          "socket": [
+            231.76332092285156,
+            127.31993865966797
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            123.18889617919922,
+            113.70137786865234,
+            262.8232421875,
+            342.56658935546875
+          ],
+          "socket": [
+            238.32382202148438,
+            133.9254913330078
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            124.06710815429688,
+            115.0224609375,
+            263.75732421875,
+            344.513671875
+          ],
+          "socket": [
+            231.85137939453125,
+            127.50652313232422
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            121.17491149902344,
+            114.85997772216797,
+            260.80926513671875,
+            349.5283508300781
+          ],
+          "socket": [
+            237.14749145507812,
+            136.35108947753906
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            122.6024169921875,
+            115.38945007324219,
+            262.29266357421875,
+            343.5693359375
+          ],
+          "socket": [
+            230.52215576171875,
+            128.0119171142578
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            121.65568542480469,
+            113.94456481933594,
+            261.2900390625,
+            347.02099609375
+          ],
+          "socket": [
+            238.46173095703125,
+            136.74594116210938
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            122.6795883178711,
+            115.2425537109375,
+            262.36981201171875,
+            342.686767578125
+          ],
+          "socket": [
+            230.73477172851562,
+            128.0045928955078
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            121.85482788085938,
+            113.0738525390625,
+            261.4891662597656,
+            344.513671875
+          ],
+          "socket": [
+            239.00477600097656,
+            136.4304656982422
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            122.7115478515625,
+            115.10277557373047,
+            262.4017639160156,
+            341.8041687011719
+          ],
+          "socket": [
+            230.82281494140625,
+            127.92304229736328
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            121.65568542480469,
+            113.94456481933594,
+            261.2900390625,
+            342.00634765625
+          ],
+          "socket": [
+            238.46173095703125,
+            136.74594116210938
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            122.6795883178711,
+            115.2425537109375,
+            262.36981201171875,
+            340.9216003417969
+          ],
+          "socket": [
+            230.73477172851562,
+            128.0045928955078
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            0.1762957,
+            -0.7036436
+          ],
+          [
+            0.1745514,
+            -0.7109394
+          ],
+          [
+            0.1467862,
+            -0.7409386
+          ]
+        ],
+        [
+          [
+            0.1688735,
+            -0.7156085
+          ],
+          [
+            0.1697209,
+            -0.7183764
+          ],
+          [
+            0.1460072,
+            -0.7418942
+          ]
+        ],
+        [
+          [
+            0.1657874,
+            -0.7232345
+          ],
+          [
+            0.167716,
+            -0.7232109
+          ],
+          [
+            0.1456846,
+            -0.7425778
+          ]
+        ],
+        [
+          [
+            0.1688735,
+            -0.7156085
+          ],
+          [
+            0.1697209,
+            -0.7183764
+          ],
+          [
+            0.1460072,
+            -0.7418942
+          ]
+        ],
+        [
+          [
+            0.1762957,
+            -0.7036436
+          ],
+          [
+            0.1654111,
+            -0.7094895
+          ],
+          [
+            0.1411372,
+            -0.7400425
+          ]
+        ],
+        [
+          [
+            0.1836729,
+            -0.7008023
+          ],
+          [
+            0.1702262,
+            -0.7080429
+          ],
+          [
+            0.1419162,
+            -0.7400694
+          ]
+        ],
+        [
+          [
+            0.1867141,
+            -0.7022999
+          ],
+          [
+            0.1722158,
+            -0.7091987
+          ],
+          [
+            0.1422388,
+            -0.7403682
+          ]
+        ],
+        [
+          [
+            0.1836729,
+            -0.7008023
+          ],
+          [
+            0.1702262,
+            -0.7080429
+          ],
+          [
+            0.1419162,
+            -0.7400694
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 2,
+      "yaw": -0.610725998878479,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            132.10678100585938,
+            119.45267486572266,
+            252.21636962890625,
+            345.9342346191406
+          ],
+          "socket": [
+            234.56629943847656,
+            142.8465576171875
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            131.59393310546875,
+            120.15113067626953,
+            251.70350646972656,
+            340.5364990234375
+          ],
+          "socket": [
+            234.05343627929688,
+            134.04046630859375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            131.5892791748047,
+            118.613525390625,
+            251.6988525390625,
+            343.2353515625
+          ],
+          "socket": [
+            234.04879760742188,
+            140.67645263671875
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            131.5108642578125,
+            120.0164794921875,
+            251.62045288085938,
+            340.5364990234375
+          ],
+          "socket": [
+            233.97039794921875,
+            133.7570343017578
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            131.3749237060547,
+            117.77437591552734,
+            251.4844970703125,
+            340.5364990234375
+          ],
+          "socket": [
+            233.83444213867188,
+            139.29873657226562
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            131.47647094726562,
+            119.88178253173828,
+            251.58604431152344,
+            340.5364990234375
+          ],
+          "socket": [
+            233.93597412109375,
+            133.5611114501953
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            131.5892791748047,
+            118.613525390625,
+            251.6988525390625,
+            338.60931396484375
+          ],
+          "socket": [
+            234.04879760742188,
+            140.67645263671875
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            131.5108642578125,
+            120.0164794921875,
+            251.62045288085938,
+            340.5364990234375
+          ],
+          "socket": [
+            233.97039794921875,
+            133.7570343017578
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.42144775390625,
+            119.45267486572266,
+            249.531005859375,
+            345.9342346191406
+          ],
+          "socket": [
+            231.88096618652344,
+            142.8465576171875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            129.93429565429688,
+            120.15113067626953,
+            250.04388427734375,
+            340.5364990234375
+          ],
+          "socket": [
+            232.39382934570312,
+            134.04046630859375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.93894958496094,
+            118.613525390625,
+            250.04852294921875,
+            343.2353515625
+          ],
+          "socket": [
+            232.39846801757812,
+            143.38133239746094
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            130.01736450195312,
+            120.0164794921875,
+            250.12692260742188,
+            340.5364990234375
+          ],
+          "socket": [
+            232.4768829345703,
+            134.05572509765625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            130.15330505371094,
+            117.77437591552734,
+            250.26287841796875,
+            340.5364990234375
+          ],
+          "socket": [
+            232.61282348632812,
+            143.12374877929688
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            130.05177307128906,
+            119.88178253173828,
+            250.16131591796875,
+            340.5364990234375
+          ],
+          "socket": [
+            232.51129150390625,
+            133.9835205078125
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.93894958496094,
+            118.613525390625,
+            250.04852294921875,
+            338.60931396484375
+          ],
+          "socket": [
+            232.39846801757812,
+            143.38133239746094
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            130.01736450195312,
+            120.0164794921875,
+            250.12692260742188,
+            340.5364990234375
+          ],
+          "socket": [
+            232.4768829345703,
+            134.05572509765625
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            0.1510349,
+            -0.6786382
+          ],
+          [
+            0.1559541,
+            -0.6856915
+          ],
+          [
+            0.1540751,
+            -0.7179552
+          ]
+        ],
+        [
+          [
+            0.1481089,
+            -0.6913936
+          ],
+          [
+            0.1540581,
+            -0.6936423
+          ],
+          [
+            0.1537709,
+            -0.7189936
+          ]
+        ],
+        [
+          [
+            0.1468969,
+            -0.6993479
+          ],
+          [
+            0.1532727,
+            -0.69869
+          ],
+          [
+            0.1536447,
+            -0.7197114
+          ]
+        ],
+        [
+          [
+            0.1481089,
+            -0.6913936
+          ],
+          [
+            0.1540581,
+            -0.6936423
+          ],
+          [
+            0.1537709,
+            -0.7189936
+          ]
+        ],
+        [
+          [
+            0.1510349,
+            -0.6786382
+          ],
+          [
+            0.1461156,
+            -0.6856915
+          ],
+          [
+            0.1479946,
+            -0.7179552
+          ]
+        ],
+        [
+          [
+            0.1539608,
+            -0.6750098
+          ],
+          [
+            0.1480116,
+            -0.6837322
+          ],
+          [
+            0.1482989,
+            -0.7178993
+          ]
+        ],
+        [
+          [
+            0.1551728,
+            -0.6761826
+          ],
+          [
+            0.148797,
+            -0.6846759
+          ],
+          [
+            0.148425,
+            -0.7181638
+          ]
+        ],
+        [
+          [
+            0.1539608,
+            -0.6750098
+          ],
+          [
+            0.1480116,
+            -0.6837322
+          ],
+          [
+            0.1482989,
+            -0.7178993
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 3,
+      "yaw": -0.9897410869598389,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            123.19094848632812,
+            116.39948272705078,
+            262.8253173828125,
+            349.5283508300781
+          ],
+          "socket": [
+            223.44845581054688,
+            148.5006866455078
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            121.70756530761719,
+            116.928955078125,
+            261.3977966308594,
+            343.5693359375
+          ],
+          "socket": [
+            230.0738067626953,
+            140.16151428222656
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.71017456054688,
+            115.48406982421875,
+            262.34454345703125,
+            347.0210266113281
+          ],
+          "socket": [
+            223.80532836914062,
+            146.31829833984375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            121.63040161132812,
+            116.78205871582031,
+            261.3206481933594,
+            342.686767578125
+          ],
+          "socket": [
+            230.13211059570312,
+            139.876220703125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.51103210449219,
+            114.61335754394531,
+            262.1453857421875,
+            344.513671875
+          ],
+          "socket": [
+            223.95428466796875,
+            144.93560791015625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            121.59843444824219,
+            116.64230346679688,
+            261.2886962890625,
+            341.8041687011719
+          ],
+          "socket": [
+            230.15625,
+            139.6794891357422
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.71017456054688,
+            115.48406982421875,
+            262.34454345703125,
+            342.00634765625
+          ],
+          "socket": [
+            223.80532836914062,
+            146.31829833984375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            121.63040161132812,
+            116.78205871582031,
+            261.3206481933594,
+            340.9216003417969
+          ],
+          "socket": [
+            230.13211059570312,
+            139.876220703125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            120.6961898803711,
+            116.00376892089844,
+            260.33056640625,
+            343.86962890625
+          ],
+          "socket": [
+            220.95370483398438,
+            148.10498046875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            120.16571044921875,
+            116.68439483642578,
+            259.85595703125,
+            344.513671875
+          ],
+          "socket": [
+            228.53196716308594,
+            139.91696166992188
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            121.17695617675781,
+            115.24088287353516,
+            260.81134033203125,
+            342.0450744628906
+          ],
+          "socket": [
+            220.6010284423828,
+            148.65234375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            120.24287414550781,
+            116.56196594238281,
+            259.93310546875,
+            344.513671875
+          ],
+          "socket": [
+            228.47366333007812,
+            139.93411254882812
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            121.37611389160156,
+            114.43334197998047,
+            261.010498046875,
+            342.0849304199219
+          ],
+          "socket": [
+            220.45626831054688,
+            148.40005493164062
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            120.27484130859375,
+            116.4323501586914,
+            259.965087890625,
+            344.513671875
+          ],
+          "socket": [
+            228.44955444335938,
+            139.86270141601562
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            121.17695617675781,
+            115.24088287353516,
+            260.81134033203125,
+            342.56658935546875
+          ],
+          "socket": [
+            220.6010284423828,
+            148.65234375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            120.24287414550781,
+            116.56196594238281,
+            259.93310546875,
+            344.513671875
+          ],
+          "socket": [
+            228.47366333007812,
+            139.93411254882812
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            0.104336,
+            -0.65913
+          ],
+          [
+            0.1152206,
+            -0.6649759
+          ],
+          [
+            0.1394946,
+            -0.6955289
+          ]
+        ],
+        [
+          [
+            0.1063216,
+            -0.6719572
+          ],
+          [
+            0.1165281,
+            -0.6729718
+          ],
+          [
+            0.1397082,
+            -0.6965742
+          ]
+        ],
+        [
+          [
+            0.1071558,
+            -0.6799403
+          ],
+          [
+            0.1170739,
+            -0.6780376
+          ],
+          [
+            0.1397966,
+            -0.697295
+          ]
+        ],
+        [
+          [
+            0.1063216,
+            -0.6719572
+          ],
+          [
+            0.1165281,
+            -0.6729718
+          ],
+          [
+            0.1397082,
+            -0.6965742
+          ]
+        ],
+        [
+          [
+            0.104336,
+            -0.65913
+          ],
+          [
+            0.1060804,
+            -0.6664257
+          ],
+          [
+            0.1338456,
+            -0.6964249
+          ]
+        ],
+        [
+          [
+            0.1023955,
+            -0.6554263
+          ],
+          [
+            0.1047883,
+            -0.6644203
+          ],
+          [
+            0.133632,
+            -0.6963621
+          ]
+        ],
+        [
+          [
+            0.1016062,
+            -0.6565668
+          ],
+          [
+            0.1042579,
+            -0.6653446
+          ],
+          [
+            0.1335436,
+            -0.6966237
+          ]
+        ],
+        [
+          [
+            0.1023955,
+            -0.6554263
+          ],
+          [
+            0.1047883,
+            -0.6644203
+          ],
+          [
+            0.133632,
+            -0.6963621
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 4,
+      "yaw": -2.1815226078033447,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            146.0074462890625,
+            119.6659927368164,
+            236.69039916992188,
+            342.5606384277344
+          ],
+          "socket": [
+            170.116943359375,
+            151.08401489257812
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            143.33212280273438,
+            118.84391784667969,
+            238.4444580078125,
+            339.8511657714844
+          ],
+          "socket": [
+            189.31068420410156,
+            149.7179718017578
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            146.0074462890625,
+            118.62073516845703,
+            236.69039916992188,
+            342.5606384277344
+          ],
+          "socket": [
+            172.38082885742188,
+            149.60943603515625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            143.3321075439453,
+            118.6761703491211,
+            238.35543823242188,
+            339.8511657714844
+          ],
+          "socket": [
+            189.67678833007812,
+            149.54727172851562
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            146.00746154785156,
+            117.69623565673828,
+            236.69039916992188,
+            342.5606384277344
+          ],
+          "socket": [
+            173.3215789794922,
+            148.52105712890625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            143.33212280273438,
+            118.52778625488281,
+            238.1403350830078,
+            339.8511657714844
+          ],
+          "socket": [
+            189.8284149169922,
+            149.39804077148438
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            146.0074462890625,
+            118.62073516845703,
+            236.69039916992188,
+            342.5606384277344
+          ],
+          "socket": [
+            172.38082885742188,
+            149.60943603515625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            143.3321075439453,
+            118.6761703491211,
+            237.9249267578125,
+            339.8511657714844
+          ],
+          "socket": [
+            189.67678833007812,
+            149.54727172851562
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            146.00746154785156,
+            118.59649658203125,
+            236.69039916992188,
+            340.8860778808594
+          ],
+          "socket": [
+            170.116943359375,
+            150.0145263671875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            143.33212280273438,
+            118.18292999267578,
+            237.8356475830078,
+            342.5606384277344
+          ],
+          "socket": [
+            189.31069946289062,
+            149.05697631835938
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            146.0074462890625,
+            117.9634780883789,
+            236.69039916992188,
+            340.3528137207031
+          ],
+          "socket": [
+            167.86436462402344,
+            149.8582763671875
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            143.3321075439453,
+            118.08135223388672,
+            237.9249267578125,
+            342.5606384277344
+          ],
+          "socket": [
+            188.94461059570312,
+            148.9595489501953
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            146.0074462890625,
+            117.20970153808594,
+            236.69039916992188,
+            340.13189697265625
+          ],
+          "socket": [
+            166.93490600585938,
+            149.3158721923828
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            143.3321075439453,
+            117.96036529541016,
+            238.1403350830078,
+            342.5606384277344
+          ],
+          "socket": [
+            188.79298400878906,
+            148.84066772460938
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            146.0074462890625,
+            117.9634780883789,
+            236.69039916992188,
+            340.3528137207031
+          ],
+          "socket": [
+            167.86436462402344,
+            149.8582763671875
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            143.3321075439453,
+            118.08135223388672,
+            238.35543823242188,
+            342.5606384277344
+          ],
+          "socket": [
+            188.94461059570312,
+            148.9595489501953
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            -0.0972411,
+            -0.657214
+          ],
+          [
+            -0.080175,
+            -0.6555112
+          ],
+          [
+            -0.0098531,
+            -0.6605161
+          ]
+        ],
+        [
+          [
+            -0.0845282,
+            -0.6660714
+          ],
+          [
+            -0.0718806,
+            -0.6609137
+          ],
+          [
+            -0.0085118,
+            -0.6611415
+          ]
+        ],
+        [
+          [
+            -0.0792304,
+            -0.6723986
+          ],
+          [
+            -0.0684339,
+            -0.6649013
+          ],
+          [
+            -0.0079562,
+            -0.6616882
+          ]
+        ],
+        [
+          [
+            -0.0845282,
+            -0.6660714
+          ],
+          [
+            -0.0718806,
+            -0.6609137
+          ],
+          [
+            -0.0085118,
+            -0.6611415
+          ]
+        ],
+        [
+          [
+            -0.0972411,
+            -0.657214
+          ],
+          [
+            -0.080175,
+            -0.6594295
+          ],
+          [
+            -0.009853,
+            -0.6629378
+          ]
+        ],
+        [
+          [
+            -0.1098325,
+            -0.6574351
+          ],
+          [
+            -0.088428,
+            -0.660002
+          ],
+          [
+            -0.0111943,
+            -0.6632948
+          ]
+        ],
+        [
+          [
+            -0.1150086,
+            -0.6601866
+          ],
+          [
+            -0.0918333,
+            -0.6619893
+          ],
+          [
+            -0.0117498,
+            -0.6637303
+          ]
+        ],
+        [
+          [
+            -0.1098325,
+            -0.6574351
+          ],
+          [
+            -0.088428,
+            -0.660002
+          ],
+          [
+            -0.0111943,
+            -0.6632948
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 5,
+      "yaw": 2.909881591796875,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            120.69619750976562,
+            115.991455078125,
+            260.3305358886719,
+            334.4843444824219
+          ],
+          "socket": [
+            144.35797119140625,
+            132.30691528320312
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            120.16572570800781,
+            114.85212707519531,
+            259.85595703125,
+            335.02435302734375
+          ],
+          "socket": [
+            151.93621826171875,
+            138.1713409423828
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            121.1769790649414,
+            115.07606506347656,
+            260.81134033203125,
+            336.9916687011719
+          ],
+          "socket": [
+            145.6763916015625,
+            131.79981994628906
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            120.24288940429688,
+            114.70520782470703,
+            259.93310546875,
+            335.90692138671875
+          ],
+          "socket": [
+            152.14883422851562,
+            138.15695190429688
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            121.37611389160156,
+            114.20532989501953,
+            261.0104675292969,
+            339.4990234375
+          ],
+          "socket": [
+            146.22361755371094,
+            131.11331176757812
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            120.27485656738281,
+            114.5654525756836,
+            259.9650573730469,
+            336.7895202636719
+          ],
+          "socket": [
+            152.2368927001953,
+            138.07244873046875
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            121.1769790649414,
+            115.07606506347656,
+            260.81134033203125,
+            342.00634765625
+          ],
+          "socket": [
+            145.6763916015625,
+            131.79981994628906
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            120.24288940429688,
+            114.70520782470703,
+            259.93310546875,
+            337.6720886230469
+          ],
+          "socket": [
+            152.14883422851562,
+            138.15695190429688
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            123.19095611572266,
+            115.59574127197266,
+            262.8253173828125,
+            338.3459777832031
+          ],
+          "socket": [
+            146.85272216796875,
+            131.91119384765625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            121.70757293701172,
+            114.6075439453125,
+            261.3977966308594,
+            339.4990234375
+          ],
+          "socket": [
+            153.47805786132812,
+            137.92678833007812
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.71017456054688,
+            114.83287811279297,
+            262.34454345703125,
+            337.5519104003906
+          ],
+          "socket": [
+            145.53848266601562,
+            130.7916259765625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            121.63041687011719,
+            114.48511505126953,
+            261.3206481933594,
+            339.4990234375
+          ],
+          "socket": [
+            153.26544189453125,
+            137.6730194091797
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.51103973388672,
+            114.02531433105469,
+            262.1453857421875,
+            337.07025146484375
+          ],
+          "socket": [
+            144.9954376220703,
+            129.8515625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            121.59844970703125,
+            114.35549926757812,
+            261.2886657714844,
+            339.4990234375
+          ],
+          "socket": [
+            153.17738342285156,
+            137.48941040039062
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.71017456054688,
+            114.83287811279297,
+            262.34454345703125,
+            337.0303955078125
+          ],
+          "socket": [
+            145.53848266601562,
+            130.7916259765625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            121.63041687011719,
+            114.48511505126953,
+            261.3206481933594,
+            339.4990234375
+          ],
+          "socket": [
+            153.26544189453125,
+            137.6730194091797
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            -0.1762949,
+            -0.7310896
+          ],
+          [
+            -0.1745505,
+            -0.7243066
+          ],
+          [
+            -0.1467854,
+            -0.7028205
+          ]
+        ],
+        [
+          [
+            -0.1688728,
+            -0.7345091
+          ],
+          [
+            -0.1697201,
+            -0.7261645
+          ],
+          [
+            -0.1460064,
+            -0.7028732
+          ]
+        ],
+        [
+          [
+            -0.1657866,
+            -0.738572
+          ],
+          [
+            -0.1677152,
+            -0.7286797
+          ],
+          [
+            -0.1456838,
+            -0.7031828
+          ]
+        ],
+        [
+          [
+            -0.1688728,
+            -0.7345091
+          ],
+          [
+            -0.1697201,
+            -0.7261645
+          ],
+          [
+            -0.1460064,
+            -0.7028732
+          ]
+        ],
+        [
+          [
+            -0.1762949,
+            -0.7310896
+          ],
+          [
+            -0.1654103,
+            -0.7257564
+          ],
+          [
+            -0.1411364,
+            -0.7037165
+          ]
+        ],
+        [
+          [
+            -0.1836721,
+            -0.7367037
+          ],
+          [
+            -0.1702254,
+            -0.7298583
+          ],
+          [
+            -0.1419154,
+            -0.7046463
+          ]
+        ],
+        [
+          [
+            -0.1867133,
+            -0.7416747
+          ],
+          [
+            -0.172215,
+            -0.7333025
+          ],
+          [
+            -0.142238,
+            -0.705319
+          ]
+        ],
+        [
+          [
+            -0.1836721,
+            -0.7367037
+          ],
+          [
+            -0.1702254,
+            -0.7298583
+          ],
+          [
+            -0.1419154,
+            -0.7046463
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 6,
+      "yaw": 2.5308666229248047,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            131.78387451171875,
+            118.99903106689453,
+            251.89346313476562,
+            334.0255432128906
+          ],
+          "socket": [
+            149.4339141845703,
+            125.41571044921875
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            132.29672241210938,
+            117.84210205078125,
+            252.40631103515625,
+            335.1387634277344
+          ],
+          "socket": [
+            149.94676208496094,
+            131.8982391357422
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            132.30136108398438,
+            118.15990447998047,
+            252.41094970703125,
+            333.2115783691406
+          ],
+          "socket": [
+            149.951416015625,
+            125.04885864257812
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            132.37977600097656,
+            117.70745086669922,
+            252.4893798828125,
+            335.1387634277344
+          ],
+          "socket": [
+            150.02981567382812,
+            131.90643310546875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            132.51571655273438,
+            117.32075500488281,
+            252.62530517578125,
+            335.1387634277344
+          ],
+          "socket": [
+            150.165771484375,
+            124.4205322265625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            132.41416931152344,
+            117.57275390625,
+            252.52374267578125,
+            335.1387634277344
+          ],
+          "socket": [
+            150.06422424316406,
+            131.831298828125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            132.30136108398438,
+            118.15990447998047,
+            252.41094970703125,
+            337.8376159667969
+          ],
+          "socket": [
+            149.951416015625,
+            125.04885864257812
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            132.37977600097656,
+            117.70745086669922,
+            252.4893798828125,
+            335.1387634277344
+          ],
+          "socket": [
+            150.02981567382812,
+            131.90643310546875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            134.46920776367188,
+            118.99903106689453,
+            254.57879638671875,
+            334.0255432128906
+          ],
+          "socket": [
+            152.11924743652344,
+            125.41571044921875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            133.9563446044922,
+            117.84210205078125,
+            254.06593322753906,
+            335.1387634277344
+          ],
+          "socket": [
+            151.6063995361328,
+            131.8982391357422
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            133.95169067382812,
+            118.15990447998047,
+            254.061279296875,
+            333.2115783691406
+          ],
+          "socket": [
+            151.60174560546875,
+            124.15621948242188
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            133.873291015625,
+            117.70745086669922,
+            253.98287963867188,
+            335.1387634277344
+          ],
+          "socket": [
+            151.52333068847656,
+            131.62191772460938
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            133.73733520507812,
+            117.32075500488281,
+            253.846923828125,
+            335.1387634277344
+          ],
+          "socket": [
+            151.38739013671875,
+            123.15827178955078
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            133.83888244628906,
+            117.57275390625,
+            253.94847106933594,
+            335.1387634277344
+          ],
+          "socket": [
+            151.48895263671875,
+            131.42893981933594
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            133.95169067382812,
+            118.15990447998047,
+            254.061279296875,
+            337.8376159667969
+          ],
+          "socket": [
+            151.60174560546875,
+            124.15621948242188
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            133.873291015625,
+            117.70745086669922,
+            253.98287963867188,
+            335.1387634277344
+          ],
+          "socket": [
+            151.52333068847656,
+            131.62191772460938
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            -0.1510341,
+            -0.7560951
+          ],
+          [
+            -0.1559533,
+            -0.7495545
+          ],
+          [
+            -0.1540744,
+            -0.7258039
+          ]
+        ],
+        [
+          [
+            -0.1481081,
+            -0.758724
+          ],
+          [
+            -0.1540573,
+            -0.7508986
+          ],
+          [
+            -0.1537701,
+            -0.7257738
+          ]
+        ],
+        [
+          [
+            -0.1468962,
+            -0.7624585
+          ],
+          [
+            -0.153272,
+            -0.7532006
+          ],
+          [
+            -0.153644,
+            -0.7260491
+          ]
+        ],
+        [
+          [
+            -0.1481081,
+            -0.758724
+          ],
+          [
+            -0.1540573,
+            -0.7508986
+          ],
+          [
+            -0.1537701,
+            -0.7257738
+          ]
+        ],
+        [
+          [
+            -0.1510341,
+            -0.7560951
+          ],
+          [
+            -0.1461148,
+            -0.7495545
+          ],
+          [
+            -0.1479938,
+            -0.7258039
+          ]
+        ],
+        [
+          [
+            -0.15396,
+            -0.7624962
+          ],
+          [
+            -0.1480108,
+            -0.754169
+          ],
+          [
+            -0.1482981,
+            -0.7268162
+          ]
+        ],
+        [
+          [
+            -0.1551719,
+            -0.767792
+          ],
+          [
+            -0.1487962,
+            -0.7578253
+          ],
+          [
+            -0.1484241,
+            -0.7275233
+          ]
+        ],
+        [
+          [
+            -0.15396,
+            -0.7624962
+          ],
+          [
+            -0.1480108,
+            -0.754169
+          ],
+          [
+            -0.1482981,
+            -0.7268162
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 7,
+      "yaw": 2.1518516540527344,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            121.17491149902344,
+            111.74365997314453,
+            260.80926513671875,
+            338.3459777832031
+          ],
+          "socket": [
+            160.55174255371094,
+            119.7615966796875
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            122.6024169921875,
+            113.06803894042969,
+            262.29266357421875,
+            339.4990234375
+          ],
+          "socket": [
+            153.92640686035156,
+            125.77716064453125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            121.65568542480469,
+            111.10901641845703,
+            261.2900390625,
+            337.5519104003906
+          ],
+          "socket": [
+            160.19488525390625,
+            119.40703582763672
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            122.6795883178711,
+            112.94561004638672,
+            262.36981201171875,
+            339.4990234375
+          ],
+          "socket": [
+            153.8681182861328,
+            125.7872543334961
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            121.85482788085938,
+            110.37055206298828,
+            261.48919677734375,
+            337.07025146484375
+          ],
+          "socket": [
+            160.04592895507812,
+            118.78367614746094
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            122.71154022216797,
+            112.81599426269531,
+            262.40179443359375,
+            339.4990234375
+          ],
+          "socket": [
+            153.84396362304688,
+            125.712890625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            121.65568542480469,
+            111.10901641845703,
+            261.2900390625,
+            337.0303955078125
+          ],
+          "socket": [
+            160.19488525390625,
+            119.40703582763672
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            122.6795883178711,
+            112.94561004638672,
+            262.36981201171875,
+            339.4990234375
+          ],
+          "socket": [
+            153.8681182861328,
+            125.7872543334961
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            123.66966247558594,
+            112.13937377929688,
+            263.3040466308594,
+            334.4843444824219
+          ],
+          "socket": [
+            163.0465087890625,
+            120.15731048583984
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            124.14425659179688,
+            113.3125991821289,
+            263.8345031738281,
+            335.02435302734375
+          ],
+          "socket": [
+            155.46824645996094,
+            126.02174377441406
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            123.18888854980469,
+            111.15037536621094,
+            262.8232421875,
+            336.9916687011719
+          ],
+          "socket": [
+            163.39918518066406,
+            118.88520812988281
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            124.06710815429688,
+            113.16570281982422,
+            263.75732421875,
+            335.9069519042969
+          ],
+          "socket": [
+            155.5265350341797,
+            125.74351501464844
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            122.98973083496094,
+            110.26519775390625,
+            262.62408447265625,
+            339.4990234375
+          ],
+          "socket": [
+            163.5439453125,
+            117.88195037841797
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            124.03514099121094,
+            113.02594757080078,
+            263.7253723144531,
+            336.7895202636719
+          ],
+          "socket": [
+            155.55068969726562,
+            125.54976654052734
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            123.18888854980469,
+            111.15037536621094,
+            262.8232421875,
+            342.00634765625
+          ],
+          "socket": [
+            163.39918518066406,
+            118.88520812988281
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            124.06710815429688,
+            113.16570281982422,
+            263.75732421875,
+            337.6720886230469
+          ],
+          "socket": [
+            155.5265350341797,
+            125.74351501464844
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            -0.1043352,
+            -0.7756034
+          ],
+          [
+            -0.1152199,
+            -0.77027
+          ],
+          [
+            -0.1394938,
+            -0.7482302
+          ]
+        ],
+        [
+          [
+            -0.1063208,
+            -0.7781604
+          ],
+          [
+            -0.1165274,
+            -0.771569
+          ],
+          [
+            -0.1397073,
+            -0.7481932
+          ]
+        ],
+        [
+          [
+            -0.107155,
+            -0.7818661
+          ],
+          [
+            -0.1170731,
+            -0.7738529
+          ],
+          [
+            -0.1397958,
+            -0.7484657
+          ]
+        ],
+        [
+          [
+            -0.1063208,
+            -0.7781604
+          ],
+          [
+            -0.1165274,
+            -0.771569
+          ],
+          [
+            -0.1397073,
+            -0.7481932
+          ]
+        ],
+        [
+          [
+            -0.1043352,
+            -0.7756034
+          ],
+          [
+            -0.1060796,
+            -0.7688202
+          ],
+          [
+            -0.1338448,
+            -0.7473341
+          ]
+        ],
+        [
+          [
+            -0.1023947,
+            -0.7820798
+          ],
+          [
+            -0.1047875,
+            -0.7734809
+          ],
+          [
+            -0.1336312,
+            -0.7483535
+          ]
+        ],
+        [
+          [
+            -0.1016054,
+            -0.7874078
+          ],
+          [
+            -0.1042571,
+            -0.7771566
+          ],
+          [
+            -0.1335427,
+            -0.7490634
+          ]
+        ],
+        [
+          [
+            -0.1023947,
+            -0.7820798
+          ],
+          [
+            -0.1047875,
+            -0.7734809
+          ],
+          [
+            -0.1336312,
+            -0.7483535
+          ]
+        ]
+      ]
+    }
+  ],
+  "fps": 100,
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 48
+  },
+  "display_scale": 1.406896551724138,
+  "reference_sha256": "444644e358d8312d72c9192237dbe1e662338e5f287138e54639d02eb283f28c",
+  "generator_sha256": "e9187d420a69f39f607d3f9eb708e0703742f8f4667dc22c029e968991dfe0b3",
+  "runtime": {
+    "mesh_objects": 36,
+    "triangles": 21122,
+    "materials": 14
+  }
+}

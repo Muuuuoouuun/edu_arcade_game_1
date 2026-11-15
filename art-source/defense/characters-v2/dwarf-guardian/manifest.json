@@ -1,0 +1,104 @@
+{
+  "hero": "bron",
+  "asset": "dwarf-guardian",
+  "source": "art-source/defense/dwarf.blend",
+  "reference": "public/defense/atlas.png",
+  "reference_sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330",
+  "generator": "tools/blender/build_character_production.py",
+  "materials": 1,
+  "texture_size": 1024,
+  "texture_maps": [
+    "color",
+    "normal",
+    "orm"
+  ],
+  "source_material_tiles": [
+    {
+      "name": "Bronze / polished edge",
+      "surface": "metal"
+    },
+    {
+      "name": "Bronze / warm armor trim",
+      "surface": "metal"
+    },
+    {
+      "name": "Cloth / deep jade wool",
+      "surface": "cloth"
+    },
+    {
+      "name": "Cloth / lit woven folds",
+      "surface": "cloth"
+    },
+    {
+      "name": "Eye / obsidian pupil",
+      "surface": "smooth"
+    },
+    {
+      "name": "Eye / pale amber whites",
+      "surface": "smooth"
+    },
+    {
+      "name": "Hair / beard groove",
+      "surface": "fur"
+    },
+    {
+      "name": "Hair / copper beard",
+      "surface": "fur"
+    },
+    {
+      "name": "Hair / warm braid ridges",
+      "surface": "fur"
+    },
+    {
+      "name": "Hammer / cold granite",
+      "surface": "stone"
+    },
+    {
+      "name": "Leather / burgundy straps",
+      "surface": "leather"
+    },
+    {
+      "name": "Leather / heavy boot sole",
+      "surface": "leather"
+    },
+    {
+      "name": "Rune / pale mint inlay",
+      "surface": "metal"
+    },
+    {
+      "name": "Skin / rosy nose",
+      "surface": "smooth"
+    },
+    {
+      "name": "Skin / warm copper",
+      "surface": "smooth"
+    },
+    {
+      "name": "Steel / bevel highlights",
+      "surface": "metal"
+    },
+    {
+      "name": "Steel / blue forged armor",
+      "surface": "metal"
+    },
+    {
+      "name": "Steel / recessed dark joints",
+      "surface": "metal"
+    }
+  ],
+  "triangles": 23190,
+  "meshes": 157,
+  "clips": [
+    "dwarf-hammer-attack",
+    "bron-idle",
+    "bron-walk"
+  ],
+  "rig": "Articulated rigid pivots, including independent leg assemblies; no deforming skin weights",
+  "glb_bytes": 1935780,
+  "glb_sha256": "4d2ad53caee422698ecc88fe4931afddcc443781e6ea60f6e9be92cd3596c7ee",
+  "limits": [
+    "Concept-guided procedural surface textures, not a photogrammetry reconstruction",
+    "No physical-device FPS measurement",
+    "Rush retains its snowball prop and attack timing for Popo"
+  ]
+}

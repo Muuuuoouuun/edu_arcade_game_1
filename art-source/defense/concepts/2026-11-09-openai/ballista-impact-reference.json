@@ -1,0 +1,10 @@
+{
+  "kind": "concept-reference-not-a-game-screenshot",
+  "provider": "OpenAI connected image generation tool",
+  "tool": "image_gen.imagegen",
+  "successful_generation_calls": 1,
+  "source_reference": "art-source/defense/concepts/2026-10-29/props/six-tower-modules.png",
+  "output": "ballista-impact-reference.png",
+  "brief": "Four moments of a stylized ballista bolt striking a wooden target: directional splinters, launch, gravity and ground contact, readable at mobile size.",
+  "notes": "Visual reference only; runtime particles are procedural 3D, not generated-image geometry. No direct OpenAI REST or Claude API call or usage percentage claim."
+}

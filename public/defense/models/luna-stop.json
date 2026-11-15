@@ -1,0 +1,2307 @@
+{
+  "generator": "tools/blender/build_luna_stop.py",
+  "command": "npm run models:luna-stop",
+  "source_walk_sha256": "dc2e03609115fde634d5c9f92427daeb6022e1f5058a3c33fd5f02ca02014ae8",
+  "source_cast_sha256": "fc4466f5a428a1f34568d51cf041efa0d2d33b2c22886d8038cdc6f1f02bf77a",
+  "reference": "art-source/defense/atlases/ranged-motion.png",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      330
+    ],
+    "orthographic_scale": 6.8
+  },
+  "delivery_frame": {
+    "width": 192,
+    "height": 192,
+    "ground": [
+      96,
+      165
+    ],
+    "columns": 16,
+    "rows": 1
+  },
+  "duration_seconds": 0.24,
+  "samples_seconds": [
+    0.08,
+    0.2
+  ],
+  "entry_checks": [
+    {
+      "entry": 0,
+      "first_leg": "left-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    },
+    {
+      "entry": 1,
+      "first_leg": "left-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    },
+    {
+      "entry": 2,
+      "first_leg": "left-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    },
+    {
+      "entry": 3,
+      "first_leg": "left-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    },
+    {
+      "entry": 4,
+      "first_leg": "right-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    },
+    {
+      "entry": 5,
+      "first_leg": "right-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    },
+    {
+      "entry": 6,
+      "first_leg": "right-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    },
+    {
+      "entry": 7,
+      "first_leg": "right-leg",
+      "support_stationary": true,
+      "frames_checked": 25,
+      "min_sole_z": 0.004999972879886627,
+      "max_support_drift": 0
+    }
+  ],
+  "files": [
+    {
+      "file": "art-source/defense/luna-stop.blend",
+      "bytes": 4483288,
+      "sha256": "a9c4e80dec92b42d966833a31bf2179dd7a8be1f43e2df7ad45e086307396c5f"
+    },
+    {
+      "file": "public/defense/models/luna-stop.glb",
+      "bytes": 1762916,
+      "sha256": "501a9056e9c743254af615227d664b1732a431e0e188047b2ebc4c9be6c8e6d2"
+    },
+    {
+      "file": "public/defense/models/luna-stop.png",
+      "bytes": 125744,
+      "sha256": "d565fc72e454c6e52c0272876f0dc42bc37cc0a9d76bd3cddd5848077dc89441"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-0-0.png",
+      "bytes": 109760,
+      "sha256": "c49f18826d7130a4d9f8eee1aee88b0ee73fd62bda9ed78e236f62272c5931d9"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-0-1.png",
+      "bytes": 109445,
+      "sha256": "bcf88c070a152191597aaf7b65bf83a16eca052975067b5c8c0e887277d0a6a4"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-1-0.png",
+      "bytes": 109634,
+      "sha256": "b3f6e64039b60a0dbd70bd312ba195bfbef622918b4193f6880bb22f7bca050e"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-1-1.png",
+      "bytes": 109451,
+      "sha256": "3e8ee1b83f448e32cb3235b8b2213186694496be3d16ef35e7a6d822b59ef35a"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-2-0.png",
+      "bytes": 109066,
+      "sha256": "757e38376e36669060567d1fe234cd7e0cd633dce40cd543aebc1359b34737b3"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-2-1.png",
+      "bytes": 109184,
+      "sha256": "0dad56e2c62190c4ae79e61d55df21e4201e0cc415a40000125939480f361665"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-3-0.png",
+      "bytes": 108005,
+      "sha256": "f262691ac85c0b2e1bddcb1fa58d09eb9ac91943be5cfca0af2934e860e1815f"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-3-1.png",
+      "bytes": 109153,
+      "sha256": "db0802cb4f5ce7bc867c38be84d5ee89bc198dfdb2cfdcd2d522750cf2401d06"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-4-0.png",
+      "bytes": 107233,
+      "sha256": "0f558b7d1182a9dadf960519d1ace17a760aa0728e4a74dd49624609975b08bf"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-4-1.png",
+      "bytes": 108279,
+      "sha256": "2a74f7e8a4d40117c0ff283e332eda3d143072f0453b0ae081d7d2fec5a3f695"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-5-0.png",
+      "bytes": 107459,
+      "sha256": "ecbbcff8934a3348869b92de0da68d362bc5cf8e03780d6391fb20ff69a4a366"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-5-1.png",
+      "bytes": 108276,
+      "sha256": "629912ed238550936764fe7c4bfdf45903147b59e548e0747f221aefce2be8b0"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-6-0.png",
+      "bytes": 107987,
+      "sha256": "a7474ab722268c4f00de21543a372c48f4fb0d34ac3c7908ddb2d786e9466d68"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-6-1.png",
+      "bytes": 108369,
+      "sha256": "fda2395d6c271641c53bf737a23c164c3c07e7b7506ff13fbac4f32b010f4bea"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-7-0.png",
+      "bytes": 108483,
+      "sha256": "7c0f121d1c2ebb4445aa6e1e2eae6766657086f66a76deccad1e7fdeda85b4dc"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-0-7-1.png",
+      "bytes": 108337,
+      "sha256": "6a781af86b69dbdd4f2d9527fee2f5d9f8d9b63322fe8b3cd7031a72a0f8b696"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-0-0.png",
+      "bytes": 125744,
+      "sha256": "d565fc72e454c6e52c0272876f0dc42bc37cc0a9d76bd3cddd5848077dc89441"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-0-1.png",
+      "bytes": 125479,
+      "sha256": "411c662d9f83d3e93fe0b168071497301681da2789737c7e3d85a659f2f0ade9"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-1-0.png",
+      "bytes": 125623,
+      "sha256": "ed010260dc999761d754fb1889de7b234628987e3f441652a5b5c98f20f39d11"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-1-1.png",
+      "bytes": 125642,
+      "sha256": "1d71cbec9f85bb7adb8de81ec8000ffd1464da2c333d86db513df9c08a8613ba"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-2-0.png",
+      "bytes": 125508,
+      "sha256": "2c7906a510027f3f3bf5a8ff802b4d76c8d3803f9b1550cd81740f7713d536c4"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-2-1.png",
+      "bytes": 125662,
+      "sha256": "fb0db69fd36c9f651509440334795f36dae66ae0e50d5792687de49c0c1206ec"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-3-0.png",
+      "bytes": 125270,
+      "sha256": "52f8f60edc6587859738f7d944e4df11b149ca66eb90f87c779d1df93142d791"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-3-1.png",
+      "bytes": 125668,
+      "sha256": "f58a10f0076e82f30b1b99ec9eaf58cd5b617118f219740bceab2a9b76fe9c39"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-4-0.png",
+      "bytes": 126095,
+      "sha256": "0110b4f98f5d981521e8d27873129a9fd99626890fde3a5cc0bd24083c19e7a7"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-4-1.png",
+      "bytes": 125633,
+      "sha256": "e2934a8c953bce456e18cc9dcc95212528a1c08304171481a4499cfb768a7ade"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-5-0.png",
+      "bytes": 125884,
+      "sha256": "bc34921a49d4c6c926d8770d8cab84a6bc02764c68acb06bc6435bf5d3fd83b7"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-5-1.png",
+      "bytes": 125578,
+      "sha256": "f874efaad728bfa0b5278a966290819967e98c56f28e31bfdc1c99958e3fab2a"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-6-0.png",
+      "bytes": 125690,
+      "sha256": "01bf33b42429a32c1672e56655006ec3b483be08f80f65cbbe002931299cd5a0"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-6-1.png",
+      "bytes": 125510,
+      "sha256": "a8e511d49365695c64893938b46d90f0794bfe6a96f6a1bd87cd1730b019b749"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-7-0.png",
+      "bytes": 125040,
+      "sha256": "6b8c867330be968e8a5cf0403b3f61586f3ca0de0618cc76e39bcc7ed58e4d2c"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-1-7-1.png",
+      "bytes": 125398,
+      "sha256": "86ffb5eb1778a66cbee6b195fa1d2300995c68a1499f3a9b4fe935c39aa61a47"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-0-0.png",
+      "bytes": 123089,
+      "sha256": "fc729ef843bd3def4deb64789f19aade1dcd93a42118b701b06b898fdf3830bd"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-0-1.png",
+      "bytes": 122696,
+      "sha256": "2326b3069754f6f1328b4c6a655ca5339a03bd654cd607887652d18744c95661"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-1-0.png",
+      "bytes": 123010,
+      "sha256": "6d1fb88750153834fe7b66ff70e17dea4e22e01392d07a4d6933bee11472a1a5"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-1-1.png",
+      "bytes": 122684,
+      "sha256": "cf921e9a89fb6380a14a9662f97c8af1f1681accc3a2742469a553796837aace"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-2-0.png",
+      "bytes": 122867,
+      "sha256": "6d8961e4c45a8c2de34f835e80ed7b3180c28f4300fc7220a9737db869f0b3ed"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-2-1.png",
+      "bytes": 122780,
+      "sha256": "dca15aa438df2dc4ece79da7b539eacef3ec1e936ce4bfb5576211d8d8fcfbe7"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-3-0.png",
+      "bytes": 122906,
+      "sha256": "5adc35a1c4529502d29192b9bb0e7e7b7ea03875196a28df374429b40a0366e6"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-3-1.png",
+      "bytes": 122734,
+      "sha256": "11a36a84b85f23ae60ae577d49c17b89b33695b956cf2fcc420faca1db971d99"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-4-0.png",
+      "bytes": 123233,
+      "sha256": "eb85b47aa3f19d2d53da79e6e004deef0db28e76d593ab7223fd05ab8b0ccc7d"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-4-1.png",
+      "bytes": 123066,
+      "sha256": "e8a7e94c9bd4252e17851bb878045b4707884f259cd0d5ad7ac99c9e5e68da9f"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-5-0.png",
+      "bytes": 122994,
+      "sha256": "3bcfda345a6884da95020fbf3107117d9ab3497bd46b697ffa56bfc572f31e43"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-5-1.png",
+      "bytes": 122997,
+      "sha256": "e20da8385b2d3dc1ea6e7e5c20a7d7553bcf00c5c30a95c29a0a282fe8661a34"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-6-0.png",
+      "bytes": 122824,
+      "sha256": "d41824e22fa3716d146a7368e2b53a6243143d536eaa0a411bb9a6d1448a9306"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-6-1.png",
+      "bytes": 122923,
+      "sha256": "2973ee92d9869d16a196f3de1086c0b7859ea5fde8f091154e1d476464fa92c6"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-7-0.png",
+      "bytes": 122594,
+      "sha256": "686fd1be82094750276333bd083a9f42470eae8c9389c07265c1d01c9a27c40d"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-2-7-1.png",
+      "bytes": 122913,
+      "sha256": "70e99299ed4c257a5692dec211f793e438437413771da73b36510c7944560a90"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-0-0.png",
+      "bytes": 120089,
+      "sha256": "cd4e061adbddbbfacb9b28ff2c47b949825ee65e5f152128809f1362e931527a"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-0-1.png",
+      "bytes": 119804,
+      "sha256": "41480bc0d1c525824ac9a1f3512a3e47de14f2b55df0ff09c0ac4260b2385371"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-1-0.png",
+      "bytes": 120176,
+      "sha256": "3af2c74eb8ddf5c667bea92d9355dd17dfa26177548724f69f24464533408f68"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-1-1.png",
+      "bytes": 119900,
+      "sha256": "7e6f7d294d9bdac8e65039658aecd4932b9ff1ec6cd2c4b9af07d709fc49d814"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-2-0.png",
+      "bytes": 120096,
+      "sha256": "ec77a1b33455f74a02cd8cadeb54b66b7da5fb0a8117a090a0c635dc74d77b5e"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-2-1.png",
+      "bytes": 119755,
+      "sha256": "fc40813497b632d063290ef2b4fa2db2ab03a6ae72fa0b0345dc5dfc86208629"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-3-0.png",
+      "bytes": 119949,
+      "sha256": "9006940488182e4ac68e40e013b8a573aba98debca8e8c6339c2e4b936265be5"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-3-1.png",
+      "bytes": 119879,
+      "sha256": "ff22c2f322507ac67a0d45c64e128a8d8e9367cb3d085f495e134ca1b65780e0"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-4-0.png",
+      "bytes": 120060,
+      "sha256": "73a9650f05f77468ce79e5737485f1bb41fab236de0ae8acf87d101b13dd1bdb"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-4-1.png",
+      "bytes": 120225,
+      "sha256": "120aee47306d383df26e8adcfdf6ad450afc2dde402066bb35463a35b79e4ebe"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-5-0.png",
+      "bytes": 119948,
+      "sha256": "b32ed7ea7b258017bc713d73a189c56efb882b292c18d5f62bf66bce95aef361"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-5-1.png",
+      "bytes": 120262,
+      "sha256": "ad70730926291bf6b04f951b2cf195190f502aac30a9ab7d1f063916b5cd19c8"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-6-0.png",
+      "bytes": 119941,
+      "sha256": "ee3206f89344f40f4783b9e6504ab1e470333e445ca13e4488c4da4d7395a799"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-6-1.png",
+      "bytes": 120169,
+      "sha256": "774436be857b543d8f21c8eddecc0148e184abcbd30bc810467073b2664a18e1"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-7-0.png",
+      "bytes": 119428,
+      "sha256": "603a53f2d0b0545fd6cc05e38010a04c541f0ba35fb75473a7872b272370bc76"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-3-7-1.png",
+      "bytes": 120087,
+      "sha256": "3fffdd7f9f666671a6ed0f0ba690f8838713fb03c05bc50fa77851732033095a"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-0-0.png",
+      "bytes": 108361,
+      "sha256": "0c6665404e1f6e6cbdc7d5b76139dfdc2f66b57b0481303146f91ce485045b86"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-0-1.png",
+      "bytes": 108094,
+      "sha256": "288696aeacf209ad0cbb0dfc87ff54948381239acad6160ae2dd12b55ba1d520"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-1-0.png",
+      "bytes": 108049,
+      "sha256": "4eff0f230969f43b4c717af7289cf1c2d870979b02c48897610cd03cd32107c8"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-1-1.png",
+      "bytes": 108131,
+      "sha256": "5faaf63f408bcbcd74685e7d38a9fa2ec2e5d35b721b1b3f0ffae79ef8a27adf"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-2-0.png",
+      "bytes": 108107,
+      "sha256": "491114be1c0354ddf904b9405f1ad2e9d9d6795a5633e7b20e690973cf2117a6"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-2-1.png",
+      "bytes": 107982,
+      "sha256": "e19b90ae9a2fcf854a2d19f00d9ca1d9f15948e276b2ddd410d6698c58de2dd3"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-3-0.png",
+      "bytes": 107632,
+      "sha256": "69a402331979065ff36a29ffc7da726e2734fe05f6418dc9f4a9153be56686e6"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-3-1.png",
+      "bytes": 107842,
+      "sha256": "d4f7d3f8908d1baf24b7d79bca916075e0fa6ec92a3bbf8934a5ae9c4146de48"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-4-0.png",
+      "bytes": 106568,
+      "sha256": "4f972599ba1470b25dcc1807f48fc68b55c3660c0a7dc53fffc4b27213fd27ac"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-4-1.png",
+      "bytes": 108127,
+      "sha256": "fa6e8d02ee8c66f31daca11b2afe020c3286bf0c331cc9d71cd23920a98f1057"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-5-0.png",
+      "bytes": 106566,
+      "sha256": "d12edeb1fc3bbec30553d6c6e9ecf70f3621d4d0e1150af70c7f4a3b8ae5d661"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-5-1.png",
+      "bytes": 108116,
+      "sha256": "af23384a860903ce573eee61801014a1693d5a84f3f1d9b23c03cae671aa46df"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-6-0.png",
+      "bytes": 106953,
+      "sha256": "b843dba28f7680144c4b2f69515227b831ed68d49593b64f57d3625c21cbda1f"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-6-1.png",
+      "bytes": 108220,
+      "sha256": "c0473c2bf8b7c572beac854bc50ef0734551489633e4a9448f353c5388febfbe"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-7-0.png",
+      "bytes": 107529,
+      "sha256": "a8343a2670f34c6c5297f5d04f7fb3ff34d8510a4afaa1515cdf23410cd2bdcd"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-4-7-1.png",
+      "bytes": 108185,
+      "sha256": "0e04ddccedcadf59188c35a7b98e8d11d8a13f0acc98f66bf6a58a6b41a33cc3"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-0-0.png",
+      "bytes": 116057,
+      "sha256": "f338927b0bbe9450dc094336b7504bf51a7adc6aa32b99844829c9befd61c74a"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-0-1.png",
+      "bytes": 116908,
+      "sha256": "d5ddf1b36ececa212a339b9b6e6104a214bc15816eb2e8766ddd1dd02ca5a878"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-1-0.png",
+      "bytes": 116146,
+      "sha256": "c460c5132b5b08a951b90f1bf5d8f626dfb82bec73e70889474c81a67dcbe747"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-1-1.png",
+      "bytes": 116660,
+      "sha256": "4c73d7122dbe46772fd5207c6b21b29dda6b9c32128eaf9d90bdaef755dff723"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-2-0.png",
+      "bytes": 116467,
+      "sha256": "0f486a8b934be7d05889fd5a36430836d89095688ea45d8ec13a8d3386b114e3"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-2-1.png",
+      "bytes": 116661,
+      "sha256": "b3d7997d145bfe338e23ab4e014ac7159dec344505917895957f7f10a90a8cec"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-3-0.png",
+      "bytes": 116264,
+      "sha256": "9c040429267fd92c352019c53230114e2396fa5deb0ac00c0503f22204bff51c"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-3-1.png",
+      "bytes": 116686,
+      "sha256": "14ffa508e806045b42cd1e13aafe87308655db703854cfe929178e61293c5e9b"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-4-0.png",
+      "bytes": 115766,
+      "sha256": "ac6cc4218c348168ce60ce55aefe0e76b93a8e1c3f0d24a1a571d6e8d088ddcd"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-4-1.png",
+      "bytes": 116877,
+      "sha256": "fb321648a56f0fea5a78b8ce892ffd4c2b1121947f04e81b96a2371c00c73d71"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-5-0.png",
+      "bytes": 115973,
+      "sha256": "0c7e2557cb964334447ed2fac4267773cf47fe4d6e655024ca015b54593e2d08"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-5-1.png",
+      "bytes": 116811,
+      "sha256": "c8fbecdb7b22f498275e466beae59baccdb7305913c8d4e1c605a6847a21349e"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-6-0.png",
+      "bytes": 116743,
+      "sha256": "599b908bd6cd1e9b6f8e862fa18702fcb2013cf08da71cede8d6c20fa53f901c"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-6-1.png",
+      "bytes": 116821,
+      "sha256": "c312bbc1d95dbda35dd08af1a3013c889bb436f4137c9e4d95fea5f96010996d"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-7-0.png",
+      "bytes": 116792,
+      "sha256": "7005b321232b093d12a2e0dc418671ee57a2bcdd5e68fee22fc8c68267e623a1"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-5-7-1.png",
+      "bytes": 116864,
+      "sha256": "f4ac5a8cc710da6f5b6ecc48a3b01c88bfb334e50aefa74a6b29e55315ccf021"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-0-0.png",
+      "bytes": 114094,
+      "sha256": "35af0462b182a1f0f7454741ea70fcbe3213ff0c6b4e56398e54af54b1ee0e1a"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-0-1.png",
+      "bytes": 114691,
+      "sha256": "c82ad70e9bc447f5c506cb6c71b00e8d55eff37983fd620974b940247ed9c414"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-1-0.png",
+      "bytes": 114106,
+      "sha256": "ffc5b3034d9834a6e2ce2c535225539695b42d8c72bd09fdbd98a5b71ad4d2e9"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-1-1.png",
+      "bytes": 114502,
+      "sha256": "3f4c800d8fb3c9bae7bcd8517de3d4704a06e0ad2d7b550412847f79151786df"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-2-0.png",
+      "bytes": 114167,
+      "sha256": "85951d630f2220b0d750733e566fc60e2f70c18cea29d0c659bc96b203e15d48"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-2-1.png",
+      "bytes": 114815,
+      "sha256": "29806d7a2236c9232d040748cf8f53dbde0f75ab5d9f842f991699cc6418ae8e"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-3-0.png",
+      "bytes": 114086,
+      "sha256": "6c83339ba4f3ebf4c0d6a7cc7b927b5d1c7885c7a3a352659eaa964f05af0ac8"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-3-1.png",
+      "bytes": 114744,
+      "sha256": "a593b3770880cb31d754e4ebbeeacf52bfc583f8d2e057b092518c0b315c0b5d"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-4-0.png",
+      "bytes": 114044,
+      "sha256": "a4c3508830ec2995a46b7855cb8d7824cbc4ab840abd75d5af4fc0772bf6696e"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-4-1.png",
+      "bytes": 114478,
+      "sha256": "e6c6295e848be27aabbe9675ca6bf539683e2adcc61a116e29d2f565705f417d"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-5-0.png",
+      "bytes": 114137,
+      "sha256": "560c0c10ee1c707d1bdbac71e7ce8d3e680900545ee89235f300144c35c4fdcd"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-5-1.png",
+      "bytes": 114131,
+      "sha256": "161f1189db2ffd8606e9a59ded0eb260d07d3ecc2b72cbf8647bceb16f44f7cf"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-6-0.png",
+      "bytes": 114364,
+      "sha256": "5c618f22a5f02fd8be7bd5549aee5a526318f66ab4afdfe0984dc04335168186"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-6-1.png",
+      "bytes": 114488,
+      "sha256": "60262af3066aa7be92ded68dbae05393abeab3b082d39c8da81022017ee01153"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-7-0.png",
+      "bytes": 114528,
+      "sha256": "08a049a3d15f246f0b8c82fb3e85126f1da8bcea96af2887c2dcdbdb2a10559b"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-6-7-1.png",
+      "bytes": 114325,
+      "sha256": "80f749dc96a2e79feeeba440623bd52ccdb9ee49e520762a9f515f9f6cba436e"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-0-0.png",
+      "bytes": 111793,
+      "sha256": "ba44b3370999ceddb258ca9fa41a1102b2c07289b254d69e95e81b071da81fc3"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-0-1.png",
+      "bytes": 113139,
+      "sha256": "8429248a7d2c23a70b5521da85be38464efeb660ae5c36cf883405d785c43e77"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-1-0.png",
+      "bytes": 111900,
+      "sha256": "5c1c704713f4a5f31c1a1c6f3d65aa2d8174c71b8796d796ea129c2b3ec34c54"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-1-1.png",
+      "bytes": 112857,
+      "sha256": "4bacb9b81dc5f9b7a335c111f1b05e580934aac3c2cace149773b75aaa277f36"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-2-0.png",
+      "bytes": 112118,
+      "sha256": "cae0992e90405da8bb50364a6504486db5b94848ba04955497eb74beb85b48ea"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-2-1.png",
+      "bytes": 112887,
+      "sha256": "30071d0310d3e1aaf1b17783c038d8078333a2aca9bf379ed11cfaa39adeb109"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-3-0.png",
+      "bytes": 111978,
+      "sha256": "e46f8eea1005195b780c462d77ff93d41d2a3879e49e9517aeb06a171806b57d"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-3-1.png",
+      "bytes": 112970,
+      "sha256": "8fed0b8d7c9e8143471dc8dcb779cae30c2786e6d2f8494905adbb9feb8132aa"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-4-0.png",
+      "bytes": 112206,
+      "sha256": "dbba30f9455e5a3b2b759496522bc76f02e0ee2f162fbc7eaa5288ee9a813712"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-4-1.png",
+      "bytes": 112607,
+      "sha256": "3a604a2cad24680e3bbf21f27be4d3890e18001fed7268a942a3cbe450feea7b"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-5-0.png",
+      "bytes": 111859,
+      "sha256": "c0724358d2c45485adc23e033cc74a82ac202e33d62fde2608336fbdaa15a9c9"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-5-1.png",
+      "bytes": 112485,
+      "sha256": "bf4e68fbe05bfab195f863b1b3817b32ddda1b6638c44f8f12cb652ca23343c8"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-6-0.png",
+      "bytes": 112427,
+      "sha256": "7822a6e5d56df966203499738ab1521a80c71f7368f7dae12535e620f58ab753"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-6-1.png",
+      "bytes": 112533,
+      "sha256": "2675f035085a4dbc9abd62d401c972901039cdb0e63c6e6bd713ff370ba46296"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-7-0.png",
+      "bytes": 112295,
+      "sha256": "495241c19e837573d6a884a889ca55dc315d60f31790ef8c3d1fd3abe6210430"
+    },
+    {
+      "file": "art-source/defense/luna-stop-frames/luna-stop-7-7-1.png",
+      "bytes": 112720,
+      "sha256": "69c638a4ddcabe0adcf69ff2a13fcae65ca61ae0e677854eb00e09aa22d9dce5"
+    },
+    {
+      "file": "public/defense/models/luna-stop-0-atlas.webp",
+      "bytes": 50876,
+      "sha256": "f1ec3534d0ea3fcfca0c66abee2f23979755c4f44471c7fc0df443bfaf0f8902"
+    },
+    {
+      "file": "public/defense/models/luna-stop-1-atlas.webp",
+      "bytes": 78484,
+      "sha256": "1d6d169bb81fc369f95210da0bed828bdf42473bd43118d53b34143ba097b8e2"
+    },
+    {
+      "file": "public/defense/models/luna-stop-2-atlas.webp",
+      "bytes": 69858,
+      "sha256": "fe895dfd96822ef5d63c5963dffb7f6b70cf4022271d87c883e0bbe9499b3ef2"
+    },
+    {
+      "file": "public/defense/models/luna-stop-3-atlas.webp",
+      "bytes": 67464,
+      "sha256": "2ddfad1426cd0499943f1fb1b62a7f46af20e156b8ba5d230d3ca776ffdaeb62"
+    },
+    {
+      "file": "public/defense/models/luna-stop-4-atlas.webp",
+      "bytes": 48100,
+      "sha256": "85f37669df1cdcab2d9d7f3a64f658851c0795cfc0bf88a91cffe40f50eb1f3c"
+    },
+    {
+      "file": "public/defense/models/luna-stop-5-atlas.webp",
+      "bytes": 65232,
+      "sha256": "122a1b1a402ad2206bdf3389d226c26eab372d8a1e8a7984744210697594ce70"
+    },
+    {
+      "file": "public/defense/models/luna-stop-6-atlas.webp",
+      "bytes": 56706,
+      "sha256": "75a4a2e820f02616dbd1dfa4475dde1c612f81b2f5b844cca378931acc3aa2b1"
+    },
+    {
+      "file": "public/defense/models/luna-stop-7-atlas.webp",
+      "bytes": 55074,
+      "sha256": "3df2a1e4959027a5b666bd40977afa502b17ccbb1db72ac6a10760a1e21a6656"
+    }
+  ],
+  "clips": [
+    {
+      "name": "luna-stop-0",
+      "entry": 0,
+      "duration": 0.24
+    },
+    {
+      "name": "luna-stop-1",
+      "entry": 1,
+      "duration": 0.24
+    },
+    {
+      "name": "luna-stop-2",
+      "entry": 2,
+      "duration": 0.24
+    },
+    {
+      "name": "luna-stop-3",
+      "entry": 3,
+      "duration": 0.24
+    },
+    {
+      "name": "luna-stop-4",
+      "entry": 4,
+      "duration": 0.24
+    },
+    {
+      "name": "luna-stop-5",
+      "entry": 5,
+      "duration": 0.24
+    },
+    {
+      "name": "luna-stop-6",
+      "entry": 6,
+      "duration": 0.24
+    },
+    {
+      "name": "luna-stop-7",
+      "entry": 7,
+      "duration": 0.24
+    }
+  ],
+  "directions": [
+    {
+      "direction": 0,
+      "yaw": 0.960070013999939,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            154.3349151611328,
+            117.69371795654297,
+            238.33895874023438,
+            337.849853515625
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.42430114746094,
+            117.37287139892578,
+            229.85543823242188,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            153.45643615722656,
+            117.3197021484375,
+            232.127197265625,
+            336.7103576660156
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.4168243408203,
+            117.36321258544922,
+            229.80679321289062,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            152.5354461669922,
+            116.88162231445312,
+            229.85215759277344,
+            336.23834228515625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.39889526367188,
+            117.35945892333984,
+            229.78660583496094,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            153.45643615722656,
+            117.3197021484375,
+            228.71798706054688,
+            336.7103271484375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.38111877441406,
+            117.36321258544922,
+            229.80679321289062,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            153.94683837890625,
+            118.8182601928711,
+            228.77728271484375,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.37379455566406,
+            117.37287139892578,
+            229.85543823242188,
+            337.849853515625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            153.99807739257812,
+            118.22547912597656,
+            229.0865478515625,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.38111877441406,
+            117.3834228515625,
+            229.9039764404297,
+            337.849853515625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            154.12969970703125,
+            117.65535736083984,
+            229.45106506347656,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.39889526367188,
+            117.38806915283203,
+            229.92404174804688,
+            337.849853515625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            154.2725067138672,
+            118.22547912597656,
+            229.0865478515625,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.4168243408203,
+            117.3834228515625,
+            229.9039764404297,
+            337.849853515625
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 1,
+      "yaw": -0.23171095550060272,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.58782958984375,
+            125.34786987304688,
+            273.4635009765625,
+            345.45794677734375
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.30934143066406,
+            124.62355041503906,
+            272.5963134765625,
+            341.08734130859375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.23086547851562,
+            124.89212036132812,
+            272.95745849609375,
+            343.1595764160156
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.30657958984375,
+            124.62364196777344,
+            272.5718078613281,
+            341.08734130859375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.03973388671875,
+            124.405517578125,
+            272.7477111816406,
+            340.8611755371094
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.29994201660156,
+            124.62373352050781,
+            272.5616760253906,
+            341.08734130859375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.12933349609375,
+            124.89212036132812,
+            272.95745849609375,
+            338.56280517578125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.29336547851562,
+            124.62364196777344,
+            272.5718078613281,
+            341.08734130859375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            127.82110595703125,
+            125.76395416259766,
+            270.84033203125,
+            345.6841125488281
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.2906494140625,
+            124.62355041503906,
+            272.5963134765625,
+            340.8611755371094
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            128.17393493652344,
+            125.20289611816406,
+            271.3455810546875,
+            343.3857421875
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.29336547851562,
+            124.62371063232422,
+            272.620849609375,
+            340.8611755371094
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            128.36093139648438,
+            124.67271423339844,
+            271.61065673828125,
+            341.08734130859375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.29994201660156,
+            124.62382507324219,
+            272.6309509277344,
+            340.8611755371094
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            128.27548217773438,
+            125.20289611816406,
+            271.3455810546875,
+            338.7889709472656
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.30657958984375,
+            124.62371063232422,
+            272.620849609375,
+            340.8611755371094
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 2,
+      "yaw": -0.610725998878479,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            135.4425048828125,
+            130.95211791992188,
+            267.80230712890625,
+            347.7334899902344
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            134.03073120117188,
+            130.01974487304688,
+            266.39056396484375,
+            339.58245849609375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            135.26565551757812,
+            130.10983276367188,
+            267.4429626464844,
+            345.259521484375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            134.0465087890625,
+            129.9820556640625,
+            266.39056396484375,
+            338.9410705566406
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            135.21173095703125,
+            129.46286010742188,
+            267.2940979003906,
+            342.7855529785156
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            134.05319213867188,
+            129.96649169921875,
+            266.39056396484375,
+            338.2996520996094
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            135.26565551757812,
+            130.10983276367188,
+            267.4429626464844,
+            340.31158447265625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            134.0465087890625,
+            129.9820556640625,
+            266.39056396484375,
+            337.65826416015625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            132.61895751953125,
+            130.95211791992188,
+            264.9787902832031,
+            341.88592529296875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            134.03073120117188,
+            130.01974487304688,
+            266.39056396484375,
+            342.7855529785156
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            132.84359741210938,
+            130.36947631835938,
+            265.3381652832031,
+            339.4119567871094
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            134.01541137695312,
+            130.011474609375,
+            266.39056396484375,
+            342.7855529785156
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            132.94686889648438,
+            129.830078125,
+            265.4870300292969,
+            336.93798828125
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            134.0092010498047,
+            130.0081329345703,
+            266.39056396484375,
+            342.7855529785156
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            132.84359741210938,
+            130.36947631835938,
+            265.3381652832031,
+            337.8015441894531
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            134.01541137695312,
+            130.011474609375,
+            266.39056396484375,
+            342.7855529785156
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 3,
+      "yaw": -0.9897410869598389,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            132.61146545410156,
+            125.76395416259766,
+            256.0355529785156,
+            351.1166687011719
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            131.29989624023438,
+            124.62355041503906,
+            254.69088745117188,
+            343.22576904296875
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            133.2510986328125,
+            125.20227813720703,
+            255.7247772216797,
+            348.81829833984375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            131.39613342285156,
+            124.62364196777344,
+            254.69366455078125,
+            342.6298828125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            133.52481079101562,
+            124.67182159423828,
+            255.63931274414062,
+            346.5198974609375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            131.43606567382812,
+            124.62373352050781,
+            254.70030212402344,
+            342.03399658203125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            133.2510986328125,
+            125.20227813720703,
+            255.82630920410156,
+            344.2215270996094
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            131.39613342285156,
+            124.62364196777344,
+            254.70689392089844,
+            341.4381408691406
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            129.98834228515625,
+            125.34786987304688,
+            253.55599975585938,
+            340.8422546386719
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            131.29989624023438,
+            124.62355041503906,
+            254.7095947265625,
+            346.5198974609375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            129.37034606933594,
+            124.89273834228516,
+            253.87091064453125,
+            340.2986145019531
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            131.20388793945312,
+            124.62371063232422,
+            254.70689392089844,
+            346.5198974609375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            129.11903381347656,
+            124.40643310546875,
+            253.96051025390625,
+            340.4224853515625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            131.16416931152344,
+            124.62382507324219,
+            254.70030212402344,
+            346.5198974609375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            129.37034606933594,
+            124.89273834228516,
+            253.76937866210938,
+            341.4903564453125
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            131.20388793945312,
+            124.62371063232422,
+            254.69366455078125,
+            346.5198974609375
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 4,
+      "yaw": -2.1815226078033447,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            145.66128540039062,
+            119.02061462402344,
+            229.66531372070312,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.14479064941406,
+            117.52597045898438,
+            229.57594299316406,
+            337.849853515625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            151.873046875,
+            118.26571655273438,
+            230.54379272460938,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.1934356689453,
+            117.51443481445312,
+            229.58340454101562,
+            337.849853515625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            154.14810180664062,
+            117.65494537353516,
+            231.46478271484375,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.21360778808594,
+            117.50971984863281,
+            229.601318359375,
+            337.849853515625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            155.28225708007812,
+            118.26571655273438,
+            230.54379272460938,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.1934356689453,
+            117.51443481445312,
+            229.61911010742188,
+            337.849853515625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            155.22293090820312,
+            117.89607238769531,
+            230.0533905029297,
+            337.849853515625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.14479064941406,
+            117.52597045898438,
+            229.62643432617188,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            154.9136962890625,
+            117.45762634277344,
+            230.00216674804688,
+            336.7103271484375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.09625244140625,
+            117.51773071289062,
+            229.61911010742188,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            154.5491485595703,
+            116.97855377197266,
+            229.87054443359375,
+            336.23834228515625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.076171875,
+            117.51441192626953,
+            229.601318359375,
+            342.33575439453125
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            154.9136962890625,
+            117.45762634277344,
+            229.7277374267578,
+            336.7103271484375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            154.09625244140625,
+            117.51773071289062,
+            229.58340454101562,
+            342.33575439453125
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 5,
+      "yaw": 2.909881591796875,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            110.53672790527344,
+            125.972900390625,
+            253.41238403320312,
+            332.5523681640625
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            111.40388488769531,
+            124.83247375488281,
+            254.69088745117188,
+            335.8465270996094
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            111.04277038574219,
+            125.69453430175781,
+            253.76934814453125,
+            333.7742919921875
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            111.42840576171875,
+            124.8647232055664,
+            254.69366455078125,
+            335.8465270996094
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            111.25251770019531,
+            125.28121948242188,
+            253.96047973632812,
+            336.07269287109375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            111.43856048583984,
+            124.87815856933594,
+            254.70028686523438,
+            335.8465270996094
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            111.04277038574219,
+            125.69453430175781,
+            253.87091064453125,
+            338.3710632324219
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            111.42840576171875,
+            124.8647232055664,
+            254.70687866210938,
+            335.8465270996094
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            113.15986633300781,
+            125.55681610107422,
+            256.17913818359375,
+            332.7785339355469
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            111.40388488769531,
+            124.83247375488281,
+            254.70956420898438,
+            336.07269287109375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            112.65461730957031,
+            124.81759643554688,
+            255.8262939453125,
+            333.5481262207031
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            111.37939453125,
+            124.80049896240234,
+            254.70687866210938,
+            336.07269287109375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            112.38955688476562,
+            124.21334838867188,
+            255.6392822265625,
+            335.8465270996094
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            111.36925506591797,
+            124.78729248046875,
+            254.70028686523438,
+            336.07269287109375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            112.65461730957031,
+            124.81759643554688,
+            255.72476196289062,
+            338.1448974609375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            111.37939453125,
+            124.80049896240234,
+            254.69366455078125,
+            336.07269287109375
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 6,
+      "yaw": 2.5308666229248047,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            116.19789123535156,
+            127.0744400024414,
+            248.5577392578125,
+            334.1847229003906
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            117.60966491699219,
+            125.32827758789062,
+            249.96949768066406,
+            337.3878173828125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            116.55726623535156,
+            127.22218322753906,
+            248.73455810546875,
+            332.40380859375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            117.60966491699219,
+            125.3994140625,
+            249.95370483398438,
+            337.3878173828125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            116.70613098144531,
+            127.0001449584961,
+            248.78848266601562,
+            331.5402526855469
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            117.60966491699219,
+            125.42912292480469,
+            249.947021484375,
+            337.3878173828125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            116.55726623535156,
+            127.22218322753906,
+            248.73455810546875,
+            334.01422119140625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            117.60966491699219,
+            125.3994140625,
+            249.95370483398438,
+            337.3878173828125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            119.02142333984375,
+            127.0744400024414,
+            251.38125610351562,
+            332.43988037109375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            117.60966491699219,
+            125.32827758789062,
+            249.96949768066406,
+            331.6191101074219
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            118.66204833984375,
+            125.96026611328125,
+            251.1566162109375,
+            334.9138488769531
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            117.60966491699219,
+            125.2580337524414,
+            249.98483276367188,
+            332.2605285644531
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            118.51318359375,
+            125.2159423828125,
+            251.05337524414062,
+            337.3878173828125
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            117.60966491699219,
+            125.22921752929688,
+            249.99102783203125,
+            332.90191650390625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            118.66204833984375,
+            125.96026611328125,
+            251.1566162109375,
+            339.8617858886719
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            117.60966491699219,
+            125.2580337524414,
+            249.98483276367188,
+            333.5433044433594
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 7,
+      "yaw": 2.1518516540527344,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            127.96469116210938,
+            120.21814727783203,
+            251.3887481689453,
+            338.2110900878906
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.309326171875,
+            118.74126434326172,
+            252.70033264160156,
+            341.5052490234375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            128.2754669189453,
+            120.37165832519531,
+            250.74911499023438,
+            336.4757080078125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.3065643310547,
+            118.80667877197266,
+            252.60409545898438,
+            341.5052490234375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            128.36093139648438,
+            120.15202331542969,
+            250.4754180908203,
+            335.4078369140625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.2999267578125,
+            118.8340072631836,
+            252.56417846679688,
+            341.5052490234375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            128.17393493652344,
+            120.37165832519531,
+            250.74911499023438,
+            335.283935546875
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.29336547851562,
+            118.80667877197266,
+            252.60409545898438,
+            341.5052490234375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.44422912597656,
+            120.63423156738281,
+            254.01190185546875,
+            336.908447265625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.2906494140625,
+            118.74126434326172,
+            252.70033264160156,
+            335.82757568359375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.12933349609375,
+            119.51426696777344,
+            254.6298828125,
+            339.20684814453125
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.29336547851562,
+            118.67676544189453,
+            252.79635620117188,
+            336.4234619140625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.03973388671875,
+            118.76751708984375,
+            254.88121032714844,
+            341.5052490234375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.2999267578125,
+            118.65032958984375,
+            252.8360595703125,
+            337.01934814453125
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 9,
+          "bounds": [
+            130.23086547851562,
+            119.51426696777344,
+            254.6298828125,
+            343.8036193847656
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 21,
+          "bounds": [
+            129.3065643310547,
+            118.67676544189453,
+            252.79635620117188,
+            337.6152038574219
+          ]
+        }
+      ]
+    }
+  ],
+  "fps": 100,
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 64
+  },
+  "display_scale": 1.406896551724138,
+  "reference_sha256": "444644e358d8312d72c9192237dbe1e662338e5f287138e54639d02eb283f28c",
+  "generator_sha256": "6b312574c8d477806ebdd4217cc67cf677fbbe9cc531bfefc3adc778a5e6efbd",
+  "runtime": {
+    "mesh_objects": 51,
+    "triangles": 24384,
+    "materials": 15
+  }
+}

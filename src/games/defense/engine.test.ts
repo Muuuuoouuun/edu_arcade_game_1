@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { actDefense, allowedBranches, createDefense, FLAWLESS_BONUS, damageMultiplier, positionOnPath, petPosition, questSatisfied, questComplete, questStatus, stepDefense, towerRange, waveSize, surgeStart, inSurge, SURGE_INTERVAL, SURGE_MIN_GAP } from './engine.ts';
+import { actDefense, allowedBranches, createDefense, SKILL_SUPPLY, skillSlowSeconds, FLAWLESS_BONUS, damageMultiplier, positionOnPath, petPosition, questSatisfied, questComplete, questStatus, stepDefense, towerRange, waveSize, surgeStart, inSurge, SURGE_INTERVAL, SURGE_MIN_GAP } from './engine.ts';
 import { ENEMIES, PATHS, SLOTS, STAGES, HERO_ORDER, STAGE_COUNT, getStage, getSlots, getPaths, getRegion, stageLabel } from './data.ts';
 import { DIFFICULTIES, getWavePlan } from './difficulty.ts';
 import type { Difficulty, DefenseAction, DefenseState, Enemy, EnemyKind } from './types.ts';
@@ -151,6 +151,27 @@ test('a leak raises one breach effect sized to the lost HP without changing the 
   const big=battlefield();const boss=enemy('boss',1);boss.progress=10000;big.enemies=[boss];
   const crash=stepDefense(big,.1);assert.equal(crash.hp,12);assert.equal(crash.effects.find(e=>e.kind==='breach')?.force,8);
 });
+test('simultaneous breaches identify each gate, keep damage and never pay kills',()=>{
+ const state=battlefield(4),wood={...enemy('wood',1),progress:10000},boss={...enemy('boss',2),progress:10000,path:1};
+ state.enemies=[wood,boss,{...enemy('stone',3,100,100),speed:0}];
+ const hit=stepDefense(state,.02),effects=hit.effects.filter(e=>e.kind==='breach');
+ assert.equal(hit.hp,19);assert.equal(hit.outpostHp,4);assert.equal(hit.coins,state.coins);assert.equal(hit.kills,0);assert.equal(hit.leaks,2);
+ assert.deepEqual(effects.map(e=>[e.targetGate,e.force,e.age]),[['village',1,0],['outpost',8,0]]);
+ const paused=actDefense(hit,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+ const resumed=stepDefense(actDefense(paused,{type:'resume'}),.1);
+ assert.ok(resumed.effects.filter(e=>e.kind==='breach').every(e=>Math.abs(e.age!-.1)<1e-8));assert.equal(resumed.leaks,2);
+ assert.equal(resumed.hp,hit.hp);assert.equal(resumed.outpostHp,hit.outpostHp);assert.equal(resumed.coins,hit.coins);
+});
+test('the final gate breach finishes its visual response without changing terminal outcomes',()=>{
+ for(const outpost of [false,true]){
+  const state=battlefield(4);state.hp=outpost?20:1;state.outpostHp=1;state.wave=4;state.spawned=waveSize(4,4);
+  state.enemies=[{...enemy('wood',1),path:outpost?1:0,progress:10000}];
+  const ended=stepDefense(state,.02);assert.equal(ended.phase,outpost?'won':'lost');
+  assert.equal(ended.effects.find(e=>e.kind==='breach')?.targetGate,outpost?'outpost':'village');
+  const settled=advance(ended,1);assert.equal(settled.effects.length,0);assert.equal(settled.hp,ended.hp);assert.equal(settled.outpostHp,ended.outpostHp);assert.equal(settled.coins,ended.coins);assert.equal(settled.leaks,1);assert.equal(settled.phase,ended.phase);
+ }
+});
+
 test('kills pay once, main leaks cause loss, and losing the expanded village only fails its quest',()=>{
   const kill=battlefield();const dead=enemy('sprout',1);dead.hp=0;kill.enemies=[dead];
   const paid=stepDefense(kill,.1);
@@ -174,6 +195,30 @@ test('skills require live combat, respect cooldown, and the control promotion sl
   const moved=actDefense(s,{type:'move',point:{x:-99,y:100000}});
   assert.deepEqual(moved.heroTarget,{x:30,y:555});assert.deepEqual(moved.heroPosition,s.heroPosition);
   assert.equal(actDefense(s,{type:'move',point:{x:NaN,y:20}}),s);
+});
+
+test('skill visuals snapshot exactly the live targets at the instant of damage, including lethal and distant hits',()=>{
+ for(const hero of HERO_ORDER){
+  const s=battlefield();s.hero=hero;s.heroPosition={x:100,y:100};
+  s.enemies=[{...enemy('sprout',1,120,150),hp:1},enemy('boss',2,800,480),{...enemy('wood',3,600,300),hp:0}];
+  const original=JSON.stringify(s),cast=actDefense(s,{type:'skill'}),fx=cast.effects.find(e=>e.kind==='skill');
+  assert.ok(fx);assert.equal(fx.skillHero,hero);
+  assert.deepEqual(fx.skillTargets,[{id:1,x:120,y:150},{id:2,x:800,y:480}]);
+  assert.equal(cast.lastSkill?.hits,2);assert.equal(cast.lastSkill?.kills,1);assert.equal(cast.skillCooldown,20);
+  assert.ok(cast.enemies.find(e=>e.id===2)!.hp<s.enemies[1].hp);
+  assert.equal(JSON.stringify(s),original,'visual snapshot does not mutate the input');
+  const paused=actDefense(cast,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+  const advanced=stepDefense(cast,.1),advancedFx=advanced.effects.find(e=>e.kind==='skill');
+  assert.deepEqual(advancedFx?.skillTargets,fx.skillTargets,'target positions do not follow surviving enemies');
+  assert.ok((advancedFx?.age??0)>0);
+ }
+});
+
+test('a crowded skill keeps its aggregate hit markers within the shared effect limit',()=>{
+ const s=battlefield();s.enemies=Array.from({length:120},(_,i)=>({...enemy('sprout',i+1,100+i*3,250),hp:1}));
+ const cast=actDefense(s,{type:'skill'}),fx=cast.effects.find(e=>e.kind==='skill');
+ assert.equal(cast.effects.length,100);assert.equal(cast.lastSkill?.hits,120);assert.equal(fx?.skillTargets?.length,120);
+ assert.deepEqual(fx?.skillTargets?.[119],{id:120,x:457,y:250});
 });
 
 test('stage four uses two entrances and the boss accelerates below half health',()=>{
@@ -598,6 +643,19 @@ test('the surge notice appears once in waves 2-3 and never in waves 1 or 4',()=>
   }
 });
 
+test('wolf death records path facing and simulation age while rewards settle exactly once',()=>{
+ const state=battlefield(5),wolf={...enemy('frostwolf',1),hp:0,speed:0,facing:-1 as const};
+ state.enemies=[wolf,{...enemy('stone',2,100,100),speed:0}];
+ const killed=stepDefense(state,.02),death=killed.effects.find(effect=>effect.kind==='death')!;
+ assert.equal(killed.kills,1);assert.equal(killed.coins-state.coins,16);
+ assert.equal(death.targetKind,'frostwolf');assert.equal(death.targetFacing,1);assert.equal(death.maxLife,.7);
+ const paused=actDefense(killed,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+ const resumed=actDefense(paused,{type:'resume'}),later=stepDefense(resumed,.1);
+ const aged=later.effects.find(effect=>effect.id===death.id)!;assert.ok(Math.abs(aged.age!-(death.age!+.1))<1e-8);
+ const finished=advance(later,1);assert.equal(finished.effects.some(effect=>effect.id===death.id),false);
+ assert.equal(finished.kills,1);assert.equal(finished.coins,killed.coins);
+});
+
 test('a boss kill adds one shockwave and a labelled coin without changing the bounty',()=>{
   const kill=(kind:EnemyKind)=>{const s=battlefield(kind==='frostboss'?8:4),e=enemy(kind,1);e.hp=0;e.speed=0;const spare=enemy('stone',2,100,100);spare.speed=0;s.enemies=[e,spare];const before=s.coins;const next=stepDefense(s,.05);return {next,gain:next.coins-before};};
   for(const kind of ['boss','frostboss'] as const){
@@ -640,6 +698,30 @@ test('hero attacks carry a finite splash limit so a saved battle survives JSON',
   assert.ok(Number.isFinite(a.splashLimit));assert.equal(JSON.parse(JSON.stringify(a)).splashLimit,a.splashLimit);
 });
 
+
+test('a base magic bolt keeps its launch level when the tower upgrades or is sold',()=>{
+ const s=rangedBattle('magic');s.coins=1000;
+ const windup=stepDefense(s,.02);assert.equal(windup.towers[0].recoil??0,0);assert.equal(windup.projectiles.length,0);
+ const fired=until(windup,n=>n.projectiles.length>0),bolt=fired.projectiles[0];assert.equal(bolt.sourceLevel,1);assert.equal(bolt.actor,'magic');
+ const upgraded=actDefense(fired,{type:'upgrade',slot:2,branch:'fire'});assert.equal(upgraded.towers[0].level,2);assert.equal(upgraded.projectiles[0].sourceLevel,1);
+ const sold=actDefense(fired,{type:'sell',slot:2});assert.equal(sold.towers.length,0);assert.equal(sold.projectiles[0].sourceLevel,1);
+});
+
+test('water cannon recoil starts only on launch and a flying shell keeps its source level',()=>{
+ const s=rangedBattle('cannon');s.coins=1000;s.towers[0].level=2;s.towers[0].branch='water';
+ const windup=stepDefense(s,.02);assert.equal(windup.towers[0].recoil??0,0);
+ assert.equal(windup.projectiles.length,0);
+ const paused=actDefense(windup,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+ const fired=until(windup,n=>n.projectiles.length>0);assert.ok(fired.towers[0].recoil!>0);
+ assert.equal(fired.projectiles[0].sourceLevel,2);
+ const upgraded=actDefense(fired,{type:'upgrade',slot:2});assert.equal(upgraded.towers[0].level,3);
+ assert.equal(upgraded.projectiles[0].sourceLevel,2,'an upgrade must not move a flying shell origin');
+ const next=until({...upgraded,projectiles:[]},n=>n.projectiles.some(p=>p.sourceLevel===3));
+ assert.ok(next.projectiles.some(p=>p.sourceLevel===3),'the next shot uses the upgraded muzzle');
+ const sold=actDefense(fired,{type:'sell',slot:2});assert.equal(sold.towers.length,0);assert.equal(sold.projectiles[0].sourceLevel,2);
+ const empty=until({...windup,enemies:[]},n=>n.attacks.length===0);assert.equal(empty.projectiles.length,0);assert.equal(empty.towers[0].recoil??0,0);
+});
+
 test('damage multiplier table: every enemy × element pair is pinned so a balance edit shows up here',()=>{
   const kinds:EnemyKind[]=['sprout','wood','ice','stone','metal','insulator','boss','frostwolf','frostboss'];
   const elements=['physical','fire','lightning','impact','water'] as const;
@@ -667,6 +749,362 @@ test('a tower strikes the enemy furthest along the road, not the nearest or olde
   assert.equal(next.attacks[0]?.targetId,2);
 });
 
+test('ballista release keeps the actual launch aim and level through tracking, upgrade and sale',()=>{
+ const s=rangedBattle('crossbow');s.coins=1000;s.towers[0].level=2;s.towers[0].branch='pierce';
+ const windup=stepDefense(s,.02);assert.equal(windup.towers[0].recoil??0,0);assert.equal(windup.projectiles.length,0);
+ const changed={...windup,enemies:windup.enemies.map(e=>({...e,progress:e.progress+25,speed:35}))};
+ const fired=until(changed,n=>n.projectiles.length>0),shot=fired.projectiles[0];
+ assert.ok(shot.launchAim);assert.deepEqual(shot.launchAim,shot.to);assert.deepEqual(fired.towers[0].aim,shot.launchAim);
+ assert.equal(shot.sourceLevel,2);assert.ok(fired.towers[0].recoil!>0);
+ const snapshot=structuredClone(shot.launchAim),tracked=stepDefense(fired,.02);
+ assert.deepEqual(tracked.projectiles[0].launchAim,snapshot);assert.deepEqual(shot.launchAim,snapshot);
+ assert.notDeepEqual(tracked.projectiles[0].to,snapshot,'tracking target moves while the launch socket stays fixed');
+ const paused=actDefense(fired,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+ const upgraded=actDefense(fired,{type:'upgrade',slot:2});assert.equal(upgraded.towers[0].level,3);
+ assert.equal(upgraded.projectiles[0].sourceLevel,2);assert.deepEqual(upgraded.projectiles[0].launchAim,snapshot);
+ const sold=actDefense(fired,{type:'sell',slot:2});assert.equal(sold.towers.length,0);assert.deepEqual(sold.projectiles[0].launchAim,snapshot);
+ const next=until({...upgraded,projectiles:[]},n=>n.projectiles.some(p=>p.sourceLevel===3));assert.ok(next.projectiles.some(p=>p.sourceLevel===3&&p.launchAim));
+ const empty=until({...windup,enemies:[]},n=>n.attacks.length===0);assert.equal(empty.projectiles.length,0);assert.equal(empty.towers[0].recoil??0,0);
+});
+
+
+test('Ian bolts keep their launch pose and size through tracking, movement and promotion',()=>{
+ const state=battlefield();state.hero='mage';state.heroCooldown=0;state.enemies=[{...positionedEnemy('wood',501,410),hp:1000,maxHp:1000,speed:35}];
+ const fired=until(state,s=>s.projectiles.some(p=>p.actor==='mage'));const shot=fired.projectiles.find(p=>p.actor==='mage')!;
+ assert.equal(shot.sourceSize,84);assert.deepEqual(shot.launchAim,shot.to);const snapshot=structuredClone(shot.launchAim);
+ const next=stepDefense({...fired,promotion:'power',heroTarget:{x:700,y:500}},.02);const following=next.projectiles.find(p=>p.id===shot.id)!;
+ assert.equal(following.sourceSize,84);assert.deepEqual(following.launchAim,snapshot);assert.notDeepEqual(following.to,snapshot);assert.deepEqual(shot.launchAim,snapshot);
+ const promoted=until({...state,promotion:'power'},s=>s.projectiles.some(p=>p.actor==='mage'));assert.equal(promoted.projectiles.find(p=>p.actor==='mage')!.sourceSize,94);
+ const merc=until({...state,hero:'dwarf',heroCooldown:99,mercenary:'mage',mercenaryPosition:{...state.heroPosition},mercCooldown:0,promotion:'power'},s=>s.projectiles.some(p=>p.actor==='mage'));
+ assert.equal(merc.projectiles.find(p=>p.actor==='mage')!.sourceSize,84,'leader promotion cannot enlarge a mercenary bolt origin');
+});
+
+test('Riel arrows keep their launch pose and size through tracking, movement and promotion',()=>{
+ const state=battlefield();state.hero='elf';state.heroCooldown=0;state.enemies=[{...positionedEnemy('wood',501,410),hp:1000,maxHp:1000,speed:35}];
+ const fired=until(state,s=>s.projectiles.some(p=>p.actor==='elf'));const shot=fired.projectiles.find(p=>p.actor==='elf')!;
+ assert.equal(shot.sourceSize,84);assert.deepEqual(shot.launchAim,shot.to);const snapshot=structuredClone(shot.launchAim);
+ const next=stepDefense({...fired,promotion:'power',heroTarget:{x:700,y:500}},.02);const following=next.projectiles.find(p=>p.id===shot.id)!;
+ assert.equal(following.sourceSize,84);assert.deepEqual(following.launchAim,snapshot);assert.notDeepEqual(following.to,snapshot);assert.deepEqual(shot.launchAim,snapshot);
+ const promoted=until({...state,promotion:'power'},s=>s.projectiles.some(p=>p.actor==='elf'));assert.equal(promoted.projectiles.find(p=>p.actor==='elf')!.sourceSize,94);
+ const merc=until({...state,hero:'dwarf',heroCooldown:99,mercenary:'elf',mercenaryPosition:{...state.heroPosition},mercCooldown:0,promotion:'power'},s=>s.projectiles.some(p=>p.actor==='elf'));
+ assert.equal(merc.projectiles.find(p=>p.actor==='elf')!.sourceSize,84,'leader promotion cannot enlarge a mercenary arrow origin');
+});
+
+test('Cheongun bolts keep their launch pose and size through tracking, movement and promotion',()=>{
+ const state=battlefield();state.hero='tao';state.heroCooldown=0;state.enemies=[{...positionedEnemy('wood',501,410),hp:1000,maxHp:1000,speed:35}];
+ const fired=until(state,s=>s.projectiles.some(p=>p.actor==='tao'));const shot=fired.projectiles.find(p=>p.actor==='tao')!;
+ assert.equal(shot.sourceSize,84);assert.deepEqual(shot.launchAim,shot.to);const snapshot=structuredClone(shot.launchAim);
+ const next=stepDefense({...fired,promotion:'power',heroTarget:{x:700,y:500}},.02);const following=next.projectiles.find(p=>p.id===shot.id)!;
+ assert.equal(following.sourceSize,84);assert.deepEqual(following.launchAim,snapshot);assert.notDeepEqual(following.to,snapshot);assert.deepEqual(shot.launchAim,snapshot);
+ const promoted=until({...state,promotion:'power'},s=>s.projectiles.some(p=>p.actor==='tao'));assert.equal(promoted.projectiles.find(p=>p.actor==='tao')!.sourceSize,94);
+ const merc=until({...state,hero:'dwarf',heroCooldown:99,mercenary:'tao',mercenaryPosition:{...state.heroPosition},mercCooldown:0,promotion:'power'},s=>s.projectiles.some(p=>p.actor==='tao'));
+ assert.equal(merc.projectiles.find(p=>p.actor==='tao')!.sourceSize,84,'leader promotion cannot enlarge a mercenary bolt origin');
+});
+
+test('Luna bolts keep their launch pose and size through tracking, movement and promotion',()=>{
+ const state=battlefield();state.hero='druid';state.heroCooldown=0;state.enemies=[{...positionedEnemy('wood',501,410),hp:1000,maxHp:1000,speed:35}];
+ const fired=until(state,s=>s.projectiles.some(p=>p.actor==='druid'));const shot=fired.projectiles.find(p=>p.actor==='druid')!;
+ assert.equal(shot.sourceSize,84);assert.deepEqual(shot.launchAim,shot.to);const snapshot=structuredClone(shot.launchAim);
+ const next=stepDefense({...fired,promotion:'power',heroTarget:{x:700,y:500}},.02);const following=next.projectiles.find(p=>p.id===shot.id)!;
+ assert.equal(following.sourceSize,84);assert.deepEqual(following.launchAim,snapshot);assert.notDeepEqual(following.to,snapshot);assert.deepEqual(shot.launchAim,snapshot);
+ const promoted=until({...state,promotion:'power'},s=>s.projectiles.some(p=>p.actor==='druid'));assert.equal(promoted.projectiles.find(p=>p.actor==='druid')!.sourceSize,94);
+ const merc=until({...state,hero:'dwarf',heroCooldown:99,mercenary:'druid',mercenaryPosition:{...state.heroPosition},mercCooldown:0,promotion:'power'},s=>s.projectiles.some(p=>p.actor==='druid'));
+ assert.equal(merc.projectiles.find(p=>p.actor==='druid')!.sourceSize,84,'leader promotion cannot enlarge a mercenary bolt origin');
+});
+
+test('the companion animates while catching a moving owner each frame, then settles without advancing idle time',()=>{
+ for(const owner of ['hero','mercenary'] as const){
+  let state=createDefense(1,owner==='hero'?'druid':'mage');
+  if(owner==='mercenary')state=actDefense(state,{type:'hire',hero:'druid'});
+  state=actDefense(state,{type:'move',point:{x:180,y:170}});const initial=state,original=structuredClone(state);let reachedWhileMoving=false;
+  for(let i=0;i<600;i++){
+   const before=state;state=stepDefense(state,1/60);const travel=Math.hypot(state.pet!.position.x-before.pet!.position.x,state.pet!.position.y-before.pet!.position.y);
+   if(travel>.001){assert.ok(state.locomotion.pet.speed>0);assert.ok(Math.abs(state.locomotion.pet.speed-travel*60)<1e-6);if(Math.hypot(state.pet!.position.x-state.pet!.target.x,state.pet!.position.y-state.pet!.target.y)<.01)reachedWhileMoving=true;}
+   if(i===10){const frozen=actDefense(state,{type:'pause'});assert.equal(stepDefense(frozen,.1),frozen);}
+  }
+  assert.ok(reachedWhileMoving,'a faster companion can reach each following target without standing still');assert.equal(state.locomotion.pet.speed,0);assert.equal(stepDefense(state,.1),state);assert.ok(state.locomotion.pet.distance>0);assert.deepEqual(initial,original);
+ }
+});
+
+
+test('rapid crossbow release keeps the actual launch aim and level through tracking, upgrade and sale',()=>{
+ const s=rangedBattle('crossbow');s.coins=1000;s.towers[0].level=2;s.towers[0].branch='rapid';
+ const windup=stepDefense(s,.02);assert.equal(windup.towers[0].recoil??0,0);assert.equal(windup.projectiles.length,0);
+ const changed={...windup,enemies:windup.enemies.map(e=>({...e,progress:e.progress+25,speed:35}))};
+ const fired=until(changed,n=>n.projectiles.length>0),shot=fired.projectiles[0];
+ assert.ok(shot.launchAim);assert.deepEqual(shot.launchAim,shot.to);assert.deepEqual(fired.towers[0].aim,shot.launchAim);
+ assert.equal(shot.sourceLevel,2);assert.ok(fired.towers[0].recoil!>0);
+ const snapshot=structuredClone(shot.launchAim),tracked=stepDefense(fired,.02);
+ assert.deepEqual(tracked.projectiles[0].launchAim,snapshot);assert.deepEqual(shot.launchAim,snapshot);
+ assert.notDeepEqual(tracked.projectiles[0].to,snapshot,'tracking target moves while the launch socket stays fixed');
+ const paused=actDefense(fired,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+ const upgraded=actDefense(fired,{type:'upgrade',slot:2});assert.equal(upgraded.towers[0].level,3);
+ assert.equal(upgraded.projectiles[0].sourceLevel,2);assert.deepEqual(upgraded.projectiles[0].launchAim,snapshot);
+ const sold=actDefense(fired,{type:'sell',slot:2});assert.equal(sold.towers.length,0);assert.deepEqual(sold.projectiles[0].launchAim,snapshot);
+ const next=until({...upgraded,projectiles:[]},n=>n.projectiles.some(p=>p.sourceLevel===3));assert.ok(next.projectiles.some(p=>p.sourceLevel===3&&p.launchAim));
+ const empty=until({...windup,enemies:[]},n=>n.attacks.length===0);assert.equal(empty.projectiles.length,0);assert.equal(empty.towers[0].recoil??0,0);
+});
+
+test('crush cannon release keeps the actual launch aim and level through tracking, upgrade and sale',()=>{
+ const s=rangedBattle('cannon');s.coins=1000;s.towers[0].level=2;s.towers[0].branch='crush';
+ const windup=stepDefense(s,.02);assert.equal(windup.towers[0].recoil??0,0);assert.equal(windup.projectiles.length,0);
+ const changed={...windup,enemies:windup.enemies.map(e=>({...e,progress:e.progress+25,speed:35}))};
+ const fired=until(changed,n=>n.projectiles.length>0),shot=fired.projectiles[0];
+ assert.ok(shot.launchAim);assert.deepEqual(shot.launchAim,shot.to);assert.deepEqual(fired.towers[0].aim,shot.launchAim);
+ assert.equal(shot.sourceLevel,2);assert.ok(fired.towers[0].recoil!>0);
+ const snapshot=structuredClone(shot.launchAim),tracked=stepDefense(fired,.02);
+ assert.deepEqual(tracked.projectiles[0].launchAim,snapshot);assert.deepEqual(shot.launchAim,snapshot);
+ assert.deepEqual(tracked.projectiles[0].to,snapshot,'ballistic shell keeps its launch target');
+ const paused=actDefense(fired,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+ const upgraded=actDefense(fired,{type:'upgrade',slot:2});assert.equal(upgraded.towers[0].level,3);
+ assert.equal(upgraded.projectiles[0].sourceLevel,2);assert.deepEqual(upgraded.projectiles[0].launchAim,snapshot);
+ const sold=actDefense(fired,{type:'sell',slot:2});assert.equal(sold.towers.length,0);assert.deepEqual(sold.projectiles[0].launchAim,snapshot);
+ const next=until({...upgraded,projectiles:[]},n=>n.projectiles.some(p=>p.sourceLevel===3));assert.ok(next.projectiles.some(p=>p.sourceLevel===3&&p.launchAim));
+ const empty=until({...windup,enemies:[]},n=>n.attacks.length===0);assert.equal(empty.projectiles.length,0);assert.equal(empty.towers[0].recoil??0,0);
+});
+
+
+test('wolf death owns the final visual gait snapshot without sharing a mutable heading',()=>{
+ const s=battlefield(5),heading={x:0,y:-1};
+ const wolf={...enemy('frostwolf',11),hp:0,speed:0,walkDistance:123,walkCycles:2.375,walkHeading:heading};
+ s.enemies=[wolf,{...enemy('stone',12),speed:0}];
+ const killed=stepDefense(s,.02),death=killed.effects.find(e=>e.kind==='death')!;
+ assert.deepEqual(death.targetWalk,{heading,distance:200,cycles:2.375+11*7/40});
+ assert.notEqual(death.targetWalk!.heading,heading);
+ heading.y=1;wolf.walkCycles=99;assert.equal(death.targetWalk!.heading.y,-1);
+ const later=stepDefense(killed,.1);assert.deepEqual(later.effects.find(e=>e.id===death.id)!.targetWalk,death.targetWalk);
+ assert.equal(later.kills,1);assert.equal(later.coins-s.coins,16);
+ const other=battlefield();other.enemies=[{...enemy('wood',1),hp:0,speed:0},{...enemy('stone',2),speed:0}];
+ assert.equal(stepDefense(other,.02).effects.find(e=>e.kind==='death')!.targetWalk,undefined);
+});
+
+
+test('lethal knockback saves the prior visible brace instead of the new killing impulse',()=>{
+ for(const prior of [0,7,12,40,140]){
+  const s=battlefield(5);s.hero='dwarf';s.enemies=[{...enemy('frostwolf',11),hp:1,knockVelocity:prior,walkHeading:{x:0,y:-1},walkCycles:.375,walkDistance:123}];
+  const killed=actDefense(s,{type:'skill'}),death=killed.effects.find(e=>e.kind==='death')!;
+  assert.equal(death.force,170);assert.equal(death.targetWalk!.braceVelocity,prior>7?prior:undefined);
+  assert.equal(s.enemies[0].knockVelocity,prior);assert.equal(s.enemies[0].deathBraceVelocity,undefined);
+  assert.equal(killed.kills,1);assert.equal(killed.coins-s.coins,16);assert.equal(killed.enemies.length,0);
+  const paused=actDefense(killed,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);
+  const next=stepDefense(killed,.1);assert.deepEqual(next.effects.find(e=>e.id===death.id)!.targetWalk,death.targetWalk);
+ }
+});
+
+test('burn deaths during knockback use the existing brace without requiring another impact',()=>{
+ const s=battlefield(5);s.enemies=[{...enemy('frostwolf',11),hp:.01,burn:1,knockVelocity:80,knockCooldown:.8,speed:0,progress:200,walkHeading:{x:1,y:0},walkCycles:.375},{...enemy('stone',12),speed:0}];
+ const killed=stepDefense(s,.02),death=killed.effects.find(e=>e.kind==='death')!;
+ assert.ok(death.targetWalk!.braceVelocity!>65&&death.targetWalk!.braceVelocity!<=80);
+ assert.equal(killed.kills,1);assert.equal(killed.coins-s.coins,16);assert.equal(s.enemies[0].hp,.01);
+});
+
+test('Riel hero and mercenary remember their last step, pause, settle and cancel when moving again',()=>{
+ for(const role of ['hero','mercenary'] as const){
+  let s=createDefense(1,role==='hero'?'elf':'dwarf');if(role==='mercenary')s=actDefense(s,{type:'hire',hero:'elf'});
+  s=actDefense(s,{type:'move',point:{x:250,y:220}});let observed=false;
+  for(let i=0;i<600;i++){
+   const previous=s;s=stepDefense(s,1/60);const m=s.locomotion[role];
+   if(role==='mercenary'){const travel=Math.hypot(s.mercenaryPosition.x-previous.mercenaryPosition.x,s.mercenaryPosition.y-previous.mercenaryPosition.y);if(travel>.001){assert.ok(m.speed>0);assert.equal(m.settle,undefined);}}
+   if(m.settle){
+    observed=true;assert.equal(m.settle.frame,Math.floor((previous.locomotion[role].distance%64)/8));assert.equal(m.settle.elapsed,0);assert.deepEqual(m.settle.heading,previous.locomotion[role].heading);
+    const frozen=actDefense(s,{type:'pause'});assert.equal(stepDefense(frozen,.1),frozen);
+    const snapshot=structuredClone(s),finished=advance(s,.4);assert.equal(finished.locomotion[role].settle,undefined);assert.deepEqual(s,snapshot);
+    const point=role==='hero'?s.heroPosition:s.mercenaryPosition;assert.deepEqual(role==='hero'?finished.heroPosition:finished.mercenaryPosition,point);
+    const restarted=stepDefense(actDefense(s,{type:'move',point:{x:650,y:450}}),.05);assert.equal(restarted.locomotion[role].settle,undefined);assert.ok(restarted.locomotion[role].speed>0);
+    if(role==='hero'){const dashed=stepDefense(actDefense(actDefense(s,{type:'start-wave'}),{type:'dash',point:{x:650,y:450}}),.02);assert.equal(dashed.locomotion.hero.settle,undefined);}
+    break;
+   }
+  }
+  assert.ok(observed,role+' naturally reaches a stop');
+ }
+});
+
+test('Ian hero and mercenary remember their last step, pause, settle and cancel when moving again',()=>{
+ for(const role of ['hero','mercenary'] as const){
+  let s=createDefense(1,role==='hero'?'mage':'dwarf');if(role==='mercenary')s=actDefense(s,{type:'hire',hero:'mage'});
+  s=actDefense(s,{type:'move',point:{x:250,y:220}});let observed=false;
+  for(let i=0;i<600;i++){
+   const previous=s;s=stepDefense(s,1/60);const m=s.locomotion[role];
+   if(role==='mercenary'){const travel=Math.hypot(s.mercenaryPosition.x-previous.mercenaryPosition.x,s.mercenaryPosition.y-previous.mercenaryPosition.y);if(travel>.001){assert.ok(m.speed>0);assert.equal(m.settle,undefined);}}
+   if(m.settle){
+    observed=true;assert.equal(m.settle.frame,Math.floor((previous.locomotion[role].distance%64)/8));assert.equal(m.settle.elapsed,0);assert.deepEqual(m.settle.heading,previous.locomotion[role].heading);
+    const frozen=actDefense(s,{type:'pause'});assert.equal(stepDefense(frozen,.1),frozen);
+    const snapshot=structuredClone(s),finished=advance(s,.4);assert.equal(finished.locomotion[role].settle,undefined);assert.deepEqual(s,snapshot);
+    const point=role==='hero'?s.heroPosition:s.mercenaryPosition;assert.deepEqual(role==='hero'?finished.heroPosition:finished.mercenaryPosition,point);
+    const restarted=stepDefense(actDefense(s,{type:'move',point:{x:650,y:450}}),.05);assert.equal(restarted.locomotion[role].settle,undefined);assert.ok(restarted.locomotion[role].speed>0);
+    if(role==='hero'){const dashed=stepDefense(actDefense(actDefense(s,{type:'start-wave'}),{type:'dash',point:{x:650,y:450}}),.02);assert.equal(dashed.locomotion.hero.settle,undefined);}
+    break;
+   }
+  }
+  assert.ok(observed,role+' naturally reaches a stop');
+ }
+});
+
+test('Bron hero and mercenary remember their last step, pause, settle and cancel when moving again',()=>{
+ for(const role of ['hero','mercenary'] as const){
+  let s=createDefense(1,role==='hero'?'dwarf':'mage');if(role==='mercenary')s=actDefense(s,{type:'hire',hero:'dwarf'});
+  s=actDefense(s,{type:'move',point:{x:250,y:220}});let observed=false;
+  for(let i=0;i<600;i++){
+   const previous=s;s=stepDefense(s,1/60);const m=s.locomotion[role];
+   if(role==='mercenary'){const travel=Math.hypot(s.mercenaryPosition.x-previous.mercenaryPosition.x,s.mercenaryPosition.y-previous.mercenaryPosition.y);if(travel>.001){assert.ok(m.speed>0);assert.equal(m.settle,undefined);}}
+   if(m.settle){
+    observed=true;assert.equal(m.settle.frame,Math.floor((previous.locomotion[role].distance%64)/8));assert.equal(m.settle.elapsed,0);assert.deepEqual(m.settle.heading,previous.locomotion[role].heading);
+    const frozen=actDefense(s,{type:'pause'});assert.equal(stepDefense(frozen,.1),frozen);
+    const snapshot=structuredClone(s),finished=advance(s,.4);assert.equal(finished.locomotion[role].settle,undefined);assert.deepEqual(s,snapshot);
+    const point=role==='hero'?s.heroPosition:s.mercenaryPosition;assert.deepEqual(role==='hero'?finished.heroPosition:finished.mercenaryPosition,point);
+    const restarted=stepDefense(actDefense(s,{type:'move',point:{x:650,y:450}}),.05);assert.equal(restarted.locomotion[role].settle,undefined);assert.ok(restarted.locomotion[role].speed>0);
+    if(role==='hero'){const dashed=stepDefense(actDefense(actDefense(s,{type:'start-wave'}),{type:'dash',point:{x:650,y:450}}),.02);assert.equal(dashed.locomotion.hero.settle,undefined);}
+    break;
+   }
+  }
+  assert.ok(observed,role+' naturally reaches a stop');
+ }
+});
+
+test('Cheongun companion keeps walking while catching its owner, then rests without idle simulation',()=>{
+ let s=actDefense(createDefense(1,'dwarf'),{type:'hire',hero:'tao'});s=actDefense(s,{type:'move',point:{x:400,y:300}});let caughtMoving=false;
+ for(let i=0;i<600;i++){
+  const before=s;s=stepDefense(s,1/60);const travel=Math.hypot(s.mercenaryPosition.x-before.mercenaryPosition.x,s.mercenaryPosition.y-before.mercenaryPosition.y);
+  if(travel>.001){assert.ok(s.locomotion.mercenary.speed>0);if(Math.hypot(s.mercenaryPosition.x-(s.heroPosition.x+38),s.mercenaryPosition.y-(s.heroPosition.y+35))<.01)caughtMoving=true;}
+ }
+ assert.ok(caughtMoving);assert.equal(s.locomotion.mercenary.speed,0);assert.equal(s.locomotion.mercenary.settle,undefined);assert.equal(stepDefense(s,.1),s);
+});
+
+test('Cheongun hero and mercenary remember their last step, pause, settle and cancel when moving again',()=>{
+ for(const role of ['hero','mercenary'] as const){
+  let s=createDefense(1,role==='hero'?'tao':'mage');if(role==='mercenary')s=actDefense(s,{type:'hire',hero:'tao'});
+  s=actDefense(s,{type:'move',point:{x:250,y:220}});let observed=false;
+  for(let i=0;i<600;i++){
+   const previous=s;s=stepDefense(s,1/60);const m=s.locomotion[role];
+   if(role==='mercenary'){const travel=Math.hypot(s.mercenaryPosition.x-previous.mercenaryPosition.x,s.mercenaryPosition.y-previous.mercenaryPosition.y);if(travel>.001){assert.ok(m.speed>0);assert.equal(m.settle,undefined);}}
+   if(m.settle){
+    observed=true;assert.equal(m.settle.frame,Math.floor((previous.locomotion[role].distance%64)/8));assert.equal(m.settle.elapsed,0);assert.deepEqual(m.settle.heading,previous.locomotion[role].heading);
+    const frozen=actDefense(s,{type:'pause'});assert.equal(stepDefense(frozen,.1),frozen);
+    const snapshot=structuredClone(s),finished=advance(s,.4);assert.equal(finished.locomotion[role].settle,undefined);assert.deepEqual(s,snapshot);
+    const point=role==='hero'?s.heroPosition:s.mercenaryPosition;assert.deepEqual(role==='hero'?finished.heroPosition:finished.mercenaryPosition,point);
+    const restarted=stepDefense(actDefense(s,{type:'move',point:{x:650,y:450}}),.05);assert.equal(restarted.locomotion[role].settle,undefined);assert.ok(restarted.locomotion[role].speed>0);
+    if(role==='hero'){const dashed=stepDefense(actDefense(actDefense(s,{type:'start-wave'}),{type:'dash',point:{x:650,y:450}}),.02);assert.equal(dashed.locomotion.hero.settle,undefined);}
+    break;
+   }
+  }
+  assert.ok(observed,role+' naturally reaches a stop');
+ }
+});
+
+test('Luna companion keeps walking while catching its owner, then rests without idle simulation',()=>{
+ let s=actDefense(createDefense(1,'dwarf'),{type:'hire',hero:'druid'});s=actDefense(s,{type:'move',point:{x:400,y:300}});let caughtMoving=false;
+ for(let i=0;i<600;i++){
+  const before=s;s=stepDefense(s,1/60);const travel=Math.hypot(s.mercenaryPosition.x-before.mercenaryPosition.x,s.mercenaryPosition.y-before.mercenaryPosition.y);
+  if(travel>.001){assert.ok(s.locomotion.mercenary.speed>0);if(Math.hypot(s.mercenaryPosition.x-(s.heroPosition.x+38),s.mercenaryPosition.y-(s.heroPosition.y+35))<.01)caughtMoving=true;}
+ }
+ assert.ok(caughtMoving);assert.equal(s.locomotion.mercenary.speed,0);assert.equal(s.locomotion.mercenary.settle,undefined);assert.equal(stepDefense(s,.1),s);
+});
+
+test('Luna hero and mercenary remember their last step, pause, settle and cancel when moving again',()=>{
+ for(const role of ['hero','mercenary'] as const){
+  let s=createDefense(1,role==='hero'?'druid':'mage');if(role==='mercenary')s=actDefense(s,{type:'hire',hero:'druid'});
+  s=actDefense(s,{type:'move',point:{x:250,y:220}});let observed=false;
+  for(let i=0;i<600;i++){
+   const previous=s;s=stepDefense(s,1/60);const m=s.locomotion[role];
+   if(role==='mercenary'){const travel=Math.hypot(s.mercenaryPosition.x-previous.mercenaryPosition.x,s.mercenaryPosition.y-previous.mercenaryPosition.y);if(travel>.001){assert.ok(m.speed>0);assert.equal(m.settle,undefined);}}
+   if(m.settle){
+    observed=true;assert.equal(m.settle.frame,Math.floor((previous.locomotion[role].distance%64)/8));assert.equal(m.settle.elapsed,0);assert.deepEqual(m.settle.heading,previous.locomotion[role].heading);
+    const frozen=actDefense(s,{type:'pause'});assert.equal(stepDefense(frozen,.1),frozen);
+    const snapshot=structuredClone(s),finished=advance(s,.4);assert.equal(finished.locomotion[role].settle,undefined);assert.deepEqual(s,snapshot);
+    const point=role==='hero'?s.heroPosition:s.mercenaryPosition;assert.deepEqual(role==='hero'?finished.heroPosition:finished.mercenaryPosition,point);
+    const restarted=stepDefense(actDefense(s,{type:'move',point:{x:650,y:450}}),.05);assert.equal(restarted.locomotion[role].settle,undefined);assert.ok(restarted.locomotion[role].speed>0);
+    if(role==='hero'){const dashed=stepDefense(actDefense(actDefense(s,{type:'start-wave'}),{type:'dash',point:{x:650,y:450}}),.02);assert.equal(dashed.locomotion.hero.settle,undefined);}
+    break;
+   }
+  }
+  assert.ok(observed,role+' naturally reaches a stop');
+ }
+});
+
+
+test('skill supply pays only for three direct kills once per wave and survives JSON restore',()=>{
+ const s=battlefield();s.enemies=[1,2,3].map(id=>({...enemy('sprout',id),hp:10}));
+ const original=JSON.stringify(s),cast=actDefense(s,{type:'skill'});
+ assert.equal(JSON.stringify(s),original,'command does not mutate its input');
+ assert.equal(cast.coins-s.coins,42+SKILL_SUPPLY);assert.equal(cast.skillSupplyWave,1);
+ assert.deepEqual(cast.lastSkill,{at:0,hits:3,kills:3,damage:30,weakHits:3,supply:15,interrupted:false,slowSeconds:0});
+ assert.equal(actDefense(cast,{type:'skill'}),cast);
+ const restored=JSON.parse(JSON.stringify(cast)) as DefenseState;
+ const again=actDefense({...restored,skillCooldown:0,enemies:[4,5,6].map(id=>({...enemy('sprout',id),hp:10}))},{type:'skill'});
+ assert.equal(again.coins-cast.coins,42);assert.equal(again.lastSkill?.supply,0);
+ const next=actDefense({...again,phase:'intermission'},{type:'start-wave'});
+ assert.equal(next.lastSkill,undefined);assert.equal(next.wave,2);
+ const second=actDefense({...next,skillCooldown:0,enemies:[7,8,9].map(id=>({...enemy('sprout',id),hp:10}))},{type:'skill'});
+ assert.equal(second.lastSkill?.supply,SKILL_SUPPLY);assert.equal(second.skillSupplyWave,2);
+});
+
+test('small casts retain eligibility; already dead enemies and ongoing burn do not earn skill supply',()=>{
+ const s=battlefield();s.enemies=[{...enemy('sprout',1),hp:10},{...enemy('sprout',2),hp:10},{...enemy('boss',3),hp:1000}];
+ const cast=actDefense(s,{type:'skill'});assert.equal(cast.lastSkill?.kills,2);assert.equal(cast.lastSkill?.supply,0);assert.equal(cast.skillSupplyWave,undefined);
+ const more=actDefense({...cast,skillCooldown:0,enemies:[4,5,6].map(id=>({...enemy('sprout',id),hp:10}))},{type:'skill'});assert.equal(more.lastSkill?.supply,15);
+ const dead={...s,enemies:[1,2,3].map(id=>({...enemy('sprout',id),hp:0}))};assert.equal(actDefense(dead,{type:'skill'}),dead);
+ const burning=actDefense({...s,enemies:[1,2,3].map(id=>({...enemy('wood',id),hp:174}))},{type:'skill'});
+ const delayed=advance(burning,.5);assert.equal(delayed.kills,3);assert.equal(delayed.lastSkill?.kills,0);assert.equal(delayed.lastSkill?.supply,0);assert.equal(delayed.skillSupplyWave,undefined);
+});
+
+test('control promotion improves innate slowing and never shortens a stronger control effect',()=>{
+ for(const hero of HERO_ORDER)for(const promotion of [null,'power','control'] as const){
+  const s={...battlefield(),hero,promotion,enemies:[{...enemy('boss',1),hp:10000}]};
+  const cast=actDefense(s,{type:'skill'}),innate=hero==='druid'?5:hero==='tao'?4:0,expected=promotion==='control'?(innate?innate+2:4):innate;
+  assert.equal(skillSlowSeconds(hero,promotion),expected);assert.equal(cast.enemies[0].slow,expected);assert.equal(cast.lastSkill?.slowSeconds,expected);
+  assert.equal(cast.effects.find(e=>e.kind==='skill')?.skillMode,promotion??undefined);
+  const stronger=actDefense({...s,enemies:[{...s.enemies[0],slow:9}]},{type:'skill'});assert.equal(stronger.enemies[0].slow,9);
+ }
+});
+
+test('skill report counts actual capped damage and boss interruption without changing village health',()=>{
+ const s={...battlefield(8),hero:'dwarf' as const,bossCharge:2,hp:11,outpostHp:6,enemies:[{...enemy('frostboss',1),hp:10000},{...enemy('stone',2),hp:20}]};
+ const cast=actDefense(s,{type:'skill'});assert.equal(cast.lastSkill?.damage,193);assert.equal(cast.lastSkill?.weakHits,2);assert.equal(cast.lastSkill?.interrupted,true);assert.equal(cast.lastSkill?.kills,1);assert.equal(cast.lastSkill?.supply,0);
+ assert.equal(cast.hp,11);assert.equal(cast.outpostHp,6);assert.equal(cast.bossCharge,0);
+ const paused=actDefense(cast,{type:'pause'});assert.equal(stepDefense(paused,.1),paused);assert.equal(actDefense(paused,{type:'skill'}),paused);
+ for(const rate of [30,60,120]){let current=cast;for(let i=0;i<rate/2;i++)current=stepDefense(current,1/rate);assert.deepEqual(current.lastSkill,cast.lastSkill);assert.equal(current.skillSupplyWave,undefined);}
+});
+
+test('Kar companion keeps walking while catching its owner, then rests without idle simulation',()=>{
+ let s=actDefense(createDefense(1,'dwarf'),{type:'hire',hero:'barbarian'});s=actDefense(s,{type:'move',point:{x:400,y:300}});let caughtMoving=false;
+ for(let i=0;i<600;i++){
+  const before=s;s=stepDefense(s,1/60);const travel=Math.hypot(s.mercenaryPosition.x-before.mercenaryPosition.x,s.mercenaryPosition.y-before.mercenaryPosition.y);
+  if(travel>.001){assert.ok(s.locomotion.mercenary.speed>0);if(Math.hypot(s.mercenaryPosition.x-(s.heroPosition.x+38),s.mercenaryPosition.y-(s.heroPosition.y+35))<.01)caughtMoving=true;}
+ }
+ assert.ok(caughtMoving);assert.equal(s.locomotion.mercenary.speed,0);assert.equal(s.locomotion.mercenary.settle,undefined);assert.equal(stepDefense(s,.1),s);
+});
+
+test('Kar hero and mercenary remember their last step, pause, settle and cancel when moving again',()=>{
+ for(const role of ['hero','mercenary'] as const){
+  let s=createDefense(1,role==='hero'?'barbarian':'mage');if(role==='mercenary')s=actDefense(s,{type:'hire',hero:'barbarian'});
+  s=actDefense(s,{type:'move',point:{x:250,y:220}});let observed=false;
+  for(let i=0;i<600;i++){
+   const previous=s;s=stepDefense(s,1/60);const m=s.locomotion[role];
+   if(role==='mercenary'){const travel=Math.hypot(s.mercenaryPosition.x-previous.mercenaryPosition.x,s.mercenaryPosition.y-previous.mercenaryPosition.y);if(travel>.001){assert.ok(m.speed>0);assert.equal(m.settle,undefined);}}
+   if(m.settle){
+    observed=true;assert.equal(m.settle.frame,Math.floor((previous.locomotion[role].distance%64)/8));assert.equal(m.settle.elapsed,0);assert.deepEqual(m.settle.heading,previous.locomotion[role].heading);
+    const frozen=actDefense(s,{type:'pause'});assert.equal(stepDefense(frozen,.1),frozen);
+    const snapshot=structuredClone(s),finished=advance(s,.4);assert.equal(finished.locomotion[role].settle,undefined);assert.deepEqual(s,snapshot);
+    const point=role==='hero'?s.heroPosition:s.mercenaryPosition;assert.deepEqual(role==='hero'?finished.heroPosition:finished.mercenaryPosition,point);
+    const restarted=stepDefense(actDefense(s,{type:'move',point:{x:650,y:450}}),.05);assert.equal(restarted.locomotion[role].settle,undefined);assert.ok(restarted.locomotion[role].speed>0);
+    if(role==='hero'){const dashed=stepDefense(actDefense(actDefense(s,{type:'start-wave'}),{type:'dash',point:{x:650,y:450}}),.02);assert.equal(dashed.locomotion.hero.settle,undefined);}
+    break;
+   }
+  }
+  assert.ok(observed,role+' naturally reaches a stop');
+ }
+});
+
+test('a lightning tower whose windup target falls re-aims at an enemy whose arc lands, not just the front-most',()=>{
+  const s=rangedBattle('magic');s.towers[0].branch='lightning';
+  const wet=(id:number,x:number)=>{const e=positionedEnemy('wood',id,x);e.wet=5;return e;};
+  s.enemies=[positionedEnemy('wood',1,430),wet(2,395),positionedEnemy('wood',3,375)];
+  const winding=stepDefense(s,.02);assert.equal(winding.attacks[0].targetId,2);
+  const survivors=[positionedEnemy('wood',1,430),wet(4,392),positionedEnemy('wood',3,375)];
+  const fired=until({...winding,enemies:survivors},n=>n.projectiles.length>0);
+  assert.equal(fired.projectiles[0].targetId,4,'re-aim keeps the chain preference instead of the dry front body');
+});
+
 test('a lightning tower aims at the front-most enemy whose arc would land, and falls back to the front-most',()=>{
   const lightning=(a:Enemy,b:Enemy,c:Enemy)=>{
     const s=rangedBattle('magic');s.towers[0].branch='lightning';s.enemies=[a,b,c];return stepDefense(s,.02);
@@ -679,20 +1117,10 @@ test('a lightning tower aims at the front-most enemy whose arc would land, and f
   assert.ok(landed.enemies.find(e=>e.id===3)!.hp<ENEMIES.wood.hp,'the arc really reached the neighbor behind the wet body');
   const allDry=lightning(positionedEnemy('wood',1,430),positionedEnemy('wood',2,395),positionedEnemy('wood',3,375));
   assert.equal(allDry.attacks[0]?.targetId,1,'with no arc available the front-most enemy is still hit');
-  const metalFront=lightning(positionedEnemy('metal',1,430),positionedEnemy('wood',2,395),positionedEnemy('wood',3,375));
-  assert.equal(metalFront.attacks[0]?.targetId,1,'a metal front body with a neighbor already chains, so it stays the target');
+  const alone=lightning(positionedEnemy('metal',1,430),positionedEnemy('wood',2,395),positionedEnemy('wood',3,375));
+  assert.equal(alone.attacks[0]?.targetId,1,'a metal front body with a neighbor already chains, so it stays the target');
   const plain=rangedBattle('magic');plain.enemies=[positionedEnemy('wood',1,430),wetBody,neighbor];
   assert.equal(stepDefense(plain,.02).attacks[0]?.targetId,1,'non-lightning magic towers keep the front-most rule');
-});
-
-test('a lightning tower whose windup target falls re-aims at an enemy whose arc lands, not just the front-most',()=>{
-  const s=rangedBattle('magic');s.towers[0].branch='lightning';
-  const wet=(id:number,x:number)=>{const e=positionedEnemy('wood',id,x);e.wet=5;return e;};
-  s.enemies=[positionedEnemy('wood',1,430),wet(2,395),positionedEnemy('wood',3,375)];
-  const winding=stepDefense(s,.02);assert.equal(winding.attacks[0].targetId,2);
-  const survivors=[positionedEnemy('wood',1,430),wet(4,392),positionedEnemy('wood',3,375)];
-  const fired=until({...winding,enemies:survivors},n=>n.projectiles.length>0);
-  assert.equal(fired.projectiles[0].targetId,4,'re-aim keeps the chain preference instead of the dry front body');
 });
 
 test('moving or dashing mid-windup refunds the hero cooldown but keeps attacks already launched',()=>{

@@ -1,5 +1,9 @@
-import { memo, useId } from 'react';
+import { memo, useEffect, useId, useState } from 'react';
 import type { DefenseThemeId } from '../games/defense/themes';
+import { GATE_ART } from '../games/defense/gateArt';
+import { GATE_IMPACT_ATLAS } from '../games/defense/gateImpact';
+import { FOREST_GATE } from '../games/defense/forestGateModel';
+import { loadGateAsset, gatePlacement, type GateAssetMode } from '../games/defense/gateAssets';
 
 // Presentation only: these landmarks never contribute collision, range or damage.
 // Each gate fits the original town silhouette; the road and build pads stay clear.
@@ -26,7 +30,7 @@ function Pennant({ x, y, color, leaf = false }: { x: number; y: number; color: s
 }
 
 /** Small static architecture, memoized independently of the 60 Hz battle state. */
-const Gate = memo(function Gate({ themeId, snow, outpost = false }: { themeId: DefenseThemeId; snow: boolean; outpost?: boolean }) {
+const VectorGate = memo(function VectorGate({ themeId, snow, outpost = false }: { themeId: DefenseThemeId; snow: boolean; outpost?: boolean }) {
   const uid = useId(), p = PALETTES[themeId], wood = themeId === 'verdant', east = themeId === 'unryeong', night = themeId === 'twilight';
   return <g transform={`translate(${outpost ? 852 : 850} ${outpost ? 131 : 318}) scale(${outpost ? .82 : 1})`} data-gate-theme={themeId} data-gate={outpost ? 'outpost' : 'village'}>
     <defs>
@@ -91,11 +95,61 @@ const Gate = memo(function Gate({ themeId, snow, outpost = false }: { themeId: D
   </g>;
 });
 
-export const DefenseThemeScenery = memo(function DefenseThemeScenery({ themeId, snow, expanded, outpostFallen }: {
-  themeId: DefenseThemeId; snow: boolean; expanded: boolean; outpostFallen: boolean;
+function Gate({ themeId, snow, outpost = false, ready }: {
+  themeId: DefenseThemeId; snow: boolean; outpost?: boolean; ready: boolean;
 }) {
-  return <g className="def-theme-scenery" pointerEvents="none" aria-hidden="true">
-    <Gate themeId={themeId} snow={snow}/>
-    {expanded ? <g opacity={outpostFallen ? .4 : 1}><Gate themeId={themeId} snow={snow} outpost/></g> : null}
+  if (!ready) return <VectorGate themeId={themeId} snow={snow} outpost={outpost}/>;
+  const art = GATE_ART[themeId];
+  return <g transform={`translate(${outpost ? 840 : 830} ${outpost ? 131 : 318}) scale(${outpost ? .82 : 1})`}
+    data-gate-theme={themeId} data-gate={outpost ? 'outpost' : 'village'} data-gate-art="illustrated">
+    <ellipse cy="-1" rx="60" ry="10" fill={snow ? '#253d50' : '#132e29'} opacity=".3"/>
+    <image href={art.src} x={art.x} y={art.y} width={art.width} height={art.height}/>
+  </g>;
+}
+
+/** One load decision shared by the background fallback and depth-sorted model. */
+export function useGateAsset(themeId:DefenseThemeId,snow:boolean):GateAssetMode {
+  const key=`${themeId}:${snow}`, [ready,setReady]=useState<{key:string;mode:GateAssetMode}|null>(null);
+  useEffect(()=>{
+    let active=true;const images:HTMLImageElement[]=[];
+    const load=(src:string)=>new Promise<boolean>(resolve=>{
+      const image=new Image();images.push(image);
+      image.onload=()=>{image.onload=null;image.onerror=null;resolve(true);};
+      image.onerror=()=>{image.onload=null;image.onerror=null;resolve(false);};image.src=src;
+    });
+    void loadGateAsset(themeId,snow,load).then(mode=>{if(active)setReady({key,mode});});
+    return()=>{active=false;for(const image of images){image.onload=null;image.onerror=null;}};
+  },[key,themeId,snow]);
+  return ready?.key===key?ready.mode:'fallback';
+}
+
+/** A missing reaction atlas keeps the static modeled gate. Never fetch GLB in battle. */
+export function useGateImpactAsset(enabled:boolean){
+  const [ready,setReady]=useState(false);
+  useEffect(()=>{
+    if(!enabled){setReady(false);return;}
+    let active=true;const image=new Image();
+    image.onload=()=>{if(active)setReady(true);};image.onerror=()=>{if(active)setReady(false);};image.src=GATE_IMPACT_ATLAS.src;
+    return()=>{active=false;image.onload=null;image.onerror=null;};
+  },[enabled]);
+  return enabled&&ready;
+}
+
+export const ModeledGate=memo(function ModeledGate({outpost=false,fallen=false,impactFrame,impactId}:{outpost?:boolean;fallen?:boolean;impactFrame?:number;impactId?:number}){
+  const p=gatePlacement(outpost);
+  return <g transform={`translate(${p.x} ${p.y}) scale(${p.scale})`} opacity={fallen ? .4 : 1} data-gate-theme="verdant" data-gate={outpost?'outpost':'village'} data-gate-art="baked" data-sort-y={p.sortY} data-impact-frame={impactFrame} data-impact-id={impactId} pointerEvents="none" aria-hidden="true">
+    <ellipse cy="4" rx="61" ry="14" fill="#132e29" opacity=".25"/>
+    {impactFrame!==undefined?<svg x={FOREST_GATE.x} y={FOREST_GATE.y} width={FOREST_GATE.width} height={FOREST_GATE.height} viewBox={`${impactFrame*512} 0 512 512`} overflow="hidden"><image href={GATE_IMPACT_ATLAS.src} width={GATE_IMPACT_ATLAS.width} height={GATE_IMPACT_ATLAS.height}/></svg>:<image href={FOREST_GATE.src} x={FOREST_GATE.x} y={FOREST_GATE.y} width={FOREST_GATE.width} height={FOREST_GATE.height}/>}
+  </g>;
+});
+
+export const DefenseThemeScenery = memo(function DefenseThemeScenery({ themeId, snow, expanded, outpostFallen,assetMode }: {
+  themeId: DefenseThemeId; snow: boolean; expanded: boolean; outpostFallen: boolean;assetMode:GateAssetMode;
+}) {
+  if(assetMode==='modeled')return null;
+  const ready=assetMode==='illustrated';
+  return <g className="def-theme-scenery" data-gate-assets={assetMode} pointerEvents="none" aria-hidden="true">
+    <Gate themeId={themeId} snow={snow} ready={ready}/>
+    {expanded ? <g opacity={outpostFallen ? .4 : 1}><Gate themeId={themeId} snow={snow} ready={ready} outpost/></g> : null}
   </g>;
 });

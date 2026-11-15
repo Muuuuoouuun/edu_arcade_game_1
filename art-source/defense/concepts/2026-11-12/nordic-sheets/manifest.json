@@ -1,0 +1,65 @@
+{
+  "createdAt": "2026-11-12T00:32:37.856346+00:00",
+  "baseCommit": "39062c288ff2f087133957e9821c9988c817a4f9",
+  "ownerBranch": "codex/arcana-nordic-sheets-20261112",
+  "targetBranch": "codex/arcana-stage-experience-20261106",
+  "generator": {
+    "provider": "connected OpenAI image generation tool",
+    "tool": "image_gen.imagegen",
+    "successfulCalls": 2,
+    "retries": 0,
+    "modelVersion": "not exposed by tool",
+    "actualChargeUsd": null
+  },
+  "status": "new Nordic fantasy art proposals only; no new heroes, stats, meshes, animations or map integrated",
+  "prompts": "generation-prompts.json",
+  "files": [
+    {
+      "id": "nordic-viking-guardians",
+      "titleKo": "바이킹 수호대 — 도끼 전사·방패 전사·룬술사",
+      "file": "nordic-viking-guardians.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 2141782,
+      "sha256": "7c7d73b97e79d79c4e0251538eac91ceb7cef2d958001eb2d4bd833aee784f2a",
+      "directImageReferences": [
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/core-theme/core-guardians-ian-riel-bron.png",
+          "sha256": "da0000b4b052b47f56b0b30678304e6f221d1e0abec7718ea54a35e7f4a46857"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/regional-sheets/polar-coast-cast.png",
+          "sha256": "ccf566d202da8dc6a23d5e0d1e6ad827bf4ad7be74c06d24cd48a0b2b4c7de26"
+        }
+      ]
+    },
+    {
+      "id": "nordic-fjord-environment-kit",
+      "titleKo": "북유럽 피오르 — 목조 마을·항구·지형 제작 키트",
+      "file": "nordic-fjord-environment-kit.png",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "bytes": 3282033,
+      "sha256": "18e4f1b6361221251fdf335751a2ca7b866d6844849db933e4aa52756bfc669a",
+      "directImageReferences": [
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/regional-sheets/polar-coast-environment-kit.png",
+          "sha256": "b4f97cf52973fb99a95569a597185c47a6edffe1cc50bb5f43e7f377e260e61c"
+        },
+        {
+          "repositoryPath": "art-source/defense/concepts/2026-11-12/core-theme/verdant-starter-theme-sheet.png",
+          "sha256": "636949d6c7f6c3aa9c56558c713aefcc8ec2d2791a4bcb73d4949afe78e683aa"
+        }
+      ]
+    }
+  ],
+  "modelingReview": [
+    "Side/back mini-views simplify or omit weapons. Define a single gear assembly and handedness contract before modeling/rigging; do not treat generated views as exact orthographic drawings.",
+    "Axe silhouette and haft length vary between the main and isolated prop views; choose one canonical head and shaft and preserve the two-hand grip spacing.",
+    "Rune staff stone/cradle shape varies in small views. Fix its pivot, weight and grip from one mesh.",
+    "The environment rune beacon appears as the existing cyan crystal tower family; a distinct slate rune-stone variant is still a future modeling choice.",
+    "Longship hull/deck/keel, bridge joints and ramp grades are illustrated concepts; traversability, occlusion, buoyancy and collision have not been validated."
+  ]
+}

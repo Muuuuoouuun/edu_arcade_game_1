@@ -1,0 +1,217 @@
+"""Bake orthographic road, bridge and high-ground meshes into aligned 2.5D terrain.
+Run after tools/export-terrain-layout.ts; no generated illustration is an input.
+"""
+import bpy
+import argparse, sys
+import json
+import math
+import random
+import subprocess
+import hashlib
+import site
+from pathlib import Path
+from mathutils import Vector
+from bpy_extras.object_utils import world_to_camera_view
+
+# Blender may omit Python's user site; install the pinned bake-only dependency there.
+site.addsitedir(site.getusersitepackages())
+from shapely import constrained_delaunay_triangles
+from shapely.geometry import LineString, box
+from shapely.geometry.polygon import orient
+
+ROOT = Path(__file__).resolve().parents[2]
+SOURCE = ROOT/'art-source/defense'
+OUT = ROOT/'public/defense/terrain'
+OUT.mkdir(parents=True,exist_ok=True)
+sys.path.insert(0,str(Path(__file__).resolve().parent))
+from forest_bridge import build_bridge
+p=argparse.ArgumentParser();p.add_argument('--bridge',action='store_true');args=p.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+layout=json.loads((SOURCE/'terrain-layout.json').read_text())
+
+def position(x,y,z):
+    # Camera's vertical projection: .8*Y + .6*Z. Top surfaces keep their logical XY.
+    return ((x-450), (300-y-.6*z)/.8, z)
+
+def material(name,color,rough=.8,grain=False):
+    m=bpy.data.materials.new(name);m.diffuse_color=(*color,1);m.use_nodes=True
+    node=m.node_tree.nodes.get('Principled BSDF')
+    node.inputs['Roughness'].default_value=rough
+    node.inputs['Base Color'].default_value=(*color,1)
+    nodes=m.node_tree.nodes;links=m.node_tree.links
+    # World coordinates keep the surface continuous across individual road quads.
+    geometry=nodes.new('ShaderNodeNewGeometry')
+    mapping=nodes.new('ShaderNodeVectorMath');mapping.operation='MULTIPLY'
+    mapping.inputs[1].default_value=(.12,1.8,.5) if grain else (1,1,1)
+    links.new(geometry.outputs['Position'],mapping.inputs[0])
+    noise=nodes.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=.32 if grain else .19
+    noise.inputs['Detail'].default_value=3;noise.inputs['Roughness'].default_value=.72
+    links.new(mapping.outputs[0],noise.inputs['Vector'])
+    ramp=nodes.new('ShaderNodeValToRGB')
+    ramp.color_ramp.elements[0].position=.15;ramp.color_ramp.elements[0].color=(*(v*.62 for v in color),1)
+    ramp.color_ramp.elements[1].position=.85;ramp.color_ramp.elements[1].color=(*(min(1,v*1.18) for v in color),1)
+    links.new(noise.outputs['Fac'],ramp.inputs[0]);links.new(ramp.outputs['Color'],node.inputs['Base Color'])
+    bump=nodes.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.24;bump.inputs['Distance'].default_value=.7 if grain else 1.1
+    links.new(noise.outputs['Fac'],bump.inputs['Height']);links.new(bump.outputs['Normal'],node.inputs['Normal'])
+    return m
+
+def solid(name,polygon,height,top,side,depth=None):
+    depth=height if depth is None else depth
+    roof=[position(x,y,height) for x,y in polygon]
+    floor=[(x,y,z-depth) for x,y,z in roof]
+    n=len(roof)
+    # Screen-clockwise polygon corresponds to a world-space counterclockwise roof.
+    faces=[tuple(range(n))]+[(i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n)]
+    mesh=bpy.data.meshes.new(name);mesh.from_pydata(roof+floor,[],faces);mesh.update()
+    obj=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(obj)
+    mesh.materials.append(top);mesh.materials.append(side)
+    for face in mesh.polygons:face.material_index=0 if face.index==0 else 1
+    return obj
+
+def soften(obj,width=.55):
+    bevel=obj.modifiers.new('Worn edges','BEVEL');bevel.width=width;bevel.segments=2
+    return obj
+
+def tile(name,x,y,w,h,z,top,side,depth=None):
+    return soften(solid(name,[(x-w/2,y-h/2),(x-w/2,y+h/2),(x+w/2,y+h/2),(x+w/2,y-h/2)],z,top,side,depth),min(.55,w*.1,h*.1))
+
+def smooth_path(points):
+    p=[Vector((v['x'],v['y'])) for v in points];out=[p[0]]
+    for i in range(1,len(p)-1):
+        a,b,c=p[i-1:i+2]
+        left=b+(a-b).normalized()*18;right=b+(c-b).normalized()*18
+        out.append(left)
+        for j in range(1,9):
+            t=j/8;out.append((1-t)**2*left+2*(1-t)*t*b+t*t*right)
+    out.append(p[-1]);return out
+
+def ribbon(name,points,width,z,top,side):
+    # Offset strips fold over themselves when the inside bend radius is < half-width.
+    # Buffer/union first, then triangulate the simple outline: no overlapping caps,
+    # internal vertical walls or dark spikes at the snow road's tight bends.
+    outline=LineString([tuple(p) for p in points]).buffer(width/2,cap_style='flat',join_style='round')
+    assert outline.is_valid and outline.geom_type=='Polygon' and not outline.interiors
+    regions=[outline]
+    if args.bridge and not snow:
+        for bridge_y in bridge_ys:outline=outline.difference(box(628,bridge_y-38,728,bridge_y+38))
+        regions=list(outline.geoms) if outline.geom_type=='MultiPolygon' else [outline]
+    if callable(top):
+        # Split at the exact gameplay ice boundaries, including triangles at a bend.
+        regions=[outline.intersection(box(left,-1000,right,1600)) for left,right in [(-1000,300),(300,520),(520,1900)]]
+    for region in regions:
+        for shape in ([region] if region.geom_type=='Polygon' else region.geoms):
+            if shape.is_empty or shape.area<.001:continue
+            shape=orient(shape,sign=-1)
+            polygon=list(shape.exterior.coords)[:-1]
+            lookup={p:i for i,p in enumerate(polygon)}
+            triangles=constrained_delaunay_triangles(shape)
+            assert abs(sum(t.area for t in triangles.geoms)-shape.area)<.001
+            faces=[tuple(lookup[p] for p in orient(t,sign=-1).exterior.coords[:-1]) for t in triangles.geoms]
+            roof=[position(x,y,z) for x,y in polygon];n=len(roof);cap_count=len(faces)
+            floor=[(x,y,0) for x,y,_ in roof]
+            faces.extend((i,(i+1)%n,(i+1)%n+n,i+n) for i in range(n))
+            mesh=bpy.data.meshes.new(name);mesh.from_pydata(roof+floor,[],faces);mesh.update()
+            obj=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(obj)
+            p=shape.representative_point()
+            mesh.materials.append(top(Vector((p.x,p.y))) if callable(top) else top);mesh.materials.append(side)
+            for face in mesh.polygons:face.material_index=0 if face.index<cap_count else 1
+
+manifest={'projection':{'width':900,'height':600,'camera':'orthographic','ground_plane':'X=(x-450), Y=(300-y-.6z)/.8'},'variants':[]}
+for variant in layout['variants']:
+    if args.bridge and variant['id'].startswith('snow'):continue
+    bridge_ys=[430]+([235] if len(variant['paths'])==2 else [])
+    fronts=[];bridge_parts=[]
+    bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
+    rng=random.Random(143)
+    snow=variant['id'].startswith('snow')
+    road=material('Road / ice' if snow else 'Road / warm packed sand',(.65,.75,.76) if snow else (.60,.39,.16))
+    ice=material('Ice / accelerated crossing',(.23,.55,.69),.28)
+    edge=material('Weathered shoulder',(.64,.77,.79) if snow else (.30,.36,.19))
+    cliff=material('Cut bank / shaded strata',(.19,.32,.39) if snow else (.19,.21,.14))
+    stone=material('Stone / upper faces',(.60,.73,.77) if snow else (.43,.45,.32))
+    dark=material('Stone / side faces',(.24,.36,.42) if snow else (.23,.27,.20))
+    wood=material('Bridge / oak planks',(.35,.19,.07),grain=True)
+    rim=material('Bridge / pale endgrain',(.58,.36,.14),grain=True)
+    moss=material('Shoulder / moss or frost',(.72,.85,.88) if snow else (.24,.32,.12))
+    iron=material('Bridge / iron fasteners',(.09,.13,.13),.4)
+    for lane,raw in enumerate(variant['paths']):
+        path=smooth_path(raw)
+        ribbon(f'Lane {lane+1} / raised bank',path,58,12,edge,cliff)
+        ribbon(f'Lane {lane+1} / road surface',path,43,13,(lambda p:ice if 300<=p.x<=520 else road) if snow else road,cliff)
+        # Low segmented curbs and scattered inset pavers expose depth without obscuring the lane.
+        for a,b in zip(path,path[1:]):
+            length=(b-a).length
+            if length<24:continue
+            tangent=(b-a).normalized();normal=Vector((-tangent.y,tangent.x))
+            for k in range(int(length/23)):
+                center=a+tangent*(k*23+11)
+                if args.bridge and not snow and 624<center.x<732 and any(abs(center.y-y)<42 for y in bridge_ys):continue
+                for side in (-1,1):
+                    c=center+normal*side*(25+rng.uniform(-1,1))
+                    half=rng.uniform(7.5,10)
+                    polygon=[tuple(c+tangent*(u+rng.uniform(-.7,.7))+normal*(v+rng.uniform(-.5,.5))) for u,v in [(-half,-2),(-half,2),(-half+2,3),(half-1,3),(half,1),(half,-2),(half-2,-3),(-half+1,-3)]]
+                    soften(solid('Road / worn curb stone',polygon,16+rng.uniform(-.6,.6),stone,dark,7))
+                    if k%3==0:
+                        c=center+normal*side*28
+                        tile('Shoulder / moss in joints',c.x,c.y,4,2,13,moss,cliff,1)
+                if k%2==0:
+                    c=center+normal*rng.uniform(-10,10)
+                    tile('Road / inset paver',c.x,c.y,5+rng.random()*6,3,14,stone,dark,2)
+    for slot in variant['highSlots']:
+        x,y=slot['x'],slot['y']+8
+        polygon=[(x+30*math.cos(i*math.tau/8),y+18*math.sin(i*math.tau/8)) for i in reversed(range(8))]
+        solid('High ground / stone terrace',polygon,20,stone,dark)
+        for dx in (-18,-6,6,18):
+            for dy in (-6,5):
+                tile('High ground / paving slab',x+dx,y+dy,11,9,21,edge if dx==6 else stone,dark,2)
+        for step in range(3):
+            tile('High ground / access stair',x,y+17+step*4,23,6,16-step*5,stone,dark,7)
+        # Masonry face seams appear on the front retaining wall.
+        for dx in (-16,0,16):tile('High ground / front block',x+dx,y+17,13,3,12,stone,dark,8)
+    if args.bridge:
+        for y in bridge_ys:
+            base,front=build_bridge(y,position,tile,stone,dark,wood,rim,iron);bridge_parts.append(base+front);fronts.extend(front)
+            for obj in front:obj.hide_render=True
+    elif not snow:
+        for y in [430]+([235] if len(variant['paths'])==2 else []):
+            tile('Bridge / crossbeam',677,y,124,48,17,wood,dark)
+            for x in range(620,739,9):
+                tile('Bridge / transverse plank',x,y,8,45,20,rim,wood,5)
+            # Back rail is part of the bake; the front rail is depth-sorted at runtime.
+            tile('Bridge / back handrail',678,y-24,128,3,45,rim,wood,4)
+            for x in (620,650,680,710,738):
+                tile('Bridge / back post',x,y-22,4,4,42,wood,dark,24)
+                tile('Bridge / nail',x,y-18,2,2,21,iron,iron,1)
+    scene=bpy.context.scene
+    scene.render.engine='CYCLES';scene.cycles.samples=48;scene.cycles.use_denoising=False
+    scene.render.resolution_x=1800;scene.render.resolution_y=1200;scene.render.resolution_percentage=100
+    scene.render.film_transparent=True;scene.render.image_settings.file_format='PNG';scene.render.image_settings.color_mode='RGBA'
+    scene.view_settings.view_transform='AgX';scene.view_settings.look='AgX - Medium High Contrast'
+    world=bpy.data.worlds.new('Soft daylight');world.use_nodes=True
+    world.node_tree.nodes['Background'].inputs[0].default_value=(.65,.75,.85,1)
+    world.node_tree.nodes['Background'].inputs[1].default_value=.48;scene.world=world
+    light_data=bpy.data.lights.new('Warm directional light','AREA');light_data.energy=2200000;light_data.shape='DISK';light_data.size=500
+    light_data.color=(1,.87,.68)
+    light=bpy.data.objects.new('Warm directional light',light_data);scene.collection.objects.link(light)
+    light.location=(-400,-200,1000);light.rotation_euler=(-light.location).to_track_quat('-Z','Y').to_euler()
+    camera_data=bpy.data.cameras.new('Logical coordinate camera');camera=bpy.data.objects.new(camera_data.name,camera_data);scene.collection.objects.link(camera)
+    camera.location=(0,-900,1200);camera.rotation_euler=(-camera.location).to_track_quat('-Z','Y').to_euler();camera_data.type='ORTHO';camera_data.ortho_scale=900;camera_data.clip_end=4000;scene.camera=camera
+    bpy.context.view_layer.update()
+    anchors=[]
+    for raw in variant['paths']:
+        for p in raw:
+            v=world_to_camera_view(scene,camera,Vector(position(p['x'],p['y'],13)))
+            actual=[v.x*900,(1-v.y)*600]
+            assert abs(actual[0]-p['x'])<.01 and abs(actual[1]-p['y'])<.01,actual
+            anchors.append({'logical':[p['x'],p['y']],'projected':[round(n,4) for n in actual]})
+    suffix="-bridge" if args.bridge else ""
+    png=SOURCE/f"terrain-{variant['id']}{suffix}.png";webp=OUT/f"{variant['id']}{suffix}.webp"
+    scene.render.filepath=str(png);bpy.ops.render.render(write_still=True)
+    subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(png),'-c:v','libwebp','-quality','90',str(webp)],check=True)
+    bpy.context.preferences.filepaths.save_version=0
+    bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE/f"terrain-{variant['id']}{suffix}.blend"))
+    manifest['variants'].append({'id':variant['id'],'file':webp.name,'bytes':webp.stat().st_size,'sha256':hashlib.sha256(webp.read_bytes()).hexdigest(),'path_anchors':anchors})
+    if args.bridge and variant['id']=='forest-single':
+        from export_bridge import export_bridge
+        manifest['bridge']=export_bridge(scene,bridge_parts[0],fronts,ROOT,OUT,SOURCE)
+(OUT/('bridge-manifest.json' if args.bridge else 'manifest.json')).write_text(json.dumps(manifest,indent=2)+'\n')
+print('ARCANA_TERRAIN_COMPLETE')

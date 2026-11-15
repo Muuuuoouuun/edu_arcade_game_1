@@ -1,0 +1,61 @@
+{
+  "source": "art-source/defense/forest-gate.blend",
+  "source_sha256": "9b37ec591aa2585c58b54f553bda660bffee1a4c6ee94e3ffb93064edf7e1a9a",
+  "regeneration_command": "npm run models:forest-gate",
+  "concept": "art-source/defense/concepts/2026-10-29/castles/verdant-citadel.png",
+  "camera": {
+    "location": [
+      4.0,
+      -10.0,
+      7.0
+    ],
+    "target": [
+      0.0,
+      0.0,
+      2.0999999046325684
+    ],
+    "ortho_scale": 6.800000190734863,
+    "resolution": [
+      512,
+      512
+    ],
+    "ground_anchor": [
+      256.0000305175781,
+      399.9229736328125
+    ]
+  },
+  "battle": {
+    "width": 170,
+    "height": 170,
+    "x": -85.00001013278961,
+    "y": -132.78692483901978,
+    "depth_offset": 9.612303674221039,
+    "sort_y": 327.61230367422104,
+    "outpost_sort_y": 138.88208901286126,
+    "outpost_scale": 0.82
+  },
+  "editable_parts": 162,
+  "runtime_meshes": 10,
+  "files": [
+    {
+      "file": "art-source/defense/forest-gate.png",
+      "bytes": 314710,
+      "sha256": "b53669e4cf3b0ef89027ba5cee9ceb0cd0d0e71f974602727b8dc9077637901e"
+    },
+    {
+      "file": "public/defense/models/forest-gate.glb",
+      "bytes": 1429212,
+      "sha256": "a379dab9ce38a556acd2a55cfa6e3dc278894d2018d0bc58ea130b1ea7c7101c"
+    },
+    {
+      "file": "public/defense/models/forest-gate-game.webp",
+      "bytes": 34566,
+      "sha256": "99c2550fe6b87489e60fef3b7cbea3c24e97411d02d975d3a1f3333878bafc73"
+    },
+    {
+      "file": "public/defense/models/forest-gate.png",
+      "bytes": 314710,
+      "sha256": "b53669e4cf3b0ef89027ba5cee9ceb0cd0d0e71f974602727b8dc9077637901e"
+    }
+  ]
+}

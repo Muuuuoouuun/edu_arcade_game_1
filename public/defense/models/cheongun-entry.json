@@ -1,0 +1,3746 @@
+{
+  "generator": "tools/blender/build_cheongun_entry.py",
+  "command": "npm run models:cheongun-entry",
+  "source_cast_sha256": "3bc40dd4cd5f4f9991dadb063b1cc702f4bf945039061cb719539ce602bd8a94",
+  "source_walk_sha256": "4cf89538fca3d6937eb11b025a02f62f4a1b5c643a6c0ecdd57a3a8954aaa7c0",
+  "reference": "art-source/defense/atlases/ranged-motion.png",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      330
+    ],
+    "orthographic_scale": 6.8
+  },
+  "delivery_frame": {
+    "width": 192,
+    "height": 192,
+    "ground": [
+      96,
+      165
+    ],
+    "columns": 16,
+    "rows": 1
+  },
+  "duration_seconds": 0.33,
+  "transition_seconds": 0.1,
+  "hit_at": 0.15,
+  "samples_seconds": [
+    0.04,
+    0.08
+  ],
+  "entry_checks": [
+    {
+      "entry": 0,
+      "first_leg": "left-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 1,
+      "first_leg": "left-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 2,
+      "first_leg": "left-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 3,
+      "first_leg": "left-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 4,
+      "first_leg": "right-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 5,
+      "first_leg": "right-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 6,
+      "first_leg": "right-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 7,
+      "first_leg": "right-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    }
+  ],
+  "files": [
+    {
+      "file": "art-source/defense/cheongun-entry.blend",
+      "bytes": 5111124,
+      "sha256": "5bdb602f642cb18b19fe4a26269ba21acde67adb3990d9ec726951fcb9e61581"
+    },
+    {
+      "file": "public/defense/models/cheongun-entry.glb",
+      "bytes": 1986084,
+      "sha256": "e306d15fd26e447d7f7e2f837245192a28509602d516ef18d65d613063336b20"
+    },
+    {
+      "file": "public/defense/models/cheongun-entry.png",
+      "bytes": 114603,
+      "sha256": "535ed20979e24fd067f624a64c159992a54a2c7739d83f7e31177a48d203eb6c"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-0-0.png",
+      "bytes": 104327,
+      "sha256": "2e8249d11d77d429aca1b42d109db43e501ecb6aebea68ca3dfaa9f2e82d6006"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-0-1.png",
+      "bytes": 103004,
+      "sha256": "8baa0c4238a48814a63b684c9c59a1fc984d0662ff3c7f6123960355f75c24ef"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-1-0.png",
+      "bytes": 103953,
+      "sha256": "ad9d0f48fa3bcbe9806bae6e70c3a71e3dfbb006e77448b2fdf4ea160eafcbf1"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-1-1.png",
+      "bytes": 102780,
+      "sha256": "f72873a9f0d095472c135c199a78bde80e9af96f07a4333b62bd99a6b84cacf0"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-2-0.png",
+      "bytes": 103645,
+      "sha256": "1191196472367fa5f3b4c09a2c9d453833bd24155bfde9d64860edbaf8071b07"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-2-1.png",
+      "bytes": 103023,
+      "sha256": "c22437fb8426eca08ac13a9d23400f03ac8ac6b7cd6dab71e7de10b36caa16fb"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-3-0.png",
+      "bytes": 102771,
+      "sha256": "88526ffdd62b7a350a1db81a088512ae5878d66b5dba7af3877532c2befb9636"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-3-1.png",
+      "bytes": 102567,
+      "sha256": "64a4cf2f50bd70e66ecb405ba93898d82ac00fb185bd7116268a7a25e181bb70"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-4-0.png",
+      "bytes": 101988,
+      "sha256": "fde129020149af89fe7666f2a9e5194ce1b6c227ec7997fbeec640d8e653c2f3"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-4-1.png",
+      "bytes": 101988,
+      "sha256": "4caa8754c59baa47b13ee8f4037e0dea9300b2c6670b1986205b4074f6cadee7"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-5-0.png",
+      "bytes": 102525,
+      "sha256": "7064a1cc295888aa45248e3836a90853060d070397e25d318d346f6423ccf2bc"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-5-1.png",
+      "bytes": 102216,
+      "sha256": "7d125a8b616a75ec7db1544c739946389e6b27a618eada6165b1f952578326f2"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-6-0.png",
+      "bytes": 103275,
+      "sha256": "f05188272384ede4264e671e5b81380aae0f9dedb1b14482711727601d46d050"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-6-1.png",
+      "bytes": 102563,
+      "sha256": "996803074dffa98901ee85451899a041f46ae93ecb284f00377afc46b7475017"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-7-0.png",
+      "bytes": 103341,
+      "sha256": "46895a2a6e3153c34e1d38c4b569e2bfed356a6f9ac1044872f3f134f124298f"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-0-7-1.png",
+      "bytes": 102759,
+      "sha256": "284baaea15e3d3075d608e1050c3f7e52eeb004af4e1ea5211f4a40854276737"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-0-0.png",
+      "bytes": 114603,
+      "sha256": "535ed20979e24fd067f624a64c159992a54a2c7739d83f7e31177a48d203eb6c"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-0-1.png",
+      "bytes": 114230,
+      "sha256": "ab96b560c32ecbce026278695e4fb9dc71f3e7a7a846540d0e1e7bd06e96cc74"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-1-0.png",
+      "bytes": 114485,
+      "sha256": "b07b808e9342331ff79a742c646dcc0cad3fc665c689b043baefae005e0fe959"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-1-1.png",
+      "bytes": 114349,
+      "sha256": "613e7c2ddef02062b5697ce18010020c55df2dacd83b8cc32dcff5735f333f26"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-2-0.png",
+      "bytes": 114706,
+      "sha256": "4125353b96d8dc422e360de0c87c5f201c4513291ca25a12f4a1b208e710ee1f"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-2-1.png",
+      "bytes": 114312,
+      "sha256": "a44c801c7cb29a487de3a6257dc4505b43d35e2b7d72401d8b3495290d46a6f0"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-3-0.png",
+      "bytes": 114355,
+      "sha256": "55a5b6acdd588f9350315c7ec40adf6008ca0c5e4b57e42dff496c34791079ef"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-3-1.png",
+      "bytes": 114354,
+      "sha256": "a048a97bbfb584f927484dec9788c3b6aaabdd8185027813b1c9cb04d65dbe36"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-4-0.png",
+      "bytes": 115065,
+      "sha256": "460ecd840e802b2d553629372f24a80807d62ed0f7add43eebcddfdaeadc190b"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-4-1.png",
+      "bytes": 114412,
+      "sha256": "d40d23c2f1bb9bf07a49ba8114fc95e58a13f194f2063cee0af18f01c06409b8"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-5-0.png",
+      "bytes": 114681,
+      "sha256": "4a55795c2ebe4df8b6cdaf572897308694b123419db789c3d92f6712a71899c2"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-5-1.png",
+      "bytes": 114222,
+      "sha256": "a53a10e47ea6126166ed125a06d1cbdd38aa794512a842a7f812536a6e5d4f46"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-6-0.png",
+      "bytes": 114403,
+      "sha256": "da54eefa479eb3da79b5c6be3a0295ede639a102ade3771e42bab274e09a05a7"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-6-1.png",
+      "bytes": 114163,
+      "sha256": "8593df296c06290c6752bc68e80903d4a5e57377d7d1956b5e1fd9196c6cbc2b"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-7-0.png",
+      "bytes": 114117,
+      "sha256": "2d4386cab02b7fa62bb039899177029f9b1c6a6c7b43b7873ab6b5aef83fa64a"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-1-7-1.png",
+      "bytes": 113995,
+      "sha256": "76ea9b05c564b8aa5cd0ede7476dea8c402ad299ba317fedc1ee14c67d660f6c"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-0-0.png",
+      "bytes": 113600,
+      "sha256": "03e6e4915228f9c21cc7d1484239cf657c1817ce9cceaf2878551c906bd34b37"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-0-1.png",
+      "bytes": 113425,
+      "sha256": "51aeca154337d45b8a6aa4331d6f2ceb2905220b22e670b5d0cb0718ca4a3d33"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-1-0.png",
+      "bytes": 113201,
+      "sha256": "c5bfbd6597827952de94dd465f40201017b3b9544a29fa2d85c2e979405d4ab5"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-1-1.png",
+      "bytes": 113380,
+      "sha256": "813a610ae4b177508b7efc8c4bf41b7e006440579980b95050915d54fe7ac3e6"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-2-0.png",
+      "bytes": 113345,
+      "sha256": "f759a684533b6374f0432994e9158e5abc546aa0557b01abba9b6eece42c1739"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-2-1.png",
+      "bytes": 113075,
+      "sha256": "1347cb04838683fa1a63533a0be192af5c1689a726f87841f576e4d3633ce04a"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-3-0.png",
+      "bytes": 113004,
+      "sha256": "259cd9c9cf6ade0067c223a3b661982b8114ea8063255b035939d8cde66f2b40"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-3-1.png",
+      "bytes": 113309,
+      "sha256": "a3e119e26342ba1df8b8c0ce0af03316dbee7b131594af68a030540b66992092"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-4-0.png",
+      "bytes": 113379,
+      "sha256": "ea6c51fcc4a5748fa2786d3b08a1be326651bde4b5a347d146032467db6fe14c"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-4-1.png",
+      "bytes": 113477,
+      "sha256": "aeac761783a1f1ddb8c323d14d315ab57ac80e27b134ebf4ce9faf9f464e0aa8"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-5-0.png",
+      "bytes": 113213,
+      "sha256": "6264df56067c6314eba4b6c74c77ce07a6bd5395899271360e91f4f198a460e3"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-5-1.png",
+      "bytes": 113313,
+      "sha256": "d949194be6280fe2c61ac96380d95bcb88eb1028f4841001a976d05a9a1af9b7"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-6-0.png",
+      "bytes": 113442,
+      "sha256": "ebca16a43cdaf456c23144871d46ebf199d268df8934cb361a2839c67833a009"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-6-1.png",
+      "bytes": 113349,
+      "sha256": "18f1ba50d757b9438c4a2190557bf98d74c8840a0275e232a9e5f9fd4e11d13b"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-7-0.png",
+      "bytes": 113031,
+      "sha256": "020b39d44e6c2e49618179c4b2cd8818df7126f99411e355114c173abbc81114"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-2-7-1.png",
+      "bytes": 113274,
+      "sha256": "da8fe38a7e1d9f90468cf26214bbe696aa6cb38c247937c1785bcc41d2323ce5"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-0-0.png",
+      "bytes": 112372,
+      "sha256": "13d8e1c7dc0f1f9e336cbbec0a72eeb66747c0ab9a0dbc277bf1c79fae174a48"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-0-1.png",
+      "bytes": 112723,
+      "sha256": "6ad385af21b6b4a632c9e6e70459fb8643201749b0cf671d664b81752392a7f1"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-1-0.png",
+      "bytes": 112464,
+      "sha256": "9cb254f1fb21cd8dec7505ff4f1dddada7ade515f385e4e4dadc08cff79e9b1d"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-1-1.png",
+      "bytes": 112813,
+      "sha256": "9ae39fd55f50f342d58cdb93e89d2a61a795e59da19dac3ff03481ecd2c8b6db"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-2-0.png",
+      "bytes": 112710,
+      "sha256": "6f7d296e724a3976ea6faa5fffcf7737ae98b6a251ffd1aa464a07b6802c9c99"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-2-1.png",
+      "bytes": 112717,
+      "sha256": "4b4ad60c198de37c22f0982ed5330818dc0400e9290a73f7a1d596b1d47d8435"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-3-0.png",
+      "bytes": 112453,
+      "sha256": "689f3390d94f11d1cd88d76b89682396036a8e9a18e35bb15e2aa1882fe6ff62"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-3-1.png",
+      "bytes": 112638,
+      "sha256": "b314e5e8c3802dddfbcfe611ccd354bfadec8b4d6c6790bc66ca79f7e20ee97d"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-4-0.png",
+      "bytes": 112707,
+      "sha256": "ad7a868765246c442ff600f1a56e422fe4e56dab3bae90362313944acf46d24c"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-4-1.png",
+      "bytes": 113210,
+      "sha256": "f679923ef359d0d90bbdd6f1c7d36a43663d365d586938fe98b7c74c8539e610"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-5-0.png",
+      "bytes": 112784,
+      "sha256": "4e610c23841c3fcd4f5a0e564f11d3e5c38bdbd29566bd7b4c1dae276789210b"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-5-1.png",
+      "bytes": 113165,
+      "sha256": "b1b5e60f7f3e1250fa0e5ecd774aa22bcfc1b3dc923ce736381ff1eec18ec3c2"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-6-0.png",
+      "bytes": 112601,
+      "sha256": "e11de6c2bc6d7d6d07e3e7e9e78539a9ac09552894343d003282cdc373f00ce5"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-6-1.png",
+      "bytes": 113031,
+      "sha256": "f770044920a546cd19b5ad17d3a9d792e314a8f1599d54dab0e2e9c18d1d7b4c"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-7-0.png",
+      "bytes": 112222,
+      "sha256": "29702f9c4fb418ac92d806c64b4bb91f110a3d2822c361c486868c8b0185f57d"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-3-7-1.png",
+      "bytes": 112870,
+      "sha256": "aa4790eadaed06f04032b6273cc4a8b0525c100c999389fe85c8e9c4252909eb"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-0-0.png",
+      "bytes": 102364,
+      "sha256": "e5fdf9b09d1f35fcbb6ebfe056ddaa7b6873e27c15c44e2b8d0fc7c6f96a0645"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-0-1.png",
+      "bytes": 101338,
+      "sha256": "fbe0cfcec23e0222b1718dd2996aead0a259fc74b7d22c6f8a9e44ac3df6cc9f"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-1-0.png",
+      "bytes": 102270,
+      "sha256": "546d47ef1842b1d04982bbe15eff24c09bf85d782eef601f9b739ae2c0ec243a"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-1-1.png",
+      "bytes": 101148,
+      "sha256": "3ff2258f556e10335d67ce6288a3e12ccf63c6fdade6e831405b668bd653485a"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-2-0.png",
+      "bytes": 102012,
+      "sha256": "edc3bf1267ce8c31cc66e426d944a65f5bb87b02f3dddaf5f3dc041bc725dff5"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-2-1.png",
+      "bytes": 101234,
+      "sha256": "816a4515284227cdcaf80853b77bd78854e395d6a0777cf871a6db8ea02221e0"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-3-0.png",
+      "bytes": 101522,
+      "sha256": "8a083d3d8e510e04a68fce2476be718044b3aa3f3d15f94a18a3de8d041a702b"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-3-1.png",
+      "bytes": 100859,
+      "sha256": "8fdb22b87bccdcc86ec3936516a569f23bc8035ba7cd5476b76dbdda15cff0b2"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-4-0.png",
+      "bytes": 100853,
+      "sha256": "5393d5a8899f8af85679857b2de0811b044e44cf0b632b753a32232c72de9886"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-4-1.png",
+      "bytes": 101003,
+      "sha256": "78dbc62c61d430e41a1595f58c1263fcd12dc2af5906159a496ec56ff8be9e4e"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-5-0.png",
+      "bytes": 100952,
+      "sha256": "fc73c4e636bfeafd66440b01a741397b35cef23542e5ff3a619e3134ebf392d2"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-5-1.png",
+      "bytes": 101215,
+      "sha256": "cdaceb28fefa985af779ae12ad96e65812b4c35f386dd277a97dcdac49317132"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-6-0.png",
+      "bytes": 101390,
+      "sha256": "e0921633b1369e208a17f96a7ae9abef8740a6852b06418e457581a9acbe670e"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-6-1.png",
+      "bytes": 101475,
+      "sha256": "924917980b63dabb3d67760021e324d3190f6099182f9bdab2608ca3f79e1d9d"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-7-0.png",
+      "bytes": 101880,
+      "sha256": "f4bb6225e6d74ad712f801180cf416bca4b70ab0983396e6dd669047c9ee18f4"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-4-7-1.png",
+      "bytes": 101620,
+      "sha256": "f2e418b16e9c310fb9e7a49f7a60719e482e2d0b8553530a870274bb12ff3750"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-0-0.png",
+      "bytes": 103483,
+      "sha256": "0b3e668c158ef930ea44ea042e891e7ee8664f1fe1c190ee81bdac1e2a2b2673"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-0-1.png",
+      "bytes": 103533,
+      "sha256": "bdc1f0d67d36d1778b716306dc54491eb383d72f9c23722facdba73ed37f496d"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-1-0.png",
+      "bytes": 103704,
+      "sha256": "3bcf9ee2267c10d27d880beec5f51cd7a58bdd3e6e269e284f216e1878aa0034"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-1-1.png",
+      "bytes": 103696,
+      "sha256": "9ab8130d7551d60d0f4e538444349299538246ed0be25b1b6f7f6f615af72c50"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-2-0.png",
+      "bytes": 104324,
+      "sha256": "45521934bd7c8b9eff889e9590fbc36e73dcd35ba85fa38c68d68b9e0863e010"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-2-1.png",
+      "bytes": 103839,
+      "sha256": "89c80e4b98b81084082b3253ad3d86528c79c3bea015140790d365158fc786b0"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-3-0.png",
+      "bytes": 104253,
+      "sha256": "f82b89bcd3d86cc0e0d5ec17a6c0bcfbe3fdb13bc377912113a14cbb0d75913c"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-3-1.png",
+      "bytes": 103923,
+      "sha256": "b9f209ec529b402ce1ff706ab93ed71619deb2abac40c4a0797caf3feaf4e2cc"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-4-0.png",
+      "bytes": 103306,
+      "sha256": "6a0efd7be39d4c604af5ba435f23de75afff28c30136cba2d553f3882dcc2206"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-4-1.png",
+      "bytes": 103506,
+      "sha256": "c84d27fae2874ca33585442cb16e4c252e6e18cc131671221ff47b04a715f7de"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-5-0.png",
+      "bytes": 103482,
+      "sha256": "8ce1c744b21c82926815db09a3f8034b49cd41ba4fb08ca4193f9c28270a9ae2"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-5-1.png",
+      "bytes": 103564,
+      "sha256": "8805b67935bf318490dcafdca18a489af948aa2b3660f193a1a2893e951d97b2"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-6-0.png",
+      "bytes": 103773,
+      "sha256": "64c9c1236221e234c9249d971dfb67693c2650a745e9f02c2596feafa583374a"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-6-1.png",
+      "bytes": 103631,
+      "sha256": "38bf2bad526804779be9a06465a1e9f540ec8b46dc3991ced9cf6d77a8a4b8bd"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-7-0.png",
+      "bytes": 104356,
+      "sha256": "462636daef384fc8be91882dcf9502f68e6fc7fd75446d068e02ea90e6c1f04d"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-5-7-1.png",
+      "bytes": 103776,
+      "sha256": "d1f8fccfbdf1508a67b0872e543ab4f84988b4b99929dd5485f6243dc30adeba"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-0-0.png",
+      "bytes": 101826,
+      "sha256": "db55b8a2fea9d6e72653c8f66e78285b2d072e782466fc2c42718ce6cc74b138"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-0-1.png",
+      "bytes": 102235,
+      "sha256": "4315949da1d2787f2464e38842872f4b9e9b6feb8b0a55fc7fa2d95206c6b9db"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-1-0.png",
+      "bytes": 102084,
+      "sha256": "3e86c689724e080c0ad185a6b0007a50b30c6d015b28e7556601152bcebc6555"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-1-1.png",
+      "bytes": 102397,
+      "sha256": "c02846dcd8f8c28c3f85e1a183d1b751d311c5848700f926e359df2be333bdad"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-2-0.png",
+      "bytes": 101908,
+      "sha256": "c34b4353c1cb57c2a0ec930614206584e8d12a528445360ec0e5f3439f23cc66"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-2-1.png",
+      "bytes": 102409,
+      "sha256": "1541cb081ae5399c5b4058439a66a1698419da5259002bd9b8874eb9056fbe01"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-3-0.png",
+      "bytes": 102068,
+      "sha256": "6dd00b4036d757cc32f9ec36fad648e0bf907aa296bf4d9776874df23a88a7fb"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-3-1.png",
+      "bytes": 102506,
+      "sha256": "60880800fdb136a1838cb1b1d7346dfc894a315eb19ce0cc7bd4df790f30c55b"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-4-0.png",
+      "bytes": 101240,
+      "sha256": "698e67c3b782cd91953097d95f6b742be56ed30e5f0629b180b107a1336d5d0c"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-4-1.png",
+      "bytes": 101897,
+      "sha256": "c5de54ca8cec9b227fc65f451d47804d7a1937d566dd057daffe13e3ddf4b3ab"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-5-0.png",
+      "bytes": 101919,
+      "sha256": "83559d714b80aa3ecbdf7ed220d64d2a0223161b8082271c95031ca166c55046"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-5-1.png",
+      "bytes": 102049,
+      "sha256": "da16ca19cbc6ec1e652647d1d8c932ae944907edf2dd1a0641e75a8347b5c56e"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-6-0.png",
+      "bytes": 102172,
+      "sha256": "9e18915c09640ad4cb20a4f6e16c7df5001a215fb4505e875cdc3d79f0d4eb47"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-6-1.png",
+      "bytes": 102053,
+      "sha256": "8ee55c2a24a9a60137ae32453d9219a3d114d4818512cca9fee827f5d7baf0e6"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-7-0.png",
+      "bytes": 102672,
+      "sha256": "2207f5aaf21eae7d71dd274a1a1c17afc6a5762a599dd9edca5f0aff82a3ee9a"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-6-7-1.png",
+      "bytes": 102256,
+      "sha256": "0969cf9b0d2ff373d4df42f822e8f8c58616230cc76c4454f3fda054665dceb0"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-0-0.png",
+      "bytes": 102419,
+      "sha256": "f59cfcb453b76b048c621a47436302399b47bbaa8375c1ffa320ff0486245c15"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-0-1.png",
+      "bytes": 103817,
+      "sha256": "ae96fe99e17e0ab4d9538692b5e403880b1fe5574e6a965b0e16d67258acbd03"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-1-0.png",
+      "bytes": 102653,
+      "sha256": "714d668d39290cc2a63b8a708b87356c7b79e4e51f833a49fd9879df6a798d64"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-1-1.png",
+      "bytes": 103889,
+      "sha256": "db524ede5ae05d14c6493fbb47a45846f4026b0599ff1c2a8a74b20bb103aef6"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-2-0.png",
+      "bytes": 102693,
+      "sha256": "ca7c881875309fbc2d4fedd3fb736a9426e33f50370bb29f217b57fae549504b"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-2-1.png",
+      "bytes": 103817,
+      "sha256": "f5c3b61c8e158257f9d8220fab7bc0927b230bdc4b208c7240cf1f7b58a1efde"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-3-0.png",
+      "bytes": 102791,
+      "sha256": "a72575445451645b034d9031261c3b0787bdc783c9b2293e49ce03061f606bad"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-3-1.png",
+      "bytes": 104127,
+      "sha256": "ea5ddadd5fe42683e7d986205976b9dde057b3f7debec8797d2268a40fff9098"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-4-0.png",
+      "bytes": 102391,
+      "sha256": "0084fb25cae78e1340ae36da23eb8d9974f0f0e86567a075694bacba13b1177d"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-4-1.png",
+      "bytes": 103416,
+      "sha256": "0a14390d4f922c1d2d54dfc7bce647073518f317e7600f02231fe1a9c920acdf"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-5-0.png",
+      "bytes": 102700,
+      "sha256": "b5e6f632a8916b96a03d76107a573aca09b8e2001d99ca501c19624a5ae1e5af"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-5-1.png",
+      "bytes": 103650,
+      "sha256": "b8409c25a42b0f68b6e7ceb1038c2d90430d5fb56926ecaf8ae718f035f20567"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-6-0.png",
+      "bytes": 103014,
+      "sha256": "28f6187447d0d90dce3ff98b43ad9032c414aad48548f24d4b16c834223beeac"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-6-1.png",
+      "bytes": 103641,
+      "sha256": "f13482e15aa0ab508c7df20c353346b4ff8b53f665a0a605b47258a950e96edd"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-7-0.png",
+      "bytes": 103270,
+      "sha256": "aecf58801371a256e158fac4558b05ec2dbda7fc23fdcbabfe2a988941194e2d"
+    },
+    {
+      "file": "art-source/defense/cheongun-entry-frames/cheongun-entry-7-7-1.png",
+      "bytes": 103704,
+      "sha256": "abffa882b5134bfe4b6a4ccf8d331bbdb67c87fc56b94b01d2476e1f2cf3fef8"
+    },
+    {
+      "file": "public/defense/models/cheongun-entry-0-atlas.webp",
+      "bytes": 47676,
+      "sha256": "38c48411a683b6d9b9c4c9fc0943a6996be9425a812cbfa20e10b9d2b1d35877"
+    },
+    {
+      "file": "public/defense/models/cheongun-entry-1-atlas.webp",
+      "bytes": 62394,
+      "sha256": "94567fbf41d12fb22bf1f6d591ac3c6df488d3a99634848708644560eb67e65d"
+    },
+    {
+      "file": "public/defense/models/cheongun-entry-2-atlas.webp",
+      "bytes": 58910,
+      "sha256": "6af343e8412a7a1f117f9ddee263a1d5dd7108c8b10646f27d0789d4eba6c8be"
+    },
+    {
+      "file": "public/defense/models/cheongun-entry-3-atlas.webp",
+      "bytes": 59524,
+      "sha256": "c40b2650aa30c5d151e7623c8b2e1dc8a4f3a89cf47a4dce8af30e8d98287d15"
+    },
+    {
+      "file": "public/defense/models/cheongun-entry-4-atlas.webp",
+      "bytes": 43892,
+      "sha256": "901fcaf5b7baf3371f09aa7319a08fce3b0328c8f8075ff0eb98c3f4060b538a"
+    },
+    {
+      "file": "public/defense/models/cheongun-entry-5-atlas.webp",
+      "bytes": 45412,
+      "sha256": "86d62037f7bf0dbc40e3a1fbb84e8cc1cea02f94d271f5329edd5be9142c107d"
+    },
+    {
+      "file": "public/defense/models/cheongun-entry-6-atlas.webp",
+      "bytes": 42902,
+      "sha256": "7dab7993bdd6a1f1474c7585ff60d6ec57f7268fd76a73b27b40d8bfd7e492f2"
+    },
+    {
+      "file": "public/defense/models/cheongun-entry-7-atlas.webp",
+      "bytes": 45394,
+      "sha256": "04692f44a9e7464ff0e6fa257ec771ec8b87db2002622804b6626e8c819dedf2"
+    },
+    {
+      "file": "src/games/defense/taoEntrySockets.ts",
+      "bytes": 5140,
+      "sha256": "b77d069ba21697077eceb5150ee16f9248a4fd9867d22d5245614f8f53d5d8dd"
+    }
+  ],
+  "clips": [
+    {
+      "name": "cheongun-entry-0",
+      "entry": 0,
+      "duration": 0.33
+    },
+    {
+      "name": "cheongun-entry-1",
+      "entry": 1,
+      "duration": 0.33
+    },
+    {
+      "name": "cheongun-entry-2",
+      "entry": 2,
+      "duration": 0.33
+    },
+    {
+      "name": "cheongun-entry-3",
+      "entry": 3,
+      "duration": 0.33
+    },
+    {
+      "name": "cheongun-entry-4",
+      "entry": 4,
+      "duration": 0.33
+    },
+    {
+      "name": "cheongun-entry-5",
+      "entry": 5,
+      "duration": 0.33
+    },
+    {
+      "name": "cheongun-entry-6",
+      "entry": 6,
+      "duration": 0.33
+    },
+    {
+      "name": "cheongun-entry-7",
+      "entry": 7,
+      "duration": 0.33
+    }
+  ],
+  "directions": [
+    {
+      "direction": 0,
+      "yaw": 0.960070013999939,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            143.1181640625,
+            142.6644287109375,
+            238.33895874023438,
+            340.66119384765625
+          ],
+          "socket": [
+            225.51658630371094,
+            170.45599365234375
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            146.915283203125,
+            142.29872131347656,
+            232.52719116210938,
+            342.33575439453125
+          ],
+          "socket": [
+            217.19674682617188,
+            158.47361755371094
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            141.8958282470703,
+            142.17861938476562,
+            232.127197265625,
+            340.2040710449219
+          ],
+          "socket": [
+            225.50390625,
+            169.88421630859375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            146.75808715820312,
+            142.22076416015625,
+            232.6119384765625,
+            342.33575439453125
+          ],
+          "socket": [
+            217.19366455078125,
+            158.40211486816406
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            141.3931121826172,
+            141.5841522216797,
+            231.29090881347656,
+            340.0147399902344
+          ],
+          "socket": [
+            225.4969940185547,
+            169.2669677734375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            146.6747283935547,
+            142.12533569335938,
+            232.64718627929688,
+            342.33575439453125
+          ],
+          "socket": [
+            217.1923828125,
+            158.3096923828125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            141.8958282470703,
+            142.17861938476562,
+            230.9971160888672,
+            340.2040710449219
+          ],
+          "socket": [
+            225.50390625,
+            169.88421630859375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            146.75808715820312,
+            142.22076416015625,
+            232.6119384765625,
+            342.33575439453125
+          ],
+          "socket": [
+            217.19366455078125,
+            158.40211486816406
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            143.1181640625,
+            143.73391723632812,
+            230.30181884765625,
+            342.33575439453125
+          ],
+          "socket": [
+            225.51658630371094,
+            171.52548217773438
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            146.915283203125,
+            142.959716796875,
+            232.52719116210938,
+            339.6262512207031
+          ],
+          "socket": [
+            217.19674682617188,
+            159.13461303710938
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            143.72434997558594,
+            142.87713623046875,
+            229.6274871826172,
+            342.33575439453125
+          ],
+          "socket": [
+            225.5216064453125,
+            170.79818725585938
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            147.05526733398438,
+            142.82220458984375,
+            232.44293212890625,
+            339.6262512207031
+          ],
+          "socket": [
+            217.1998291015625,
+            158.99176025390625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            143.9784393310547,
+            142.1289825439453,
+            229.35475158691406,
+            342.33575439453125
+          ],
+          "socket": [
+            225.52081298828125,
+            170.1163787841797
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            147.09693908691406,
+            142.70211791992188,
+            232.408203125,
+            339.6262512207031
+          ],
+          "socket": [
+            217.20108032226562,
+            158.86985778808594
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            143.72434997558594,
+            142.87713623046875,
+            229.6274871826172,
+            342.33575439453125
+          ],
+          "socket": [
+            225.5216064453125,
+            170.79818725585938
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            147.05526733398438,
+            142.82220458984375,
+            232.44293212890625,
+            339.6262512207031
+          ],
+          "socket": [
+            217.1998291015625,
+            158.99176025390625
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            0.1293108,
+            -0.5767778
+          ],
+          [
+            0.1227978,
+            -0.5845362
+          ],
+          [
+            0.0923157,
+            -0.6284372
+          ]
+        ],
+        [
+          [
+            0.1292478,
+            -0.5801195
+          ],
+          [
+            0.1227514,
+            -0.5866311
+          ],
+          [
+            0.0923044,
+            -0.6286991
+          ]
+        ],
+        [
+          [
+            0.1292066,
+            -0.5836151
+          ],
+          [
+            0.1227261,
+            -0.5888926
+          ],
+          [
+            0.0922997,
+            -0.6290378
+          ]
+        ],
+        [
+          [
+            0.1292478,
+            -0.5801195
+          ],
+          [
+            0.1227514,
+            -0.5866311
+          ],
+          [
+            0.0923044,
+            -0.6286991
+          ]
+        ],
+        [
+          [
+            0.1293108,
+            -0.5767778
+          ],
+          [
+            0.1227978,
+            -0.5806178
+          ],
+          [
+            0.0923157,
+            -0.6260154
+          ]
+        ],
+        [
+          [
+            0.1292952,
+            -0.5806493
+          ],
+          [
+            0.1228162,
+            -0.5832825
+          ],
+          [
+            0.092327,
+            -0.6265388
+          ]
+        ],
+        [
+          [
+            0.1292579,
+            -0.5843673
+          ],
+          [
+            0.1228133,
+            -0.5857805
+          ],
+          [
+            0.0923315,
+            -0.6269854
+          ]
+        ],
+        [
+          [
+            0.1292952,
+            -0.5806493
+          ],
+          [
+            0.1228162,
+            -0.5832825
+          ],
+          [
+            0.092327,
+            -0.6265388
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 1,
+      "yaw": -0.23171095550060272,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            137.6487579345703,
+            137.7091827392578,
+            256.68243408203125,
+            345.45794677734375
+          ],
+          "socket": [
+            238.17572021484375,
+            191.97891235351562
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            136.28054809570312,
+            138.29953002929688,
+            255.63851928710938,
+            341.08734130859375
+          ],
+          "socket": [
+            235.09097290039062,
+            176.91641235351562
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            137.4203643798828,
+            137.1064910888672,
+            256.61090087890625,
+            343.1595764160156
+          ],
+          "socket": [
+            237.7383270263672,
+            191.2855682373047
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            136.243408203125,
+            138.20281982421875,
+            255.6419677734375,
+            341.08734130859375
+          ],
+          "socket": [
+            235.02035522460938,
+            176.82501220703125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            137.33648681640625,
+            136.46360778808594,
+            256.5819396972656,
+            340.8611755371094
+          ],
+          "socket": [
+            237.55654907226562,
+            190.61737060546875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            136.2926483154297,
+            138.0996551513672,
+            255.64321899414062,
+            341.08734130859375
+          ],
+          "socket": [
+            234.99111938476562,
+            176.724365234375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            137.4841766357422,
+            137.1064910888672,
+            256.61090087890625,
+            339.1947021484375
+          ],
+          "socket": [
+            237.7383270263672,
+            191.2855682373047
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            136.39950561523438,
+            138.20281982421875,
+            255.6419677734375,
+            341.08734130859375
+          ],
+          "socket": [
+            235.02035522460938,
+            176.82501220703125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            135.4097137451172,
+            138.10488891601562,
+            254.1876983642578,
+            345.6841125488281
+          ],
+          "socket": [
+            235.68096923828125,
+            192.3746337890625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            134.95947265625,
+            138.54409790039062,
+            254.0966796875,
+            340.8611755371094
+          ],
+          "socket": [
+            233.54910278320312,
+            177.16099548339844
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            135.85482788085938,
+            137.3649444580078,
+            254.2601318359375,
+            343.3857421875
+          ],
+          "socket": [
+            236.11550903320312,
+            191.76605224609375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            134.99655151367188,
+            138.42535400390625,
+            254.09268188476562,
+            340.8611755371094
+          ],
+          "socket": [
+            233.61968994140625,
+            177.0380401611328
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            136.06558227539062,
+            136.6652069091797,
+            254.29037475585938,
+            341.08734130859375
+          ],
+          "socket": [
+            236.29446411132812,
+            191.13232421875
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            134.9472198486328,
+            138.3130645751953,
+            254.09088134765625,
+            340.8611755371094
+          ],
+          "socket": [
+            233.64892578125,
+            176.92437744140625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            135.79100036621094,
+            137.3649444580078,
+            254.2601318359375,
+            338.96856689453125
+          ],
+          "socket": [
+            236.11550903320312,
+            191.76605224609375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            134.8404541015625,
+            138.42535400390625,
+            254.09268188476562,
+            340.8611755371094
+          ],
+          "socket": [
+            233.61968994140625,
+            177.0380401611328
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            0.167018,
+            -0.4967469
+          ],
+          [
+            0.1691783,
+            -0.5056807
+          ],
+          [
+            0.1578764,
+            -0.5608666
+          ]
+        ],
+        [
+          [
+            0.1645482,
+            -0.5007726
+          ],
+          [
+            0.1675758,
+            -0.508221
+          ],
+          [
+            0.1576177,
+            -0.5612015
+          ]
+        ],
+        [
+          [
+            0.1635196,
+            -0.5045571
+          ],
+          [
+            0.1669098,
+            -0.5106691
+          ],
+          [
+            0.1575106,
+            -0.5615702
+          ]
+        ],
+        [
+          [
+            0.1645482,
+            -0.5007726
+          ],
+          [
+            0.1675758,
+            -0.508221
+          ],
+          [
+            0.1576177,
+            -0.5612015
+          ]
+        ],
+        [
+          [
+            0.167018,
+            -0.4967469
+          ],
+          [
+            0.160038,
+            -0.5042309
+          ],
+          [
+            0.1522273,
+            -0.5599705
+          ]
+        ],
+        [
+          [
+            0.1694587,
+            -0.4999632
+          ],
+          [
+            0.1616301,
+            -0.5064606
+          ],
+          [
+            0.1524859,
+            -0.560421
+          ]
+        ],
+        [
+          [
+            0.1704583,
+            -0.5034215
+          ],
+          [
+            0.1622858,
+            -0.5087824
+          ],
+          [
+            0.152593,
+            -0.5608374
+          ]
+        ],
+        [
+          [
+            0.1694587,
+            -0.4999632
+          ],
+          [
+            0.1616301,
+            -0.5064606
+          ],
+          [
+            0.1524859,
+            -0.560421
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 2,
+      "yaw": -0.610725998878479,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.79690551757812,
+            139.1551513671875,
+            252.49481201171875,
+            347.7334899902344
+          ],
+          "socket": [
+            228.3545379638672,
+            198.2835693359375
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            129.2793426513672,
+            139.7528076171875,
+            253.74063110351562,
+            341.8177490234375
+          ],
+          "socket": [
+            228.34765625,
+            182.98486328125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.42164611816406,
+            138.48382568359375,
+            251.9666748046875,
+            345.259521484375
+          ],
+          "socket": [
+            227.8887939453125,
+            197.52122497558594
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            129.25372314453125,
+            139.6450653076172,
+            253.6369171142578,
+            340.9468994140625
+          ],
+          "socket": [
+            228.27291870117188,
+            182.88238525390625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.2749786376953,
+            137.81253051757812,
+            251.74957275390625,
+            342.7855529785156
+          ],
+          "socket": [
+            227.69586181640625,
+            196.82440185546875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            129.24359130859375,
+            139.53732299804688,
+            253.59408569335938,
+            340.0760498046875
+          ],
+          "socket": [
+            228.241943359375,
+            182.77711486816406
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.42164611816406,
+            138.48382568359375,
+            251.9666748046875,
+            340.31158447265625
+          ],
+          "socket": [
+            227.8887939453125,
+            197.52122497558594
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            129.25372314453125,
+            139.6450653076172,
+            253.6369171142578,
+            339.2052307128906
+          ],
+          "socket": [
+            228.27291870117188,
+            182.88238525390625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            127.11155700683594,
+            139.1551513671875,
+            249.80947875976562,
+            341.88592529296875
+          ],
+          "socket": [
+            225.66920471191406,
+            198.2835693359375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            127.61972045898438,
+            139.7528076171875,
+            252.08099365234375,
+            342.7855529785156
+          ],
+          "socket": [
+            226.68801879882812,
+            182.98486328125
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            127.5091552734375,
+            138.48382568359375,
+            250.34381103515625,
+            340.3966064453125
+          ],
+          "socket": [
+            226.13494873046875,
+            197.74375915527344
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            127.64695739746094,
+            139.6450653076172,
+            252.18511962890625,
+            342.7855529785156
+          ],
+          "socket": [
+            226.76278686523438,
+            182.873046875
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            127.67875671386719,
+            137.81253051757812,
+            250.567138671875,
+            340.46453857421875
+          ],
+          "socket": [
+            226.327880859375,
+            197.13845825195312
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            127.65868377685547,
+            139.53732299804688,
+            252.22836303710938,
+            342.7855529785156
+          ],
+          "socket": [
+            226.7937469482422,
+            182.76394653320312
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            127.5091552734375,
+            138.48382568359375,
+            250.34381103515625,
+            340.91119384765625
+          ],
+          "socket": [
+            226.13494873046875,
+            197.74375915527344
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            127.64695739746094,
+            139.6450653076172,
+            252.18511962890625,
+            342.7855529785156
+          ],
+          "socket": [
+            226.76278686523438,
+            182.873046875
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            0.1282763,
+            -0.4741887
+          ],
+          [
+            0.1331955,
+            -0.4825818
+          ],
+          [
+            0.1331703,
+            -0.538633
+          ]
+        ],
+        [
+          [
+            0.1256429,
+            -0.4786043
+          ],
+          [
+            0.1314891,
+            -0.4853748
+          ],
+          [
+            0.1328965,
+            -0.5390085
+          ]
+        ],
+        [
+          [
+            0.1245521,
+            -0.4825508
+          ],
+          [
+            0.1307823,
+            -0.4879278
+          ],
+          [
+            0.132783,
+            -0.5393942
+          ]
+        ],
+        [
+          [
+            0.1256429,
+            -0.4786043
+          ],
+          [
+            0.1314891,
+            -0.4853748
+          ],
+          [
+            0.1328965,
+            -0.5390085
+          ]
+        ],
+        [
+          [
+            0.1282763,
+            -0.4741887
+          ],
+          [
+            0.123357,
+            -0.4825818
+          ],
+          [
+            0.1270897,
+            -0.538633
+          ]
+        ],
+        [
+          [
+            0.1309096,
+            -0.4770175
+          ],
+          [
+            0.1250634,
+            -0.4845595
+          ],
+          [
+            0.1273637,
+            -0.5390427
+          ]
+        ],
+        [
+          [
+            0.1320004,
+            -0.4803161
+          ],
+          [
+            0.1257703,
+            -0.4867772
+          ],
+          [
+            0.1274771,
+            -0.5394424
+          ]
+        ],
+        [
+          [
+            0.1309096,
+            -0.4770175
+          ],
+          [
+            0.1250634,
+            -0.4845595
+          ],
+          [
+            0.1273637,
+            -0.5390427
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 3,
+      "yaw": -0.9897410869598389,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            128.62857055664062,
+            138.10488891601562,
+            248.84625244140625,
+            351.1166687011719
+          ],
+          "socket": [
+            213.3731689453125,
+            202.6934814453125
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            128.2768096923828,
+            138.54409790039062,
+            249.28668212890625,
+            345.428466796875
+          ],
+          "socket": [
+            216.44515991210938,
+            187.6289520263672
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.13307189941406,
+            137.3649444580078,
+            248.20925903320312,
+            348.81829833984375
+          ],
+          "socket": [
+            212.94515991210938,
+            201.8628692626953
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            128.370361328125,
+            138.42535400390625,
+            249.16232299804688,
+            344.61944580078125
+          ],
+          "socket": [
+            216.37686157226562,
+            187.51551818847656
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.3597869873047,
+            136.6652069091797,
+            247.9346466064453,
+            346.5198974609375
+          ],
+          "socket": [
+            212.76849365234375,
+            201.1378173828125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            128.4095458984375,
+            138.3130645751953,
+            249.11087036132812,
+            343.8104248046875
+          ],
+          "socket": [
+            216.34857177734375,
+            187.40574645996094
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.13307189941406,
+            137.3649444580078,
+            248.14541625976562,
+            344.2215270996094
+          ],
+          "socket": [
+            212.94515991210938,
+            201.8628692626953
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            128.370361328125,
+            138.42535400390625,
+            249.16232299804688,
+            343.0013732910156
+          ],
+          "socket": [
+            216.37686157226562,
+            187.51551818847656
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            126.13381958007812,
+            137.70916748046875,
+            246.09579467773438,
+            344.3672790527344
+          ],
+          "socket": [
+            210.87840270996094,
+            202.29776000976562
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            126.73497009277344,
+            138.29953002929688,
+            247.74484252929688,
+            346.5198974609375
+          ],
+          "socket": [
+            214.9033203125,
+            187.3843994140625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            125.67741394042969,
+            137.1064910888672,
+            246.51605224609375,
+            344.1492004394531
+          ],
+          "socket": [
+            211.3092498779297,
+            201.8264617919922
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            126.64295196533203,
+            138.20281982421875,
+            247.86935424804688,
+            346.5198974609375
+          ],
+          "socket": [
+            214.9716339111328,
+            187.28347778320312
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            125.49961853027344,
+            136.46360778808594,
+            246.66375732421875,
+            344.19891357421875
+          ],
+          "socket": [
+            211.48876953125,
+            201.24960327148438
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            126.60527801513672,
+            138.0996551513672,
+            247.92098999023438,
+            346.5198974609375
+          ],
+          "socket": [
+            214.9999237060547,
+            187.17892456054688
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            125.67741394042969,
+            137.1064910888672,
+            246.57989501953125,
+            344.62725830078125
+          ],
+          "socket": [
+            211.3092498779297,
+            201.8264617919922
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            126.64295196533203,
+            138.20281982421875,
+            247.86935424804688,
+            346.5198974609375
+          ],
+          "socket": [
+            214.9716339111328,
+            187.28347778320312
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            0.0713269,
+            -0.4589407
+          ],
+          [
+            0.0783069,
+            -0.4664247
+          ],
+          [
+            0.089562,
+            -0.5216181
+          ]
+        ],
+        [
+          [
+            0.0689038,
+            -0.4637425
+          ],
+          [
+            0.0767387,
+            -0.4694679
+          ],
+          [
+            0.0893118,
+            -0.5220337
+          ]
+        ],
+        [
+          [
+            0.0679056,
+            -0.4678485
+          ],
+          [
+            0.0760915,
+            -0.4721244
+          ],
+          [
+            0.0892081,
+            -0.5224358
+          ]
+        ],
+        [
+          [
+            0.0689038,
+            -0.4637425
+          ],
+          [
+            0.0767387,
+            -0.4694679
+          ],
+          [
+            0.0893118,
+            -0.5220337
+          ]
+        ],
+        [
+          [
+            0.0713269,
+            -0.4589407
+          ],
+          [
+            0.0691666,
+            -0.4678746
+          ],
+          [
+            0.083913,
+            -0.5225141
+          ]
+        ],
+        [
+          [
+            0.0737791,
+            -0.461381
+          ],
+          [
+            0.0707451,
+            -0.4696013
+          ],
+          [
+            0.0841633,
+            -0.5228838
+          ]
+        ],
+        [
+          [
+            0.0748063,
+            -0.4645178
+          ],
+          [
+            0.0714028,
+            -0.4717148
+          ],
+          [
+            0.084267,
+            -0.5232669
+          ]
+        ],
+        [
+          [
+            0.0737791,
+            -0.461381
+          ],
+          [
+            0.0707451,
+            -0.4696013
+          ],
+          [
+            0.0841633,
+            -0.5228838
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 4,
+      "yaw": -2.1815226078033447,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            145.66128540039062,
+            143.73391723632812,
+            240.88206481933594,
+            342.33575439453125
+          ],
+          "socket": [
+            158.48361206054688,
+            199.41383361816406
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            151.47303771972656,
+            142.959716796875,
+            237.0849609375,
+            339.6262512207031
+          ],
+          "socket": [
+            166.80345153808594,
+            187.42596435546875
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            151.873046875,
+            142.87713623046875,
+            242.10438537597656,
+            342.33575439453125
+          ],
+          "socket": [
+            158.49632263183594,
+            198.4710693359375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            151.38827514648438,
+            142.82220458984375,
+            237.24215698242188,
+            339.6262512207031
+          ],
+          "socket": [
+            166.80654907226562,
+            187.294921875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            152.7093505859375,
+            142.1289825439453,
+            242.60711669921875,
+            342.33575439453125
+          ],
+          "socket": [
+            158.5032196044922,
+            197.70013427734375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            151.35302734375,
+            142.70211791992188,
+            237.32550048828125,
+            339.6262512207031
+          ],
+          "socket": [
+            166.80783081054688,
+            187.1778564453125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            153.00311279296875,
+            142.87713623046875,
+            242.10438537597656,
+            342.33575439453125
+          ],
+          "socket": [
+            158.49632263183594,
+            198.4710693359375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            151.38827514648438,
+            142.82220458984375,
+            237.24215698242188,
+            339.6262512207031
+          ],
+          "socket": [
+            166.80654907226562,
+            187.294921875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            153.69842529296875,
+            142.66445922851562,
+            240.88206481933594,
+            340.66119384765625
+          ],
+          "socket": [
+            158.48361206054688,
+            198.34434509277344
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            151.47303771972656,
+            142.29872131347656,
+            237.0849609375,
+            342.33575439453125
+          ],
+          "socket": [
+            166.803466796875,
+            186.76498413085938
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            154.37274169921875,
+            142.17861938476562,
+            240.27589416503906,
+            340.2040710449219
+          ],
+          "socket": [
+            158.47862243652344,
+            197.988037109375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            151.55728149414062,
+            142.22076416015625,
+            236.9449462890625,
+            342.33575439453125
+          ],
+          "socket": [
+            166.8004150390625,
+            186.68170166015625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            154.64549255371094,
+            141.5841522216797,
+            240.02178955078125,
+            340.0147399902344
+          ],
+          "socket": [
+            158.47940063476562,
+            197.45986938476562
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            151.592041015625,
+            142.1253662109375,
+            236.9032745361328,
+            342.33575439453125
+          ],
+          "socket": [
+            166.7991485595703,
+            186.58444213867188
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            154.37274169921875,
+            142.17861938476562,
+            240.27589416503906,
+            340.2040710449219
+          ],
+          "socket": [
+            158.47862243652344,
+            197.988037109375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            151.55728149414062,
+            142.22076416015625,
+            236.9449462890625,
+            342.33575439453125
+          ],
+          "socket": [
+            166.8004150390625,
+            186.68170166015625
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            -0.12931,
+            -0.4746007
+          ],
+          [
+            -0.1227971,
+            -0.4784407
+          ],
+          [
+            -0.0923149,
+            -0.5223618
+          ]
+        ],
+        [
+          [
+            -0.129247,
+            -0.4800401
+          ],
+          [
+            -0.1227505,
+            -0.4818948
+          ],
+          [
+            -0.0923036,
+            -0.5228419
+          ]
+        ],
+        [
+          [
+            -0.1292058,
+            -0.4844045
+          ],
+          [
+            -0.1227253,
+            -0.4847193
+          ],
+          [
+            -0.0922989,
+            -0.5232708
+          ]
+        ],
+        [
+          [
+            -0.129247,
+            -0.4800401
+          ],
+          [
+            -0.1227505,
+            -0.4818948
+          ],
+          [
+            -0.0923036,
+            -0.5228419
+          ]
+        ],
+        [
+          [
+            -0.12931,
+            -0.4746007
+          ],
+          [
+            -0.1227971,
+            -0.4823591
+          ],
+          [
+            -0.0923149,
+            -0.5247835
+          ]
+        ],
+        [
+          [
+            -0.1292944,
+            -0.4763746
+          ],
+          [
+            -0.1228154,
+            -0.4836645
+          ],
+          [
+            -0.0923261,
+            -0.5250886
+          ]
+        ],
+        [
+          [
+            -0.1292571,
+            -0.4792239
+          ],
+          [
+            -0.1228125,
+            -0.4855996
+          ],
+          [
+            -0.0923307,
+            -0.5254449
+          ]
+        ],
+        [
+          [
+            -0.1292944,
+            -0.4763746
+          ],
+          [
+            -0.1228154,
+            -0.4836645
+          ],
+          [
+            -0.0923261,
+            -0.5250886
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 5,
+      "yaw": 2.909881591796875,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            127.31778717041016,
+            146.04415893554688,
+            246.35150146484375,
+            334.6500244140625
+          ],
+          "socket": [
+            145.82449340820312,
+            177.89093017578125
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            128.36172485351562,
+            144.66403198242188,
+            247.71969604492188,
+            335.8465270996094
+          ],
+          "socket": [
+            148.90927124023438,
+            168.983154296875
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            127.38929748535156,
+            145.30422973632812,
+            246.57986450195312,
+            333.9538879394531
+          ],
+          "socket": [
+            146.2618865966797,
+            177.0697021484375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            128.3582763671875,
+            144.5452880859375,
+            247.75685119628906,
+            335.8465270996094
+          ],
+          "socket": [
+            148.9798583984375,
+            168.87200927734375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            127.41830444335938,
+            144.6044921875,
+            246.66372680664062,
+            336.07269287109375
+          ],
+          "socket": [
+            146.4436798095703,
+            176.34974670410156
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            128.35699462890625,
+            144.4329833984375,
+            247.7075958251953,
+            335.8465270996094
+          ],
+          "socket": [
+            149.00909423828125,
+            168.76318359375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            127.38929748535156,
+            145.30422973632812,
+            246.5160369873047,
+            338.3710632324219
+          ],
+          "socket": [
+            146.2618865966797,
+            177.0697021484375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            128.3582763671875,
+            144.5452880859375,
+            247.60073852539062,
+            335.8465270996094
+          ],
+          "socket": [
+            148.9798583984375,
+            168.87200927734375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.8125457763672,
+            145.64845275878906,
+            248.5905303955078,
+            334.8761901855469
+          ],
+          "socket": [
+            148.31924438476562,
+            177.49520874023438
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            129.903564453125,
+            144.41946411132812,
+            249.04078674316406,
+            336.07269287109375
+          ],
+          "socket": [
+            150.45111083984375,
+            168.7386016845703
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.74008178710938,
+            145.0457763671875,
+            248.14540100097656,
+            334.1800537109375
+          ],
+          "socket": [
+            147.88470458984375,
+            177.0201873779297
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            129.90753173828125,
+            144.32275390625,
+            249.00369262695312,
+            336.07269287109375
+          ],
+          "socket": [
+            150.3805389404297,
+            168.6354217529297
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.7098388671875,
+            144.40289306640625,
+            247.9346466064453,
+            335.8465270996094
+          ],
+          "socket": [
+            147.7057647705078,
+            176.44390869140625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            129.90936279296875,
+            144.21957397460938,
+            249.05300903320312,
+            336.07269287109375
+          ],
+          "socket": [
+            150.35130310058594,
+            168.52993774414062
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.74008178710938,
+            145.0457763671875,
+            248.209228515625,
+            338.1448974609375
+          ],
+          "socket": [
+            147.88470458984375,
+            177.0201873779297
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            129.90753173828125,
+            144.32275390625,
+            249.15980529785156,
+            336.07269287109375
+          ],
+          "socket": [
+            150.3805389404297,
+            168.6354217529297
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            -0.1670172,
+            -0.5546318
+          ],
+          [
+            -0.1691775,
+            -0.5572962
+          ],
+          [
+            -0.1578755,
+            -0.5899324
+          ]
+        ],
+        [
+          [
+            -0.1645474,
+            -0.559387
+          ],
+          [
+            -0.167575,
+            -0.560305
+          ],
+          [
+            -0.1576169,
+            -0.5903396
+          ]
+        ],
+        [
+          [
+            -0.1635188,
+            -0.5634626
+          ],
+          [
+            -0.1669089,
+            -0.5629427
+          ],
+          [
+            -0.1575098,
+            -0.5907383
+          ]
+        ],
+        [
+          [
+            -0.1645474,
+            -0.559387
+          ],
+          [
+            -0.167575,
+            -0.560305
+          ],
+          [
+            -0.1576169,
+            -0.5903396
+          ]
+        ],
+        [
+          [
+            -0.1670172,
+            -0.5546318
+          ],
+          [
+            -0.1600373,
+            -0.558746
+          ],
+          [
+            -0.1522265,
+            -0.5908284
+          ]
+        ],
+        [
+          [
+            -0.1694579,
+            -0.5570606
+          ],
+          [
+            -0.1616293,
+            -0.5604864
+          ],
+          [
+            -0.1524851,
+            -0.5912064
+          ]
+        ],
+        [
+          [
+            -0.1704574,
+            -0.5601697
+          ],
+          [
+            -0.1622849,
+            -0.5625977
+          ],
+          [
+            -0.1525922,
+            -0.5915929
+          ]
+        ],
+        [
+          [
+            -0.1694579,
+            -0.5570606
+          ],
+          [
+            -0.1616293,
+            -0.5604864
+          ],
+          [
+            -0.1524851,
+            -0.5912064
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 6,
+      "yaw": 2.5308666229248047,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            131.50540161132812,
+            147.69479370117188,
+            254.20333862304688,
+            336.22784423828125
+          ],
+          "socket": [
+            155.64569091796875,
+            171.58627319335938
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            130.25961303710938,
+            146.30746459960938,
+            254.72088623046875,
+            337.3878173828125
+          ],
+          "socket": [
+            155.65257263183594,
+            162.91470336914062
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            132.03353881835938,
+            147.0234832763672,
+            254.57858276367188,
+            335.513427734375
+          ],
+          "socket": [
+            156.1114501953125,
+            170.8340606689453
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            130.36329650878906,
+            146.19973754882812,
+            254.74652099609375,
+            337.3878173828125
+          ],
+          "socket": [
+            155.72732543945312,
+            162.81466674804688
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            132.25064086914062,
+            146.3521728515625,
+            254.72525024414062,
+            335.0668029785156
+          ],
+          "socket": [
+            156.3043670654297,
+            170.1427459716797
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            130.4061279296875,
+            146.09201049804688,
+            254.75665283203125,
+            337.3878173828125
+          ],
+          "socket": [
+            155.75827026367188,
+            162.71041870117188
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            132.03353881835938,
+            147.0234832763672,
+            254.57858276367188,
+            334.9988708496094
+          ],
+          "socket": [
+            156.1114501953125,
+            170.8340606689453
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            130.36329650878906,
+            146.19973754882812,
+            254.74652099609375,
+            337.3878173828125
+          ],
+          "socket": [
+            155.72732543945312,
+            162.81466674804688
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            134.19073486328125,
+            147.69479370117188,
+            256.888671875,
+            332.43988037109375
+          ],
+          "socket": [
+            158.33102416992188,
+            171.58627319335938
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            131.9192352294922,
+            146.30746459960938,
+            256.3805236816406,
+            332.9366455078125
+          ],
+          "socket": [
+            157.31219482421875,
+            162.91470336914062
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            133.6564178466797,
+            147.0234832763672,
+            256.4910888671875,
+            334.9138488769531
+          ],
+          "socket": [
+            157.86526489257812,
+            171.04251098632812
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            131.81512451171875,
+            146.19973754882812,
+            256.353271484375,
+            333.8074951171875
+          ],
+          "socket": [
+            157.23744201660156,
+            162.8004150390625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            133.43310546875,
+            146.3521728515625,
+            256.32147216796875,
+            337.3878173828125
+          ],
+          "socket": [
+            157.67234802246094,
+            170.43780517578125
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            131.77188110351562,
+            146.09201049804688,
+            256.341552734375,
+            334.6783142089844
+          ],
+          "socket": [
+            157.20648193359375,
+            162.6903533935547
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            133.6564178466797,
+            147.0234832763672,
+            256.4910888671875,
+            339.8617858886719
+          ],
+          "socket": [
+            157.86526489257812,
+            171.04251098632812
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            131.81512451171875,
+            146.19973754882812,
+            256.353271484375,
+            335.5491638183594
+          ],
+          "socket": [
+            157.23744201660156,
+            162.8004150390625
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            -0.1282754,
+            -0.5771899
+          ],
+          [
+            -0.1331947,
+            -0.5803951
+          ],
+          [
+            -0.1331695,
+            -0.612166
+          ]
+        ],
+        [
+          [
+            -0.125642,
+            -0.5815553
+          ],
+          [
+            -0.1314882,
+            -0.5831511
+          ],
+          [
+            -0.1328956,
+            -0.6125325
+          ]
+        ],
+        [
+          [
+            -0.1245512,
+            -0.5854689
+          ],
+          [
+            -0.1307814,
+            -0.5856839
+          ],
+          [
+            -0.1327822,
+            -0.6129144
+          ]
+        ],
+        [
+          [
+            -0.125642,
+            -0.5815553
+          ],
+          [
+            -0.1314882,
+            -0.5831511
+          ],
+          [
+            -0.1328956,
+            -0.6125325
+          ]
+        ],
+        [
+          [
+            -0.1282754,
+            -0.5771899
+          ],
+          [
+            -0.1233562,
+            -0.5803951
+          ],
+          [
+            -0.1270889,
+            -0.612166
+          ]
+        ],
+        [
+          [
+            -0.1309088,
+            -0.5800062
+          ],
+          [
+            -0.1250626,
+            -0.5823874
+          ],
+          [
+            -0.1273628,
+            -0.6125847
+          ]
+        ],
+        [
+          [
+            -0.1319996,
+            -0.5832751
+          ],
+          [
+            -0.1257694,
+            -0.5846029
+          ],
+          [
+            -0.1274763,
+            -0.6129879
+          ]
+        ],
+        [
+          [
+            -0.1309088,
+            -0.5800062
+          ],
+          [
+            -0.1250626,
+            -0.5823874
+          ],
+          [
+            -0.1273628,
+            -0.6125847
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 7,
+      "yaw": 2.1518516540527344,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            135.15399169921875,
+            145.64845275878906,
+            255.3716583251953,
+            340.3087463378906
+          ],
+          "socket": [
+            170.62705993652344,
+            167.1763458251953
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            134.71356201171875,
+            144.41946411132812,
+            255.72341918945312,
+            341.5052490234375
+          ],
+          "socket": [
+            167.55506896972656,
+            158.2706298828125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            135.79098510742188,
+            145.0457763671875,
+            254.86715698242188,
+            339.61260986328125
+          ],
+          "socket": [
+            171.05506896972656,
+            166.49240112304688
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            134.837890625,
+            144.32275390625,
+            255.6298828125,
+            341.5052490234375
+          ],
+          "socket": [
+            167.6233673095703,
+            158.1815185546875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            136.06558227539062,
+            144.40289306640625,
+            254.64044189453125,
+            339.1842346191406
+          ],
+          "socket": [
+            171.2317352294922,
+            165.82933044433594
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            134.88934326171875,
+            144.21957397460938,
+            255.59066772460938,
+            341.5052490234375
+          ],
+          "socket": [
+            167.6516571044922,
+            158.08181762695312
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            135.8548126220703,
+            145.0457763671875,
+            254.86715698242188,
+            339.1345520019531
+          ],
+          "socket": [
+            171.05506896972656,
+            166.49240112304688
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            134.837890625,
+            144.32275390625,
+            255.6298828125,
+            341.5052490234375
+          ],
+          "socket": [
+            167.6233673095703,
+            158.1815185546875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            137.9044647216797,
+            146.04415893554688,
+            257.8664245605469,
+            336.908447265625
+          ],
+          "socket": [
+            173.12181091308594,
+            167.57205200195312
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            136.25540161132812,
+            144.66403198242188,
+            257.2652587890625,
+            337.17767333984375
+          ],
+          "socket": [
+            169.09690856933594,
+            158.51519775390625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            137.4841766357422,
+            145.30422973632812,
+            258.32281494140625,
+            339.20684814453125
+          ],
+          "socket": [
+            172.6909637451172,
+            166.95980834960938
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            136.13087463378906,
+            144.5452880859375,
+            257.3572692871094,
+            337.9867248535156
+          ],
+          "socket": [
+            169.02859497070312,
+            158.3900146484375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            137.33648681640625,
+            144.6044921875,
+            258.5006103515625,
+            341.5052490234375
+          ],
+          "socket": [
+            172.51145935058594,
+            166.32664489746094
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            136.07925415039062,
+            144.4329833984375,
+            257.39495849609375,
+            338.7957458496094
+          ],
+          "socket": [
+            169.00027465820312,
+            158.275390625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            137.42034912109375,
+            145.30422973632812,
+            258.32281494140625,
+            343.8036193847656
+          ],
+          "socket": [
+            172.6909637451172,
+            166.95980834960938
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            136.13087463378906,
+            144.5452880859375,
+            257.3572692871094,
+            339.6047668457031
+          ],
+          "socket": [
+            169.02859497070312,
+            158.3900146484375
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            -0.0713261,
+            -0.5924378
+          ],
+          [
+            -0.078306,
+            -0.5965522
+          ],
+          [
+            -0.0895612,
+            -0.6291809
+          ]
+        ],
+        [
+          [
+            -0.0689029,
+            -0.596417
+          ],
+          [
+            -0.0767379,
+            -0.599058
+          ],
+          [
+            -0.0893109,
+            -0.6295074
+          ]
+        ],
+        [
+          [
+            -0.0679048,
+            -0.6001711
+          ],
+          [
+            -0.0760906,
+            -0.6014874
+          ],
+          [
+            -0.0892073,
+            -0.6298727
+          ]
+        ],
+        [
+          [
+            -0.0689029,
+            -0.596417
+          ],
+          [
+            -0.0767379,
+            -0.599058
+          ],
+          [
+            -0.0893109,
+            -0.6295074
+          ]
+        ],
+        [
+          [
+            -0.0713261,
+            -0.5924378
+          ],
+          [
+            -0.0691658,
+            -0.5951024
+          ],
+          [
+            -0.0839122,
+            -0.6282848
+          ]
+        ],
+        [
+          [
+            -0.0737783,
+            -0.5956428
+          ],
+          [
+            -0.0707443,
+            -0.5973455
+          ],
+          [
+            -0.0841625,
+            -0.6287435
+          ]
+        ],
+        [
+          [
+            -0.0748055,
+            -0.5990734
+          ],
+          [
+            -0.071402,
+            -0.5996653
+          ],
+          [
+            -0.0842662,
+            -0.6291634
+          ]
+        ],
+        [
+          [
+            -0.0737783,
+            -0.5956428
+          ],
+          [
+            -0.0707443,
+            -0.5973455
+          ],
+          [
+            -0.0841625,
+            -0.6287435
+          ]
+        ]
+      ]
+    }
+  ],
+  "fps": 100,
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 48
+  },
+  "display_scale": 1.406896551724138,
+  "reference_sha256": "444644e358d8312d72c9192237dbe1e662338e5f287138e54639d02eb283f28c",
+  "generator_sha256": "bbf5bc0e2a64d9df4dcd3c321a52f90dd189fea066c0a855d57498e23720b1b6",
+  "runtime": {
+    "mesh_objects": 51,
+    "triangles": 26668,
+    "materials": 13
+  }
+}

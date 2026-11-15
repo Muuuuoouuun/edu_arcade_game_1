@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#173234"/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <title>시점 비교 · 아르카나 작업실</title>
+</head>
+<body>
+  <main class="study">
+    <header class="study-header"><a href="/model-lab.html">✦ ARCANA <span>WORKSHOP</span></a><a href="/">게임으로 돌아가기 ↗</a></header>
+    <section class="intro">
+      <p class="eyebrow">CAMERA STUDY / 01</p>
+      <h1>전장을 읽고,<br/>캐릭터를 알아보는 시점.</h1>
+      <p class="lead">기존 게임 이미지와 30°·35°·45°·60° 렌더를 같은 전장 크기에서 비교합니다. 각도는 수평선을 0°로 한 내려다보는 각도입니다.</p>
+      <p class="note"><strong>이안은 임시 모델입니다.</strong> 파란 모자와 지팡이의 가림을 살피기 위한 단순 모형이며 완성된 캐릭터가 아닙니다. 전장도 경로와 배경을 이용한 모의 배치입니다. 단순 그래픽의 나무와 지형은 충돌 기능이 없는 시안 장식입니다.</p>
+    </section>
+    <section aria-labelledby="comparison-heading">
+      <div class="section-head"><div><p class="eyebrow">SIDE BY SIDE</p><h2 id="comparison-heading">같은 전장에서 비교</h2></div><div class="study-controls"><fieldset class="sizes"><legend>맵 그래픽</legend><label><input type="radio" name="terrain" value="clear" checked/> 단순 숲 시안</label><label><input type="radio" name="terrain" value="existing"/> 기존 배경</label></fieldset><fieldset class="sizes"><legend>화면 기준</legend><label><input type="radio" name="screen" value="390" checked/> 390px</label><label><input type="radio" name="screen" value="320"/> 320px</label></fieldset><fieldset class="sizes"><legend>전장 시야</legend><label><input type="radio" name="zoom" value="1" checked/> 전체</label><label><input type="radio" name="zoom" value="1.35"/> 1.35배 확대</label></fieldset></div></div>
+      <p class="hint" id="screen-description">390px 화면 기준: 전장 폭 최대 374px · 작은 창에서는 화면에 맞춰 축소</p><p class="zoom-hint" id="zoom-description">전체 전장 표시 · 게임 엔진의 경로를 유지한 시안</p>
+      <div id="comparison" class="comparison" aria-live="polite"><p>비교 이미지를 불러오는 중입니다…</p></div>
+    </section>
+    <section class="reading"><div><p class="eyebrow">WHAT TO LOOK FOR</p><h2>각도를 볼 때</h2></div><ul><li>모자와 무기가 얼굴·몸을 얼마나 가리는지</li><li>타워의 옆면과 기단, 적이 지나갈 길이 구분되는지</li><li>실제 화면 크기에서 영웅과 타워가 배경에 묻히지 않는지</li></ul><p>브롤스타즈 참고 이미지의 명료한 색면과 유닛 대비를 원칙으로 삼아, 아르카나의 숲과 기존 경로로 새롭게 배치한 시안입니다. 각 시안은 카메라 방향과 정사영 배율을 고정하고 높이 각도만 바꿨습니다. 확대 렌더와 모의 전장의 스프라이트 크기는 각도별로 동일합니다. 기존 2D 원화에는 정확한 단일 카메라 각도가 정해져 있지 않습니다.</p></section>
+    <footer><a href="/model-lab.html">← 모델 작업실</a><span>실제 전투 동작과 기기 성능은 별도 확인이 필요합니다.</span></footer>
+  </main>
+  <script type="module" src="/src/camera-comparison.ts"></script>
+</body>
+</html>

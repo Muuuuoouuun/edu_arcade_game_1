@@ -39,3 +39,5 @@
 }
 .camp-hero-trait{margin:11px 0 0;padding:8px 11px;border-radius:9px;background:#eaf0da;color:#4f6b3d;font-size:12px;line-height:1.5;word-break:keep-all}.camp-hero-trait b{font-family:Jua,sans-serif;font-weight:400;font-size:15px;margin-right:7px;color:#3f5a30}
 @media(max-width:600px){.camp-hero-trait{font-size:11px}}
+
+.camp-frontier-entry{display:flex;justify-content:space-between;align-items:center;gap:16px;background:#284c40;color:#fff0bd;text-decoration:none;padding:16px 22px;border:1px solid #b5a86b66;border-radius:16px;margin:0 0 20px}.camp-frontier-entry small{display:block;color:#c1d3ba;font-size:12px;margin-top:5px}

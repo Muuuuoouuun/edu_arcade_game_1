@@ -1,0 +1,1281 @@
+{
+  "source": "art-source/defense/rapid-crossbow-lv3-action.blend",
+  "level": 3,
+  "regeneration_command": "npm run models:rapid-action-lv3",
+  "display_scale": 1.1889999999999998,
+  "base_source_sha256": "24fe4195df3defadf72b45aa952cdb3f8ab7a4b8ac207b259a6654a151ea684a",
+  "generator": "tools/blender/build_rapid_crossbow_lv3_action.py",
+  "reference": "art-source/defense/concepts/2026-10-29/props/six-tower-modules.png",
+  "frame": {
+    "width": 640,
+    "height": 640,
+    "ground": [
+      320.0001525878906,
+      488.6482238769531
+    ],
+    "crop": [
+      32,
+      24,
+      576,
+      576
+    ],
+    "orthographic_scale": 7.5,
+    "display_ground_y": 551.5559293523969,
+    "previous_ground": [
+      320.0001525878906,
+      488.6482238769531
+    ]
+  },
+  "delivery_frame": {
+    "width": 256,
+    "height": 256,
+    "crop": [
+      12.8,
+      9.6,
+      230.4,
+      230.4
+    ],
+    "ground_y": 220.62237174095876
+  },
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 48
+  },
+  "pennant_mount": {
+    "offset_per_side": [
+      0.16,
+      0.12,
+      -1.1
+    ],
+    "fixed_wall_brackets": 4
+  },
+  "animation": {
+    "clip": "rapid-feed-release",
+    "fps": 100,
+    "first_frame": 1,
+    "last_frame": 35,
+    "duration_seconds": 0.34,
+    "hit_at": 0.1
+  },
+  "directions": [
+    {
+      "index": 0,
+      "yaw": 2.2142973163788913,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            599.8934326171875,
+            199.29165649414062
+          ],
+          "bounds": [
+            109.0561752319336,
+            63.93939971923828,
+            595.6815185546875,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.64000004529953,
+            -0.47999992966651917,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -1.6000001430511475,
+            -1.1999998092651367,
+            4.0
+          ]
+        },
+        {
+          "name": "release",
+          "muzzle": [
+            599.8934326171875,
+            199.29165649414062
+          ],
+          "bounds": [
+            109.0561752319336,
+            56.51908874511719,
+            520.5321044921875,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.6912000775337219,
+            -0.5183999538421631,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.18000000715255737,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -1.6000001430511475,
+            -1.1999998092651367,
+            4.0
+          ]
+        },
+        {
+          "name": "draw",
+          "muzzle": [
+            599.8934326171875,
+            199.29165649414062
+          ],
+          "bounds": [
+            109.0561752319336,
+            59.65099334716797,
+            520.5321044921875,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.870400071144104,
+            -0.6527999043464661,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.6499999761581421,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -1.3184000253677368,
+            -0.9887998104095459,
+            4.0
+          ]
+        },
+        {
+          "name": "feed",
+          "muzzle": [
+            599.8934326171875,
+            199.29165649414062
+          ],
+          "bounds": [
+            109.0561752319336,
+            63.93939971923828,
+            571.1055297851562,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.742400050163269,
+            -0.5567998886108398,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.2800000011920929,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -1.4720001220703125,
+            -1.1039998531341553,
+            4.0
+          ]
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "yaw": 1.1394394450420453,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            453.1893615722656,
+            332.48095703125
+          ],
+          "bounds": [
+            112.26042175292969,
+            60.188446044921875,
+            543.332763671875,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.7267194390296936,
+            0.33448299765586853,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -1.8167985677719116,
+            0.8362075090408325,
+            4.0
+          ]
+        },
+        {
+          "name": "release",
+          "muzzle": [
+            453.1893615722656,
+            332.48095703125
+          ],
+          "bounds": [
+            118.22967529296875,
+            57.58964538574219,
+            573.7239990234375,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.7848570346832275,
+            0.3612416386604309,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.18000000715255737,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -1.8167985677719116,
+            0.8362075090408325,
+            4.0
+          ]
+        },
+        {
+          "name": "draw",
+          "muzzle": [
+            453.1893615722656,
+            332.48095703125
+          ],
+          "bounds": [
+            114.45184326171875,
+            48.493804931640625,
+            559.4314575195312,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.9883384704589844,
+            0.45489686727523804,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.6499999761581421,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -1.4970420598983765,
+            0.6890349388122559,
+            4.0
+          ]
+        },
+        {
+          "name": "feed",
+          "muzzle": [
+            453.1893615722656,
+            332.48095703125
+          ],
+          "bounds": [
+            112.26042175292969,
+            54.990806579589844,
+            543.332763671875,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.8429945111274719,
+            0.3880002796649933,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.2800000011920929,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -1.671454668045044,
+            0.7693108916282654,
+            4.0
+          ]
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "yaw": 0.6435013233700159,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            320.00018310546875,
+            350.7253112792969
+          ],
+          "bounds": [
+            78.336181640625,
+            60.84796905517578,
+            561.6641235351562,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.48000016808509827,
+            0.6399998664855957,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -1.2000004053115845,
+            1.5999996662139893,
+            4.0
+          ]
+        },
+        {
+          "name": "release",
+          "muzzle": [
+            320.00018310546875,
+            350.7253112792969
+          ],
+          "bounds": [
+            64.8594970703125,
+            57.89314270019531,
+            575.140869140625,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.5184001922607422,
+            0.6911998987197876,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.18000000715255737,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -1.2000004053115845,
+            1.5999996662139893,
+            4.0
+          ]
+        },
+        {
+          "name": "draw",
+          "muzzle": [
+            320.00018310546875,
+            350.7253112792969
+          ],
+          "bounds": [
+            70.50667572021484,
+            47.55134582519531,
+            569.49365234375,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.6528002619743347,
+            0.8703998327255249,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.6499999761581421,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -0.9888003468513489,
+            1.3183996677398682,
+            4.0
+          ]
+        },
+        {
+          "name": "feed",
+          "muzzle": [
+            320.00018310546875,
+            350.7253112792969
+          ],
+          "bounds": [
+            78.336181640625,
+            54.9383544921875,
+            561.6641235351562,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.5568001866340637,
+            0.7423998117446899,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.2800000011920929,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -1.1040003299713135,
+            1.4719996452331543,
+            4.0
+          ]
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "yaw": 0.1475630759167614,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            186.81097412109375,
+            332.4809875488281
+          ],
+          "bounds": [
+            96.66751861572266,
+            61.62406921386719,
+            527.7398681640625,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.1176224946975708,
+            0.7913058400154114,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -0.294056236743927,
+            1.978264570236206,
+            4.0
+          ]
+        },
+        {
+          "name": "release",
+          "muzzle": [
+            186.81097412109375,
+            332.4809875488281
+          ],
+          "bounds": [
+            66.27630615234375,
+            59.025230407714844,
+            521.7706298828125,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.1270322948694229,
+            0.8546103239059448,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.18000000715255737,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -0.294056236743927,
+            1.978264570236206,
+            4.0
+          ]
+        },
+        {
+          "name": "draw",
+          "muzzle": [
+            186.81097412109375,
+            332.4809875488281
+          ],
+          "bounds": [
+            80.56883239746094,
+            49.92938995361328,
+            525.5484619140625,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.1599665880203247,
+            1.0761759281158447,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.6499999761581421,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -0.2423023283481598,
+            1.6300899982452393,
+            4.0
+          ]
+        },
+        {
+          "name": "feed",
+          "muzzle": [
+            186.81097412109375,
+            332.4809875488281
+          ],
+          "bounds": [
+            96.66751861572266,
+            56.426429748535156,
+            527.7398681640625,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            -0.13644209504127502,
+            0.9179147481918335,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.2800000011920929,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            -0.2705317437648773,
+            1.8200033903121948,
+            4.0
+          ]
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "yaw": -0.9272953372109017,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            40.10687255859375,
+            199.29165649414062
+          ],
+          "bounds": [
+            44.31876754760742,
+            63.93943786621094,
+            530.9441528320312,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.64000004529953,
+            0.47999992966651917,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            1.6000001430511475,
+            1.1999998092651367,
+            4.0
+          ]
+        },
+        {
+          "name": "release",
+          "muzzle": [
+            40.10687255859375,
+            199.29165649414062
+          ],
+          "bounds": [
+            149.68019104003906,
+            56.51908874511719,
+            530.9441528320312,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.6912000775337219,
+            0.5183999538421631,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.18000000715255737,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            1.6000001430511475,
+            1.1999998092651367,
+            4.0
+          ]
+        },
+        {
+          "name": "draw",
+          "muzzle": [
+            40.10687255859375,
+            199.29165649414062
+          ],
+          "bounds": [
+            149.68019104003906,
+            59.65095520019531,
+            530.9441528320312,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.870400071144104,
+            0.6527999043464661,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.6499999761581421,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            1.3184000253677368,
+            0.9887998104095459,
+            4.0
+          ]
+        },
+        {
+          "name": "feed",
+          "muzzle": [
+            40.10687255859375,
+            199.29165649414062
+          ],
+          "bounds": [
+            68.894775390625,
+            63.93943786621094,
+            530.9441528320312,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.742400050163269,
+            0.5567998886108398,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.2800000011920929,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            1.4720001220703125,
+            1.1039998531341553,
+            4.0
+          ]
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "yaw": -2.002153208547748,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            186.81092834472656,
+            66.10233306884766
+          ],
+          "bounds": [
+            96.66756439208984,
+            55.119476318359375,
+            527.7399291992188,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.7267194390296936,
+            -0.33448299765586853,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            1.8167985677719116,
+            -0.8362075090408325,
+            4.0
+          ]
+        },
+        {
+          "name": "release",
+          "muzzle": [
+            186.81092834472656,
+            66.10233306884766
+          ],
+          "bounds": [
+            66.27630615234375,
+            94.2721939086914,
+            521.7706298828125,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.7848570346832275,
+            -0.3612416386604309,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.18000000715255737,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            1.8167985677719116,
+            -0.8362075090408325,
+            4.0
+          ]
+        },
+        {
+          "name": "draw",
+          "muzzle": [
+            186.81092834472656,
+            66.10233306884766
+          ],
+          "bounds": [
+            80.56883239746094,
+            101.9644546508789,
+            525.5484619140625,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.9883384704589844,
+            -0.45489686727523804,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.6499999761581421,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            1.4970420598983765,
+            -0.6890349388122559,
+            4.0
+          ]
+        },
+        {
+          "name": "feed",
+          "muzzle": [
+            186.81092834472656,
+            66.10233306884766
+          ],
+          "bounds": [
+            96.66756439208984,
+            66.81411743164062,
+            527.7399291992188,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.8429945111274719,
+            -0.3880002796649933,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.2800000011920929,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            1.671454668045044,
+            -0.7693108916282654,
+            4.0
+          ]
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "yaw": -2.4980913302197774,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            320.00006103515625,
+            47.858009338378906
+          ],
+          "bounds": [
+            78.33616638183594,
+            50.13679504394531,
+            561.6641235351562,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.48000022768974304,
+            -0.6399998664855957,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            1.200000524520874,
+            -1.5999996662139893,
+            4.0
+          ]
+        },
+        {
+          "name": "release",
+          "muzzle": [
+            320.00006103515625,
+            47.858009338378906
+          ],
+          "bounds": [
+            64.85943603515625,
+            121.69086456298828,
+            575.1408081054688,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.518400251865387,
+            -0.6911998987197876,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.18000000715255737,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            1.200000524520874,
+            -1.5999996662139893,
+            4.0
+          ]
+        },
+        {
+          "name": "draw",
+          "muzzle": [
+            320.00006103515625,
+            47.858009338378906
+          ],
+          "bounds": [
+            70.50667572021484,
+            121.69086456298828,
+            569.49365234375,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.6528003215789795,
+            -0.8703998327255249,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.6499999761581421,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            0.9888004660606384,
+            -1.3183996677398682,
+            4.0
+          ]
+        },
+        {
+          "name": "feed",
+          "muzzle": [
+            320.00006103515625,
+            47.858009338378906
+          ],
+          "bounds": [
+            78.33616638183594,
+            63.43341827392578,
+            561.6641235351562,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.5568002462387085,
+            -0.7423998117446899,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.2800000011920929,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            1.104000449180603,
+            -1.4719996452331543,
+            4.0
+          ]
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "yaw": -2.994029577673032,
+      "poses": [
+        {
+          "name": "ready",
+          "muzzle": [
+            453.1893310546875,
+            66.102294921875
+          ],
+          "bounds": [
+            112.26042175292969,
+            55.11943817138672,
+            543.332763671875,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.11762255430221558,
+            -0.7913058400154114,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            0.29405638575553894,
+            -1.978264570236206,
+            4.0
+          ]
+        },
+        {
+          "name": "release",
+          "muzzle": [
+            453.1893310546875,
+            66.102294921875
+          ],
+          "bounds": [
+            118.22967529296875,
+            94.27223205566406,
+            573.7239990234375,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.12703236937522888,
+            -0.8546103239059448,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.18000000715255737,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            0.29405638575553894,
+            -1.978264570236206,
+            4.0
+          ]
+        },
+        {
+          "name": "draw",
+          "muzzle": [
+            453.1893310546875,
+            66.102294921875
+          ],
+          "bounds": [
+            114.45182037353516,
+            101.96449279785156,
+            559.4315185546875,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.15996667742729187,
+            -1.0761759281158447,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.6499999761581421,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            0.24230246245861053,
+            -1.6300899982452393,
+            4.0
+          ]
+        },
+        {
+          "name": "feed",
+          "muzzle": [
+            453.1893310546875,
+            66.102294921875
+          ],
+          "bounds": [
+            112.26042175292969,
+            66.81411743164062,
+            543.332763671875,
+            577.252685546875
+          ],
+          "foundation_drift": 0.0,
+          "fixed_meshes": 114,
+          "magazine_center": [
+            0.1364421546459198,
+            -0.9179147481918335,
+            4.480000019073486
+          ],
+          "lever_rotation": [
+            -0.2800000011920929,
+            0.0,
+            0.0
+          ],
+          "shuttle_center": [
+            0.27053186297416687,
+            -1.8200033903121948,
+            4.0
+          ]
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "file": "rapid-lv3-action-0-atlas.webp",
+      "bytes": 46156,
+      "sha256": "e9168d111bd111d592bd14032ece388ad6d2f7e9052b60017b586c9281cbb5f9"
+    },
+    {
+      "file": "rapid-lv3-action-1-atlas.webp",
+      "bytes": 48372,
+      "sha256": "f832554da7187fb6a0371d94b4d08bcf88acda62dda04f33871ae9046b00089a"
+    },
+    {
+      "file": "rapid-lv3-action-2-atlas.webp",
+      "bytes": 49952,
+      "sha256": "3a96404f9176d23c14bbc2004cc9c7414ffac6a33897876f170b5fde21a87d4c"
+    },
+    {
+      "file": "rapid-lv3-action-3-atlas.webp",
+      "bytes": 50232,
+      "sha256": "a95e143bbecda0a6066b0a90216a41edc85b3e0c38c14a9f03891721e3e94710"
+    },
+    {
+      "file": "rapid-lv3-action-4-atlas.webp",
+      "bytes": 45800,
+      "sha256": "4df51d8942c6af17de246519cf3c3e407c724377eb848cfdccb256edfd55ff48"
+    },
+    {
+      "file": "rapid-lv3-action-5-atlas.webp",
+      "bytes": 48318,
+      "sha256": "39e2c26cb42ed609a7d4fccf745638ad27da115a5b23fd420c79e8b2d72e1b56"
+    },
+    {
+      "file": "rapid-lv3-action-6-atlas.webp",
+      "bytes": 48210,
+      "sha256": "a7f1cc7f364bd904ad27ee95ef04b8df73f1d0a5a40b2b2c6cb8be781eb5449f"
+    },
+    {
+      "file": "rapid-lv3-action-7-atlas.webp",
+      "bytes": 49538,
+      "sha256": "5c6905728d91933b365c1c1ef8beee1e3298d74f2d2892d5c6d8bf9dc4aaea1c"
+    },
+    {
+      "file": "rapid-crossbow-lv3-action.glb",
+      "bytes": 1588404,
+      "sha256": "e690b67e8e40d3e4fcb85d31f6bdfa121dd21b831e75063a7c855da17ae8e190"
+    },
+    {
+      "file": "rapid-crossbow-lv3-action.png",
+      "bytes": 529822,
+      "sha256": "03183b5ebd8bf9ea9aea4d2fd7983969e6ca8995f7aaa4cd5fd8d5693628b7f3"
+    }
+  ],
+  "shuttle_sweep": {
+    "frames_checked": 35,
+    "moving_parts": 7,
+    "obstacles": 4,
+    "min_axis_separation": 0.015999794006347656,
+    "checks": "world AABB separation from carriage, hopper and fixed guide rails"
+  },
+  "pennant_clearance": {
+    "directions": 8,
+    "frames_per_direction": 35,
+    "moving_parts": 13,
+    "fixed_decor": 10,
+    "surface_intersections": 0
+  },
+  "carriage_pennant_clearance": {
+    "directions": 8,
+    "frames_per_direction": 35,
+    "moving_parts": 91,
+    "fixed_pennants": 8,
+    "surface_intersections": 0
+  },
+  "runtime": {
+    "mesh_objects": 44,
+    "triangles": 31970,
+    "materials": 13
+  },
+  "reference_sha256": "4a4123d8bf291270f0912d0708b7f6170ff52de80e65c2e6a8bda1eaba1789ec",
+  "frame_files": [
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-0-draw.png",
+      "sha256": "4c7f663b6b038496dd109877892bf2ab71841e198c9c541a6d7d5169a382942f"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-0-feed.png",
+      "sha256": "8c0e71ef2d20abc6fe8b4c887d42411bee0ed664469e3f5c14ac3842eddfc2e5"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-0-ready.png",
+      "sha256": "e03c9e1b325429453691a6c4e48ce669cd88e70443c5f9a1e1920f1914e9b12c"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-0-release.png",
+      "sha256": "ccc0d55585194747fe10717ae7812018fa41bc949b56a52472a8e6e542f902b4"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-1-draw.png",
+      "sha256": "66880377187b37a794d01b0438a647cbc8b9bb1bd08753d5d5ac815ae54b027c"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-1-feed.png",
+      "sha256": "d109eaa968b6e7955e6fa29f9c77312eacfbb43083890ec51220e34d9877eb5e"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-1-ready.png",
+      "sha256": "c403fb32d68be03b5fc437430f8133fb2a0601434172bac20c7bb70c2bde9042"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-1-release.png",
+      "sha256": "1cff56257ae7b55f4d14da753d8456abbedb46ca9b7936a2a7f342c02c98838f"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-2-draw.png",
+      "sha256": "76770c75a6903e67a3e2341c748966d29c847a5db8121fac090328a907c63a5e"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-2-feed.png",
+      "sha256": "5e79e911ffe348fc81c828ac3e321e9688ef14c5733f83477fbe345cc6e17ff4"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-2-ready.png",
+      "sha256": "8696827a82ef085f456f8e992fd3823c2af846f18f44b35c58cc37cc1b09e23e"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-2-release.png",
+      "sha256": "f19741e59fe2349775a63faeb76096e5e9f734da4d83f23e18d27ae67e63ceee"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-3-draw.png",
+      "sha256": "837fc6ecb67f14b99f45b9744ce6305744ceefa8479d695475d30ec626877c85"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-3-feed.png",
+      "sha256": "a64668ccbe89c200ebdd35396851b93daf092499e525c8d8c44205946d4a91a9"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-3-ready.png",
+      "sha256": "f8f4069c2585c52585b9734ab8763c2c20c226f08deee90406c58320968d62d0"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-3-release.png",
+      "sha256": "9f135b5df256c6ea46213fc638be6092a4f7e3f8aff61d987d46072ec653632e"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-4-draw.png",
+      "sha256": "59728a785f8ccd8a462dedf6e08a70b8c611f3a831627b48bcaf2c1e927b5670"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-4-feed.png",
+      "sha256": "14353779fd169f8f8c2427fafdd9d44436477f64671acb6e833efb30aaa9a811"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-4-ready.png",
+      "sha256": "03183b5ebd8bf9ea9aea4d2fd7983969e6ca8995f7aaa4cd5fd8d5693628b7f3"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-4-release.png",
+      "sha256": "1f78db744f9ef31ce30fe279ab7f2ff7f05c4f35ab13dacefa3fe97f5dfbd188"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-5-draw.png",
+      "sha256": "1683150b8da213a4802f22af48f57474c76359de737f808e087adf9e1174bc1d"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-5-feed.png",
+      "sha256": "d3d344237ff80fb16cd52e2d7e9148896cb050841a09364b4165e6d9e95ed356"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-5-ready.png",
+      "sha256": "b5ce21af14986bd31e1d882accbf7b1e496bae3efc5e70f66c1d2f3be409c026"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-5-release.png",
+      "sha256": "6d6d151036f964b7f0d72971bb7ef033a1f3630ef8b79536e49ddf57b442c5ef"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-6-draw.png",
+      "sha256": "818c26d1f81f561d6d7498b5ce3e3ea104d1763ac19074edc94b38a9e1f98eb4"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-6-feed.png",
+      "sha256": "00e3b8611d1c5504287894973d64ac5904ff0a49c84e92ff650459eca5af9e89"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-6-ready.png",
+      "sha256": "5c51aa2a631284ab23ef69f68c55dd2f177b2500fcb06bb89f35ac21dbf89227"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-6-release.png",
+      "sha256": "e68fac143930ed8f85ec2a0df3e8f1cc4bde7d6749d69413a2e9931d725ab330"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-7-draw.png",
+      "sha256": "03ecf08819756c974dacab788d73f7aa94cf17997325be84d244deff54e6b76c"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-7-feed.png",
+      "sha256": "ba9a20083e7196f88bca5caf7c7a32677895818669ae755cd4f063fd3b00ace3"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-7-ready.png",
+      "sha256": "207d468e34aa1b1b3d868f8004fb04f27e9c8faf5525158f179642dbe71a1abf"
+    },
+    {
+      "file": "art-source/defense/rapid-crossbow-lv3-action/rapid-lv3-action-7-release.png",
+      "sha256": "149da5e4aeff350ab9e2e9561ce10de0e9b859e09d872919a11f2b115b0348fe"
+    }
+  ],
+  "generator_sha256": "5dd0c64bd42aaa6ca87c3e936a3b6ab648cc6876ecdfc61c072f32d9a1b610bf",
+  "source_sha256": "73548c9a97d3794904d13c191615092404ac79eb5e259410d6f0a6054fb1575b"
+}

@@ -1,0 +1,109 @@
+{
+  "generator": "tools/blender/build_frontier_ballista.py",
+  "regeneration_command": "npm run models:frontier-ballista",
+  "base_source": "art-source/defense/piercing-ballista-action.blend",
+  "base_sha256": "f9ebe7c5c4b460ffe5ef66131a909269f543daebd640f3026193c7bc1e6a934b",
+  "runtime_scale": 0.65,
+  "muzzle_local_gltf": [
+    0.0,
+    2.5199999809265137,
+    2.049999952316284
+  ],
+  "muzzle_world_offset": [
+    0,
+    2.6208,
+    2.0072
+  ],
+  "animation": {
+    "clip": "frontier-ballista-release",
+    "duration": 0.4,
+    "release": 0.1,
+    "fps": 120
+  },
+  "camera": {
+    "resolution": [
+      512,
+      512
+    ],
+    "ortho_scale": 7.5,
+    "position": [
+      9.0,
+      -12.0,
+      12.0
+    ]
+  },
+  "files": [
+    {
+      "path": "art-source/defense/piercing-ballista-action.blend",
+      "bytes": 2642548,
+      "sha256": "f9ebe7c5c4b460ffe5ef66131a909269f543daebd640f3026193c7bc1e6a934b"
+    },
+    {
+      "path": "tools/blender/build_frontier_ballista.py",
+      "bytes": 8486,
+      "sha256": "4ca2d1d5cc36ffa7d61acdfaf39cc30c0519dbeda7de01a004c5c9bec3f9f52b"
+    },
+    {
+      "path": "art-source/defense/frontier-ballista.blend",
+      "bytes": 2277420,
+      "sha256": "f89172fbd9b3dd4534dd9e9590d68b84d57a404c9e578c30436569ed74f1a082"
+    },
+    {
+      "path": "art-source/defense/frontier-ballista/reload.png",
+      "bytes": 317791,
+      "sha256": "88e6e83a511787dfdfda44dbc3c6411e35e40a339010e13b046874850914ff8d"
+    },
+    {
+      "path": "art-source/defense/frontier-ballista/ready.png",
+      "bytes": 316927,
+      "sha256": "77e21a481810250df5b44400d87826ed7187a5df91f3eb027a8f436aea753270"
+    },
+    {
+      "path": "art-source/defense/frontier-ballista/release.png",
+      "bytes": 316966,
+      "sha256": "1d3aaa447502c4ec1e6e97103d4f4a32c136eb7b978adc7c9a39e5bc4e99c081"
+    },
+    {
+      "path": "art-source/defense/frontier-ballista/recoil.png",
+      "bytes": 317425,
+      "sha256": "c0685b14cef83efd024b8536d0475a808762ad8c0a4819b57e7c3659f2cada9c"
+    },
+    {
+      "path": "public/defense/models/frontier-ballista.glb",
+      "bytes": 780332,
+      "sha256": "39190ba890290b19ac5731af1e3507811abbe8f8ba24397360e9507fb129a18d"
+    },
+    {
+      "path": "public/defense/models/frontier-ballista-game.glb",
+      "bytes": 230188,
+      "sha256": "624d3a2a236fd3e8563e8a98eb7aeef70f27994cb5d8418d341672ed82b29b87"
+    },
+    {
+      "path": "public/defense/models/frontier-ballista.png",
+      "bytes": 316927,
+      "sha256": "77e21a481810250df5b44400d87826ed7187a5df91f3eb027a8f436aea753270"
+    },
+    {
+      "path": "public/defense/models/frontier-ballista.webp",
+      "bytes": 33338,
+      "sha256": "f6fc6271cf9652307663c079c12672904f1d893f3fb422d315dffa8c243859de"
+    },
+    {
+      "path": "public/defense/models/frontier-ballista-atlas.webp",
+      "bytes": 46046,
+      "sha256": "6f50c4811d1fefbba51c270d34dc8bc768e240ee5489b65da406f030af465187"
+    }
+  ],
+  "runtime": {
+    "meshes": 7,
+    "triangles": 9962,
+    "materials": 1,
+    "editable_meshes": 145
+  },
+  "runtime_game": {
+    "meshes": 7,
+    "triangles": 3540,
+    "materials": 1,
+    "file": "frontier-ballista-game.glb"
+  }
+}

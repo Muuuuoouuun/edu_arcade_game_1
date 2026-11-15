@@ -1,0 +1,649 @@
+{
+  "generator": "tools/blender/build_luna_ultimate.py",
+  "command": "npm run models:luna-ultimate",
+  "source_cast_sha256": "fc4466f5a428a1f34568d51cf041efa0d2d33b2c22886d8038cdc6f1f02bf77a",
+  "reference": "art-source/defense/atlases/ranged-motion.png",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      330
+    ],
+    "orthographic_scale": 6.8
+  },
+  "delivery_frame": {
+    "width": 192,
+    "height": 192,
+    "ground": [
+      96,
+      165
+    ],
+    "columns": 3,
+    "rows": 1
+  },
+  "duration_seconds": 0.5,
+  "samples_seconds": [
+    0.06,
+    0.26,
+    0.45
+  ],
+  "checks": [
+    {
+      "frames": 51,
+      "min_sole_z": 0.004999972879886627,
+      "ready_end_error": 0
+    }
+  ],
+  "files": [
+    {
+      "file": "art-source/defense/luna-ultimate.blend",
+      "bytes": 2559628,
+      "sha256": "ae08c695c97ad4e80e16ef9f0d1cb74e4146ff872075261287d7b6a4e2d47933"
+    },
+    {
+      "file": "public/defense/models/luna-ultimate.glb",
+      "bytes": 1637412,
+      "sha256": "effda5f1bede4962f04a77f8edd91636edd0acae82b442f70cf4351573a9dd6f"
+    },
+    {
+      "file": "src/games/defense/druidUltimateSockets.ts",
+      "bytes": 758,
+      "sha256": "af2e39eb332fb4f9ab540a2b046330169e8ebd48c3869c5cf5b1c4078f469904"
+    },
+    {
+      "file": "public/defense/models/luna-ultimate.png",
+      "bytes": 130329,
+      "sha256": "c8595aaf5c81111cceec2b584e74b47ae5e75fa07322f94ce2f1c0488dcf0bbb"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-0-0-0.png",
+      "bytes": 111906,
+      "sha256": "89fc24dd5d6542c15b5679bace6c5f6adad8db2f1fa30888e5e94c66f2b71b05"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-0-0-1.png",
+      "bytes": 111147,
+      "sha256": "526c2cd7d6b879e02af30d83c6869c0ae949aa6cd0390ecb7f7c797be1fe3bd8"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-0-0-2.png",
+      "bytes": 110229,
+      "sha256": "546ff910f98fcf6bcaf888b458164d16bb6c84223d4c0dc660993d2a4f6940c7"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-1-0-0.png",
+      "bytes": 130329,
+      "sha256": "c8595aaf5c81111cceec2b584e74b47ae5e75fa07322f94ce2f1c0488dcf0bbb"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-1-0-1.png",
+      "bytes": 128215,
+      "sha256": "2fb6a826bac9e49eb21579bacc790214c4af2c612ba44ad88560fbe10a5f36bd"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-1-0-2.png",
+      "bytes": 126941,
+      "sha256": "752a5f36047478169e4a379529bbd1851aa88268c74f53747a0f5e2823b261c1"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-2-0-0.png",
+      "bytes": 129811,
+      "sha256": "1f0540fb9bfc1ba24c0d5af647e5175bbb3f8276de4c726a99e5e98042fb2dc1"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-2-0-1.png",
+      "bytes": 127410,
+      "sha256": "17d51b6d9d4bcac93c8c3bd3d95a1e52f7d2d329a04496d0d65a713ae041b458"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-2-0-2.png",
+      "bytes": 124236,
+      "sha256": "229ff13e01d389edad30081e028eeacaad2a142a75a28497c97c47f181cf4c78"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-3-0-0.png",
+      "bytes": 125592,
+      "sha256": "911a3be36407f2351c31111f9b4dd4ef7024788a7d66902e26b209757622b18d"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-3-0-1.png",
+      "bytes": 123100,
+      "sha256": "e83653d483bef7a4116b55c853350bd02e54c06e378e1c7f776ba417c2f88d2c"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-3-0-2.png",
+      "bytes": 120876,
+      "sha256": "6597b79ad93bd30b0fef366f3aad7c71427f9aeda456817ea2acea991cd7a431"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-4-0-0.png",
+      "bytes": 108267,
+      "sha256": "0477a183e9c0074d209fb23dfe6b8f7ecea63b8a95a6772a23a24c5a62ebb95a"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-4-0-1.png",
+      "bytes": 108726,
+      "sha256": "1e293a22a059ac238dd20a5554e7e403268e65be5ecc40f010f60574a4b7af2f"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-4-0-2.png",
+      "bytes": 109576,
+      "sha256": "32f9b5289f1ae5535d5aa7e9a04a96476cc3e53d73d418d9d04ba80124bcb7e5"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-5-0-0.png",
+      "bytes": 121610,
+      "sha256": "792f973d84a82a50558cb52930214c7080bee0725fc8780e60a9ebb727235460"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-5-0-1.png",
+      "bytes": 120398,
+      "sha256": "3f5381e9f3358a20871b81b046555a611b8e8ad69df96153acaad183a10ac222"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-5-0-2.png",
+      "bytes": 118797,
+      "sha256": "968dd7b9a00136bea79d652b9cd453a8d60476134737a71f02d168c9f8b62114"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-6-0-0.png",
+      "bytes": 122710,
+      "sha256": "80288b522059695b802a26b6aa18db28b2bb8ed802ade8f20ae2dc7be45909b3"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-6-0-1.png",
+      "bytes": 120813,
+      "sha256": "41be9991d337ef1d072b40fbfd1e25198898b0f0e85a52d9033f79307cce6da1"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-6-0-2.png",
+      "bytes": 117221,
+      "sha256": "36e0478f323667d300879699f9cd8c317b76d302f2f0f0549b50df359201fb26"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-7-0-0.png",
+      "bytes": 121880,
+      "sha256": "4a620ca15986bcef71a89172aae832fd37f6f811cb853dec703c64d22118cf6c"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-7-0-1.png",
+      "bytes": 119743,
+      "sha256": "33cdfdae88d5c50224c3f6b60bf01ca0ed00e50c90ff00e52cfb65c35ec79f93"
+    },
+    {
+      "file": "art-source/defense/luna-ultimate-frames/luna-ultimate-7-0-2.png",
+      "bytes": 115138,
+      "sha256": "b83f78c4b3d1e8ab1d76ea8218bb51c7117c55c91c1dfb988b10b3fa5b88c487"
+    },
+    {
+      "file": "public/defense/models/luna-ultimate-0-atlas.webp",
+      "bytes": 10622,
+      "sha256": "09bde93108a1b1f893736afcea1fe0bf05748b687a78af3487afb98a6b5eee93"
+    },
+    {
+      "file": "public/defense/models/luna-ultimate-1-atlas.webp",
+      "bytes": 16408,
+      "sha256": "e2b909dde962a1ad37c0eaae0cbc1d1e0b031e4e25700af1e18ff6a0e1bad055"
+    },
+    {
+      "file": "public/defense/models/luna-ultimate-2-atlas.webp",
+      "bytes": 15048,
+      "sha256": "61fdf026a69d092beb9dd33f11749716003757d40a73e84306c1d21133e11521"
+    },
+    {
+      "file": "public/defense/models/luna-ultimate-3-atlas.webp",
+      "bytes": 14210,
+      "sha256": "7cc38f0652cbabba17e3145173a72639c265cd2bd649de07c5a714777b56a81f"
+    },
+    {
+      "file": "public/defense/models/luna-ultimate-4-atlas.webp",
+      "bytes": 9696,
+      "sha256": "98aa4bda99c23b44d4fc5bafbd810266dbcde5c1cff5b8329004aeda27987918"
+    },
+    {
+      "file": "public/defense/models/luna-ultimate-5-atlas.webp",
+      "bytes": 14228,
+      "sha256": "da1466b1fbb39c869d2dbb2c0cd35fb0ad9ccd42018be8404226b8176ee554c3"
+    },
+    {
+      "file": "public/defense/models/luna-ultimate-6-atlas.webp",
+      "bytes": 13430,
+      "sha256": "bd8a83075dbf968a4f4792d62fca7800dd29caf707caf0d70377c082bf628ff6"
+    },
+    {
+      "file": "public/defense/models/luna-ultimate-7-atlas.webp",
+      "bytes": 12334,
+      "sha256": "ae2ba798e5a9eae4cca3d674c61ec3cf2833803ec176666e62fac11bb20e29c8"
+    }
+  ],
+  "clips": [
+    {
+      "name": "luna-ultimate-0",
+      "duration": 0.5
+    }
+  ],
+  "directions": [
+    {
+      "direction": 0,
+      "yaw": 0.960070013999939,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            152.71083068847656,
+            78.9353256225586,
+            231.90850830078125,
+            342.33575439453125
+          ],
+          "socket": [
+            203.42111206054688,
+            93.17328643798828
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            153.62322998046875,
+            90.65986633300781,
+            231.6158447265625,
+            342.33575439453125
+          ],
+          "socket": [
+            208.23428344726562,
+            104.80341339111328
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            154.44937133789062,
+            115.56770324707031,
+            229.77874755859375,
+            342.33575439453125
+          ],
+          "socket": [
+            218.36215209960938,
+            129.47463989257812
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 1,
+      "yaw": -0.23171095550060272,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            129.19769287109375,
+            96.56854248046875,
+            273.34246826171875,
+            341.08734130859375
+          ],
+          "socket": [
+            244.49172973632812,
+            110.4345703125
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            129.23451232910156,
+            109.59830474853516,
+            273.1771240234375,
+            341.08734130859375
+          ],
+          "socket": [
+            244.66107177734375,
+            123.41033935546875
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            129.31861877441406,
+            124.62355041503906,
+            272.8282165527344,
+            341.08734130859375
+          ],
+          "socket": [
+            245.02230834960938,
+            150.91439819335938
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 2,
+      "yaw": -0.610725998878479,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            121.02435302734375,
+            105.07493591308594,
+            272.0376281738281,
+            342.7855529785156
+          ],
+          "socket": [
+            243.95303344726562,
+            118.41329956054688
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            125.30818176269531,
+            117.9964599609375,
+            270.30291748046875,
+            342.7855529785156
+          ],
+          "socket": [
+            242.21835327148438,
+            131.26950073242188
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            133.6262664794922,
+            130.01974487304688,
+            266.65814208984375,
+            342.7855529785156
+          ],
+          "socket": [
+            238.5735626220703,
+            158.52273559570312
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 3,
+      "yaw": -0.9897410869598389,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            122.55516052246094,
+            111.8803939819336,
+            262.68243408203125,
+            346.5198974609375
+          ],
+          "socket": [
+            236.04010009765625,
+            125.74639892578125
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            125.35592651367188,
+            124.39888000488281,
+            259.375244140625,
+            346.5198974609375
+          ],
+          "socket": [
+            232.6475830078125,
+            138.21090698242188
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            131.58944702148438,
+            124.62355041503906,
+            254.68162536621094,
+            346.5198974609375
+          ],
+          "socket": [
+            225.5141143798828,
+            164.64077758789062
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 4,
+      "yaw": -2.1815226078033447,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            152.09173583984375,
+            117.52597045898438,
+            231.28939819335938,
+            342.33575439453125
+          ],
+          "socket": [
+            180.5791015625,
+            134.55599975585938
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            152.38436889648438,
+            117.52597045898438,
+            230.37701416015625,
+            342.33575439453125
+          ],
+          "socket": [
+            175.7659149169922,
+            144.80435180664062
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            154.22146606445312,
+            117.52597045898438,
+            229.5508575439453,
+            342.33575439453125
+          ],
+          "socket": [
+            165.6380615234375,
+            166.57235717773438
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 5,
+      "yaw": 2.909881591796875,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            110.65776062011719,
+            102.963134765625,
+            254.80255126953125,
+            336.07269287109375
+          ],
+          "socket": [
+            139.50845336914062,
+            117.29473114013672
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            110.82308959960938,
+            111.80543518066406,
+            254.76571655273438,
+            336.07269287109375
+          ],
+          "socket": [
+            139.3391571044922,
+            126.19743347167969
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            111.17200469970703,
+            124.83247375488281,
+            254.68162536621094,
+            336.07269287109375
+          ],
+          "socket": [
+            138.9779052734375,
+            145.132568359375
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 6,
+      "yaw": 2.5308666229248047,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            111.96258544921875,
+            95.52351379394531,
+            262.9758605957031,
+            337.3878173828125
+          ],
+          "socket": [
+            140.0471649169922,
+            109.31600189208984
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            113.69730377197266,
+            104.47357177734375,
+            258.6920471191406,
+            337.3878173828125
+          ],
+          "socket": [
+            141.78189086914062,
+            118.33827209472656
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            117.34208679199219,
+            123.55055236816406,
+            250.37396240234375,
+            337.3878173828125
+          ],
+          "socket": [
+            145.42665100097656,
+            137.52426147460938
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 7,
+      "yaw": 2.1518516540527344,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            121.31776428222656,
+            87.65130615234375,
+            261.445068359375,
+            341.5052490234375
+          ],
+          "socket": [
+            147.9601287841797,
+            101.98290252685547
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            124.62498474121094,
+            97.0048599243164,
+            258.644287109375,
+            341.5052490234375
+          ],
+          "socket": [
+            151.35263061523438,
+            111.39688110351562
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            129.318603515625,
+            116.92975616455078,
+            252.41079711914062,
+            341.5052490234375
+          ],
+          "socket": [
+            158.486083984375,
+            131.40621948242188
+          ]
+        }
+      ]
+    }
+  ],
+  "fps": 100,
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 48
+  },
+  "display_scale": 1.406896551724138,
+  "reference_sha256": "444644e358d8312d72c9192237dbe1e662338e5f287138e54639d02eb283f28c",
+  "generator_sha256": "1a8c5089f037743f6fe25fec2be869eada6bc481e9409c8c2ce5c631fb6dd6ed",
+  "runtime": {
+    "mesh_objects": 51,
+    "triangles": 24384,
+    "materials": 15
+  }
+}

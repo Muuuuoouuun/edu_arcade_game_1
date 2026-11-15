@@ -1,0 +1,41 @@
+{
+  "approved_date_kst": "2026-11-13",
+  "kind": "AI-generated gameplay visual targets, not runtime screenshots",
+  "images": [
+    {
+      "file": "00-style-anchor.png",
+      "source": "exec-9aac6c6f-bdd3-404f-8a69-512d01561ad4.png",
+      "sha256": "bd760be91c943dc288b56a7c64d869f9d8315ab24481f91f34927c8285bac6b8"
+    },
+    {
+      "file": "01-battle-forest.png",
+      "source": "exec-aad20043-23ce-49a6-b4f1-02f3958416b5.png",
+      "sha256": "15fda548266a05328048de4e7d4e00128314f53038183920941834b6817d7e28"
+    },
+    {
+      "file": "02-battle-gate.png",
+      "source": "exec-d07e53b3-9b38-4180-9c27-18f9ea52335d.png",
+      "sha256": "0d3ecb2ffbed76cd76ce7b46c6879e7a7ba079c1260ac57511b279a8d914c2ef"
+    },
+    {
+      "file": "03-battle-bridge.png",
+      "source": "exec-616172e2-673b-45db-a825-73f3b6ea79b0.png",
+      "sha256": "cd62b1d060c35b1a85e70ef9d14cf421b129cd2eec392a76ba716a3fc6a57853"
+    },
+    {
+      "file": "04-battle-boss.png",
+      "source": "exec-c4a0c209-3edb-4d5d-910d-5f1e4c22e4f8.png",
+      "sha256": "90434dcfd8e469c9c13f811c19fe74a1ed7c85cc4710901042af275c4a16bec3"
+    },
+    {
+      "file": "05-production-village.png",
+      "source": "exec-39538327-b067-466d-8005-20fba2698b00.png",
+      "sha256": "51e71b89f0e4d56eef44202bfd782ffcd1207b717ae51e5381234b9e28535f21"
+    },
+    {
+      "file": "06-production-towers.png",
+      "source": "exec-7e712ce7-fd69-4a1a-be96-4d8f31432e6d.png",
+      "sha256": "42b3beeb4d733b7fc7f7fc253a2e38dc22226e96393dea6f3cf6ea3760209209"
+    }
+  ]
+}

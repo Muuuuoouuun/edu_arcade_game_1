@@ -1,0 +1,67 @@
+{
+  "source": "art-source/defense/dwarf-walk.blend",
+  "base_source_sha256": "58bcc711b7d0da71e2c6591cf41544594b027133414a89064a7980876757e959",
+  "generator": "tools/blender/build_dwarf_walk.py",
+  "nativeFacing": 1,
+  "frame": {
+    "width": 640,
+    "height": 640,
+    "ground": [
+      320.0002,
+      550.0
+    ]
+  },
+  "animation": {
+    "fps": 30,
+    "first_frame": 1,
+    "last_frame": 25,
+    "duration_seconds": 0.8,
+    "loop": true
+  },
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 48
+  },
+  "poses": [
+    {
+      "name": "walk-0",
+      "file": "dwarf-walk-0.png",
+      "frame": 1
+    },
+    {
+      "name": "walk-1",
+      "file": "dwarf-walk-1.png",
+      "frame": 4
+    },
+    {
+      "name": "walk-2",
+      "file": "dwarf-walk-2.png",
+      "frame": 7
+    },
+    {
+      "name": "walk-3",
+      "file": "dwarf-walk-3.png",
+      "frame": 10
+    },
+    {
+      "name": "walk-4",
+      "file": "dwarf-walk-4.png",
+      "frame": 13
+    },
+    {
+      "name": "walk-5",
+      "file": "dwarf-walk-5.png",
+      "frame": 16
+    },
+    {
+      "name": "walk-6",
+      "file": "dwarf-walk-6.png",
+      "frame": 19
+    },
+    {
+      "name": "walk-7",
+      "file": "dwarf-walk-7.png",
+      "frame": 22
+    }
+  ]
+}

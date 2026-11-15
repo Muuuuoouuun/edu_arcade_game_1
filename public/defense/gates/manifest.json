@@ -1,0 +1,33 @@
+{
+  "encoding": "512px WebP, original aspect and alpha",
+  "files": [
+    {
+      "id": "verdant",
+      "file": "verdant.webp",
+      "bytes": 83844,
+      "sha256": "28b24b9edfdfcc8d4c4f8264e71db0269ef92d68fce7cc848607544bf2b56a56",
+      "sourceSha256": "f5fff411cdbc7aa0a842c0b02db690d0901cbe925e5bf8af48b3a8efb1080c64"
+    },
+    {
+      "id": "unryeong",
+      "file": "unryeong.webp",
+      "bytes": 79060,
+      "sha256": "df6ed3055544d3414c7a7db6d5f0cf6134da5a6138120e5e4b3bcab05c742afc",
+      "sourceSha256": "a2baed0916bdd4ac52472ea44810953eec5ccc4f47743cc41b0cf1a4915c8bee"
+    },
+    {
+      "id": "steel",
+      "file": "steel.webp",
+      "bytes": 84766,
+      "sha256": "a9a4a685978d532224d962761f7d0d1d8e86c5e9e4c93778d6c6c592d4f89ba7",
+      "sourceSha256": "989d7c7e0f8ca264a85c35f49b9dc96c9433a5015aa054e5b416042cbabe6a8a"
+    },
+    {
+      "id": "twilight",
+      "file": "twilight.webp",
+      "bytes": 78008,
+      "sha256": "975ee5436aef6cfe4086c5395ad51dc67d45f74724ff480f076b5e0785ddb2c8",
+      "sourceSha256": "05aa21d56eba921f37428f07d309406c8c283a1c792244c32701a512e67ac770"
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "command": "npm run models:frontier-forest-doors",
+  "concept": "art-source/defense/concepts/2026-11-06/verdant-heart.png",
+  "duration": 0.55,
+  "clip": "forest-door-impact",
+  "camera": {
+    "position": [
+      4,
+      -10,
+      7
+    ],
+    "target": [
+      0,
+      0,
+      2.1
+    ],
+    "ortho_scale": 6.8,
+    "size": [
+      512,
+      512
+    ]
+  },
+  "poses": [
+    {
+      "name": "idle",
+      "frame": 1,
+      "time": 0.0
+    },
+    {
+      "name": "contact",
+      "frame": 6,
+      "time": 0.08333333333333333
+    },
+    {
+      "name": "rebound",
+      "frame": 13,
+      "time": 0.2
+    },
+    {
+      "name": "settled",
+      "frame": 34,
+      "time": 0.55
+    }
+  ],
+  "files": [
+    {
+      "path": "tools/blender/build_frontier_forest_doors.py",
+      "bytes": 7108,
+      "sha256": "a8db21bf35b4c626bb4fc086edcb8aec15512731ca4dd51f761ef296202ce2c3"
+    },
+    {
+      "path": "art-source/defense/forest-gate.blend",
+      "bytes": 1794984,
+      "sha256": "9b37ec591aa2585c58b54f553bda660bffee1a4c6ee94e3ffb93064edf7e1a9a"
+    },
+    {
+      "path": "art-source/defense/frontier-forest-doors.blend",
+      "bytes": 2220380,
+      "sha256": "80f457209791a9b85f3a4d16c19b30b41718876a0f383422dd3452ee6b768953"
+    },
+    {
+      "path": "public/defense/models/frontier-forest-doors.glb",
+      "bytes": 75380,
+      "sha256": "89cb1b1f3ca598855e17db0ebc6f2d8966c5921e0cf9fea8b4a5b36e88533643"
+    },
+    {
+      "path": "public/defense/models/frontier-forest-doors.png",
+      "bytes": 374435,
+      "sha256": "8f971168e76d64ed8a93f8a3064add304c7ca5ca371e9837eb6574797f1cf25f"
+    },
+    {
+      "path": "public/defense/models/frontier-forest-doors-atlas.webp",
+      "bytes": 151558,
+      "sha256": "df1418baddf40b96d85dad1e7f22adc3bedaf67c20c83d4d364173b823940368"
+    },
+    {
+      "path": "art-source/defense/frontier-forest-doors/idle.png",
+      "bytes": 374435,
+      "sha256": "8f971168e76d64ed8a93f8a3064add304c7ca5ca371e9837eb6574797f1cf25f"
+    },
+    {
+      "path": "art-source/defense/frontier-forest-doors/contact.png",
+      "bytes": 375225,
+      "sha256": "69233ea4b25b21b12c4133919aab382b38299d0cf8fa197832526850e5659b4d"
+    },
+    {
+      "path": "art-source/defense/frontier-forest-doors/rebound.png",
+      "bytes": 373886,
+      "sha256": "9f924ef23046fed87958dffabbdfdf6bf5671f934fd7d72ef8f90461cb654399"
+    },
+    {
+      "path": "art-source/defense/frontier-forest-doors/settled.png",
+      "bytes": 374435,
+      "sha256": "44654f32965868912b7ce40e069897a0aa5f342a20dd35cb6207ff904cfc637f"
+    }
+  ]
+}

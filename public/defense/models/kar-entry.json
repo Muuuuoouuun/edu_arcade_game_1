@@ -1,0 +1,2317 @@
+{
+  "generator": "tools/blender/build_kar_entry.py",
+  "command": "npm run models:kar-entry",
+  "source_cast_sha256": "cacf27e4cce01668070214c568e9e9d2d3bbf4fdc22c93b788b9aa1a3908a241",
+  "source_walk_sha256": "e9a124d22e4ed756d6bb645d799b15d577650940002f37bd815373eab7be260b",
+  "reference": "art-source/defense/atlases/melee-motion.png",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      330
+    ],
+    "orthographic_scale": 6.8
+  },
+  "delivery_frame": {
+    "width": 192,
+    "height": 192,
+    "ground": [
+      96,
+      165
+    ],
+    "columns": 16,
+    "rows": 1
+  },
+  "duration_seconds": 0.56,
+  "transition_seconds": 0.18,
+  "hit_at": 0.28,
+  "samples_seconds": [
+    0.06,
+    0.14
+  ],
+  "entry_checks": [
+    {
+      "entry": 0,
+      "first_leg": "right-foot",
+      "frames": 57,
+      "min_sole_z": 0.009999997913837433,
+      "support_drift": 6.735557211041201e-18,
+      "walk_start_error": 0,
+      "cast_from_18_error": 0
+    },
+    {
+      "entry": 1,
+      "first_leg": "right-foot",
+      "frames": 57,
+      "min_sole_z": 0.009999997913837433,
+      "support_drift": 6.735557211041201e-18,
+      "walk_start_error": 0,
+      "cast_from_18_error": 0
+    },
+    {
+      "entry": 2,
+      "first_leg": "right-foot",
+      "frames": 57,
+      "min_sole_z": 0.009999997913837433,
+      "support_drift": 6.735557211041201e-18,
+      "walk_start_error": 0,
+      "cast_from_18_error": 0
+    },
+    {
+      "entry": 3,
+      "first_leg": "right-foot",
+      "frames": 57,
+      "min_sole_z": 0.009999997913837433,
+      "support_drift": 6.735557211041201e-18,
+      "walk_start_error": 0,
+      "cast_from_18_error": 0
+    },
+    {
+      "entry": 4,
+      "first_leg": "left-foot",
+      "frames": 57,
+      "min_sole_z": 0.009999997913837433,
+      "support_drift": 6.735557211041201e-18,
+      "walk_start_error": 0,
+      "cast_from_18_error": 0
+    },
+    {
+      "entry": 5,
+      "first_leg": "left-foot",
+      "frames": 57,
+      "min_sole_z": 0.009999997913837433,
+      "support_drift": 6.735557211041201e-18,
+      "walk_start_error": 0,
+      "cast_from_18_error": 0
+    },
+    {
+      "entry": 6,
+      "first_leg": "left-foot",
+      "frames": 57,
+      "min_sole_z": 0.009999997913837433,
+      "support_drift": 6.735557211041201e-18,
+      "walk_start_error": 0,
+      "cast_from_18_error": 0
+    },
+    {
+      "entry": 7,
+      "first_leg": "left-foot",
+      "frames": 57,
+      "min_sole_z": 0.009999997913837433,
+      "support_drift": 6.735557211041201e-18,
+      "walk_start_error": 0,
+      "cast_from_18_error": 0
+    }
+  ],
+  "files": [
+    {
+      "file": "art-source/defense/kar-entry.blend",
+      "bytes": 5855628,
+      "sha256": "8463b131fd074e849df7def3272f9baca49ff296b7814ececb38220cc1a91faa"
+    },
+    {
+      "file": "public/defense/models/kar-entry.glb",
+      "bytes": 1446560,
+      "sha256": "a71b68167f461703cd5f92a9e5227d053b5cf2500b07a5e330559dc189faa292"
+    },
+    {
+      "file": "public/defense/models/kar-entry.png",
+      "bytes": 137205,
+      "sha256": "e5f779e32e65bdaea8ce131a1e3e241a3600fdfe19e600f48c4658d4c9c9839c"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-0-0.png",
+      "bytes": 120851,
+      "sha256": "d155b7532627dffa1e3c2442679d603f5c491bbe9a4e267c4f4e47e5f36336b3"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-0-1.png",
+      "bytes": 123091,
+      "sha256": "f6e56f2f51e3ef87318333b314872b31683f930327f873b0d0f974170a0b7abb"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-1-0.png",
+      "bytes": 120099,
+      "sha256": "74e6995a1c32ba7c3e86398adb63d04eb7bd178b96c8dce5eebd541d2657896a"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-1-1.png",
+      "bytes": 122939,
+      "sha256": "d08a133639db9a4611b32eb9e52142cb7c741af335408e19600f8a04d2907457"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-2-0.png",
+      "bytes": 119593,
+      "sha256": "56dfe5a950070f6fc18b7f682e9fd2dabf3125a2cc3fde6498ecca2c7984e741"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-2-1.png",
+      "bytes": 122854,
+      "sha256": "19cc2140de92104128a4c75718f4505a7ad478f2f03ccf81e4ee4b5c5a60c38b"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-3-0.png",
+      "bytes": 119563,
+      "sha256": "63a9bec97143b05e3bde239bb97e08821360643ea4551e04c7f3d27d0ceafe2e"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-3-1.png",
+      "bytes": 122610,
+      "sha256": "954365a1d62fd8fbee89e31b2406860884286dd039f200b69af5469ed9b0d886"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-4-0.png",
+      "bytes": 120079,
+      "sha256": "f30a2c8a9526dfe8c6b3b85bbe91e0e256cd1383106614b05df9c96bbad04d14"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-4-1.png",
+      "bytes": 122504,
+      "sha256": "8ebfd7da29d0713fe7623c0375de49c5840984fab2d0dcf60870b09f915a4ea0"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-5-0.png",
+      "bytes": 120350,
+      "sha256": "4d8154a53ee4e0f9f4d5bbaac6a12dd4e14d928c6da78baf9b43a86b296149c5"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-5-1.png",
+      "bytes": 122331,
+      "sha256": "2803b3546dc114573510b76fa57644c256f2e423c9411558348ca2db3e01d4e0"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-6-0.png",
+      "bytes": 120744,
+      "sha256": "c95a240e89194d4242a7ae325a3634b7ce134678bb80c80e85dde8f0aacfbad3"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-6-1.png",
+      "bytes": 122399,
+      "sha256": "73ac9c6e182ab870d060982266056734ac2b3bc428a856aee51fd5178f506850"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-7-0.png",
+      "bytes": 120925,
+      "sha256": "b2cac144810830461d289c9403ed8d46bdc0fdcfc7bf5c1fbb6b1e87e772e05a"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-0-7-1.png",
+      "bytes": 122533,
+      "sha256": "f0f887e46bf45870772ed7ccf25c275cb41725d581e2fa909c3e3d01d6054db5"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-0-0.png",
+      "bytes": 138050,
+      "sha256": "072e100621b95f1535fe2fcebfd5abaa2a66d27640d19f10543f26603d047a49"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-0-1.png",
+      "bytes": 136306,
+      "sha256": "0e2a37cf23ea5518396e129ecbbe62c505fc9b48a0d121db0a6390a44f3177e0"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-1-0.png",
+      "bytes": 137978,
+      "sha256": "ec7563c7a133f7b19baae6d026b981f4ed1b3617ddfe099ba9869db88a27eda7"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-1-1.png",
+      "bytes": 135944,
+      "sha256": "1d02688e3d45bf5b316dc9752bb94cc3097e2534c10f1574be35157193862d67"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-2-0.png",
+      "bytes": 137589,
+      "sha256": "c863cee9e5d9f115be54d343329594b6ff2d51e45381b0a9347df8e0b72e00d6"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-2-1.png",
+      "bytes": 135833,
+      "sha256": "62f009ebba272eeb2833ab6fb7e73861146c222a274fadd91447e9dd3ce832ac"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-3-0.png",
+      "bytes": 137205,
+      "sha256": "e5f779e32e65bdaea8ce131a1e3e241a3600fdfe19e600f48c4658d4c9c9839c"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-3-1.png",
+      "bytes": 135505,
+      "sha256": "dad8cb5949d9361473a29aa3225f0b944c757e760c4fa2cd5161dbf253ee19a8"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-4-0.png",
+      "bytes": 138119,
+      "sha256": "a3e1ef4b81c8b4edebdbdf33c5eb689a28914ed35c3b4a948d17bf1f3164a09d"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-4-1.png",
+      "bytes": 135952,
+      "sha256": "76cdddc46abc08e4a6d3f5a309658da828d29c64226a328192e9b2b01fa4a31b"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-5-0.png",
+      "bytes": 138262,
+      "sha256": "dcf53bd35e68a30b2b7bee2aa9819c902a2b098245667ef14d6c34661b19f482"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-5-1.png",
+      "bytes": 136261,
+      "sha256": "040dc1a209b5d1b40bdada90342b70d5e81416cf46d182053df7473740c40605"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-6-0.png",
+      "bytes": 138452,
+      "sha256": "50235bf926d2db2f1ab4e53d9e5090a2614b3bd9957ff7993d1ec8e1be6085a2"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-6-1.png",
+      "bytes": 136157,
+      "sha256": "8d8cf3123f34335a00a3d5e16eeb6a79f46d24e72b448bf924fec0f2b2807b64"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-7-0.png",
+      "bytes": 138045,
+      "sha256": "48c8b268587d427fc46441d60a6a619c59bfdaa0ce4b334fc41541663ae536ac"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-1-7-1.png",
+      "bytes": 135993,
+      "sha256": "1dd5e915184fed1e9e14053b8b306bcb16d89e23230b7645a34549af60f4452e"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-0-0.png",
+      "bytes": 134039,
+      "sha256": "cbd80c9bd402963e35251eb6e48b275574547102ad35a052f49a657c45927d28"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-0-1.png",
+      "bytes": 134881,
+      "sha256": "eb90db0015ce875e2891e20afe8596879f99a65942ca21f4c8c85e55757da6a7"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-1-0.png",
+      "bytes": 133857,
+      "sha256": "f9cf3241cbceaba199459da45a18c026195fecce2a3f17489e7e136a444f5527"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-1-1.png",
+      "bytes": 134801,
+      "sha256": "6f4d0fc79bd69a75d806bbc785e1989fc08cf56232df6deedf7c730f23b764a6"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-2-0.png",
+      "bytes": 133655,
+      "sha256": "afc767ab5de729e9168b9b578e1fc44d26fba43f73a7aacd8d6f74205a7c5da4"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-2-1.png",
+      "bytes": 134628,
+      "sha256": "1a63ca645a0d360c7f814598de4b7c8e62bf25ab6c07a60b1e19ad337bab0c90"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-3-0.png",
+      "bytes": 133383,
+      "sha256": "584b8c05963c97f0572cee307bfc575f5819948f77400231ffe20af637b0b65f"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-3-1.png",
+      "bytes": 134636,
+      "sha256": "2da40cebaa2dab85e9b8f00c89b68a4361e16c8d7301e5ea184ab7aca5983573"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-4-0.png",
+      "bytes": 134622,
+      "sha256": "7e8dc8cbf66b7c0d213336da9f5e73d66b2faacaae01f347ec615ddf2ecaf87d"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-4-1.png",
+      "bytes": 134932,
+      "sha256": "d7785cc563135a9dfce5d4bdc4d7c1a9d867e7c310349557967b821ec58c1abb"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-5-0.png",
+      "bytes": 134279,
+      "sha256": "ddb52b1552f6c345d2e2e7c9b758ce05f4a73cb7d8a189d08294470668317dd7"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-5-1.png",
+      "bytes": 134587,
+      "sha256": "289f9002cd22348bf1cf04272f3710fdbdb440ceb75faea8dd0afa1571676bda"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-6-0.png",
+      "bytes": 134001,
+      "sha256": "98043c0e6b34cc802d4338ae08edb278fd0fc9382409e39d12d3cd7c880d9882"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-6-1.png",
+      "bytes": 134674,
+      "sha256": "00016f40cee7eb639813f2fd437d87fc198e3b802c26ef024d68e361bca2591f"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-7-0.png",
+      "bytes": 133714,
+      "sha256": "fa60ae053d108ad9c23f2de0c542572aea9e757dea928b2c6c722b5bc9adb86c"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-2-7-1.png",
+      "bytes": 134374,
+      "sha256": "3b5285dd0d113f7b103d383808ed4d6cbd2843c16f8e6e892a59c385ed6088f5"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-0-0.png",
+      "bytes": 132884,
+      "sha256": "fc56a6d0ef541619888f2f59e4b8d60d014ac322eee168feb7ce98a9736bc3ab"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-0-1.png",
+      "bytes": 135675,
+      "sha256": "2206eeb1aa7f830cd7a17a353810081a9368ecde27dade142781b94d49311cbc"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-1-0.png",
+      "bytes": 133261,
+      "sha256": "51d80f75471cb724a8c2d00b1372e89d3fc36a856c5732e33af367f8915d0a9e"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-1-1.png",
+      "bytes": 135897,
+      "sha256": "bfa6af2ce748aec11b4caf0bae62139bb414c7a56e95276157cb384b04054c6e"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-2-0.png",
+      "bytes": 133147,
+      "sha256": "4cd54b25cdb422cd91e8bbd0b9eb36e32ea17e0d8af7d1af5666d78f1967120f"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-2-1.png",
+      "bytes": 135740,
+      "sha256": "b1a1e2628b602dd1582cffe8f17c72062996d5b998ee74eb7b74af9118d32266"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-3-0.png",
+      "bytes": 132766,
+      "sha256": "a8c5fe93c8ff3eb0e26819776fcd0c37748184d463d6d85c9d639e069434449d"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-3-1.png",
+      "bytes": 135710,
+      "sha256": "8e6ad493d47816b8b87fbed980316587f4ccf573c5481477b2575b9b06814d70"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-4-0.png",
+      "bytes": 133313,
+      "sha256": "7a0b1da5b4dcf2985b031574812c11fd690d8330ef78e66ed840c302f3dea339"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-4-1.png",
+      "bytes": 136241,
+      "sha256": "34d2fd331c44d2498096fd9ed27cdb9c5df9e35d49ce2cb9aa23a9c0b761c17e"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-5-0.png",
+      "bytes": 132944,
+      "sha256": "10eb0188dc460b3643ae3654555b2905c6c149f62fb875f5564b724104b99a26"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-5-1.png",
+      "bytes": 136393,
+      "sha256": "67b38172fdbb127a4f2db5d087c15e459dff665c4363ff075f2e34d1020a9638"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-6-0.png",
+      "bytes": 132088,
+      "sha256": "42544f5fbbbbbb27bc000eecd5a14d8088c8ce6ca90eba339f5507c5e75ebab2"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-6-1.png",
+      "bytes": 135990,
+      "sha256": "870026859c52ed35d7d86eb98facfc7f967ba803a608316e89c704281f8034eb"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-7-0.png",
+      "bytes": 131886,
+      "sha256": "4e805fc3b82328c313d9bd7625990bf0dd519cf91f4c77efa97c4581bca54d76"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-3-7-1.png",
+      "bytes": 135841,
+      "sha256": "cff5ca4a280bdd07f42078594d0488c05e919e6ff2f3ec95495fd630faa2157f"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-0-0.png",
+      "bytes": 111835,
+      "sha256": "410d813db58c02563c1cc5b2b7a2c151fdc828a9c079fa6cfc322e2f83a472f3"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-0-1.png",
+      "bytes": 117254,
+      "sha256": "80a3e668426a4cadbd569aae59db1971a3d23230c59cfd694de2c70474c31cd4"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-1-0.png",
+      "bytes": 111629,
+      "sha256": "38a93dbeedd86c51bfceeb6a2f19737e77c4f206188177902bdb9a09d79b76a9"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-1-1.png",
+      "bytes": 117492,
+      "sha256": "dc394c083cc43ed31b86955c2b3a9d5138441bf4a475fcbb396de6da73de1936"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-2-0.png",
+      "bytes": 111429,
+      "sha256": "3d9204eda9187d931e1abcc6d16c0f36cee6b2ca78f891514ba068455c1417bd"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-2-1.png",
+      "bytes": 117628,
+      "sha256": "c6f7ad1932444137e9626e7e841b1e5546b59dd2100eda8b953291d129e97da0"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-3-0.png",
+      "bytes": 111793,
+      "sha256": "c7dafd038d6505cc8e6bbf0ad33985d78a20c5074159ab454cd6649c1b4ca1bf"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-3-1.png",
+      "bytes": 117686,
+      "sha256": "1fecea0b42971f55970ffc4acec5d7d3de51f207f41274e1013de620a133ea99"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-4-0.png",
+      "bytes": 113019,
+      "sha256": "4c15c79e78d1a55ffa454fa71602738859de4cb2a5b80b12bfa8ff0bb450d84f"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-4-1.png",
+      "bytes": 118174,
+      "sha256": "afe1797ac80c5d1ff2c9001aa6f3fb919c9b523bf914a141896fa09fb5b083f3"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-5-0.png",
+      "bytes": 113000,
+      "sha256": "3f189c0a1f1c3252f664f5a6a66f6026e107f70cf7d6ad0eb3ef1b806c859b96"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-5-1.png",
+      "bytes": 118144,
+      "sha256": "cd8f6dd8f200f2ae0d38de8e6edcb2c15a3a4b31b406b109238a42ae0e1a844e"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-6-0.png",
+      "bytes": 112754,
+      "sha256": "a5f1b854e15d841acbb5b15dfea52176cdd86af96a0eebf740dd78d778a32b84"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-6-1.png",
+      "bytes": 117939,
+      "sha256": "8a22320fbb61df8cc6787fd1d1b46c58915a3c97a4afb731b8fa9cb18a9ea664"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-7-0.png",
+      "bytes": 112231,
+      "sha256": "6be69879fe7b53346cae98add962e394cf77229da1662707fd89719f0813a78a"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-4-7-1.png",
+      "bytes": 117717,
+      "sha256": "a9ede7bb792f9ad03dfa17024cc89c8a07202def19409722ade89afd7049b3f9"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-0-0.png",
+      "bytes": 131312,
+      "sha256": "859780313d899a1c392260548715743dd6fe82dbef1892b8bcea00b1be7ff79f"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-0-1.png",
+      "bytes": 124523,
+      "sha256": "2fe9591b18545a65bbbacc7569c1bcb4362bb9bb44379cddbfea389493636f3b"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-1-0.png",
+      "bytes": 131587,
+      "sha256": "977f7958a44ff599820aa0f8c59604a690725b859643499c416e659b657d198b"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-1-1.png",
+      "bytes": 124490,
+      "sha256": "ac37afd5f2fb7018cc2de63be3da296adef9f2e82f5179e254eb11cfb4c14afb"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-2-0.png",
+      "bytes": 132051,
+      "sha256": "934cb32262dc6b5f4f10948062bbb5dcd9560d635e608ae7cb14c37a47b08b45"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-2-1.png",
+      "bytes": 124709,
+      "sha256": "3fd98be12e82b601b01bbbd9f089a94e3b9ef11de4b6a34e8009be942b82d8b3"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-3-0.png",
+      "bytes": 132436,
+      "sha256": "5102dc3436cd2f996e8458e0f335fea8db61493da90b3cdb4b8b1f6a0ad713b5"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-3-1.png",
+      "bytes": 124787,
+      "sha256": "d7ad6467bce3b8aca42189103080d592d4e1c082447c207321a7ceb50c93e70e"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-4-0.png",
+      "bytes": 131775,
+      "sha256": "74f79d0cf64aa3a4055c6f5194c37019ac1a988bd42675a0540ad28c54979842"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-4-1.png",
+      "bytes": 125041,
+      "sha256": "64c6ffde45a43ec0b7a64ee65aca50f8caf39303caee2f3bf93419f223efd00e"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-5-0.png",
+      "bytes": 132163,
+      "sha256": "f54cf06d6fc2c9337f1252ca41837f4d2bfb01525631f415703c8ca73c3bc146"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-5-1.png",
+      "bytes": 125322,
+      "sha256": "a4287698a429ece449bc63f692a024541611515b900b8acfffe88523d5494473"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-6-0.png",
+      "bytes": 132525,
+      "sha256": "6a86aeb03e55ee6a40f8ea0bf73a3aad9c5c740220090973b69ad68f29ad78a0"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-6-1.png",
+      "bytes": 125192,
+      "sha256": "fb05997b4a78b1b095747bf86c502cacd50a152bbd7c532c0baeb53458298900"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-7-0.png",
+      "bytes": 132625,
+      "sha256": "5f9493a46fd3b11f740530801fa1848f92281024353a6280d54027adf416d5bf"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-5-7-1.png",
+      "bytes": 125548,
+      "sha256": "919c361316fe07fae7561cc85463f0454eaa55fa3641c16ff6272f673ddd683c"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-0-0.png",
+      "bytes": 129086,
+      "sha256": "1e30453e217c099dba997f44e827d022f7a438535315a0f209f48439d3d1f90b"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-0-1.png",
+      "bytes": 125873,
+      "sha256": "c51ddb1615508cde0b8cf9c211946bc641dcdbede695160cdfce14aaa9e56c14"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-1-0.png",
+      "bytes": 129452,
+      "sha256": "7149ae82cd6372e7fcfd864e0ffecffdcf06db22102ff8bfb45e5cb568aa03c0"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-1-1.png",
+      "bytes": 126118,
+      "sha256": "5d0de666b5f3028ada819a387c5072d76f6a30a01d887cca3baa7b34ee4f565b"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-2-0.png",
+      "bytes": 130222,
+      "sha256": "997d081c15537c36ec3bd9156113a489cac1254ed43724e2e19d9b5fd68b5939"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-2-1.png",
+      "bytes": 126086,
+      "sha256": "d153874ed38b05c9d9c5eed197b26f13effee0d90196cd73d795d94ec153fb1e"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-3-0.png",
+      "bytes": 130175,
+      "sha256": "28def9d7ce950c0a9de8597968a3c64d304d48f827c8196e9043a9d3b7ff0908"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-3-1.png",
+      "bytes": 126255,
+      "sha256": "8cf74d2822243f10b6d8c61c67ad439b45db0dca55507b792a6b8a1a8cd6a610"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-4-0.png",
+      "bytes": 129477,
+      "sha256": "65d8ef818de8772ff2c89d6362194dd93c971897d78d83a7a272241f5cc61455"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-4-1.png",
+      "bytes": 126325,
+      "sha256": "53b589f252f03147c90398e0b0409a7ae2cd0a99474b0d25cf323c1291058752"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-5-0.png",
+      "bytes": 129949,
+      "sha256": "845f6f75e409383c2e9187457a50120716a4a2995c1b1febf72b5a86d6ebf1e7"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-5-1.png",
+      "bytes": 126514,
+      "sha256": "0de3dcbd833b14ca1bbf97926f66fddd83307c775886fbc132af14a3fcb2e1dc"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-6-0.png",
+      "bytes": 130489,
+      "sha256": "8627c82d194cfc5676fa76f0239121143c5448d492fc0cdebbe5fce047273f95"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-6-1.png",
+      "bytes": 126513,
+      "sha256": "f9308e360245be5bdfd150aa966706057cec4b268f6fb28d5b8ee9b92d05bb00"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-7-0.png",
+      "bytes": 130510,
+      "sha256": "283f5a1bb8fbd083908bb601ae31496ee74cbe58c29dc1422e4e7a21048815d2"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-6-7-1.png",
+      "bytes": 126641,
+      "sha256": "9e4c9cd99ce96116d15f0721b4682bc86031ea7e1fef071128e59eef8e2b87b8"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-0-0.png",
+      "bytes": 129003,
+      "sha256": "355678cdc2136e77845c4c1f0de8dec1ca0a92ae02614b483c618ec2bd4e8f6c"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-0-1.png",
+      "bytes": 128381,
+      "sha256": "7a621b028d9cb3fb3714262a86536f10148340f2780a2c077a0681f1d36371a5"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-1-0.png",
+      "bytes": 129361,
+      "sha256": "0a74b8730782dbf2d96990e5ac76603d063de3a948d3c89377495d6ec27b3eb2"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-1-1.png",
+      "bytes": 128399,
+      "sha256": "a93e96196237fb8e206f7776c5a380e292bbabfbceea893661e92d5cbd438c42"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-2-0.png",
+      "bytes": 129846,
+      "sha256": "3b98e53573377cbd910ad64e5092ab0b5f8174866de23660474d617264690a09"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-2-1.png",
+      "bytes": 128504,
+      "sha256": "d021a699bd02074a1549ef2955de19aced40579ce5f5306bc545d57c98367af6"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-3-0.png",
+      "bytes": 129854,
+      "sha256": "83ab1b7995533d6b18ae71986aada84567d1a7a315fec61f54c5f16200d62065"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-3-1.png",
+      "bytes": 128674,
+      "sha256": "c03219107b91ab34b6d11d37d7fbe992b15b1f4d368ad057d9807b1ef9327e91"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-4-0.png",
+      "bytes": 129558,
+      "sha256": "247233029010b178614ccdccd2ce3e140b6b9c14d5c8a3c2177e0569b78bfefa"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-4-1.png",
+      "bytes": 128503,
+      "sha256": "ccb71352cfee4d1a8ec9c641b866e931c3941e6980a38c24dc8c5cf8be31c2d1"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-5-0.png",
+      "bytes": 129950,
+      "sha256": "800183870a8c63733f7b4fb0f6701a5f2d5c28af561e78bebcc8ecdbc6fa84ed"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-5-1.png",
+      "bytes": 128452,
+      "sha256": "53a280936eb862d26260bd2ec45ed2bf90fcbee5c8dc5081967503969b8d4c28"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-6-0.png",
+      "bytes": 130251,
+      "sha256": "adb5fbffa0c72a9ea3965b0a63cea3b488e43220547a82f8b5ef94c88f9951f4"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-6-1.png",
+      "bytes": 128435,
+      "sha256": "f05c85f24ffdd7b590024220b38076458c957490fa103440be6d4e372fa93fa2"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-7-0.png",
+      "bytes": 130600,
+      "sha256": "cf2d2c79beafe0a37afd2cb55f9755de33fbd83e76b84f2e1c65a839dabca7a6"
+    },
+    {
+      "file": "art-source/defense/kar-entry-frames/kar-entry-7-7-1.png",
+      "bytes": 128590,
+      "sha256": "5b0d303471e33b2a522f702a1ffeb5aa8a2183791144fe88116de6e66c081fe2"
+    },
+    {
+      "file": "public/defense/models/kar-entry-0-atlas.webp",
+      "bytes": 62420,
+      "sha256": "55cb85e602e406a422062567bd1b065d84db0d3a03c7c697d6e635fd146089d4"
+    },
+    {
+      "file": "public/defense/models/kar-entry-1-atlas.webp",
+      "bytes": 83984,
+      "sha256": "1d9770cb7e3937bf729e3da9947f6271c0b9b3aab42197b2a2cbaa031e605ac7"
+    },
+    {
+      "file": "public/defense/models/kar-entry-2-atlas.webp",
+      "bytes": 76816,
+      "sha256": "c0c93e474524c56a9f623cae09f74ae7c072304e19efb5f19b144b7f0e4d0a63"
+    },
+    {
+      "file": "public/defense/models/kar-entry-3-atlas.webp",
+      "bytes": 81008,
+      "sha256": "4345f7f9c17be0c7c8e8f2ac72b949b5d9637f89f368c95ea2d26832deb756ec"
+    },
+    {
+      "file": "public/defense/models/kar-entry-4-atlas.webp",
+      "bytes": 56768,
+      "sha256": "930a00542867a56b1ca10824844e5a6d7a606fef0bae8cf5f4f9d0c5c6d79108"
+    },
+    {
+      "file": "public/defense/models/kar-entry-5-atlas.webp",
+      "bytes": 72202,
+      "sha256": "c528484600a8b699f26562949405368383e44f88080caef99f74a7f89262cd8a"
+    },
+    {
+      "file": "public/defense/models/kar-entry-6-atlas.webp",
+      "bytes": 70520,
+      "sha256": "bd6cd51a554c0302080146def171c0bf30c270759ce4669fac07d48a1b1e6147"
+    },
+    {
+      "file": "public/defense/models/kar-entry-7-atlas.webp",
+      "bytes": 71024,
+      "sha256": "7e5925fbf2cc2a31c56782be87e047fa40502e0c1cb8a6e4b3ca7e6c31aba11f"
+    }
+  ],
+  "clips": [
+    {
+      "name": "kar-entry-0",
+      "entry": 0,
+      "duration": 0.56
+    },
+    {
+      "name": "kar-entry-1",
+      "entry": 1,
+      "duration": 0.56
+    },
+    {
+      "name": "kar-entry-2",
+      "entry": 2,
+      "duration": 0.56
+    },
+    {
+      "name": "kar-entry-3",
+      "entry": 3,
+      "duration": 0.56
+    },
+    {
+      "name": "kar-entry-4",
+      "entry": 4,
+      "duration": 0.56
+    },
+    {
+      "name": "kar-entry-5",
+      "entry": 5,
+      "duration": 0.56
+    },
+    {
+      "name": "kar-entry-6",
+      "entry": 6,
+      "duration": 0.56
+    },
+    {
+      "name": "kar-entry-7",
+      "entry": 7,
+      "duration": 0.56
+    }
+  ],
+  "directions": [
+    {
+      "direction": 0,
+      "yaw": 0.960070013999939,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            148.2570037841797,
+            86.9132308959961,
+            239.99807739257812,
+            346.4691467285156
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            137.43722534179688,
+            84.6676025390625,
+            243.44558715820312,
+            348.9363708496094
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            149.70864868164062,
+            85.73707580566406,
+            238.57968139648438,
+            345.23468017578125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            137.17269897460938,
+            84.63764190673828,
+            243.56814575195312,
+            348.9363708496094
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            149.92352294921875,
+            84.58792877197266,
+            237.98928833007812,
+            344.72332763671875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            137.0634002685547,
+            84.51072692871094,
+            243.61880493164062,
+            348.9363708496094
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            149.70864868164062,
+            85.73707580566406,
+            238.57968139648438,
+            345.23468017578125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            137.17269897460938,
+            84.63764190673828,
+            243.56814575195312,
+            348.9363708496094
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            148.2570037841797,
+            86.9132308959961,
+            239.99807739257812,
+            348.9364013671875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            137.43722534179688,
+            84.6676025390625,
+            243.44558715820312,
+            346.1307373046875
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            144.81539916992188,
+            85.82901763916016,
+            241.40628051757812,
+            348.9364013671875
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            137.70269775390625,
+            84.30647277832031,
+            243.3226318359375,
+            346.1307373046875
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            143.39761352539062,
+            84.71788787841797,
+            241.98641967773438,
+            348.9363708496094
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            137.81295776367188,
+            84.04234313964844,
+            243.27157592773438,
+            346.1307373046875
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            144.81539916992188,
+            85.82901763916016,
+            241.40628051757812,
+            348.9364013671875
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            137.70269775390625,
+            84.30647277832031,
+            243.3226318359375,
+            346.1307373046875
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 1,
+      "yaw": -0.23171095550060272,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            109.59454345703125,
+            112.28624725341797,
+            299.8311767578125,
+            344.82659912109375
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            106.53311920166016,
+            100.63671112060547,
+            275.7329406738281,
+            348.485595703125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            109.78739929199219,
+            111.0403060913086,
+            298.7129211425781,
+            344.18798828125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            106.54702758789062,
+            100.44401550292969,
+            275.53887939453125,
+            348.485595703125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            109.85324096679688,
+            109.8633041381836,
+            298.2488098144531,
+            344.2725524902344
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            106.553466796875,
+            100.24974060058594,
+            275.45849609375,
+            348.485595703125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            109.78739929199219,
+            111.0403060913086,
+            298.7129211425781,
+            345.3797607421875
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            106.54702758789062,
+            100.44401550292969,
+            275.53887939453125,
+            348.485595703125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            107.32283020019531,
+            112.28624725341797,
+            299.8311767578125,
+            353.0823669433594
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            104.84699249267578,
+            100.63671112060547,
+            275.7329406738281,
+            347.5968322753906
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            107.16728210449219,
+            111.27550506591797,
+            300.9461364746094,
+            350.7839660644531
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            104.83547973632812,
+            100.4384536743164,
+            275.9270324707031,
+            346.6383972167969
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            107.12678527832031,
+            110.19591522216797,
+            301.4069519042969,
+            348.485595703125
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            104.83142852783203,
+            100.24186706542969,
+            276.0074462890625,
+            345.679931640625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            107.16728210449219,
+            111.27550506591797,
+            300.9461364746094,
+            346.18719482421875
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            104.83547973632812,
+            100.4384536743164,
+            275.9270324707031,
+            344.72149658203125
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 2,
+      "yaw": -0.610725998878479,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            120.72100830078125,
+            126.6192626953125,
+            290.10284423828125,
+            347.13714599609375
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            120.40585327148438,
+            112.84767150878906,
+            277.737060546875,
+            342.189208984375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            119.59426879882812,
+            125.20454406738281,
+            289.3633728027344,
+            344.6631774902344
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            120.19190979003906,
+            112.62641143798828,
+            277.611083984375,
+            342.189208984375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            119.14794158935547,
+            123.95773315429688,
+            289.0570983886719,
+            342.189208984375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            120.10391235351562,
+            112.42028045654297,
+            277.5589294433594,
+            342.189208984375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            119.59426879882812,
+            125.20454406738281,
+            289.3633728027344,
+            339.7152404785156
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            120.19190979003906,
+            112.62641143798828,
+            277.611083984375,
+            342.189208984375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            118.27576446533203,
+            126.6192626953125,
+            290.10284423828125,
+            347.13714599609375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            118.59092712402344,
+            112.84767150878906,
+            277.737060546875,
+            342.189208984375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            119.28291320800781,
+            125.7776870727539,
+            290.84228515625,
+            344.6631774902344
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            118.77125549316406,
+            112.67804718017578,
+            277.8630676269531,
+            342.189208984375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            119.72023010253906,
+            124.76824951171875,
+            291.1485900878906,
+            342.189208984375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            118.84654998779297,
+            112.49327087402344,
+            277.9152526855469,
+            342.189208984375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            119.28291320800781,
+            125.7776870727539,
+            290.84228515625,
+            339.7152404785156
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            118.77125549316406,
+            112.67804718017578,
+            277.8630676269531,
+            342.189208984375
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 3,
+      "yaw": -0.9897410869598389,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            136.00616455078125,
+            128.63388061523438,
+            284.7589111328125,
+            353.0823669433594
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            134.58058166503906,
+            113.33985900878906,
+            291.84088134765625,
+            347.5968322753906
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            134.4810028076172,
+            127.1700210571289,
+            284.85498046875,
+            350.7839660644531
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            134.47174072265625,
+            113.11003875732422,
+            291.82171630859375,
+            346.6383972167969
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            133.60952758789062,
+            125.90272521972656,
+            284.893310546875,
+            348.485595703125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            134.42674255371094,
+            112.90038299560547,
+            291.81365966796875,
+            345.679931640625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            134.21853637695312,
+            127.1700210571289,
+            284.85498046875,
+            346.18719482421875
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            134.47174072265625,
+            113.11003875732422,
+            291.82171630859375,
+            344.72149658203125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            130.21762084960938,
+            128.63388061523438,
+            284.7589111328125,
+            344.82659912109375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            132.8944549560547,
+            113.33985900878906,
+            291.84088134765625,
+            348.485595703125
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            132.51602172851562,
+            127.84110260009766,
+            284.6580810546875,
+            344.18798828125
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            133.0035858154297,
+            113.17872619628906,
+            291.85968017578125,
+            348.485595703125
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            134.8144073486328,
+            126.85176086425781,
+            284.61505126953125,
+            344.2725524902344
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            133.0488739013672,
+            112.99752044677734,
+            291.86737060546875,
+            348.485595703125
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            134.59530639648438,
+            127.84110260009766,
+            284.6580810546875,
+            345.3797607421875
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            133.0035858154297,
+            113.17872619628906,
+            291.85968017578125,
+            348.485595703125
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 4,
+      "yaw": -2.1815226078033447,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            144.00213623046875,
+            131.09536743164062,
+            235.74322509765625,
+            348.9363708496094
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            140.5546417236328,
+            118.99992370605469,
+            246.56298828125,
+            346.1307373046875
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            145.42054748535156,
+            129.33023071289062,
+            234.29159545898438,
+            348.9363708496094
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            140.43206787109375,
+            118.86959838867188,
+            246.8275146484375,
+            346.1307373046875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            146.01092529296875,
+            127.93707275390625,
+            234.07672119140625,
+            348.9363708496094
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            140.3814239501953,
+            118.70111846923828,
+            246.9368133544922,
+            346.1307373046875
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            145.42054748535156,
+            129.33023071289062,
+            234.29159545898438,
+            348.9363708496094
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            140.43206787109375,
+            118.86959838867188,
+            246.8275146484375,
+            346.1307373046875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            144.00213623046875,
+            131.09536743164062,
+            235.74322509765625,
+            346.4691467285156
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            140.5546417236328,
+            118.99992370605469,
+            246.56298828125,
+            348.9363708496094
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            142.5939483642578,
+            130.60018920898438,
+            239.18484497070312,
+            345.23468017578125
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            140.6776123046875,
+            118.7391128540039,
+            246.29750061035156,
+            348.9363708496094
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            142.0137939453125,
+            129.73301696777344,
+            240.60263061523438,
+            344.72332763671875
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            140.72866821289062,
+            118.51654815673828,
+            246.187255859375,
+            348.9363708496094
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            142.5939483642578,
+            130.60018920898438,
+            239.18484497070312,
+            345.23468017578125
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            140.6776123046875,
+            118.7391128540039,
+            246.29750061035156,
+            348.9363708496094
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 5,
+      "yaw": 2.909881591796875,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            84.16903686523438,
+            112.17828369140625,
+            274.40570068359375,
+            337.6204833984375
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            108.26727294921875,
+            124.42593383789062,
+            277.46710205078125,
+            337.4947204589844
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            85.28729248046875,
+            111.40560150146484,
+            274.2128601074219,
+            339.91888427734375
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            108.46133422851562,
+            124.45834350585938,
+            277.4532165527344,
+            338.4531555175781
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            85.75140380859375,
+            110.42431640625,
+            274.1470031738281,
+            342.2172546386719
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            108.54170227050781,
+            124.35722351074219,
+            277.44677734375,
+            339.41162109375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            85.28729248046875,
+            111.40560150146484,
+            274.2128601074219,
+            344.5156555175781
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            108.46133422851562,
+            124.45834350585938,
+            277.4532165527344,
+            340.37005615234375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            84.16903686523438,
+            112.17828369140625,
+            276.67742919921875,
+            340.9417724609375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            108.26727294921875,
+            124.42593383789062,
+            279.1532287597656,
+            342.2172546386719
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            83.05408477783203,
+            110.6935043334961,
+            276.8329772949219,
+            339.1114196777344
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            108.07317352294922,
+            124.00222778320312,
+            279.16473388671875,
+            342.2172546386719
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            82.59326934814453,
+            109.41735076904297,
+            276.87347412109375,
+            338.00421142578125
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            107.99276733398438,
+            123.71214294433594,
+            279.1688232421875,
+            342.2172546386719
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            83.05408477783203,
+            110.6935043334961,
+            276.8329772949219,
+            337.919677734375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            108.07317352294922,
+            124.00222778320312,
+            279.16473388671875,
+            342.2172546386719
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 6,
+      "yaw": 2.5308666229248047,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            93.89736938476562,
+            109.08815002441406,
+            263.27923583984375,
+            334.257568359375
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            106.26312255859375,
+            124.78065490722656,
+            263.5943908691406,
+            335.4420166015625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            94.63683319091797,
+            108.48607635498047,
+            264.4059753417969,
+            332.9680480957031
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            106.38910675048828,
+            124.8416519165039,
+            263.808349609375,
+            335.4420166015625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            94.94313049316406,
+            107.57551574707031,
+            264.852294921875,
+            335.4420166015625
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            106.44129180908203,
+            124.75236511230469,
+            263.89630126953125,
+            335.4420166015625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            94.63683319091797,
+            108.48607635498047,
+            264.4059753417969,
+            337.9159851074219
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            106.38910675048828,
+            124.8416519165039,
+            263.808349609375,
+            335.4420166015625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            93.89736938476562,
+            109.08815002441406,
+            265.7244873046875,
+            334.257568359375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            106.26312255859375,
+            124.78065490722656,
+            265.4093017578125,
+            335.4420166015625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            93.15792083740234,
+            107.43296813964844,
+            264.7173156738281,
+            332.9680480957031
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            106.13714599609375,
+            124.32833862304688,
+            265.2289733886719,
+            335.4420166015625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            92.85162353515625,
+            106.08629608154297,
+            264.280029296875,
+            335.4420166015625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            106.08496856689453,
+            124.02642059326172,
+            265.1536865234375,
+            335.4420166015625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            93.15792083740234,
+            107.43296813964844,
+            264.7173156738281,
+            337.9159851074219
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            106.13714599609375,
+            124.32833862304688,
+            265.2289733886719,
+            335.4420166015625
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 7,
+      "yaw": 2.1518516540527344,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            99.2413330078125,
+            95.83062744140625,
+            247.99407958984375,
+            340.9417724609375
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            92.15934753417969,
+            111.72278594970703,
+            249.41964721679688,
+            342.2172546386719
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            99.14524841308594,
+            95.27588653564453,
+            249.5192413330078,
+            339.1114196777344
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            92.17851257324219,
+            111.79234313964844,
+            249.5284881591797,
+            342.2172546386719
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            99.1069107055664,
+            94.38489532470703,
+            250.39071655273438,
+            338.00421142578125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            92.18655395507812,
+            111.70660400390625,
+            249.573486328125,
+            342.2172546386719
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            99.14524841308594,
+            95.27588653564453,
+            249.78172302246094,
+            337.919677734375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            92.17851257324219,
+            111.79234313964844,
+            249.5284881591797,
+            342.2172546386719
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            99.2413330078125,
+            95.83062744140625,
+            253.78262329101562,
+            337.6204833984375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            92.15934753417969,
+            111.72278594970703,
+            251.1057586669922,
+            337.4947204589844
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            99.34211730957031,
+            94.1279067993164,
+            251.48423767089844,
+            339.91888427734375
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            92.14054107666016,
+            111.26195526123047,
+            250.9966278076172,
+            338.4531555175781
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            99.38517761230469,
+            92.76150512695312,
+            249.18582153320312,
+            342.2172546386719
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            92.13285827636719,
+            110.95648956298828,
+            250.95132446289062,
+            339.41162109375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            99.34211730957031,
+            94.1279067993164,
+            249.4049072265625,
+            344.5156555175781
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 15,
+          "bounds": [
+            92.14054107666016,
+            111.26195526123047,
+            250.9966278076172,
+            340.37005615234375
+          ]
+        }
+      ]
+    }
+  ],
+  "fps": 100,
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 64
+  },
+  "display_scale": 1.406896551724138,
+  "reference_sha256": "9e264fcf20942375e1017348f0f555f9e44e89f6fbf097ddd2dd3789a44c5222",
+  "generator_sha256": "debb79a95d4d15944143ec4f478308418fd4a31aeb7a2c14fb20ea32dab8a5c5",
+  "runtime": {
+    "mesh_objects": 41,
+    "triangles": 20432,
+    "materials": 13
+  }
+}

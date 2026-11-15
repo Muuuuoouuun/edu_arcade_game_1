@@ -1,0 +1,33 @@
+{
+  "requested_model": "claude-fable-5-2",
+  "effort": "max",
+  "input_image": "docs/arcana-branch-inventory/frontier-defense.png",
+  "input_documents": [
+    "docs/arcana-project-direction.md",
+    "art-source/defense/model-bridge-20261110/manifest.json"
+  ],
+  "model": "claude-fable-5-2",
+  "usage": {
+    "input_tokens": 7800,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 7,
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard"
+  },
+  "stop_reason": "max_tokens",
+  "output_usage": {
+    "input_tokens": 7800,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 32000,
+    "output_tokens_details": {
+      "thinking_tokens": 32000
+    }
+  }
+}

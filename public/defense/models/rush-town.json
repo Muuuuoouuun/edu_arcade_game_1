@@ -1,0 +1,88 @@
+{
+  "command": "blender --background --python-exit-code 1 --python tools/blender/build_rush_town.py",
+  "concept": "art-source/defense/concepts/2026-11-06/verdant-heart.png",
+  "editable_meshes": 329,
+  "runtime": {
+    "meshes": 1,
+    "materials": 1,
+    "triangles": 4374,
+    "radius": 2.559999942779541,
+    "min_y": 0.0,
+    "max_y": 5.519999980926514,
+    "front": [
+      0,
+      0,
+      -1
+    ],
+    "origin": [
+      0,
+      0,
+      0
+    ],
+    "animations": false,
+    "image_textures": false
+  },
+  "camera": {
+    "position": [
+      7,
+      11,
+      8
+    ],
+    "target": [
+      0,
+      0,
+      2.35
+    ],
+    "ortho_scale": 7.7,
+    "resolution": [
+      640,
+      640
+    ],
+    "ground": 0
+  },
+  "bake": {
+    "webp": "public/defense/models/rush-town-game.webp",
+    "resolution": [
+      256,
+      256
+    ],
+    "usage": "fallback/2.5D-ready preview, not currently a new campaign building"
+  },
+  "files": [
+    {
+      "path": "tools/blender/build_rush_town.py",
+      "bytes": 14716,
+      "sha256": "da41b6ef15b0412e78cbffe6db0f745a4fa6ee3a1f9964bb4969c9e852a60da3"
+    },
+    {
+      "path": "art-source/defense/rush-town.blend",
+      "bytes": 2423548,
+      "sha256": "842e251f9faa9b9d6cbd9dd368f5d290da86c7b7d92ed424779fcc09f49ee731"
+    },
+    {
+      "path": "src/rush/models/forest-town.glb",
+      "bytes": 402460,
+      "sha256": "45d29fa3a992f590ca38bc8645330c6bde59cbb0c27a14f61858a4eff443af76"
+    },
+    {
+      "path": "art-source/defense/rush-town/front.png",
+      "bytes": 465546,
+      "sha256": "69a2990065023bd30868c8678fb3c7681e9762170c9792f950b0ab5973a15995"
+    },
+    {
+      "path": "art-source/defense/rush-town/rear.png",
+      "bytes": 449193,
+      "sha256": "156ec3831f2c45264c739d3963a08ad1b6cd78effdd40e32551482243d4a5bb7"
+    },
+    {
+      "path": "public/defense/models/rush-town.png",
+      "bytes": 465546,
+      "sha256": "69a2990065023bd30868c8678fb3c7681e9762170c9792f950b0ab5973a15995"
+    },
+    {
+      "path": "public/defense/models/rush-town-game.webp",
+      "bytes": 10280,
+      "sha256": "df29b9ae6a5e4dab76680c8a1f2c63ff2c47898736d9f13201efbe6dfe145fa8"
+    }
+  ]
+}

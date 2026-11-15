@@ -1,0 +1,3746 @@
+{
+  "generator": "tools/blender/build_luna_entry.py",
+  "command": "npm run models:luna-entry",
+  "source_cast_sha256": "fc4466f5a428a1f34568d51cf041efa0d2d33b2c22886d8038cdc6f1f02bf77a",
+  "source_walk_sha256": "dc2e03609115fde634d5c9f92427daeb6022e1f5058a3c33fd5f02ca02014ae8",
+  "reference": "art-source/defense/atlases/ranged-motion.png",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      330
+    ],
+    "orthographic_scale": 6.8
+  },
+  "delivery_frame": {
+    "width": 192,
+    "height": 192,
+    "ground": [
+      96,
+      165
+    ],
+    "columns": 16,
+    "rows": 1
+  },
+  "duration_seconds": 0.33,
+  "transition_seconds": 0.1,
+  "hit_at": 0.15,
+  "samples_seconds": [
+    0.04,
+    0.08
+  ],
+  "entry_checks": [
+    {
+      "entry": 0,
+      "first_leg": "left-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 1,
+      "first_leg": "left-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 2,
+      "first_leg": "left-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 3,
+      "first_leg": "left-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 4,
+      "first_leg": "right-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 5,
+      "first_leg": "right-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 6,
+      "first_leg": "right-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    },
+    {
+      "entry": 7,
+      "first_leg": "right-leg",
+      "frames": 34,
+      "min_sole_z": 0.004999972879886627,
+      "support_drift": 0,
+      "walk_start_error": 0,
+      "cast_from_10_error": 0
+    }
+  ],
+  "files": [
+    {
+      "file": "art-source/defense/luna-entry.blend",
+      "bytes": 5276428,
+      "sha256": "96f8f6ce9eb35e228c34b7312f284f6d15ea1f5bd784e50ed693cd870c15dc11"
+    },
+    {
+      "file": "public/defense/models/luna-entry.glb",
+      "bytes": 1804808,
+      "sha256": "935036759bf9dbdec0e07fddbb1bcbc95c8d41503267c5d73ace9659a8660c66"
+    },
+    {
+      "file": "public/defense/models/luna-entry.png",
+      "bytes": 126205,
+      "sha256": "d62d046e9f087b2c6c662743f3ad456a157cf07865570317e47000a524d7eeaf"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-0-0.png",
+      "bytes": 109609,
+      "sha256": "0bb68b0aa80eedb79f847ed53eef85f87c6d7cfc6a3838ae079bb6ad891f10ef"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-0-1.png",
+      "bytes": 107404,
+      "sha256": "3dbc7c7a5627744893a92f9fcb2a41a6d588298aca2cd442a4ab95da4c7ba0a1"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-1-0.png",
+      "bytes": 109581,
+      "sha256": "a6f47c0e5e7b0d0f8bdf2e3553f7a8127c70c5f32b0b8d721dff8e3bac73ddb8"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-1-1.png",
+      "bytes": 107222,
+      "sha256": "9d0599ac66666da70fde19c803541898843858d1efedc5f6ea3e8332e16395b8"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-2-0.png",
+      "bytes": 109202,
+      "sha256": "03e8ddd902906d3e948315664beeae70fe7a15cd3bd0994ff8fdbb4e175bb8cb"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-2-1.png",
+      "bytes": 107126,
+      "sha256": "d9321d6cc68f468d75f803592b0871521c74569a3aa2154cd1b13cb3aa5488e8"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-3-0.png",
+      "bytes": 108129,
+      "sha256": "b266fc980641d1c03ac961680671d5fdf8240726ae7aacc638dd62a70df37f7e"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-3-1.png",
+      "bytes": 106906,
+      "sha256": "c71d521890cd8daf6831c4cc13fd9fa2887ef634e81259cd4ebc83924cb7e676"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-4-0.png",
+      "bytes": 107001,
+      "sha256": "d97accb9cc5f67aa28de3ee8529c7925484597b6183cf94247cba6c36a56225a"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-4-1.png",
+      "bytes": 105984,
+      "sha256": "990da8a42272147db81665ec426c3d8ba63fa87ee144850088aa2f888e47d29e"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-5-0.png",
+      "bytes": 107219,
+      "sha256": "435a81e9259a7342f717854e39d38bc2833a2535f1423d02cd19693469d61ad7"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-5-1.png",
+      "bytes": 106401,
+      "sha256": "a0e21bbf5bade766cc472f6ec1f0d32bbee9654aa6031e6c13bc0653a681d6ae"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-6-0.png",
+      "bytes": 107711,
+      "sha256": "523d331f7db4bd3f146690b33c6551b171d3b46dd01559827f962b31dc287c1a"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-6-1.png",
+      "bytes": 106660,
+      "sha256": "808257cf2b2ba2e587598803f7d97cf74098d9b18222e393f7b25957c0cf257e"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-7-0.png",
+      "bytes": 108467,
+      "sha256": "3e2eff3e3dba49584254fa4b5a52e08a7920b345d41effe057fc874e3f5deb21"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-0-7-1.png",
+      "bytes": 106906,
+      "sha256": "28c43890e67489a5fa5497e96b8b5e6f5859a4f8c38a0117d46f2ffb9706c662"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-0-0.png",
+      "bytes": 126205,
+      "sha256": "d62d046e9f087b2c6c662743f3ad456a157cf07865570317e47000a524d7eeaf"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-0-1.png",
+      "bytes": 124303,
+      "sha256": "0347ee38e70144b24bfed09f3e0102516e0ed3e02b97e0c3ee2ed7714196266d"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-1-0.png",
+      "bytes": 125601,
+      "sha256": "c7d1b3766a9e6ceadba00c5afc9d61c26e585c8c531977dc1a8911a941c2dbed"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-1-1.png",
+      "bytes": 124185,
+      "sha256": "f456e9c71b80dcdc8b91532ddbcd0d70d6dbfe348cb3751c24f4dcf8ab456803"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-2-0.png",
+      "bytes": 125469,
+      "sha256": "ea1980ec8a1fa6295efbb3e193a4c837d78e1022326cece553f2def98aec80b3"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-2-1.png",
+      "bytes": 124356,
+      "sha256": "b20319965f5485aa8b037ee6910ebb60595cc7b27857d7d70754c9eb285ec70b"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-3-0.png",
+      "bytes": 125117,
+      "sha256": "abf6f9b996a03c0bb756db328448b0827c0c9d46c37e119d57a1208fc1a0bfa2"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-3-1.png",
+      "bytes": 124276,
+      "sha256": "c45abfb1cdf7bfe18d06b60d2dc708a295df909f84262183e1df79ff5e3bf763"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-4-0.png",
+      "bytes": 126211,
+      "sha256": "331f944af9baab52dbf3a9726b19a510ac17774f9462df9cb2655c67d0800d9d"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-4-1.png",
+      "bytes": 124462,
+      "sha256": "0b562f80367906d8d595690acdeabe1f34c1613bfe3bb9f784c8843277e7b4ec"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-5-0.png",
+      "bytes": 125969,
+      "sha256": "47a2cb50de0ff5b8f674dabc466fc1167f1f33f8d92d01858f2c700882a836f9"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-5-1.png",
+      "bytes": 124445,
+      "sha256": "00a684968a282591a0514b1eede5adafa1414accf5a78cc680ac335c4175e179"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-6-0.png",
+      "bytes": 125615,
+      "sha256": "10e982e1e3701eb6994b2e0273d0f29bca92cbb8ac820a301fb47b29b0c92a41"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-6-1.png",
+      "bytes": 124366,
+      "sha256": "78672b3ca7b6843cb31db5cd4fff72fe72ddfae807adc89fb4170a4c4c29e567"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-7-0.png",
+      "bytes": 125135,
+      "sha256": "a7165b827865a015392fdfe08e04d48fb950b6755a7403691d7c0acda434a6e5"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-1-7-1.png",
+      "bytes": 124323,
+      "sha256": "5c406c1be1575dd75d5f88af48b8e35c615b84cb8816f755e96a3dcabda95fb1"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-0-0.png",
+      "bytes": 123293,
+      "sha256": "6f1cbca1fef46d15a79d7e8d676104546d9d67042a99212af516e3ce03e289dd"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-0-1.png",
+      "bytes": 122853,
+      "sha256": "9ae13cd71695ebd8703d9c2ee6417543d3846d1d7790fd303b16a2abe82eb8f7"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-1-0.png",
+      "bytes": 123111,
+      "sha256": "93b11f1336c6ded824922b4102546a6fe498bec6064e6d9ad601f69e256de198"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-1-1.png",
+      "bytes": 122732,
+      "sha256": "f6757180f0a05fd63ab256daa85a2ab6780a64de24440ddb502d35e8f1af930a"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-2-0.png",
+      "bytes": 123173,
+      "sha256": "9a7b80cdfc37eeb2d88b91758d1e0732e436d3944ff536db08d925bf33ff32d4"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-2-1.png",
+      "bytes": 122668,
+      "sha256": "5d98df7d6f477a56a8b757dccce197eab156dbd78c72c3142bf60e69392980fc"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-3-0.png",
+      "bytes": 122886,
+      "sha256": "ea67633c87e0c34d0fafe5fcf2a316827465cb25694678d83d64d91c8fdd7c87"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-3-1.png",
+      "bytes": 122660,
+      "sha256": "0b8080325f8cdea451c256f1ec069cbde0bbcc954371e5fa107004c0abec4e30"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-4-0.png",
+      "bytes": 123127,
+      "sha256": "93be94270b8d9c99d17a5dc70f72c5165885659157815b667f5ee813bc206fa6"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-4-1.png",
+      "bytes": 122922,
+      "sha256": "ebbc7e311c1816f20a7ab6284d871f46109ea823ae8277ad9688667f7c5cfe8e"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-5-0.png",
+      "bytes": 122949,
+      "sha256": "cda844f85b40fdd07f7e5db890487bc53826e8cde27637898271a20a6d7ec026"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-5-1.png",
+      "bytes": 122856,
+      "sha256": "7aa281ae857045987002b0c6d2ee935c79dc8ee7db267ba771812f790b71db5b"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-6-0.png",
+      "bytes": 122968,
+      "sha256": "c44b5789912501c665ea65d8ff1a9a39b2ad054498d4a62c35f7b1cda3f78498"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-6-1.png",
+      "bytes": 122815,
+      "sha256": "33d7de3e5cf80736986f1ebe005f50b514473dec578ae346d8385787146a898b"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-7-0.png",
+      "bytes": 122877,
+      "sha256": "27fddaec516683d7e2de3dd39434a52bc38b1ce61c43e18d0df262467ddd43b1"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-2-7-1.png",
+      "bytes": 122833,
+      "sha256": "1c88c75f3c2281b55f076898dde6cde4f08dc891eb27bcb9ab82d8156a00dbaa"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-0-0.png",
+      "bytes": 120364,
+      "sha256": "8662f63053a790b40cdc98d5b00db8310e07c53349f68f7965495724bf7d88ac"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-0-1.png",
+      "bytes": 120477,
+      "sha256": "f74c1aa45563d91b929608fb24c1ae6188db7ebdd1c142a1fa5da8c7eb83ef57"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-1-0.png",
+      "bytes": 120417,
+      "sha256": "521edf92a1d2056f8206610ae5604b4426832487341d4bad61ed8a2c41e7c3f4"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-1-1.png",
+      "bytes": 120553,
+      "sha256": "c9b5e815c94db26845a361d2127fb40507a700f918b5158084962f47523b544b"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-2-0.png",
+      "bytes": 120374,
+      "sha256": "be8462c66eac0abebaca41d8699848db3caeab553d60ab9758f1411d9eb0c48b"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-2-1.png",
+      "bytes": 120574,
+      "sha256": "8034bbf01a80faa56026192ebb6458012c6451f1b449401f365dc62a5fbfb3fd"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-3-0.png",
+      "bytes": 119934,
+      "sha256": "4534a997cfdbe4ce208fd0eb8fd7a1aaa063b2e3070ba63e1a4bb12c7857ceee"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-3-1.png",
+      "bytes": 120579,
+      "sha256": "74db91f4794d65cb09ebdb005796312d1e5d3449653457deb032a610301629c7"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-4-0.png",
+      "bytes": 120229,
+      "sha256": "40aacd420947ae4b8c1dcf29cf5c128a1f95439a2bbb9f9d7839fe37d6d6850c"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-4-1.png",
+      "bytes": 120899,
+      "sha256": "54e88af049afa73435e8f76920771e563f95d7edb497c073bc4ddec782a53d38"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-5-0.png",
+      "bytes": 120399,
+      "sha256": "6aa5cf6204c2f8bb0dd1aa434737d61b06e90d1a3f6433a83f94313c492ede9d"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-5-1.png",
+      "bytes": 120832,
+      "sha256": "7e8b7d3f35b4e1bcc14d317f5c499ef17aaff3cd7142aba4fec7084fb91e4b0e"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-6-0.png",
+      "bytes": 120089,
+      "sha256": "321bc6e69eb02c07cb5a7ea87366e2b171ea8810a380b656bb0ee07ae34cb5ec"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-6-1.png",
+      "bytes": 120812,
+      "sha256": "a293952c99b2f9f38b87c1dd5ffb0b976084d461e5eab1094e680b3606b9290b"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-7-0.png",
+      "bytes": 119961,
+      "sha256": "a229bd820c7dce4916164045700a8e446983b905cb61852407e792cc55409486"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-3-7-1.png",
+      "bytes": 120617,
+      "sha256": "37e50c1bcfe47b69cb9c069dfcd32e3625a326ea504f2b7d1d77ceaff150eef5"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-0-0.png",
+      "bytes": 107965,
+      "sha256": "92c2356f47604b2284fb4a850a4de9f46208dbb7643314ad17f10eb623cc1ffb"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-0-1.png",
+      "bytes": 107052,
+      "sha256": "b852f99897335ee8cf60d6a87611adc76df5b1707c8763c3cea9501294e6a809"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-1-0.png",
+      "bytes": 108268,
+      "sha256": "b883040807e890a2a3bd0de7056f3b7e4cd9fa0386b7d4a1f0afc6a16ca96474"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-1-1.png",
+      "bytes": 107065,
+      "sha256": "4b1c9b6c2bc5fb95bf27abe15e2d9506e4a6a3e4e291d2e1e249fd253e143219"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-2-0.png",
+      "bytes": 107981,
+      "sha256": "c026f954901faa02e7468d50ff1537745e10d72d90efc2103089ec147dad1df6"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-2-1.png",
+      "bytes": 106965,
+      "sha256": "57fa2ac6357e7c6cc366b71d6f85833ff4d6a8b817eb9eabf204cf9c9f1d3031"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-3-0.png",
+      "bytes": 107755,
+      "sha256": "4f9055169a0b739a2feb6912c2ae78f65c5aef7f5ff482a262317e4d5f6911d7"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-3-1.png",
+      "bytes": 106835,
+      "sha256": "39994af9ab25ff8241456d6a5688c5bd386c6eb63ab8e10fe251754b23cfb6d2"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-4-0.png",
+      "bytes": 106755,
+      "sha256": "6410d9b91a10eba61702a6c3167781be56f30e70fc1407273780babe43277e8e"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-4-1.png",
+      "bytes": 107038,
+      "sha256": "6c9d94a9a2e5d1dd1e7c9723d21b1619055d325eff344cd61b9386e6f684f10b"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-5-0.png",
+      "bytes": 106835,
+      "sha256": "8421740c54bd17f62ba3e0bd58ad606390874afa12c3ffcadd9a432215ae754f"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-5-1.png",
+      "bytes": 107085,
+      "sha256": "381b341d90cb32664e1d52654cb16adab47c6672d0deb10c4332b4ef348428e4"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-6-0.png",
+      "bytes": 107627,
+      "sha256": "16a6f59519e388b57d2509a5f6b1ac0f8fba9dad3f4db4c8c31aff6db854550c"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-6-1.png",
+      "bytes": 107287,
+      "sha256": "cf616939726e8495f3b0f8a5a339a9813516b28d243fc804abdfb4eec3b231c4"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-7-0.png",
+      "bytes": 107787,
+      "sha256": "9289f7a472d8cd57d001ad8193fefcd91b4a2aa45eadaf12f6b8dbccb2335683"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-4-7-1.png",
+      "bytes": 107316,
+      "sha256": "5dd290e741c15450de90479a7fbc681237866ec4139bc0ea8d4f9b08cff3dce3"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-0-0.png",
+      "bytes": 116413,
+      "sha256": "ad857547fe05f4a3cf13130c5a69862d9c56a7f4a21ee88801072ed529627d7d"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-0-1.png",
+      "bytes": 115613,
+      "sha256": "7d02c15254c20850427b90969868a10f476b5ea8549515628e0b80841afc6b73"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-1-0.png",
+      "bytes": 116342,
+      "sha256": "f0b2ef56b5f75d180bac9490367e72992c79725dea8cd33452d39a0b54907ae6"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-1-1.png",
+      "bytes": 115682,
+      "sha256": "4b2b800d0e4000ee89c72eeac292d2ee55bf643c9f8c6c564b66fe1ea2646748"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-2-0.png",
+      "bytes": 116693,
+      "sha256": "fede522f91b6fe283ab4929f77f71cd632daefd29a4bd1df39f2f4a99d25ac18"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-2-1.png",
+      "bytes": 115622,
+      "sha256": "76fad2444e72334af834eee09785197961b24f310de182d9330aac9fcce1a63e"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-3-0.png",
+      "bytes": 116834,
+      "sha256": "56bfcfe7762fe14c12091904a77bcd0c89c39f806a736ff1208063a3f195b4fd"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-3-1.png",
+      "bytes": 115666,
+      "sha256": "f761fa24607503ff471a9dc58376fb4f7c8791295122052e085bc6fb0b09b869"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-4-0.png",
+      "bytes": 116140,
+      "sha256": "1dfb456b81259d0467ab1268a93b68ce5d58ba54569847896c917f9b128b77d4"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-4-1.png",
+      "bytes": 115709,
+      "sha256": "3dc8b04291bb6325f736294191e37c6cc22ebea4320795f60bc9e50f4cdbe040"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-5-0.png",
+      "bytes": 116333,
+      "sha256": "f5440e84fe5c0290515cb0289a9cb911ba54f7d6399a457138fb917f0b2441a6"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-5-1.png",
+      "bytes": 115693,
+      "sha256": "543e4c41d4a6b44f60f48a4f7d7fac891f7b9e0bb54e77cf0523a08d11c93e02"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-6-0.png",
+      "bytes": 117053,
+      "sha256": "cee88fbd8d4275f2c4d12bc42e26a30d00e0cb7cc053dd32724f291350da48ee"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-6-1.png",
+      "bytes": 115662,
+      "sha256": "63ee8478f863f2c137cc0ecc4cf1d227c2f5c69f4d41bdff9e6fd4542ceee31c"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-7-0.png",
+      "bytes": 117376,
+      "sha256": "1ff2f55fd71f3b530d64eb1ab0dce89f9a03f13c5f115e78cc3669a3d464a990"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-5-7-1.png",
+      "bytes": 115746,
+      "sha256": "2b06922c81acd8aefcd74ebd3572e591e9c500adb60e60ea917d5972c6e1f3fb"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-0-0.png",
+      "bytes": 114361,
+      "sha256": "9e0ff997d58bda319b2b5ca93ecede36f07112411dd75fc64a0fea301c54964d"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-0-1.png",
+      "bytes": 114003,
+      "sha256": "2c1e9fe136a5d6f7190eb023314b88624b53bf8ca46b5881e0ef29ddd3d105bb"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-1-0.png",
+      "bytes": 114559,
+      "sha256": "d809d979946d34db1960fb75b2daaff752d19d8b9701892dd98a608bff16edbc"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-1-1.png",
+      "bytes": 113954,
+      "sha256": "cc26a0486cea2864ebb464744ecfbc3e2cf1422f345c895a69d8978c8830153d"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-2-0.png",
+      "bytes": 114648,
+      "sha256": "5a2eb75925fe64b9bb07398017438520fb7f1a510d660dc114f6d782291befe5"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-2-1.png",
+      "bytes": 113910,
+      "sha256": "c55eab2a5baf5dd4a37d107ce311fbbc40a8c02b6d3276bab05015adf52501fb"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-3-0.png",
+      "bytes": 114932,
+      "sha256": "69b59ad531d6ef65f317391e80d8a13944a650592c79e3f3a5f5b19a676ef568"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-3-1.png",
+      "bytes": 114086,
+      "sha256": "bcaed95a5d6efc6ac0d8e7876870323eceaf30c8846c843c90d03cee2c01b73b"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-4-0.png",
+      "bytes": 114018,
+      "sha256": "1d8a8c0b1ea77f97055d7c43e6f4e2b6556fd9aa7accef80731c8d97402d8e59"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-4-1.png",
+      "bytes": 113672,
+      "sha256": "9b082e2602cb3b967fb95ad58f6b6df86d7c0f2831b7d2c9286511f64c2ba287"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-5-0.png",
+      "bytes": 114214,
+      "sha256": "6bb129a09cc457167aabc104b3fa13de9d6a107a20c434496637c3a292b6e7d4"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-5-1.png",
+      "bytes": 113738,
+      "sha256": "fe179aab6584c81dc205fc861683099b1ab372d936353fca28c3747ff256d717"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-6-0.png",
+      "bytes": 114403,
+      "sha256": "481773f8c6d4447e0c289983403c213a4b548d25edf15a589be2b28a52131141"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-6-1.png",
+      "bytes": 114014,
+      "sha256": "9b28b5ccb7e4af5500b4a425ed10909e81c8f680bc447dba16193fe635aeab6b"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-7-0.png",
+      "bytes": 114753,
+      "sha256": "a9d63033f2ce85cbf9c9a6fd461890fba5e9c90d2d91232b686a681cc37a102a"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-6-7-1.png",
+      "bytes": 113931,
+      "sha256": "c538250a932de526f97302417ea8682758c23819e8b91d983fcad3f92839589d"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-0-0.png",
+      "bytes": 112470,
+      "sha256": "cdbff6ad98f8e13b63825e49169545c214dfe743dcbb479fe8e37e6bac2d6670"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-0-1.png",
+      "bytes": 113236,
+      "sha256": "6e57226b84280ac2113459816f99e1226dca7ea636eaed9d9870d84c9c30a4a3"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-1-0.png",
+      "bytes": 112789,
+      "sha256": "a1076f71d5cf4608df662b547e6c1d4ce9a58cfca817281b08ef40df85f52206"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-1-1.png",
+      "bytes": 113380,
+      "sha256": "d804eafbcb61983c7dbfd1b183ca6f21dfe2b05222d80bad632d71339ff12b19"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-2-0.png",
+      "bytes": 113010,
+      "sha256": "c086e8b9f9a15863f104124bd021c4f134f13de9e9f8607ae5f782e8536685a3"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-2-1.png",
+      "bytes": 113404,
+      "sha256": "8cdca4440546b767def1a360eb13d0f3e3f047f3a6b48387ed4a3f6160d76725"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-3-0.png",
+      "bytes": 112827,
+      "sha256": "fbf650f146e7c562665279121b8aeb3f0fd25215c350d067704988a67276a8b1"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-3-1.png",
+      "bytes": 113438,
+      "sha256": "fba809642af97b6f2be11d96cc36c0e6ece484f274bfee737ede2ee34bf2e4f9"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-4-0.png",
+      "bytes": 112174,
+      "sha256": "78324762491f742b3b7da4cfc0a195dfcf6ba4bd32e2d0acb45a82ae611040b0"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-4-1.png",
+      "bytes": 112716,
+      "sha256": "7a431008f0a5834bb2b1143c1dc6e833f7b671fe124adda33c8bde6514bc92bf"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-5-0.png",
+      "bytes": 112689,
+      "sha256": "b19d4ca7bebd55ebd5fbbc3973b22f6d65e3c2a19ea2630057a72897f677241f"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-5-1.png",
+      "bytes": 112848,
+      "sha256": "d91fffdf111cca861b10a3aa1c4ed78f9d9295ecf341e36906bfd9cfca70415e"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-6-0.png",
+      "bytes": 113056,
+      "sha256": "1b1813f30fd6c17deb67ab844a2af41c64732d95cc1957ed925d85c8c44f1556"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-6-1.png",
+      "bytes": 113096,
+      "sha256": "79c99ee004d78c441f9655dc8281cbfdabb78044ff5bbc89e101d14f1f2bbfd1"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-7-0.png",
+      "bytes": 113198,
+      "sha256": "c35211f79ba9031d650258945967f4274c04668ed21e252feb0e74782c3204aa"
+    },
+    {
+      "file": "art-source/defense/luna-entry-frames/luna-entry-7-7-1.png",
+      "bytes": 113010,
+      "sha256": "8ab75319f0ecd38c0e2d1ea7887d1188082fb713218231effb5a244785ffd3d0"
+    },
+    {
+      "file": "public/defense/models/luna-entry-0-atlas.webp",
+      "bytes": 51100,
+      "sha256": "7084745da2369941a94dfb4a5407d0ed4f1e1bf90ac683733a39d761b1f41656"
+    },
+    {
+      "file": "public/defense/models/luna-entry-1-atlas.webp",
+      "bytes": 79606,
+      "sha256": "7688dcbd3a77ae3ecb99e9f01d97ef039ffb7ddfa031242baa367072ad176333"
+    },
+    {
+      "file": "public/defense/models/luna-entry-2-atlas.webp",
+      "bytes": 71752,
+      "sha256": "e72be11ce57f226bb91836c07cc080c0c3f95ae36dd43097dff1c5237e92fa69"
+    },
+    {
+      "file": "public/defense/models/luna-entry-3-atlas.webp",
+      "bytes": 69438,
+      "sha256": "0fb62d15e0cedf23548f564de7acfc4cf68ec42f0f11a7bb6f7050a780887995"
+    },
+    {
+      "file": "public/defense/models/luna-entry-4-atlas.webp",
+      "bytes": 48662,
+      "sha256": "ec2f511614be0334f5efc5ff0bae4d5c6e2f6cb9f481045f697ed7fe271d4050"
+    },
+    {
+      "file": "public/defense/models/luna-entry-5-atlas.webp",
+      "bytes": 66284,
+      "sha256": "36fc605014479ffd5a79537bac53bfaa62f92bcf2122f84250945b4e5a1efc1a"
+    },
+    {
+      "file": "public/defense/models/luna-entry-6-atlas.webp",
+      "bytes": 58400,
+      "sha256": "a033aa3845949f2717a30b23bda01973e066ff3751963e87e531649bcfb2c65a"
+    },
+    {
+      "file": "public/defense/models/luna-entry-7-atlas.webp",
+      "bytes": 57296,
+      "sha256": "a03546edadae504fb56cafdceea353928642a369d660a381ed8fbb4483749da5"
+    },
+    {
+      "file": "src/games/defense/druidEntrySockets.ts",
+      "bytes": 5131,
+      "sha256": "8884f6ec3f7b638bb2e20e9eeb567865c4bcbfcf68d0361e35f9f2ea95d66307"
+    }
+  ],
+  "clips": [
+    {
+      "name": "luna-entry-0",
+      "entry": 0,
+      "duration": 0.33
+    },
+    {
+      "name": "luna-entry-1",
+      "entry": 1,
+      "duration": 0.33
+    },
+    {
+      "name": "luna-entry-2",
+      "entry": 2,
+      "duration": 0.33
+    },
+    {
+      "name": "luna-entry-3",
+      "entry": 3,
+      "duration": 0.33
+    },
+    {
+      "name": "luna-entry-4",
+      "entry": 4,
+      "duration": 0.33
+    },
+    {
+      "name": "luna-entry-5",
+      "entry": 5,
+      "duration": 0.33
+    },
+    {
+      "name": "luna-entry-6",
+      "entry": 6,
+      "duration": 0.33
+    },
+    {
+      "name": "luna-entry-7",
+      "entry": 7,
+      "duration": 0.33
+    }
+  ],
+  "directions": [
+    {
+      "direction": 0,
+      "yaw": 0.960070013999939,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            153.7664794921875,
+            116.438232421875,
+            238.33895874023438,
+            340.66119384765625
+          ],
+          "socket": [
+            215.91845703125,
+            130.4191131591797
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            150.09341430664062,
+            111.72624206542969,
+            230.2884979248047,
+            342.33575439453125
+          ],
+          "socket": [
+            203.46588134765625,
+            126.01599884033203
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            154.30532836914062,
+            115.9332504272461,
+            232.127197265625,
+            340.2040710449219
+          ],
+          "socket": [
+            215.101806640625,
+            129.9905548095703
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            150.17803955078125,
+            111.67394256591797,
+            228.10195922851562,
+            342.33575439453125
+          ],
+          "socket": [
+            203.33657836914062,
+            125.97239685058594
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            154.12351989746094,
+            115.34193420410156,
+            227.98101806640625,
+            340.0147399902344
+          ],
+          "socket": [
+            214.76394653320312,
+            129.42933654785156
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            150.3824920654297,
+            111.58943939208984,
+            226.74375915527344,
+            342.33575439453125
+          ],
+          "socket": [
+            203.2830810546875,
+            125.89146423339844
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            154.52572631835938,
+            115.9332504272461,
+            227.9069366455078,
+            340.2040710449219
+          ],
+          "socket": [
+            215.101806640625,
+            129.9905548095703
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            150.587158203125,
+            111.67394256591797,
+            226.6425018310547,
+            342.33575439453125
+          ],
+          "socket": [
+            203.33657836914062,
+            125.97239685058594
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            154.4807891845703,
+            117.50772857666016,
+            227.998291015625,
+            342.33575439453125
+          ],
+          "socket": [
+            215.91845703125,
+            131.48858642578125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            150.67196655273438,
+            112.3872299194336,
+            226.97457885742188,
+            339.6262512207031
+          ],
+          "socket": [
+            203.46588134765625,
+            126.67698669433594
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            154.52572631835938,
+            116.70783233642578,
+            228.08535766601562,
+            342.33575439453125
+          ],
+          "socket": [
+            216.73594665527344,
+            130.60708618164062
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            150.587158203125,
+            112.22504425048828,
+            227.30667114257812,
+            339.6262512207031
+          ],
+          "socket": [
+            203.59527587890625,
+            126.50598907470703
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            154.6385040283203,
+            115.959228515625,
+            228.3225860595703,
+            342.33575439453125
+          ],
+          "socket": [
+            217.07461547851562,
+            129.85826110839844
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            150.3824920654297,
+            112.09503936767578,
+            227.44422912597656,
+            339.6262512207031
+          ],
+          "socket": [
+            203.64889526367188,
+            126.37227630615234
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            154.30532836914062,
+            116.70783233642578,
+            228.08535766601562,
+            342.33575439453125
+          ],
+          "socket": [
+            216.73594665527344,
+            130.60708618164062
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            150.17803955078125,
+            112.22504425048828,
+            227.30667114257812,
+            339.6262512207031
+          ],
+          "socket": [
+            203.59527587890625,
+            126.50598907470703
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            0.0993108,
+            -0.7280015
+          ],
+          [
+            0.0876323,
+            -0.7312231
+          ],
+          [
+            0.0420086,
+            -0.7473552
+          ]
+        ],
+        [
+          [
+            0.0946895,
+            -0.7306062
+          ],
+          [
+            0.0846402,
+            -0.7327932
+          ],
+          [
+            0.0415349,
+            -0.7475149
+          ]
+        ],
+        [
+          [
+            0.0927775,
+            -0.7338252
+          ],
+          [
+            0.0834024,
+            -0.7348494
+          ],
+          [
+            0.0413389,
+            -0.7478114
+          ]
+        ],
+        [
+          [
+            0.0946895,
+            -0.7306062
+          ],
+          [
+            0.0846402,
+            -0.7327932
+          ],
+          [
+            0.0415349,
+            -0.7475149
+          ]
+        ],
+        [
+          [
+            0.0993108,
+            -0.7280015
+          ],
+          [
+            0.0876323,
+            -0.7273047
+          ],
+          [
+            0.0420086,
+            -0.7449335
+          ]
+        ],
+        [
+          [
+            0.1039322,
+            -0.7327037
+          ],
+          [
+            0.0906274,
+            -0.7305344
+          ],
+          [
+            0.0424827,
+            -0.74556
+          ]
+        ],
+        [
+          [
+            0.1058441,
+            -0.7367916
+          ],
+          [
+            0.0918682,
+            -0.7332779
+          ],
+          [
+            0.0426791,
+            -0.7460498
+          ]
+        ],
+        [
+          [
+            0.1039322,
+            -0.7327037
+          ],
+          [
+            0.0906274,
+            -0.7305344
+          ],
+          [
+            0.0424827,
+            -0.74556
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 1,
+      "yaw": -0.23171095550060272,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            130.31332397460938,
+            125.26451110839844,
+            273.1297607421875,
+            345.45794677734375
+          ],
+          "socket": [
+            245.11691284179688,
+            151.22445678710938
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            128.47781372070312,
+            125.62923431396484,
+            269.0863342285156,
+            341.08734130859375
+          ],
+          "socket": [
+            240.032958984375,
+            142.08514404296875
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            130.0800018310547,
+            124.66374206542969,
+            272.6219482421875,
+            343.1595764160156
+          ],
+          "socket": [
+            244.38204956054688,
+            150.37686157226562
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            128.43968200683594,
+            125.52946472167969,
+            269.0047607421875,
+            341.08734130859375
+          ],
+          "socket": [
+            239.9156494140625,
+            141.97494506835938
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            130.0240478515625,
+            124.02472686767578,
+            272.4114685058594,
+            340.8611755371094
+          ],
+          "socket": [
+            244.07781982421875,
+            149.64224243164062
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            128.48655700683594,
+            125.42511749267578,
+            268.9709777832031,
+            341.08734130859375
+          ],
+          "socket": [
+            239.86709594726562,
+            141.86642456054688
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            130.16156005859375,
+            124.66374206542969,
+            272.6219482421875,
+            339.1947021484375
+          ],
+          "socket": [
+            244.38204956054688,
+            150.37686157226562
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            128.59104919433594,
+            125.52946472167969,
+            269.0047607421875,
+            341.08734130859375
+          ],
+          "socket": [
+            239.9156494140625,
+            141.97494506835938
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            128.08285522460938,
+            125.66022491455078,
+            270.6349792480469,
+            345.6841125488281
+          ],
+          "socket": [
+            242.62216186523438,
+            151.6201629638672
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            127.15003967285156,
+            125.87379455566406,
+            267.5444641113281,
+            340.8611755371094
+          ],
+          "socket": [
+            238.4910888671875,
+            142.3297119140625
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            128.53219604492188,
+            124.9288330078125,
+            271.1423034667969,
+            343.3857421875
+          ],
+          "socket": [
+            243.35733032226562,
+            151.15798950195312
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            127.18810272216797,
+            125.75836944580078,
+            267.62603759765625,
+            340.8611755371094
+          ],
+          "socket": [
+            238.60842895507812,
+            142.225341796875
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            128.75314331054688,
+            124.23575592041016,
+            271.39984130859375,
+            341.08734130859375
+          ],
+          "socket": [
+            243.66188049316406,
+            150.5828857421875
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            127.14114379882812,
+            125.64749908447266,
+            267.6598205566406,
+            340.8611755371094
+          ],
+          "socket": [
+            238.65704345703125,
+            142.1192626953125
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            128.4506378173828,
+            124.9288330078125,
+            271.1423034667969,
+            338.96856689453125
+          ],
+          "socket": [
+            243.35733032226562,
+            151.15798950195312
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            127.03672790527344,
+            125.75836944580078,
+            267.62603759765625,
+            340.8611755371094
+          ],
+          "socket": [
+            238.60842895507812,
+            142.225341796875
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            0.1943604,
+            -0.6486882
+          ],
+          [
+            0.1946094,
+            -0.6549966
+          ],
+          [
+            0.1759828,
+            -0.6884812
+          ]
+        ],
+        [
+          [
+            0.1902039,
+            -0.6536635
+          ],
+          [
+            0.191917,
+            -0.658102
+          ],
+          [
+            0.175553,
+            -0.6888849
+          ]
+        ],
+        [
+          [
+            0.1884832,
+            -0.6578636
+          ],
+          [
+            0.1908024,
+            -0.6607935
+          ],
+          [
+            0.1753751,
+            -0.6892825
+          ]
+        ],
+        [
+          [
+            0.1902039,
+            -0.6536635
+          ],
+          [
+            0.191917,
+            -0.658102
+          ],
+          [
+            0.175553,
+            -0.6888849
+          ]
+        ],
+        [
+          [
+            0.1943604,
+            -0.6486882
+          ],
+          [
+            0.1854691,
+            -0.6535468
+          ],
+          [
+            0.1703337,
+            -0.6875851
+          ]
+        ],
+        [
+          [
+            0.1985168,
+            -0.6510197
+          ],
+          [
+            0.1881626,
+            -0.6552401
+          ],
+          [
+            0.1707636,
+            -0.6879675
+          ]
+        ],
+        [
+          [
+            0.2002376,
+            -0.6541265
+          ],
+          [
+            0.1892784,
+            -0.6573472
+          ],
+          [
+            0.1709418,
+            -0.6883561
+          ]
+        ],
+        [
+          [
+            0.1985168,
+            -0.6510197
+          ],
+          [
+            0.1881626,
+            -0.6552401
+          ],
+          [
+            0.1707636,
+            -0.6879675
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 2,
+      "yaw": -0.610725998878479,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            135.78939819335938,
+            130.82943725585938,
+            267.73321533203125,
+            347.7334899902344
+          ],
+          "socket": [
+            239.64865112304688,
+            158.922119140625
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            137.47230529785156,
+            130.95877075195312,
+            267.2203674316406,
+            341.8177490234375
+          ],
+          "socket": [
+            239.1357879638672,
+            149.35525512695312
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            135.42413330078125,
+            130.098876953125,
+            267.2674560546875,
+            345.259521484375
+          ],
+          "socket": [
+            239.18289184570312,
+            157.98281860351562
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            137.3979034423828,
+            130.8570098876953,
+            267.1456298828125,
+            340.9468994140625
+          ],
+          "socket": [
+            239.06106567382812,
+            149.23037719726562
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            135.28182983398438,
+            129.32943725585938,
+            267.0745849609375,
+            342.7855529785156
+          ],
+          "socket": [
+            238.98995971679688,
+            157.210205078125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            137.36708068847656,
+            130.75181579589844,
+            267.11468505859375,
+            340.0760498046875
+          ],
+          "socket": [
+            239.03009033203125,
+            149.11581420898438
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            135.42413330078125,
+            130.098876953125,
+            267.2674560546875,
+            340.31158447265625
+          ],
+          "socket": [
+            239.18289184570312,
+            157.98281860351562
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            137.3979034423828,
+            130.8570098876953,
+            267.1456298828125,
+            339.2052307128906
+          ],
+          "socket": [
+            239.06106567382812,
+            149.23037719726562
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            133.10406494140625,
+            130.82943725585938,
+            265.0478820800781,
+            341.88592529296875
+          ],
+          "socket": [
+            236.96331787109375,
+            158.922119140625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            135.8126678466797,
+            130.95877075195312,
+            265.56072998046875,
+            342.7855529785156
+          ],
+          "socket": [
+            237.47616577148438,
+            149.35525512695312
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            133.49253845214844,
+            130.1114501953125,
+            265.5136413574219,
+            340.3966064453125
+          ],
+          "socket": [
+            237.42906188964844,
+            158.55166625976562
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            135.8870849609375,
+            130.8453369140625,
+            265.635498046875,
+            342.7855529785156
+          ],
+          "socket": [
+            237.55091857910156,
+            149.26556396484375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            133.6586151123047,
+            129.4237518310547,
+            265.7065734863281,
+            340.46453857421875
+          ],
+          "socket": [
+            237.62197875976562,
+            158.01458740234375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            135.91790771484375,
+            130.73529052734375,
+            265.6664733886719,
+            342.7855529785156
+          ],
+          "socket": [
+            237.58187866210938,
+            149.16554260253906
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            133.49253845214844,
+            130.1114501953125,
+            265.5136413574219,
+            340.91119384765625
+          ],
+          "socket": [
+            237.42906188964844,
+            158.55166625976562
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            135.8870849609375,
+            130.8453369140625,
+            265.635498046875,
+            342.7855529785156
+          ],
+          "socket": [
+            237.55091857910156,
+            149.26556396484375
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            0.1696555,
+            -0.6208803
+          ],
+          [
+            0.1745748,
+            -0.626794
+          ],
+          [
+            0.1726958,
+            -0.661845
+          ]
+        ],
+        [
+          [
+            0.1670221,
+            -0.6263743
+          ],
+          [
+            0.1728684,
+            -0.6302354
+          ],
+          [
+            0.172422,
+            -0.6623025
+          ]
+        ],
+        [
+          [
+            0.1659314,
+            -0.6307892
+          ],
+          [
+            0.1721615,
+            -0.6330661
+          ],
+          [
+            0.1723085,
+            -0.6627222
+          ]
+        ],
+        [
+          [
+            0.1670221,
+            -0.6263743
+          ],
+          [
+            0.1728684,
+            -0.6302354
+          ],
+          [
+            0.172422,
+            -0.6623025
+          ]
+        ],
+        [
+          [
+            0.1696555,
+            -0.6208803
+          ],
+          [
+            0.1647363,
+            -0.626794
+          ],
+          [
+            0.1666153,
+            -0.661845
+          ]
+        ],
+        [
+          [
+            0.1722889,
+            -0.6226932
+          ],
+          [
+            0.1664427,
+            -0.6281512
+          ],
+          [
+            0.1668891,
+            -0.6621736
+          ]
+        ],
+        [
+          [
+            0.1733797,
+            -0.6255852
+          ],
+          [
+            0.1671495,
+            -0.630119
+          ],
+          [
+            0.1670026,
+            -0.66254
+          ]
+        ],
+        [
+          [
+            0.1722889,
+            -0.6226932
+          ],
+          [
+            0.1664427,
+            -0.6281512
+          ],
+          [
+            0.1668891,
+            -0.6621736
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 3,
+      "yaw": -0.9897410869598389,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            132.84011840820312,
+            125.66022491455078,
+            256.18170166015625,
+            351.1166687011719
+          ],
+          "socket": [
+            227.41708374023438,
+            165.2676544189453
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            131.25473022460938,
+            125.87379455566406,
+            258.1383056640625,
+            345.428466796875
+          ],
+          "socket": [
+            231.5481719970703,
+            155.97720336914062
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            133.42083740234375,
+            124.92219543457031,
+            255.54962158203125,
+            348.81829833984375
+          ],
+          "socket": [
+            227.28656005859375,
+            164.28282165527344
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            131.29432678222656,
+            125.75200653076172,
+            258.107421875,
+            344.61944580078125
+          ],
+          "socket": [
+            231.5265655517578,
+            155.844970703125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            133.62875366210938,
+            124.22632598876953,
+            255.24710083007812,
+            346.5198974609375
+          ],
+          "socket": [
+            227.23233032226562,
+            163.4913330078125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            131.31060791015625,
+            125.6385269165039,
+            258.0946350097656,
+            343.8104248046875
+          ],
+          "socket": [
+            231.51759338378906,
+            155.72735595703125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            133.42083740234375,
+            124.92219543457031,
+            255.4680633544922,
+            344.2215270996094
+          ],
+          "socket": [
+            227.28656005859375,
+            164.28282165527344
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            131.29432678222656,
+            125.75200653076172,
+            258.107421875,
+            343.0013732910156
+          ],
+          "socket": [
+            231.5265655517578,
+            155.844970703125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            130.34535217285156,
+            125.26451110839844,
+            253.422607421875,
+            344.3672790527344
+          ],
+          "socket": [
+            224.92233276367188,
+            164.8719482421875
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            129.71287536621094,
+            125.62923431396484,
+            256.596435546875,
+            346.5198974609375
+          ],
+          "socket": [
+            230.00631713867188,
+            155.73263549804688
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.80886840820312,
+            124.67040252685547,
+            253.8386993408203,
+            344.1492004394531
+          ],
+          "socket": [
+            225.05255126953125,
+            164.5470428466797
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            129.65846252441406,
+            125.53582763671875,
+            256.62725830078125,
+            346.5198974609375
+          ],
+          "socket": [
+            230.02789306640625,
+            155.6503143310547
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.59690856933594,
+            124.0341567993164,
+            253.9761962890625,
+            344.19891357421875
+          ],
+          "socket": [
+            225.10647583007812,
+            164.02877807617188
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            129.63430786132812,
+            125.43406677246094,
+            256.6400146484375,
+            346.5198974609375
+          ],
+          "socket": [
+            230.03680419921875,
+            155.5533447265625
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            129.80886840820312,
+            124.67040252685547,
+            253.92025756835938,
+            344.62725830078125
+          ],
+          "socket": [
+            225.05255126953125,
+            164.5470428466797
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            129.65846252441406,
+            125.53582763671875,
+            256.62725830078125,
+            346.5198974609375
+          ],
+          "socket": [
+            230.02789306640625,
+            155.6503143310547
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            0.1208696,
+            -0.5986866
+          ],
+          [
+            0.1297609,
+            -0.6035452
+          ],
+          [
+            0.1448963,
+            -0.6375835
+          ]
+        ],
+        [
+          [
+            0.1201331,
+            -0.604438
+          ],
+          [
+            0.1292827,
+            -0.6071535
+          ],
+          [
+            0.1448172,
+            -0.638068
+          ]
+        ],
+        [
+          [
+            0.1198272,
+            -0.6089596
+          ],
+          [
+            0.129084,
+            -0.6100533
+          ],
+          [
+            0.1447843,
+            -0.6384989
+          ]
+        ],
+        [
+          [
+            0.1201331,
+            -0.604438
+          ],
+          [
+            0.1292827,
+            -0.6071535
+          ],
+          [
+            0.1448172,
+            -0.638068
+          ]
+        ],
+        [
+          [
+            0.1208696,
+            -0.5986866
+          ],
+          [
+            0.1206206,
+            -0.604995
+          ],
+          [
+            0.1392473,
+            -0.6384796
+          ]
+        ],
+        [
+          [
+            0.1216062,
+            -0.600242
+          ],
+          [
+            0.1210977,
+            -0.6061854
+          ],
+          [
+            0.1393263,
+            -0.6387812
+          ]
+        ],
+        [
+          [
+            0.1219121,
+            -0.6030273
+          ],
+          [
+            0.1212953,
+            -0.6080842
+          ],
+          [
+            0.139359,
+            -0.6391365
+          ]
+        ],
+        [
+          [
+            0.1216062,
+            -0.600242
+          ],
+          [
+            0.1210977,
+            -0.6061854
+          ],
+          [
+            0.1393263,
+            -0.6387812
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 4,
+      "yaw": -2.1815226078033447,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            145.66128540039062,
+            118.79818725585938,
+            230.2337646484375,
+            342.33575439453125
+          ],
+          "socket": [
+            168.08177185058594,
+            168.3731689453125
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            153.7117462158203,
+            118.37159729003906,
+            233.90684509277344,
+            339.6262512207031
+          ],
+          "socket": [
+            180.5343475341797,
+            163.5615692138672
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            151.873046875,
+            117.8671875,
+            229.69491577148438,
+            342.33575439453125
+          ],
+          "socket": [
+            168.89842224121094,
+            167.57363891601562
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            155.89828491210938,
+            118.21886444091797,
+            233.82220458984375,
+            339.6262512207031
+          ],
+          "socket": [
+            180.66363525390625,
+            163.45840454101562
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            156.0192108154297,
+            117.0912094116211,
+            229.876708984375,
+            342.33575439453125
+          ],
+          "socket": [
+            169.23626708984375,
+            166.85874938964844
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            157.2564697265625,
+            118.09254455566406,
+            233.61773681640625,
+            339.6262512207031
+          ],
+          "socket": [
+            180.71714782714844,
+            163.3528289794922
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            156.09327697753906,
+            117.8671875,
+            229.47450256347656,
+            342.33575439453125
+          ],
+          "socket": [
+            168.89842224121094,
+            167.57363891601562
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            157.3577117919922,
+            118.21886444091797,
+            233.41310119628906,
+            339.6262512207031
+          ],
+          "socket": [
+            180.66363525390625,
+            163.45840454101562
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            156.00193786621094,
+            117.72871398925781,
+            229.5194549560547,
+            340.66119384765625
+          ],
+          "socket": [
+            168.08177185058594,
+            167.30369567871094
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            157.025634765625,
+            117.71063232421875,
+            233.32827758789062,
+            342.33575439453125
+          ],
+          "socket": [
+            180.5343475341797,
+            162.90057373046875
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            155.91488647460938,
+            117.20512390136719,
+            229.47450256347656,
+            340.2040710449219
+          ],
+          "socket": [
+            167.2642822265625,
+            166.79318237304688
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            156.69354248046875,
+            117.6481704711914,
+            233.41310119628906,
+            342.33575439453125
+          ],
+          "socket": [
+            180.4049530029297,
+            162.78912353515625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            155.67762756347656,
+            116.59501647949219,
+            229.36172485351562,
+            340.0147399902344
+          ],
+          "socket": [
+            166.92559814453125,
+            166.19801330566406
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            156.55599975585938,
+            117.55927276611328,
+            233.61773681640625,
+            342.33575439453125
+          ],
+          "socket": [
+            180.351318359375,
+            162.68008422851562
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            155.91488647460938,
+            117.20512390136719,
+            229.69491577148438,
+            340.2040710449219
+          ],
+          "socket": [
+            167.2642822265625,
+            166.79318237304688
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            156.69354248046875,
+            117.6481704711914,
+            233.82220458984375,
+            342.33575439453125
+          ],
+          "socket": [
+            180.4049530029297,
+            162.78912353515625
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            -0.09931,
+            -0.5928641
+          ],
+          [
+            -0.0876314,
+            -0.5921673
+          ],
+          [
+            -0.0420078,
+            -0.609796
+          ]
+        ],
+        [
+          [
+            -0.0946887,
+            -0.5975662
+          ],
+          [
+            -0.0846394,
+            -0.5950966
+          ],
+          [
+            -0.0415341,
+            -0.6101739
+          ]
+        ],
+        [
+          [
+            -0.0927768,
+            -0.6016541
+          ],
+          [
+            -0.0834016,
+            -0.5977158
+          ],
+          [
+            -0.041338,
+            -0.6105608
+          ]
+        ],
+        [
+          [
+            -0.0946887,
+            -0.5975662
+          ],
+          [
+            -0.0846394,
+            -0.5950966
+          ],
+          [
+            -0.0415341,
+            -0.6101739
+          ]
+        ],
+        [
+          [
+            -0.09931,
+            -0.5928641
+          ],
+          [
+            -0.0876314,
+            -0.5960856
+          ],
+          [
+            -0.0420078,
+            -0.6122177
+          ]
+        ],
+        [
+          [
+            -0.1039314,
+            -0.5954687
+          ],
+          [
+            -0.0906266,
+            -0.597956
+          ],
+          [
+            -0.0424819,
+            -0.6126261
+          ]
+        ],
+        [
+          [
+            -0.1058433,
+            -0.5986877
+          ],
+          [
+            -0.0918674,
+            -0.6001366
+          ],
+          [
+            -0.0426784,
+            -0.6130256
+          ]
+        ],
+        [
+          [
+            -0.1039314,
+            -0.5954687
+          ],
+          [
+            -0.0906266,
+            -0.597956
+          ],
+          [
+            -0.0424819,
+            -0.6126261
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 5,
+      "yaw": 2.909881591796875,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            110.87047576904297,
+            125.5323486328125,
+            253.68692016601562,
+            334.6500244140625
+          ],
+          "socket": [
+            138.88330078125,
+            147.56784057617188
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            114.91389465332031,
+            123.99742126464844,
+            255.52243041992188,
+            335.8465270996094
+          ],
+          "socket": [
+            143.96726989746094,
+            147.492431640625
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            111.3782730102539,
+            125.0042953491211,
+            253.92025756835938,
+            333.9538879394531
+          ],
+          "socket": [
+            139.6181640625,
+            147.18731689453125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            114.99546813964844,
+            123.90971374511719,
+            255.560546875,
+            335.8465270996094
+          ],
+          "socket": [
+            144.0845489501953,
+            147.45587158203125
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            111.58872985839844,
+            124.3952865600586,
+            253.9761962890625,
+            336.07269287109375
+          ],
+          "socket": [
+            139.92239379882812,
+            146.64584350585938
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            115.02925109863281,
+            123.81037902832031,
+            255.513671875,
+            335.8465270996094
+          ],
+          "socket": [
+            144.13311767578125,
+            147.37786865234375
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            111.3782730102539,
+            125.0042953491211,
+            253.83868408203125,
+            338.3710632324219
+          ],
+          "socket": [
+            139.6181640625,
+            147.18731689453125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            114.99546813964844,
+            123.90971374511719,
+            255.40919494628906,
+            335.8465270996094
+          ],
+          "socket": [
+            144.0845489501953,
+            147.45587158203125
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            113.36521911621094,
+            125.13663482666016,
+            255.91738891601562,
+            334.8761901855469
+          ],
+          "socket": [
+            141.3780517578125,
+            147.172119140625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            116.45574188232422,
+            123.75286102294922,
+            256.8502197265625,
+            336.07269287109375
+          ],
+          "socket": [
+            145.5091094970703,
+            147.2478790283203
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            112.85791015625,
+            124.33211517333984,
+            255.46804809570312,
+            334.1800537109375
+          ],
+          "socket": [
+            140.64288330078125,
+            146.2422637939453
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            116.3741683959961,
+            123.62535095214844,
+            256.8121337890625,
+            336.07269287109375
+          ],
+          "socket": [
+            145.39178466796875,
+            147.06976318359375
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            112.60037231445312,
+            123.60857391357422,
+            255.2470703125,
+            335.8465270996094
+          ],
+          "socket": [
+            140.3383331298828,
+            145.47340393066406
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            116.34039306640625,
+            123.50951385498047,
+            256.8591003417969,
+            336.07269287109375
+          ],
+          "socket": [
+            145.3431854248047,
+            146.93312072753906
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            112.85791015625,
+            124.33211517333984,
+            255.54962158203125,
+            338.1448974609375
+          ],
+          "socket": [
+            140.64288330078125,
+            146.2422637939453
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            116.3741683959961,
+            123.62535095214844,
+            256.9635009765625,
+            336.07269287109375
+          ],
+          "socket": [
+            145.39178466796875,
+            147.06976318359375
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            -0.1943596,
+            -0.6721773
+          ],
+          [
+            -0.1946086,
+            -0.6683937
+          ],
+          [
+            -0.175982,
+            -0.66867
+          ]
+        ],
+        [
+          [
+            -0.1902032,
+            -0.6745089
+          ],
+          [
+            -0.1919162,
+            -0.6697878
+          ],
+          [
+            -0.1755523,
+            -0.6688039
+          ]
+        ],
+        [
+          [
+            -0.1884825,
+            -0.6776157
+          ],
+          [
+            -0.1908016,
+            -0.6717717
+          ],
+          [
+            -0.1753744,
+            -0.6690897
+          ]
+        ],
+        [
+          [
+            -0.1902032,
+            -0.6745089
+          ],
+          [
+            -0.1919162,
+            -0.6697878
+          ],
+          [
+            -0.1755523,
+            -0.6688039
+          ]
+        ],
+        [
+          [
+            -0.1943596,
+            -0.6721773
+          ],
+          [
+            -0.1854683,
+            -0.6698435
+          ],
+          [
+            -0.170333,
+            -0.669566
+          ]
+        ],
+        [
+          [
+            -0.198516,
+            -0.6771527
+          ],
+          [
+            -0.1881618,
+            -0.6732503
+          ],
+          [
+            -0.1707629,
+            -0.6702185
+          ]
+        ],
+        [
+          [
+            -0.2002368,
+            -0.6813527
+          ],
+          [
+            -0.1892777,
+            -0.6760673
+          ],
+          [
+            -0.1709409,
+            -0.6707192
+          ]
+        ],
+        [
+          [
+            -0.198516,
+            -0.6771527
+          ],
+          [
+            -0.1881618,
+            -0.6732503
+          ],
+          [
+            -0.1707629,
+            -0.6702185
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 6,
+      "yaw": 2.5308666229248047,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            116.26699829101562,
+            125.92213439941406,
+            248.2108154296875,
+            336.22784423828125
+          ],
+          "socket": [
+            144.35157775878906,
+            139.87017822265625
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            116.77983856201172,
+            126.48019409179688,
+            246.52793884277344,
+            337.3878173828125
+          ],
+          "socket": [
+            144.86441040039062,
+            140.22230529785156
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            116.73274230957031,
+            125.66720581054688,
+            248.57608032226562,
+            335.513427734375
+          ],
+          "socket": [
+            144.81732177734375,
+            139.58135986328125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            116.8545913696289,
+            126.46769714355469,
+            246.60232543945312,
+            337.3878173828125
+          ],
+          "socket": [
+            144.93917846679688,
+            140.20042419433594
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            116.9256591796875,
+            125.17950439453125,
+            248.7183837890625,
+            335.0668029785156
+          ],
+          "socket": [
+            145.01023864746094,
+            139.077880859375
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            116.88554382324219,
+            126.39969635009766,
+            246.6331329345703,
+            337.3878173828125
+          ],
+          "socket": [
+            144.97012329101562,
+            140.12847900390625
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            116.73274230957031,
+            125.66720581054688,
+            248.57608032226562,
+            334.9988708496094
+          ],
+          "socket": [
+            144.81732177734375,
+            139.58135986328125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            116.8545913696289,
+            126.46769714355469,
+            246.60232543945312,
+            337.3878173828125
+          ],
+          "socket": [
+            144.93917846679688,
+            140.20042419433594
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            118.95233154296875,
+            125.92213439941406,
+            250.89614868164062,
+            332.43988037109375
+          ],
+          "socket": [
+            147.0369110107422,
+            139.87017822265625
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            118.43946838378906,
+            126.48019409179688,
+            248.18756103515625,
+            332.9366455078125
+          ],
+          "socket": [
+            146.5240478515625,
+            140.22230529785156
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            118.48658752441406,
+            124.87252807617188,
+            250.5076904296875,
+            334.9138488769531
+          ],
+          "socket": [
+            146.57115173339844,
+            138.8485565185547
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            118.36471557617188,
+            126.27813720703125,
+            248.1131591796875,
+            333.8074951171875
+          ],
+          "socket": [
+            146.44927978515625,
+            140.029541015625
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            118.29365539550781,
+            124.0558090209961,
+            250.34161376953125,
+            337.3878173828125
+          ],
+          "socket": [
+            146.37823486328125,
+            138.0417022705078
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            118.3337631225586,
+            126.13162994384766,
+            248.0823211669922,
+            334.6783142089844
+          ],
+          "socket": [
+            146.4183349609375,
+            139.88681030273438
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            118.48658752441406,
+            124.87252807617188,
+            250.5076904296875,
+            339.8617858886719
+          ],
+          "socket": [
+            146.57115173339844,
+            138.8485565185547
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            118.36471557617188,
+            126.27813720703125,
+            248.1131591796875,
+            335.5491638183594
+          ],
+          "socket": [
+            146.44927978515625,
+            140.029541015625
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            -0.1696548,
+            -0.6999852
+          ],
+          [
+            -0.174574,
+            -0.6965963
+          ],
+          [
+            -0.172695,
+            -0.6953062
+          ]
+        ],
+        [
+          [
+            -0.1670214,
+            -0.7017981
+          ],
+          [
+            -0.1728676,
+            -0.6976545
+          ],
+          [
+            -0.1724211,
+            -0.6953864
+          ]
+        ],
+        [
+          [
+            -0.1659306,
+            -0.70469
+          ],
+          [
+            -0.1721608,
+            -0.6994991
+          ],
+          [
+            -0.1723077,
+            -0.69565
+          ]
+        ],
+        [
+          [
+            -0.1670214,
+            -0.7017981
+          ],
+          [
+            -0.1728676,
+            -0.6976545
+          ],
+          [
+            -0.1724211,
+            -0.6953864
+          ]
+        ],
+        [
+          [
+            -0.1696548,
+            -0.6999852
+          ],
+          [
+            -0.1647355,
+            -0.6965963
+          ],
+          [
+            -0.1666145,
+            -0.6953062
+          ]
+        ],
+        [
+          [
+            -0.1722881,
+            -0.7054792
+          ],
+          [
+            -0.1664419,
+            -0.7003393
+          ],
+          [
+            -0.1668884,
+            -0.6960125
+          ]
+        ],
+        [
+          [
+            -0.1733789,
+            -0.7098941
+          ],
+          [
+            -0.1671487,
+            -0.7032955
+          ],
+          [
+            -0.1670018,
+            -0.6965354
+          ]
+        ],
+        [
+          [
+            -0.1722881,
+            -0.7054792
+          ],
+          [
+            -0.1664419,
+            -0.7003393
+          ],
+          [
+            -0.1668884,
+            -0.6960125
+          ]
+        ]
+      ]
+    },
+    {
+      "direction": 7,
+      "yaw": 2.1518516540527344,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            127.81855773925781,
+            119.06675720214844,
+            251.16009521484375,
+            340.3087463378906
+          ],
+          "socket": [
+            156.5831298828125,
+            133.52462768554688
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            125.86192321777344,
+            119.3118667602539,
+            252.74551391601562,
+            341.5052490234375
+          ],
+          "socket": [
+            152.45204162597656,
+            133.60037231445312
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            128.45062255859375,
+            118.84954833984375,
+            250.57937622070312,
+            339.61260986328125
+          ],
+          "socket": [
+            156.71365356445312,
+            133.2813720703125
+          ]
+        },
+        {
+          "entry": 1,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            125.89277648925781,
+            119.30545806884766,
+            252.70591735839844,
+            341.5052490234375
+          ],
+          "socket": [
+            152.47364807128906,
+            133.58584594726562
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            128.7531280517578,
+            118.37745666503906,
+            250.3714599609375,
+            339.1842346191406
+          ],
+          "socket": [
+            156.76788330078125,
+            132.7967529296875
+          ]
+        },
+        {
+          "entry": 2,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            125.90557861328125,
+            119.23997497558594,
+            252.6896209716797,
+            341.5052490234375
+          ],
+          "socket": [
+            152.4826202392578,
+            133.51693725585938
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            128.5321807861328,
+            118.84954833984375,
+            250.57937622070312,
+            339.1345520019531
+          ],
+          "socket": [
+            156.71365356445312,
+            133.2813720703125
+          ]
+        },
+        {
+          "entry": 3,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            125.89277648925781,
+            119.30545806884766,
+            252.70591735839844,
+            341.5052490234375
+          ],
+          "socket": [
+            152.47364807128906,
+            133.58584594726562
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            130.57760620117188,
+            119.46247100830078,
+            253.6548614501953,
+            336.908447265625
+          ],
+          "socket": [
+            159.077880859375,
+            133.92034912109375
+          ]
+        },
+        {
+          "entry": 4,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            127.40376281738281,
+            119.55642700195312,
+            254.287353515625,
+            337.17767333984375
+          ],
+          "socket": [
+            153.993896484375,
+            133.8449249267578
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            130.1615447998047,
+            118.3751220703125,
+            254.1913604736328,
+            339.20684814453125
+          ],
+          "socket": [
+            158.94766235351562,
+            132.8532257080078
+          ]
+        },
+        {
+          "entry": 5,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            127.37295532226562,
+            119.34830474853516,
+            254.34178161621094,
+            337.9867248535156
+          ],
+          "socket": [
+            153.97232055664062,
+            133.64480590820312
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            130.0240478515625,
+            117.5427474975586,
+            254.4033203125,
+            341.5052490234375
+          ],
+          "socket": [
+            158.89373779296875,
+            132.02749633789062
+          ]
+        },
+        {
+          "entry": 6,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            127.36021423339844,
+            119.19927978515625,
+            254.36593627929688,
+            338.7957458496094
+          ],
+          "socket": [
+            153.96340942382812,
+            133.4990234375
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            130.07998657226562,
+            118.3751220703125,
+            254.1913604736328,
+            343.8036193847656
+          ],
+          "socket": [
+            158.94766235351562,
+            132.8532257080078
+          ]
+        },
+        {
+          "entry": 7,
+          "sample": 1,
+          "frame": 9,
+          "bounds": [
+            127.37295532226562,
+            119.34830474853516,
+            254.34178161621094,
+            339.6047668457031
+          ],
+          "socket": [
+            153.97232055664062,
+            133.64480590820312
+          ]
+        }
+      ],
+      "sockets": [
+        [
+          [
+            -0.1208688,
+            -0.7221789
+          ],
+          [
+            -0.1297601,
+            -0.7198451
+          ],
+          [
+            -0.1448955,
+            -0.7195676
+          ]
+        ],
+        [
+          [
+            -0.1201323,
+            -0.7237344
+          ],
+          [
+            -0.1292819,
+            -0.7207364
+          ],
+          [
+            -0.1448164,
+            -0.7196208
+          ]
+        ],
+        [
+          [
+            -0.1198264,
+            -0.7265197
+          ],
+          [
+            -0.1290832,
+            -0.7225119
+          ],
+          [
+            -0.1447835,
+            -0.7198733
+          ]
+        ],
+        [
+          [
+            -0.1201323,
+            -0.7237344
+          ],
+          [
+            -0.1292819,
+            -0.7207364
+          ],
+          [
+            -0.1448164,
+            -0.7196208
+          ]
+        ],
+        [
+          [
+            -0.1208688,
+            -0.7221789
+          ],
+          [
+            -0.1206198,
+            -0.7183953
+          ],
+          [
+            -0.1392465,
+            -0.7186716
+          ]
+        ],
+        [
+          [
+            -0.1216054,
+            -0.7279304
+          ],
+          [
+            -0.1210969,
+            -0.722305
+          ],
+          [
+            -0.1393255,
+            -0.7194048
+          ]
+        ],
+        [
+          [
+            -0.1219114,
+            -0.732452
+          ],
+          [
+            -0.1212945,
+            -0.7253303
+          ],
+          [
+            -0.1393582,
+            -0.7199389
+          ]
+        ],
+        [
+          [
+            -0.1216054,
+            -0.7279304
+          ],
+          [
+            -0.1210969,
+            -0.722305
+          ],
+          [
+            -0.1393255,
+            -0.7194048
+          ]
+        ]
+      ]
+    }
+  ],
+  "fps": 100,
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 64
+  },
+  "display_scale": 1.406896551724138,
+  "reference_sha256": "444644e358d8312d72c9192237dbe1e662338e5f287138e54639d02eb283f28c",
+  "generator_sha256": "47127eeddf3467f75f06e6742e34cc15fac91328a57e2a09a5fc6efa60e4b218",
+  "runtime": {
+    "mesh_objects": 51,
+    "triangles": 24384,
+    "materials": 15
+  }
+}

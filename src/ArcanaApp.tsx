@@ -53,12 +53,25 @@ export default function ArcanaApp() {
       <div className="arcana-title-content">
         <header className="arcana-title-top"><span className="arcana-world-mark">✦ THE GUARDIANS OF ARCANA</span><button className="arcana-settings-button" onClick={() => setSettings(true)} aria-label="게임 설정 열기"><SettingsIcon/></button></header>
         <div className="arcana-title-brand"><p>작은 마을에서 시작되는 큰 모험</p><span className="arcana-wordmark" aria-hidden="true">ARCANA</span><h1>아르카나 수비대</h1><div className="arcana-title-rule" aria-hidden="true"><i/>✦<i/></div></div>
-        <div className="arcana-title-bottom">
-          <p className="arcana-title-story">동료를 모으고, 마을을 지켜라.<br/>다음 모험이 당신을 기다린다.</p>
-          {hasJourney ? <div className="arcana-journey"><span>당신의 수비대</span><strong>구한 마을 {campaign.cleared.length}/{STAGE_COUNT} <i>·</i> 동료 {campaign.visitors.length}명</strong></div> : <p className="arcana-title-chapter">첫 번째 이야기 · 청록의 숲</p>}
-          <button className="arcana-start" onClick={start}><Icon name="play" size={25}/><span>{hasJourney ? '모험 이어가기' : '수비대 결성하기'}</span><span aria-hidden="true">→</span></button>
-          <p className="arcana-title-save">진행 상황은 이 기기에 저장됩니다</p>
-        </div>
+        <nav className="arcana-title-bottom arcana-mode-picker" aria-label="플레이 모드 선택">
+          <p className="arcana-mode-heading">오늘, 어떤 전장을 지킬까요?</p>
+          <a className="arcana-mode arcana-mode-main" href="/rush.html">
+            <span className="arcana-mode-mark" aria-hidden="true">✦</span>
+            <span><small>RUSH · 3D 전투와 마을 성장</small><strong>마을 수비</strong><span>영웅을 움직여 싸우고, 보상으로 마을을 키워요</span></span>
+            <b aria-hidden="true">→</b>
+          </a>
+          <button className="arcana-mode" onClick={start}>
+            <Icon name="play" size={23}/>
+            <span><strong>원정{hasJourney ? ' 이어가기' : ''}</strong><span>{hasJourney ? `구한 마을 ${campaign.cleared.length}/${STAGE_COUNT} · 동료 ${campaign.visitors.length}명` : '영웅과 타워로 길목 방어 · 동료와 장비 성장'}</span><small>원정 거점에서 군단 방어도 선택할 수 있어요</small></span>
+            <b aria-hidden="true">→</b>
+          </button>
+          <a className="arcana-mode" href="/frontier.html">
+            <span className="arcana-mode-mark" aria-hidden="true">⚑</span>
+            <span><strong>전술 훈련</strong><span>성문 방어 · 분대 지휘 · 솔로 직접 조작</span><small>독립 훈련 · 마을 성장 보상 없음</small></span>
+            <b aria-hidden="true">→</b>
+          </a>
+          <p className="arcana-title-save">각 모드의 성장과 기록은 이 기기에 따로 저장됩니다</p>
+        </nav>
       </div>
     </main>}
     {settings ? <Dialog title="게임 설정" className="arcana-settings-dialog" onClose={() => setSettings(false)}>

@@ -6,7 +6,7 @@ import { Dialog } from './Dialog';
 import { Icon } from './Icon';
 import { BRANCHES, HEROES, TOWERS, getSlots, getStage, stageLabel } from '../games/defense/data';
 import { DIFFICULTIES } from '../games/defense/difficulty';
-import { allowedBranches, inSurge, questStatus, upgradeCost, waveSize } from '../games/defense/engine';
+import { SKILL_SUPPLY, SKILL_SUPPLY_KILLS, skillSlowSeconds, allowedBranches, inSurge, questStatus, upgradeCost, waveSize } from '../games/defense/engine';
 import type { TacticalAction } from '../games/defense/engine';
 import { towerSpriteAsset } from '../games/defense/art';
 import type { Campaign, DefenseState, Point, TowerKind } from '../games/defense/types';
@@ -30,11 +30,14 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
   const terminal = state.phase === 'won' || state.phase === 'lost';
   const canAct = !state.paused && !terminal && state.phase !== 'promotion';
   const skillReady = canAct && state.phase === 'wave' && state.skillCooldown === 0 && state.enemies.length > 0;
+  const skillResult = state.lastSkill && ((state.phase==='wave' && state.time-state.lastSkill.at<3)||state.phase==='intermission') ? state.lastSkill : null;
+  const supplyReady=state.skillSupplyWave!==state.wave;
+  const skillBenefit=state.promotion==='power'?'전직 · 피해 +40%':skillSlowSeconds(state.hero,state.promotion)?`생존 적 둔화 ${skillSlowSeconds(state.hero,state.promotion)}초`:hero.trait;
   const dashReady = canAct && state.phase === 'wave' && state.dashCooldown === 0;
   // A dimmed action button should say when it comes back, not look broken.
   const idleHint = state.phase === 'wave' ? '' : '웨이브 중 사용';
   const skillHint = state.skillCooldown > 0 ? `${Math.ceil(state.skillCooldown)}초` : state.phase === 'wave' && state.enemies.length === 0 ? '적이 나오면' : idleHint || hero.skill;
-  const dashHint = state.dashCooldown > 0 ? `${Math.ceil(state.dashCooldown)}초` : aimingDash ? '한 번 더 눌러 취소' : idleHint || '위치를 골라 질주';
+  const dashHint = state.dashCooldown > 0 ? `${Math.ceil(state.dashCooldown)}초` : aimingDash ? '한 번 더 눌러 취소' : idleHint || '경로의 적 타격';
   const mapSpace = useRef<HTMLDivElement>(null);
   const mapViewport = useRef<HTMLDivElement>(null);
   const lastMapScroll = useRef(-Infinity);
@@ -99,8 +102,8 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
 
   return <main className={`battle-page battle-${stage.region} ${aimingDash ? 'battle-aiming' : ''} ${surging ? 'battle-surge' : ''} ${nudge ? `battle-nudge-${nudge}` : ''} ${largeText ? 'battle-large-text' : ''}`} id="main" aria-label="아르카나 수비대 전투" data-phase={state.phase} data-paused={state.paused} data-aiming={aimingDash} data-dash-cooldown={state.dashCooldown.toFixed(2)} data-hero-x={state.heroPosition.x.toFixed(1)} data-hero-y={state.heroPosition.y.toFixed(1)}>
     <span className="battle-font-probe" ref={fontProbe} aria-hidden="true"/>
+    <div className="battle-accessible-status" role="status" aria-live="polite" aria-atomic="true">{stageLabel(state.stage)} · 마을 체력 {state.hp}{stage.expanded ? ` · 외곽 마을 체력 ${state.outpostHp}` : ''} · 전투 코인 {state.coins} · 웨이브 {state.wave} / 4</div>
     <header className="battle-hud">
-      <button className="battle-stage" onClick={() => onPanel({ kind: 'party' })} disabled={terminal || state.paused || state.phase === 'promotion'} aria-label="원정 정보와 전술 메뉴">{stageLabel(state.stage)}</button>
       <span key={`m${hitTown.main}`} className={`battle-health ${state.hp <= 5 ? 'danger' : ''} ${hitTown.main ? 'is-hit' : ''}`} aria-label={`마을 체력 ${state.hp}`}><small>마을</small><Heart/><b>{state.hp}</b></span>
       {stage.expanded ? <span key={`o${hitTown.outpost}`} className={`battle-health ${state.outpostHp <= 4 ? 'danger' : ''} ${hitTown.outpost ? 'is-hit' : ''}`} aria-label={`외곽 마을 체력 ${state.outpostHp}`}><small>외곽</small><Heart/><b>{state.outpostHp}</b></span> : null}
       <span className="battle-coins" aria-label={`전투 코인 ${state.coins}`}><Coin/><b>{state.coins}</b></span>
@@ -124,6 +127,9 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
           <button onClick={() => { onCancelAim(); const next = !(zoomed && canZoom); writeZoomPreference(next); wantZoom.current = next; setZoomed(next); }} disabled={!canZoom} aria-pressed={zoomed && canZoom} aria-label="전장 확대">{zoomed && canZoom ? '전체 보기' : '확대 보기'}</button>
         </div>
         <div className="battle-map-space" ref={mapSpace}>
+          <div className="battle-skill-result" role="status" aria-live="polite" aria-atomic="true" data-visible={!!skillResult}>
+            {skillResult?<><strong>{hero.skill}{skillResult.interrupted?' · 충전 차단!':''}</strong><span>적중 {skillResult.hits} · 처치 {skillResult.kills} · 약점 {skillResult.weakHits}</span><span>실제 피해 {skillResult.damage}{skillResult.slowSeconds?` · 둔화 ${skillResult.slowSeconds}초`:''}</span>{skillResult.supply?<b>전투 보급 +{skillResult.supply} <small>이번 웨이브 지급 완료</small></b>:null}</>:null}
+          </div>
           {hitCount ? <i key={hitCount} className="battle-breach-flash" aria-hidden="true"/> : null}
           <div className={`battle-map-viewport ${zoomed && canZoom ? 'is-zoomed' : ''}`} ref={mapViewport} tabIndex={zoomed && canZoom ? 0 : undefined} role="region" aria-label="전장 지도. 확대 시 좌우로 스크롤할 수 있어요"
             onScroll={event => { lastMapScroll.current = performance.now(); onCancelAim(); if (zoomed && state.phase === 'wave') setScrollLeft(Math.round(event.currentTarget.scrollLeft)); }}
@@ -147,7 +153,8 @@ export function DefenseBattle({ state, campaign, themeId, aimingDash, selectedSl
         {storageFailed ? <p className="battle-save-warning" role="status">진행을 저장할 수 없어요. 창을 닫기 전 확인해 주세요.</p> : null}
       </section>
       <nav className="battle-commands" aria-label="영웅 액션">
-        <button className={`battle-skill ${skillReady ? 'is-ready' : ''}`} disabled={!skillReady} onClick={onSkill} aria-label="필살기 사용"><Icon name="star" size={25}/><span>필살기<small>{skillHint}</small></span></button>
+        <p id="battle-skill-benefit" className="battle-skill-benefit"><strong>{skillBenefit}</strong><span>{supplyReady?`필살기 ${SKILL_SUPPLY_KILLS}처치 → 보급 +${SKILL_SUPPLY}`:'이번 웨이브 보급 획득'}</span><small>웨이브당 1회 · 전투 코인</small></p>
+        <button className={`battle-skill ${skillReady ? 'is-ready' : ''}`} disabled={!skillReady} onClick={onSkill} aria-label="필살기 사용" aria-describedby="battle-skill-benefit"><Icon name="star" size={25}/><span>필살기<small>{skillHint}</small></span></button>
         <button className={`battle-dash ${aimingDash ? 'selected' : ''}`} disabled={!dashReady} onClick={onDash} aria-label={aimingDash ? '돌진 조준 취소' : '영웅 돌진 위치 선택'} aria-pressed={aimingDash}><DashIcon/><span>{aimingDash ? largeText ? '취소' : '돌진 취소' : '돌진'}<small>{dashHint}</small></span></button>
       </nav>
     </div>
@@ -182,7 +189,7 @@ export function DefenseTacticalPanel({ panel, state, campaign, active, onClose, 
       </> : <div className="tactical-towers">{(['crossbow', 'magic', 'cannon'] as TowerKind[]).map(kind => <button key={kind} disabled={state.coins < TOWERS[kind].cost} onClick={() => onBuy({ type: 'build', slot: slot.id, kind })}><DefenseSprite index={TOWERS[kind].sprite}/><strong>{TOWERS[kind].name}</strong><span>{kind === 'crossbow' ? '빠른 단일 공격' : kind === 'magic' ? '속성 마법 공격' : '충격 범위 공격'}</span><b>{costLabel(TOWERS[kind].cost)}</b></button>)}</div> : null}
       {panel.kind === 'recruit' ? state.mercenary ? <div className="tactical-hired"><DefenseSprite index={HEROES[state.mercenary].sprite}/><strong>{HEROES[state.mercenary].name}</strong><p>이번 원정에 함께하고 있어요.</p></div> : <div className="tactical-recruits">{campaign.visitors.filter(id => id !== state.hero).map(id => <button key={id} disabled={state.coins < 120} onClick={() => onBuy({ type: 'hire', hero: id })}><DefenseSprite index={HEROES[id].sprite}/><span><strong>{HEROES[id].name}</strong><small>{HEROES[id].role}</small></span><b>{costLabel(120)}</b></button>)}{campaign.visitors.length < 2 ? <p>첫 마을을 지키면 새로운 동료가 찾아옵니다.</p> : null}</div> : null}
       {panel.kind === 'scout' ? <DefenseForecast stage={state.stage} wave={state.wave} phase={state.phase} difficulty={state.difficulty} spawned={state.spawned} alive={state.enemies.length} expanded/> : null}
-      {panel.kind === 'party' ? <div className="tactical-party"><div className="tactical-hero"><DefenseSprite index={hero.sprite}/><div><h3>{hero.name}</h3><p>{hero.role}</p><small>{hero.description}</small></div></div><p>{stageLabel(state.stage)} {stage.name} · {DIFFICULTIES[state.difficulty].name}</p>{state.phase === 'won' || state.phase === 'lost' ? null : <p className={`tactical-quest-live ${quest.met ? 'met' : 'risk'}`} role="status">추가 퀘스트 · {questLiveText(quest)}</p>}<div className="tactical-menu"><button onClick={() => onPanel({ kind: 'recruit' })}>용병 고용</button><button onClick={() => onPanel({ kind: 'scout' })}>적 편성 정찰</button></div><div className="tactical-quest"><strong>추가 퀘스트</strong><p>{stage.quest}</p><small>{campaign.questClaimed.includes(state.stage) ? '추가 보상 수령 완료' : `클리어 시 추가 ${stage.questReward} G`}</small></div><p className="tactical-help">공격은 자동 · 땅을 눌러 이동<br/>돌진: 위치 선택 · 필살기: 즉시 발동</p></div> : null}
+      {panel.kind === 'party' ? <div className="tactical-party"><div className="tactical-hero"><DefenseSprite index={hero.sprite}/><div><h3>{hero.name}</h3><p>{hero.role}</p><small>{hero.description}</small></div></div><p>{stageLabel(state.stage)} {stage.name} · {DIFFICULTIES[state.difficulty].name}</p>{state.phase === 'won' || state.phase === 'lost' ? null : <p className={`tactical-quest-live ${quest.met ? 'met' : 'risk'}`} role="status">추가 퀘스트 · {questLiveText(quest)}</p>}<div className="tactical-menu"><button onClick={() => onPanel({ kind: 'recruit' })}>용병 고용</button><button onClick={() => onPanel({ kind: 'scout' })}>적 편성 정찰</button></div><div className="tactical-quest"><strong>추가 퀘스트</strong><p>{stage.quest}</p><small>{campaign.questClaimed.includes(state.stage) ? '추가 보상 수령 완료' : `클리어 시 추가 ${stage.questReward} G`}</small></div><p className="tactical-help">공격은 자동 · 땅을 눌러 이동<br/>돌진: 경로의 적 1회 타격·밀치기 · 필살기: 즉시 발동</p></div> : null}
     </div>
   </Dialog>;
 }

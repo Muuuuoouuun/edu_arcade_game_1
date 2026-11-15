@@ -1,0 +1,609 @@
+{
+  "source": "art-source/defense/ice-knight-walk.blend",
+  "source_sha256": "c23b166be5c4d47c2f594df858e2de4e15e4760bf608b90f131a640c3984c301",
+  "base_source": "art-source/defense/ice-knight.blend",
+  "base_source_sha256": "47f74460ce0c792b22dfd80dcda465b290dfb4f14e50ebdb2c5b57cb999f8e7e",
+  "regeneration_command": "npm run models:ice-walk",
+  "reference": "public/defense/monster-models.webp",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      317.61
+    ],
+    "display_anchor_y": 339.61,
+    "delivery_shift_y": 22,
+    "crop": [
+      0,
+      0,
+      384,
+      384
+    ],
+    "orthographic_scale": 5.599999904632568
+  },
+  "sword_parent": "arm-near",
+  "clip": "ice-knight-walk",
+  "duration": 1,
+  "stride_world": 24.8373,
+  "stride_reference_size": 68,
+  "baked_frames": [
+    1,
+    5,
+    9,
+    13,
+    17,
+    21,
+    25,
+    29
+  ],
+  "samples": [
+    {
+      "frame": 1,
+      "phase": 0.0,
+      "bounds": [
+        102.987,
+        31.373,
+        323.148,
+        338.587
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.0
+      }
+    },
+    {
+      "frame": 2,
+      "phase": 0.19635,
+      "bounds": [
+        103.642,
+        31.855,
+        323.894,
+        338.257
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.007612,
+        "far": 0.0
+      }
+    },
+    {
+      "frame": 3,
+      "phase": 0.392699,
+      "bounds": [
+        105.541,
+        32.037,
+        324.455,
+        337.288
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.029289,
+        "far": -0.0
+      }
+    },
+    {
+      "frame": 4,
+      "phase": 0.589049,
+      "bounds": [
+        108.625,
+        31.958,
+        324.67,
+        335.876
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.061732,
+        "far": 0.0
+      }
+    },
+    {
+      "frame": 5,
+      "phase": 0.785398,
+      "bounds": [
+        112.802,
+        31.693,
+        324.438,
+        334.313
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.1,
+        "far": 0.0
+      }
+    },
+    {
+      "frame": 6,
+      "phase": 0.981748,
+      "bounds": [
+        116.409,
+        31.34,
+        323.737,
+        332.942
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.138268,
+        "far": 0.0
+      }
+    },
+    {
+      "frame": 7,
+      "phase": 1.178097,
+      "bounds": [
+        120.655,
+        31.01,
+        322.626,
+        332.092
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.170711,
+        "far": 0.0
+      }
+    },
+    {
+      "frame": 8,
+      "phase": 1.374447,
+      "bounds": [
+        125.543,
+        30.8,
+        321.229,
+        332.028
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.192388,
+        "far": -0.0
+      }
+    },
+    {
+      "frame": 9,
+      "phase": 1.570796,
+      "bounds": [
+        124.926,
+        30.776,
+        319.721,
+        332.897
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.2,
+        "far": -0.0
+      }
+    },
+    {
+      "frame": 10,
+      "phase": 1.767146,
+      "bounds": [
+        122.879,
+        30.952,
+        318.297,
+        334.707
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.192388,
+        "far": 0.0
+      }
+    },
+    {
+      "frame": 11,
+      "phase": 1.963495,
+      "bounds": [
+        121.333,
+        31.291,
+        317.146,
+        337.322
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.170711,
+        "far": -0.0
+      }
+    },
+    {
+      "frame": 12,
+      "phase": 2.159845,
+      "bounds": [
+        120.551,
+        31.707,
+        316.421,
+        340.479
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.138268,
+        "far": 0.0
+      }
+    },
+    {
+      "frame": 13,
+      "phase": 2.356194,
+      "bounds": [
+        120.698,
+        32.089,
+        316.218,
+        343.828
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.1,
+        "far": -0.0
+      }
+    },
+    {
+      "frame": 14,
+      "phase": 2.552544,
+      "bounds": [
+        121.815,
+        32.324,
+        316.566,
+        346.977
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.061732,
+        "far": 0.0
+      }
+    },
+    {
+      "frame": 15,
+      "phase": 2.748894,
+      "bounds": [
+        121.721,
+        32.316,
+        317.464,
+        349.545
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": 0.029289,
+        "far": -0.0
+      }
+    },
+    {
+      "frame": 16,
+      "phase": 2.945243,
+      "bounds": [
+        121.574,
+        32.007,
+        320.52,
+        351.217
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.007612,
+        "far": 0.0
+      }
+    },
+    {
+      "frame": 17,
+      "phase": 3.141593,
+      "bounds": [
+        121.953,
+        31.373,
+        322.913,
+        351.783
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.0
+      }
+    },
+    {
+      "frame": 18,
+      "phase": 3.337942,
+      "bounds": [
+        122.754,
+        30.436,
+        324.475,
+        351.648
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.007612
+      }
+    },
+    {
+      "frame": 19,
+      "phase": 3.534292,
+      "bounds": [
+        123.855,
+        29.252,
+        325.054,
+        351.293
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": -0.0,
+        "far": 0.029289
+      }
+    },
+    {
+      "frame": 20,
+      "phase": 3.730641,
+      "bounds": [
+        125.135,
+        27.915,
+        324.907,
+        350.723
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.061732
+      }
+    },
+    {
+      "frame": 21,
+      "phase": 3.926991,
+      "bounds": [
+        126.493,
+        26.547,
+        325.954,
+        349.949
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.1
+      }
+    },
+    {
+      "frame": 22,
+      "phase": 4.12334,
+      "bounds": [
+        127.865,
+        25.29,
+        326.558,
+        348.991
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.138268
+      }
+    },
+    {
+      "frame": 23,
+      "phase": 4.31969,
+      "bounds": [
+        129.226,
+        24.288,
+        326.673,
+        347.876
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.170711
+      }
+    },
+    {
+      "frame": 24,
+      "phase": 4.516039,
+      "bounds": [
+        130.585,
+        23.664,
+        326.314,
+        346.642
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": -0.0,
+        "far": 0.192388
+      }
+    },
+    {
+      "frame": 25,
+      "phase": 4.712389,
+      "bounds": [
+        131.794,
+        23.5,
+        325.562,
+        345.336
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": -0.0,
+        "far": 0.2
+      }
+    },
+    {
+      "frame": 26,
+      "phase": 4.908739,
+      "bounds": [
+        126.164,
+        23.817,
+        324.561,
+        344.013
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.192388
+      }
+    },
+    {
+      "frame": 27,
+      "phase": 5.105088,
+      "bounds": [
+        120.946,
+        24.569,
+        323.495,
+        342.728
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": -0.0,
+        "far": 0.170711
+      }
+    },
+    {
+      "frame": 28,
+      "phase": 5.301438,
+      "bounds": [
+        116.352,
+        25.657,
+        322.561,
+        341.542
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.138268
+      }
+    },
+    {
+      "frame": 29,
+      "phase": 5.497787,
+      "bounds": [
+        112.541,
+        26.944,
+        321.924,
+        340.507
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": -0.0,
+        "far": 0.1
+      }
+    },
+    {
+      "frame": 30,
+      "phase": 5.694137,
+      "bounds": [
+        108.593,
+        28.281,
+        321.691,
+        339.667
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.061732
+      }
+    },
+    {
+      "frame": 31,
+      "phase": 5.890486,
+      "bounds": [
+        105.489,
+        29.532,
+        321.878,
+        339.057
+      ],
+      "lowest_vertex": -0.0,
+      "feet": {
+        "near": -0.0,
+        "far": 0.029289
+      }
+    },
+    {
+      "frame": 32,
+      "phase": 6.086836,
+      "bounds": [
+        103.605,
+        30.587,
+        322.413,
+        338.694
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.007612
+      }
+    },
+    {
+      "frame": 33,
+      "phase": 6.283185,
+      "bounds": [
+        102.987,
+        31.373,
+        323.148,
+        338.587
+      ],
+      "lowest_vertex": 0.0,
+      "feet": {
+        "near": 0.0,
+        "far": 0.0
+      }
+    }
+  ],
+  "files": [
+    {
+      "file": "ice-knight-walk.glb",
+      "bytes": 153876,
+      "sha256": "eb3addf355e9558b5c65e42bcdc29ff736184ff5055ada246e270b7940307e7f"
+    },
+    {
+      "file": "ice-knight-walk-atlas.webp",
+      "bytes": 76578,
+      "sha256": "07f846438e005e54b4f3dd9ec8dc340df8513a0928189a3305a410c0f1d18210"
+    },
+    {
+      "file": "ice-knight-walk.png",
+      "bytes": 154286,
+      "sha256": "db92db6fca2e44c8606e815f5e772a3df16026e4c1d5c3ed0f7718118afc21d8"
+    }
+  ],
+  "renders": [
+    {
+      "path": "art-source/defense/ice-walk-frames/ice-walk-0.png",
+      "sha256": "db92db6fca2e44c8606e815f5e772a3df16026e4c1d5c3ed0f7718118afc21d8"
+    },
+    {
+      "path": "art-source/defense/ice-walk-frames/ice-walk-1.png",
+      "sha256": "bb5a30d0b28ff1e75728174fca27e4ff9539c8e174473896f6311d070977d181"
+    },
+    {
+      "path": "art-source/defense/ice-walk-frames/ice-walk-2.png",
+      "sha256": "13fbfbd7d680adb4c80d1e75ddada963ce30b4d889e92db7aa2cb67176da8946"
+    },
+    {
+      "path": "art-source/defense/ice-walk-frames/ice-walk-3.png",
+      "sha256": "ba5651b4281dde92ac6198f5d8c434e9b65d257f8f1a44f93d6b48847e60141f"
+    },
+    {
+      "path": "art-source/defense/ice-walk-frames/ice-walk-4.png",
+      "sha256": "56408cc6104c38bae735a8b21081f374637daf30fb59a1f15724c517df2cdf96"
+    },
+    {
+      "path": "art-source/defense/ice-walk-frames/ice-walk-5.png",
+      "sha256": "9b63018e1a1004a2a12338778b6f71e0c0ea7facf1e833131cd75238d9a75a40"
+    },
+    {
+      "path": "art-source/defense/ice-walk-frames/ice-walk-6.png",
+      "sha256": "25fd189220e8ad2017e4a85e962e3836d5d1b4f9a15cee0584c2eadca363061a"
+    },
+    {
+      "path": "art-source/defense/ice-walk-frames/ice-walk-7.png",
+      "sha256": "fcfdd3a19e2adc32aaf16acf10b505c3d0e3ed47a1d0fa34d3f3236c0a36a7ca"
+    }
+  ],
+  "camera": {
+    "location": [
+      5.0,
+      -10.0,
+      6.900000095367432
+    ],
+    "rotation_euler": [
+      1.157740592956543,
+      3.3536032617575984e-08,
+      0.46364766359329224
+    ],
+    "samples": 64,
+    "view_transform": "Standard"
+  },
+  "delivery_frame": {
+    "width": 256,
+    "height": 256,
+    "columns": 8,
+    "source_scale": 0.6666666666666666,
+    "ground_y": 226.40666666666667
+  }
+}

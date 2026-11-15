@@ -1,0 +1,21 @@
+// BASE can target development or the offline mobile bundle. Software rendering is not a device performance result.
+const {chromium}=require('playwright');const assert=require('node:assert/strict');
+const base=process.env.BASE||'http://127.0.0.1:3284/',out=process.env.ARTIFACT_DIR;
+(async()=>{const b=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox','--enable-unsafe-swiftshader']});
+for(const mode of [{name:'pc',w:1280,h:720},{name:'mobile',w:844,h:390,touch:true},{name:'reduced',w:844,h:390,touch:true,reduced:true},{name:'walk-fail',w:844,h:390,touch:true,walkFail:true},{name:'base-fail',w:844,h:390,touch:true,baseFail:true}].filter(x=>!process.env.PROFILE||x.name===process.env.PROFILE)){
+ const c=await b.newContext({viewport:{width:mode.w,height:mode.h},hasTouch:!!mode.touch,reducedMotion:mode.reduced?'reduce':'no-preference'}),p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
+ await c.addInitScript(()=>{window.__shieldDraws=[];const original=CanvasRenderingContext2D.prototype.drawImage;CanvasRenderingContext2D.prototype.drawImage=function(image,...args){const src=image?.currentSrc||'';if(src.includes('legion-shield-')&&src.endsWith('-atlas.webp')){window.__shieldDraws.push({src,sx:args[0]});if(window.__shieldDraws.length>20000)window.__shieldDraws.shift();}return original.call(this,image,...args)}});
+ if(mode.walkFail)await p.route('**/legion-shield-walk-atlas.webp',r=>r.abort());if(mode.baseFail)await p.route('**/legion-shield-atlas.webp',r=>r.abort());
+ await p.goto(base,{waitUntil:'networkidle'});await p.getByRole('button',{name:/수비대 결성하기|모험 이어가기/}).click();await p.getByRole('button',{name:/군단 방어/}).click();const board=p.locator('canvas.legion-board'),box=await board.boundingBox();await board.click({position:{x:box.width*.65,y:box.height*.50}});await p.getByRole('button',{name:/전투 시작/}).click();
+ if(!mode.reduced&&!mode.walkFail&&!mode.baseFail)await p.waitForFunction(()=>new Set(window.__shieldDraws.filter(d=>d.src.includes('walk-atlas')).map(d=>d.sx)).size>=3,null,{timeout:35000});else await p.waitForTimeout(9000);
+ const results=await p.evaluate(()=>({walk:window.__shieldDraws.filter(x=>x.src.includes('walk-atlas')),base:window.__shieldDraws.filter(x=>x.src.endsWith('legion-shield-atlas.webp'))}));
+ if(mode.reduced){assert.equal(results.walk.length,0);assert.ok(results.base.length);assert.equal(new Set(results.base.map(x=>x.sx)).size,1)}
+ else if(mode.walkFail){assert.equal(results.walk.length,0);assert.ok(results.base.length,'base poses stay visible')}
+ else if(mode.baseFail){assert.equal(results.walk.length+results.base.length,0,'procedural soldier fallback');assert.ok(await p.locator('.legion-card svg[viewBox="0 0 48 56"]').count())}
+ else {assert.ok(results.walk.length);assert.ok(new Set(results.walk.map(x=>x.sx)).size>=3);}
+ if(out)await p.screenshot({path:`${out}/after-${mode.name}.png`});
+ const game=p.locator('[data-screen=legion]'),time=()=>game.getAttribute('data-time').then(Number);let t=await time();await p.waitForTimeout(600);const normal=await time()-t;
+ await p.getByRole('button',{name:'군단 전투 일시정지'}).click();const paused=await time();await p.waitForTimeout(150);const pixels=await board.evaluate(el=>el.toDataURL());await p.waitForTimeout(400);assert.equal(await time(),paused);assert.equal(await board.evaluate(el=>el.toDataURL()),pixels,'all board poses freeze on pause');await p.getByRole('button',{name:'계속하기'}).click();await p.getByRole('button',{name:/전투 속도 1배/}).click();t=await time();await p.waitForTimeout(600);assert.ok(await time()-t>normal*1.35,'speed applies to simulation time');
+ if(mode.name==='mobile'){await p.setViewportSize({width:390,height:844});await p.locator('.landscape-gate').waitFor({state:'visible'});const q=await time();await p.waitForTimeout(400);assert.equal(await time(),q);await p.setViewportSize({width:844,height:390});await p.getByRole('button',{name:'계속하기'}).click();}
+ assert.deepEqual(errors,[]);console.log(JSON.stringify({mode:mode.name,walkDraws:results.walk.length,walkFrames:[...new Set(results.walk.map(x=>x.sx))],baseDraws:results.base.length,errors}));await c.close();
+}await b.close()})().catch(e=>{console.error(e);process.exit(1)});

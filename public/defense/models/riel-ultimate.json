@@ -1,0 +1,524 @@
+{
+  "generator": "tools/blender/build_riel_ultimate.py",
+  "command": "npm run models:riel-ultimate",
+  "source_cast_sha256": "0f0c0225ccdd325ed257474b55eb3466a21ac59eeebed9bbeb97c51569f8b44f",
+  "reference": "art-source/defense/atlases/ranged-motion.png",
+  "reference_sha256": "444644e358d8312d72c9192237dbe1e662338e5f287138e54639d02eb283f28c",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      330
+    ],
+    "orthographic_scale": 6.8
+  },
+  "delivery_frame": {
+    "width": 192,
+    "height": 192,
+    "ground": [
+      96,
+      165
+    ],
+    "columns": 3,
+    "rows": 1
+  },
+  "duration_seconds": 0.5,
+  "samples_seconds": [
+    0.06,
+    0.26,
+    0.45
+  ],
+  "checks": [
+    {
+      "frames": 51,
+      "min_sole_z": 0.004999972879886627,
+      "ready_end_error": 2.384185791015625e-07
+    }
+  ],
+  "files": [
+    {
+      "file": "art-source/defense/riel-ultimate.blend",
+      "bytes": 2693328,
+      "sha256": "baadfe3c2d3dbf5899bb0a9b2213a687bec41f823a3138f2876f1efd124575bd"
+    },
+    {
+      "file": "public/defense/models/riel-ultimate.glb",
+      "bytes": 1197608,
+      "sha256": "79d535e26963e2c7c673dba40a7a09d902ce2f3256462a5b40f604f4d3df270b"
+    },
+    {
+      "file": "public/defense/models/riel-ultimate.png",
+      "bytes": 116882,
+      "sha256": "a3ff7cb26e1fffb4c1a5030f839dd89359ed438ba005f690a4bbf21bfd8036ce"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-0-0.png",
+      "bytes": 108889,
+      "sha256": "1cdb2d11e00ba75be94ab4c9f94d636a0de828de05892401d299f2bfe22798f0"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-0-1.png",
+      "bytes": 108791,
+      "sha256": "f43169c16eb8f1aa74d1b6d4a5bdbcc52eb5122089dad93d69f146d137e1a4b4"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-0-2.png",
+      "bytes": 109168,
+      "sha256": "22bd475d9f65c13783d13f60a25b9fd85e11dff874c60acf0b03ccf522a94edd"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-1-0.png",
+      "bytes": 116882,
+      "sha256": "a3ff7cb26e1fffb4c1a5030f839dd89359ed438ba005f690a4bbf21bfd8036ce"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-1-1.png",
+      "bytes": 116822,
+      "sha256": "310400e3b8d948eb80dcfc48bb803e73a8c6dd59ea0352d1593e1b77be58ba15"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-1-2.png",
+      "bytes": 117385,
+      "sha256": "349fb829fb4382ee6eee69a9d80c12207ab687c69fd7a754fe7959b661ebb9e6"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-2-0.png",
+      "bytes": 111982,
+      "sha256": "faf1e61875c7f0a262076f0f1f625819b50263c95ea36af134856891daa07b2c"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-2-1.png",
+      "bytes": 111553,
+      "sha256": "0c79bf539ec2b69d25d84884b22a588468481259ebc6472ce602f7404979b873"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-2-2.png",
+      "bytes": 111205,
+      "sha256": "fb457111516a5ee820d7b192806765a0794f28de86c5db6e75614d07f6805cfc"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-3-0.png",
+      "bytes": 110581,
+      "sha256": "9892202f34f698e993d4339580bef91cc566f98640d4bbf8bb6114db131171ae"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-3-1.png",
+      "bytes": 110597,
+      "sha256": "99431964d7c3b113940db37ee62a72aefd8d6a0d9542664030e14c41399255c8"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-3-2.png",
+      "bytes": 110739,
+      "sha256": "f1a168a2ca57e4c600878105f2211e0598ef27a5d6aa2b79f7fe76cde7b73bbd"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-4-0.png",
+      "bytes": 107136,
+      "sha256": "9bbcd8f60bd13d84e4371aa673ec4ae6bb3cf17e94dd5f76f87f922386ad1e5a"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-4-1.png",
+      "bytes": 107187,
+      "sha256": "8476c5c7e37e72c632832065c5d0fded76adce42b90fcc9f9fb0e320c6248380"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-4-2.png",
+      "bytes": 108584,
+      "sha256": "cbdc0dec939c2543b92161a5e0301793cfe9c1068a62c13f034e342231fb41cb"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-5-0.png",
+      "bytes": 107348,
+      "sha256": "d7c01f472355f54f8420567f327c974a3d3a62c0ff302454bf9ee2608c06a9d5"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-5-1.png",
+      "bytes": 107873,
+      "sha256": "4bfb663e3084973a91303852e3dd02d8df6ae516c9028868b0b46c06edbe8653"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-5-2.png",
+      "bytes": 108700,
+      "sha256": "7bb01bdce258ee4a0956eb4bf8e253d802d905b216651467f7801c824e9e19e1"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-6-0.png",
+      "bytes": 102084,
+      "sha256": "000eca122bb620fc7454a473903fa1b24494ba3c029736047de7d2e2faa5aac9"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-6-1.png",
+      "bytes": 102340,
+      "sha256": "ca1716964b24f758d7ca1b9991027f71beb304fc2084edebff3fb0ba21ed0b74"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-6-2.png",
+      "bytes": 102318,
+      "sha256": "b2b729dcb69b4cc3037ad49ae554d019e1ef445bbc4ec050b44491e75f2178a8"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-7-0.png",
+      "bytes": 102257,
+      "sha256": "56fce7116757bcf59c13693ee2b56b84a77284f343ebc6c4af0f2f7956706238"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-7-1.png",
+      "bytes": 102066,
+      "sha256": "84385ff6911b83c220932e643da5f17be7f1c6c27b40d8accfb3a820fd02f634"
+    },
+    {
+      "file": "art-source/defense/riel-ultimate-frames/riel-ultimate-7-2.png",
+      "bytes": 101941,
+      "sha256": "b11077af1e8e3a45b5573368eb7915ff8f7d1b576172d965a192fbb7bf36e38f"
+    },
+    {
+      "file": "public/defense/models/riel-ultimate-0-atlas.webp",
+      "bytes": 13260,
+      "sha256": "027551e783c8916b6e5773a56ca08a3857a219a87141073850636642ff597edd"
+    },
+    {
+      "file": "public/defense/models/riel-ultimate-1-atlas.webp",
+      "bytes": 14056,
+      "sha256": "6c31f6e45034dd404a7a36b8b2d5bf670192cde21be3840763abbd7784f7514e"
+    },
+    {
+      "file": "public/defense/models/riel-ultimate-2-atlas.webp",
+      "bytes": 10678,
+      "sha256": "d5b2697b6e71ef36a706ed6a193d65ed2ec665df44dce653f94debed1d243486"
+    },
+    {
+      "file": "public/defense/models/riel-ultimate-3-atlas.webp",
+      "bytes": 10486,
+      "sha256": "a434dba4a9920d88991e5be50d83c18d32636c36ae05677baf4a8032718ed0ab"
+    },
+    {
+      "file": "public/defense/models/riel-ultimate-4-atlas.webp",
+      "bytes": 13090,
+      "sha256": "83a78dc5ee6ed039cf7d15509694d9523d3ddb50c3671d65bb84c3d91da8555a"
+    },
+    {
+      "file": "public/defense/models/riel-ultimate-5-atlas.webp",
+      "bytes": 11968,
+      "sha256": "c45e423b1da8ef9caf325d0895b1c15da66dea72b301f5d424983fe69fcc3b14"
+    },
+    {
+      "file": "public/defense/models/riel-ultimate-6-atlas.webp",
+      "bytes": 8616,
+      "sha256": "5df2a8c1fc1f931fa221ba5531de8d2dd5bb8c12bc44b3bc516abb036792c203"
+    },
+    {
+      "file": "public/defense/models/riel-ultimate-7-atlas.webp",
+      "bytes": 8992,
+      "sha256": "fa2f387375a6d5d4476540a69eea3a08ebe8a89a09ed86fca1f3f0fac0e95738"
+    }
+  ],
+  "clips": [
+    {
+      "name": "riel-ultimate-0",
+      "duration": 0.5
+    }
+  ],
+  "directions": [
+    {
+      "direction": 0,
+      "yaw": 0.960070013999939,
+      "poses": [
+        {
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            151.99411010742188,
+            136.67706298828125,
+            280.2843322753906,
+            341.7734680175781
+          ]
+        },
+        {
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            150.97146606445312,
+            137.13201904296875,
+            269.6387939453125,
+            341.7734680175781
+          ]
+        },
+        {
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            149.52410888671875,
+            137.8863525390625,
+            297.9034118652344,
+            341.7734680175781
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 1,
+      "yaw": -0.23171095550060272,
+      "poses": [
+        {
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            132.5690155029297,
+            137.31399536132812,
+            262.15386962890625,
+            341.7173156738281
+          ]
+        },
+        {
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            132.1906280517578,
+            136.72201538085938,
+            260.68243408203125,
+            341.7173156738281
+          ]
+        },
+        {
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            131.65509033203125,
+            135.97499084472656,
+            264.7611083984375,
+            341.7173156738281
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 2,
+      "yaw": -0.610725998878479,
+      "poses": [
+        {
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            143.962158203125,
+            141.75205993652344,
+            242.63748168945312,
+            343.5727233886719
+          ]
+        },
+        {
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            143.962158203125,
+            141.08010864257812,
+            242.63748168945312,
+            343.5727233886719
+          ]
+        },
+        {
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            143.962158203125,
+            140.21836853027344,
+            242.63748168945312,
+            343.5727233886719
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 3,
+      "yaw": -0.9897410869598389,
+      "poses": [
+        {
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            144.57199096679688,
+            137.31399536132812,
+            251.4312286376953,
+            347.04315185546875
+          ]
+        },
+        {
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            145.39886474609375,
+            136.72201538085938,
+            251.8096160888672,
+            347.04315185546875
+          ]
+        },
+        {
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            146.59327697753906,
+            135.97499084472656,
+            252.34512329101562,
+            347.04315185546875
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 4,
+      "yaw": -2.1815226078033447,
+      "poses": [
+        {
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            103.71591186523438,
+            136.67709350585938,
+            232.00611877441406,
+            341.7734680175781
+          ]
+        },
+        {
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            114.36146545410156,
+            137.1320343017578,
+            233.0287628173828,
+            341.7734680175781
+          ]
+        },
+        {
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            86.09681701660156,
+            137.8863525390625,
+            234.4761199951172,
+            341.7734680175781
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 5,
+      "yaw": 2.909881591796875,
+      "poses": [
+        {
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            121.84634399414062,
+            142.09481811523438,
+            251.43121337890625,
+            337.12054443359375
+          ]
+        },
+        {
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            123.31779479980469,
+            142.89244079589844,
+            251.80960083007812,
+            337.12054443359375
+          ]
+        },
+        {
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            119.23912048339844,
+            144.14297485351562,
+            252.34512329101562,
+            337.12054443359375
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 6,
+      "yaw": 2.5308666229248047,
+      "poses": [
+        {
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            141.36276245117188,
+            146.0508270263672,
+            240.03805541992188,
+            338.6247863769531
+          ]
+        },
+        {
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            141.36276245117188,
+            145.38815307617188,
+            240.03805541992188,
+            338.6247863769531
+          ]
+        },
+        {
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            141.36276245117188,
+            144.89022827148438,
+            240.03805541992188,
+            338.6247863769531
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 7,
+      "yaw": 2.1518516540527344,
+      "poses": [
+        {
+          "sample": 0,
+          "frame": 7,
+          "bounds": [
+            132.5690155029297,
+            140.96820068359375,
+            239.42822265625,
+            342.4463806152344
+          ]
+        },
+        {
+          "sample": 1,
+          "frame": 27,
+          "bounds": [
+            132.19061279296875,
+            140.49526977539062,
+            238.60137939453125,
+            342.4463806152344
+          ]
+        },
+        {
+          "sample": 2,
+          "frame": 46,
+          "bounds": [
+            131.65509033203125,
+            139.93565368652344,
+            237.40695190429688,
+            342.4463806152344
+          ]
+        }
+      ]
+    }
+  ],
+  "fps": 100,
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 48
+  },
+  "display_scale": 1.406896551724138,
+  "generator_sha256": "ccb4420d56147933d28c43325c11538a571136e6449a8f94145656bfc85997b6",
+  "runtime": {
+    "mesh_objects": 56,
+    "triangles": 16734,
+    "materials": 14
+  }
+}

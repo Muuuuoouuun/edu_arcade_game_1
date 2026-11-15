@@ -1,0 +1,92 @@
+{
+  "id": "human-guard",
+  "status": "articulated_model_prototype_not_runtime_unit",
+  "reference": "art-source/defense/concepts/2026-11-12-characters/human-roles/14-human-garrison-troops.png",
+  "reference_candidate": "14-A",
+  "reference_sha256": "ac7a69434f75c2de4fd7f2d893447f21a35b44f851f5ec9cc3d622d8c25e6a43",
+  "generator": "tools/blender/build_human_guard.py",
+  "blender": "4.3.2",
+  "coordinates": {
+    "authoring_up": "+Z",
+    "authoring_forward": "+Y",
+    "gltf_up": "+Y",
+    "gltf_forward": "-Z",
+    "ground_y_gltf": 0,
+    "root_motion": false
+  },
+  "proportions": {
+    "skull_top": 2.96,
+    "chin_bottom": 1.8,
+    "sole_bottom": 0,
+    "approximate_body_heads": 2.55,
+    "note": "Authoring dimensions; excludes helmet/spear. Styling guide, not a scan of the concept."
+  },
+  "animation": {
+    "fps": 30,
+    "rig": "articulated object hierarchy, not skinning",
+    "clips": [
+      {
+        "name": "human-guard-idle",
+        "duration_seconds": 2,
+        "contact_seconds": null,
+        "contact_basis": null
+      },
+      {
+        "name": "human-guard-walk",
+        "duration_seconds": 0.8,
+        "contact_seconds": null,
+        "contact_basis": null
+      },
+      {
+        "name": "human-guard-thrust",
+        "duration_seconds": 1,
+        "contact_seconds": 0.4,
+        "contact_basis": "Authored maximum spear-arm reach at frame 12, 30 fps; gameplay damage not triggered by this asset"
+      }
+    ],
+    "walk_note": "In-place rigid leg translation and lift; no foot IK. Supporting foot stays on authoring ground at keyed samples."
+  },
+  "runtime": {
+    "meshes": 8,
+    "primitives": 43,
+    "triangles": 23028,
+    "materials": 15,
+    "nodes": 17
+  },
+  "sprite": {
+    "width": 768,
+    "height": 768,
+    "ground_pixels": [
+      375.707,
+      628.672
+    ],
+    "orthographic_scale": 4.8
+  },
+  "files": {
+    "human-guard-thrust.png": {
+      "bytes": 506298,
+      "sha256": "c820fd3678da1b3ff6db46923f2da95cd313c55eb8177af4350ec9078c523b96"
+    },
+    "human-guard-walk.png": {
+      "bytes": 523226,
+      "sha256": "677a381707d2ed96ddf02db84a54d6ca19e066188a088da54b112ffe6146dc5d"
+    },
+    "human-guard.blend": {
+      "bytes": 2665840,
+      "sha256": "6b394ffc09b7c8a7d43ba6c6cf0e814a645e90fbbe782c532de3ed4cf026f38a"
+    },
+    "human-guard.glb": {
+      "bytes": 1164924,
+      "sha256": "43493cdeaa042200092d2e1b961e8c9f3a511f4b98f13388f5541b8ee92c3bc7"
+    },
+    "human-guard.png": {
+      "bytes": 524256,
+      "sha256": "6ff97356da732b714a48e1521a14298e68ac3d518998b10eba230a55d808f196"
+    }
+  },
+  "limitations": [
+    "Geometry and flat PBR color blocks are a prototype, not image-equivalent hand-painted textures.",
+    "Human guard is available for workshop review only; no new combat class or spawn behavior is registered.",
+    "Full motion collision, far-camera readability and actual mobile performance remain unverified."
+  ]
+}

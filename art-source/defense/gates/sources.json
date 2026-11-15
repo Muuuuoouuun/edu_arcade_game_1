@@ -1,0 +1,55 @@
+{
+  "generator": "Native image generation, 2026-11-06",
+  "reference": "art-source/defense/concepts/2026-10-29/castles",
+  "alphaBoundsThreshold": 24,
+  "images": {
+    "verdant": {
+      "size": [
+        1254,
+        1254
+      ],
+      "bounds": [
+        80,
+        78,
+        1167,
+        1155
+      ]
+    },
+    "unryeong": {
+      "size": [
+        1312,
+        1199
+      ],
+      "bounds": [
+        50,
+        99,
+        1260,
+        1108
+      ]
+    },
+    "steel": {
+      "size": [
+        1289,
+        1221
+      ],
+      "bounds": [
+        39,
+        48,
+        1251,
+        1138
+      ]
+    },
+    "twilight": {
+      "size": [
+        1254,
+        1254
+      ],
+      "bounds": [
+        154,
+        27,
+        1096,
+        1211
+      ]
+    }
+  }
+}

@@ -1,0 +1,429 @@
+{
+  "generator": "tools/blender/build_ian_reset.py",
+  "command": "npm run models:ian-reset",
+  "source_cast_sha256": "eda0afda0a6d52bcdd59310c14fd9e58c83e1bc266dc0069e3b02c3aa44a148f",
+  "reference": "art-source/defense/atlases/ranged-motion.png",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      330
+    ],
+    "orthographic_scale": 6.8
+  },
+  "delivery_frame": {
+    "width": 192,
+    "height": 192,
+    "ground": [
+      96,
+      165
+    ],
+    "columns": 2,
+    "rows": 1
+  },
+  "duration_seconds": 0.12,
+  "battle_start_seconds": 0.21,
+  "battle_end_seconds": 0.33,
+  "followthrough_delay_seconds": {
+    "staff": 0.015,
+    "cape": 0.025
+  },
+  "body_settle_seconds": 0.085,
+  "hit_at": 0.15,
+  "samples_seconds": [
+    0.04,
+    0.1
+  ],
+  "return_checks": [
+    {
+      "target": "ready",
+      "frames": 13,
+      "min_sole_z": 0.004999913275241852,
+      "strike_start_error": 0,
+      "ready_end_error": 1.469576190014977e-17
+    }
+  ],
+  "files": [
+    {
+      "file": "art-source/defense/ian-reset.blend",
+      "bytes": 1883384,
+      "sha256": "55de5da3fe5274807b0a98f7d92ea94f4a1d912863147623f7410096ecb3a557"
+    },
+    {
+      "file": "public/defense/models/ian-reset.glb",
+      "bytes": 1393944,
+      "sha256": "165f9afacde6acd987bd3d148183cb89d6ee2e472c3ece67f665d6e45e1c4ff4"
+    },
+    {
+      "file": "public/defense/models/ian-reset.png",
+      "bytes": 123759,
+      "sha256": "3c6e8fc6ed3f2061dfccb5d598f96fd94b6367419c06143420e7273affed2831"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-0-0-0.png",
+      "bytes": 112015,
+      "sha256": "05dab9987bb954c358decd473dedb82c62b05b2877c7e5b4ab684cf66803da7b"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-0-0-1.png",
+      "bytes": 110794,
+      "sha256": "8c9cc13ed83c45f0deee0145c485d5b569ad705a42a17e8e67aa6e0047dd3632"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-1-0-0.png",
+      "bytes": 122254,
+      "sha256": "b3ccc3b519671685d0049136668969662fb7ddaa42cd7d3fe6fdd85e360e5c0a"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-1-0-1.png",
+      "bytes": 123759,
+      "sha256": "3c6e8fc6ed3f2061dfccb5d598f96fd94b6367419c06143420e7273affed2831"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-2-0-0.png",
+      "bytes": 120350,
+      "sha256": "c1d5ef7cd2855cdc1e7f8e4f32b97693c278e4f596a463bb2b45b8215f6c6fb1"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-2-0-1.png",
+      "bytes": 121216,
+      "sha256": "0c075e569ac33120fab7626647c47d450792d65b3f7b796a1edeb8a0ea74bafe"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-3-0-0.png",
+      "bytes": 119865,
+      "sha256": "6b3e5512374f0ca15256d863d254c4d0e92266f2266fe8df7eda05f78df7f344"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-3-0-1.png",
+      "bytes": 120576,
+      "sha256": "144decd044e961463fc1bea78e914c301c9c6e1b286cf1fd321279c876a5f68d"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-4-0-0.png",
+      "bytes": 111311,
+      "sha256": "2556136e36c797fbbc4fe1179d5bfd3c4e6758a319b6b35aff7b063ccf9e3ac3"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-4-0-1.png",
+      "bytes": 110331,
+      "sha256": "5219e7711b5f20096c3da347b072e349a7e80e32f01d770c9f21ecbe91441b73"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-5-0-0.png",
+      "bytes": 116447,
+      "sha256": "53a7accca612af6291b43a0781859ac97019125706f3430b48612239f10011d7"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-5-0-1.png",
+      "bytes": 116870,
+      "sha256": "10d37e4263ca3c3e77165e32fa31c27b6a9b06f8be4a07f411913005710d0f18"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-6-0-0.png",
+      "bytes": 114527,
+      "sha256": "5330519f452535bf519c8b4e2863ffa342877649c0b97a57160a1ca17e0436b4"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-6-0-1.png",
+      "bytes": 115824,
+      "sha256": "86142843cb3b8721ac64969fe853507fd5572edbae8d2275ac6e2556065d4258"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-7-0-0.png",
+      "bytes": 113750,
+      "sha256": "750a0c8b2b659779c8db5655ccc038bc57c99c01202154262ba0baf8b202b8d2"
+    },
+    {
+      "file": "art-source/defense/ian-reset-frames/ian-reset-7-0-1.png",
+      "bytes": 115134,
+      "sha256": "aa5d1f484144262e4aae1a6c4f9091879cb68db23dca687bdff90acdf3728428"
+    },
+    {
+      "file": "public/defense/models/ian-reset-0-atlas.webp",
+      "bytes": 8416,
+      "sha256": "dac20fe4cbdfe18179dee95263b445946413b2bc869fbd396ce66ff1514565bc"
+    },
+    {
+      "file": "public/defense/models/ian-reset-1-atlas.webp",
+      "bytes": 10468,
+      "sha256": "7808709a3e54b6a4a04fb9c3bc8fc1a7259a06aa5a01a5daeb7a23e353583d50"
+    },
+    {
+      "file": "public/defense/models/ian-reset-2-atlas.webp",
+      "bytes": 9798,
+      "sha256": "50ef8670bcc8b28f1878679aa9c7231dc478413c96f164d5eb2b2a3d2550b81f"
+    },
+    {
+      "file": "public/defense/models/ian-reset-3-atlas.webp",
+      "bytes": 9562,
+      "sha256": "ec3fe5d9c4e2a808aee53b6aa70ba95f544d85c8f2092bf21ae75a64ebf90e83"
+    },
+    {
+      "file": "public/defense/models/ian-reset-4-atlas.webp",
+      "bytes": 8204,
+      "sha256": "7cbbd6b80f4bee839a26a1de0bb85d4f121c90288a6397cb47f23dadc040d29b"
+    },
+    {
+      "file": "public/defense/models/ian-reset-5-atlas.webp",
+      "bytes": 8856,
+      "sha256": "535ac2ed7201809108074954350cfa39a1e694ab6f0bd4a181e686d73653981b"
+    },
+    {
+      "file": "public/defense/models/ian-reset-6-atlas.webp",
+      "bytes": 7978,
+      "sha256": "daddc32acd18ea6610406019dc0b577f56fa732672657e071ea8b6abe5cc3fdd"
+    },
+    {
+      "file": "public/defense/models/ian-reset-7-atlas.webp",
+      "bytes": 7892,
+      "sha256": "f2ba5790d8e4a11548c336fa0c6092e07f8dc26f525237e3bb9be04decee69a3"
+    }
+  ],
+  "clips": [
+    {
+      "name": "ian-reset-0",
+      "duration": 0.12
+    }
+  ],
+  "directions": [
+    {
+      "direction": 0,
+      "yaw": 0.960070013999939,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            142.45249938964844,
+            114.25252532958984,
+            295.31903076171875,
+            342.5606689453125
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 11,
+          "bounds": [
+            146.66322326660156,
+            113.31726837158203,
+            243.1530303955078,
+            342.5606384277344
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 1,
+      "yaw": -0.23171095550060272,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            120.60555267333984,
+            112.94371032714844,
+            284.6341247558594,
+            344.513671875
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 11,
+          "bounds": [
+            122.19036865234375,
+            113.86035919189453,
+            264.06549072265625,
+            344.513671875
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 2,
+      "yaw": -0.610725998878479,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            130.1036376953125,
+            117.56483459472656,
+            251.27886962890625,
+            340.5364990234375
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 11,
+          "bounds": [
+            130.56442260742188,
+            118.62808227539062,
+            250.87368774414062,
+            340.5364990234375
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 3,
+      "yaw": -0.9897410869598389,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            123.68775939941406,
+            114.48321533203125,
+            263.3946838378906,
+            344.513671875
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 11,
+          "bounds": [
+            122.19035339355469,
+            115.39986419677734,
+            261.80987548828125,
+            344.513671875
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 4,
+      "yaw": -2.1815226078033447,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            88.68120574951172,
+            118.41327667236328,
+            241.5477294921875,
+            342.5606689453125
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 11,
+          "bounds": [
+            140.84716796875,
+            118.62808227539062,
+            237.33700561523438,
+            342.5606384277344
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 5,
+      "yaw": 2.909881591796875,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            99.36610412597656,
+            117.1102294921875,
+            263.3946838378906,
+            339.4990234375
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 11,
+          "bounds": [
+            119.93470764160156,
+            115.39986419677734,
+            261.8098449707031,
+            339.4990234375
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 6,
+      "yaw": 2.5308666229248047,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            132.72137451171875,
+            120.48552703857422,
+            253.89657592773438,
+            335.1387634277344
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 11,
+          "bounds": [
+            133.12652587890625,
+            118.37976837158203,
+            253.43582153320312,
+            335.1387634277344
+          ]
+        }
+      ]
+    },
+    {
+      "direction": 7,
+      "yaw": 2.1518516540527344,
+      "poses": [
+        {
+          "entry": 0,
+          "sample": 0,
+          "frame": 5,
+          "bounds": [
+            120.60552978515625,
+            115.57072448730469,
+            260.3124694824219,
+            339.4990234375
+          ]
+        },
+        {
+          "entry": 0,
+          "sample": 1,
+          "frame": 11,
+          "bounds": [
+            122.19035339355469,
+            111.58790588378906,
+            261.80987548828125,
+            339.4990234375
+          ]
+        }
+      ]
+    }
+  ],
+  "fps": 100,
+  "render": {
+    "engine": "Cycles CPU",
+    "samples": 48
+  },
+  "display_scale": 1.406896551724138,
+  "reference_sha256": "444644e358d8312d72c9192237dbe1e662338e5f287138e54639d02eb283f28c",
+  "generator_sha256": "d17a9231eb2999e2ae98c2cd2dd6ce8dc23b50fc8fef4e44eda4753f8d2eaaea",
+  "runtime": {
+    "mesh_objects": 36,
+    "triangles": 21122,
+    "materials": 14
+  }
+}

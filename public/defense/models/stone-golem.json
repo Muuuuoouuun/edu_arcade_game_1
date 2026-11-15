@@ -1,5 +1,36 @@
 {
  "id": "stone-golem",
+ "reference": "public/defense/monster-models.webp",
+ "regeneration_command": "blender --python-exit-code 1 -b --python tools/blender/build_golem.py --",
+ "bounds": [
+  {
+   "pose": "walk-a",
+   "bounds": [
+    94.749,
+    78.332,
+    324.271,
+    321.147
+   ]
+  },
+  {
+   "pose": "walk-b",
+   "bounds": [
+    112.876,
+    72.224,
+    296.198,
+    321.998
+   ]
+  },
+  {
+   "pose": "hit",
+   "bounds": [
+    26.889,
+    65.31,
+    257.036,
+    317.437
+   ]
+  }
+ ],
  "source": "art-source/defense/stone-golem.blend",
  "generator": "tools/blender/build_golem.py",
  "blender": "4.3.2",
@@ -29,6 +60,22 @@
   "samples": 96,
   "transparent": true
  },
- "mesh_objects": 29,
- "evaluated_polygons": 2320
+ "mesh_objects": 56,
+ "evaluated_polygons": 4480,
+ "source_sha256": "d83bafe958e8a84b3586bed2c8dc42c16d1449bcb83120d664cfe74a003c5d76",
+ "renders": [
+  {
+   "path": "art-source/defense/golem-frames/stone-golem-walk-a.png",
+   "sha256": "9ff7d0873d5a63a81ec313a37af64159e173ae4dd2aed7ed60c7364b01e09942"
+  },
+  {
+   "path": "art-source/defense/golem-frames/stone-golem-walk-b.png",
+   "sha256": "e685c5995c52dd1a7ad0ac8b99061535e4c17b06e480c6009e4d80cd73ea2d8a"
+  },
+  {
+   "path": "art-source/defense/golem-frames/stone-golem-hit.png",
+   "sha256": "70af261854ec1d968005b34bc8c93025932716bfddeda467c7e3fda136bd835f"
+  }
+ ],
+ "atlas_sha256": "7559afbb9e190b2610a2f6b73fae667b9b8355f333eb198d0c6595ede2518fb2"
 }

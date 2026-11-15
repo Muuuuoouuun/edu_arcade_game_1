@@ -1,0 +1,116 @@
+diff --git a/src/rush/main.ts b/src/rush/main.ts
+index 52083cb..51c7052 100644
+--- a/src/rush/main.ts
++++ b/src/rush/main.ts
+@@ -10,6 +10,7 @@ import { playHaptic } from '../lib/haptic.ts';
+ import { collect, kingdomMods, settleBattle } from './kingdom.ts';
+ import { stageDifficulty } from './stages.ts';
+ import { advanceClock, createClock, hitStopFor, tryStop } from './clock.ts';
++import { createWebGPURenderer } from './webgpu-spike.ts';
+ import { loadKingdom, saveKingdom, TownScreen } from './town.ts';
+ 
+ const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+@@ -22,7 +23,9 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+ 
+ const canvas = $<HTMLCanvasElement>('rush-canvas');
+ const surface = $('rush');
+-const view = new RushView(canvas);
++// ?renderer=webgpu (cycle 07 spike) swaps in a lazily loaded WebGPURenderer; the default stays WebGL.
++const spike = params.get('renderer') === 'webgpu' ? await createWebGPURenderer(canvas, params.has('forcewebgl')) : null;
++const view = new RushView(canvas, spike?.renderer);
+ let state: RushState = createRush(Number(params.get('seed')) || 1);
+ let mode: 'title' | 'town' | 'play' | 'demo' | 'result' = 'title';
+ let paused = false;
+@@ -200,7 +203,7 @@ function resize() {
+ new ResizeObserver(resize).observe(surface);
+ resize();
+ 
+-let prev = performance.now(), fpsFrames = 0, fpsT = 0, fps = 0, hitStops = 0;
++let prev = performance.now(), fpsFrames = 0, fpsT = 0, fps = 0, hitStops = 0, firstFrameMs = 0;
+ let clock = createClock(prev / 1000);
+ function frame(now: number) {
+   const dt = Math.min(0.1, (now - prev) / 1000);
+@@ -225,6 +228,7 @@ function frame(now: number) {
+   view.fxPaused = state.tick >= freezeAt;
+   view.sync(state, running ? dt : 0, mode === 'play' ? input.aim : null, stopped);
+   view.render();
++  if (!firstFrameMs) firstFrameMs = Math.round(performance.now());
+   updatePops(dt);
+   updateHud();
+   if (toastTimer > 0 && (toastTimer -= dt) <= 0) $('toast').classList.remove('show');
+@@ -240,4 +244,4 @@ if (params.has('demo')) start('demo');
+ else if (params.has('play')) start('play');
+ 
+ // Read-only handle for automated browser checks.
+-Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, info: () => view.info(), towerLevels: TOWER_LEVELS.length } });
++Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, renderer: { kind: spike ? 'WebGPURenderer' : 'WebGLRenderer', backend: spike?.backend ?? 'webgl2', initMs: spike?.initMs ?? 0 }, get firstFrameMs() { return firstFrameMs; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, info: () => view.info(), towerLevels: TOWER_LEVELS.length } });
+diff --git a/src/rush/render.ts b/src/rush/render.ts
+index e71dd4e..1608f23 100644
+--- a/src/rush/render.ts
++++ b/src/rush/render.ts
+@@ -12,6 +12,15 @@ import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify,
+ import { Batch } from './batch.ts';
+ import { Particles } from './fx.ts';
+ 
++/** The renderer surface the view needs; satisfied by WebGLRenderer and (for the cycle 07 spike) WebGPURenderer. */
++export interface RenderBackend {
++  setPixelRatio(ratio: number): void;
++  setSize(width: number, height: number, updateStyle?: boolean): void;
++  render(scene: Scene, camera: PerspectiveCamera): unknown;
++  outputColorSpace: string;
++  info: { render: { calls?: number; drawCalls?: number; triangles: number } };
++}
++
+ export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'super'; offset: Vec } | null;
+ 
+ const TEAM = { ally: PAL.ally, enemy: PAL.enemy };
+@@ -28,7 +37,7 @@ type Bar = { root: Group; fill: Mesh; width: number };
+ type Fx = { mesh: Mesh; age: number; life: number; grow: number; fade: number; y0: number };
+ 
+ export class RushView {
+-  readonly renderer: WebGLRenderer;
++  readonly renderer: RenderBackend;
+   readonly scene = new Scene();
+   readonly camera = new PerspectiveCamera(42, 1, 0.5, 120);
+   private focus = new Vector3(0, 0, 4);
+@@ -87,8 +96,8 @@ export class RushView {
+     barBg: basic(0x10161c, 0.8), barAlly: basic(0x52e07c), barEnemy: basic(0xff5160), barTown: basic(0x4fb8ff), ammo: basic(0xffa43a), ammoDim: basic(0x5b3a1a, 0.9),
+   };
+ 
+-  constructor(canvas: HTMLCanvasElement) {
+-    this.renderer = new WebGLRenderer({ canvas, antialias: devicePixelRatio < 2, powerPreference: 'high-performance' });
++  constructor(canvas: HTMLCanvasElement, renderer?: RenderBackend) {
++    this.renderer = renderer ?? new WebGLRenderer({ canvas, antialias: devicePixelRatio < 2, powerPreference: 'high-performance' });
+     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+     this.renderer.outputColorSpace = SRGBColorSpace;
+     this.scene.background = new Color(PAL.water);
+@@ -701,7 +710,7 @@ export class RushView {
+ 
+   render() { this.renderer.render(this.scene, this.camera); }
+   /** Renderer statistics for the debug overlay and performance notes. */
+-  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning() }; }
++  info() { const r = this.renderer.info.render; return { calls: r.drawCalls ?? r.calls ?? 0, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning() }; }
+ }
+ 
+ const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x9b4dd6, brute: 0xd0602f, boss: 0x6d55c4 };
+diff --git a/src/rush/webgpu-spike.ts b/src/rush/webgpu-spike.ts
+new file mode 100644
+index 0000000..ab61679
+--- /dev/null
++++ b/src/rush/webgpu-spike.ts
+@@ -0,0 +1,15 @@
++// Cycle 07 spike: an opt-in WebGPURenderer path (?renderer=webgpu[&forcewebgl]). Lazily loaded, so the default
++// WebGL build never ships three/webgpu. Our toon rim and ink outlines patch GLSL via onBeforeCompile, which node
++// materials ignore — see docs/rush/cycles/07-spike.md for what that changes on screen.
++import type { RenderBackend } from './render.ts';
++
++export type SpikeRenderer = { renderer: RenderBackend; backend: 'webgpu' | 'webgl2'; initMs: number };
++
++export async function createWebGPURenderer(canvas: HTMLCanvasElement, forceWebGL: boolean): Promise<SpikeRenderer> {
++  const t0 = performance.now();
++  const { WebGPURenderer } = await import('three/webgpu');
++  const renderer = new WebGPURenderer({ canvas, antialias: devicePixelRatio < 2, forceWebGL });
++  await renderer.init();
++  const backend = (renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend ? 'webgpu' : 'webgl2';
++  return { renderer: renderer as unknown as RenderBackend, backend, initMs: Math.round(performance.now() - t0) };
++}

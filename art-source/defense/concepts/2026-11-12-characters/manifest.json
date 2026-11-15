@@ -1,0 +1,76 @@
+{
+  "date": "2026-11-12",
+  "status": "visual_candidates_not_runtime_assets",
+  "sheets": [
+    {
+      "file": "01-forest-guardians.png",
+      "source": "exec-dbd31b76-5f0d-4aad-a667-ed5190c62307.png",
+      "theme": "숲·수호대",
+      "candidates": {
+        "A": "엘프 궁수",
+        "B": "숲길 창수",
+        "C": "멧돼지 방패 전사",
+        "D": "버섯 약초사"
+      },
+      "width": 1254,
+      "height": 1254,
+      "sha256": "d55c0f723208b746f2c584d3d1a8b1b7f4b7dbbe7e3d89ffb89afadeb6228b43"
+    },
+    {
+      "file": "02-eastern-fortress.png",
+      "source": "exec-ef54e8e6-478f-47e4-8375-fdd799e88cb0.png",
+      "theme": "동방·산성",
+      "candidates": {
+        "A": "산성 창수",
+        "B": "부적술사",
+        "C": "호랑이 무투가",
+        "D": "도깨비 장인"
+      },
+      "width": 1254,
+      "height": 1254,
+      "sha256": "16635cd6197845f5c192d0173bf1ae036c9c227e2fc044ddbaf74f898c340040"
+    },
+    {
+      "file": "03-polar-expedition.png",
+      "source": "exec-cc043fc4-f548-4cd7-9b2b-6a2b2cb3753c.png",
+      "theme": "설산·극지",
+      "candidates": {
+        "A": "북극곰 수호자",
+        "B": "설산 창전사",
+        "C": "늑대 정찰병",
+        "D": "드워프 탐험가"
+      },
+      "width": 1254,
+      "height": 1254,
+      "sha256": "0dfd986b024a154330e22a7ce0df7ddd556ad1d822f3c1566e547ab6ebd9014f"
+    },
+    {
+      "file": "04-tropical-islanders.png",
+      "source": "exec-27802df3-bb3f-4c13-8959-7ebc7345d26b.png",
+      "theme": "열대·군도",
+      "candidates": {
+        "A": "도마뱀 씨앗 사수",
+        "B": "수달 잠수부",
+        "C": "큰부리새 창수",
+        "D": "거북 공병"
+      },
+      "width": 1254,
+      "height": 1254,
+      "sha256": "53fb95c699938389626ce808b2c0494f7b4749842d349392123308dacd62e826"
+    },
+    {
+      "file": "05-twilight-borderlands.png",
+      "source": "exec-3115b644-eca5-4440-8a40-e730ef9c3b0f.png",
+      "theme": "황혼·고딕",
+      "candidates": {
+        "A": "흡혈귀 결투가",
+        "B": "오크 지휘관",
+        "C": "트롤 약초사",
+        "D": "가고일 수호자"
+      },
+      "width": 1254,
+      "height": 1254,
+      "sha256": "7b1cbfbff6ccafdd8918496389d7b30c304891fc081bc22cee4d05e9df6a60ce"
+    }
+  ]
+}

@@ -1,0 +1,321 @@
+{
+  "source": "art-source/defense/stone-golem-death.blend",
+  "source_sha256": "ac487840cd82e7b97c84c4dad0cced81f0e840104abb30f0ede5290b56534c3c",
+  "base_source": "art-source/defense/stone-golem.blend",
+  "base_source_sha256": "d83bafe958e8a84b3586bed2c8dc42c16d1449bcb83120d664cfe74a003c5d76",
+  "regeneration_command": "npm run models:golem-death",
+  "reference": "public/defense/monster-models.webp",
+  "frame": {
+    "width": 384,
+    "height": 384,
+    "ground": [
+      192,
+      292.91
+    ],
+    "crop": [
+      0,
+      0,
+      384,
+      384
+    ],
+    "orthographic_scale": 6.599999904632568,
+    "battle_anchor": {
+      "initial_y": 297,
+      "ground_y": 292.91,
+      "settle_seconds": 0.1
+    }
+  },
+  "clip": "stone-golem-death",
+  "duration": 0.6333333333333333,
+  "baked_frames": [
+    1,
+    5,
+    10,
+    15,
+    20
+  ],
+  "effect_duration": 0.7,
+  "initial_floor_penetration": -0.1493,
+  "samples": [
+    {
+      "frame": 1,
+      "time": 0.0,
+      "bounds": [
+        26.889,
+        65.31,
+        257.036,
+        317.437
+      ],
+      "lowest_vertex": -0.1493
+    },
+    {
+      "frame": 2,
+      "time": 0.03333,
+      "bounds": [
+        26.889,
+        65.31,
+        257.036,
+        315.367
+      ],
+      "lowest_vertex": -0.11033
+    },
+    {
+      "frame": 3,
+      "time": 0.06667,
+      "bounds": [
+        26.849,
+        65.433,
+        257.106,
+        311.549
+      ],
+      "lowest_vertex": -0.03819
+    },
+    {
+      "frame": 4,
+      "time": 0.1,
+      "bounds": [
+        26.51,
+        66.342,
+        257.64,
+        309.718
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 5,
+      "time": 0.13333,
+      "bounds": [
+        25.757,
+        67.937,
+        258.626,
+        310.332
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 6,
+      "time": 0.16667,
+      "bounds": [
+        24.756,
+        70.172,
+        259.969,
+        311.181
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 7,
+      "time": 0.2,
+      "bounds": [
+        23.718,
+        73.03,
+        261.578,
+        312.217
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 8,
+      "time": 0.23333,
+      "bounds": [
+        22.855,
+        76.478,
+        263.548,
+        313.393
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 9,
+      "time": 0.26667,
+      "bounds": [
+        22.365,
+        80.467,
+        265.648,
+        314.145
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 10,
+      "time": 0.3,
+      "bounds": [
+        22.403,
+        84.918,
+        267.765,
+        314.78
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 11,
+      "time": 0.33333,
+      "bounds": [
+        21.023,
+        89.718,
+        269.825,
+        315.412
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 12,
+      "time": 0.36667,
+      "bounds": [
+        20.208,
+        94.723,
+        271.765,
+        316.024
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 13,
+      "time": 0.4,
+      "bounds": [
+        20.112,
+        99.759,
+        274.265,
+        316.816
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 14,
+      "time": 0.43333,
+      "bounds": [
+        20.662,
+        104.613,
+        275.699,
+        319.993
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 15,
+      "time": 0.46667,
+      "bounds": [
+        21.514,
+        108.892,
+        276.363,
+        322.885
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 16,
+      "time": 0.5,
+      "bounds": [
+        22.403,
+        111.821,
+        277.344,
+        325.113
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 17,
+      "time": 0.53333,
+      "bounds": [
+        23.1,
+        113.606,
+        277.983,
+        326.575
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 18,
+      "time": 0.56667,
+      "bounds": [
+        23.403,
+        114.324,
+        278.236,
+        327.156
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 19,
+      "time": 0.6,
+      "bounds": [
+        23.405,
+        114.33,
+        278.238,
+        327.162
+      ],
+      "lowest_vertex": 0.001
+    },
+    {
+      "frame": 20,
+      "time": 0.63333,
+      "bounds": [
+        23.405,
+        114.33,
+        278.238,
+        327.162
+      ],
+      "lowest_vertex": 0.001
+    }
+  ],
+  "files": [
+    {
+      "file": "stone-golem-death.glb",
+      "bytes": 488428,
+      "sha256": "9b0d04aaeeab54c0938c974238502f3924261f8f281c978f42b3e064dd237c5a"
+    },
+    {
+      "file": "stone-golem-death-atlas.webp",
+      "bytes": 30864,
+      "sha256": "6f612694714e533fcadda72acf0e69ba63cd93006ae6366f34ee0d19b44685cb"
+    },
+    {
+      "file": "stone-golem-death.png",
+      "bytes": 125602,
+      "sha256": "c43e6ea19926e828f8eb5aab110870f08378b047d359e8d7f283f825a40c00f2"
+    }
+  ],
+  "renders": [
+    {
+      "path": "art-source/defense/golem-death-frames/golem-death-0.png",
+      "sha256": "c43e6ea19926e828f8eb5aab110870f08378b047d359e8d7f283f825a40c00f2"
+    },
+    {
+      "path": "art-source/defense/golem-death-frames/golem-death-1.png",
+      "sha256": "8988e13053f0eeed492e4fadc4ebca2ff1b39260130bef497bad33f4c499b286"
+    },
+    {
+      "path": "art-source/defense/golem-death-frames/golem-death-2.png",
+      "sha256": "e91305bdcb11476f5d71c450864181aeed3779f618cba171c4da72948830d32c"
+    },
+    {
+      "path": "art-source/defense/golem-death-frames/golem-death-3.png",
+      "sha256": "286e277d96273449c785429133819a9f24e22430c0716afbcabd308ae2775294"
+    },
+    {
+      "path": "art-source/defense/golem-death-frames/golem-death-4.png",
+      "sha256": "a5e88def0d16758701774cfbd7b7ab180af84afe7a488b285ddf544bc38739a8"
+    }
+  ],
+  "camera": {
+    "location": [
+      5.0,
+      -10.0,
+      6.900000095367432
+    ],
+    "rotation_euler": [
+      1.1502621173858643,
+      3.684800020664625e-08,
+      0.46364766359329224
+    ],
+    "samples": 64,
+    "view_transform": "Standard"
+  },
+  "delivery_frame": {
+    "width": 256,
+    "height": 256,
+    "columns": 5,
+    "source_scale": 0.6666666666666666,
+    "display_scale": 1.476923076923077
+  }
+}

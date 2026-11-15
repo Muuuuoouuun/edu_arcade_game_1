@@ -1,0 +1,58 @@
+{
+  "source": "art-source/defense/forest-bridge.blend",
+  "regeneration_command": "npm run models:bridge",
+  "reference": "art-source/defense/concepts/2026-11-06/verdant-heart.png",
+  "camera": {
+    "location": [
+      0,
+      -900,
+      1200
+    ],
+    "target": [
+      0,
+      0,
+      0
+    ],
+    "orthographic_scale": 900,
+    "render": [
+      1800,
+      1200
+    ]
+  },
+  "placement": {
+    "x": 596,
+    "y_offset": -46,
+    "width": 164,
+    "height": 100,
+    "sort_y_offset": 25
+  },
+  "walkway": {
+    "x_range": [
+      604,
+      752
+    ],
+    "center_y": 430,
+    "top_z": 20
+  },
+  "glb_materials": "PBR base colors and roughness; procedural grain is preserved in Blender and baked images",
+  "front_meshes": 20,
+  "meshes": 120,
+  "runtime_meshes": 14,
+  "files": [
+    {
+      "file": "defense/terrain/forest-bridge-front.webp",
+      "bytes": 4712,
+      "sha256": "34bb907f26cb2c345bf79003e8111782f34e11367a0fe4f93cd6643ea3c32e37"
+    },
+    {
+      "file": "defense/models/forest-bridge.glb",
+      "bytes": 601476,
+      "sha256": "bfde60aef349da925d031d699f05bdef45cd73f730742554a6f463e69e851282"
+    },
+    {
+      "file": "defense/models/forest-bridge.png",
+      "bytes": 105175,
+      "sha256": "585493623ab321ac61f82da93b318b688c894f6fee7a277097eb7a4e7df2ff7a"
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "date": "2026-11-12",
+  "status": "visual_candidates_not_runtime_assets",
+  "species": "human",
+  "style_standard": "../../../../../docs/arcana-character-art-standard.md",
+  "verification": {
+    "visual_review": "all five selected sheets inspected; sheet 16 weapon framing corrected",
+    "image_decode": "Pillow verify",
+    "runtime_integration": false,
+    "mobile_readability_test": false
+  },
+  "sheets": [
+    {
+      "file": "16-frontline-mercenaries.png",
+      "source": "exec-a67afd21-a700-463f-bcd9-d351caf430e8.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2139899,
+      "sha256": "b10801fdcc7bd1e61ba237a37ffc4110b72368a483c70a8dc461cfa1173f55ac",
+      "sheet": 16,
+      "theme": "전열 용병",
+      "category": "mercenary",
+      "candidates": {
+        "A": "성벽 방패 용병",
+        "B": "산악 도끼 용병",
+        "C": "동방 월도 용병",
+        "D": "강철 대검 용병"
+      },
+      "initial_references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/human-roles/12-human-mercenaries.png",
+          "sha256": "8d303c322e5c27a98bfce3d9bc8605e2d1d63a38256c89c05bf787ff1f128b2f"
+        }
+      ],
+      "edit_reference": "exec-4de8fd16-b313-4ebf-a6d3-146939f617db.png"
+    },
+    {
+      "file": "17-specialist-mercenaries.png",
+      "source": "exec-8a8d0851-af0b-4c6c-8aec-41225828ba15.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2397291,
+      "sha256": "bbcc4d5915e0c4a700f5d7fae5c4f77a1d7d811f048e0eab8fe071bb4580a16a",
+      "sheet": 17,
+      "theme": "특수 용병",
+      "category": "mercenary",
+      "candidates": {
+        "A": "중석궁 사냥꾼",
+        "B": "그물 포획 용병",
+        "C": "연금 투척 용병",
+        "D": "전투 북잡이"
+      },
+      "initial_references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/human-roles/12-human-mercenaries.png",
+          "sha256": "8d303c322e5c27a98bfce3d9bc8605e2d1d63a38256c89c05bf787ff1f128b2f"
+        }
+      ],
+      "edit_reference": null
+    },
+    {
+      "file": "18-elemental-melee-heroes.png",
+      "source": "exec-eb5d2f9f-fe5f-47b8-8d86-8ff35da8af9e.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2476614,
+      "sha256": "934a13ccad252f40c74cdaed17574729b0d7d459f2c9549891f55e56327ecfe6",
+      "sheet": 18,
+      "theme": "속성 근접 영웅",
+      "category": "hero",
+      "candidates": {
+        "A": "태양창 수호자",
+        "B": "홍련 쌍도 검사",
+        "C": "빙결 망치 기사",
+        "D": "청풍 원륜 검사"
+      },
+      "initial_references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/human-roles/11-human-heroes.png",
+          "sha256": "fc3ed5017710a6a924754ee781cc509469e4d659cbabd2dbbec5c3a6a2ac6d1e"
+        }
+      ],
+      "edit_reference": null
+    },
+    {
+      "file": "19-arcane-ranged-heroes.png",
+      "source": "exec-be72ac9f-2bb2-4c83-ae60-5f5e5b00e939.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2428068,
+      "sha256": "18ca6567ede2bfe19475da521de6b3b6524674bb9007907acb7223fdb796218f",
+      "sheet": 19,
+      "theme": "비전·원거리 영웅",
+      "category": "hero",
+      "candidates": {
+        "A": "해류 지휘술사",
+        "B": "대지 룬 현자",
+        "C": "뇌광 마법궁수",
+        "D": "달빛 봉인술사"
+      },
+      "initial_references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/human-roles/11-human-heroes.png",
+          "sha256": "fc3ed5017710a6a924754ee781cc509469e4d659cbabd2dbbec5c3a6a2ac6d1e"
+        }
+      ],
+      "edit_reference": null
+    },
+    {
+      "file": "20-human-boss-commanders.png",
+      "source": "exec-bd8b4917-d2c6-4662-9e1a-bc1cfaeba830.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2603861,
+      "sha256": "b5c79b55b9472c29fc2534a69e8f1fb85613e71026643076c9c9b096cb3df3c2",
+      "sheet": 20,
+      "theme": "인간형 보스 지휘관",
+      "category": "boss",
+      "candidates": {
+        "A": "흑철 성채 군주",
+        "B": "폭풍 왕관 대마도사",
+        "C": "붉은 사막 투기왕",
+        "D": "황혼 거울 섭정"
+      },
+      "initial_references": [
+        {
+          "path": "public/defense/atlas.png",
+          "sha256": "6020c235cb757466256b760aebe95f34da2d1b26ad2bf62d3a006f76be245330"
+        },
+        {
+          "path": "art-source/defense/concepts/2026-11-12-characters/human-roles/11-human-heroes.png",
+          "sha256": "fc3ed5017710a6a924754ee781cc509469e4d659cbabd2dbbec5c3a6a2ac6d1e"
+        }
+      ],
+      "edit_reference": null
+    }
+  ],
+  "drafts": [
+    {
+      "file": "drafts/16-frontline-mercenaries-initial.png",
+      "source": "exec-4de8fd16-b313-4ebf-a6d3-146939f617db.png",
+      "width": 1254,
+      "height": 1254,
+      "bytes": 2429646,
+      "sha256": "4aa85ddd72779a8587c6963b7da67b5aa0b58b50258b98222729986f05a93262",
+      "sheet": 16,
+      "status": "superseded_by_framing_correction"
+    }
+  ]
+}

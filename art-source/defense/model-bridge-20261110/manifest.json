@@ -1,0 +1,89 @@
+{
+  "source_commit": "bec804114a26a85a800379058463f4e9fd0bf2cf",
+  "source_branch": "codex/arcana-stage-experience-20261106",
+  "purpose": "Source-preserving model integration study; not loaded by the game",
+  "files": [
+    {
+      "original_path": "public/defense/models/frontier-kar-game.glb",
+      "archive_path": "models/frontier-kar-game.glb",
+      "bytes": 1320844,
+      "sha256": "dcb44aa08e794b2985b7be0dd9cafae65a29d5a1cb44a92cd023da6144658c37",
+      "mesh_count": 13,
+      "animations": [
+        "kar-walk",
+        "kar-slam",
+        "kar-entry-0",
+        "kar-entry-1",
+        "kar-entry-2",
+        "kar-entry-3",
+        "kar-entry-4",
+        "kar-entry-5",
+        "kar-entry-6",
+        "kar-entry-7",
+        "kar-reset-0",
+        "kar-stop-0",
+        "kar-stop-1",
+        "kar-stop-2",
+        "kar-stop-3",
+        "kar-stop-4",
+        "kar-stop-5",
+        "kar-stop-6",
+        "kar-stop-7"
+      ]
+    },
+    {
+      "original_path": "public/defense/models/frontier-ballista-game.glb",
+      "archive_path": "models/frontier-ballista-game.glb",
+      "bytes": 230188,
+      "sha256": "624d3a2a236fd3e8563e8a98eb7aeef70f27994cb5d8418d341672ed82b29b87",
+      "mesh_count": 7,
+      "animations": [
+        "frontier-ballista-release"
+      ]
+    },
+    {
+      "original_path": "public/defense/models/frontier-wood-game.glb",
+      "archive_path": "models/frontier-wood-game.glb",
+      "bytes": 134616,
+      "sha256": "e7293e2391a4d2bbb3aa60bfe386dc85b7c1597bea41f04e4ca4d02600e999f6",
+      "mesh_count": 8,
+      "animations": [
+        "frontier-wood-walk"
+      ]
+    },
+    {
+      "original_path": "public/defense/models/frontier-wood-strike-game.glb",
+      "archive_path": "models/frontier-wood-strike-game.glb",
+      "bytes": 138612,
+      "sha256": "31f5a048d1786ff434b5971deccff08a07c0e6b1ce76ef1b61520d67472b31fc",
+      "mesh_count": 8,
+      "animations": [
+        "frontier-wood-strike"
+      ]
+    },
+    {
+      "original_path": "art-source/defense/frontier-kar.blend",
+      "archive_path": "blender/frontier-kar.blend",
+      "bytes": 9948376,
+      "sha256": "cc8b47f22fcfb2e7f86f4d1f4e12bdca1dce1ab657b4d3e6d6767793277eec62"
+    },
+    {
+      "original_path": "art-source/defense/frontier-ballista.blend",
+      "archive_path": "blender/frontier-ballista.blend",
+      "bytes": 2277420,
+      "sha256": "f89172fbd9b3dd4534dd9e9590d68b84d57a404c9e578c30436569ed74f1a082"
+    },
+    {
+      "original_path": "art-source/defense/frontier-wood.blend",
+      "archive_path": "blender/frontier-wood.blend",
+      "bytes": 1685280,
+      "sha256": "bd6d139b36be1d6456efaa94a2dcb904be106410fd2167f92303ef01608113e8"
+    },
+    {
+      "original_path": "art-source/defense/frontier-wood-strike.blend",
+      "archive_path": "blender/frontier-wood-strike.blend",
+      "bytes": 1782052,
+      "sha256": "d21efedc198ff3c27d37cb594ebeab61f7f5a397afe2ab818d1468e25f9320b4"
+    }
+  ]
+}

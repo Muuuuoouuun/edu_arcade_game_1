@@ -1,0 +1,32 @@
+{
+  "requested_model": "claude-fable-5-2",
+  "effort": "high",
+  "max_tokens": 3000,
+  "image": "public/defense/models/kar-barbarian.png",
+  "prompt": "이 이미지는 모바일 판타지 디펜스용 카르 3D 모델의 정지 렌더입니다. 이미지에서 보이는 망치와 갑옷이 작게 축소됐을 때 서로 구분되는지 검토하고, 관찰 1개와 형태 개선 2개만 한국어로 간결하게 답하세요. 보이지 않는 뒷면이나 실제 동작은 추측하지 마세요.",
+  "model": "claude-fable-5-2",
+  "start_usage": {
+    "input_tokens": 359,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "output_tokens": 3,
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard"
+  },
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 359,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "output_tokens": 855,
+    "output_tokens_details": {
+      "thinking_tokens": 401
+    }
+  },
+  "text_characters": 406
+}

@@ -1,0 +1,146 @@
+{
+  "source": "art-source/defense/fire-tower-lv3-action.blend",
+  "level": 3,
+  "regeneration_command": "npm run models:fire-action-lv3",
+  "display_scale": 1.1889999999999998,
+  "base_source_sha256": "24fe4195df3defadf72b45aa952cdb3f8ab7a4b8ac207b259a6654a151ea684a",
+  "generator": "tools/blender/build_fire_tower_action.py",
+  "reference": "art-source/defense/concepts/2026-10-29/props/six-tower-modules.png",
+  "frame": {
+    "width": 640,
+    "height": 640,
+    "ground": [
+      320.0001525878906,
+      488.6482334136963
+    ],
+    "crop": [
+      32,
+      24,
+      576,
+      576
+    ],
+    "orthographic_scale": 7.5
+  },
+  "delivery_frame": {
+    "width": 384,
+    "height": 384,
+    "crop": [
+      19.2,
+      14.4,
+      345.6,
+      345.6
+    ]
+  },
+  "clip": "fire-core-release",
+  "hit_at": 0.15,
+  "duration": 0.39,
+  "poses": [
+    {
+      "name": "rest",
+      "socket": [
+        315.90415954589844,
+        236.11957550048828
+      ],
+      "bounds": [
+        149.68018531799316,
+        38.35102081298828,
+        490.32012939453125,
+        577.25266456604
+      ],
+      "fixed_meshes": 81,
+      "foundation_drift": 0.0
+    },
+    {
+      "name": "gather",
+      "socket": [
+        316.0270309448242,
+        244.44175720214844
+      ],
+      "bounds": [
+        149.68018531799316,
+        36.704254150390625,
+        490.32012939453125,
+        577.25266456604
+      ],
+      "fixed_meshes": 81,
+      "foundation_drift": 0.0
+    },
+    {
+      "name": "charged",
+      "socket": [
+        316.3137435913086,
+        257.3535919189453
+      ],
+      "bounds": [
+        149.68018531799316,
+        34.52045440673828,
+        490.32012939453125,
+        577.25266456604
+      ],
+      "fixed_meshes": 81,
+      "foundation_drift": 0.0
+    },
+    {
+      "name": "release",
+      "socket": [
+        315.65839767456055,
+        221.7715835571289
+      ],
+      "bounds": [
+        149.68018531799316,
+        35.949745178222656,
+        490.32012939453125,
+        577.25266456604
+      ],
+      "fixed_meshes": 81,
+      "foundation_drift": 0.0
+    },
+    {
+      "name": "rebound",
+      "socket": [
+        315.82223892211914,
+        227.5094223022461
+      ],
+      "bounds": [
+        149.68018531799316,
+        46.46595001220703,
+        490.32012939453125,
+        577.25266456604
+      ],
+      "fixed_meshes": 81,
+      "foundation_drift": 0.0
+    },
+    {
+      "name": "settle",
+      "socket": [
+        315.9451103210449,
+        239.85050201416016
+      ],
+      "bounds": [
+        149.68018531799316,
+        40.781097412109375,
+        490.32012939453125,
+        577.25266456604
+      ],
+      "fixed_meshes": 81,
+      "foundation_drift": 0.0
+    }
+  ],
+  "files": [
+    {
+      "file": "fire-tower-lv3-action.glb",
+      "bytes": 996180,
+      "sha256": "7c27a046a544a45337cea8b5523bdd811f0efb6ab93f54fb9bb9e197f3f7558e"
+    },
+    {
+      "file": "fire-tower-lv3-action.png",
+      "bytes": 530429,
+      "sha256": "db486042b81403285ea00d31eaa89a556bb4a090b862b6f1a215f7ef05d3817f"
+    },
+    {
+      "file": "fire-lv3-action-atlas.webp",
+      "bytes": 133592,
+      "sha256": "e3220d6919ff0687d3f7cf5e9af9e822016f689ae87e12ee9b7c70419b527596"
+    }
+  ]
+}

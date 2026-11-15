@@ -1,0 +1,111 @@
+{
+  "command": "npm run models:frontier-gate-impact",
+  "concept": "art-source/defense/concepts/2026-11-09/polar-battlefield.png",
+  "editable_meshes": 119,
+  "hinges": 4,
+  "duration": 0.55,
+  "atlas": {
+    "path": "public/defense/models/frontier-frost-gate-impact-atlas.webp",
+    "frame_size": [
+      384,
+      384
+    ],
+    "columns": 4,
+    "rows": 1,
+    "poses": [
+      {
+        "name": "idle",
+        "index": 0,
+        "source_frame": 1,
+        "time": 0.0
+      },
+      {
+        "name": "contact",
+        "index": 1,
+        "source_frame": 6,
+        "time": 0.08333333333333333
+      },
+      {
+        "name": "secondary",
+        "index": 2,
+        "source_frame": 10,
+        "time": 0.15
+      },
+      {
+        "name": "settled",
+        "index": 3,
+        "source_frame": 34,
+        "time": 0.55
+      }
+    ]
+  },
+  "camera": {
+    "position": [
+      7,
+      -11,
+      8
+    ],
+    "target": [
+      0,
+      0,
+      2
+    ],
+    "ortho_scale": 9,
+    "size": [
+      384,
+      384
+    ]
+  },
+  "files": [
+    {
+      "path": "tools/blender/build_frontier_gate_impact.py",
+      "bytes": 9521,
+      "sha256": "7d83581f2f308d5fc73f38590a3c2bd9efb2c5f719e55f2a7a1b7dcce06cfc9e"
+    },
+    {
+      "path": "art-source/defense/frontier-frost.blend",
+      "bytes": 3660180,
+      "sha256": "51e0a21495df43cfdf44cf6e615a9d5e752975f7355d6ff6d12f3e88bdd6af42"
+    },
+    {
+      "path": "art-source/defense/frontier-frost-gate-impact.blend",
+      "bytes": 1657796,
+      "sha256": "f6b37ae1874cb71a0c9fa0c9029bae2cd7e094a33227714dc3c88e7ec9f4e8f7"
+    },
+    {
+      "path": "public/defense/models/frontier-frost-gate-impact.glb",
+      "bytes": 142592,
+      "sha256": "851e623edee757c12acd3fb2c77987b1c3ca15fc7b7e5fdd7499ae547b27b9b9"
+    },
+    {
+      "path": "public/defense/models/frontier-frost-gate-impact.png",
+      "bytes": 172600,
+      "sha256": "f402162374eb16e6bc2b8c15a123159ee431f44b7e83dcdb316663415cf4afd6"
+    },
+    {
+      "path": "public/defense/models/frontier-frost-gate-impact-atlas.webp",
+      "bytes": 51002,
+      "sha256": "8821d07da2216038a25b7ff2e4f06a90340a1613061ec39d6cfc0be92a0dc18a"
+    },
+    {
+      "path": "art-source/defense/frontier-gate-impact/idle.png",
+      "bytes": 172600,
+      "sha256": "f402162374eb16e6bc2b8c15a123159ee431f44b7e83dcdb316663415cf4afd6"
+    },
+    {
+      "path": "art-source/defense/frontier-gate-impact/contact.png",
+      "bytes": 172929,
+      "sha256": "68b10ac6b5bd3400af810218df2f055489f7c9b38bc8c57579e9a4602ae721b2"
+    },
+    {
+      "path": "art-source/defense/frontier-gate-impact/secondary.png",
+      "bytes": 172350,
+      "sha256": "9815d76be51344a9b3bcc6907e06486c14d76c29ba4c1e5a1feeda7feac62059"
+    },
+    {
+      "path": "art-source/defense/frontier-gate-impact/settled.png",
+      "bytes": 172600,
+      "sha256": "d638b2a49e5be5a37712507b62441bfa1fac5c1bdcbd4c653967174e40879030"
+    }
+  ]
+}

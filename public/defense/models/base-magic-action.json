@@ -1,0 +1,152 @@
+{
+  "source": "art-source/defense/base-magic-action.blend",
+  "level": 1,
+  "regeneration_command": "npm run models:base-magic-action",
+  "display_scale": 1.16,
+  "base_source_sha256": "24fe4195df3defadf72b45aa952cdb3f8ab7a4b8ac207b259a6654a151ea684a",
+  "generator": "tools/blender/build_base_magic_action.py",
+  "reference": "art-source/defense/concepts/2026-10-29/props/six-tower-modules.png",
+  "frame": {
+    "width": 640,
+    "height": 640,
+    "ground": [
+      320.0001525878906,
+      488.6482334136963
+    ],
+    "crop": [
+      32,
+      24,
+      576,
+      576
+    ],
+    "orthographic_scale": 7.5
+  },
+  "delivery_frame": {
+    "width": 256,
+    "height": 256,
+    "crop": [
+      12.8,
+      9.6,
+      230.4,
+      230.4
+    ]
+  },
+  "clip": "base-magic-release",
+  "hit_at": 0.15,
+  "duration": 0.39,
+  "poses": [
+    {
+      "name": "rest",
+      "socket": [
+        320.0001525878906,
+        59.20631408691406
+      ],
+      "bounds": [
+        149.68018531799316,
+        60.81596374511719,
+        490.32012939453125,
+        577.25266456604
+      ],
+      "fixed_meshes": 77,
+      "foundation_drift": 0.0
+    },
+    {
+      "name": "gather",
+      "socket": [
+        320.0001525878906,
+        69.05818939208984
+      ],
+      "bounds": [
+        149.68018531799316,
+        70.6356430053711,
+        490.32012939453125,
+        577.25266456604
+      ],
+      "fixed_meshes": 77,
+      "foundation_drift": 0.0
+    },
+    {
+      "name": "charged",
+      "socket": [
+        320.0001525878906,
+        85.31726837158203
+      ],
+      "bounds": [
+        149.68018531799316,
+        84.0164566040039,
+        490.32012939453125,
+        577.25266456604
+      ],
+      "fixed_meshes": 77,
+      "foundation_drift": 0.0
+    },
+    {
+      "name": "release",
+      "socket": [
+        320.0001525878906,
+        39.502525329589844
+      ],
+      "bounds": [
+        149.68018531799316,
+        41.17656707763672,
+        490.32012939453125,
+        577.25266456604
+      ],
+      "fixed_meshes": 77,
+      "foundation_drift": 0.0
+    },
+    {
+      "name": "rebound",
+      "socket": [
+        320.0001525878906,
+        49.35436248779297
+      ],
+      "bounds": [
+        149.68018531799316,
+        50.996246337890625,
+        490.32012939453125,
+        577.25266456604
+      ],
+      "fixed_meshes": 77,
+      "foundation_drift": 0.0
+    },
+    {
+      "name": "settle",
+      "socket": [
+        320.0001525878906,
+        62.9840087890625
+      ],
+      "bounds": [
+        149.68018531799316,
+        64.57756042480469,
+        490.32012939453125,
+        577.25266456604
+      ],
+      "fixed_meshes": 77,
+      "foundation_drift": 0.0
+    }
+  ],
+  "files": [
+    {
+      "file": "base-magic-action.glb",
+      "bytes": 884580,
+      "sha256": "907067a062d7af54d67c41550b33658540315f1905705585da095e9631d626e3"
+    },
+    {
+      "file": "base-magic-action.png",
+      "bytes": 508094,
+      "sha256": "af52105359f7092b1332754691bf088a3582c160b60c4573f046e52ba505ad44"
+    },
+    {
+      "file": "base-magic-action-atlas.webp",
+      "bytes": 68966,
+      "sha256": "538c1b44d56aa61bbb81e9d5826804738e0f6eba9f31add82c6c11a4277de750"
+    }
+  ],
+  "clearance": {
+    "sampled_frames": 40,
+    "ring_crystal_crossings": 0
+  },
+  "source_sha256": "8a92e459b2b2c3b43fe3688087b38cbd71c872d61b146378201635de2e64f5fc",
+  "generator_sha256": "b2fa9df073a1d6702ac5efd7185f866979b4422a6c86ba8660907f76b7486aa3"
+}

@@ -1,0 +1,48 @@
+{
+  "source": "Existing Kar authoring assets; unchanged, no new model",
+  "regenerate": "npm run models:barbarian && npm run models:kar-entry && npm run models:frontier-hero",
+  "forwardCorrection": 3.141592653589793,
+  "scale": 0.8184143183206886,
+  "baseY": -0.00818414147586157,
+  "contact": 0.28,
+  "duration": 0.56,
+  "socket": [
+    0.3682864338560855,
+    0.5118761743547257,
+    1.2532002944681326
+  ],
+  "files": [
+    {
+      "path": "art-source/defense/kar-barbarian.blend",
+      "sha256": "cacf27e4cce01668070214c568e9e9d2d3bbf4fdc22c93b788b9aa1a3908a241"
+    },
+    {
+      "path": "art-source/defense/kar-barbarian-walk.blend",
+      "sha256": "e9a124d22e4ed756d6bb645d799b15d577650940002f37bd815373eab7be260b"
+    },
+    {
+      "path": "art-source/defense/kar-entry.blend",
+      "sha256": "8463b131fd074e849df7def3272f9baca49ff296b7814ececb38220cc1a91faa"
+    },
+    {
+      "path": "public/defense/models/kar-barbarian.glb",
+      "sha256": "239b7145b387e8f3b38fe936ed62e6423b6ca1c071acd271f823e83e9e853684"
+    },
+    {
+      "path": "public/defense/models/kar-barbarian-walk.glb",
+      "sha256": "601740b336faeb363c8adb9aa3d2514b761911f9f5f4eb4ec8089f5237a931cb"
+    },
+    {
+      "path": "public/defense/models/kar-entry.glb",
+      "sha256": "a71b68167f461703cd5f92a9e5227d053b5cf2500b07a5e330559dc189faa292"
+    },
+    {
+      "path": "public/defense/models/kar-barbarian.json",
+      "sha256": "a29abe440107b4b03283a250a0b0224dc81385de6bcc4dc7b22bf36999b9c893"
+    },
+    {
+      "path": "public/defense/models/kar-entry.json",
+      "sha256": "b77e1038b3f582888b3233dc4308f7fe0b735456f413d3df01698b2a06b2ac4c"
+    }
+  ]
+}

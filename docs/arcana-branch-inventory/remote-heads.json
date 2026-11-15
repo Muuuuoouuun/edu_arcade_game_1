@@ -1,0 +1,1314 @@
+{
+  "snapshot_kst": "2026-11-10 17:06 KST",
+  "main": "b175a9f7a3b400dff1a819d4d79b8e79ac8e5d9e",
+  "branches": [
+    {
+      "branch": "claude/confident-knuth-qc16ui",
+      "sha": "4dac27f9fbb1332e4e08b837d5e3aaa9ce3eb82a",
+      "status": "미병합 고유 작업",
+      "pr": null
+    },
+    {
+      "branch": "claude/nice-meitner-5fin85",
+      "sha": "bf7c1c67ebb23a9d7386d87c67f470dea362b0f9",
+      "status": "main 조상",
+      "pr": null
+    },
+    {
+      "branch": "claude/pensive-ptolemy-uhyunb",
+      "sha": "97d4cc1c1d9fc99124dfc05a32a9f2adcf22ca76",
+      "status": "미병합 고유 작업",
+      "pr": null
+    },
+    {
+      "branch": "claude/wizardly-shannon-zqnwg0",
+      "sha": "ad84ebe8a148af9c7bab5b9338d1ffa25cbbb7aa",
+      "status": "미병합 고유 작업",
+      "pr": null
+    },
+    {
+      "branch": "codex/arcana-3d-world-sync-20261109",
+      "sha": "a6af307f2f0b570bdf83920c047a8725cdff688a",
+      "status": "미병합 고유 작업",
+      "pr": null
+    },
+    {
+      "branch": "codex/arcana-android-install-20261106",
+      "sha": "3038bb9278816924f7f974f690aae4b94fcfb3c8",
+      "status": "PR 병합",
+      "pr": {
+        "number": 62,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/62",
+        "head_at_merge": "3038bb9278816924f7f974f690aae4b94fcfb3c8",
+        "merge_commit": "6dbff8d76bedd6dc7febb44dcc4ab8c09576022f",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-api-production-20261109",
+      "sha": "1686b6c491bd6c5e74069d8acfcc007687274437",
+      "status": "PR 병합",
+      "pr": {
+        "number": 83,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/83",
+        "head_at_merge": "1686b6c491bd6c5e74069d8acfcc007687274437",
+        "merge_commit": "a48f2c03b3690f9bebc8f5e08bd8da6bd0ccc8a6",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-art-camp-20261031",
+      "sha": "080c5a77edea1fbd9cf81d673db2da401c5126ee",
+      "status": "PR 병합",
+      "pr": {
+        "number": 15,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/15",
+        "head_at_merge": "080c5a77edea1fbd9cf81d673db2da401c5126ee",
+        "merge_commit": "d8808d239067843ad7e0abf03482441568376f30",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-art-direction-followup-20261109",
+      "sha": "ebf354c13c2f6dafcc4499013cb54cfafe96fbf6",
+      "status": "PR 병합",
+      "pr": {
+        "number": 97,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/97",
+        "head_at_merge": "ebf354c13c2f6dafcc4499013cb54cfafe96fbf6",
+        "merge_commit": "222081742cc5abea15afef64828e3545cdd03174",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-character-motion",
+      "sha": "9e1376d41b38bfa39a023be27cc09be13e649967",
+      "status": "PR 병합, 이후 추가 검토",
+      "pr": {
+        "number": 96,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/96",
+        "head_at_merge": "86fc245d1b2628b2faeabe86b2032bcd273e5787",
+        "merge_commit": "aeaa40f9ebf3d33595690ecf4c2529be9fc4af9d",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-concept-expansion-20261106",
+      "sha": "597a9bb9f28200a63ca0a81a98997fc8a5da07f9",
+      "status": "PR 병합",
+      "pr": {
+        "number": 67,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/67",
+        "head_at_merge": "597a9bb9f28200a63ca0a81a98997fc8a5da07f9",
+        "merge_commit": "658789280859bd41cef76a498577010d3d88954d",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-core-rules-20261109",
+      "sha": "fea802b4b2468a784e54c649876969f944e19d30",
+      "status": "PR 병합",
+      "pr": {
+        "number": 103,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/103",
+        "head_at_merge": "fea802b4b2468a784e54c649876969f944e19d30",
+        "merge_commit": "6569da1be0651dc36a21189e299d675ffe5c0f98",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-development-loop-20261030",
+      "sha": "f6b4777e9487dfbc5f94ec27b324154395ce89e9",
+      "status": "PR 병합, 현재 tip도 포함",
+      "pr": {
+        "number": 3,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/3",
+        "head_at_merge": "d1f496332538f53cf2aff1dae458f038190fcca9",
+        "merge_commit": "82380571c5b43e9c226fcf7a622fd7bb990bead8",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-dwarf-model-20261031",
+      "sha": "ee6f695a69f50649f651820b6af2461ff6f38400",
+      "status": "PR 병합",
+      "pr": {
+        "number": 14,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/14",
+        "head_at_merge": "ee6f695a69f50649f651820b6af2461ff6f38400",
+        "merge_commit": "8ecee60ab34a7e5526c99f1d771299dd1f86b25b",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-enemy-design-20261109",
+      "sha": "7cdcb9a6a12eccaccf5ed5265cd718ee850ae153",
+      "status": "PR 병합",
+      "pr": {
+        "number": 104,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/104",
+        "head_at_merge": "7cdcb9a6a12eccaccf5ed5265cd718ee850ae153",
+        "merge_commit": "b175a9f7a3b400dff1a819d4d79b8e79ac8e5d9e",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-graphics-20261029",
+      "sha": "f6d2dd7c0a42826c4b2fdb56bbe789f97efe55bf",
+      "status": "PR 병합",
+      "pr": {
+        "number": 1,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/1",
+        "head_at_merge": "f6d2dd7c0a42826c4b2fdb56bbe789f97efe55bf",
+        "merge_commit": "6403a91c407fbcc272c5106753194138aae76287",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-hourly-production-20261101",
+      "sha": "9ee075692fc3a352266025103399deaa2038b799",
+      "status": "PR 병합",
+      "pr": {
+        "number": 18,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/18",
+        "head_at_merge": "9ee075692fc3a352266025103399deaa2038b799",
+        "merge_commit": "6961662cffce34aac34be16269c191515bab15b1",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-kar-3d-preview-20261109",
+      "sha": "f5f0c28c8868a42ef307d9f073a845b4ec0236fd",
+      "status": "PR 병합",
+      "pr": {
+        "number": 94,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/94",
+        "head_at_merge": "f5f0c28c8868a42ef307d9f073a845b4ec0236fd",
+        "merge_commit": "2735fabbe878579fa9597991a94194c7befaf57e",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-lightning-model-20261031",
+      "sha": "9b0939d7505663d43e456c9dc33af40690b83469",
+      "status": "PR 병합",
+      "pr": {
+        "number": 16,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/16",
+        "head_at_merge": "9b0939d7505663d43e456c9dc33af40690b83469",
+        "merge_commit": "d24fa0c487105580f9ad0f255ac32dc067ed7278",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-0342",
+      "sha": "053a10962601ef57f73f1f4af8f43fe07253a92b",
+      "status": "PR 병합",
+      "pr": {
+        "number": 4,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/4",
+        "head_at_merge": "053a10962601ef57f73f1f4af8f43fe07253a92b",
+        "merge_commit": "e0dfe9d267dc04f8f1abafe0efd3644a929532d7",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-0542",
+      "sha": "caf1c5132f31664433e7a5716dc3136cd1077410",
+      "status": "PR 병합",
+      "pr": {
+        "number": 5,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/5",
+        "head_at_merge": "caf1c5132f31664433e7a5716dc3136cd1077410",
+        "merge_commit": "d50b0b46eb48fa8fedc1f787a86beb1b7f630c61",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-1142",
+      "sha": "681454258782a95c4441db7e50b7c5e4b5ccc215",
+      "status": "PR 병합",
+      "pr": {
+        "number": 7,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/7",
+        "head_at_merge": "681454258782a95c4441db7e50b7c5e4b5ccc215",
+        "merge_commit": "0506bf51d533dd6dba7866cffbf0f1c90899b3f4",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-1542",
+      "sha": "933d51e40723500868b50888b43d3d43871c98dd",
+      "status": "PR 병합",
+      "pr": {
+        "number": 8,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/8",
+        "head_at_merge": "933d51e40723500868b50888b43d3d43871c98dd",
+        "merge_commit": "1c63ba26e3cb2ac1f58988655e77b9fc0d2b1003",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-1942",
+      "sha": "d4579a68f2b6abe5260bd16e841471158f3a993e",
+      "status": "PR 병합",
+      "pr": {
+        "number": 9,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/9",
+        "head_at_merge": "d4579a68f2b6abe5260bd16e841471158f3a993e",
+        "merge_commit": "62fc6b22c87333afc12b45140a89ca817628386c",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-2042",
+      "sha": "86ce3f3477abd41a275e6b459a7acc12946f4999",
+      "status": "PR 병합",
+      "pr": {
+        "number": 10,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/10",
+        "head_at_merge": "86ce3f3477abd41a275e6b459a7acc12946f4999",
+        "merge_commit": "64d4340f5b2adc0fa90ed082759869d51cc2b268",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-2142",
+      "sha": "e2acd5db0db0f6293840a27b9271f2149415b31d",
+      "status": "PR 병합",
+      "pr": {
+        "number": 11,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/11",
+        "head_at_merge": "e2acd5db0db0f6293840a27b9271f2149415b31d",
+        "merge_commit": "71c764d2f2e6749e7e5912d46f47b00ab5ce1388",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261030-2342",
+      "sha": "d89f881150259df557c532d9d2a962166c8236ce",
+      "status": "PR 병합",
+      "pr": {
+        "number": 12,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/12",
+        "head_at_merge": "d89f881150259df557c532d9d2a962166c8236ce",
+        "merge_commit": "394c332d77063264593697d35314c66e0fb4c246",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261031-0342",
+      "sha": "c5b83821ca3bec3891af6b2313fe1ad03cc25f36",
+      "status": "PR 병합",
+      "pr": {
+        "number": 13,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/13",
+        "head_at_merge": "c5b83821ca3bec3891af6b2313fe1ad03cc25f36",
+        "merge_commit": "f8c9b9337a128bbb843e0a3bc5333ba24fa23f47",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261031-2342",
+      "sha": "988a9720c7ea62c9b7c35c448eb781a5da1eab58",
+      "status": "PR 병합",
+      "pr": {
+        "number": 17,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/17",
+        "head_at_merge": "988a9720c7ea62c9b7c35c448eb781a5da1eab58",
+        "merge_commit": "85e9474b788f6717910a3a216b61a04716fb61aa",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261101-0224",
+      "sha": "04814daceee6c3a9be783dcfc4f2f8d4dd389f5b",
+      "status": "PR 병합",
+      "pr": {
+        "number": 19,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/19",
+        "head_at_merge": "04814daceee6c3a9be783dcfc4f2f8d4dd389f5b",
+        "merge_commit": "8fa7739dc8ee8a21369e005ebc08593cd39d9df8",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0115",
+      "sha": "e2ef306fd29e8d961b3a927806625dc64e20dbec",
+      "status": "PR 병합",
+      "pr": {
+        "number": 21,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/21",
+        "head_at_merge": "e2ef306fd29e8d961b3a927806625dc64e20dbec",
+        "merge_commit": "be6d4c9d75c22b222b4db8ef905f6813e00c3d7f",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0214",
+      "sha": "8f45cc36f23e7fdb38aff67ba8652ac5d385f5b3",
+      "status": "PR 병합",
+      "pr": {
+        "number": 22,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/22",
+        "head_at_merge": "8f45cc36f23e7fdb38aff67ba8652ac5d385f5b3",
+        "merge_commit": "61e94c808f55dc45347186a7bb1b0f1c672eb95a",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0315",
+      "sha": "87a22cb05c7faeb9950076ae67a6c106521f67a0",
+      "status": "PR 병합",
+      "pr": {
+        "number": 23,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/23",
+        "head_at_merge": "87a22cb05c7faeb9950076ae67a6c106521f67a0",
+        "merge_commit": "ddbaa0274a5607e99cc44e9fe2df7758e386aa87",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0415",
+      "sha": "d7b80f4e650f5b52cb174d996fd73c3be086cce7",
+      "status": "PR 병합",
+      "pr": {
+        "number": 24,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/24",
+        "head_at_merge": "d7b80f4e650f5b52cb174d996fd73c3be086cce7",
+        "merge_commit": "5126f9995ead2b54b413a7bf74f5eeba98601811",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0514",
+      "sha": "c814a2828ca0bfcc001d2ff3ead40b98cfc759dc",
+      "status": "PR 병합",
+      "pr": {
+        "number": 25,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/25",
+        "head_at_merge": "c814a2828ca0bfcc001d2ff3ead40b98cfc759dc",
+        "merge_commit": "4667ced0a904202bd093259e444dc751f1bcd795",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0614",
+      "sha": "7a5981ea774bcc8afb57fa629ec8843f9c3a27dc",
+      "status": "PR 병합",
+      "pr": {
+        "number": 26,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/26",
+        "head_at_merge": "7a5981ea774bcc8afb57fa629ec8843f9c3a27dc",
+        "merge_commit": "4dfaf39fe4c94fa0579b7ddd2b02ee401e62bba1",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0714",
+      "sha": "df08b41ec335416ef4b0c10c4c16997791962773",
+      "status": "PR 병합",
+      "pr": {
+        "number": 27,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/27",
+        "head_at_merge": "df08b41ec335416ef4b0c10c4c16997791962773",
+        "merge_commit": "2931bbc797158bcf8dbb8075d45f25becc2a6c87",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0814",
+      "sha": "3a959ad4a129bb0ebabab120839cc9accfa6610b",
+      "status": "PR 병합",
+      "pr": {
+        "number": 28,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/28",
+        "head_at_merge": "3a959ad4a129bb0ebabab120839cc9accfa6610b",
+        "merge_commit": "977818842c583e54497b3a1f880a99a8578c6a49",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-0920",
+      "sha": "bb9e92cefdc285266db6294d01272165db70feec",
+      "status": "PR 병합",
+      "pr": {
+        "number": 29,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/29",
+        "head_at_merge": "bb9e92cefdc285266db6294d01272165db70feec",
+        "merge_commit": "7de9a379d4575b270dc0d8c4325129efcfd9900c",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1013",
+      "sha": "e8b24ba030fa3a7a1e7ca5fdf80c451cf8736cbd",
+      "status": "PR 병합",
+      "pr": {
+        "number": 30,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/30",
+        "head_at_merge": "e8b24ba030fa3a7a1e7ca5fdf80c451cf8736cbd",
+        "merge_commit": "0ebd83348b05ef8e865da8da259241ab42cf09c1",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1114",
+      "sha": "8cb3f68d2c52689ecdb58dae0dd2505211bfcd06",
+      "status": "PR 병합",
+      "pr": {
+        "number": 31,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/31",
+        "head_at_merge": "8cb3f68d2c52689ecdb58dae0dd2505211bfcd06",
+        "merge_commit": "9ab9e2b26ca6f77f49d6df4c1d44ba1d6184f805",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1215",
+      "sha": "2d7117eb566c7f3e569dc9eb53544b1cffe0e4e2",
+      "status": "PR 병합",
+      "pr": {
+        "number": 32,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/32",
+        "head_at_merge": "2d7117eb566c7f3e569dc9eb53544b1cffe0e4e2",
+        "merge_commit": "aee57ba9b4f26a04e543ba21c1b14a152e0623f1",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1316",
+      "sha": "567cdbaccc7e9134610ac22809fee07101119d0d",
+      "status": "PR 병합",
+      "pr": {
+        "number": 33,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/33",
+        "head_at_merge": "567cdbaccc7e9134610ac22809fee07101119d0d",
+        "merge_commit": "90d23c61726d73a3b325f9cdb9afd680af17e630",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1414",
+      "sha": "a83106b6076c1b2b825faa18532f042f9b363580",
+      "status": "PR 병합",
+      "pr": {
+        "number": 34,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/34",
+        "head_at_merge": "a83106b6076c1b2b825faa18532f042f9b363580",
+        "merge_commit": "bfb184e68b24187a14353bca4425154c623beaa8",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1514",
+      "sha": "2924c0fc2f08edfefcc6e99d5060e95a2ddd1b5b",
+      "status": "PR 병합",
+      "pr": {
+        "number": 35,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/35",
+        "head_at_merge": "2924c0fc2f08edfefcc6e99d5060e95a2ddd1b5b",
+        "merge_commit": "2c1a89707e4759fdfa28a9d89c3e85e314a038e8",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1614",
+      "sha": "34d5832f7267042d8eb63352d4af64bf67948c9d",
+      "status": "PR 병합",
+      "pr": {
+        "number": 36,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/36",
+        "head_at_merge": "34d5832f7267042d8eb63352d4af64bf67948c9d",
+        "merge_commit": "1da8a0ce7b64f2111bfe42f8bc4324f499231f65",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1814",
+      "sha": "656860a3910ac2465724a67dae7aa0d1b4b198ee",
+      "status": "PR 병합",
+      "pr": {
+        "number": 37,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/37",
+        "head_at_merge": "656860a3910ac2465724a67dae7aa0d1b4b198ee",
+        "merge_commit": "bf4d384d74d6c620332adb76ec6169a4094c1a01",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-1913",
+      "sha": "abed7888617d1a251520202fc628c258e4d18f8b",
+      "status": "PR 병합",
+      "pr": {
+        "number": 38,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/38",
+        "head_at_merge": "abed7888617d1a251520202fc628c258e4d18f8b",
+        "merge_commit": "ae9591f5ccc552378c548a7f14feeff29ab8fac1",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-2013",
+      "sha": "701a582edf6b8d955a5c58986febeaee963d0618",
+      "status": "PR 병합",
+      "pr": {
+        "number": 39,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/39",
+        "head_at_merge": "701a582edf6b8d955a5c58986febeaee963d0618",
+        "merge_commit": "9e7b86df4c5afdf3adb40df85c79952f970a4c51",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-2113",
+      "sha": "223b3933e5dbea2ec35b1e5a1d54357fb4df137d",
+      "status": "PR 병합",
+      "pr": {
+        "number": 40,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/40",
+        "head_at_merge": "223b3933e5dbea2ec35b1e5a1d54357fb4df137d",
+        "merge_commit": "6d5b3c369c60f154f7245a467ad7397ffb11f72f",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-2213",
+      "sha": "b7386d904bb94721743b5e2333de26f59f06c37a",
+      "status": "PR 병합",
+      "pr": {
+        "number": 41,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/41",
+        "head_at_merge": "b7386d904bb94721743b5e2333de26f59f06c37a",
+        "merge_commit": "06d32c9471a9e87d5669512d7dfbd6f313d023ac",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261102-2313",
+      "sha": "eede58146fc030934afb0266de59d2336ff39972",
+      "status": "PR 병합",
+      "pr": {
+        "number": 42,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/42",
+        "head_at_merge": "eede58146fc030934afb0266de59d2336ff39972",
+        "merge_commit": "4c21975c8af186fa54cb541970e86edeb8871169",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-0014",
+      "sha": "81510e1b9da01150b96a97ed6c33b76158b0779f",
+      "status": "PR 병합",
+      "pr": {
+        "number": 43,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/43",
+        "head_at_merge": "81510e1b9da01150b96a97ed6c33b76158b0779f",
+        "merge_commit": "e3c81425d5ee715be40420862fc178568c6cec98",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-0514",
+      "sha": "6553f8a3dc620f426b1f97de6efc4780c76459f6",
+      "status": "PR 병합",
+      "pr": {
+        "number": 44,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/44",
+        "head_at_merge": "6553f8a3dc620f426b1f97de6efc4780c76459f6",
+        "merge_commit": "17248052a901298615d48302c9e387f7f509a4aa",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-0615",
+      "sha": "f759776089e63eb569e0cc625ed43ff156bcc6a4",
+      "status": "PR 병합",
+      "pr": {
+        "number": 45,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/45",
+        "head_at_merge": "f759776089e63eb569e0cc625ed43ff156bcc6a4",
+        "merge_commit": "e7a22336e30a134f08b5b5e5f23bb28a7fa0fb32",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-0715",
+      "sha": "f66a223cd715fc530803b2c9214410deaf045c19",
+      "status": "PR 병합",
+      "pr": {
+        "number": 46,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/46",
+        "head_at_merge": "f66a223cd715fc530803b2c9214410deaf045c19",
+        "merge_commit": "9604632b7ffea0f5204cd40c41e5e860cc05e91e",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-0813",
+      "sha": "99fae02c060a3efb963fd12b64402653303de8ea",
+      "status": "PR 병합",
+      "pr": {
+        "number": 47,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/47",
+        "head_at_merge": "99fae02c060a3efb963fd12b64402653303de8ea",
+        "merge_commit": "6074003b889ea7c9ee10690518111dc899c68dc9",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-0915",
+      "sha": "9f3fa32b20dfd630289eb03fb8dca5b0ffae2dd6",
+      "status": "PR 병합",
+      "pr": {
+        "number": 48,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/48",
+        "head_at_merge": "9f3fa32b20dfd630289eb03fb8dca5b0ffae2dd6",
+        "merge_commit": "d8de9a68da51710c8ea629f8443be1e053434b4c",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1015",
+      "sha": "270529cbbdbaf0dfe607171e254ff547f22cf960",
+      "status": "PR 병합",
+      "pr": {
+        "number": 49,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/49",
+        "head_at_merge": "270529cbbdbaf0dfe607171e254ff547f22cf960",
+        "merge_commit": "bb2a1d42a321d201a619d34f7de82dbc3d530ac0",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1120",
+      "sha": "bea73745857ba941cab1e6b0a3b6763ea73cab0c",
+      "status": "PR 병합",
+      "pr": {
+        "number": 50,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/50",
+        "head_at_merge": "bea73745857ba941cab1e6b0a3b6763ea73cab0c",
+        "merge_commit": "871523f05cc2ef992657810f0173914dd4b94740",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1213",
+      "sha": "1b65fba9f531302c056bdd82cd30ef58de597baf",
+      "status": "PR 병합",
+      "pr": {
+        "number": 51,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/51",
+        "head_at_merge": "1b65fba9f531302c056bdd82cd30ef58de597baf",
+        "merge_commit": "f70ded3be584a1ea7dca19c9e7c5ecebdf17dc3c",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1314",
+      "sha": "a075e7a084069bfc494a020a6b2de9e54037f781",
+      "status": "PR 병합",
+      "pr": {
+        "number": 52,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/52",
+        "head_at_merge": "a075e7a084069bfc494a020a6b2de9e54037f781",
+        "merge_commit": "93ba3b75f088ab6de3c35b1ec102511943874eee",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1414",
+      "sha": "8a70cf39efc77e20b5f746271daa034a37c1bbda",
+      "status": "PR 병합",
+      "pr": {
+        "number": 53,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/53",
+        "head_at_merge": "8a70cf39efc77e20b5f746271daa034a37c1bbda",
+        "merge_commit": "d987210cb977074430311138043ebb9a1123eec2",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1513",
+      "sha": "51e9fc1e3fa0a0e9087ff91b88bd4f629907f510",
+      "status": "PR 병합",
+      "pr": {
+        "number": 54,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/54",
+        "head_at_merge": "51e9fc1e3fa0a0e9087ff91b88bd4f629907f510",
+        "merge_commit": "ac0b2a72e080fb97659ea115795c9f3cf2b14413",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1614",
+      "sha": "96b88b125a8c8f38baf0f5677b2f981ff0df3473",
+      "status": "PR 병합",
+      "pr": {
+        "number": 55,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/55",
+        "head_at_merge": "96b88b125a8c8f38baf0f5677b2f981ff0df3473",
+        "merge_commit": "3524bf3b8fb6d5a0f234d0b23edb88d056d2c823",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1715",
+      "sha": "ee808164d3a15c51094421e46c4ff243ca1abdc4",
+      "status": "PR 병합",
+      "pr": {
+        "number": 56,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/56",
+        "head_at_merge": "ee808164d3a15c51094421e46c4ff243ca1abdc4",
+        "merge_commit": "4feee93bec661d3e43d3fec62d6df6d8f1de40e8",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1813",
+      "sha": "b2b3bdc940e68346e54d1e780fd349217338649f",
+      "status": "PR 병합",
+      "pr": {
+        "number": 57,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/57",
+        "head_at_merge": "b2b3bdc940e68346e54d1e780fd349217338649f",
+        "merge_commit": "01bb90d35f860d703069ae2f59e73657d7e3e394",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-1914",
+      "sha": "52aca5398b0cc911c4a748d0d55cf70480de160e",
+      "status": "PR 병합",
+      "pr": {
+        "number": 58,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/58",
+        "head_at_merge": "52aca5398b0cc911c4a748d0d55cf70480de160e",
+        "merge_commit": "baf05a9443b591c6e42f8990d148d9afb5b16e06",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261103-2015",
+      "sha": "ba5141ee49d51877614ab6408e620a54da9d5524",
+      "status": "PR 병합",
+      "pr": {
+        "number": 59,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/59",
+        "head_at_merge": "ba5141ee49d51877614ab6408e620a54da9d5524",
+        "merge_commit": "f6b4777e9487dfbc5f94ec27b324154395ce89e9",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1020",
+      "sha": "c3b536154a5a99f61450b30134e62f38e63ebb4c",
+      "status": "PR 병합",
+      "pr": {
+        "number": 61,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/61",
+        "head_at_merge": "c3b536154a5a99f61450b30134e62f38e63ebb4c",
+        "merge_commit": "9a2b5a230401e66656d4a5dad5f62bcdb1104715",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1215",
+      "sha": "c0cf1307dbd5b7c376a67bdcde0ffc3681b1c41b",
+      "status": "PR 병합",
+      "pr": {
+        "number": 63,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/63",
+        "head_at_merge": "c0cf1307dbd5b7c376a67bdcde0ffc3681b1c41b",
+        "merge_commit": "bbef0bbd2a07dff906e012bc42042304571502eb",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1320",
+      "sha": "c94ab8ff0a5cba2c9e259862b54c6717ae256186",
+      "status": "PR 병합",
+      "pr": {
+        "number": 64,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/64",
+        "head_at_merge": "c94ab8ff0a5cba2c9e259862b54c6717ae256186",
+        "merge_commit": "16fb70994ae01d2dc8909ca63a9794fd774bc927",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1415",
+      "sha": "b12fa8890336ae38b2e2d2c078a74c8af75e7a1f",
+      "status": "PR 병합",
+      "pr": {
+        "number": 65,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/65",
+        "head_at_merge": "b12fa8890336ae38b2e2d2c078a74c8af75e7a1f",
+        "merge_commit": "21e98d1c1df84b438f4838fe938623c3e17490e5",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1615",
+      "sha": "360d2e503f10ddde47ddf01fde794f2a268c2120",
+      "status": "PR 병합",
+      "pr": {
+        "number": 66,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/66",
+        "head_at_merge": "360d2e503f10ddde47ddf01fde794f2a268c2120",
+        "merge_commit": "8b68b6458b51931759d110bc7e77d788fc23163f",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1715",
+      "sha": "30ee577e15043163295b53ee0df851ff6e97f52b",
+      "status": "PR 병합",
+      "pr": {
+        "number": 68,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/68",
+        "head_at_merge": "30ee577e15043163295b53ee0df851ff6e97f52b",
+        "merge_commit": "c512d9ad04d0a53aedef75ee0193c6c739251927",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1815",
+      "sha": "4b580b8e56538f612790e895317fe537568056d9",
+      "status": "PR 병합",
+      "pr": {
+        "number": 70,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/70",
+        "head_at_merge": "4b580b8e56538f612790e895317fe537568056d9",
+        "merge_commit": "183f918ddf87f5645be846816dc99d6c635257e4",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-1915",
+      "sha": "9214ec36af22e87eb428189f929a6a9406502f14",
+      "status": "PR 병합",
+      "pr": {
+        "number": 71,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/71",
+        "head_at_merge": "9214ec36af22e87eb428189f929a6a9406502f14",
+        "merge_commit": "03b6a700a52f3e9d5befe8ab61427d45d7ba8c60",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-2015",
+      "sha": "81bb4afeb5b47c054470ed8aef8350af4731f865",
+      "status": "PR 병합",
+      "pr": {
+        "number": 72,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/72",
+        "head_at_merge": "81bb4afeb5b47c054470ed8aef8350af4731f865",
+        "merge_commit": "40d2289013e74e84b63230a694798de0816f94e7",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-2115",
+      "sha": "e8cca5e99d2c38cb8d2d106abb4ec0939097370b",
+      "status": "PR 병합",
+      "pr": {
+        "number": 73,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/73",
+        "head_at_merge": "e8cca5e99d2c38cb8d2d106abb4ec0939097370b",
+        "merge_commit": "740d358b94e0836d3fafcdd6a31f509f7c44c173",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261106-2315",
+      "sha": "33f608362494a624850791ae2c5c7b13d8e2c28e",
+      "status": "PR 병합",
+      "pr": {
+        "number": 74,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/74",
+        "head_at_merge": "33f608362494a624850791ae2c5c7b13d8e2c28e",
+        "merge_commit": "6aaf9351cc22fd66185ed0763e9f8c07ea40228d",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261107-0015",
+      "sha": "af798dd5038bee0f205135aaf9716a896938745d",
+      "status": "PR 병합",
+      "pr": {
+        "number": 75,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/75",
+        "head_at_merge": "af798dd5038bee0f205135aaf9716a896938745d",
+        "merge_commit": "be033149e0f5db5a01b1b2ba55b4e1b4bb56dfd3",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261107-0215",
+      "sha": "9052039c42adb4aaa8aa4b4e2ffd3e2904de5b12",
+      "status": "PR 병합",
+      "pr": {
+        "number": 76,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/76",
+        "head_at_merge": "9052039c42adb4aaa8aa4b4e2ffd3e2904de5b12",
+        "merge_commit": "52510985f476b2daa64885f45ae9c76ac307bfa7",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261107-0315",
+      "sha": "5a0c225185a6fa2cadc5d20921068a3c8cd0d8d2",
+      "status": "PR 병합",
+      "pr": {
+        "number": 77,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/77",
+        "head_at_merge": "5a0c225185a6fa2cadc5d20921068a3c8cd0d8d2",
+        "merge_commit": "785154a54cac0b42075318f5f8f95d84a839edb1",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261107-0416",
+      "sha": "547bc716f8b7c63fb1624d56e0e4bc335578d4e4",
+      "status": "PR 병합",
+      "pr": {
+        "number": 78,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/78",
+        "head_at_merge": "547bc716f8b7c63fb1624d56e0e4bc335578d4e4",
+        "merge_commit": "2574ea10743193a9f9823078aafadd0801251146",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261107-0916",
+      "sha": "b2a873c9d2f74d419b85c39f5c1953e1577de883",
+      "status": "PR 병합",
+      "pr": {
+        "number": 79,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/79",
+        "head_at_merge": "b2a873c9d2f74d419b85c39f5c1953e1577de883",
+        "merge_commit": "6f44afa865cd87600d02ac2fab5d1c9bf123b338",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261107-1015",
+      "sha": "4e21c338fc6e740804e8e75d3538c21a46df9012",
+      "status": "PR 병합",
+      "pr": {
+        "number": 80,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/80",
+        "head_at_merge": "4e21c338fc6e740804e8e75d3538c21a46df9012",
+        "merge_commit": "2eabc766085ce9fd35c37546343844f3b2ab5ca8",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261107-1020",
+      "sha": "cfef6986e94de5e993fe328a0cdf1d413b853c57",
+      "status": "PR 병합",
+      "pr": {
+        "number": 81,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/81",
+        "head_at_merge": "cfef6986e94de5e993fe328a0cdf1d413b853c57",
+        "merge_commit": "48b067a64d6cca0f0f32d9f5917708462439f15d",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0158",
+      "sha": "93ca3aaefa7993105e17b6c9973fe22f89d96b2e",
+      "status": "PR 병합",
+      "pr": {
+        "number": 85,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/85",
+        "head_at_merge": "93ca3aaefa7993105e17b6c9973fe22f89d96b2e",
+        "merge_commit": "8b54d756489d381fbe4f62deb1b9b1b9f58dbf32",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0258",
+      "sha": "6e2dcd0a690ff15cb85b0e069e5420b779cd4798",
+      "status": "PR 병합",
+      "pr": {
+        "number": 86,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/86",
+        "head_at_merge": "6e2dcd0a690ff15cb85b0e069e5420b779cd4798",
+        "merge_commit": "ee3d8f514f422a4b303a84baa41c8990204b418d",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0358",
+      "sha": "2f5c7d53b93e09413e7ac82245fc77876dd7ff01",
+      "status": "PR 병합",
+      "pr": {
+        "number": 87,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/87",
+        "head_at_merge": "2f5c7d53b93e09413e7ac82245fc77876dd7ff01",
+        "merge_commit": "0ac2a743479df8a11e1d0ac3f35a2cb017649bef",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0458",
+      "sha": "7de64e690cefb9e1864d4b99defe17a2a3cd6853",
+      "status": "PR 병합",
+      "pr": {
+        "number": 88,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/88",
+        "head_at_merge": "7de64e690cefb9e1864d4b99defe17a2a3cd6853",
+        "merge_commit": "97a117d312cb015565b96e71978d9837e7d69014",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0558",
+      "sha": "ec1cba9447ce6fdbcb9d9395fc6708a37c0f7ee2",
+      "status": "PR 병합",
+      "pr": {
+        "number": 89,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/89",
+        "head_at_merge": "ec1cba9447ce6fdbcb9d9395fc6708a37c0f7ee2",
+        "merge_commit": "dded7f070f91112556ecc4f3fd3f7c0f112c435c",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0658",
+      "sha": "1061a20f63e3c98175027787ee2eec26db958afd",
+      "status": "PR 병합",
+      "pr": {
+        "number": 90,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/90",
+        "head_at_merge": "1061a20f63e3c98175027787ee2eec26db958afd",
+        "merge_commit": "77cd183f77fa3c1bd856b906bcd0a6658455997b",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0758",
+      "sha": "c07dff558cf2e0eb4f403bd8646e69e11f76de79",
+      "status": "PR 병합",
+      "pr": {
+        "number": 91,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/91",
+        "head_at_merge": "c07dff558cf2e0eb4f403bd8646e69e11f76de79",
+        "merge_commit": "2cd0b9ccf99e06b0e7abf99553736aba25fea7bb",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-0858",
+      "sha": "a0e46a18c189ea7ad4cdcbf4b8945e064df3c4ea",
+      "status": "PR 병합",
+      "pr": {
+        "number": 92,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/92",
+        "head_at_merge": "a0e46a18c189ea7ad4cdcbf4b8945e064df3c4ea",
+        "merge_commit": "d48446242c6109e9933ea6ae929568abf1bc0407",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-1158",
+      "sha": "adaadadc27f039af6b931bdab451da092ae4f010",
+      "status": "PR 병합",
+      "pr": {
+        "number": 98,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/98",
+        "head_at_merge": "adaadadc27f039af6b931bdab451da092ae4f010",
+        "merge_commit": "4472e03d16bb9fe69846e42a018c955d0b6686dd",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-1258",
+      "sha": "7639c5bb08332f716360e1114a4fe9abdddc0e7b",
+      "status": "PR 병합",
+      "pr": {
+        "number": 99,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/99",
+        "head_at_merge": "7639c5bb08332f716360e1114a4fe9abdddc0e7b",
+        "merge_commit": "4d1ef248c42a045ac4c126b214aef28c52107169",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-loop-20261109-1358",
+      "sha": "10b011c3c8e269e555f552287c926e6b2b30443c",
+      "status": "PR 병합",
+      "pr": {
+        "number": 100,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/100",
+        "head_at_merge": "10b011c3c8e269e555f552287c926e6b2b30443c",
+        "merge_commit": "4f10e7cd6f37b1cdff55b96330f00eead18d0087",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-math-integrated-20261109",
+      "sha": "40a7d4ad6964e8bd4b3c3147472a9ae543c49697",
+      "status": "PR 병합",
+      "pr": {
+        "number": 95,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/95",
+        "head_at_merge": "40a7d4ad6964e8bd4b3c3147472a9ae543c49697",
+        "merge_commit": "b664dcc87759e88bc0450a008ab70843b7ca4b9f",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-mobile-baseline-20261106",
+      "sha": "a168afe059506183f5550eec3ad34cb65e7194d7",
+      "status": "PR 병합",
+      "pr": {
+        "number": 60,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/60",
+        "head_at_merge": "a168afe059506183f5550eec3ad34cb65e7194d7",
+        "merge_commit": "066108e1eedc54a02ff38d8063b49da58f4f082d",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-mobile-battle-20261102",
+      "sha": "0dbf5882d955c8866b4fcdc76aa356b5753e4b6c",
+      "status": "PR 병합",
+      "pr": {
+        "number": 20,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/20",
+        "head_at_merge": "0dbf5882d955c8866b4fcdc76aa356b5753e4b6c",
+        "merge_commit": "209ecbc4867f293d3cba60f2b0678bf9078ed2ef",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-mobile-integration-20261109",
+      "sha": "c9487bbbc46b703360358b4badadeb8a3fea1912",
+      "status": "PR 병합",
+      "pr": {
+        "number": 93,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/93",
+        "head_at_merge": "c9487bbbc46b703360358b4badadeb8a3fea1912",
+        "merge_commit": "4547e6acc1e78d7a548abff7acceec6d1c2e017f",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-model-actions-20261109",
+      "sha": "f93be6572825a054f0907b00357497cbd77b80d1",
+      "status": "PR 병합",
+      "pr": {
+        "number": 84,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/84",
+        "head_at_merge": "f93be6572825a054f0907b00357497cbd77b80d1",
+        "merge_commit": "f39ba934968c35515064cef4a39df570d8a988b8",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-modeling-focus-20261030",
+      "sha": "9d0443b9f4b021205b5dbaf1a437ae2500ce946f",
+      "status": "PR 병합",
+      "pr": {
+        "number": 6,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/6",
+        "head_at_merge": "9d0443b9f4b021205b5dbaf1a437ae2500ce946f",
+        "merge_commit": "c24b75a9d98a6272e03f73608616b0f5fb9f11fa",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-polar-tropical-concepts-20261106",
+      "sha": "1c7fd5a58115acf2ea4b0ffce7b89071f4541146",
+      "status": "PR 병합",
+      "pr": {
+        "number": 69,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/69",
+        "head_at_merge": "1c7fd5a58115acf2ea4b0ffce7b89071f4541146",
+        "merge_commit": "04ffc8ae441158320413a40f80296eeb00251ac4",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-self-contained-math-20261109",
+      "sha": "bfdca24b293b687623a94391d9e8e4d648a4f518",
+      "status": "main 조상",
+      "pr": null
+    },
+    {
+      "branch": "codex/arcana-stage-experience-20261106",
+      "sha": "bec804114a26a85a800379058463f4e9fd0bf2cf",
+      "status": "미병합 고유 작업",
+      "pr": null
+    },
+    {
+      "branch": "codex/arcana-standalone-pivot-20261109",
+      "sha": "7bd4d0478dbb08a304c0246a84afb4537a63dc16",
+      "status": "PR 병합",
+      "pr": {
+        "number": 102,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/102",
+        "head_at_merge": "7bd4d0478dbb08a304c0246a84afb4537a63dc16",
+        "merge_commit": "355e573f76d50ca0c804a77434224331c63db497",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-subject-concepts-20261109",
+      "sha": "c43a0f45da04d9854efbb656213bf088dc8b040f",
+      "status": "PR 병합",
+      "pr": {
+        "number": 82,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/82",
+        "head_at_merge": "c43a0f45da04d9854efbb656213bf088dc8b040f",
+        "merge_commit": "249922562cd019aff1a75ea1a4b765435c81a76b",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-theme-campaign-20261030",
+      "sha": "86e35c122c9e804e157b9c976d01a1d9831fb7da",
+      "status": "PR 병합",
+      "pr": {
+        "number": 2,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/2",
+        "head_at_merge": "86e35c122c9e804e157b9c976d01a1d9831fb7da",
+        "merge_commit": "a97bf88ff8790167cb14fc9eadf2720d5013c5db",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-village-ui-plan-20261109",
+      "sha": "52275ae02478dedf56f248a9093367db206c6a76",
+      "status": "PR 병합",
+      "pr": {
+        "number": 101,
+        "url": "https://github.com/Muuuuoouuun/edu_arcade_game_1/pull/101",
+        "head_at_merge": "52275ae02478dedf56f248a9093367db206c6a76",
+        "merge_commit": "ee396d2b2f17e185fe7a62a727dc944faa40acdd",
+        "merged_on_main": true
+      }
+    },
+    {
+      "branch": "codex/arcana-world-art-planning",
+      "sha": "8e09b967b038db433df713a95892813694735674",
+      "status": "main 조상",
+      "pr": null
+    },
+    {
+      "branch": "main",
+      "sha": "b175a9f7a3b400dff1a819d4d79b8e79ac8e5d9e",
+      "status": "main 기준",
+      "pr": null
+    },
+    {
+      "branch": "work",
+      "sha": "803134271d26390b2083a83f1fccf683186f51bf",
+      "status": "미병합 고유 작업",
+      "pr": null
+    }
+  ]
+}

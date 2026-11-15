@@ -1,0 +1,472 @@
+{
+  "projection": {
+    "width": 900,
+    "height": 600,
+    "camera": "orthographic",
+    "ground_plane": "X=(x-450), Y=(300-y-.6z)/.8"
+  },
+  "variants": [
+    {
+      "id": "forest-single",
+      "file": "forest-single.webp",
+      "bytes": 50150,
+      "sha256": "34f19cb1a337ebccaa6198024dc7ed0a54ecf5e7aa8fc3fa3891a83820c5aec1",
+      "path_anchors": [
+        {
+          "logical": [
+            0,
+            170
+          ],
+          "projected": [
+            0.0,
+            170.0
+          ]
+        },
+        {
+          "logical": [
+            130,
+            170
+          ],
+          "projected": [
+            130.0,
+            170.0
+          ]
+        },
+        {
+          "logical": [
+            230,
+            285
+          ],
+          "projected": [
+            230.0,
+            285.0
+          ]
+        },
+        {
+          "logical": [
+            410,
+            285
+          ],
+          "projected": [
+            410.0,
+            285.0
+          ]
+        },
+        {
+          "logical": [
+            520,
+            430
+          ],
+          "projected": [
+            520.0,
+            430.0
+          ]
+        },
+        {
+          "logical": [
+            730,
+            430
+          ],
+          "projected": [
+            730.0,
+            430.0
+          ]
+        },
+        {
+          "logical": [
+            820,
+            300
+          ],
+          "projected": [
+            820.0,
+            300.0
+          ]
+        },
+        {
+          "logical": [
+            900,
+            300
+          ],
+          "projected": [
+            900.0,
+            300.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "forest-expanded",
+      "file": "forest-expanded.webp",
+      "bytes": 81118,
+      "sha256": "c0ad8e365dbf5eb5347d02bd8bebb244db372604c7f2d8711ad752f812b66421",
+      "path_anchors": [
+        {
+          "logical": [
+            0,
+            170
+          ],
+          "projected": [
+            0.0,
+            170.0
+          ]
+        },
+        {
+          "logical": [
+            130,
+            170
+          ],
+          "projected": [
+            130.0,
+            170.0
+          ]
+        },
+        {
+          "logical": [
+            230,
+            285
+          ],
+          "projected": [
+            230.0,
+            285.0
+          ]
+        },
+        {
+          "logical": [
+            410,
+            285
+          ],
+          "projected": [
+            410.0,
+            285.0
+          ]
+        },
+        {
+          "logical": [
+            520,
+            430
+          ],
+          "projected": [
+            520.0,
+            430.0
+          ]
+        },
+        {
+          "logical": [
+            730,
+            430
+          ],
+          "projected": [
+            730.0,
+            430.0
+          ]
+        },
+        {
+          "logical": [
+            820,
+            300
+          ],
+          "projected": [
+            820.0,
+            300.0
+          ]
+        },
+        {
+          "logical": [
+            900,
+            300
+          ],
+          "projected": [
+            900.0,
+            300.0
+          ]
+        },
+        {
+          "logical": [
+            380,
+            0
+          ],
+          "projected": [
+            380.0,
+            0.0
+          ]
+        },
+        {
+          "logical": [
+            380,
+            150
+          ],
+          "projected": [
+            380.0,
+            150.0
+          ]
+        },
+        {
+          "logical": [
+            520,
+            235
+          ],
+          "projected": [
+            520.0,
+            235.0
+          ]
+        },
+        {
+          "logical": [
+            730,
+            235
+          ],
+          "projected": [
+            730.0,
+            235.0
+          ]
+        },
+        {
+          "logical": [
+            820,
+            115
+          ],
+          "projected": [
+            820.0,
+            115.0
+          ]
+        },
+        {
+          "logical": [
+            900,
+            115
+          ],
+          "projected": [
+            900.0,
+            115.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "snow-single",
+      "file": "snow-single.webp",
+      "bytes": 50494,
+      "sha256": "56f711a5b3f263d606d8a144673f6945c3334d638029f69cd5da387c4d451ef6",
+      "path_anchors": [
+        {
+          "logical": [
+            0,
+            150
+          ],
+          "projected": [
+            0.0,
+            150.0
+          ]
+        },
+        {
+          "logical": [
+            200,
+            150
+          ],
+          "projected": [
+            200.0,
+            150.0
+          ]
+        },
+        {
+          "logical": [
+            290,
+            320
+          ],
+          "projected": [
+            290.0,
+            320.0
+          ]
+        },
+        {
+          "logical": [
+            510,
+            320
+          ],
+          "projected": [
+            510.0,
+            320.0
+          ]
+        },
+        {
+          "logical": [
+            620,
+            455
+          ],
+          "projected": [
+            620.0,
+            455.0
+          ]
+        },
+        {
+          "logical": [
+            790,
+            455
+          ],
+          "projected": [
+            790.0,
+            455.0
+          ]
+        },
+        {
+          "logical": [
+            850,
+            300
+          ],
+          "projected": [
+            850.0,
+            300.0
+          ]
+        },
+        {
+          "logical": [
+            900,
+            300
+          ],
+          "projected": [
+            900.0,
+            300.0
+          ]
+        }
+      ]
+    },
+    {
+      "id": "snow-expanded",
+      "file": "snow-expanded.webp",
+      "bytes": 79680,
+      "sha256": "551a5d24e5dbae55bd2e6b84d076fa001fd1ccbe02fd47dece513a9242dadfba",
+      "path_anchors": [
+        {
+          "logical": [
+            0,
+            150
+          ],
+          "projected": [
+            0.0,
+            150.0
+          ]
+        },
+        {
+          "logical": [
+            200,
+            150
+          ],
+          "projected": [
+            200.0,
+            150.0
+          ]
+        },
+        {
+          "logical": [
+            290,
+            320
+          ],
+          "projected": [
+            290.0,
+            320.0
+          ]
+        },
+        {
+          "logical": [
+            510,
+            320
+          ],
+          "projected": [
+            510.0,
+            320.0
+          ]
+        },
+        {
+          "logical": [
+            620,
+            455
+          ],
+          "projected": [
+            620.0,
+            455.0
+          ]
+        },
+        {
+          "logical": [
+            790,
+            455
+          ],
+          "projected": [
+            790.0,
+            455.0
+          ]
+        },
+        {
+          "logical": [
+            850,
+            300
+          ],
+          "projected": [
+            850.0,
+            300.0
+          ]
+        },
+        {
+          "logical": [
+            900,
+            300
+          ],
+          "projected": [
+            900.0,
+            300.0
+          ]
+        },
+        {
+          "logical": [
+            370,
+            0
+          ],
+          "projected": [
+            370.0,
+            0.0
+          ]
+        },
+        {
+          "logical": [
+            370,
+            180
+          ],
+          "projected": [
+            370.0,
+            180.0
+          ]
+        },
+        {
+          "logical": [
+            590,
+            180
+          ],
+          "projected": [
+            590.0,
+            180.0
+          ]
+        },
+        {
+          "logical": [
+            760,
+            115
+          ],
+          "projected": [
+            760.0,
+            115.0
+          ]
+        },
+        {
+          "logical": [
+            900,
+            115
+          ],
+          "projected": [
+            900.0,
+            115.0
+          ]
+        }
+      ]
+    }
+  ]
+}
