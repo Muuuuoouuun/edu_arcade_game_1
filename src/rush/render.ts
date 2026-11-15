@@ -3,7 +3,7 @@ import {
   Box3, BufferAttribute, DodecahedronGeometry, BoxGeometry, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
   DataTexture, DirectionalLight, Group, HemisphereLight, IcosahedronGeometry, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera,
   PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
-  Matrix4, Object3D, Quaternion, Euler, Frustum, InstancedMesh, Skeleton, SkinnedMesh, Float32BufferAttribute, Uint16BufferAttribute, type Bone, Sphere, BackSide, BufferGeometry, Points, ShaderMaterial, type AnimationAction, type Material, type MeshToonMaterial, type MeshStandardMaterial,
+  Matrix4, Object3D, Quaternion, Euler, Frustum, InstancedMesh, BatchedMesh, Skeleton, SkinnedMesh, Float32BufferAttribute, Uint16BufferAttribute, type Bone, Sphere, BackSide, BufferGeometry, Points, ShaderMaterial, type AnimationAction, type Material, type MeshToonMaterial, type MeshStandardMaterial,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -95,6 +95,9 @@ type MapKit = {
   root: Group; bushes: Mesh[]; ground: DataTexture; hulls: Mesh[]; decor: Mesh[]; used: number;
   /** Cycle 103: crates are drawn as one instanced body and hull per kind; `shown` is the bitmask of crate ids last written. */
   crates: Map<number, KitCrate>; crateBatches: { body: InstancedMesh; hull: InstancedMesh }[]; shown: number;
+  /** Cycle 119: every hiding bush in one batched body and one batched hull (instance i = bush i). The bush the hero hides
+   * in leaves the batch and shows as its own see-through mesh (`bushes[i]`). */
+  bushBatch: { body: BatchedMesh; hull: BatchedMesh } | null;
 };
 
 export class RushView {
@@ -456,8 +459,9 @@ export class RushView {
   }
   private disposeKit(kit: MapKit) {
     this.scene.remove(kit.root);
-    kit.root.traverse(o => { if (o instanceof Mesh) o.geometry.dispose(); if (o instanceof InstancedMesh) o.dispose(); });
+    kit.root.traverse(o => { if (o instanceof Mesh) o.geometry.dispose(); if (o instanceof InstancedMesh || o instanceof BatchedMesh) o.dispose(); });
     for (const b of kit.bushes) (b.material as Material).dispose();
+    if (kit.bushBatch) (kit.bushBatch.body.material as Material).dispose();
     kit.ground.dispose();
   }
   /** Kits in memory (debug info). */
@@ -556,9 +560,27 @@ export class RushView {
       mesh.position.set(b.x, heightAt(b.x, b.z), b.z);
       mesh.renderOrder = 6; // drawn after the hero so the see-through state shows them
       mesh.userData.noCast = true; // cycle 100: grass on grass casts no shadow worth a draw (six per layout)
+      mesh.visible = false; // cycle 119: only while the hero hides in it; the batch below draws the rest
       root.add(mesh);
       return mesh;
     });
+    let bushBatch: MapKit['bushBatch'] = null;
+    if (bushes.length) {
+      const size = (gs: BufferGeometry[]) => [gs.reduce((a, g) => a + g.attributes.position.count, 0), gs.reduce((a, g) => a + (g.index ? g.index.count : 0), 0)] as const;
+      const bodies = bushes.map(m => m.geometry), inks = bushes.map(m => (m.children[0] as Mesh).geometry);
+      const body = new BatchedMesh(bushes.length, ...size(bodies), toon(0xffffff, { vertexColors: true, rim: 0.3 }));
+      const hull = new BatchedMesh(bushes.length, ...size(inks), outlineMaterial(0.03));
+      const at = new Matrix4();
+      bushes.forEach((m, i) => {
+        at.makeTranslation(m.position.x, m.position.y, m.position.z);
+        body.setMatrixAt(body.addInstance(body.addGeometry(bodies[i])), at);
+        hull.setMatrixAt(hull.addInstance(hull.addGeometry(inks[i])), at);
+      });
+      body.name = 'rush-bushes'; hull.name = 'rush-bushes-ink';
+      body.userData.noCast = true; body.userData.receive = true; // receives tower and wall shadows as the bushes did
+      root.add(body, hull);
+      bushBatch = { body, hull };
+    }
     // Crates (cycle 103): one instanced body and one instanced hull per kind (plain, treasure), so six crates cost four
     // draws and two shadow draws instead of twelve and six. Hits wobble and breaks remove them through the instance
     // matrices (syncCrates).
@@ -572,7 +594,7 @@ export class RushView {
       return { body, hull };
     });
     this.scene.add(root);
-    return { root, bushes, crates, crateBatches, shown: -1, ground, hulls, decor, used: 0 };
+    return { root, bushes, crates, crateBatches, shown: -1, bushBatch, ground, hulls, decor, used: 0 };
   }
 
   /** Write the standing crates that are on screen into their kind's instanced body and hull, only when that set changed
@@ -1640,9 +1662,13 @@ export class RushView {
     s.map.bushes.forEach((b, i) => {
       const mesh = kit.bushes[i], mat = mesh.material as Material & { opacity: number };
       const inside = hiding && Math.abs(h.x - b.x) <= b.w / 2 && Math.abs(h.z - b.z) <= b.d / 2;
-      mat.opacity = inside ? 0.4 : 1;
-      mat.depthWrite = !inside;
-      mesh.children[0].visible = !inside;
+      if (!kit.bushBatch) {
+        mat.opacity = inside ? 0.4 : 1; mat.depthWrite = !inside; mesh.children[0].visible = !inside; mesh.visible = true;
+        return;
+      }
+      // Cycle 119: the batch draws every bush but the one the hero hides in, which shows as its own see-through mesh.
+      mat.opacity = 0.4; mat.depthWrite = false; mesh.children[0].visible = false; mesh.visible = inside;
+      if (kit.bushBatch.body.getVisibleAt(i) === inside) { kit.bushBatch.body.setVisibleAt(i, !inside); kit.bushBatch.hull.setVisibleAt(i, !inside); }
     });
     this.syncCrates(s, kit, worldDt);
     this.syncDefences(s, worldDt, alive, reduced);
