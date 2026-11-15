@@ -813,9 +813,17 @@ export class RushView {
       material.normalMap = sourceMaterial?.normalMap ?? null;
       if (sourceMaterial?.normalScale) material.normalScale.copy(sourceMaterial.normalScale);
       if (material.map) material.map.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
-      // Three's clone does not copy onBeforeCompile; preserve the common toon rim program.
-      material.onBeforeCompile = this.mats.hero.onBeforeCompile;
-      material.customProgramCacheKey = this.mats.hero.customProgramCacheKey;
+      // Three's clone does not copy onBeforeCompile; preserve the common toon rim program. Cycle 116: a vertex whose UV is
+      // (-1, -1) (the team cape, baked into the skinned hero) skips the texture atlas and the normal map, so it shows its
+      // vertex colour alone, as the untextured hero material does.
+      const toonHero = this.mats.hero.onBeforeCompile, toonKey = this.mats.hero.customProgramCacheKey;
+      material.onBeforeCompile = (shader, renderer) => {
+        toonHero.call(material, shader, renderer);
+        shader.fragmentShader = shader.fragmentShader
+          .replace('#include <map_fragment>', '#ifdef USE_MAP\n\tdiffuseColor *= vMapUv.x < -0.5 ? vec4( 1.0 ) : texture2D( map, vMapUv );\n#endif')
+          .replace('#include <normal_fragment_maps>', '#ifdef USE_MAP\nif ( vMapUv.x > -0.5 ) {\n#endif\n#include <normal_fragment_maps>\n#ifdef USE_MAP\n}\n#endif');
+      };
+      material.customProgramCacheKey = () => `${toonKey.call(material)}-hero-cape-uv`;
       material.needsUpdate = true;
       const groups = new Map<Object3D, { geo: BufferGeometry; color: number; matrix: Matrix4 }[]>();
       const inv = new Matrix4(), ws = new Vector3(), hidden = new MeshBasicMaterial({ visible: false });
@@ -861,6 +869,26 @@ export class RushView {
           }
           bodies.push(geo); hulls.push(hull);
         });
+        // The team cape (cycle 116): one more rigid part on the hero body node, vertex colour only (UV -1 marks it).
+        const cape = this.capes.get(kind);
+        if (cape) {
+          const geo = cape.geometry.index ? cape.geometry.toNonIndexed() : cape.geometry.clone();
+          for (const name of Object.keys(geo.attributes)) if (!(name in bodies[0].attributes)) geo.deleteAttribute(name);
+          if (bodies[0].getAttribute('uv') && !geo.getAttribute('uv')) geo.setAttribute('uv', new Float32BufferAttribute(new Float32Array(geo.attributes.position.count * 2).fill(-1), 2));
+          const shell = new BufferGeometry();
+          shell.setAttribute('position', geo.getAttribute('position').clone()); shell.setAttribute('normal', geo.getAttribute('normal').clone());
+          const hull = hullGeometry(shell), i = bones.length;
+          toModel.multiplyMatrices(modelInv, this.heroBody.matrixWorld);
+          for (const g of [geo, hull]) {
+            g.applyMatrix4(toModel);
+            const n = g.attributes.position.count, index = new Uint16Array(n * 4), weight = new Float32Array(n * 4);
+            for (let v = 0; v < n; v++) { index[v * 4] = i; weight[v * 4] = 1; }
+            g.setAttribute('skinIndex', new Uint16BufferAttribute(index, 4));
+            g.setAttribute('skinWeight', new Float32BufferAttribute(weight, 4));
+          }
+          bones.push(this.heroBody); bodies.push(geo); hulls.push(hull);
+          cape.removeFromParent(); this.capes.delete(kind);
+        }
         const skeleton = new Skeleton(bones as Bone[]);
         const body = new SkinnedMesh(mergeGeometries(bodies), material);
         const hull = new SkinnedMesh(mergeGeometries(hulls), outlineMaterial(+(0.035 / (model.getWorldScale(ws).x || 1)).toFixed(3)));
