@@ -153,6 +153,7 @@ def apply_detail(m, lib, tid, tile, detail=.7, chroma=.3, bump=.45, bump_dist=.0
         return m
     nt = m.node_tree; p = nt.nodes.get('Principled BSDF')
     base = tuple(p.inputs['Base Color'].default_value)[:3]
+    m['uv_tile'] = tile; m['tex_id'] = tid; m['tex_detail'] = detail; m['tex_chroma'] = chroma; m['base_rgb'] = list(base); m['tex_bump'] = bump
     for l in list(p.inputs['Normal'].links):
         nt.links.remove(l)
     tc = nt.nodes.new('ShaderNodeTexCoord')
@@ -202,6 +203,82 @@ def layered_ground_mat(name, lib, layers, vcol='Col', mask='Mask', rough=.9, bum
     mul = nt.nodes.new('ShaderNodeVectorMath'); mul.operation = 'MULTIPLY'
     nt.links.new(a.outputs['Color'], mul.inputs[0]); nt.links.new(col_acc, mul.inputs[1]); nt.links.new(mul.outputs['Vector'], p.inputs['Base Color'])
     b = _n(nt, 'ShaderNodeBump', Strength=bump, Distance=bump_dist); nt.links.new(hgt_acc, b.inputs['Height']); nt.links.new(b.outputs['Normal'], p.inputs['Normal'])
+    return m
+
+
+# ---------------------------------------------------------------- real-time (glTF) materials
+def _lin(a):
+    import numpy as np
+    return np.where(a <= .04045, a / 12.92, ((a + .055) / 1.055) ** 2.4)
+
+
+def _srgb8(a):
+    import numpy as np
+    a = np.clip(a, 0, 1); return (np.where(a <= .0031308, a * 12.92, 1.055 * a ** (1 / 2.4) - .055) * 255 + .5).astype('uint8')
+
+
+def tinted_tile(lib, tid, base_lin, detail, chroma, path, size=256):
+    """Palette colour x photo detail baked into one small tileable base-colour texture (what the glTF carries)."""
+    import numpy as np
+    from PIL import Image
+    lin = _lin(np.asarray(Image.open(lib._path(tid, 'diff')).convert('RGB').resize((size, size), Image.LANCZOS), dtype=float) / 255.0)
+    mean = lin.reshape(-1, 3).mean(0); lum = lin @ np.array([.2126, .7152, .0722])
+    f = 1 + detail * (((lum / lum.mean())[..., None] * (1 - chroma) + (lin / mean) * chroma) - 1)
+    Image.fromarray(_srgb8(np.array(base_lin)[None, None, :] * f)).save(path, quality=90, method=6)
+    return path
+
+
+def normal_tile(lib, tid, path, size=256, strength=2.5):
+    import numpy as np
+    from PIL import Image
+    h = np.asarray(Image.open(lib._path(tid, 'disp')).convert('L').resize((size, size), Image.LANCZOS), dtype=float) / 255.0
+    dx = (np.roll(h, -1, 1) - np.roll(h, 1, 1)) * size / 64 * strength; dy = (np.roll(h, -1, 0) - np.roll(h, 1, 0)) * size / 64 * strength
+    n = np.stack([-dx, dy, np.ones_like(h)], -1); n /= np.linalg.norm(n, axis=-1, keepdims=True)
+    Image.fromarray(((n * .5 + .5) * 255 + .5).astype('uint8')).save(path, quality=94, method=6)
+    return path
+
+
+def export_ready(m, lib, cache, size=256, normal=False):
+    """Swap the Cycles-only box-projection nodes for UV image textures the glTF exporter understands."""
+    nt = m.node_tree; p = nt.nodes.get('Principled BSDF')
+    for n in [n for n in nt.nodes if n != p and n.type != 'OUTPUT_MATERIAL']:
+        nt.nodes.remove(n)
+    tid = m.get('tex_id')
+    if not tid or not lib:
+        return m
+    os.makedirs(cache, exist_ok=True)
+    safe = re.sub(r'[^a-z0-9]+', '-', m.name.lower()).strip('-')
+    t = nt.nodes.new('ShaderNodeTexImage')
+    t.image = bpy.data.images.load(tinted_tile(lib, tid, list(m['base_rgb']), m['tex_detail'], m['tex_chroma'], os.path.join(cache, safe + '.webp'), size))
+    nt.links.new(t.outputs['Color'], p.inputs['Base Color'])
+    if normal:
+        nimg = bpy.data.images.load(normal_tile(lib, tid, os.path.join(cache, tid + '-normal.webp'), size), check_existing=True); nimg.colorspace_settings.name = 'Non-Color'
+        tn = nt.nodes.new('ShaderNodeTexImage'); tn.image = nimg
+        nm = nt.nodes.new('ShaderNodeNormalMap'); nm.inputs['Strength'].default_value = .8
+        nt.links.new(tn.outputs['Color'], nm.inputs['Color']); nt.links.new(nm.outputs['Normal'], p.inputs['Normal'])
+    return m
+
+
+def soften_contact(src, dst, quality=88):
+    """Ground-bake clean-up: the ground under a hidden object (pad, rock, trunk) renders pure black. Replace those
+    holes by a soft contact shadow (55 % of the surrounding ground) so a smaller real-time mesh never shows a black rim."""
+    import numpy as np
+    from PIL import Image, ImageFilter
+    im = Image.open(src).convert('RGB'); a = np.asarray(im, dtype=float) / 255.0
+    lum = a @ np.array([.2126, .7152, .0722]); t = np.clip((.22 - lum) / (.22 - .09), 0, 1); mask = t * t * (3 - 2 * t)
+    w = Image.fromarray(((1 - mask) * 255).astype('uint8')).filter(ImageFilter.GaussianBlur(14))
+    num = Image.fromarray((a * (1 - mask)[..., None] * 255).astype('uint8')).filter(ImageFilter.GaussianBlur(14))
+    fill = np.asarray(num, dtype=float) / np.maximum(np.asarray(w, dtype=float)[..., None], 1.0)
+    out = a * (1 - mask)[..., None] + fill * .55 * mask[..., None]
+    Image.fromarray((np.clip(out, 0, 1) * 255 + .5).astype('uint8')).save(dst, quality=quality, method=6)
+    return float(mask.mean())
+
+
+def image_mat(name, path, rough=.95):
+    m = bpy.data.materials.new(name); m.use_nodes = True
+    nt = m.node_tree; p = nt.nodes.get('Principled BSDF'); p.inputs['Roughness'].default_value = rough
+    t = nt.nodes.new('ShaderNodeTexImage'); t.image = bpy.data.images.load(path, check_existing=True)
+    nt.links.new(t.outputs['Color'], p.inputs['Base Color'])
     return m
 
 
@@ -338,7 +415,16 @@ class MB:
 
     def to_mesh(self, name):
         me = bpy.data.meshes.new(name)
-        self.bm.normal_update(); self.bm.to_mesh(me); self.bm.free()
+        self.bm.normal_update()
+        # box-projected UVs in object space (same mapping as the Cycles detail layers) so textures survive glTF export
+        layer = self.bm.loops.layers.uv.new('UVMap')
+        tiles = [float(m.get('uv_tile', 1.0)) for m in self.mats] or [1.0]
+        for f in self.bm.faces:
+            n = f.normal; ax = max(range(3), key=lambda i: abs(n[i])); t = tiles[min(f.material_index, len(tiles) - 1)]
+            a, b = ((1, 2), (0, 2), (0, 1))[ax]
+            for l in f.loops:
+                l[layer].uv = (l.vert.co[a] / t, l.vert.co[b] / t)
+        self.bm.to_mesh(me); self.bm.free()
         for m in self.mats:
             me.materials.append(m)
         return me

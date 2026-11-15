@@ -1,0 +1,95 @@
+{
+ "projection": {
+  "camera": "orthographic, 60 deg above the horizon, looking north (src/games/defense/terrain3d.ts TERRAIN_ELEVATION = PI/3)",
+  "ground_plane": "board (x, y) on the ground maps 1:1; world depth = y / sin60",
+  "coverage_board_px": {
+   "x": [
+    -210,
+    1110
+   ],
+   "y": [
+    -20,
+    620
+   ]
+  },
+  "note": "Lay the image on a ground plane 1320 x 640/sin60 centred on board (450, 300). Covers landscape screens up to 2.2:1 (844 x 390 shows ~1300 board px). Gates, villages, towers, units and build-pad buttons are NOT baked in: the game draws them."
+ },
+ "source": "docs/arcana-3d-modeling/scripts/build_theme_map.py --hd --tex (Blender 5.2.3, Cycles CPU + OIDN)",
+ "textures": "CC0 1.0, Poly Haven - see ../textures/credits.json",
+ "variants": [
+  {
+   "id": "forest-single",
+   "file": "forest-single.webp",
+   "size": [
+    2640,
+    1280
+   ],
+   "bytes": 698954,
+   "sha256": "1286d20444e6817aed827c535c93c2be08ca138cae83c3ce36742e71ac5cfa87",
+   "stages": [
+    1,
+    2,
+    3
+   ],
+   "scene": {
+    "trees": 706,
+    "rocks": 46,
+    "tufts": 14137,
+    "flowers": 575,
+    "stats": {
+     "objects": 16146,
+     "meshes": 48,
+     "triangles": 1554683
+    }
+   }
+  },
+  {
+   "id": "forest-expanded",
+   "file": "forest-expanded.webp",
+   "size": [
+    2640,
+    1280
+   ],
+   "bytes": 707624,
+   "sha256": "607aee885fe477a40588dd50afb6426bb5210c4035d33c917e714449559330a8",
+   "stages": [
+    4
+   ],
+   "scene": {
+    "trees": 659,
+    "rocks": 46,
+    "tufts": 14137,
+    "flowers": 484,
+    "stats": {
+     "objects": 16075,
+     "meshes": 51,
+     "triangles": 1523210
+    }
+   }
+  },
+  {
+   "id": "snow-expanded",
+   "file": "snow-expanded.webp",
+   "size": [
+    2640,
+    1280
+   ],
+   "bytes": 581654,
+   "sha256": "677bb7ae8e8a3945bad8de0e7aadbdebb02307ef12a7abcad47f628d6ca50fa5",
+   "stages": [
+    8
+   ],
+   "scene": {
+    "trees": 597,
+    "rocks": 46,
+    "tufts": 3093,
+    "flowers": 0,
+    "stats": {
+     "objects": 4164,
+     "meshes": 42,
+     "triangles": 1031960
+    }
+   }
+  }
+ ]
+}

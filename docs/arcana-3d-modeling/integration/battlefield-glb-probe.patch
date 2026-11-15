@@ -1,0 +1,57 @@
+--- a/src/games/defense/terrain3d.ts
++++ b/src/games/defense/terrain3d.ts
+@@ -1,5 +1,6 @@
+ import * as THREE from 'three';
+ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
++import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+ import { getPaths, getSlots, getStage } from './data.ts';
+ import type { Point } from './types.ts';
+ 
+@@ -109,6 +110,16 @@
+  const scene=new THREE.Scene();scene.background=new THREE.Color(snow?'#a8c8d0':'#80aa65');
+  scene.add(new THREE.HemisphereLight(snow?0xe8faff:0xfff4d2,snow?0x647b82:0x496843,1.4));
+  const key=new THREE.DirectionalLight(0xfff1d3,1.6);key.position.set(-350,900,200);scene.add(key);
++ // SCRATCH PROBE (not committed): real-time battlefield GLB from docs/arcana-3d-modeling (metres, Y up, origin = board (0,600)).
++ const glbUrl=(globalThis as unknown as {__TERRAIN_GLB?:Record<string,string>}).__TERRAIN_GLB?.[`${stage.region}-${stage.expanded?'expanded':'single'}`];
++ if(mode==='battle'&&glbUrl){
++  new GLTFLoader().load(glbUrl,gltf=>{
++   gltf.scene.scale.setScalar(100);gltf.scene.position.z=600/TERRAIN_SIN;
++   const holder=new THREE.Scene();holder.add(gltf.scene);batchTerrain(holder);holder.name='battlefield-glb';scene.add(holder);
++   const g=globalThis as unknown as {__redraw?:()=>void;__GLB_READY?:number};g.__GLB_READY=performance.now();g.__redraw?.();
++  });
++  return scene;
++ }
+  addBox(scene,{x:450,y:300},900,600,8,-8,material(snow?'#b8d5d6':'#80ae5e'));
+  // Shallow solid planes and low-poly shapes are meshes, not background bitmaps.
+  const patch=material(snow?'#c7dfdb':'#8fba6b');patch.side=THREE.DoubleSide;
+--- a/src/components/DefenseTerrain3D.tsx
++++ b/src/components/DefenseTerrain3D.tsx
+@@ -51,7 +51,7 @@
+   const lost=(event:Event)=>{event.preventDefault();contextLost=true;report(false);};
+   const restored=()=>{contextLost=false;resize();};
+   renderer.domElement.addEventListener('webglcontextlost',lost);renderer.domElement.addEventListener('webglcontextrestored',restored);
+-  redraw.current=draw;
++  redraw.current=draw;(globalThis as unknown as {__redraw?:()=>void}).__redraw=draw;
+   const observer=new ResizeObserver(resize);observer.observe(host);resize();
+   return ()=>{disposed=true;redraw.current=()=>{};observer.disconnect();renderer.domElement.removeEventListener('webglcontextlost',lost);renderer.domElement.removeEventListener('webglcontextrestored',restored);actors?.dispose();disposeTerrain(scene);renderer.dispose();renderer.domElement.remove();};
+  },[stage,mode,onReady,onActorsReady]);
+--- a/src/games/defense/battleModels.ts
++++ b/src/games/defense/battleModels.ts
+@@ -39,6 +39,17 @@
+ /** This is visual height only: it does not alter navigation or targeting. */
+ export function battleGroundHeight(stage:number, point:Point):number {
+  const definition=getStage(stage);
++ // SCRATCH PROBE (not committed): ground units on the battlefield GLB with its height contract (battlefield-<variant>.height.json).
++ type Heights={step:number;cols:number;rows:number;heights:number[];pads:{x:number;y:number;top:number}[];bridges:{y:number;x0:number;x1:number;half_depth:number;base:number;rise:number}[]};
++ const H=(globalThis as unknown as {__HEIGHTS?:Record<string,Heights>}).__HEIGHTS?.[`${definition.region}-${definition.expanded?'expanded':'single'}`];
++ if(H){
++  const pad=H.pads.find(p=>Math.hypot(p.x-point.x,p.y-point.y)<=26);if(pad)return pad.top;
++  const deck=H.bridges.find(b=>point.x>=b.x0&&point.x<=b.x1&&Math.abs(point.y-b.y)<=b.half_depth);
++  if(deck)return deck.base+deck.rise*Math.sin(Math.PI*(point.x-deck.x0)/(deck.x1-deck.x0));
++  const fx=Math.min(Math.max(point.x/H.step,0),H.cols-1.001),fy=Math.min(Math.max(point.y/H.step,0),H.rows-1.001),ix=Math.floor(fx),iy=Math.floor(fy),tx=fx-ix,ty=fy-iy;
++  const at=(x:number,y:number)=>H.heights[y*H.cols+x],a=at(ix,iy),b=at(ix+1,iy),c=at(ix,iy+1),d=at(ix+1,iy+1);
++  return a+(b-a)*tx+(c-a)*ty+(a-b-c+d)*tx*ty+.5;
++ }
+  if(definition.region==='forest'&&point.x>=648&&point.x<=737&&
+   [430,...(definition.expanded?[235]:[])].some(y=>Math.abs(point.y-y)<=25))return 6.5;
+  if(getSlots(stage).some(slot=>slot.unlock<=stage&&slot.terrain==='high'&&Math.hypot(slot.x-point.x,slot.y-point.y)<=32))return 3.1;

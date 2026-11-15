@@ -15,8 +15,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy, bmesh
 import numpy as np
 from mathutils import Vector, Matrix
-from arcana_bpy import (MB, SIN60, TexLib, add_obj, apply_detail, area, battle_camera, camera, collection, layered_ground_mat, mat,
-                        read_board, render, reset_scene, rot, setup_render, srgb, stats, sun, trs, vcol_mat)
+from arcana_bpy import (MB, SIN60, TexLib, add_obj, apply_detail, area, battle_camera, camera, collection, export_ready, image_mat, soften_contact,
+                        layered_ground_mat, mat, read_board, render, reset_scene, rot, setup_render, srgb, stats, sun, trs, vcol_mat)
 
 ap = argparse.ArgumentParser()
 ap.add_argument('--data', required=True); ap.add_argument('--stage', type=int, default=1); ap.add_argument('--out', required=True)
@@ -24,6 +24,10 @@ ap.add_argument('--views', default='battle'); ap.add_argument('--size', type=int
 ap.add_argument('--gate', action='store_true'); ap.add_argument('--glb', action='store_true'); ap.add_argument('--blend', action='store_true')
 ap.add_argument('--seed', type=int, default=7)
 ap.add_argument('--tex', default=''); ap.add_argument('--hd', action='store_true')
+# real-time export: bake the detailed ground (grass, flowers, curbs, shadows) into one texture on a real relief mesh,
+# swap trees / rocks / props for low-poly UV-textured meshes, write <tag>-rt.glb + <tag>-height.json
+ap.add_argument('--rt', action='store_true'); ap.add_argument('--ground-size', type=int, default=2048); ap.add_argument('--bake-samples', type=int, default=48)
+ap.add_argument('--terrace', type=float, default=None); ap.add_argument('--sets', action='store_true'); ap.add_argument('--rtviews', default='')
 args = ap.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
 
 THEME = 'snow' if args.stage >= 5 else 'forest'
@@ -130,7 +134,21 @@ SLOT_PTS = [(s['x'], s['y']) for s in SLOTS]
 GATES = [(900, 300)] + ([(900, 115)] if EXPANDED else [])
 
 
-TERRACE_H = .28
+TERRACE_H = args.terrace if args.terrace is not None else .28
+RT, LOD = {}, 0
+
+
+def proto(fn, *a):
+    """Build a prototype mesh; with --rt also its low-poly twin (same seed) that replaces it after the ground bake."""
+    global LOD
+    me = fn(*a)
+    if args.rt:
+        LOD = 1; lo = fn(*a); LOD = 0; lo.name = me.name + ' / rt'; RT[me.name] = lo
+    return me
+
+
+def lod_sub(sub):
+    return min(sub, 1) if LOD else sub
 
 
 def terrace_mask(X, Y, d=None):
@@ -177,7 +195,7 @@ def height_field(X, Y):
 
 # ---------------------------------------------------------------- scene
 scene = reset_scene()
-C_TERRAIN, C_WATER, C_PROPS, C_FLORA, C_SET, C_STUDIO = (collection(n) for n in ('Terrain', 'Water and ice', 'Props', 'Flora', 'Theme set', 'Studio'))
+C_TERRAIN, C_WATER, C_PROPS, C_FLORA, C_SET, C_STUDIO, C_BAKE = (collection(n) for n in ('Terrain', 'Water and ice', 'Props', 'Flora', 'Theme set', 'Studio', 'Baked into the ground'))
 
 PAL = {
     'forest': dict(g=['#84b246', '#5d983b', '#a9c95b', '#3f7836'], dirt=['#dcc18c', '#c3a36c'], edge='#86703f', rut='#a98b58',
@@ -259,11 +277,10 @@ def hz(x, y):
     return float(a + (b - a) * tx + (c - a) * ty + (a - b - c + d) * tx * ty)
 
 
-def build_band_surface():
+def build_band_surface(step=2.5, ystep=5.0, rt_mat=None):
     """River water (forest) or the frozen river sheet (snow) with painted flow / frost and the scraped ice road."""
-    step = 2.5
     x0, x1 = (270, 550) if SNOW else (628, 757)
-    gx = np.arange(x0, x1 + .1, step); gy = np.arange(-MARGIN, 600 + MARGIN + .1, 5.0)
+    gx = np.arange(x0, x1 + .1, step); gy = np.arange(-MARGIN, 600 + MARGIN + .1, ystep)
     X, Y = np.meshgrid(gx, gy); lb, rb = band_edges(Y); mid = (lb + rb) / 2; half = (rb - lb) / 2
     centre = np.clip(1 - np.abs(X - mid) / half, 0, 1)
     if SNOW:
@@ -293,8 +310,22 @@ def build_band_surface():
     me.polygons.foreach_set('use_smooth', [True] * len(me.polygons))
     attr = me.color_attributes.new('Col', 'FLOAT_COLOR', 'POINT')
     attr.data.foreach_set('color', np.concatenate([np.clip(col, 0, 1).reshape(-1, 3), np.ones((ny * nx, 1))], axis=1).ravel())
-    me.materials.append(vcol_mat('Band / ' + name, 'Col', rough=rough, bump=.35 if not SNOW else .08, bump_scale=140 if not SNOW else 60))
-    add_obj(me, coll=C_WATER)
+    if rt_mat:
+        ground_uv(me); me.materials.append(rt_mat)
+    else:
+        me.materials.append(vcol_mat('Band / ' + name, 'Col', rough=rough, bump=.35 if not SNOW else .08, bump_scale=140 if not SNOW else 60))
+    return add_obj(me, coll=C_WATER)
+
+
+WY0, WY1 = (600.0 - (600 + MARGIN)) / 100.0 / SIN60, (600.0 + MARGIN) / 100.0 / SIN60     # world-y range of the ground
+
+
+def ground_uv(me):
+    """Planar top-down UVs matching the ground-bake camera (exact for a height field)."""
+    n = len(me.vertices); co = np.empty(n * 3); me.vertices.foreach_get('co', co); co = co.reshape(-1, 3)
+    u = (co[:, 0] * 100 + MARGIN) / (900 + 2 * MARGIN); v = (co[:, 1] - WY0) / (WY1 - WY0)
+    li = np.empty(len(me.loops), dtype=np.int32); me.loops.foreach_get('vertex_index', li)
+    layer = me.uv_layers.new(name='UVMap'); layer.data.foreach_set('uv', np.stack([u[li], v[li]], -1).ravel())
 
 
 build_band_surface()
@@ -304,7 +335,7 @@ M = dict(
     trunk=mat('Wood / bark', '#5b3d26', .95, bump=.5, bump_scale=60), trunk_l=mat('Wood / bark lit', '#7a5636', .95),
     wood=mat('Wood / plank', '#a8764a', .8, bump=.3, bump_scale=120), wood_d=mat('Wood / plank dark', '#6f4a2f', .85), wood_l=mat('Wood / cut end', '#d9b27a', .8),
     leaf=[mat('Leaf / shade', '#285c30', .9), mat('Leaf / mid', '#44883a', .9), mat('Leaf / sunlit', '#7cb146', .9)],
-    pine=[mat('Pine / deep teal', '#1d5247', .9), mat('Pine / mid', '#2f7458', .9), mat('Pine / tip', '#4c9468', .9)],
+    pine=[mat('Pine / deep', '#1d5247' if SNOW else '#286a3c', .9), mat('Pine / mid', '#2f7458' if SNOW else '#3c8c48', .9), mat('Pine / tip', '#4c9468' if SNOW else '#79b852', .9)],
     maple=[mat('Maple / shade', '#9b3324', .9), mat('Maple / mid', '#cf5631', .9), mat('Maple / sunlit', '#ee9440', .9)],
     bush=[mat('Bush / shade', '#2f6a31', .9), mat('Bush / mid', '#55933c', .9), mat('Bush / lit', '#8cbf52', .9)],
     rock=mat('Rock / facet', PAL['rock'][0], .9, bump=.4, bump_scale=40), rock_d=mat('Rock / shade', PAL['rock'][1], .95), rock_top=mat('Rock / moss or snow top', PAL['top'], .9),
@@ -351,21 +382,21 @@ def top_tone(b, verts, m, nz=.5):
 def tree_broad(seed, pal):
     r = random.Random(seed); b = MB(); h = r.uniform(.44, .6); lean = r.uniform(-.07, .07)
     b.tube(M['trunk'], [(0, 0, -.03), (lean * .35, 0, h * .5), (lean, .02, h + .12)], [.085, .06, .045], seg=8)
-    for k in range(5):                                   # root flare
+    for k in range(3 if LOD else 5):                     # root flare
         a = k * 2 * math.pi / 5 + r.uniform(-.3, .3)
         b.tube(M['trunk'], [(0, 0, .12), (math.cos(a) * .09, math.sin(a) * .09, .03), (math.cos(a) * .17, math.sin(a) * .17, -.03)], [.036, .03, .012], seg=5)
-    for k in range(3):                                   # boughs
+    for k in range(0 if LOD else 3):                     # boughs
         a = r.uniform(0, 6.28); L = r.uniform(.18, .27); z = h * r.uniform(.62, .95)
         b.tube(M['trunk_l'], [(lean, 0, z), (lean + math.cos(a) * L * .6, math.sin(a) * L * .6, z + L * .45), (lean + math.cos(a) * L, math.sin(a) * L, z + L * .7)], [.03, .022, .012], seg=5)
     cz = h + .24
-    for k in range(r.randint(15, 19)):                   # layered foliage masses: shade below, sunlit on top
-        a = r.uniform(0, 6.28); rad = r.uniform(.04, .34); zz = cz + r.uniform(-.14, .2) - rad * .25; rr = r.uniform(.11, .19)
+    for k in range(6 if LOD else r.randint(15, 19)):     # layered foliage masses: shade below, sunlit on top
+        a = r.uniform(0, 6.28); rad = r.uniform(.04, .34); zz = cz + r.uniform(-.14, .2) - rad * .25; rr = r.uniform(.11, .19) * (1.3 if LOD else 1)
         tone = 2 if zz > cz + .06 else (0 if zz < cz - .06 else 1)
-        b.ico(pal[tone], rr, 2, trs((lean + math.cos(a) * rad, math.sin(a) * rad, zz)), jitter=rr * .3, jscale=2.4, seed=seed * 10 + k, squash=(1, 1, .78))
-    b.ico(pal[1], .24, 2, trs((lean, 0, cz - .02)), jitter=.05, seed=seed + 77, squash=(1, 1, .7))      # core mass
-    b.ico(pal[2], .17, 2, trs((lean - .03, -.03, cz + .25)), jitter=.045, seed=seed + 99, squash=(1, 1, .68))
-    for k in range(9):                                   # small leaf tufts breaking the outline
-        a = r.uniform(0, 6.28); b.ico(pal[r.choice([0, 1, 2])], r.uniform(.045, .075), 1, trs((lean + math.cos(a) * .4, math.sin(a) * .4, cz + r.uniform(-.14, .14))), jitter=.02, seed=seed + k)
+        b.ico(pal[tone], rr, lod_sub(2), trs((lean + math.cos(a) * rad, math.sin(a) * rad, zz)), jitter=rr * .3, jscale=2.4, seed=seed * 10 + k, squash=(1, 1, .78))
+    b.ico(pal[1], .24, lod_sub(2), trs((lean, 0, cz - .02)), jitter=.05, seed=seed + 77, squash=(1, 1, .7))      # core mass
+    b.ico(pal[2], .17, lod_sub(2), trs((lean - .03, -.03, cz + .25)), jitter=.045, seed=seed + 99, squash=(1, 1, .68))
+    for k in range(3 if LOD else 9):                     # small leaf tufts breaking the outline
+        a = r.uniform(0, 6.28); b.ico(pal[r.choice([0, 1, 2])], r.uniform(.045, .075) * (1.4 if LOD else 1), 0 if LOD else 1, trs((lean + math.cos(a) * .4, math.sin(a) * .4, cz + r.uniform(-.14, .14))), jitter=.02, seed=seed + k)
     return b.to_mesh(f'Tree / broadleaf {seed}')
 
 
@@ -374,10 +405,12 @@ def tree_conifer(seed, snowy):
     b.cyl(M['trunk'], .05, .34, 7, taper=.75)
     for i in range(tiers):
         ri = R * (1 - i / tiers * .8); hg = .36 - i * .03
-        b.cone(M['pine'][0 if i % 2 == 0 else 1], ri, ri * .1, hg, 12, trs((0, 0, z), rot('Z', i * 17 + seed * 5)), star=.3, droop=.045)
-        b.cone(M['pine'][2], ri * .62, ri * .08, hg * .78, 12, trs((0, 0, z + hg * .16), rot('Z', i * 17 + seed * 5 + 15)), star=.25)   # lit inner layer
+        sg = 8 if LOD else 12
+        b.cone(M['pine'][0 if i % 2 == 0 else 1], ri, ri * .1, hg, sg, trs((0, 0, z), rot('Z', i * 17 + seed * 5)), star=.3, droop=.045)
+        if not (LOD and snowy):
+            b.cone(M['pine'][2], ri * .62, ri * .08, hg * .78, sg, trs((0, 0, z + hg * .16), rot('Z', i * 17 + seed * 5 + 15)), star=.25)   # lit inner layer
         if snowy:
-            b.cone(M['snow'], ri * .8, ri * .07, hg * .72, 12, trs((0, 0, z + hg * .3), rot('Z', i * 17 + seed * 5 + 7)), star=.22, smooth=True)
+            b.cone(M['snow'], ri * .8, ri * .07, hg * .72, sg, trs((0, 0, z + hg * .3), rot('Z', i * 17 + seed * 5 + 7)), star=.22, smooth=True)
         z += hg * .5
     b.cone(M['snow'] if snowy else M['pine'][2], .035, .0, .12, 6, trs((0, 0, z + .08)))
     return b.to_mesh(f'Tree / conifer {seed}')
@@ -400,16 +433,18 @@ def bush(seed, pal):
     r = random.Random(seed); b = MB()
     for k in range(r.randint(4, 6)):
         a = r.uniform(0, 6.28); rad = r.uniform(0, .1); rr = r.uniform(.07, .12)
-        b.ico(pal[min(2, k // 2)], rr, 2, trs((math.cos(a) * rad, math.sin(a) * rad, rr * .7 + k * .012)), jitter=rr * .25, seed=seed + k, squash=(1, 1, .78))
+        if LOD and k >= 3:
+            continue
+        b.ico(pal[min(2, k // 2) if not LOD else k], rr * (1.25 if LOD else 1), lod_sub(2), trs((math.cos(a) * rad, math.sin(a) * rad, rr * .7 + k * .012)), jitter=rr * .25, seed=seed + k, squash=(1, 1, .78))
     return b.to_mesh(f'Bush {seed}')
 
 
 def rock(seed, big=False):
     r = random.Random(seed); b = MB()
-    v = b.ico(M['rock'], 1, 2, trs((0, 0, .32), rot('Z', r.uniform(0, 360)), (1, r.uniform(.7, .95), r.uniform(.5, .75))), jitter=.3, jscale=1.6, seed=seed, smooth=False)
+    v = b.ico(M['rock'], 1, lod_sub(2), trs((0, 0, .32), rot('Z', r.uniform(0, 360)), (1, r.uniform(.7, .95), r.uniform(.5, .75))), jitter=.3, jscale=1.6, seed=seed, smooth=False)
     top_tone(b, v, M['rock_top'], .62)
     if big:
-        v = b.ico(M['rock_d'], .55, 2, trs((.75, .15, .16), rot('Z', 40), (1, .8, .6)), jitter=.2, jscale=1.8, seed=seed + 5, smooth=False); top_tone(b, v, M['rock_top'], .62)
+        v = b.ico(M['rock_d'], .55, lod_sub(2), trs((.75, .15, .16), rot('Z', 40), (1, .8, .6)), jitter=.2, jscale=1.8, seed=seed + 5, smooth=False); top_tone(b, v, M['rock_top'], .62)
         v = b.ico(M['rock'], .4, 1, trs((-.7, -.25, .1), rot('Z', 10), (1, .9, .6)), jitter=.14, seed=seed + 9, smooth=False); top_tone(b, v, M['rock_top'], .62)
     return b.to_mesh(f'Rock {seed}')
 
@@ -521,7 +556,7 @@ def crystals(seed):
 
 
 def drift(seed):
-    b = MB(); b.ico(M['snow'], 1, 3, trs(scale=(1, .7, .22)), jitter=.2, jscale=1.4, seed=seed); return b.to_mesh(f'Snow drift {seed}')
+    b = MB(); b.ico(M['snow'], 1, 2 if LOD else 3, trs(scale=(1, .7, .22)), jitter=.2, jscale=1.4, seed=seed); return b.to_mesh(f'Snow drift {seed}')
 
 
 def crate():
@@ -644,6 +679,54 @@ def gate_snow():
     return b.to_mesh('Gate / mountain refuge')
 
 
+def spawn_gate():
+    """Raider camp gate at a road entry (approved stills): sharpened palisade, log arch, red war banners, torches."""
+    b = MB(); red = mat('Cloth / raider red', '#b3262b', .75); bone = mat('Cloth / raider emblem', '#ecdcc0', .8)
+    for side in (-1, 1):
+        for k in range(5):                                  # palisade wings
+            y = side * (.36 + k * .105); hgt = .5 + .06 * math.sin(k * 2.1 + side)
+            b.cyl(M['trunk'], .05, hgt, 7, trs((rng.uniform(-.015, .015), y, 0))); b.cone(M['wood_l'], .05, .0, .11, 7, trs((0, y, hgt)))
+        b.box(M['wood_d'], (.035, .5, .045), trs((-.055, side * .57, .26)))
+        b.cyl(M['trunk'], .075, .86, 8, trs((0, side * .27, 0)))                                # gate posts
+        b.cone(M['wood_l'], .075, .0, .13, 8, trs((0, side * .27, .86)))
+        b.quad(red, [(-.085, side * .27 - .085, .74), (-.085, side * .27 + .085, .74), (-.085, side * .27 + .085, .42), (-.085, side * .27, .34), (-.085, side * .27 - .085, .42)])
+        b.quad(bone, [(-.09, side * .27, .66), (-.09, side * .27 + .04, .58), (-.09, side * .27, .5), (-.09, side * .27 - .04, .58)])
+        b.cyl(M['wood_d'], .016, .5, 6, trs((-.12, side * .47, 0)))                              # torch
+        b.cone(M['iron'], .022, .04, .05, 6, trs((-.12, side * .47, .5)))
+        for k in range(3):
+            b.ico(M['fire'], .04 - k * .009, 1, trs((-.12, side * .47, .57 + k * .04), scale=(1, 1, 1.5)))
+    b.cyl(M['trunk'], .06, .78, 8, trs((0, -.39, .8), rot('X', -90)))                              # lintel log
+    b.box(M['wood_d'], (.05, .6, .1), trs((0, 0, .9)), bevel=.008)
+    for k in (-1, 0, 1):                                                                         # horned skull-ish crest spikes
+        b.cone(bone, .03, .0, .12, 5, trs((0, k * .13, .95), rot('X', k * 22)))
+    return b.to_mesh('Raider camp gate')
+
+
+def house():
+    """Village forge house (approved stills): stone footing, timber frame, teal tile gable roof, chimney, lit forge mouth."""
+    b = MB(); w, d, hgt = .62, .5, .34; roofm = M['thatch'] if SNOW else M['roof']
+    b.box(M['stone'], (w + .04, d + .04, .1), trs((0, 0, .05)), bevel=.012)
+    b.box(mat('Plaster / warm wall', '#e2cfa6' if not SNOW else '#b98f66', .9), (w, d, hgt), trs((0, 0, .1 + hgt / 2)))
+    for x in (-w / 2, w / 2):                                                                    # corner posts and gable
+        for y in (-d / 2, d / 2):
+            b.box(M['wood_d'], (.05, .05, hgt + .02), trs((x, y, .1 + hgt / 2)))
+        b.quad(M['wood'], [(x, -d / 2, .1 + hgt), (x, d / 2, .1 + hgt), (x, 0, .1 + hgt + .26)])
+    b.box(M['wood_d'], (w + .02, .04, .04), trs((0, -d / 2 - .005, .1 + hgt)))
+    for side in (-1, 1):                                                                         # roof slabs + ridge
+        b.box(roofm, (w + .16, .4, .05), trs((0, side * .15, .1 + hgt + .13), rot('X', side * -41)), bevel=.008)
+        if SNOW:
+            b.box(M['snow'], (w + .12, .34, .05), trs((0, side * .15, .1 + hgt + .17), rot('X', side * -41)), bevel=.02)
+    b.box(M['roof_l'] if not SNOW else M['wood_d'], (w + .18, .06, .05), trs((0, 0, .1 + hgt + .285)))
+    b.box(M['stone'], (.13, .13, .5), trs((w / 2 - .12, .1, .1 + hgt + .2)), bevel=.01); b.box(M['stone_d'], (.16, .16, .04), trs((w / 2 - .12, .1, .1 + hgt + .46)))
+    b.box(M['dark'], (.2, .03, .2), trs((-.12, -d / 2 - .005, .2))); b.box(M['fire'], (.14, .02, .09), trs((-.12, -d / 2 - .02, .16)))   # forge mouth
+    b.box(M['glow'], (.09, .02, .09), trs((.16, -d / 2 - .01, .3))); b.box(M['wood_d'], (.12, .025, .02), trs((.16, -d / 2 - .012, .3)))  # window
+    b.box(M['iron'], (.11, .05, .035), trs((-.12, -d / 2 - .17, .1))); b.box(M['iron'], (.04, .04, .07), trs((-.12, -d / 2 - .17, .045)))  # anvil
+    b.box(M['wood'], (.3, .2, .02), trs((.18, -d / 2 - .12, .22), rot('X', 24)))                    # awning
+    for x in (.05, .31):
+        b.cyl(M['wood_d'], .012, .22, 5, trs((x, -d / 2 - .2, 0)))
+    return b.to_mesh('Village forge house')
+
+
 # ---------------------------------------------------------------- placement
 occupied = []
 
@@ -680,13 +763,25 @@ if not SNOW:
 if args.gate:
     for i, (gx, gy) in enumerate(GATES):
         g = add_obj(gate_snow() if SNOW else gate_forest(), loc=W(gx + 12, gy, 0), coll=C_SET, scale=1.0 if i == 0 else .72)
+if args.sets:
+    SG = spawn_gate()
+    for path in PATHS:                                       # raider gate on every road entry, facing down the road
+        (ax, ay), (bx, by) = (path[0]['x'], path[0]['y']), (path[1]['x'], path[1]['y']); L = math.hypot(bx - ax, by - ay)
+        gx, gy = ax - (bx - ax) / L * 26, ay - (by - ay) / L * 26
+        add_obj(SG, loc=W(gx, gy, 0), rz=math.atan2(-(by - ay), bx - ax) + math.pi, coll=C_SET, scale=1.15)
+        occupied.append((gx, gy, 70))
+    for (hx, hy) in ((835, 470), (820, 520), (840, 215), (800, 560), (830, 60)):   # one forge house beside the village
+        if (float(path_dist(np.array([float(hx)]), np.array([float(hy)]))[0]) > 78 and float(pts_dist(np.array([float(hx)]), np.array([float(hy)]), SLOT_PTS)[0]) > 78
+                and float(band_mask(np.array([float(hx)]), np.array([float(hy)]))[0]) < .02):
+            o = add_obj(house(), loc=W(hx, hy, hz(hx, hy)), rz=math.radians(-18), coll=C_SET, scale=1.0)
+            occupied.append((hx, hy, 62)); break
 occupied += [(HERO[0], HERO[1], 46)] + [(vx, vy, 60) for vx, vy in VILLAGES]
 
 # trees ----------------------------------------------------------------
 if SNOW:
-    T_A = [tree_conifer(s, True) for s in (1, 2, 3, 4)]; T_B = [tree_bare(s) for s in (11, 12)]; T_C = []
+    T_A = [proto(tree_conifer, s, True) for s in (1, 2, 3, 4)]; T_B = [tree_bare(s) for s in (11, 12)]; T_C = []
 else:
-    T_A = [tree_conifer(s, False) for s in (1, 2, 3)]; T_B = [tree_broad(s, M['leaf']) for s in (21, 22, 23, 24)]; T_C = [tree_broad(31, M['maple'])]
+    T_A = [proto(tree_conifer, s, False) for s in (1, 2, 3)]; T_B = [proto(tree_broad, s, M['leaf']) for s in (21, 22, 23, 24)]; T_C = [proto(tree_broad, 31, M['maple'])]
 X, Y, D, B, S, O = candidates(int(9000 * AF))
 n_border = n_inner = 0
 for x, y, d, bm_, sd, o in zip(X, Y, D, B, S, O):
@@ -695,7 +790,7 @@ for x, y, d, bm_, sd, o in zip(X, Y, D, B, S, O):
         continue
     if border and o > 0 and rng.random() < .25:           # thin the belt inside the board so the ground stays readable
         continue
-    gap = 30 if border else 62
+    gap = (38 if args.rt else 30) if border else 62
     if not border and n_inner >= (15 if not SNOW else 12):
         continue
     if not free(x, y, gap * .5):
@@ -709,7 +804,7 @@ for x, y, d, bm_, sd, o in zip(X, Y, D, B, S, O):
     occupied.append((x, y, gap * .5)); n_border += int(border); n_inner += int(not border)
 
 # rocks: free scatter, river / ice banks, plateau rims --------------------
-ROCKS = [rock(s) for s in (41, 42, 43, 44)] + [rock(45, True), rock(46, True)]
+ROCKS = [proto(rock, s) for s in (41, 42, 43, 44)] + [proto(rock, 45, True), proto(rock, 46, True)]
 X, Y, D, B, S, O = candidates(1600)
 n_rock = 0
 for x, y, d, bm_, sd, o in zip(X, Y, D, B, S, O):
@@ -724,7 +819,7 @@ for yb in range(-130, 740, 14):                             # banks
         yy = yb + rng.uniform(-5, 5)
         if float(path_dist(np.array([xb]), np.array([yy]))[0]) < 34 or rng.random() < (.35 if not SNOW else .6):
             continue
-        place(rng.choice(ROCKS[:4]), xb, yy, rng.uniform(.045, .1), coll=C_PROPS, zoff=-.015)
+        place(rng.choice(ROCKS[:4]), xb, yy, rng.uniform(.045, .1), coll=C_BAKE, zoff=-.015)
 for (px, py) in HIGH:                                      # cliff stones around the high ground
     for k in range(14):
         a = k * 2 * math.pi / 14 + rng.uniform(-.15, .15); rr = rng.uniform(47, 58); x, y = px + math.cos(a) * rr, py + math.sin(a) * rr
@@ -738,7 +833,7 @@ if args.hd:                                                 # boulders along the
             big = rng.random() < .3
             place(rng.choice(ROCKS[4:] if big else ROCKS[:4]), x, y, rng.uniform(.09, .15) * (.8 if big else 1), coll=C_PROPS, zoff=-.06)
             occupied.append((x, y, 8)); n_cliff += 1
-            if n_cliff >= 900:
+            if n_cliff >= (380 if args.rt else 900):
                 break
 if not SNOW:                                               # cascade ledge + stepping stones in the river
     for xb in range(650, 740, 11):
@@ -758,10 +853,10 @@ if args.hd:   # curb stones lining both road edges (the approved stills' stone-e
                         continue
                     if float(band_mask(np.array([x]), np.array([y]))[0]) > .02 or float(pts_dist(np.array([x]), np.array([y]), SLOT_PTS)[0]) < 38 or not clear_of_sets(x, y):
                         continue
-                    place(rng.choice(CURB), x, y, rng.uniform(.045, .07), coll=C_PROPS, zoff=-.012)
+                    place(rng.choice(CURB), x, y, rng.uniform(.045, .07), coll=C_BAKE, zoff=-.012)
 
 # small flora -------------------------------------------------------------
-BUSH = [bush(s, M['bush']) for s in (51, 52, 53)] if not SNOW else [drift(s) for s in (51, 52, 53)]
+BUSH = [proto(bush, s, M['bush']) for s in (51, 52, 53)] if not SNOW else [proto(drift, s) for s in (51, 52, 53)]
 X, Y, D, B, S, O = candidates(2500)
 n_b = 0
 for x, y, d, bm_, sd, o in zip(X, Y, D, B, S, O):
@@ -774,15 +869,15 @@ for x, y, d, bm_, sd, o in zip(X, Y, D, B, S, O):
     occupied.append((x, y, 9)); n_b += 1
 
 TUFT = [tuft(s, M['dry'] if SNOW else M['grass']) for s in (61, 62, 63, 64)]
-X, Y, D, B, S, O = candidates(int((12000 if not SNOW else 5000) * (3 if args.hd else 1) * AF))
+X, Y, D, B, S, O = candidates(int((12000 if not SNOW else 5000) * (4.5 if args.hd else 1) * AF))
 n_t = 0
 for x, y, d, bm_, sd, o in zip(X, Y, D, B, S, O):
-    if d < 27 or bm_ > .02 or sd < 30 or o < -110:
+    if d < 27 or bm_ > .02 or sd < 30 or o < (-225 if args.hd else -110):
         continue
     if SNOW and rng.random() < .55:
         continue
-    place(rng.choice(TUFT), x, y, rng.uniform(.8, 1.6)); n_t += 1
-    if n_t >= (3200 if not SNOW else 700) * (3 if args.hd else 1) * AF:
+    place(rng.choice(TUFT), x, y, rng.uniform(.8, 1.6), coll=C_BAKE); n_t += 1
+    if n_t >= (3200 if not SNOW else 700) * (4.5 if args.hd else 1) * AF:
         break
 
 n_f = 0
@@ -793,15 +888,15 @@ if not SNOW:
         for _ in range(rng.randint(5, 11)):
             x, y = cx + rng.gauss(0, 13), cy + rng.gauss(0, 13)
             if float(path_dist(np.array([x]), np.array([y]))[0]) > 27 and float(band_mask(np.array([x]), np.array([y]))[0]) < .02 and float(pts_dist(np.array([x]), np.array([y]), SLOT_PTS)[0]) > 30:
-                place(FLOWER[kind], x, y, rng.uniform(.9, 1.5)); n_f += 1
+                place(FLOWER[kind], x, y, rng.uniform(.9, 1.5), coll=C_BAKE); n_f += 1
     for (ox, oy, orad) in list(occupied)[:]:
         if orad in (15, 22) and rng.random() < .22:
-            place(MUSH, ox + rng.uniform(-14, 14), oy + rng.uniform(8, 16), rng.uniform(.9, 1.4))
+            place(MUSH, ox + rng.uniform(-14, 14), oy + rng.uniform(8, 16), rng.uniform(.9, 1.4), coll=C_BAKE)
     for yb in range(-120, 730, 9):                         # reeds along the banks
         lb, rb = band_edges(np.array([float(yb)])); lb, rb = float(lb[0]), float(rb[0])
         for xb in (lb + 1, rb - 1):
             if rng.random() < .45 and float(path_dist(np.array([xb]), np.array([float(yb)]))[0]) > 36:
-                place(rng.choice(REED), xb + rng.uniform(-3, 3), yb, rng.uniform(.8, 1.4), zoff=.14)
+                place(rng.choice(REED), xb + rng.uniform(-3, 3), yb, rng.uniform(.8, 1.4), zoff=.14, coll=C_BAKE)
 else:
     CRYS = [crystals(s) for s in (81, 82, 83)]
     for yb in range(-110, 720, 46):                        # crystal growths on the frozen banks
@@ -821,7 +916,7 @@ else:
         for (ax, ay), (bx, by) in zip(pts, pts[1:]):
             dx, dy = bx - ax, by - ay; L = math.hypot(dx, dy) or 1; nx, ny = -dy / L * .8, dx / L * .8
             cb.quad(M['ice_d'], [W(ax + nx, ay + ny, .001), W(ax - nx, ay - ny, .001), W(bx - nx * .4, by - ny * .4, .001), W(bx + nx * .4, by + ny * .4, .001)])
-    add_obj(cb.to_mesh('Ice cracks'), coll=C_WATER)
+    add_obj(cb.to_mesh('Ice cracks'), coll=C_BAKE)
 
 # story props along the road -------------------------------------------------
 def along(path_i, dist_px, side_px):
@@ -861,7 +956,7 @@ if not SNOW:
 
 # ---------------------------------------------------------------- light, cameras, output
 setup_render(scene, args.size, round(args.size * 2 / 3), args.samples, world=('#c7dcec', .85) if not SNOW else ('#bcd2ea', .8))
-sun('Sun / west-southwest', (.56, .30, -.77), 3.3 if not SNOW else 2.5, '#fff1d6' if not SNOW else '#fff6ea', 4.0, C_STUDIO)
+SUN = sun('Sun / west-southwest', (.56, .30, -.77), 3.3 if not SNOW else 2.5, '#fff1d6' if not SNOW else '#fff6ea', 4.0, C_STUDIO)
 centre = W(450, 300)
 cams = {
     'battle': battle_camera(coll=C_STUDIO),
@@ -886,10 +981,84 @@ for view in [v for v in args.views.split(',') if v]:
     else:
         scene.render.resolution_x, scene.render.resolution_y = args.size, round(args.size * 2 / 3)
     render(scene, cams[view], os.path.join(args.out, f'{tag}-{view}.png'))
+if args.rt:
+    # ------------------------------------------------------------ real-time export
+    rt_dir = os.path.join(args.out, f'{tag}-rt-tex'); os.makedirs(rt_dir, exist_ok=True)
+    # 1. bake the ground: only terrain, water / ice and the small baked-in flora are camera-visible; trees, rocks,
+    #    bridges, pads and sets stay in the scene so their shadows land in the texture.
+    n_cull = 0
+    for o in list(scene.objects):                             # trees / rocks / bushes never inside the widest landscape view
+        if o.type == 'MESH' and o.data.name in RT:
+            bx, by = o.location.x * 100, 600 - o.location.y * SIN60 * 100
+            if not (-232 < bx < 1132 and -45 < by < 695):
+                bpy.data.objects.remove(o, do_unlink=True); n_cull += 1
+    keep = {C_TERRAIN, C_WATER, C_BAKE}
+    hidden = [o for o in scene.objects if o.type == 'MESH' and not any(c in keep for c in o.users_collection)]
+    for o in hidden:
+        o.visible_camera = False
+    cx, cy = 4.5, (WY0 + WY1) / 2
+    bake_cam = camera('Ground bake / top-down ortho', (cx, cy, 60), (cx, cy, 0), ortho_scale=(900 + 2 * MARGIN) / 100, coll=C_STUDIO)
+    scene.render.resolution_x = args.ground_size; scene.render.resolution_y = round(args.ground_size * (WY1 - WY0) * 100 / (900 + 2 * MARGIN))
+    scene.cycles.samples = args.bake_samples
+    SUN.data.energy *= .78; bgn = scene.world.node_tree.nodes.get('Background'); bgn.inputs['Strength'].default_value *= 1.3   # softer baked shadows
+    raw_png = os.path.join(rt_dir, 'ground-raw.png'); render(scene, bake_cam, raw_png)
+    SUN.data.energy /= .78; bgn.inputs['Strength'].default_value /= 1.3
+    ground_png = os.path.join(rt_dir, 'ground.webp'); contact = soften_contact(raw_png, ground_png)
+    scene.cycles.samples = args.samples
+    for o in hidden:
+        o.visible_camera = True
+    # 2. swap to the real-time scene
+    for o in list(C_BAKE.objects) + list(C_TERRAIN.objects) + list(C_WATER.objects):
+        bpy.data.objects.remove(o, do_unlink=True)
+    for o in scene.objects:
+        if o.type == 'MESH' and o.data.name in RT:
+            o.data = RT[o.data.name]
+    ground_px = [scene.render.resolution_x, scene.render.resolution_y]
+    gm = image_mat('Ground / baked detail', ground_png, .95)
+    wm = image_mat('Ice / baked sheet' if SNOW else 'Water / baked flow', ground_png, .15 if SNOW else .2)
+    gx_ = np.arange(-MARGIN, 900 + MARGIN + .1, 10.0); gy_ = np.arange(-MARGIN, 600 + MARGIN + .1, 10.0)
+    GX, GY = np.meshgrid(gx_, gy_); GH = height_field(GX, GY)[0]; gny, gnx = GX.shape
+    gidx = np.arange(gny * gnx).reshape(gny, gnx)
+    gme = bpy.data.meshes.new('Terrain / ' + THEME + ' / rt')
+    gme.from_pydata(np.stack([GX / 100.0, (600.0 - GY) / 100.0 / SIN60, GH], axis=-1).reshape(-1, 3).tolist(), [],
+                    np.stack([gidx[:-1, :-1], gidx[:-1, 1:], gidx[1:, 1:], gidx[1:, :-1]], axis=-1).reshape(-1, 4).tolist()); gme.update()
+    gme.polygons.foreach_set('use_smooth', [True] * len(gme.polygons)); ground_uv(gme); gme.materials.append(gm); add_obj(gme, coll=C_TERRAIN)
+    build_band_surface(6.0, 12.0, wm)
+    NORMAL = ('Rock / facet', 'Rock / shade', 'Stone / ivory block', 'Roof / teal tile', 'Wood / plank', 'Wood / bark', 'Wood / gate door')
+    for m_ in bpy.data.materials:
+        if m_ not in (gm, wm) and m_.use_nodes and m_.node_tree.nodes.get('Principled BSDF'):
+            export_ready(m_, LIB if TEX else None, rt_dir, normal=m_.name in NORMAL)
+    # 3. ground heights for unit grounding (board px, 10 px grid; water clamps to 0 - bridges carry the road)
+    hx_ = np.arange(0, 901, 10.0); hy_ = np.arange(0, 601, 10.0); HX, HY = np.meshgrid(hx_, hy_)
+    HH = np.maximum(height_field(HX, HY)[0], 0) * 100
+    json.dump({'unit': 'board px; heights are board px above the road level (world up x 100)', 'x0': 0, 'y0': 0, 'step': 10, 'cols': len(hx_), 'rows': len(hy_),
+               'max': round(float(HH.max()), 1), 'heights': [round(float(v), 1) for v in HH.ravel()]}, open(os.path.join(args.out, f'{tag}-height.json'), 'w'))
+    # 4. check renders of the real-time scene, then the GLB
+    for view in [v for v in args.rtviews.split(',') if v]:
+        if view == 'beauty':
+            scene.render.resolution_x, scene.render.resolution_y = args.size, round(args.size * 9 / 16)
+        elif view == 'backdrop':
+            scene.render.resolution_x, scene.render.resolution_y = args.size, round(args.size * 640 / 1320)
+        else:
+            scene.render.resolution_x, scene.render.resolution_y = args.size, round(args.size * 2 / 3)
+        render(scene, cams[view], os.path.join(args.out, f'{tag}-rt-{view}.png'))
+    glb = os.path.join(args.out, f'{tag}-rt.glb')
+    kw = dict(filepath=glb, export_format='GLB', export_apply=False, export_yup=True, export_cameras=False, export_lights=False)
+    try:
+        bpy.ops.export_scene.gltf(export_image_format='WEBP', export_image_quality=86, **kw)
+    except TypeError:
+        bpy.ops.export_scene.gltf(**kw)
+    info['rt'] = {'glb_bytes': os.path.getsize(glb), 'stats': stats(), 'ground_texture': ground_px, 'culled_outside_view': n_cull, 'contact_fill': round(contact, 4), 'margin': MARGIN,
+                  'terrace': TERRACE_H}
 if args.glb:
     bpy.ops.export_scene.gltf(filepath=os.path.join(args.out, f'{tag}.glb'), export_format='GLB', export_apply=True, export_yup=True)
     info['glb_bytes'] = os.path.getsize(os.path.join(args.out, f'{tag}.glb'))
 if args.blend:
-    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(args.out, f'{tag}.blend'))
+    if args.rt:                                              # editable source of the real-time scene, textures packed
+        for me_ in list(bpy.data.meshes):
+            if me_.users == 0:
+                bpy.data.meshes.remove(me_)
+        bpy.ops.file.pack_all()
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(args.out, f'{tag}{"-rt" if args.rt else ""}.blend'), compress=True)
 json.dump(info, open(os.path.join(args.out, f'{tag}.json'), 'w'), indent=1)
 print('DONE', json.dumps(info))
