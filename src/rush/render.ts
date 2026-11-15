@@ -331,6 +331,13 @@ export class RushView {
     glow(this.mats.snowball, 0.5);
     for (const b of [...Object.values(this.batches.branchShots), this.batches.wardRing]) glow(b.mesh.material as Material);
     if (this.superRing) glow(this.superRing.material as Material);
+    // Cycle 134: ring() makes a glowing material per ring and disposes it when the ring fades. When the last one went,
+    // three freed the shader program and the next ring compiled it again (every few seconds on the low tier). This
+    // hidden ring keeps one such material alive, so the program stays and the battle warm-up compiles it up front. Opaque
+    // on purpose: only an opaque glow gets its own program (glow1.000); a see-through one shares the plain basic program.
+    const keeper = new Mesh(this.geo.ring, glow(basic(0xffffff)));
+    keeper.visible = false; keeper.name = 'program-keeper:ring';
+    this.scene.add(keeper);
     this.glowBatches = [...Object.values(this.batches.shots), ...Object.values(this.batches.branchShots), this.batches.frostRing, this.batches.wardRing];
     this.fitFrame();
   }
@@ -364,7 +371,7 @@ export class RushView {
     this.post.setGrade(look.grade);
     this.renderer.info.reset();
     setGlowMask(this.post.ready);
-    if (this.warmQueue.length && scene === this.scene) for (const root of this.warmQueue.splice(0)) this.post.warm(this.renderer, scene, camera, root);
+    if (this.warmQueue.length && scene === this.scene) for (const root of this.warmQueue.splice(0)) { this.post.warm(this.renderer, scene, camera, root); if (root === scene) this.warmShadowBatch(); }
     if (this.post.ready) this.post.render(this.renderer, scene, camera, glowing); else this.renderer.render(scene, camera);
   }
   /** Cycle 128: the next battle frame first compiles every material under `root` (hidden ones too; the whole battle
@@ -373,6 +380,14 @@ export class RushView {
   private warmQueue: Object3D[] = [];
   private warmOn = new URLSearchParams(location.search).get('warm') !== '0';
   warmShaders(root: Object3D = this.scene) { if (this.warmOn) this.warmQueue.push(root); }
+  /** Cycle 134: renderer.compile skips the shadow pass, so the batched enemies' shadow (depth) program still compiled
+   * when the first wave arrived. On the warm frame an empty body batch gets one near-zero-size instance, so this frame's
+   * shadow pass compiles it; the next frame's drawEnemies hides it again. */
+  private warmShadowBatch() {
+    const b = this.batches.multi?.body;
+    if (!b || b.size > 0) return;
+    b.begin(); b.push(this.enemyKit('grunt').body, new Matrix4().makeScale(1e-4, 1e-4, 1e-4)); b.end();
+  }
   /** Debug (cycle 128): the cache key of every live shader program, oldest first. */
   programKeys() { return (this.renderer.info.programs ?? []).map(p => p.cacheKey); }
 
