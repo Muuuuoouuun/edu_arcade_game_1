@@ -22,6 +22,7 @@ import { createFrameWatch, nextPref, parsePref, PREF_LABEL, resolveQuality, watc
 import { mapFor } from './maps.ts';
 import { CRATE } from './data.ts';
 import { setShadowEvery } from './frame.ts';
+import { benchEnemies, benchStats, type BenchStats } from './bench.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const params = new URLSearchParams(location.search);
@@ -45,10 +46,12 @@ window.addEventListener('storage', event => {
   settings = parseSettings(event.newValue, settings);
   applySettings();
 });
-const speed = Math.min(8, Math.max(0.25, Number(params.get('speed')) || 1));
+// ?bench=1 (cycle 125): run the demo fast to a frozen tick, then time a fixed heavy scene (bench.ts).
+const benchMode = params.has('bench');
+const speed = Math.min(8, Math.max(0.25, Number(params.get('speed')) || (benchMode ? 8 : 1)));
 const debug = params.has('debug');
 /** ?freeze=N stops the simulation at tick N (rendering continues) for matched before/after screenshots. */
-const freezeAt = Number(params.get('freeze')) || Infinity;
+const freezeAt = Number(params.get('freeze')) || (benchMode ? 900 : Infinity);
 // Debug (cycle 101): ?shadowEvery=N redraws the high-tier shadow map every N frames (default 2; 1 = every frame).
 if (params.has('shadowEvery')) setShadowEvery(Number(params.get('shadowEvery')));
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -659,11 +662,46 @@ if (params.has('sheet')) {
   view.sheet();
   showScreen(null);
   surface.classList.add('sheet');
-} else if (params.has('demo')) start('demo');
+} else if (params.has('demo') || benchMode) { start('demo'); if (benchMode) void runBench(); }
 else if (params.has('play')) start('play');
 
 // Read-only handle for automated browser checks.
-Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, get quality() { return { pref: qualityPref, tier: view.quality, autoDropped: frameWatch.dropped }; }, get drawnFrames() { return drawnFrames; }, get music() { return { mood: music.mood, enabled: music.enabled }; }, info: () => view.info(), shadowCasters: () => view.shadowCasters(), tallyDraws: () => view.tallyDraws(), bodyOnly: (on: boolean) => { view.bodyOnly = on; }, holdPose: (on: boolean) => { view.poseHold = on; }, snapCamera: () => view.snapCamera(), maskMode: (on: boolean) => { view.maskMode = on; }, get lastTally() { return view.lastTally; }, enemyScreen, towerLevels: TOWER_LEVELS.length } });
+/** ?bench=1 (cycle 125): once the demo is frozen, build the heavy scene, warm up 2 s, time 10 s of frames and show the
+ * numbers in a panel (also window.__rush.bench). Rendering and animation keep running; the simulation is frozen. */
+let benchResult: (BenchStats & Record<string, unknown>) | null = null;
+async function runBench() {
+  const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
+  const frame = () => new Promise<number>(r => requestAnimationFrame(r));
+  const panel = document.createElement('pre');
+  panel.id = 'bench-panel';
+  panel.style.cssText = 'position:fixed;left:8px;top:8px;z-index:9999;margin:0;padding:8px 10px;background:rgba(10,16,32,.88);color:#e8f0ff;font:12px/1.4 ui-monospace,monospace;border-radius:8px;max-width:62vw;white-space:pre-wrap;pointer-events:none';
+  panel.textContent = '측정 준비 중…';
+  document.body.appendChild(panel);
+  while (state.tick < freezeAt) await wait(200);
+  state.enemies.push(...(benchEnemies(7000) as unknown as RushState['enemies']));
+  state.hero.x = 0; state.hero.z = -4.5;
+  view.snapCamera();
+  panel.textContent = '데우는 중(2초)…';
+  await wait(2000);
+  panel.textContent = '측정 중(10초)…';
+  const deltas: number[] = [];
+  let last = await frame(), calls = 0, n = 0;
+  const end = last + 10000;
+  while (last < end) { const t = await frame(); deltas.push(t - last); last = t; calls += view.info().calls; n++; }
+  const info = view.info(), st = benchStats(deltas);
+  benchResult = { ...st, calls: Math.round(calls / Math.max(1, n)), triangles: info.triangles, quality: view.quality, pref: qualityPref, autoDropped: frameWatch.dropped,
+    pixelRatio: info.pixelRatio, buffer: info.buffer, gpu: view.gpuName(), enemies: state.enemies.length };
+  panel.textContent = [
+    '아르카나 러시 · 기기 측정 (무거운 장면, 10초)',
+    `프레임 ${st.frames} · 평균 ${st.meanMs} ms (${st.fps} fps)`,
+    `중앙값 ${st.p50} · 95% ${st.p95} · 99% ${st.p99} · 최악 ${st.worst} ms`,
+    `드로콜 ${benchResult.calls} · 삼각형 ${info.triangles} · 적 ${state.enemies.length}`,
+    `품질 ${view.quality}${qualityPref === 'auto' ? ` (자동${frameWatch.dropped ? ', 낮춤' : ''})` : ''} · 화소 비율 ${info.pixelRatio} · 버퍼 ${info.buffer.join('×')}`,
+    `GPU ${benchResult.gpu}`,
+  ].join('\n');
+}
+
+Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, get quality() { return { pref: qualityPref, tier: view.quality, autoDropped: frameWatch.dropped }; }, get drawnFrames() { return drawnFrames; }, get music() { return { mood: music.mood, enabled: music.enabled }; }, info: () => view.info(), shadowCasters: () => view.shadowCasters(), tallyDraws: () => view.tallyDraws(), bodyOnly: (on: boolean) => { view.bodyOnly = on; }, holdPose: (on: boolean) => { view.poseHold = on; }, snapCamera: () => view.snapCamera(), maskMode: (on: boolean) => { view.maskMode = on; }, get lastTally() { return view.lastTally; }, get bench() { return benchResult; }, enemyScreen, towerLevels: TOWER_LEVELS.length } });
 // Debug only (map checks): dress the running battle as another stage's layout, and an overhead camera on the whole arena.
 Object.assign((window as unknown as { __rush: object }).__rush, {
   setStage(n: number) { const map = mapFor(n); state.diff.stage = n; state.map = map; state.crates = map.crates.map((c, i) => ({ id: 1 + i, x: c.x, z: c.z, hp: CRATE.hp, ...(c.gold ? { gold: c.gold } : {}) })); },

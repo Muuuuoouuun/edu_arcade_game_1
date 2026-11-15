@@ -2047,6 +2047,11 @@ export class RushView {
     });
     return out;
   }
+  /** GPU name as the browser reports it (bench panel, cycle 125); shown on the device only. */
+  gpuName(): string {
+    const gl = this.renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info');
+    return String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+  }
   info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroTexture: !!this.heroRig?.material.map, heroNormalMap: !!this.heroRig?.material.normalMap, heroMotion: this.heroRig?.motion.info(), heroKind: this.heroKind, heroTris: this.heroTris(), enemyTris: Object.fromEntries([...this.enemyKits].map(([k, v]) => [k, (v.body.index ? v.body.index.count : v.body.attributes.position.count) / 3])), heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, townModel: this.townView?.status, townOccluders: this.townView?.occlusion.count ?? 0, damage: { ...this.damageStages }, heroTint: this.mats.hero.color.getHex(), heroPosture: this.heroBody.scale.y, terrain: {heroY:this.hero.position.y,townY:this.townView?.root.position.y,focusY:this.focus.y}, dropped: Batch.dropped, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
 }
 

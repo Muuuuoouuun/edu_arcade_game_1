@@ -186,3 +186,19 @@ test('kind batch (cycle 108): several shapes refilled per frame in one batched m
   kb.begin(); kb.end();
   assert.equal(kb.mesh.visible, false, 'an empty frame costs no draw');
 });
+
+test('device bench (cycle 125): frame-time statistics and the fixed heavy scene', async () => {
+  const { benchStats, benchEnemies } = await import('./bench.ts');
+  const deltas = [...Array.from({ length: 98 }, () => 16), 40, 100];
+  const st = benchStats(deltas);
+  assert.equal(st.frames, 100);
+  assert.equal(st.p50, 16);
+  assert.equal(st.p99, 100, 'the slowest 1% boundary');
+  assert.equal(st.worst, 100);
+  assert.ok(Math.abs(st.meanMs - (98 * 16 + 140) / 100) < 0.01 && Math.abs(st.fps - 1000 / st.meanMs) < 0.05);
+  assert.deepEqual(benchStats([]), { frames: 0, meanMs: 0, fps: 0, p50: 0, p95: 0, p99: 0, worst: 0 });
+  const enemies = benchEnemies(7000);
+  assert.equal(enemies.length, 41);
+  assert.equal(new Set(enemies.map(e => e.kind)).size, 7, 'every kind plus the boss');
+  assert.ok(enemies.some(e => 'wardT' in e) && enemies.some(e => 'slowT' in e) && enemies.some(e => e.flash > 0), 'warded, frozen and flashing enemies');
+});
