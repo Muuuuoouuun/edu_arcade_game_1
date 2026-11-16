@@ -371,7 +371,11 @@ export class RushView {
     this.post.setGrade(look.grade);
     this.renderer.info.reset();
     setGlowMask(this.post.ready);
-    if (this.warmQueue.length && scene === this.scene) for (const root of this.warmQueue.splice(0)) { this.post.warm(this.renderer, scene, camera, root); if (root === scene) this.warmShadowBatch(); }
+    if (this.warmQueue.length && scene === this.scene) for (const root of this.warmQueue.splice(0)) {
+      this.post.warm(this.renderer, scene, camera, root);
+      if (root === scene) this.warmShadowBatch();
+      if (this.prewarmLow && this.quality === 'high') this.warmLowTier(scene, camera, root);
+    }
     if (this.post.ready) this.post.render(this.renderer, scene, camera, glowing); else this.renderer.render(scene, camera);
   }
   /** Cycle 128: the next battle frame first compiles every material under `root` (hidden ones too; the whole battle
@@ -380,6 +384,20 @@ export class RushView {
   private warmQueue: Object3D[] = [];
   private warmOn = new URLSearchParams(location.search).get('warm') !== '0';
   warmShaders(root: Object3D = this.scene) { if (this.warmOn) this.warmQueue.push(root); }
+  /** Cycle 140: with the 'auto' setting the tier can drop to low mid-battle (quality.ts AUTO), and then nearly every
+   * material needs another program at once. Set by main when the setting is 'auto': the battle warm-up then also
+   * compiles the low tier's programs. */
+  prewarmLow = false;
+  /** Compile `root` as the low tier would draw it: no sun shadow, no surface detail, straight to the canvas (no
+   * finishing pass). Only programs are made; the settings are put back before anything is drawn. */
+  private warmLowTier(scene: Scene, camera: PerspectiveCamera, root: Object3D) {
+    const sun = this.rig.sun, cast = sun.castShadow;
+    sun.castShadow = false;
+    setSurfaceDetail(false);
+    this.renderer.setRenderTarget(null);
+    try { this.renderer.compile(root, camera, scene); }
+    finally { sun.castShadow = cast; setSurfaceDetail(QUALITY[this.quality].surfaceDetail); }
+  }
   /** Cycle 134: renderer.compile skips the shadow pass, so the batched enemies' shadow (depth) program still compiled
    * when the first wave arrived. On the warm frame an empty body batch gets one near-zero-size instance, so this frame's
    * shadow pass compiles it; the next frame's drawEnemies hides it again. */

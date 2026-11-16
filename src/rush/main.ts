@@ -424,6 +424,8 @@ function start(nextMode: 'play' | 'demo') {
   town.closeMap();
   showScreen(null);
   // Cycle 128: compile every battle material on the first frame, not when the first wave or glow appears.
+  // Cycle 140: with 'auto' the low tier's programs too, so a mid-battle drop does not compile them all at once.
+  view.prewarmLow = qualityPref === 'auto' && params.get('warmlow') !== '0';
   view.warmShaders();
   toast(nextMode === 'demo' ? '자동 시연 · 화면을 누르면 타이틀로' : '노란 원 위에서 탑을 세우고 마을을 지키세요');
   updateOrientation();
