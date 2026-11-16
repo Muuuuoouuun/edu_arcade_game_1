@@ -814,3 +814,6 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   .danger-link { margin-top: 0; margin-bottom: 2px; }
   .settings-card h1 { margin-bottom: 2px; }
 }
+
+/* Cycle 141: how long until a greyed upgrade can be bought ('· 약 4분'), or '· 수확 먼저' when the uncollected stock covers it. */
+.town-up .eta { font-size: 12px; font-weight: 700; color: #ffd36a; white-space: nowrap; }

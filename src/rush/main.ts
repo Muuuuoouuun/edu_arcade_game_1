@@ -9,7 +9,7 @@ import { playCombatSound, setSound, unlockAudio, type CombatSoundKind } from '..
 import { readSaved } from '../lib/storage.ts';
 import { playHaptic } from '../lib/haptic.ts';
 import { NATIVE_BACKGROUND } from '../lib/nativeEvents.ts';
-import { collect, ENDLESS_STAGE, kingdomMods, nextStep, settleBattle, settleEndless, type NextStep, type Upgrade } from './kingdom.ts';
+import { collect, ENDLESS_STAGE, kingdomMods, nextStep, settleBattle, settleEndless, waitText, type NextStep, type Upgrade } from './kingdom.ts';
 import { stageDifficulty, STAGE_COUNT } from './stages.ts';
 import { createMusic } from './music.ts';
 import { parseSettings, RUSH_KINGDOM_KEY, RUSH_SETTINGS_KEY, serializeSettings, type RushSettings } from './storage.ts';
@@ -483,7 +483,9 @@ function showNextStep(step: NextStep | null, won = false) {
   const fmt = (v: number) => v.toLocaleString('en-US'), a = step.action, ready = step.have >= step.need;
   const name = !a ? '' : a.kind === 'upgrade' ? `${upgradeName(a.id)} 올리기` : a.kind === 'train' ? `${HEROES[a.hero].name} 훈련` : `${HEROES[a.hero].name} ${TALENTS[a.hero].name} 배우기`;
   const miss = ([['식량', step.short.food], ['목재', step.short.wood], ['조각', step.short.shards]] as const).filter(([, v]) => v > 0).map(([k, v]) => `${k} ${fmt(v)}`).join(' · ');
-  const todo = !a ? '마을이 다 자랐어요' : `${!ready ? '할 일' : won ? '준비됐어요 · 더 든든하게' : '전투력은 충분해요 · 더 든든하게'}: <b>${name}</b> <span class="gain">${miss ? `(${miss} 더 모으기)` : `→ 전투력 +${step.gain}`}</span>`;
+  // Cycle 141: how long the farm and mill take to cover what is missing (not for shards, which come from battles).
+  const wait = miss && step.eta ? `, ${waitText(step.eta)}` : '';
+  const todo = !a ? '마을이 다 자랐어요' : `${!ready ? '할 일' : won ? '준비됐어요 · 더 든든하게' : '전투력은 충분해요 · 더 든든하게'}: <b>${name}</b> <span class="gain">${miss ? `(${miss} 더 모으기${wait})` : `→ 전투력 +${step.gain}`}</span>`;
   el.innerHTML = `<span class="head">다음 판 · ${expeditionStage(step.target).name} 권장 ${fmt(step.need)} · <span class="${ready ? 'ok' : 'short'}">지금 ${fmt(step.have)}</span></span>${todo}`;
 }
 /** Endless challenge result (cycle 46): waves held, best record, rewards. */

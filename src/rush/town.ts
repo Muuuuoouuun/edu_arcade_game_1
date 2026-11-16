@@ -4,7 +4,7 @@ import { SPOTS, type TownView } from './townScene.ts';
 import { FORGE, HERO_ROLE, HEROES, TALENT_MAX, TALENTS, type HeroKind } from './data.ts';
 import { barricadeGrowth, kingdomPower, recommendedPower, claimGoal, currentGoal, GOALS,
   CASTLE_MAX, DAILY_WIN, ENDLESS_STAGE, nextMilestone, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canLearnTalent, canTrain, learnTalent, talentCost, dailyReady, dayIndex, canUpgrade, chooseHero, collect, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, pending, PERK_EFFECT, rate,
-  storageFull, train, trainCost, upgrade, upgradeCost, type Kingdom, type Upgrade,
+  storageFull, train, trainCost, upgrade, upgradeCost, minutesUntil, waitText, type Cost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 import { createKingdomStore } from './storage.ts';
 import { COMPANIONS, REGIONS, expeditionStage, josa, keeperOf, regionOf, villageText, type Companion } from './expedition.ts';
@@ -343,8 +343,14 @@ export class TownScreen {
     heroRow.querySelector('[data-level]')!.textContent = `Lv ${lv}/${heroMaxLevel(k)}`;
     heroRow.querySelector('[data-effect]')!.textContent = `${g.hp === g.damage ? '체력·공격 ' : ''}${growth(g)}${tc ? ` → ${growth(heroGrowth(lv + 1))}` : ''}`;
     trainBtn.disabled = !tc || !canTrain(k, k.hero);
+    // Cycle 141: what cannot be bought yet says how long production takes ('수확 먼저': the uncollected stock covers it).
+    const waitNote = (c: Partial<Cost> & { shards?: number }) => {
+      if (k.food >= (c.food ?? 0) && k.wood >= (c.wood ?? 0) && k.shards >= (c.shards ?? 0)) return '';
+      const m = minutesUntil(k, c, now);
+      return m === null ? '' : `<small class="eta"> · ${m === 0 ? '수확 먼저' : waitText(m)}</small>`;
+    };
     trainBtn.querySelector('[data-cost]')!.innerHTML = tc
-      ? `훈련 <i class="res-ico food"></i>${tc.food} <i class="res-ico wood"></i>${tc.wood}${tc.shards ? ` <i class="res-ico shard"></i>${tc.shards}` : ''}`
+      ? `훈련 <i class="res-ico food"></i>${tc.food} <i class="res-ico wood"></i>${tc.wood}${tc.shards ? ` <i class="res-ico shard"></i>${tc.shards}` : ''}${waitNote(tc)}`
       : k.heroLv[k.hero] >= CASTLE_MAX * HERO_LV_PER_CASTLE ? '최대' : '성 Lv 필요';
     trainBtn.classList.toggle('capped', !tc);
     // Talent (cycle 45): effect now → next, and a button with its shard cost or what it still needs.
@@ -415,7 +421,7 @@ export class TownScreen {
       row.querySelector('[data-effect]')!.textContent = `${r.label} ${r.value(k)}${cost ? ` → ${r.value(bumped(k, r.id))}` : ''}`;
       btn.disabled = !cost || !canUpgrade(k, r.id);
       btn.querySelector('[data-cost]')!.innerHTML = cost
-        ? `<i class="res-ico food"></i>${cost.food} <i class="res-ico wood"></i>${cost.wood}`
+        ? `<i class="res-ico food"></i>${cost.food} <i class="res-ico wood"></i>${cost.wood}${waitNote(cost)}`
         : r.id === 'castle' || level(k, r.id) >= CASTLE_MAX ? '최대' : '성 Lv 필요';
       btn.classList.toggle('capped', !cost);
       // Expedition companions keep the town (2026-11-13 merge): story only, the numbers above are unchanged.

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   battleReward, canUpgrade, collect, createKingdom, grantReward, heroMaxLevel, kingdomMods, parseKingdom, pending, RATE_PER_LEVEL, settleBattle,
   serializeKingdom, STORAGE_MINUTES, train, trainCost, upgrade, upgradeCost, type Kingdom,
-  nextStep, kingdomPower, recommendedPower, POWER,
+  nextStep, kingdomPower, recommendedPower, POWER, minutesUntil, waitText,
 } from './kingdom.ts';
 import { createRush, heroMaxHp, padCost, stepRush, WAVE_COUNT } from './sim.ts';
 import { HERO, PADS, TOWER_LEVELS, TOWN } from './data.ts';
@@ -464,4 +464,20 @@ test('result next step (cycle 129): the biggest affordable power gain, else the 
   assert.equal(nextStep(done, 10)!.action, null);
   // No recommendation past stage 10.
   assert.equal(nextStep(start, 11), null);
+});
+
+test('waiting time (cycle 141): minutes of farm and mill production until a cost is covered, counting the uncollected stock', () => {
+  const k = createKingdom(T0); // 120 food, 120 wood, farm and mill Lv1: 8 of each per minute
+  assert.equal(minutesUntil(k, { food: 100, wood: 100 }, T0), 0);
+  assert.equal(minutesUntil(k, { food: 200, wood: 120 }, T0), 10, '80 food short at 8 a minute');
+  assert.equal(minutesUntil(k, { food: 201, wood: 120 }, T0), 11, 'rounded up');
+  assert.equal(minutesUntil(k, { food: 200, wood: 200 }, T0 + 5 * MIN), 5, 'five minutes already waiting');
+  assert.equal(minutesUntil(k, { food: 150, wood: 150 }, T0 + 5 * MIN), 0, 'the uncollected stock covers it: collect first');
+  assert.equal(minutesUntil(k, { food: 0, wood: 0, shards: 1 }, T0), null, 'shards come only from battles');
+  assert.deepEqual([waitText(4), waitText(80), waitText(120)], ['약 4분', '약 1시간 20분', '약 2시간']);
+  // The result screen's next step carries it: a broke kingdom waits for the cheapest action.
+  const poor = nextStep({ ...k, food: 0, wood: 0 }, 2)!;
+  assert.ok(poor.eta !== null && poor.eta > 0);
+  assert.equal(poor.eta, Math.max(Math.ceil(poor.short.food / 8), Math.ceil(poor.short.wood / 8)));
+  assert.equal(nextStep(rich(k), 6)!.eta, 0);
 });

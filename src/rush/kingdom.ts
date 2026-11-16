@@ -405,6 +405,8 @@ export interface NextStep {
   action: StepAction | null; gain: number;
   /** What is still missing to pay for it (all zero: it can be done now). */
   short: Cost & { shards: number };
+  /** Cycle 141: minutes of production until the food and wood are there (0: they are); null when shards are short. */
+  eta: number | null;
 }
 const UPGRADES: readonly Upgrade[] = ['castle', 'farm', 'mill', 'attack', 'towerDiscount', 'townHp', 'forge', 'vault'];
 /** Result screen (cycle 129): power against the target stage's recommendation and one action in town. Among the actions
@@ -427,6 +429,26 @@ export function nextStep(k: Kingdom, target: number): NextStep | null {
   const have = kingdomPower(k);
   const ready = options.filter(o => weight(shortOf(o.cost)) === 0).sort((a, b) => b.gain - a.gain || weight(a.cost) - weight(b.cost));
   const pick = ready[0] ?? [...options].sort((a, b) => weight(shortOf(a.cost)) - weight(shortOf(b.cost)) || b.gain - a.gain)[0];
-  return pick ? { target, need, have, action: pick.action, gain: pick.gain, short: shortOf(pick.cost) }
-    : { target, need, have, action: null, gain: 0, short: { food: 0, wood: 0, shards: 0 } };
+  return pick ? { target, need, have, action: pick.action, gain: pick.gain, short: shortOf(pick.cost), eta: minutesUntil(k, pick.cost, k.lastCollect) }
+    : { target, need, have, action: null, gain: 0, short: { food: 0, wood: 0, shards: 0 }, eta: 0 };
 }
+
+// ---------- waiting time (cycle 141) ----------
+/** Whole minutes until the kingdom can pay `cost`, counting what is already waiting to be collected at `now` and the
+ * farm and mill's production per minute: 0 when it can pay now (perhaps after collecting), null when production cannot
+ * cover it (shards come only from battles). Storage holds STORAGE_MINUTES of production, so a longer wait needs a
+ * collect in between; the number stays right if the player collects. */
+export function minutesUntil(k: Kingdom, cost: Partial<Cost> & { shards?: number }, now: number): number | null {
+  if ((cost.shards ?? 0) > k.shards) return null;
+  const r = rate(k), w = pending(k, now);
+  let minutes = 0;
+  for (const res of ['food', 'wood'] as const) {
+    const need = (cost[res] ?? 0) - k[res] - w[res];
+    if (need <= 0) continue;
+    if (r[res] <= 0) return null;
+    minutes = Math.max(minutes, Math.ceil(need / r[res]));
+  }
+  return minutes;
+}
+/** '약 4분', '약 1시간 20분' (cycle 141). */
+export const waitText = (minutes: number) => minutes < 60 ? `약 ${minutes}분` : `약 ${Math.floor(minutes / 60)}시간${minutes % 60 ? ` ${minutes % 60}분` : ''}`;
