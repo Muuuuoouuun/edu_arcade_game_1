@@ -4,15 +4,15 @@ import { DoubleSide, Mesh, MeshBasicMaterial, Ray, Raycaster, Vector3 } from 'th
 import { readFile } from 'node:fs/promises';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { APPROACH, createCliffGeometry, createGroundGeometry, heightAt, normalAt, raycastTerrain } from './terrainElevation.ts';
-import { ARENA, PADS, TOWN } from './data.ts';
+import { ARENA, HOME_PADS, PADS, TOWN } from './data.ts';
 
-test('approach is continuous and grounds the castle and all four pads on one plateau',()=>{
+test('approach is continuous and grounds the castle and the four home pads on one plateau; the outposts stand on the field',()=>{
   for(const x of [-15,0,15]) {
     assert.equal(heightAt(x,-26),0);assert.equal(heightAt(x,1),0);assert.equal(heightAt(x,3),.6);assert.equal(heightAt(x,5),1.2);
     for(const z of [1,5])assert.ok(Math.abs(heightAt(x,z-1e-7)-heightAt(x,z+1e-7))<1e-6);
   }
   assert.equal(heightAt(TOWN.x,TOWN.z),1.2);
-  for(const p of PADS)assert.equal(heightAt(p.x,p.z),1.2);
+  PADS.forEach((p,i)=>assert.equal(heightAt(p.x,p.z),i<HOME_PADS?1.2:0,`pad ${i}`));
   assert.ok(normalAt(0,3).dot(new Vector3(0,.3,1))<1e-12);
 });
 

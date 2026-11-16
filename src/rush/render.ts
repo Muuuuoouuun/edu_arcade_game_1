@@ -1,13 +1,13 @@
 // Three.js view of the Arcana Rush simulation. Reads RushState, never writes it.
 import {
   Box3, BufferAttribute, DodecahedronGeometry, BoxGeometry, CapsuleGeometry, CircleGeometry, Color, ConeGeometry, CylinderGeometry,
-  DirectionalLight, Group, HemisphereLight, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera,
+  DataTexture, DirectionalLight, Group, HemisphereLight, IcosahedronGeometry, Mesh, MeshBasicMaterial, OctahedronGeometry, PerspectiveCamera,
   PlaneGeometry, Raycaster, RingGeometry, Scene, SphereGeometry, SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
-  Matrix4, Object3D, Quaternion, Euler, Frustum, Sphere, BackSide, BufferGeometry, type AnimationAction, type Material, type MeshToonMaterial, type MeshStandardMaterial,
+  Matrix4, Object3D, Quaternion, Euler, Frustum, InstancedMesh, BatchedMesh, Skeleton, SkinnedMesh, Float32BufferAttribute, Uint16BufferAttribute, type Bone, Sphere, BackSide, BufferGeometry, Points, ShaderMaterial, type AnimationAction, type Material, type MeshToonMaterial, type MeshStandardMaterial,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 // Loaded by URL, not bundled: the shared Vite config puts every three/examples module in the first-screen 'three-tools'
 // chunk, and this one is only needed once a hero model arrives (cycle 62). The file is self-contained (no imports).
 import simplifierUrl from 'three/addons/libs/meshopt_simplifier.module.js?url';
@@ -15,18 +15,26 @@ import simplifierUrl from 'three/addons/libs/meshopt_simplifier.module.js?url';
 import rangerGlb from './models/gecko-ranger.glb?url';
 import bronGlb from './models/dwarf-guardian.glb?url';
 import bearGlb from './models/polar-bear.glb?url';
-import { ARENA, BUSHES, CRATE, CRATES, ENEMIES, HEROES, PADS, TOWER_LEVELS, TOWN, WALLS, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
-import { heroDef, heroHidden, heroMaxHp, lobReach, padInReach, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
-import { bake, bakeMatrices, hullGeometry, outlineMaterial, PAL, toon, toonify, wallParts, type Part } from './look.ts';
+import { ARENA, BARRICADES, ENEMIES, FROST_HOWL, HEROES, HERO_SPAWN, LANES, PADS, TOWER_LEVELS, TOWN, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
+import { barricadeMaxHp, barricadeOrder, heroDef, heroHidden, heroMaxHp, lobReach, padCost, siteInReach, superReady, wardBreakBurst, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
+import { BRANCH_TRIM, DEF, barricadeParts, barricadeState, chevronParts, padParts, siteParts, towerParts, type BarricadeState } from './defenceModels.ts';
+import { bake, bakeColors, bakeMatrices, BOSS_LOOK, capColors, hullGeometry, mixHex, outlineMaterial, PAL, REGION_LOOK, toon, toonify, wallParts, type BossLook, type BossName, type Part, type RegionLook, type RegionName } from './look.ts';
+import { REGIONS, regionOf } from './expedition.ts';
+import { FOREST, GATES, type MapLayout } from './maps.ts';
+import { bushParts, coverParts, crateParts, groundTexture, sceneryParts, SCENERY_LOOK } from './mapScenery.ts';
 import { loadForestTown, toFloat32 } from './townModel.ts';
-import { Batch } from './batch.ts';
+import { Batch, KindBatch } from './batch.ts';
 import { Particles } from './fx.ts';
 import { QUALITY, type Quality } from './quality.ts';
 import { TownView } from './townView.ts';
 import { TownDamage } from './townDamage.ts';
 import { battleFocus } from './battleCamera.ts';
 import { HeroMotion } from './heroMotion.ts';
-import { createGroundGeometry, createCliffGeometry, heightAt, raycastTerrain } from './terrainElevation.ts';
+import { cliffColors, createGroundGeometry, createCliffGeometry, heightAt, raycastTerrain } from './terrainElevation.ts';
+// Frame-level look (lights, shadows, water, finishing pass): everything below marked "frame" belongs to it.
+import { applyToonLight, FRAME_LOOK, markShadows, setOutlineViewport, setShadowQuality, setSurfaceDetail, setSurfaceTime, setWaterLook, SunRig, waterMaterial, type FrameLook } from './frame.ts';
+import { PostFX } from './post.ts';
+import { glow, setGlowMask } from './toonShader.ts';
 
 export type AimPreview = { kind: 'fire'; dir: Vec } | { kind: 'lob'; offset: Vec } | { kind: 'super'; offset: Vec } | null;
 
@@ -60,19 +68,12 @@ function heroHull(geo: BufferGeometry, simplifier: Simplifier | null): BufferGeo
   welded.setIndex(new BufferAttribute(out, 1));
   return hullGeometry(welded);
 }
-const HERO_HEIGHT = 2.0;
+/** Hero model height in metres. Raised from 2.0 with the rebuilt heroes (2026-11-14): the enemies had grown 1.1-1.3x
+ * and a brute stood taller than the hero; at 2.4 the new faces read at phone size and the hero is the largest ally on
+ * the field. Visual only: the simulation radius, reach and hit tests are unchanged. */
+const HERO_HEIGHT = 2.4;
 /** Yaw that turns the GLB authored front (-z) toward simulation angle 0 (+x). Verified by east/north close-up renders. */
 const HERO_MODEL_YAW = -Math.PI / 2;
-/** The same sphere, cone or cylinder with half its round segments (min 6 around, 4 down); other shapes as they are. */
-function fewerSegments(geo: BufferGeometry): BufferGeometry {
-  const g = geo as BufferGeometry & { type: string; parameters?: Record<string, number> }, q = g.parameters;
-  if (!q) return geo;
-  const half = (n: number, min: number) => Math.max(min, Math.round(n / 2));
-  if (g.type === 'SphereGeometry') return new SphereGeometry(q.radius, half(q.widthSegments, 6), half(q.heightSegments, 4));
-  if (g.type === 'ConeGeometry') return new ConeGeometry(q.radius, q.height, half(q.radialSegments, 6));
-  if (g.type === 'CylinderGeometry') return new CylinderGeometry(q.radiusTop, q.radiusBottom, q.height, half(q.radialSegments, 6));
-  return geo;
-}
 /** Per-hero tweaks to a shared campaign GLB (cycle 41), applied when baking; the files stay untouched. Names are
  * GLTFLoader's (spaces → underscores). Popo's polar-bear guardian drops its hammer (handle, iron head, ivory cap)
  * and holds a snowball on the same animated node, so the attack clip becomes an overhand throw. */
@@ -87,11 +88,22 @@ const yaw = (a: number) => -a;
 
 type Bar = { root: Group; fill: Mesh; width: number };
 type Fx = { mesh: Mesh; age: number; life: number; grow: number; fade: number; y0: number };
+/** Everything that belongs to one battlefield layout (maps.ts): built once per layout, shown while it is in play. */
+/** A crate in a layout kit: where it stands, its kind (0 plain, 1 treasure) and how much hit wobble is left. */
+type KitCrate = { x: number; y: number; z: number; kind: 0 | 1; wobble: number };
+type MapKit = {
+  root: Group; bushes: Mesh[]; ground: DataTexture; hulls: Mesh[]; decor: Mesh[]; used: number;
+  /** Cycle 103: crates are drawn as one instanced body and hull per kind; `shown` is the bitmask of crate ids last written. */
+  crates: Map<number, KitCrate>; crateBatches: { body: InstancedMesh; hull: InstancedMesh }[]; shown: number;
+  /** Cycle 119: every hiding bush in one batched body and one batched hull (instance i = bush i). The bush the hero hides
+   * in leaves the batch and shows as its own see-through mesh (`bushes[i]`). */
+  bushBatch: { body: BatchedMesh; hull: BatchedMesh } | null;
+};
 
 export class RushView {
   readonly renderer: WebGLRenderer;
   readonly scene = new Scene();
-  readonly camera = new PerspectiveCamera(42, 1, 0.5, 120);
+  readonly camera = new PerspectiveCamera(42, 1, 0.5, 160);
   private focus = new Vector3(0, 0, 4);
   private shake = 0;
   private townView: TownView | null = null;
@@ -103,6 +115,7 @@ export class RushView {
   private damageStages = { town: 'healthy', hero: 'healthy' };
   private hero = new Group();
   private heroFootprints: Mesh[] = [];
+  private superRing: Mesh | null = null;
   private heroBody = new Group();
   /** Team-blue cape per hero (cycle 29): the ally colour on the body itself, not only the ring underfoot. */
   private capes = new Map<HeroKind, Mesh>();
@@ -114,27 +127,70 @@ export class RushView {
   private heroPlaceholder: Mesh | null = null;
   private get heroRig() { const r = this.heroKind ? this.heroRigs.get(this.heroKind) : undefined; return r && r !== 'loading' ? r : null; }
   private get heroShot() { return this.heroRig?.shot ?? null; }
-  private enemyKits = new Map<EnemyKind, { body: BufferGeometry; hull: BufferGeometry }>();
-  private towerKits = new Map<string, { base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; h: number }>();
+  private enemyKits = new Map<string, { body: BufferGeometry; hull: BufferGeometry }>();
+  private towerKits = new Map<string, { base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; headY: number; height: number }>();
   private towers: (Group | null)[] = PADS.map(() => null);
   private towerLevels: string[] = PADS.map(() => '');
-  private padRings: Mesh[] = [];
+  /** Defence feedback per tower: build pop (s left), recoil after a shot, last cooldown seen (a jump = it fired), idle fx timer. */
+  private towerFx = PADS.map(() => ({ pop: 0, recoil: 0, cd: 0, idle: Math.random() }));
+  /** Build-site rings: pads first, then barricade sites (same order as siteInReach kinds). */
+  /** Build-site rings (cycle 118): affordable and not-yet rings in two instanced draws (they differ only in opacity; the
+   * colour is per instance), and the ring in reach as its own mesh so its opacity can pulse. */
+  private siteRingSets!: { strong: Batch; faint: Batch; near: Mesh; at: Vector3[] };
+  private ringTurn = new Quaternion().setFromEuler(new Euler(-Math.PI / 2, 0, 0));
+  private ringColor = new Color();
+  /** Barricades (defence lane): one group per site, its geometry swapped by level, damage state and region. */
+  private barricadeKits = new Map<string, { body: BufferGeometry; hull: BufferGeometry }>();
+  private barricadeViews: { root: Group; body: Mesh; hull: Mesh; key: string; wobble: number; pop: number }[] = [];
+  private chevrons!: { body: Batch; hull: Batch };
   private townBar: Bar;
   private fx: Fx[] = [];
   private particles: Particles;
-  private bushMeshes: Mesh[] = [];
+  /** Layout kits, one per stage layout; `kit` is the one in play. Only the last few used are kept (see useMap). */
+  private kits = new Map<MapLayout, MapKit>();
+  private kitUse = 0;
+  /** Lane cues (render only): chevrons near the town on lanes with enemies on the way, and puffs at the gates. */
+  private laneCues: { mesh: Mesh; steps: BufferGeometry[] }[] = [];
+  private gateSeen = 0;
+  private gateBattle: RushState | null = null;
+  private kit: MapKit | null = null;
+  private styledMap: MapLayout | null = null;
+  private ground: Mesh | null = null;
+  /** Debug (?overhead=1 or __rush.overhead): look straight down on the whole arena to check a layout. */
+  overhead = false;
   /** Low quality hides these (cycle 12): ink hulls on walls, hedges and bushes, and the shore decor. */
   private terrainHulls: Mesh[] = [];
   private decor: Mesh[] = [];
   quality: Quality = 'high';
+  // ---- frame: key light and shadow box, stylised water, finishing pass, and the clock that moves water and clouds ----
+  private rig = new SunRig(this.scene);
+  private post = new PostFX();
+  private waterMat = waterMaterial({ x: (ARENA.minX + ARENA.maxX) / 2, z: (ARENA.minZ + ARENA.maxZ) / 2, hx: (ARENA.maxX - ARENA.minX) / 2 + 1.1, hz: (ARENA.maxZ - ARENA.minZ) / 2 + 1.1, r: 0 });
+  private surfaceTime = 0;
+  private drawnAt = 0;
+  private bufferSize = new Vector2();
+  private glowBatches: Batch[] = [];
+  /** Region restyle (expedition merge): the view lives for the whole session, so a battle on another stage swaps
+   * colour sets on the same meshes instead of rebuilding them. `styledStage` is the stage the scene is dressed for. */
+  private styledStage = 1;
+  private region: RegionName = 'forest';
+  private regionColors: { geo: BufferGeometry; sets: Record<RegionName, BufferAttribute> }[] = [];
+  private bossKill: number = BOSS_LOOK.default.kill;
+  private hemi = new HemisphereLight(REGION_LOOK.forest.hemiSky, REGION_LOOK.forest.hemiGround, 1.15);
+  private water: Mesh | null = null;
+  private snow: Points | null = null;
+  private snowTime = 0;
+  private get look(): RegionLook { return REGION_LOOK[this.region]; }
   private size = { w: 1, h: 1 };
   /** Model-sheet mode (?sheet=1): only characters on a flat background, for silhouette checks. */
   private sheetMode = false;
-  private crates = new Map<number, { mesh: Mesh; wobble: number }>();
   /** Instanced batches: draw calls stay fixed however many enemies, shots and coins are alive. */
   private batches!: {
-    body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>; flash: Record<EnemyKind, Batch>; ice: Record<EnemyKind, Batch>;
-    shadow: Batch; ring: Batch; frostRing: Batch; streak: Batch; barBg: Batch; barFill: Batch; shots: Record<Shot['owner'], Batch>; branchShots: Record<TowerBranch, Batch>; coins: Batch;
+    body: Record<EnemyKind, Batch>; hull: Record<EnemyKind, Batch>;
+    /** With WEBGL_multi_draw: every kind in one multi-draw per layer (cycle 108 bodies; cycle 110 outlines of all but the
+     * boss, whose ink is thicker, frost and ward shells, hit flash). Null: the per-kind batches draw everything. */
+    multi: { body: KindBatch; hull: KindBatch; flash: KindBatch; ice: KindBatch; ward: KindBatch } | null; flash: Record<EnemyKind, Batch>; ice: Record<EnemyKind, Batch>; ward: Record<EnemyKind, Batch>;
+    shadow: Batch; ring: Batch; frostRing: Batch; wardRing: Batch; streak: Batch; barBg: Batch; barFill: Batch; shots: Record<Shot['owner'], Batch>; branchShots: Record<TowerBranch, Batch>; coins: Batch;
   };
   private counts = { enemies: 0, shots: 0 };
   private tmp = { m: new Matrix4(), q: new Quaternion(), e: new Euler(), p: new Vector3(), s: new Vector3(), o: new Vector3() };
@@ -198,11 +254,13 @@ export class RushView {
     ]),
   };
   private mats = {
-    blob: basic(0x0b1a12, 0.32), allyRing: basic(TEAM.ally, 0.85), enemyRing: basic(TEAM.enemy, 0.8),
+    blob: basic(0x0b1a12, 0.32), allyRing: basic(TEAM.ally, 0.85), enemyRing: basic(TEAM.enemy, 0.8), frostRing: basic(REGION_LOOK.forest.frostRing, 0.9),
     heroBolt: basic(0x8ff7ff), towerBolt: basic(0xffe07a), enemyBolt: basic(0xff7b3a), superOrb: basic(0xc59bff), snowball: basic(0xf4fbff),
     coin: toon(PAL.gold, { emissive: 0x5a3a00, rim: 0.5 }),
     hero: toon(0xffffff, { vertexColors: true, rim: 0.34 }),
     baked: toon(0xffffff, { vertexColors: true, rim: 0.34 }), flash: basic(0xffffff),
+    // Enemy bodies only (same program as `baked`): its colour is the region tint, set once per battle.
+    enemy: toon(0xffffff, { vertexColors: true, rim: 0.34 }),
     barBg: basic(0x10161c, 0.8), barAlly: basic(0x52e07c), barEnemy: basic(0xff5160), barTown: basic(0x4fb8ff), ammo: basic(0xffa43a), ammoDim: basic(0x5b3a1a, 0.9),
   };
 
@@ -212,15 +270,15 @@ export class RushView {
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.scene.background = new Color(PAL.water);
     // Toon bands come from the key light; the sky/ground fill keeps the shadow band bright and colourful.
-    this.scene.add(new HemisphereLight(0xe6f6ff, 0x9c8a62, 1.15));
-    const sun = new DirectionalLight(0xfff3dc, 2.2);
-    sun.position.set(-7, 16, 9);
-    this.scene.add(sun);
+    this.scene.add(this.hemi);
+    // The key light is `this.rig` (frame.ts): colour per region, shadow box following the camera on the high tier.
+    this.renderer.shadowMap.enabled = true; // costs nothing until a light casts (high tier only)
+    this.renderer.info.autoReset = false; // one frame is several passes; draw() resets the counters itself
 
     this.particles = new Particles(this.scene, 360, (x,z) => this.groundHeight(x,z));
     this.buildGround();
-    this.buildWalls();
-    this.buildCover();
+    this.useMap(FOREST);
+    this.buildLaneCues();
     this.buildTown();
     this.buildPads();
     this.townBar = this.makeBar(3.2, this.mats.barTown);
@@ -252,36 +310,139 @@ export class RushView {
     this.aimLine.rotation.x = -Math.PI / 2;
     this.aimLob = new Mesh(this.geo.ring, basic(0xc4f2ff, 0.85));
     this.aimLob.rotation.x = -Math.PI / 2;
+    this.aimFan.name = 'aim-fan'; this.aimRing.name = 'aim-ring'; this.aimLine.name = 'aim-line'; this.aimLob.name = 'aim-lob';
     for (const m of [this.aimFan, this.aimRing, this.aimLine, this.aimLob]) { m.visible = false; m.renderOrder = 2; this.scene.add(m); }
+    this.dressFrame();
   }
+
+  // ---------- frame: light, shadows, water, finishing pass ----------
+  /** Once, after the scene is built: swap in the stylised water and fix the few shadow exceptions. */
+  private dressFrame() {
+    // The water plane is built with the terrain; only its material changes (`color` still takes the region's water).
+    if (this.water) { (this.water.material as Material).dispose(); this.water.material = this.waterMat; }
+    // A hit flash swaps the body batch for a white one: it must keep casting, or the shadow blinks with every hit.
+    for (const b of Object.values(this.batches.flash)) b.mesh.castShadow = true;
+    if (this.batches.multi) this.batches.multi.flash.mesh.castShadow = true;
+    // Speed lines are an effect, not a body.
+    this.batches.streak.mesh.userData.noShadow = true;
+    // Glow sources for the finishing pass: shots, status floor rings, the super-ready ring (shockwaves: ring()).
+    // Not the frost and ward shells: a glowing shell washed the body colour out.
+    for (const m of [this.mats.heroBolt, this.mats.towerBolt, this.mats.enemyBolt, this.mats.superOrb, this.mats.frostRing]) glow(m);
+    glow(this.mats.snowball, 0.5);
+    for (const b of [...Object.values(this.batches.branchShots), this.batches.wardRing]) glow(b.mesh.material as Material);
+    if (this.superRing) glow(this.superRing.material as Material);
+    // Cycle 134: ring() makes a glowing material per ring and disposes it when the ring fades. When the last one went,
+    // three freed the shader program and the next ring compiled it again (every few seconds on the low tier). This
+    // hidden ring keeps one such material alive, so the program stays and the battle warm-up compiles it up front. Opaque
+    // on purpose: only an opaque glow gets its own program (glow1.000); a see-through one shares the plain basic program.
+    const keeper = new Mesh(this.geo.ring, glow(basic(0xffffff)));
+    keeper.visible = false; keeper.name = 'program-keeper:ring';
+    this.scene.add(keeper);
+    this.glowBatches = [...Object.values(this.batches.shots), ...Object.values(this.batches.branchShots), this.batches.frostRing, this.batches.wardRing];
+    this.fitFrame();
+  }
+  /** After a resize or a tier change: outline viewport, shadow map, surface detail, and the finishing pass targets. */
+  private fitFrame() {
+    const spec = QUALITY[this.quality], buf = this.renderer.getDrawingBufferSize(this.bufferSize);
+    setOutlineViewport(buf.y);
+    const shadows = this.sheetMode ? 0 : spec.shadowMap;
+    setShadowQuality(shadows);
+    setSurfaceDetail(spec.surfaceDetail);
+    // Below pixel ratio 2 the scene target is multisampled (as the canvas was); at 2 and above FXAA does the edges.
+    if (spec.post) this.post.setSize(buf.x, buf.y, this.renderer.getPixelRatio() < 2); else this.post.dispose();
+    this.post.vignette = this.sheetMode ? 0 : 1;
+    // Blob discs under actors stand in for shadows on the low tier only: with real shadows they move to a layer the
+    // camera does not draw.
+    this.scene.traverse(o => { if ((o as Mesh).material === this.mats.blob) o.layers.set(shadows > 0 ? 1 : 0); });
+  }
+  private get frameLook(): FrameLook { return FRAME_LOOK[this.region]; }
+  /** What the frame pipeline is doing right now (for checks): real shadows, finishing pass. */
+  frameInfo() { return { shadows: this.rig.shadows, post: this.post.ready }; }
+  /** Draw any scene through the frame pipeline (the town island shares it): shadow pass and scene, then the finishing
+   * pass on the high tier. `look`: light colours and grade of the scene's region. `glowing`: a glow source is on screen
+   * (the town has none, so its frames skip the glow passes). */
+  draw(scene: Scene, camera: PerspectiveCamera, look: FrameLook = FRAME_LOOK.forest, glowing = false) {
+    const now = performance.now(), dt = Math.min(0.1, Math.max(0, (now - this.drawnAt) / 1000));
+    this.drawnAt = now;
+    // Water and cloud shadows keep their own clock: they move in menus, and hold with `fxPaused` for matched captures.
+    if (!this.fxPaused) this.surfaceTime += dt;
+    setSurfaceTime(this.surfaceTime);
+    applyToonLight(look);
+    this.post.setGrade(look.grade);
+    this.renderer.info.reset();
+    setGlowMask(this.post.ready);
+    if (this.warmQueue.length && scene === this.scene) for (const root of this.warmQueue.splice(0)) {
+      this.post.warm(this.renderer, scene, camera, root);
+      if (root === scene) this.warmShadowBatch();
+      if (this.prewarmLow && this.quality === 'high') this.warmLowTier(scene, camera, root);
+    }
+    if (this.post.ready) this.post.render(this.renderer, scene, camera, glowing); else this.renderer.render(scene, camera);
+  }
+  /** Cycle 128: the next battle frame first compiles every material under `root` (hidden ones too; the whole battle
+   * scene and the finishing passes by default), so nothing compiles when the first wave or glow appears. The hero model
+   * loads after the battle starts and queues its own root. ?warm=0 turns it off for comparison. */
+  private warmQueue: Object3D[] = [];
+  private warmOn = new URLSearchParams(location.search).get('warm') !== '0';
+  warmShaders(root: Object3D = this.scene) { if (this.warmOn) this.warmQueue.push(root); }
+  /** Cycle 140: with the 'auto' setting the tier can drop to low mid-battle (quality.ts AUTO), and then nearly every
+   * material needs another program at once. Set by main when the setting is 'auto': the battle warm-up then also
+   * compiles the low tier's programs. */
+  prewarmLow = false;
+  /** Compile `root` as the low tier would draw it: no sun shadow, no surface detail, straight to the canvas (no
+   * finishing pass). Only programs are made; the settings are put back before anything is drawn. */
+  private warmLowTier(scene: Scene, camera: PerspectiveCamera, root: Object3D) {
+    const sun = this.rig.sun, cast = sun.castShadow;
+    sun.castShadow = false;
+    setSurfaceDetail(false);
+    this.renderer.setRenderTarget(null);
+    try { this.renderer.compile(root, camera, scene); }
+    finally { sun.castShadow = cast; setSurfaceDetail(QUALITY[this.quality].surfaceDetail); }
+  }
+  /** Cycle 134: renderer.compile skips the shadow pass, so the batched enemies' shadow (depth) program still compiled
+   * when the first wave arrived. On the warm frame an empty body batch gets one near-zero-size instance, so this frame's
+   * shadow pass compiles it; the next frame's drawEnemies hides it again. */
+  private warmShadowBatch() {
+    const b = this.batches.multi?.body;
+    if (!b || b.size > 0) return;
+    b.begin(); b.push(this.enemyKit('grunt').body, new Matrix4().makeScale(1e-4, 1e-4, 1e-4)); b.end();
+  }
+  /** Debug (cycle 128): the cache key of every live shader program, oldest first. */
+  programKeys() { return (this.renderer.info.programs ?? []).map(p => p.cacheKey); }
 
   // ---------- static scenery ----------
   private buildGround() {
     const cx=(ARENA.minX+ARENA.maxX)/2,cz=(ARENA.minZ+ARENA.maxZ)/2;
-    const ground = new Mesh(createGroundGeometry(), toon(0xffffff,{vertexColors:true,rim:0}));
-    ground.name='rush-walkable-approach';
+    // The ground's colours come from a texture painted per layout (mapScenery.ts `groundTexture`, set in useMap):
+    // one colour per vertex smeared every edge across a metre.
+    const ground = new Mesh(createGroundGeometry(), toon(0xffffff,{rim:0}));
+    ground.name='rush-walkable-approach';this.ground=ground;
     const cliff = new Mesh(createCliffGeometry(), toon(0xffffff,{vertexColors:true,rim:.1}));
     cliff.name='rush-rock-foundation';
     const water = new Mesh(new PlaneGeometry(240,240),toon(PAL.water,{rim:0}));
-    water.rotation.x=-Math.PI/2;water.position.set(cx,-1.3,cz);
-    this.scene.add(water,cliff,ground);
+    water.rotation.x=-Math.PI/2;water.position.set(cx,-1.3,cz);water.name='rush-water';
+    this.scene.add(water,cliff,ground);this.water=water;
+    const snow=REGION_LOOK.snow;
+    this.regional(cliff.geometry,cliffColors(snow.ground));
     // Short hedge sections follow the slope without bending stone cover or changing collision bounds.
     const parts:Part[]=[];
     const hedge=(x:number,z:number,sx:number,sz:number)=>{
       const y=heightAt(x,z);
-      parts.push({geo:new BoxGeometry(sx,1,sz),color:PAL.hedge,at:[x,y+.5,z]});
-      parts.push({geo:new BoxGeometry(sx+.1,.28,sz+.1),color:PAL.hedgeTop,at:[x,y+1.08,z]});
+      parts.push({geo:new BoxGeometry(sx,1,sz),color:0,at:[x,y+.5,z]});
+      parts.push({geo:new BoxGeometry(sx+.1,.28,sz+.1),color:1,at:[x,y+1.08,z]});
     };
+    // Part colours are slots here (0 side, 1 top), filled per region.
+    const dress=(look:RegionLook)=>parts.map(p=>({...p,color:p.color?look.hedgeTop:look.hedge}));
     for(let z=ARENA.minZ;z<ARENA.maxZ;z++) {hedge(ARENA.minX-.55,z+.5,1.1,1.02);hedge(ARENA.maxX+.55,z+.5,1.1,1.02);}
     hedge(cx,ARENA.maxZ+.55,ARENA.maxX-ARENA.minX+2.2,1.1);
     hedge(cx,ARENA.minZ-.55,ARENA.maxX-ARENA.minX+2.2,1.1);
-    this.addBaked(bake(parts),.04,undefined,'terrain');
+    this.regional(this.addBaked(bake(dress(REGION_LOOK.forest)),.04,undefined,'terrain','rush-hedge').geometry,bakeColors(dress(snow)));
     // Decorative shore props are omitted: there is now a rock drop, not a flat sandy shelf.
   }
 
   /** Add a baked static mesh with its ink hull. */
-  private addBaked(geo: BufferGeometry, outline: number, at?: Vec, role?: 'terrain' | 'decor'): Mesh {
+  private addBaked(geo: BufferGeometry, outline: number, at?: Vec, role?: 'terrain' | 'decor', name = ''): Mesh {
     const mesh = new Mesh(geo, this.mats.baked);
+    mesh.name = name;
     if (outline > 0) {
       const hull = new Mesh(hullGeometry(geo), outlineMaterial(outline));
       mesh.add(hull);
@@ -293,61 +454,249 @@ export class RushView {
     return mesh;
   }
 
-  private buildWalls() {
-    // The physical cover remains opaque but stone courses, end posts and teal timber
-    // make its volume legible. Every part stays within WALLS' unchanged x/z collider
-    // and below the old 1.42m top; all walls still share one baked mesh + hull.
-    const parts: Part[] = WALLS.flatMap(w => {
-      const base=heightAt(w.x,w.z),low=heightAt(w.x,w.z-w.d/2);
-      const raised=wallParts(w).map(p=>({...p,at:[p.at![0],p.at![1]+base,p.at![2]] as [number,number,number]}));
-      // A grounded footing fills the lower end of cover that straddles the ramp.
-      if(base>low)raised.push({geo:new BoxGeometry(w.w,base-low,w.d),color:PAL.stoneFoot,at:[w.x,(base+low)/2,w.z]});
-      return raised;
-    });
-    this.addBaked(bake(parts), 0.05, undefined, 'terrain');
+  /** Register a second (snow) colour set for a static mesh; restyle() swaps the geometry's colour attribute. */
+  /** Cycle 122: two static baked terrain meshes (same material, each with its region colour sets) become one body; their
+   * ink hulls keep their own widths and move onto the merged body. Leaves both as they are if anything does not fit. */
+  private mergeTerrain(a: Mesh | undefined, b: Mesh) {
+    if (!a) return;
+    const ea = this.regionColors.find(r => r.geo === a.geometry), eb = this.regionColors.find(r => r.geo === b.geometry);
+    if (!ea || !eb || !a.position.equals(b.position)) return;
+    const geo = mergeGeometries([a.geometry, b.geometry]);
+    if (!geo) return;
+    const join = (x: BufferAttribute, y: BufferAttribute) => {
+      const out = new Float32Array((x.count + y.count) * 3); out.set(x.array as Float32Array, 0); out.set(y.array as Float32Array, x.count * 3);
+      return new BufferAttribute(out, 3);
+    };
+    const sets = { forest: join(ea.sets.forest, eb.sets.forest), snow: join(ea.sets.snow, eb.sets.snow) };
+    geo.setAttribute('color', sets[this.region]);
+    this.regionColors = this.regionColors.filter(r => r !== ea && r !== eb);
+    this.regionColors.push({ geo, sets });
+    const mesh = new Mesh(geo, this.mats.baked);
+    mesh.name = 'rush-terrain';
+    mesh.position.copy(a.position);
+    for (const old of [a, b]) {
+      for (const hull of [...old.children]) mesh.add(hull);
+      this.scene.remove(old); old.geometry.dispose();
+    }
+    this.scene.add(mesh);
+  }
+  private regional(geo: BufferGeometry, snow: Float32Array | BufferAttribute) {
+    this.regionColors.push({ geo, sets: { forest: geo.getAttribute('color') as BufferAttribute, snow: snow instanceof BufferAttribute ? snow : new BufferAttribute(snow, 3) } });
   }
 
-  /** Tall-grass bushes (walk-through, see-through when the hero hides) and breakable crates. */
-  private buildCover() {
-    let seed = 3;
-    const r = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-    // Tall grass, not a hedge: a thin patch with dense leaning blades, so it reads as walk-through.
-    for (const b of BUSHES) {
-      const parts: Part[] = [{ geo: new BoxGeometry(b.w, 0.12, b.d), color: 0x4cae48, at: [0, 0.06, 0] }];
-      const n = Math.round(b.w * b.d * 7);
-      for (let i = 0; i < n; i++) {
-        const x = (r() - 0.5) * (b.w - 0.2), z = (r() - 0.5) * (b.d - 0.2), h = 0.8 + r() * 0.5;
-        parts.push({ geo: new ConeGeometry(0.13, h, 4), color: [0x6bd05a, 0x58c04d, 0x7ddc63][i % 3], at: [x, h / 2 + 0.05, z], rot: [(r() - 0.5) * 0.5, r() * 3, (r() - 0.5) * 0.5] });
+  /** Dress the scene for a stage: region palette, snowfall, and the region boss. Runs only when the stage changes. */
+  private restyle(stage: number, map: MapLayout) {
+    this.styledStage = stage;
+    this.useMap(map);
+    const region = regionOf(stage), look = REGION_LOOK[region];
+    this.region = region;
+    if (!this.sheetMode) (this.scene.background as Color).setHex(look.water);
+    ((this.water?.material) as MeshToonMaterial | undefined)?.color.setHex(look.water);
+    this.hemi.color.setHex(look.hemiSky); this.hemi.groundColor.setHex(look.hemiGround);
+    for (const r of this.regionColors) r.geo.setAttribute('color', r.sets[region]);
+    this.townView?.setSnow(look.cap);
+    this.mats.enemy.color.setHex(look.enemyTint);
+    this.mats.frostRing.color.setHex(look.frostRing);
+    ICE.color.setHex(look.ice); ICE.opacity = look.iceOpacity;
+    (this.aimFan.material as MeshBasicMaterial).color.setHex(look.aimFan);
+    (this.aimLob.material as MeshBasicMaterial).color.setHex(look.aimLob);
+    // Named boss on the last stage of a region; any other boss wave (and the endless challenge) keeps the default.
+    const boss: BossName = stage === REGIONS[region].stages[1] ? region : 'default';
+    // Enemy shapes for this battle: winter clothes on snow, and the named boss's own shape. Kits are baked on first use.
+    if (this.batches) for (const kind of ENEMY_KINDS) {
+      const kit = this.enemyKit(kind, kind === 'boss' ? boss : region === 'snow' ? 'snow' : 'default'), B = this.batches;
+      for (const set of [B.body, B.flash, B.ice, B.ward]) set[kind].mesh.geometry = kit.body;
+      B.hull[kind].mesh.geometry = kit.hull;
+    }
+    this.bossKill = BOSS_LOOK[boss].kill;
+  }
+
+  /** Show a layout's kit (walls, cover, crates, gates, scenery, painted ground), building it the first time.
+   * Each stage has its own layout, so only the three most recently used kits are kept; older ones are disposed. */
+  private useMap(map: MapLayout) {
+    this.styledMap = map;
+    let kit = this.kits.get(map);
+    if (!kit) { kit = this.buildKit(map); this.kits.set(map, kit); }
+    kit.used = ++this.kitUse;
+    for (const [layout, k] of [...this.kits].sort((a, b) => b[1].used - a[1].used).slice(3)) { this.disposeKit(k); this.kits.delete(layout); }
+    for (const k of this.kits.values()) k.root.visible = k === kit && !this.sheetMode;
+    this.kit = kit;
+    const mat = this.ground!.material as MeshToonMaterial;
+    if (mat.map !== kit.ground) { mat.map = kit.ground; mat.needsUpdate = true; }
+  }
+  private disposeKit(kit: MapKit) {
+    this.scene.remove(kit.root);
+    kit.root.traverse(o => { if (o instanceof Mesh) o.geometry.dispose(); if (o instanceof InstancedMesh || o instanceof BatchedMesh) o.dispose(); });
+    for (const b of kit.bushes) (b.material as Material).dispose();
+    if (kit.bushBatch) (kit.bushBatch.body.material as Material).dispose();
+    kit.ground.dispose();
+  }
+  /** Kits in memory (debug info). */
+  get kitCount() { return this.kits.size; }
+
+  /** Lane cues. Chevrons: on each lane, just north of the barricade strip, up to three enemy-red chevrons point at the
+   * town while enemies are on their way down that lane; more of them light as the nearest one comes closer. In the
+   * world, no text. Built once; one draw call per lane that has enemies coming. */
+  private buildLaneCues() {
+    const bar = (k: number, side: number): Part => ({ geo: new BoxGeometry(0.95, 0.02, 0.24), color: PAL.enemy, at: [-k * 0.8 - 0.3, 0, side * 0.3], rot: [0, side * 0.72, 0] });
+    const steps = [1, 2, 3].map(n => bake(Array.from({ length: n }, (_, i) => 2 - i).flatMap(k => [bar(k, 1), bar(k, -1)])));
+    for (const lane of LANES) {
+      // Walk back 6.3 m from the lane's end at the town edge.
+      let left = 6.3, i = lane.length - 1, x = lane[i].x, z = lane[i].z, angle = 0;
+      for (; i > 0; i--) {
+        const a = lane[i - 1], dx = x - a.x, dz = z - a.z, d = Math.hypot(dx, dz);
+        angle = Math.atan2(dz, dx);
+        if (d >= left) { x -= (dx / d) * left; z -= (dz / d) * left; break; }
+        left -= d; x = a.x; z = a.z;
       }
-      const geo = bake(parts);
+      const mesh = new Mesh(steps[0], basic(PAL.enemy, 0.8));
+      mesh.position.set(x, heightAt(x, z) + 0.05, z); mesh.rotation.y = yaw(angle);
+      mesh.renderOrder = 2; mesh.visible = false;
+      this.scene.add(mesh);
+      this.laneCues.push({ mesh, steps });
+    }
+  }
+  private syncLaneCues(s: RushState, reduced: boolean) {
+    // New enemies at a lane start: dust (snow in the snow region) bursts out of that lane's gate.
+    if (this.gateBattle !== s) { this.gateBattle = s; this.gateSeen = 0; }
+    let seen = this.gateSeen;
+    const puffed = new Set<number>();
+    for (const e of s.enemies) {
+      if (e.id <= this.gateSeen) continue;
+      seen = Math.max(seen, e.id);
+      const g = GATES[e.lane];
+      if (!g || puffed.has(e.lane) || Math.hypot(e.x - g.x, e.z - g.z) > 2.5 || this.sheetMode) continue;
+      puffed.add(e.lane);
+      const snow = this.region === 'snow';
+      this.particles.emit({ kind: 'puff', n: e.kind === 'boss' ? 9 : 4, color: snow ? 0xeaf3f9 : 0xd9c79a, at: [g.x, 0.5, ARENA.minZ + 0.5], speed: 2.6, up: 1.4, size: e.kind === 'boss' ? 0.34 : 0.24, life: 0.55, dir: Math.PI / 2, cone: 1.3 });
+      this.particles.emit({ kind: 'shard', n: 3, color: PAL.enemy, at: [g.x, 2.0, ARENA.minZ + 0.2], speed: 2.5, up: 2, size: 0.09, life: 0.4, dir: Math.PI / 2, cone: 1.2 });
+    }
+    this.gateSeen = seen;
+    // Chevrons: 1 = an enemy is on this lane, 2 = past the middle of the field, 3 = close.
+    const near = LANES.map(() => -Infinity);
+    for (const e of s.enemies) if (e.hp > 0 && !e.chasing && e.z < this.laneCues[e.lane]?.mesh.position.z - 0.5) near[e.lane] = Math.max(near[e.lane], e.z);
+    this.laneCues.forEach((cue, i) => {
+      cue.mesh.visible = near[i] > -Infinity && !this.sheetMode;
+      if (!cue.mesh.visible) return;
+      cue.mesh.geometry = cue.steps[near[i] > -9 ? 2 : near[i] > -17 ? 1 : 0];
+      (cue.mesh.material as MeshBasicMaterial).opacity = reduced ? 0.8 : 0.6 + 0.3 * Math.sin(this.time * 6 - i);
+    });
+  }
+
+  private buildKit(map: MapLayout): MapKit {
+    const root = new Group(), spec = QUALITY[this.quality], region = REGION_LOOK[map.id], hulls: Mesh[] = [], decor: Mesh[] = [];
+    root.name = `rush-map-${map.id}`;
+    const ground = groundTexture(map, region.ground, SCENERY_LOOK[map.id]);
+    ground.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
+    const inked = (geo: BufferGeometry, hullOf: BufferGeometry, width: number) => {
+      const mesh = new Mesh(geo, this.mats.baked), hull = new Mesh(hullGeometry(hullOf), outlineMaterial(width));
+      mesh.add(hull); hull.visible = spec.terrainOutlines; hulls.push(hull);
+      root.add(mesh);
+      return mesh;
+    };
+    // Walls: every part stays inside its collider (wall.test.ts); one baked mesh and one hull for all of them.
+    const walls: Part[] = map.walls.flatMap(w => {
+      const base = heightAt(w.x, w.z), low = heightAt(w.x, w.z - w.d / 2);
+      const raised = coverParts(w, wallParts).map(p => ({ ...p, at: [p.at![0], p.at![1] + base, p.at![2]] as [number, number, number] }));
+      // A grounded footing fills the lower end of cover that straddles the ramp.
+      if (base > low) raised.push({ geo: new BoxGeometry(w.w, base - low, w.d), color: PAL.stoneFoot, at: [w.x, (base + low) / 2, w.z] });
+      return raised;
+    });
+    // Gates, bridges and the land around the field: one mesh, ink on the gates, bridges, trees and rocks only.
+    const scenery = sceneryParts(map), frame = bake(scenery.frame), outlined = bake(scenery.outlined);
+    // Cycle 121: the walls join the frame (same material, same ink width; the frame is always on screen, so no culling
+    // is lost): one body, one hull and one shadow draw instead of two each.
+    const wallGeo = walls.length ? bake(walls) : null;
+    const body = wallGeo ? mergeGeometries([wallGeo, frame]) : frame;
+    if (body) {
+      const mesh = new Mesh(body, this.mats.baked), hullGeo = wallGeo ? mergeGeometries([hullGeometry(wallGeo), hullGeometry(outlined)]) : hullGeometry(outlined);
+      const hull = new Mesh(hullGeo ?? hullGeometry(outlined), outlineMaterial(0.05));
+      mesh.add(hull); hull.visible = spec.terrainOutlines; hulls.push(hull);
+      mesh.name = 'rush-map-frame';
+      root.add(mesh);
+      if (!hullGeo && wallGeo) inked(wallGeo, wallGeo, 0.05).name = 'rush-walls';
+    } else {
+      if (wallGeo) inked(wallGeo, wallGeo, 0.05).name = 'rush-walls';
+      inked(frame, outlined, 0.05).name = 'rush-map-frame';
+    }
+    if (scenery.extra.length) {
+      const extra = new Mesh(bake(scenery.extra), this.mats.baked);
+      extra.name = 'rush-map-extra'; extra.visible = spec.decor; decor.push(extra);
+      // Cycle 100: flowers, tufts and pebbles are too small and low for a visible shadow; one shadow draw saved.
+      extra.userData.noCast = true;
+      root.add(extra);
+    }
+    // Hiding cover: walk-through, see-through when the hero hides in it.
+    const bushes = map.bushes.map((b, i) => {
+      const geo = bake(bushParts(b, map.id, 3 + i * 7));
+      const position = geo.getAttribute('position');
+      for (let k = 0; k < position.count; k++) position.setY(k, position.getY(k) + heightAt(b.x + position.getX(k), b.z + position.getZ(k)) - heightAt(b.x, b.z));
+      position.needsUpdate = true; geo.computeVertexNormals();
       const mat = toon(0xffffff, { vertexColors: true, rim: 0.3 });
       mat.transparent = true;
-      const mesh = new Mesh(geo, mat);
-      const hull = new Mesh(hullGeometry(geo), outlineMaterial(0.03));
-      mesh.add(hull);
-      this.terrainHulls.push(hull);
-      const position=geo.getAttribute('position');
-      for(let i=0;i<position.count;i++)position.setY(i,position.getY(i)+heightAt(b.x+position.getX(i),b.z+position.getZ(i))-heightAt(b.x,b.z));
-      position.needsUpdate=true;geo.computeVertexNormals();
-      // Rebuild the outline after the grass patch conforms to its ground.
-      hull.geometry.dispose();hull.geometry=hullGeometry(geo);
-      mesh.position.set(b.x, heightAt(b.x,b.z), b.z);
+      const mesh = new Mesh(geo, mat), hull = new Mesh(hullGeometry(geo), outlineMaterial(0.03));
+      mesh.name = 'rush-bush';
+      mesh.add(hull); hull.visible = spec.terrainOutlines; hulls.push(hull);
+      mesh.position.set(b.x, heightAt(b.x, b.z), b.z);
       mesh.renderOrder = 6; // drawn after the hero so the see-through state shows them
-      this.scene.add(mesh);
-      this.bushMeshes.push(mesh);
+      mesh.userData.noCast = true; // cycle 100: grass on grass casts no shadow worth a draw (six per layout)
+      mesh.visible = false; // cycle 119: only while the hero hides in it; the batch below draws the rest
+      root.add(mesh);
+      return mesh;
+    });
+    let bushBatch: MapKit['bushBatch'] = null;
+    if (bushes.length) {
+      const size = (gs: BufferGeometry[]) => [gs.reduce((a, g) => a + g.attributes.position.count, 0), gs.reduce((a, g) => a + (g.index ? g.index.count : 0), 0)] as const;
+      const bodies = bushes.map(m => m.geometry), inks = bushes.map(m => (m.children[0] as Mesh).geometry);
+      const body = new BatchedMesh(bushes.length, ...size(bodies), toon(0xffffff, { vertexColors: true, rim: 0.3 }));
+      const hull = new BatchedMesh(bushes.length, ...size(inks), outlineMaterial(0.03));
+      const at = new Matrix4();
+      bushes.forEach((m, i) => {
+        at.makeTranslation(m.position.x, m.position.y, m.position.z);
+        body.setMatrixAt(body.addInstance(body.addGeometry(bodies[i])), at);
+        hull.setMatrixAt(hull.addInstance(hull.addGeometry(inks[i])), at);
+      });
+      body.name = 'rush-bushes'; hull.name = 'rush-bushes-ink';
+      body.userData.noCast = true; body.userData.receive = true; // receives tower and wall shadows as the bushes did
+      root.add(body, hull);
+      bushBatch = { body, hull };
     }
-    const crateGeo = bake([
-      { geo: new BoxGeometry(CRATE.size, CRATE.size, CRATE.size), color: 0xc98a4a, at: [0, CRATE.size / 2, 0] },
-      { geo: new BoxGeometry(CRATE.size * 1.04, CRATE.size * 0.14, CRATE.size * 1.04), color: 0x8a5428, at: [0, CRATE.size * 0.78, 0] },
-      { geo: new BoxGeometry(CRATE.size * 1.04, CRATE.size * 0.14, CRATE.size * 1.04), color: 0x8a5428, at: [0, CRATE.size * 0.22, 0] },
-    ]);
-    const crateHull = hullGeometry(crateGeo);
-    CRATES.forEach((c, i) => {
-      const mesh = new Mesh(crateGeo, this.mats.baked);
-      mesh.add(new Mesh(crateHull, outlineMaterial(0.04)));
-      mesh.position.set(c.x, heightAt(c.x,c.z), c.z);
-      this.scene.add(mesh);
-      this.crates.set(1 + i, { mesh, wobble: 0 });
+    // Crates (cycle 103): one instanced body and one instanced hull per kind (plain, treasure), so six crates cost four
+    // draws and two shadow draws instead of twelve and six. Hits wobble and breaks remove them through the instance
+    // matrices (syncCrates).
+    const crates = new Map<number, KitCrate>();
+    map.crates.forEach((c, i) => crates.set(1 + i, { x: c.x, y: heightAt(c.x, c.z), z: c.z, kind: c.gold ? 1 : 0, wobble: 0 }));
+    const crateBatches = [false, true].map(treasure => {
+      const geo = bake(crateParts(treasure, map.id)), n = Math.max(1, map.crates.filter(c => !!c.gold === treasure).length);
+      const body = new InstancedMesh(geo, this.mats.baked, n), hull = new InstancedMesh(hullGeometry(geo), outlineMaterial(0.04), n);
+      body.userData.receive = true; // a prop, not an actor: it takes tower and wall shadows like the walls do
+      for (const m of [body, hull]) { m.name = `rush-crates-${treasure ? 'gold' : 'plain'}`; m.count = 0; m.visible = false; m.frustumCulled = false; root.add(m); }
+      return { body, hull };
+    });
+    this.scene.add(root);
+    return { root, bushes, crates, crateBatches, shown: -1, bushBatch, ground, hulls, decor, used: 0 };
+  }
+
+  /** Write the standing crates that are on screen into their kind's instanced body and hull, only when that set changed
+   * or one wobbles. Per-instance culling as for the enemy batches: most crates are off screen in a battle view, and a
+   * kind with none on screen costs no draw at all (separate meshes were frustum-culled the same way). */
+  private syncCrates(s: RushState, kit: MapKit, worldDt: number) {
+    let mask = 0, moving = false;
+    for (const c of s.crates) { const k = kit.crates.get(c.id); if (k && this.onScreen(k.x, 0.5, k.z, 1.5)) mask |= 1 << c.id; }
+    for (const c of kit.crates.values()) if (c.wobble > 0) { moving = true; c.wobble = Math.max(0, c.wobble - worldDt); }
+    if (mask === kit.shown && !moving) return;
+    kit.shown = mask;
+    const fill = [0, 0], { m, q, e, p, s: one } = this.tmp;
+    one.set(1, 1, 1);
+    for (const [id, c] of kit.crates) {
+      if (!(mask & (1 << id))) continue;
+      const k = Math.sin(c.wobble * 60) * c.wobble * 0.5;
+      m.compose(p.set(c.x, c.y, c.z), q.setFromEuler(e.set(k * 0.4, 0, k)), one);
+      const b = kit.crateBatches[c.kind], i = fill[c.kind]++;
+      b.body.setMatrixAt(i, m); b.hull.setMatrixAt(i, m);
+    }
+    kit.crateBatches.forEach((b, kind) => {
+      for (const mesh of [b.body, b.hull]) { mesh.count = fill[kind]; mesh.visible = fill[kind] > 0; mesh.instanceMatrix.needsUpdate = true; }
     });
   }
 
@@ -374,21 +723,74 @@ export class RushView {
     loadForestTown().then(scene => { try { town.accept(scene); } catch { town.fail(); } }, () => town.fail());
   }
 
-  private buildPads() {
-    for (const p of PADS) {
-      const ring = new Mesh(this.geo.ring, basic(0xffe48a, 0.8));
-      ring.rotation.x = -Math.PI / 2; ring.position.set(p.x, heightAt(p.x,p.z)+0.03, p.z); ring.scale.setScalar(1.05);
-      const disc = new Mesh(this.geo.disc, basic(0x143b39, 0.6));
-      disc.rotation.x = -Math.PI / 2; disc.position.set(p.x, heightAt(p.x,p.z)+0.02, p.z); disc.scale.setScalar(0.95);
-      this.scene.add(ring, disc);
-      this.padRings.push(ring);
+  /** Respawn dial (cycle 80): while the hero is down, a team-blue pie at the respawn spot fills clockwise toward the
+   * return; no text (#107 hid the toast that said when). Kept hero-sized: a wider ring slid under the castle's back
+   * towers from the battle camera. 24 pre-built wedges, so nothing is rebuilt per frame. */
+  private respawnDial: { root: Group; fill: Mesh; steps: CircleGeometry[] } | null = null;
+  private syncRespawn(downT: number, total: number) {
+    if (downT <= 0) { if (this.respawnDial) this.respawnDial.root.visible = false; return; }
+    if (!this.respawnDial) {
+      const root = new Group(), r = 0.66, top = Math.PI / 2;
+      const flat = (m: Mesh, order: number, y: number) => { m.rotation.x = -Math.PI / 2; m.position.y = y; m.renderOrder = order; root.add(m); return m; };
+      flat(new Mesh(new CircleGeometry(r, 32), basic(PAL.ink, 0.5)), 4, 0);
+      flat(new Mesh(new RingGeometry(r, r + 0.11, 32), basic(PAL.ink, 0.9)), 4, 0);
+      // Positive arc lengths only (a negative one flips the winding and is culled); the start walks clockwise from 12 o'clock.
+      const steps = Array.from({ length: 24 }, (_, i) => { const len = ((i + 1) / 24) * Math.PI * 2; return new CircleGeometry(r - 0.04, 32, top - len, len); });
+      const fill = flat(new Mesh(steps[0], basic(PAL.ally, 0.95)), 5, 0.01);
+      root.position.set(HERO_SPAWN.x, this.groundHeight(HERO_SPAWN.x, HERO_SPAWN.z) + 0.08, HERO_SPAWN.z);
+      this.scene.add(root);
+      this.respawnDial = { root, fill, steps };
     }
+    const d = this.respawnDial, k = Math.min(23, Math.max(0, Math.ceil((1 - downT / total) * 24) - 1));
+    d.root.visible = true;
+    d.fill.geometry = d.steps[k];
+  }
+
+  /** Build sites (defence lane): stone slabs under the tower pads and marker stakes at the barricade sites, baked into one
+   * mesh; a build ring per site (gold = affordable, pale = not yet, green = a barricade to repair); the barricade views;
+   * and the "can upgrade" chevrons (two instanced draws for all of them). */
+  private buildPads() {
+    const parts: Part[] = [];
+    PADS.forEach(p => parts.push(...padParts(p.x, heightAt(p.x, p.z), p.z)));
+    BARRICADES.forEach(b => parts.push(...siteParts(b.x, heightAt(b.x, b.z), b.z, siteAngle(b))));
+    const geo = bake(parts), snow = bakeColors(parts.map(coolPart)), snowAttr = new BufferAttribute(snow, 3);
+    capColors(geo, snowAttr, REGION_LOOK.snow.cap ?? 0xffffff, 0.7, -Infinity, 0.6);
+    const sitesMesh = this.addBaked(geo, 0.035, undefined, 'terrain', 'rush-build-sites');
+    this.regional(sitesMesh.geometry, snowAttr);
+    this.mergeTerrain(this.scene.getObjectByName('rush-hedge') as Mesh | undefined, sitesMesh);
+    const sites = [...PADS, ...BARRICADES].length;
+    const near = new Mesh(this.geo.ring, basic(0xffe48a, 0.8)); near.name = 'site-ring-near';
+    near.rotation.x = -Math.PI / 2; near.renderOrder = 2; near.visible = false;
+    this.scene.add(near);
+    this.siteRingSets = {
+      strong: new Batch(this.scene, this.geo.ring, basic(0xffffff, 0.85), sites, { colors: true, order: 2 }),
+      faint: new Batch(this.scene, this.geo.ring, basic(0xffffff, 0.42), sites, { colors: true, order: 2 }),
+      near, at: [...PADS, ...BARRICADES].map(p => new Vector3(p.x, heightAt(p.x, p.z) + 0.2, p.z)),
+    };
+    this.siteRingSets.strong.mesh.name = 'site-rings'; this.siteRingSets.faint.mesh.name = 'site-rings-faint';
+    BARRICADES.forEach(b => {
+      const root = new Group(), body = new Mesh(undefined, this.mats.baked), hull = new Mesh(undefined, outlineMaterial(0.045));
+      root.add(body, hull); root.name = 'barricade';
+      root.position.set(b.x, heightAt(b.x, b.z), b.z);
+      root.rotation.y = siteAngle(b);
+      root.visible = false;
+      this.scene.add(root);
+      this.barricadeViews.push({ root, body, hull, key: '', wobble: 0, pop: 0 });
+    });
+    const chevron = bake(chevronParts());
+    this.chevrons = { body: new Batch(this.scene, chevron, this.mats.baked, 8, { order: 5 }), hull: new Batch(this.scene, hullGeometry(chevron), outlineMaterial(0.04), 8, { order: 5 }) };
   }
 
   private buildHero() {
     const shadow = new Mesh(this.geo.blob, this.mats.blob); shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.02; shadow.scale.setScalar(0.62);
     const ring = new Mesh(this.geo.ring, this.mats.allyRing); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; ring.scale.setScalar(0.72);
-    this.hero.add(shadow, ring, this.heroBody);this.heroFootprints=[shadow,ring];
+    shadow.name = 'hero-blob'; ring.name = 'hero-ring';
+    // Super-ready ring (cycle 85): the super colour around the team ring while the super is charged, so the eye on the hero
+    // sees it without looking at the button corner (the "super ready" toast is hidden since #107).
+    const charged = new Mesh(new RingGeometry(0.86, 1, 40), basic(PAL.super, 0.9)); charged.rotation.x = -Math.PI / 2; charged.position.y = 0.04; charged.visible = false;
+    charged.name = 'hero-super-ring';
+    this.superRing = charged;
+    this.hero.add(shadow, ring, charged, this.heroBody);this.heroFootprints=[shadow,ring];
     // Fallback body, replaced if the GLB loads.
     const placeholderGeo = bake([
       { geo: new CapsuleGeometry(0.36, 0.6, 4, 10), color: 0x3d8f5a, at: [0, 0.75, 0] },
@@ -407,12 +809,62 @@ export class RushView {
         { geo: new BoxGeometry(0.08, 0.1, c.w * 1.02), color: 0x1f6fd0, at: [c.x - c.h * 0.22, c.y - c.h + 0.04, 0], rot: [0, 0, -0.22] },
         { geo: new BoxGeometry(0.16, 0.08, c.w * 0.9), color: PAL.gold, at: [c.x + 0.05, c.y + 0.02, 0] },
       ]);
-      const cape = new Mesh(geo, this.mats.hero);
+      const cape = new Mesh(geo, this.mats.hero); cape.name = 'hero-cape';
       cape.add(new Mesh(hullGeometry(geo), outlineMaterial(0.035)));
       cape.visible = false;
       this.heroBody.add(cape);
       this.capes.set(kind, cape);
     }
+  }
+
+  /** Light snowfall in the snow region: one Points draw, animated in the vertex shader (no per-frame CPU work or
+   * allocation). The flake box wraps around the camera focus, so a few flakes cover the whole arena. Half the flakes on
+   * the low tier; none under reduced motion or in the forest. Built on the first snow battle. */
+  private syncSnow(dt: number, reduced: boolean) {
+    const want = Math.round(this.look.snowfall * QUALITY[this.quality].particles);
+    const on = want > 0 && !reduced && !this.sheetMode;
+    if (!on) { if (this.snow) this.snow.visible = false; return; }
+    if (!this.snow) {
+      const n = REGION_LOOK.snow.snowfall, base = new Float32Array(n * 3);
+      let seed = 11;
+      for (let i = 0; i < base.length; i++) base[i] = (seed = (seed * 16807) % 2147483647) / 2147483647;
+      const geo = new BufferGeometry();
+      geo.setAttribute('position', new BufferAttribute(base, 3));
+      const mat = new ShaderMaterial({
+        transparent: true, depthWrite: false,
+        uniforms: { uTime: { value: 0 }, uFocus: { value: new Vector3() }, uHalfHeight: { value: 1 } },
+        vertexShader: `uniform float uTime; uniform vec3 uFocus; uniform float uHalfHeight; varying float vFade;
+          void main() {
+            vec3 box = vec3(30.0, 8.0, 24.0);
+            float r = fract(position.x * 7.31 + position.z * 3.17);
+            vec3 p = position * box;
+            p.y = mod(p.y - uTime * (1.1 + 0.9 * r), box.y);
+            p.x += sin(uTime * 0.7 + r * 6.2832) * 0.4;
+            p.xz = mod(p.xz - uFocus.xz, box.xz) - box.xz * 0.5 + uFocus.xz;
+            vFade = smoothstep(0.0, 0.8, p.y) * (0.65 + 0.35 * r);
+            vec4 mv = modelViewMatrix * vec4(p.x, p.y + uFocus.y, p.z, 1.0);
+            gl_PointSize = (0.1 + 0.07 * r) * projectionMatrix[1][1] * uHalfHeight / -mv.z;
+            gl_Position = projectionMatrix * mv;
+          }`,
+        fragmentShader: `varying float vFade;
+          void main() {
+            float d = length(gl_PointCoord - 0.5);
+            if (d > 0.5) discard;
+            gl_FragColor = vec4(1.0, 1.0, 1.0, 0.9 * vFade * smoothstep(0.5, 0.32, d));
+          }`,
+      });
+      this.snow = new Points(geo, mat);
+      this.snow.frustumCulled = false;
+      this.snow.renderOrder = 7;
+      this.scene.add(this.snow);
+    }
+    if (!this.fxPaused) this.snowTime += dt;
+    const u = (this.snow.material as ShaderMaterial).uniforms;
+    u.uTime.value = this.snowTime;
+    (u.uFocus.value as Vector3).copy(this.focus);
+    u.uHalfHeight.value = this.renderer.domElement.height / 2;
+    this.snow.geometry.setDrawRange(0, want);
+    this.snow.visible = true;
   }
 
   /** Aim preview shape: a long narrow fan for bolts, a short wide fan for a melee swing. */
@@ -472,9 +924,17 @@ export class RushView {
       material.normalMap = sourceMaterial?.normalMap ?? null;
       if (sourceMaterial?.normalScale) material.normalScale.copy(sourceMaterial.normalScale);
       if (material.map) material.map.anisotropy = Math.min(4, this.renderer.capabilities.getMaxAnisotropy());
-      // Three's clone does not copy onBeforeCompile; preserve the common toon rim program.
-      material.onBeforeCompile = this.mats.hero.onBeforeCompile;
-      material.customProgramCacheKey = this.mats.hero.customProgramCacheKey;
+      // Three's clone does not copy onBeforeCompile; preserve the common toon rim program. Cycle 116: a vertex whose UV is
+      // (-1, -1) (the team cape, baked into the skinned hero) skips the texture atlas and the normal map, so it shows its
+      // vertex colour alone, as the untextured hero material does.
+      const toonHero = this.mats.hero.onBeforeCompile, toonKey = this.mats.hero.customProgramCacheKey;
+      material.onBeforeCompile = (shader, renderer) => {
+        toonHero.call(material, shader, renderer);
+        shader.fragmentShader = shader.fragmentShader
+          .replace('#include <map_fragment>', '#ifdef USE_MAP\n\tdiffuseColor *= vMapUv.x < -0.5 ? vec4( 1.0 ) : texture2D( map, vMapUv );\n#endif')
+          .replace('#include <normal_fragment_maps>', '#ifdef USE_MAP\nif ( vMapUv.x > -0.5 ) {\n#endif\n#include <normal_fragment_maps>\n#ifdef USE_MAP\n}\n#endif');
+      };
+      material.customProgramCacheKey = () => `${toonKey.call(material)}-hero-cape-uv`;
       material.needsUpdate = true;
       const groups = new Map<Object3D, { geo: BufferGeometry; color: number; matrix: Matrix4 }[]>();
       const inv = new Matrix4(), ws = new Vector3(), hidden = new MeshBasicMaterial({ visible: false });
@@ -501,134 +961,288 @@ export class RushView {
         held.add(new Mesh(hullGeometry(geo), outlineMaterial(+(0.035 / (propNode.getWorldScale(ws).x || 1)).toFixed(3))));
         propNode.add(held);
       }
-      for (const [owner, parts] of groups) {
+      if (groups.size > 1 && new URLSearchParams(location.search).get('heroskin') !== '0') {
+        // Cycle 111: every animated part in one skinned body and one skinned hull. Each part's vertices ride one bone (the
+        // part's animated node) at full weight, so the clips move them exactly as before, in one draw each (and one
+        // shadow draw) instead of a body and hull per part. ?heroskin=0 keeps the per-part meshes.
+        const bones = [...groups.keys()], bodies: BufferGeometry[] = [], hulls: BufferGeometry[] = [];
+        model.updateMatrixWorld(true);
+        const modelInv = new Matrix4().copy(model.matrixWorld).invert(), toModel = new Matrix4();
+        bones.forEach((owner, i) => {
+          const geo = bakeMatrices(groups.get(owner)!, !!material.map), hull = heroHull(geo, simplifier);
+          toModel.multiplyMatrices(modelInv, owner.matrixWorld);
+          for (const g of [geo, hull]) {
+            g.applyMatrix4(toModel);
+            const n = g.attributes.position.count, index = new Uint16Array(n * 4), weight = new Float32Array(n * 4);
+            for (let v = 0; v < n; v++) { index[v * 4] = i; weight[v * 4] = 1; }
+            g.setAttribute('skinIndex', new Uint16BufferAttribute(index, 4));
+            g.setAttribute('skinWeight', new Float32BufferAttribute(weight, 4));
+          }
+          bodies.push(geo); hulls.push(hull);
+        });
+        // The team cape (cycle 116): one more rigid part on the hero body node, vertex colour only (UV -1 marks it).
+        const cape = this.capes.get(kind);
+        if (cape) {
+          const geo = cape.geometry.index ? cape.geometry.toNonIndexed() : cape.geometry.clone();
+          for (const name of Object.keys(geo.attributes)) if (!(name in bodies[0].attributes)) geo.deleteAttribute(name);
+          if (bodies[0].getAttribute('uv') && !geo.getAttribute('uv')) geo.setAttribute('uv', new Float32BufferAttribute(new Float32Array(geo.attributes.position.count * 2).fill(-1), 2));
+          const shell = new BufferGeometry();
+          shell.setAttribute('position', geo.getAttribute('position').clone()); shell.setAttribute('normal', geo.getAttribute('normal').clone());
+          const hull = hullGeometry(shell), i = bones.length;
+          toModel.multiplyMatrices(modelInv, this.heroBody.matrixWorld);
+          for (const g of [geo, hull]) {
+            g.applyMatrix4(toModel);
+            const n = g.attributes.position.count, index = new Uint16Array(n * 4), weight = new Float32Array(n * 4);
+            for (let v = 0; v < n; v++) { index[v * 4] = i; weight[v * 4] = 1; }
+            g.setAttribute('skinIndex', new Uint16BufferAttribute(index, 4));
+            g.setAttribute('skinWeight', new Float32BufferAttribute(weight, 4));
+          }
+          bones.push(this.heroBody); bodies.push(geo); hulls.push(hull);
+          cape.removeFromParent(); this.capes.delete(kind);
+        }
+        const skeleton = new Skeleton(bones as Bone[]);
+        const body = new SkinnedMesh(mergeGeometries(bodies), material);
+        const hull = new SkinnedMesh(mergeGeometries(hulls), outlineMaterial(+(0.035 / (model.getWorldScale(ws).x || 1)).toFixed(3)));
+        for (const m of [body, hull]) { m.name = `hero-${kind}-${m === body ? 'body' : 'ink'}`; m.frustumCulled = false; model.add(m); m.bind(skeleton); }
+      } else for (const [owner, parts] of groups) {
         const geo = bakeMatrices(parts, !!material.map), body = new Mesh(geo, material);
         body.add(new Mesh(heroHull(geo, simplifier), outlineMaterial(+(0.035 / (owner.getWorldScale(ws).x || 1)).toFixed(3))));
         owner.add(body);
       }
       const motion = new HeroMotion(model, gltf.animations, kind);
       this.heroRigs.set(kind, { holder, shot: motion.shot, held, motion, material });
+      this.warmShaders(holder);
     }), undefined, () => { this.heroRigs.delete(kind); /* Keep the placeholder; the prototype stays playable without the model. */ });
   }
 
-  /** One baked body + hull per enemy kind, shared by every instance of that kind. */
-  private enemyKit(kind: EnemyKind): { body: BufferGeometry; hull: BufferGeometry } {
-    let kit = this.enemyKits.get(kind);
+  /** One baked body + hull per enemy kind and look, shared by every instance of that kind. Looks: every kind has its
+   * forest shape; in the snow region the five raiders wear winter bits (cream fur collars, trims and boots); the boss has
+   * three shapes (unnamed, stage 5 elder tree king, stage 10 frost lord). restyle() swaps the batches' geometry per battle. */
+  private enemyKit(kind: EnemyKind, look: BossName = 'default'): { body: BufferGeometry; hull: BufferGeometry } {
+    const snow = look === 'snow' && kind !== 'wolf', key = kind === 'boss' ? (look === 'default' ? kind : `${kind}:${look}`) : snow ? `${kind}:snow` : kind;
+    let kit = this.enemyKits.get(key);
     if (kit) return kit;
-    const r = ENEMIES[kind].radius;
-    const eyes = (x: number, y: number, z: number, size: number, white: number, pupil: number): Part[] => [
-      { geo: new SphereGeometry(size, 8, 6), color: white, at: [x, y, z] },
-      { geo: new SphereGeometry(size, 8, 6), color: white, at: [x, y, -z] },
-      { geo: new SphereGeometry(size * 0.5, 6, 5), color: pupil, at: [x + size * 0.7, y, z] },
-      { geo: new SphereGeometry(size * 0.5, 6, 5), color: pupil, at: [x + size * 0.7, y, -z] },
+    // Drawn larger than the hitbox (ENEMY_SCALE): every length below is in visual radii.
+    const r = ENEMIES[kind].radius * ENEMY_SCALE[kind];
+    // Low segment counts on purpose (cycles 50 and 54): from the high camera a small enemy reads the same, and the
+    // heavy scene draws each body two to three times (body, ink hull, frost or ward shell).
+    const S = (rad: number, w = 8, h = 5) => new SphereGeometry(rad * r, w, h);
+    const X = (x: number, y: number, z: number) => new BoxGeometry(x * r, y * r, z * r);
+    const C = (rad: number, h: number, seg = 6) => new ConeGeometry(rad * r, h * r, seg);
+    const Y = (top: number, bottom: number, h: number, seg = 8, open = false) => new CylinderGeometry(top * r, bottom * r, h * r, seg, 1, open);
+    const I = (rad: number) => new IcosahedronGeometry(rad * r, 0);
+    const O = (rad: number) => new OctahedronGeometry(rad * r);
+    const P = (geo: BufferGeometry, color: number, x: number, y: number, z: number, rot?: [number, number, number], scale?: [number, number, number]): Part => ({ geo, color, at: [x * r, y * r, z * r], rot, scale });
+    /** A part and its mirror image across the body's centre line (z → -z). */
+    const pair = (make: () => BufferGeometry, color: number, x: number, y: number, z: number, rot: [number, number, number] = [0, 0, 0]): Part[] =>
+      [P(make(), color, x, y, z, rot), P(make(), color, x, y, -z, [-rot[0], -rot[1], rot[2]])];
+    /** Big eyes with pupils looking forward, and (with `brow`) two slanted brows: an angry V. */
+    const face = (x: number, y: number, z: number, size: number, white: number, pupil: number, brow?: number): Part[] => [
+      ...pair(() => I(size), white, x, y, z),
+      ...pair(() => I(size * 0.52), pupil, x + size * 0.62, y - size * 0.05, z * 0.92),
+      ...(brow === undefined ? [] : pair(() => X(size * 0.5, size * 0.32, size * 2.2), brow, x + size * 0.2, y + size * 1.12, z * 1.05, [-0.42, 0, 0])),
     ];
-    // Silhouette by role (cycle 11): grunt = small, round, club raised to one side; skirmisher = tall and thin
-    // with a wide hat brim and a bow held across (a T in front view); brute = wide and low with huge fists;
-    // boss = big and tall, arms raised overhead, spiked crown, cape.
+    const FUR = 0xfff1dc, BONE = 0xfff0d2, IRON = 0x8f9bb5;
     let parts: Part[];
     if (kind === 'grunt') {
+      // Raider imp: round body, big head with horns and ears, an underbite with two fangs, a bone club raised to one side.
+      const skin = 0xd13c44, dark = 0x4a1a26;
       parts = [
-        { geo: new SphereGeometry(r * 0.82, 12, 10), color: 0xe2463f, at: [0, r * 1.0, 0], scale: [1, 0.95, 1.05] },
-        { geo: new SphereGeometry(r * 0.66, 12, 10), color: 0xc4344a, at: [r * 0.15, r * 1.95, 0] },
-        { geo: new ConeGeometry(r * 0.24, r * 0.95, 8), color: 0xfff0d2, at: [r * 0.05, r * 2.6, r * 0.5], rot: [0.75, 0, 0] },
-        { geo: new ConeGeometry(r * 0.24, r * 0.95, 8), color: 0xfff0d2, at: [r * 0.05, r * 2.6, -r * 0.5], rot: [-0.75, 0, 0] },
-        { geo: new SphereGeometry(r * 0.3, 8, 6), color: 0x6e1f2c, at: [r * 0.1, r * 0.25, r * 0.45] },
-        { geo: new SphereGeometry(r * 0.3, 8, 6), color: 0x6e1f2c, at: [r * 0.1, r * 0.25, -r * 0.45] },
-        { geo: new BoxGeometry(r * 0.26, r * 1.7, r * 0.26), color: 0xeedcb4, at: [r * 0.45, r * 1.95, r * 1.0], rot: [-0.6, 0, 0] },
-        { geo: new SphereGeometry(r * 0.5, 10, 8), color: 0xfff3dc, at: [r * 0.45, r * 2.7, r * 1.55] },
-        ...eyes(r * 0.58, r * 2.05, r * 0.24, r * 0.18, 0xffffff, PAL.ink),
+        P(S(0.85), 0xe2463f, 0, 0.95, 0, undefined, [1, 0.95, 1.08]),
+        P(Y(0.86, 0.9, 0.22, 8, true), dark, 0, 0.72, 0), P(X(0.14, 0.3, 0.34), PAL.gold, 0.88, 0.72, 0),
+        P(S(0.78, 8, 6), skin, 0.12, 1.95, 0),
+        ...pair(() => C(0.2, 0.6, 4), skin, 0.05, 1.95, 0.88, [1.35, 0, 0]),
+        ...pair(() => C(0.22, 0.8, 5), BONE, 0.05, 2.68, 0.42, [0.55, 0, 0]),
+        ...pair(() => X(0.55, 0.28, 0.4), 0x6e1f2c, 0.15, 0.14, 0.42),
+        ...face(0.7, 2.1, 0.32, 0.26, 0xffffff, PAL.ink, dark),
+        P(X(0.12, 0.16, 0.52), dark, 0.84, 1.68, 0), ...pair(() => C(0.08, 0.24, 4), 0xffffff, 0.88, 1.78, 0.17),
+        P(I(0.28), skin, 0.3, 1.45, 0.98), P(I(0.28), skin, 0.4, 1.2, -0.9),
+        P(X(0.2, 1.4, 0.2), 0x8a5a2c, 0.35, 2.0, 1.1, [0.35, 0, 0]),
+        P(I(0.46), 0xfff3dc, 0.35, 2.78, 1.4), P(C(0.1, 0.42, 4), IRON, 0.35, 3.2, 1.55, [0.35, 0, 0]),
+        P(C(0.3, 0.45, 5), IRON, 0, 1.6, 0.78, [0.8, 0, 0]),
       ];
+      if (snow) parts.push(P(Y(0.62, 0.76, 0.32), FUR, 0.05, 1.4, 0), ...pair(() => X(0.62, 0.2, 0.48), FUR, 0.15, 0.34, 0.42));
     } else if (kind === 'skirmisher') {
+      // Masked archer: thin robe, wide hat with a red feather, a bandit mask with yellow eyes, a drawn bow held across.
+      const bow = 0xffb52e;
       parts = [
-        { geo: new ConeGeometry(r * 0.62, r * 2.6, 12), color: 0x2fa38f, at: [0, r * 1.3, 0] },
-        { geo: new SphereGeometry(r * 0.55, 12, 10), color: 0x237f72, at: [0, r * 2.75, 0] },
-        { geo: new CylinderGeometry(r * 1.0, r * 1.0, r * 0.12, 16), color: 0x26a08c, at: [0, r * 3.2, 0] },
-        { geo: new ConeGeometry(r * 0.5, r * 2.0, 12), color: 0x1d7d6e, at: [-r * 0.15, r * 4.2, 0], rot: [0, 0, 0.25] },
-        { geo: new BoxGeometry(r * 0.22, r * 0.22, r * 2.8), color: 0xffb52e, at: [r * 0.75, r * 1.9, 0] },
-        { geo: new BoxGeometry(r * 0.06, r * 0.06, r * 2.6), color: 0xfff1c2, at: [r * 0.55, r * 1.9, 0] },
-        { geo: new CylinderGeometry(r * 0.22, r * 0.22, r * 1.1, 8), color: 0x7a4a24, at: [-r * 0.55, r * 2.0, r * 0.3], rot: [0.3, 0, 0] },
-        ...eyes(r * 0.48, r * 2.78, r * 0.2, r * 0.14, 0xffe14d, 0xb06a00),
+        P(C(0.75, 2.3, 8), 0x1fa6b0, 0, 1.15, 0), // cycle 74: teal leans cyan, off the grass
+        P(S(0.62), 0x2bbcc4, 0.1, 2.5, 0), P(X(0.22, 0.4, 1.06), 0x0f4a52, 0.6, 2.62, 0),
+        P(Y(0.98, 0.98, 0.12, 10), 0x1d9faa, -0.32, 2.98, 0, [0, 0, -0.2]), P(Y(0.57, 0.6, 0.18, 8, true), bow, -0.34, 3.12, 0, [0, 0, -0.2]),
+        P(C(0.55, 1.5, 8), 0x166f7a, -0.5, 3.72, 0, [0, 0, 0.25]),
+        P(C(0.13, 0.95, 4), TEAM.enemy, -0.6, 3.55, 0.5, [0.5, 0, 0.4]),
+        P(Y(0.5, 0.62, 0.28), snow ? FUR : 0x0f5a66, 0, 2.0, 0, undefined, snow ? [1.15, 1.2, 1.15] : undefined),
+        P(X(0.2, 0.22, 1.0), bow, 0.85, 1.7, 0), ...pair(() => X(0.18, 0.2, 1.1), bow, 0.61, 1.7, 1.0, [0, -0.45, 0]),
+        P(X(0.05, 0.05, 2.9), 0xfff1c2, 0.38, 1.7, 0),
+        P(X(1.1, 0.07, 0.07), 0xfff1c2, 0.9, 1.72, 0), P(C(0.14, 0.36, 4), 0xdfe6f2, 1.6, 1.72, 0, [0, 0, -Math.PI / 2]),
+        ...pair(() => X(0.7, 0.2, 0.2), 0x1fa6b0, 0.5, 1.75, 0.35),
+        P(Y(0.22, 0.22, 1.0, 6), 0x7a4a24, -0.55, 1.9, 0.3, [0.3, 0, 0]), P(X(0.3, 0.3, 0.3), TEAM.enemy, -0.55, 2.45, 0.48),
+        ...face(0.62, 2.66, 0.27, 0.21, 0xffe14d, 0x5a3200),
       ];
+      if (snow) parts.push(P(Y(1.12, 1.12, 0.16, 10), FUR, -0.3, 2.9, 0, [0, 0, -0.2]));
     } else if (kind === 'shield') {
-      // Shield-bearer (cycle 27): slate body behind a tall silver tower shield with a gold rim, facing forward (+x).
+      // Shield-bearer (cycle 27): slate soldier with a crested helmet and a spear, behind a gold-rimmed tower shield
+      // facing forward (+x). The shield stops below the eyes, so the face shows over its top edge.
+      const face1 = 0x9fb0d6, helm = 0x2f3854, steel = 0x7c869c; // cycle 74: gunmetal, the silver read as sand
       parts = [
-        { geo: new CylinderGeometry(r * 0.7, r * 0.85, r * 1.9, 12), color: 0x4f5d7e, at: [0, r * 0.95, 0] },
-        { geo: new SphereGeometry(r * 0.62, 12, 10), color: 0x6b7aa0, at: [0, r * 2.2, 0] },
-        { geo: new ConeGeometry(r * 0.66, r * 0.7, 10), color: 0x2f3854, at: [0, r * 2.75, 0] },
-        { geo: new BoxGeometry(r * 0.22, r * 2.7, r * 2.0), color: 0xd8dee9, at: [r * 0.95, r * 1.45, 0] },
-        { geo: new BoxGeometry(r * 0.26, r * 2.9, r * 0.16), color: PAL.gold, at: [r * 0.97, r * 1.45, r * 1.0] },
-        { geo: new BoxGeometry(r * 0.26, r * 2.9, r * 0.16), color: PAL.gold, at: [r * 0.97, r * 1.45, -r * 1.0] },
-        { geo: new BoxGeometry(r * 0.26, r * 0.16, r * 2.1), color: PAL.gold, at: [r * 0.97, r * 2.85, 0] },
-        { geo: new OctahedronGeometry(r * 0.32), color: TEAM.enemy, at: [r * 1.1, r * 1.6, 0] },
-        ...eyes(r * 0.5, r * 2.25, r * 0.2, r * 0.13, 0xffffff, PAL.ink),
+        P(Y(0.7, 0.85, 1.7), 0x4f5d7e, 0, 0.85, 0),
+        P(S(0.62), face1, 0.05, 2.1, 0),
+        P(C(0.68, 0.75, 8), helm, 0, 2.68, 0), P(Y(0.7, 0.7, 0.14, 8, true), PAL.gold, 0, 2.34, 0),
+        P(X(0.8, 0.42, 0.14), TEAM.enemy, -0.12, 3.0, 0),
+        P(X(0.22, 2.0, 1.9), steel, 0.95, 1.1, 0),
+        ...pair(() => X(0.26, 2.1, 0.16), PAL.gold, 0.97, 1.1, 0.95),
+        P(X(0.26, 0.16, 2.06), PAL.gold, 0.97, 2.1, 0), P(X(0.26, 0.16, 2.06), PAL.gold, 0.97, 0.1, 0),
+        P(O(0.36), TEAM.enemy, 1.1, 1.2, 0),
+        P(X(0.1, 3.6, 0.1), 0x7a4a24, 0.3, 1.8, -1.0), P(C(0.2, 0.55, 4), 0xdfe6f2, 0.3, 3.85, -1.0), P(X(0.04, 0.3, 0.5), TEAM.enemy, 0.3, 3.3, -0.72),
+        P(I(0.24), face1, 0.3, 1.5, -0.95),
+        ...pair(() => S(0.4, 6, 4), steel, 0, 1.75, 0.78),
+        ...face(0.56, 2.18, 0.25, 0.2, 0xffffff, PAL.ink, helm),
       ];
+      if (snow) parts.push(P(Y(0.6, 0.74, 0.28), FUR, 0, 1.72, 0), P(X(0.36, 0.16, 2.1), FUR, 0.97, 2.24, 0), P(Y(0.75, 0.75, 0.2, 8, true), FUR, 0, 2.36, 0));
     } else if (kind === 'shaman') {
-      // Shaman (cycle 59): bell robe, bone mask with green eyes, and a staff taller than the body with a glowing green orb
-      // (the heal colour), held to one side: an 'i' beside a bell, unlike the skirmisher's T. Cycle 68: the robe was
-      // yellow-green and measured dE 8 against the #107 grass (it vanished); magenta (hue ~304) stands off grass and path.
+      // Shaman (cycle 59): bell robe, horned bone mask with hollow green-lit eyes, and a staff taller than the body with a
+      // glowing green orb (the heal colour), held to one side: an 'i' beside a bell, unlike the skirmisher's T. Cycle 68:
+      // the robe was yellow-green and measured dE 8 against the #107 grass; magenta (hue ~304) stands off grass and path.
+      const mask = 0xf3e6c8, hood = 0x7d2f86, wood = 0x7a4a24, glow = 0x7dff9a;
       parts = [
-        { geo: new ConeGeometry(r * 1.0, r * 2.1, 10), color: 0xd65fcf, at: [0, r * 1.05, 0] },
-        { geo: new CylinderGeometry(r * 1.02, r * 1.05, r * 0.2, 12), color: 0x7d2f86, at: [0, r * 0.1, 0] },
-        { geo: new SphereGeometry(r * 0.52, 12, 10), color: 0xf3e6c8, at: [r * 0.1, r * 2.2, 0] },
-        { geo: new ConeGeometry(r * 0.66, r * 1.0, 10), color: 0x7d2f86, at: [-r * 0.08, r * 2.75, 0], rot: [0, 0, 0.18] },
-        { geo: new CylinderGeometry(r * 0.11, r * 0.11, r * 3.6, 6), color: 0x7a4a24, at: [r * 0.5, r * 1.8, r * 0.85] },
-        { geo: new SphereGeometry(r * 0.4, 10, 8), color: 0x7dff9a, at: [r * 0.5, r * 3.75, r * 0.85] },
-        { geo: new OctahedronGeometry(r * 0.22), color: 0x3fd46a, at: [r * 0.5, r * 4.25, r * 0.85] },
-        ...eyes(r * 0.58, r * 2.25, r * 0.2, r * 0.13, 0x9dff5a, 0x1d4a0a),
+        P(C(1.0, 2.1, 10), 0xd65fcf, 0, 1.05, 0), P(Y(1.02, 1.05, 0.2, 10), hood, 0, 0.1, 0),
+        P(S(0.6), mask, 0.1, 2.2, 0),
+        P(C(0.72, 1.1, 8), hood, -0.1, 2.8, 0, [0, 0, 0.18]),
+        ...pair(() => C(0.14, 0.62, 4), mask, 0.25, 2.75, 0.5, [0.7, 0, 0]),
+        ...face(0.56, 2.26, 0.23, 0.2, 0x3a1440, 0x9dff5a),
+        P(X(0.1, 0.14, 0.42), 0x3a1440, 0.66, 1.93, 0),
+        P(O(0.15), glow, 0.52, 1.58, 0), ...pair(() => O(0.13), PAL.gold, 0.44, 1.62, 0.3),
+        P(X(0.14, 3.6, 0.14), wood, 0.5, 1.8, 0.9), P(S(0.42, 6, 4), glow, 0.5, 3.8, 0.9), P(O(0.2), 0x3fd46a, 0.5, 4.38, 0.9),
+        P(C(0.1, 0.55, 4), wood, 0.5, 3.75, 1.36), P(C(0.1, 0.55, 4), wood, 0.5, 3.75, 0.44),
+        P(I(0.22), mask, 0.55, 1.7, 0.85), P(I(0.22), mask, 0.62, 1.45, -0.55),
+        ...pair(() => C(0.16, 0.6, 4), glow, -0.1, 1.95, 0.55, [1.0, 0, 0]),
       ];
+      if (snow) parts.push(P(Y(0.5, 0.72, 0.3), FUR, 0, 1.75, 0));
     } else if (kind === 'brute') {
+      // Brute: wide and low, a horned iron helmet over a jutting jaw with tusks, spiked pauldrons and huge banded fists.
+      const hide = 0xe8842a, skin = 0xf29a5c, dark = 0x5a2416, fist = 0x7a2c1c;
+      // Cycle 117: on snow the pauldrons and fist bands are a darker iron; the light IRON under the cool snow tint matched
+      // the snow lanes (the frosted brute was the weakest kind on snow).
+      const iron = snow ? 0x4a536c : IRON;
       parts = [
-        { geo: new BoxGeometry(r * 1.6, r * 1.5, r * 2.1), color: 0xe8842a, at: [0, r * 1.2, 0] },
-        { geo: new SphereGeometry(r * 0.85, 12, 10), color: 0xf29a5c, at: [r * 0.45, r * 0.95, 0] },
-        { geo: new BoxGeometry(r * 0.95, r * 0.8, r * 0.95), color: 0x7a2c1c, at: [r * 0.3, r * 2.25, 0] },
-        { geo: new SphereGeometry(r * 0.52, 10, 8), color: 0xb8c3d6, at: [0, r * 2.0, r * 1.05] },
-        { geo: new SphereGeometry(r * 0.52, 10, 8), color: 0xb8c3d6, at: [0, r * 2.0, -r * 1.05] },
-        { geo: new BoxGeometry(r * 0.5, r * 1.1, r * 0.5), color: 0xe8842a, at: [r * 0.3, r * 1.25, r * 1.35] },
-        { geo: new BoxGeometry(r * 0.5, r * 1.1, r * 0.5), color: 0xe8842a, at: [r * 0.3, r * 1.25, -r * 1.35] },
-        { geo: new SphereGeometry(r * 0.55, 10, 8), color: 0x7a2c1c, at: [r * 0.45, r * 0.6, r * 1.4] },
-        { geo: new SphereGeometry(r * 0.55, 10, 8), color: 0x7a2c1c, at: [r * 0.45, r * 0.6, -r * 1.4] },
-        ...eyes(r * 0.78, r * 2.35, r * 0.22, r * 0.13, 0xffffff, PAL.ink),
+        P(X(1.5, 1.5, 2.0), hide, 0, 1.25, 0), P(S(0.85), skin, 0.42, 1.0, 0),
+        P(X(1.58, 0.28, 2.08), dark, 0, 0.6, 0),
+        P(X(0.95, 0.75, 1.0), skin, 0.32, 2.3, 0), P(X(0.8, 0.36, 1.08), 0x55607a, 0.16, 2.74, 0),
+        ...pair(() => C(0.2, 0.7, 5), BONE, 0.16, 2.98, 0.62, [0.9, 0, 0]),
+        P(X(0.4, 0.3, 0.9), 0xd9763a, 0.72, 2.02, 0), ...pair(() => C(0.1, 0.38, 4), BONE, 0.9, 2.22, 0.32),
+        ...face(0.74, 2.44, 0.27, 0.21, 0xffffff, PAL.ink, dark),
+        ...pair(() => S(0.55, 6, 4), iron, 0, 2.05, 1.08), ...pair(() => C(0.16, 0.5, 4), BONE, 0, 2.62, 1.2, [0.4, 0, 0]),
+        ...pair(() => X(0.5, 1.1, 0.5), hide, 0.3, 1.3, 1.38),
+        ...pair(() => S(0.6, 6, 4), fist, 0.5, 0.62, 1.42), ...pair(() => X(0.5, 0.34, 1.0), iron, 0.88, 0.62, 1.42),
+        ...pair(() => X(0.7, 0.3, 0.6), dark, 0.2, 0.15, 0.5),
+      ];
+      if (snow) parts.push(P(X(0.9, 0.36, 2.4), FUR, -0.25, 2.1, 0), ...pair(() => X(0.76, 0.2, 0.66), FUR, 0.2, 0.38, 0.5));
+    } else if (kind === 'wolf') {
+      // Frost wolf (snow region): a quadruped, so its outline is long and low where every raider stands upright. Frost-blue
+      // coat with a white ruff, muzzle and tail tip (pure white would vanish on snow), ice shards along the spine, and the
+      // enemy cue twice: red eyes and a red collar.
+      const coat = 0x6fa6ee, pale = 0xf2f8ff, navy = 0x35508f;
+      parts = [
+        P(S(0.7), coat, -0.05, 0.98, 0, undefined, [1.45, 0.9, 0.95]),
+        P(S(0.62, 6, 4), pale, 0.62, 1.05, 0),
+        P(S(0.62), coat, 1.15, 1.5, 0),
+        P(X(0.62, 0.36, 0.44), pale, 1.7, 1.33, 0), P(O(0.14), PAL.ink, 2.02, 1.45, 0),
+        ...pair(() => C(0.07, 0.24, 4), 0xffffff, 1.78, 1.07, 0.15, [Math.PI, 0, 0]),
+        ...pair(() => C(0.24, 0.6, 4), navy, 1.0, 2.12, 0.34, [0.25, 0, 0]),
+        ...face(1.56, 1.68, 0.28, 0.19, 0xff4d6a, 0x5a0010, navy),
+        P(C(0.3, 1.0, 6), coat, -1.2, 1.4, 0, [0, 0, 0.9]), P(I(0.18), pale, -1.56, 1.7, 0),
+        ...pair(() => X(0.26, 0.75, 0.26), navy, 0.55, 0.37, 0.38), ...pair(() => X(0.26, 0.75, 0.26), navy, -0.7, 0.37, 0.38),
+        P(Y(0.52, 0.52, 0.18), TEAM.enemy, 0.9, 1.3, 0, [0, 0, -0.9]),
+        ...[0.25, -0.3, -0.8].map((x, i) => P(O(0.26 - i * 0.03), 0xcdf1ff, x, 1.66 - i * 0.04, 0, [0, 0, 0.3], [0.6, 1.5, 0.6])),
       ];
     } else {
-      parts = [
-        { geo: new BoxGeometry(r * 0.25, r * 2.6, r * 2.4), color: 0x8a1f3a, at: [-r * 0.75, r * 1.5, 0] },
-        { geo: new CylinderGeometry(r * 0.75, r * 0.95, r * 1.9, 14), color: 0x4b3a8a, at: [0, r * 1.05, 0] },
-        { geo: new SphereGeometry(r * 0.85, 14, 12), color: 0x6d55c4, at: [0, r * 2.0, 0] },
-        { geo: new SphereGeometry(r * 0.6, 12, 10), color: 0x2a1f4d, at: [r * 0.2, r * 3.0, 0] },
-        { geo: new CylinderGeometry(r * 0.52, r * 0.46, r * 0.28, 10), color: PAL.gold, at: [r * 0.2, r * 3.55, 0] },
-        // Arms raised overhead: a tall 'Y' that never reads like the low, wide brute.
-        { geo: new BoxGeometry(r * 0.38, r * 1.3, r * 0.38), color: 0x6d55c4, at: [r * 0.3, r * 2.85, r * 0.95], rot: [0.45, 0, 0] },
-        { geo: new BoxGeometry(r * 0.38, r * 1.3, r * 0.38), color: 0x6d55c4, at: [r * 0.3, r * 2.85, -r * 0.95], rot: [-0.45, 0, 0] },
-        { geo: new SphereGeometry(r * 0.46, 12, 10), color: 0x9d83ff, at: [r * 0.3, r * 3.55, r * 1.25] },
-        { geo: new SphereGeometry(r * 0.46, 12, 10), color: 0x9d83ff, at: [r * 0.3, r * 3.55, -r * 1.25] },
-        ...eyes(r * 0.68, r * 3.05, r * 0.22, r * 0.12, 0xff4d6a, 0x5a0010),
-      ];
-      for (let i = 0; i < 5; i++) {
-        const a = (i / 5) * Math.PI * 2;
-        parts.push({ geo: new ConeGeometry(r * 0.12, r * 0.55, 6), color: PAL.gold, at: [r * 0.2 + Math.cos(a) * r * 0.42, r * 3.9, Math.sin(a) * r * 0.42] });
-      }
+      parts = this.bossParts(BOSS_LOOK[look], look, r);
     }
-    // Cycle 54 (measured in cycle 50): small enemies seen from the top-down camera look the same with half the round
-    // segments, at 52-64% fewer triangles each. The boss keeps its full segments; its arms read faceted otherwise.
-    const body = bake(kind === 'boss' ? parts : parts.map(p => ({ ...p, geo: fewerSegments(p.geo) })));
+    const body = bake(parts);
     kit = { body, hull: hullGeometry(body) };
-    this.enemyKits.set(kind, kit);
+    this.enemyKits.set(key, kit);
     return kit;
   }
 
+  /** The boss: big and tall, arms raised overhead (a 'Y' that never reads like the low, wide brute), cape, red eyes.
+   * The unnamed boss wears a gold spiked crown; the elder tree king (stage 5) grows branch antlers, a bark crown, a moss
+   * beard and roots; the frost lord (stage 10) an ice-spike crown, shoulder crystals, an icicle beard and a fur mantle. */
+  private bossParts(c: BossLook, look: BossName, r: number): Part[] {
+    type V3 = [number, number, number];
+    const P = (geo: BufferGeometry, color: number, x: number, y: number, z: number, rot?: V3, scale?: V3): Part => ({ geo, color, at: [x * r, y * r, z * r], rot, scale });
+    const both = (make: () => BufferGeometry, color: number, x: number, y: number, z: number, rot: V3 = [0, 0, 0], scale?: V3): Part[] =>
+      [P(make(), color, x, y, z, rot, scale), P(make(), color, x, y, -z, [-rot[0], -rot[1], rot[2]], scale)];
+    const cone = (rad: number, h: number, seg = 6) => new ConeGeometry(rad * r, h * r, seg), box = (x: number, y: number, z: number) => new BoxGeometry(x * r, y * r, z * r);
+    const ico = (rad: number) => new IcosahedronGeometry(rad * r, 0), oct = (rad: number) => new OctahedronGeometry(rad * r);
+    const out: Part[] = [
+      P(box(0.25, 2.6, 2.4), c.cape, -0.75, 1.5, 0),
+      P(new CylinderGeometry(r * 0.75, r * 0.95, r * 1.9, 14), c.trunk, 0, 1.05, 0),
+      P(new SphereGeometry(r * 0.85, 14, 12), c.chest, 0, 2.0, 0),
+      P(new SphereGeometry(r * 0.6, 12, 10), c.head, 0.2, 3.0, 0),
+      ...both(() => box(0.38, 1.3, 0.38), c.arm, 0.3, 2.85, 0.95, [0.45, 0, 0]),
+      ...both(() => new SphereGeometry(r * 0.46, 12, 10), c.fist, 0.3, 3.55, 1.25),
+      ...both(() => new CylinderGeometry(r * 0.27, r * 0.27, r * 0.2, 8), c.crown, 0.3, 3.2, 1.1, [0.45, 0, 0]),
+      // Face: large red eyes under a heavy angry brow, and a jaw with two fangs.
+      ...both(() => ico(0.17), 0xff4d6a, 0.64, 3.08, 0.25), ...both(() => ico(0.09), 0x5a0010, 0.76, 3.07, 0.24),
+      ...both(() => box(0.12, 0.1, 0.42), c.chest, 0.72, 3.27, 0.26, [-0.42, 0, 0]),
+      P(box(0.3, 0.2, 0.62), c.chest, 0.66, 2.72, 0), ...both(() => cone(0.07, 0.24, 4), 0xfff0d2, 0.8, 2.88, 0.2),
+      P(new CylinderGeometry(r * 0.9, r * 0.93, r * 0.22, 12, 1, true), c.head, 0, 0.9, 0), P(ico(0.24), c.crown, 0.92, 0.9, 0),
+    ];
+    const ring = (n: number, f: (a: number, i: number) => Part) => { for (let i = 0; i < n; i++) out.push(f((i / n) * Math.PI * 2, i)); };
+    if (look === 'forest') {
+      const bark = c.trunk, leaf = c.fist, amber = c.crown;
+      // Bark crown of uneven splinters, and two branching antlers with leaf tufts at the tips.
+      ring(6, (a, i) => P(cone(0.16, 0.5 + (i % 2) * 0.3, 5), bark, 0.2 + Math.cos(a) * 0.42, 3.62 + (i % 2) * 0.12, Math.sin(a) * 0.42));
+      out.push(
+        ...both(() => box(0.17, 1.2, 0.17), bark, 0.15, 4.0, 0.62, [0.75, 0, 0]),
+        ...both(() => box(0.13, 0.7, 0.13), bark, 0.15, 4.35, 0.5, [-0.2, 0, 0]),
+        ...both(() => box(0.12, 0.6, 0.12), bark, 0.3, 4.1, 0.95, [0.3, 0, -0.5]),
+        ...both(() => ico(0.24), amber, 0.15, 4.5, 1.08), ...both(() => ico(0.2), leaf, 0.15, 4.75, 0.42), ...both(() => ico(0.18), amber, 0.48, 4.4, 1.02),
+        // Leafy shoulders, a moss beard, a knot hole, and roots spreading from the foot of the trunk.
+        ...both(() => ico(0.46), c.arm, 0, 2.5, 0.92), ...both(() => ico(0.34), leaf, 0.25, 2.72, 0.7), ...both(() => ico(0.3), amber, -0.25, 2.8, 1.05),
+        P(cone(0.36, 0.8, 6), c.arm, 0.72, 2.3, 0, [Math.PI, 0, 0]),
+        P(ico(0.2), c.head, 0.82, 1.35, 0.2, undefined, [0.5, 1.3, 1]),
+      );
+      ring(6, a => P(cone(0.34, 0.75, 5), bark, Math.cos(a + 0.5) * 0.98, 0.37, Math.sin(a + 0.5) * 0.98));
+    } else if (look === 'snow') {
+      const ice = c.chest, white = c.crown;
+      // Tall ice-spike crown around one great crystal.
+      out.push(P(new CylinderGeometry(r * 0.52, r * 0.46, r * 0.24, 10), white, 0.2, 3.55, 0), P(oct(0.3), ice, 0.2, 4.35, 0, undefined, [0.65, 2.4, 0.65]));
+      ring(7, (a, i) => P(cone(0.13, 0.7 + (i % 2) * 0.45, 4), white, 0.2 + Math.cos(a) * 0.44, 3.95 + (i % 2) * 0.2, Math.sin(a) * 0.44, [Math.sin(a) * 0.25, 0, -Math.cos(a) * 0.25]));
+      out.push(
+        // Fur mantle, crystal clusters on both shoulders, an icicle beard and ice-spiked knuckles.
+        P(new CylinderGeometry(r * 0.8, r * 0.98, r * 0.42, 10), 0xfff1dc, 0, 2.52, 0),
+        ...both(() => oct(0.34), ice, 0, 2.95, 1.0, [0.5, 0, 0], [0.6, 2.0, 0.6]),
+        ...both(() => oct(0.26), white, 0.3, 2.8, 0.78, [0.15, 0, -0.3], [0.6, 1.8, 0.6]),
+        ...both(() => oct(0.24), white, -0.3, 2.85, 1.15, [0.9, 0, 0.3], [0.6, 1.8, 0.6]),
+        P(cone(0.13, 0.7, 4), white, 0.74, 2.3, 0, [Math.PI, 0, 0]), ...both(() => cone(0.1, 0.5, 4), white, 0.7, 2.4, 0.2, [Math.PI, 0, 0]),
+        ...both(() => cone(0.13, 0.5, 4), ice, 0.3, 4.1, 1.35, [0.3, 0, 0]), ...both(() => cone(0.11, 0.4, 4), ice, 0.6, 3.85, 1.4, [0.3, 0, -0.7]),
+      );
+    } else {
+      out.push(P(new CylinderGeometry(r * 0.52, r * 0.46, r * 0.28, 10), c.crown, 0.2, 3.55, 0));
+      ring(5, a => P(cone(0.12, 0.55, 6), c.crown, 0.2 + Math.cos(a) * 0.42, 3.9, Math.sin(a) * 0.42));
+      // Gold pauldrons with a spike each.
+      out.push(...both(() => new SphereGeometry(r * 0.42, 8, 6), c.crown, 0, 2.5, 0.9), ...both(() => cone(0.14, 0.5, 5), c.fist, 0, 2.95, 1.05, [0.5, 0, 0]));
+    }
+    return out;
+  }
+
   private buildBatches() {
-    const kinds: EnemyKind[] = ['grunt', 'skirmisher', 'brute', 'boss', 'shield', 'shaman'];
-    const per = <T,>(f: (k: EnemyKind) => T) => Object.fromEntries(kinds.map(k => [k, f(k)])) as Record<EnemyKind, T>;
+    const per = <T,>(f: (k: EnemyKind) => T) => Object.fromEntries(ENEMY_KINDS.map(k => [k, f(k)])) as Record<EnemyKind, T>;
     const cap = 160;
     this.batches = {
-      body: per(k => new Batch(this.scene, this.enemyKit(k).body, this.mats.baked, k === 'boss' ? 4 : cap)),
+      body: per(k => new Batch(this.scene, this.enemyKit(k).body, this.mats.enemy, k === 'boss' ? 4 : cap)),
       hull: per(k => new Batch(this.scene, this.enemyKit(k).hull, outlineMaterial(k === 'boss' ? 0.08 : 0.05), k === 'boss' ? 4 : cap)),
       flash: per(k => new Batch(this.scene, this.enemyKit(k).body, this.mats.flash, k === 'boss' ? 4 : cap)),
       // Frost shell (cycle 16): the same body, a little larger, pale ice blue and see-through. Drawn only while slowed.
       ice: per(k => new Batch(this.scene, this.enemyKit(k).body, ICE, k === 'boss' ? 4 : cap, { order: 4 })),
+      ward: per(k => new Batch(this.scene, this.enemyKit(k).body, WARD, k === 'boss' ? 4 : cap, { order: 4 })),
       shadow: new Batch(this.scene, this.geo.blob, this.mats.blob, cap),
       ring: new Batch(this.scene, this.geo.ring, this.mats.enemyRing, cap),
-      frostRing: new Batch(this.scene, this.geo.ring, basic(0x8fe6ff, 0.9), cap),
+      frostRing: new Batch(this.scene, this.geo.ring, this.mats.frostRing, cap),
+      // Ward floor ring (cycle 92): a cue that does not depend on body colour (the purple boss and the magenta shaman
+      // change little under the shell); a little wider than the frost ring so both read when they stack.
+      wardRing: new Batch(this.scene, this.geo.ring, basic(0xe070e0, 0.9), cap),
       streak: new Batch(this.scene, this.geo.streak, this.mats.baked, cap),
       barBg: new Batch(this.scene, this.geo.bar, this.mats.barBg, cap, { order: 5 }),
       barFill: new Batch(this.scene, this.geo.barFill, this.mats.barEnemy, cap, { order: 5 }),
@@ -641,7 +1255,31 @@ export class RushView {
       },
       branchShots: { fire: new Batch(this.scene, this.geo.bolt, basic(BRANCH_COLOR.fire), 120), frost: new Batch(this.scene, this.geo.bolt, basic(0xbff3ff), 120) },
       coins: new Batch(this.scene, this.geo.coin, this.mats.coin, 160),
+      multi: null,
     };
+    if (this.renderer.extensions.has('WEBGL_multi_draw') && new URLSearchParams(location.search).get('multidraw') !== '0') {
+      // Sized for the default shapes, twice over for the snow outfits and named bosses added on first use (they grow).
+      const size = (geos: BufferGeometry[]) => [geos.reduce((a, g) => a + g.attributes.position.count, 0) * 2, geos.reduce((a, g) => a + (g.index ? g.index.count : 0), 0) * 2] as const;
+      const [bv, bi] = size(ENEMY_KINDS.map(k => this.enemyKit(k).body)), [hv, hi] = size(ENEMY_KINDS.map(k => this.enemyKit(k).hull));
+      this.batches.multi = {
+        body: new KindBatch(this.scene, this.mats.enemy, 6 * cap, bv, bi),
+        hull: new KindBatch(this.scene, outlineMaterial(0.05), 6 * cap, hv, hi),
+        flash: new KindBatch(this.scene, this.mats.flash, 2 * cap, bv, bi),
+        ice: new KindBatch(this.scene, ICE, 2 * cap, bv, bi, 4),
+        ward: new KindBatch(this.scene, WARD, 2 * cap, bv, bi, 4),
+      };
+      const m = this.batches.multi, bodies = ENEMY_KINDS.map(k => this.enemyKit(k).body);
+      for (const b of [m.body, m.flash, m.ice, m.ward]) b.prepare(bodies);
+      m.hull.prepare(ENEMY_KINDS.map(k => this.enemyKit(k).hull));
+    }
+    // Names for the debug counts (shadowCasters, tallyDraws; cycle 107): 'batch:body.grunt', 'batch:shots.hero', ...
+    const nameAll = (o: unknown, path: string): void => {
+      if (o instanceof Batch || o instanceof KindBatch) o.mesh.name = `batch:${path}`;
+      else if (o && typeof o === 'object') for (const [k, v] of Object.entries(o)) nameAll(v, path ? `${path}.${k}` : k);
+    };
+    nameAll(this.batches, '');
+    // Coins lie flat on the ground: their shadow is invisible but cost a shadow-map draw (cycle 107 count).
+    this.batches.coins.mesh.userData.noCast = true;
   }
 
   /** Matrix from position, Euler rotation (order) and scale; reuses scratch objects. */
@@ -655,13 +1293,18 @@ export class RushView {
     const B = this.batches, t = this.tmp;
     this.camera.updateMatrixWorld();
     this.frustum.setFromProjectionMatrix(t.m.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse));
-    const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), ...Object.values(B.ice), B.shadow, B.ring, B.frostRing, B.streak, B.barBg, B.barFill];
+    const batched = B.multi;
+    if (batched) for (const k of Object.values(batched)) k.begin();
+    // Mask frames (cycle 126) draw through the per-kind batches, each in its own colour; the shared batches stay empty.
+    const multi = this.maskMode ? null : batched;
+    const all = [...Object.values(B.body), ...Object.values(B.hull), ...Object.values(B.flash), ...Object.values(B.ice), ...Object.values(B.ward), B.shadow, B.ring, B.frostRing, B.wardRing, B.streak, B.barBg, B.barFill];
     const swift = s.diff.twist === 'swift';
     all.forEach(b => b.begin());
     for (const e of s.enemies) {
-      const r = ENEMIES[e.kind].radius;
+      const r = ENEMIES[e.kind].radius * ENEMY_SCALE[e.kind];
       if (!this.onScreen(e.x, r * 2, e.z, r * 4 + 1)) continue;
-      const bob = Math.abs(Math.sin(this.time * 10 + e.id) * 0.06);
+      const wolf = e.kind === 'wolf', step = this.time * (wolf ? 16 : 10) + e.id;
+      const bob = Math.abs(Math.sin(step) * (wolf ? 0.1 : 0.06));
       // Slam wind-up crouches (wide and low); the rally roar (cycle 34) is the opposite: it swells up and trembles.
       let sx = e.windup ? 1.1 : 1, sy = e.windup ? 0.88 : 1, jx = 0;
       const roar = e.roarT ?? 0, call = ENEMIES[e.kind].summon;
@@ -670,19 +1313,52 @@ export class RushView {
         sx = 1 + 0.12 * k; sy = 1 + 0.18 * k;
         jx = 0.07 * Math.sin(this.time * 70 + e.id);
       }
-      const m = this.place(e.x + jx, bob, e.z, 0, yaw(e.facing), 0, sx, sy, sx);
-      (e.flash > 0 ? B.flash : B.body)[e.kind].push(m);
-      B.hull[e.kind].push(m);
+      // Walk: raiders waddle from foot to foot, the wolf gallops (nose up and down). A melee strike is a short forward
+      // jab right after the cooldown restarts. Frost wolf lunge: it crouches low and blinks white (the tell), then
+      // stretches out long while it flies.
+      let lean = 0, roll = 0, sl = 1, blink = false;
+      if (!reduced && !this.fxPaused) { if (wolf) lean = Math.sin(step) * 0.12; else if (e.kind !== 'boss') roll = Math.sin(step) * 0.09; }
+      const def = ENEMIES[e.kind], struck = def.cooldown - e.cd;
+      if (!def.shotSpeed && !e.windup && struck >= 0 && struck < 0.16) lean -= 0.32 * Math.sin((struck / 0.16) * Math.PI);
+      if ((e.lungeT ?? 0) > 0) { sy = 0.72; sl = 1.12; lean = -0.12; roll = 0; blink = Math.floor(this.time * 14) % 2 === 0; }
+      else if ((e.dashT ?? 0) > 0) { sl = 1.3; sy = 0.86; lean = 0.1; }
+      const m = this.place(e.x + jx, bob, e.z, roll, yaw(e.facing), lean, sx * sl, sy, sx, 'YXZ');
+      const flashing = e.flash > 0 || blink;
+      if (multi) (flashing ? multi.flash : multi.body).push(B.body[e.kind].mesh.geometry, m);
+      else (flashing ? B.flash : B.body)[e.kind].push(m);
+      if (multi && e.kind !== 'boss') multi.hull.push(B.hull[e.kind].mesh.geometry, m); else B.hull[e.kind].push(m);
       // Frost shell; blinks in its last quarter second so the player sees the slow wearing off.
       const ice = e.slowT ?? 0;
-      if (ice > 0 && (ice > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.ice[e.kind].push(this.place(e.x, bob - 0.02, e.z, 0, yaw(e.facing), 0, sx * 1.08, sy * 1.06, sx * 1.08));
+      // The frost wolf wears neither shell: an ice-blue shell on an ice-blue wolf shows nothing, and the floor rings
+      // already carry both states for every kind. That keeps a wolf pack at two draw calls (body and outline).
+      if (!wolf && ice > 0 && (ice > 0.25 || Math.floor(this.time * 16) % 2 === 0)) {
+        const mi = this.place(e.x, bob - 0.02, e.z, roll, yaw(e.facing), lean, sx * sl * 1.08, sy * 1.06, sx * 1.08, 'YXZ');
+        if (multi) multi.ice.push(B.body[e.kind].mesh.geometry, mi); else B.ice[e.kind].push(mi);
+      }
+      // Ward shell (cycle 90): magenta while warded, blinking in its last quarter second like the frost shell.
+      const ward = e.wardT ?? 0;
+      if (!wolf && ward > 0 && (ward > 0.25 || Math.floor(this.time * 16) % 2 === 0)) {
+        const mw = this.place(e.x, bob - 0.02, e.z, roll, yaw(e.facing), lean, sx * sl * 1.16, sy * 1.12, sx * 1.16, 'YXZ');
+        if (multi) multi.ward.push(B.body[e.kind].mesh.geometry, mw); else B.ward[e.kind].push(mw);
+      }
       if (this.sheetMode) continue;
-      B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.25));
-      B.ring.push(this.place(e.x, 0.03, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.15));
-      if ((e.slowT ?? 0) > 0) B.frostRing.push(this.place(e.x, 0.05, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.5)); // frost slow
+      if (this.bodyOnly) continue; // debug (cycle 109): no blob, rings or streak, so only the body differs from the floor
+      B.shadow.push(this.place(e.x, 0.02, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.15));
+      B.ring.push(this.place(e.x, 0.03, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.08));
+      if ((e.slowT ?? 0) > 0) B.frostRing.push(this.place(e.x, 0.05, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.38)); // frost slow
+      if (ward > 0 && (ward > 0.25 || Math.floor(this.time * 16) % 2 === 0)) B.wardRing.push(this.place(e.x, 0.055, e.z, -Math.PI / 2 - (!this.sheetMode&&e.z>1&&e.z<5?Math.atan(.3):0), 0, 0, r * 1.58)); // ward
       if (swift && !reduced && e.kind !== 'boss' && !e.windup) B.streak.push(this.place(e.x, bob, e.z, 0, yaw(e.facing), 0, Math.max(0.6, r))); // swift lap: readable even on small enemies
     }
+    // The hero held by the howl stands in a wide frost ring, blinking as it ends (cycle 99).
+    const hf = s.hero.frozenT ?? 0;
+    if (hf > 0 && (hf > 0.6 || Math.floor(this.time * 12) % 2 === 0)) B.frostRing.push(this.place(s.hero.x, 0.07, s.hero.z, -Math.PI / 2, 0, 0, 1.75));
+    // Towers frozen by the frost lord's howl stand in a frost ring (the same cue as a slowed enemy), blinking as it ends.
+    s.towers.forEach((tw, i) => {
+      const f = tw?.frozen ?? 0;
+      if (f > 0 && (f > 0.6 || Math.floor(this.time * 12) % 2 === 0)) B.frostRing.push(this.place(PADS[i].x, 0.06, PADS[i].z, -Math.PI / 2, 0, 0, 1.55));
+    });
     all.forEach(b => b.end());
+    if (batched) for (const k of Object.values(batched)) k.end();
     this.counts.enemies = s.enemies.length;
   }
 
@@ -736,38 +1412,51 @@ export class RushView {
     B.coins.end();
   }
 
-  /** Watchtower per level, baked: a static base and a rotating crossbow head. Open top keeps the head visible. */
-  private towerKit(level: number, branch?: TowerBranch): { base: BufferGeometry; baseHull: BufferGeometry; head: BufferGeometry; headHull: BufferGeometry; h: number } {
-    const key = `${level}${branch ?? ''}`;
+  /** Tower per level and branch (defenceModels.ts), baked: a static base and a rotating crossbow head. Lv1 wood, Lv2 stone
+   * with the branch crown (fire braziers, frost crystals), Lv3 a tall stone tower with banners and a roofed turret. On
+   * snow, wood and stone cool down and upward faces carry snow, like the walls (one kit per region). */
+  private towerKit(level: number, branch?: TowerBranch) {
+    const key = `${level}${branch ?? ''}:${this.region}`;
     let kit = this.towerKits.get(key);
     if (kit) return kit;
-    // Lv2+ wear their branch colour (cycle 15): fire orange with a flame, frost sky-blue with a crystal.
-    const trim = branch ? BRANCH_COLOR[branch] : PAL.ally, h = 1.0 + level * 0.3;
-    const parts: Part[] = [
-      { geo: new CylinderGeometry(0.5, 0.68, h, 8), color: 0xece0c4, at: [0, h / 2, 0] },
-      { geo: new CylinderGeometry(0.54, 0.54, 0.18, 8), color: trim, at: [0, h * 0.62, 0] },
-      { geo: new CylinderGeometry(0.74, 0.6, 0.24, 8), color: PAL.wood, at: [0, h + 0.12, 0] },
-    ];
-    for (let i = 0; i < level; i++) parts.push({ geo: new OctahedronGeometry(0.14), color: PAL.gold, at: [(i - (level - 1) / 2) * 0.34, h * 0.62, -0.6] });
-    if (branch === 'fire') parts.push({ geo: new ConeGeometry(0.2, 0.5, 6), color: 0xffb02e, at: [0, h + 0.5, -0.62] }, { geo: new ConeGeometry(0.12, 0.3, 6), color: 0xff4d1f, at: [0, h + 0.42, -0.62] });
-    if (branch === 'frost') parts.push({ geo: new OctahedronGeometry(0.24), color: 0xd8f8ff, at: [0, h + 0.5, -0.62], scale: [0.8, 1.4, 0.8] });
-    const base = bake(parts);
-    const head = bake([
-      { geo: new BoxGeometry(0.9, 0.2, 0.22), color: PAL.woodDark, at: [0.2, 0, 0] },
-      { geo: new BoxGeometry(0.16, 0.14, 1.15), color: trim, at: [0.5, 0, 0] },
-      { geo: new BoxGeometry(0.72, 0.07, 0.07), color: 0xfff1a8, at: [0.45, 0.13, 0] },
-    ]);
-    kit = { base, baseHull: hullGeometry(base), head, headHull: hullGeometry(head), h };
+    const t = towerParts(level, branch), base = this.regionBake(t.base), head = this.regionBake(t.head, false);
+    kit = { base, baseHull: hullGeometry(base), head, headHull: hullGeometry(head), headY: t.headY, height: t.height };
     this.towerKits.set(key, kit);
     return kit;
   }
-  private makeTower(level: number, branch?: TowerBranch): Group {
-    const kit = this.towerKit(level, branch), g = new Group(), head = new Group();
-    g.add(new Mesh(kit.base, this.mats.baked), new Mesh(kit.baseHull, outlineMaterial(0.05)));
-    head.name = 'head'; head.position.y = kit.h + 0.44;
-    head.add(new Mesh(kit.head, this.mats.baked), new Mesh(kit.headHull, outlineMaterial(0.04)));
-    g.add(head);
+  /** Bake defence parts for the current region: as authored in the forest; on snow, building materials cool down and
+   * (with `cap`) their upward faces carry snow. Coals, flames, ice, gold and team cloth never do. */
+  private regionBake(parts: Part[], cap = true): BufferGeometry {
+    if (this.region !== 'snow') return bake(parts);
+    const geo = bake(parts.map(coolPart));
+    if (!cap) return geo;
+    const mask = bakeColors(parts.map(p => ({ ...p, color: COOLED.has(p.color) ? 0xffffff : 0 })));
+    const n = geo.getAttribute('normal'), c = geo.getAttribute('color') as BufferAttribute, snow = new Color(REGION_LOOK.snow.cap ?? 0xffffff), k = 0.7;
+    for (let i = 0; i < c.count; i++) if (mask[i * 3] > 0.5 && n.getY(i) > 0.75)
+      c.setXYZ(i, c.getX(i) + (snow.r - c.getX(i)) * k, c.getY(i) + (snow.g - c.getY(i)) * k, c.getZ(i) + (snow.b - c.getZ(i)) * k);
+    return geo;
+  }
+  /** `mirror`: the base is flipped east-west (the Lv3 turret then stands on the middle-lane side of a west pad). */
+  private makeTower(level: number, branch?: TowerBranch, mirror = false): Group {
+    const kit = this.towerKit(level, branch), g = new Group(), head = new Group(), body = new Group(), shell = new Group();
+    g.name = 'tower'; body.name = 'body';
+    shell.add(new Mesh(kit.base, this.mats.baked), new Mesh(kit.baseHull, outlineMaterial(0.05)));
+    if (mirror) shell.scale.x = -1; // three.js flips the face winding for a mirrored matrix, so the ink hull still works
+    body.add(shell);
+    head.name = 'head'; head.position.y = kit.headY;
+    const bow = new Group(); bow.name = 'bow';
+    bow.add(new Mesh(kit.head, this.mats.baked), new Mesh(kit.headHull, outlineMaterial(0.04)));
+    head.add(bow);
+    body.add(head);
+    g.add(body);
+    g.userData.height = kit.height;
     return g;
+  }
+  private barricadeKit(level: number, state: BarricadeState) {
+    const key = `${level}:${state}:${this.region}`;
+    let kit = this.barricadeKits.get(key);
+    if (!kit) { const body = this.regionBake(barricadeParts(level, state)); kit = { body, hull: hullGeometry(body) }; this.barricadeKits.set(key, kit); }
+    return kit;
   }
 
   private makeBar(width: number, fillMat: Material): Bar {
@@ -792,6 +1481,8 @@ export class RushView {
     this.renderer.setSize(this.size.w, this.size.h, false);
     for (const h of this.terrainHulls) h.visible = spec.terrainOutlines;
     for (const d of this.decor) d.visible = spec.decor;
+    for (const k of this.kits.values()) { for (const h of k.hulls) h.visible = spec.terrainOutlines; for (const d of k.decor) d.visible = spec.decor; }
+    this.fitFrame();
   }
 
   resize(width: number, height: number) {
@@ -803,10 +1494,14 @@ export class RushView {
     this.zoom = short >= 720 ? 1 : short <= 420 ? 0.8 : 0.8 + ((short - 420) / 300) * 0.2;
     this.camera.fov = this.portrait ? 46 : 32;
     this.camera.updateProjectionMatrix();
+    this.fitFrame();
   }
 
   /** Apply one simulation step's events: the effect grammar (docs/rush/art-direction.md) and animation triggers. */
   applyEvents(events: RushEvent[], reducedMotion: boolean) {
+    // Several wards broken at once (cycle 91): one magenta ink ring around the whole cleared pack.
+    const wards = wardBreakBurst(events);
+    if (wards && wards.count >= 2) this.ring(wards.x, wards.z, 0xe070e0, wards.radius + 1.2, 0.35, 0.95, true);
     const fx = this.particles, hp = this.hero.position;
     fx.density = (reducedMotion ? 0.5 : 1) * QUALITY[this.quality].particles;
     for (const ev of events) {
@@ -835,13 +1530,13 @@ export class RushView {
           break;
         case 'kill': {
           const boss = ev.kind === 'boss';
-          fx.emit({ kind: 'shard', n: boss ? 26 : 8, color: KILL_COLOR[ev.kind], at: [ev.x, 0.8, ev.z], speed: boss ? 8 : 5.5, up: boss ? 8 : 5, size: boss ? 0.22 : 0.13, life: boss ? 0.9 : 0.55 });
+          fx.emit({ kind: 'shard', n: boss ? 26 : 8, color: boss ? this.bossKill : KILL_COLOR[ev.kind], at: [ev.x, 0.8, ev.z], speed: boss ? 8 : 5.5, up: boss ? 8 : 5, size: boss ? 0.22 : 0.13, life: boss ? 0.9 : 0.55 });
           fx.emit({ kind: 'puff', n: boss ? 8 : 3, color: 0xefe6d2, at: [ev.x, 0.6, ev.z], speed: boss ? 2.6 : 1.6, up: 1.2, size: boss ? 0.4 : 0.2, life: boss ? 0.6 : 0.38 });
           if (boss) { this.ring(ev.x, ev.z, PAL.gold, 4.2, 0.6, 0.95, true); if (!reducedMotion) this.shake = Math.max(this.shake, 0.7); }
           break;
         }
         case 'snow': // snowball landing (cycle 39): a pale ring and a puff of snow
-          this.ring(ev.x, ev.z, 0xc4f2ff, ev.radius, 0.3, 0.85);
+          this.ring(ev.x, ev.z, this.look.frostFx, ev.radius, 0.3, 0.85);
           fx.emit({ kind: 'puff', n: 6, color: 0xf4fbff, at: [ev.x, 0.4, ev.z], speed: 3, up: 1.5, size: 0.22, life: 0.4 });
           break;
         case 'splash': // fire tower
@@ -850,6 +1545,12 @@ export class RushView {
           break;
         case 'block': // shield-bearer turned a bolt aside
           fx.emit({ kind: 'spark', n: 4, color: 0xe8eefc, at: [ev.x, 1.0, ev.z], speed: 4, up: 2, size: 0.16, life: 0.2 });
+          break;
+        case 'ward': // shaman ward pulse (cycle 90): a magenta ink ring over the warded circle
+          this.ring(ev.x, ev.z, 0xe070e0, ev.radius, 0.45, 0.85, true);
+          break;
+        case 'wardBreak': // a hero hit pops a ward: magenta shards
+          fx.emit({ kind: 'shard', n: 6, color: 0xf08cf0, at: [ev.x, 0.9, ev.z], speed: 4.5, up: 3.5, size: 0.12, life: 0.4 });
           break;
         case 'chill': // frost tower
           fx.emit({ kind: 'spark', n: 3, color: 0xd8f8ff, at: [ev.x, 0.9, ev.z], speed: 2.5, up: 1.5, size: 0.18, life: 0.3 });
@@ -862,7 +1563,7 @@ export class RushView {
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.45);
           break;
         case 'crateHit': {
-          const c = this.crates.get(ev.id);
+          const c = this.kit?.crates.get(ev.id);
           if (c) c.wobble = 0.18;
           fx.emit({ kind: 'shard', n: 3, color: 0xc98a4a, at: [ev.x, 0.7, ev.z], speed: 3, up: 3, size: 0.08, life: 0.3 });
           break;
@@ -879,7 +1580,11 @@ export class RushView {
         case 'roar': this.telegraph(ev.x, ev.z, ev.radius, ev.time, 0xffb02e); break;
         // Shaman heal (cycle 59): a green ring out to the heal radius, so the cause of the refilled bars is visible.
         // Cycle 60: at 0.55 opacity the ink band won and it read as a grey smudge; 0.9 and a little longer reads green.
+        // Frost wolf lunge: a thin red ring under the crouching wolf while it winds up, then a snow puff as it springs.
+        case 'lunge': this.ring(ev.x, ev.z, TEAM.enemy, 0.9, ev.time, 0.9, true); break;
+        case 'pounce': fx.emit({ kind: 'puff', n: 3, color: 0xeef5fa, at: [ev.x, 0.2, ev.z], speed: 1.8, up: 0.6, size: 0.18, life: 0.3 }); break;
         case 'heal': this.ring(ev.x, ev.z, 0x5ee87a, ev.radius, 0.7, 0.9, true); break;
+        case 'superReady': this.ring(this.hero.position.x, this.hero.position.z, PAL.super, 2.4, 0.5, 0.95, true); break;
         case 'lap': // endless lap (cycle 47): a wide red ink ring around the town and a shake
           this.ring(TOWN.x, TOWN.z, 0xff4d5e, 7, 0.7, 0.95, true);
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.5);
@@ -889,12 +1594,29 @@ export class RushView {
           fx.emit({ kind: 'puff', n: 12, color: 0xe8c99a, at: [ev.x, 0.4, ev.z], speed: 4, up: 1, size: 0.3, life: 0.5 });
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.35);
           break;
+        case 'howl': { // the frost lord's howl: a wide ice ring from the boss, and ice bursts on every tower
+          this.ring(ev.x, ev.z, 0x9fe6ff, 16, 0.9, 0.95, true);
+          this.towers.forEach((tw, i) => { if (tw && FROST_HOWL.towerFreeze > 0) fx.emit({ kind: 'puff', n: 8, color: 0xd8f6ff, at: [PADS[i].x, 1.4, PADS[i].z], speed: 2.4, up: 1.2, size: 0.28, life: 0.6 }); });
+          if (FROST_HOWL.heroFreeze > 0) fx.emit({ kind: 'shard', n: 14, color: 0xd8f6ff, at: [hp.x, 1.2, hp.z], speed: 3, up: 3, size: 0.16, life: 0.6 });
+          if (!reducedMotion) this.shake = Math.max(this.shake, 0.6);
+          break;
+        }
         case 'slam':
           this.ring(ev.x, ev.z, 0xff5d73, ev.radius, 0.35, 0.95, true);
           fx.emit({ kind: 'puff', n: 10, color: 0xe8c99a, at: [ev.x, 0.3, ev.z], speed: 3.5, up: 0.8, size: 0.28, life: 0.45 });
           if (!reducedMotion) this.shake = Math.max(this.shake, 0.6);
           break;
         case 'townHit': if (!reducedMotion) this.shake = Math.max(this.shake, 0.12); break;
+        // Wave held (cycle 79): a gold ink ring around the town and sparks rising from it; no text (#107 hid the toasts).
+        case 'waveClear': {
+          this.ring(TOWN.x, TOWN.z, PAL.gold, 4.5, 0.9, 0.9, true);
+          // Sparks rise from eight points on the ring, not over the castle roof where they hid behind it.
+          for (let i = 0; i < 8; i++) {
+            const a = (i / 8) * Math.PI * 2, x = TOWN.x + Math.cos(a) * 3.4, z = TOWN.z + Math.sin(a) * 3.4;
+            fx.emit({ kind: 'spark', n: reducedMotion ? 1 : 3, color: PAL.gold, at: [x, this.groundHeight(x, z) + 0.4, z], speed: 1.2, up: 5, size: 0.22, life: 0.9 });
+          }
+          break;
+        }
         // Boss arrival (cycle 67): a wide red ink ring where it walks in and one big shake; no text since #107 hid the toasts.
         case 'bossEnter': this.ring(ev.x, ev.z, TEAM.enemy, 5, 1.1, 0.95, true); if (!reducedMotion) this.shake = Math.max(this.shake, 0.55); break;
         case 'heroDown':
@@ -904,19 +1626,52 @@ export class RushView {
         case 'coin':
           fx.emit({ kind: 'spark', n: 3, color: PAL.gold, at: [hp.x, 1.6, hp.z], speed: 1.5, up: 3, size: 0.14, life: 0.35 });
           break;
-        case 'build': {
+        case 'demolish': { // a tower taken down: dust and planks where it stood
           const p = PADS[ev.pad];
-          this.ring(p.x, p.z, 0xffd166, 1.8, 0.45, 0.9);
-          fx.emit({ kind: 'puff', n: 8, color: 0xf0d9a8, at: [p.x, 0.3, p.z], speed: 2.5, up: 0.8, size: 0.26, life: 0.45 });
+          this.ring(p.x, p.z, 0xc9a26a, 1.6, 0.35, 0.8);
+          fx.emit({ kind: 'puff', n: 10, color: 0xe8d5b0, at: [p.x, 0.5, p.z], speed: 2.8, up: 1, size: 0.3, life: 0.5 });
+          fx.emit({ kind: 'shard', n: 8, color: 0x9a6a3a, at: [p.x, 1.2, p.z], speed: 3.2, up: 4, size: 0.13, life: 0.5 });
           break;
         }
+        case 'build': {
+          // Build or level up: a gold ink ring, dust, and chips in the new branch colour (the tower itself pops, see syncDefences).
+          const p = PADS[ev.pad], c = ev.branch ? BRANCH_TRIM[ev.branch] : PAL.gold;
+          this.ring(p.x, p.z, 0xffd166, 1.8 + ev.level * 0.3, 0.45, 0.9, ev.level > 0);
+          fx.emit({ kind: 'puff', n: 8, color: 0xf0d9a8, at: [p.x, 0.3, p.z], speed: 2.5, up: 0.8, size: 0.26, life: 0.45 });
+          fx.emit({ kind: 'shard', n: 6 + ev.level * 3, color: c, at: [p.x, 1.4 + ev.level * 0.4, p.z], speed: 3.5, up: 5, size: 0.12, life: 0.55 });
+          break;
+        }
+        case 'barricade': {
+          const p = BARRICADES[ev.slot], v = this.barricadeViews[ev.slot];
+          if (v) v.pop = ev.repair ? POP_TIME * 0.6 : POP_TIME;
+          this.ring(p.x, p.z, ev.repair ? 0x7fe08a : 0xffd166, 2.0, 0.45, 0.9, !ev.repair);
+          fx.emit({ kind: 'puff', n: 6, color: 0xf0d9a8, at: [p.x, 0.3, p.z], speed: 2.5, up: 0.8, size: 0.24, life: 0.45 });
+          fx.emit({ kind: ev.repair ? 'spark' : 'shard', n: 6, color: ev.repair ? 0x9df0a8 : ev.level ? DEF.steel : DEF.plank, at: [p.x, 0.9, p.z], speed: 3, up: 4, size: 0.12, life: 0.5 });
+          break;
+        }
+        case 'barricadeHit': {
+          const v = this.barricadeViews[ev.slot];
+          if (v) v.wobble = 0.16;
+          fx.emit({ kind: 'shard', n: 2, color: DEF.plank, at: [ev.x, 0.7, ev.z], speed: 2.5, up: 2.5, size: 0.08, life: 0.3 });
+          if (ev.spiked) fx.emit({ kind: 'spark', n: 2, color: 0xffffff, at: [ev.x, 0.6, ev.z], speed: 3, up: 1, size: 0.13, life: 0.16 });
+          break;
+        }
+        case 'loot': // gold taken at a barricade: coins hop up from where it fell
+          fx.emit({ kind: 'spark', n: reducedMotion ? 2 : 4, color: PAL.gold, at: [ev.x, 0.8, ev.z], speed: 1.5, up: 4, size: 0.16, life: 0.5 });
+          break;
+        case 'barricadeBreak': // splinters, dust and a brown ink ring; a little shake
+          this.ring(ev.x, ev.z, DEF.plank, 2.2, 0.4, 0.9, true);
+          fx.emit({ kind: 'shard', n: 14, color: DEF.wood, at: [ev.x, 0.6, ev.z], speed: 5, up: 5, size: 0.14, life: 0.6 });
+          fx.emit({ kind: 'puff', n: 5, color: 0xe8c99a, at: [ev.x, 0.4, ev.z], speed: 2, up: 1, size: 0.3, life: 0.5 });
+          if (!reducedMotion) this.shake = Math.max(this.shake, 0.3);
+          break;
       }
     }
   }
 
   private ring(x: number, z: number, color: number, radius: number, life: number, opacity: number, ink = false) {
     const add = (geo: RingGeometry, c: number, order: number) => {
-      const mesh = new Mesh(geo, basic(c, opacity));
+      const mesh = new Mesh(geo, geo === this.geo.ring ? glow(basic(c, opacity)) : basic(c, opacity)); // frame: coloured band glows
       mesh.rotation.x = -Math.PI / 2;
       mesh.position.set(x, 0.06, z);
       mesh.scale.setScalar(radius * 0.3);
@@ -949,9 +1704,13 @@ export class RushView {
 
   /** `held` = hit-stop: the world pose (walk bob, coin spin, hero clip) holds; effects and camera keep moving. */
   sync(s: RushState, dt: number, aim: AimPreview, held = false, reduced = false) {
-    const worldDt = held ? 0 : dt;
+    const worldDt = held || this.poseHold ? 0 : dt;
     this.time += worldDt;
+    const stage = s.diff.stage ?? 1;
+    if (stage !== this.styledStage || s.map !== this.styledMap) this.restyle(stage, s.map);
+    this.syncSnow(dt, reduced);
     const h = s.hero, alive = h.downT <= 0, def = heroDef(s);
+    this.syncRespawn(h.downT, def.respawn);
     this.showHero(h.kind);
     this.syncFan(def);
     // Popo's snowball (cycle 48): in the paw only with a round loaded and not right after a throw; an empty paw = reloading.
@@ -961,6 +1720,17 @@ export class RushView {
     this.hero.visible = alive;
     this.hero.position.set(h.x, this.groundHeight(h.x,h.z), h.z);
     this.heroFootprints.forEach((m,i)=>this.conformDecal(m,.02+i*.01));
+    const ring = this.superRing;
+    if (ring) {
+      ring.visible = alive && superReady(s);
+      if (ring.visible) {
+        // Breathes on the super button's 0.9 s beat; steady under reduced motion.
+        const beat = reduced ? 0 : Math.sin(this.time * Math.PI * 2 / 0.9);
+        ring.scale.setScalar(0.95 * (1 + 0.07 * beat));
+        (ring.material as MeshBasicMaterial).opacity = 0.82 + 0.13 * beat;
+        this.conformDecal(ring, .04);
+      }
+    }
     this.heroBody.rotation.y = yaw(h.facing);
     this.heroRig?.motion.sync(s, h.x, h.z, worldDt, reduced, alive);
     this.setBar(this.heroBar, h.hp / heroMaxHp(s));
@@ -972,40 +1742,24 @@ export class RushView {
       seg.quaternion.copy(this.camera.quaternion);
     });
     this.drawEnemies(s, reduced);
+    this.syncLaneCues(s, reduced);
     this.drawShotsAndCoins(s);
     // Cover: bushes turn see-through while the hero hides in one; broken crates disappear.
     const hiding = alive && heroHidden(s);
-    BUSHES.forEach((b, i) => {
-      const mesh = this.bushMeshes[i], mat = mesh.material as Material & { opacity: number };
+    const kit = this.kit!;
+    s.map.bushes.forEach((b, i) => {
+      const mesh = kit.bushes[i], mat = mesh.material as Material & { opacity: number };
       const inside = hiding && Math.abs(h.x - b.x) <= b.w / 2 && Math.abs(h.z - b.z) <= b.d / 2;
-      mat.opacity = inside ? 0.4 : 1;
-      mat.depthWrite = !inside;
-      mesh.children[0].visible = !inside;
-    });
-    const standing = new Set(s.crates.map(c => c.id));
-    for (const [id, c] of this.crates) {
-      c.mesh.visible = standing.has(id);
-      c.wobble = Math.max(0, c.wobble - worldDt);
-      const k = Math.sin(c.wobble * 60) * c.wobble * 0.5;
-      c.mesh.rotation.set(k * 0.4, 0, k);
-    }
-    // Towers
-    s.towers.forEach((t, i) => {
-      const key = t ? `${t.level}${t.branch ?? ''}` : '';
-      if (key !== this.towerLevels[i]) {
-        if (this.towers[i]) this.scene.remove(this.towers[i]!);
-        this.towers[i] = t ? this.makeTower(t.level, t.branch) : null;
-        if (this.towers[i]) { this.towers[i]!.position.set(PADS[i].x, this.groundHeight(PADS[i].x,PADS[i].z), PADS[i].z); this.scene.add(this.towers[i]!); }
-        this.towerLevels[i] = key;
+      if (!kit.bushBatch) {
+        mat.opacity = inside ? 0.4 : 1; mat.depthWrite = !inside; mesh.children[0].visible = !inside; mesh.visible = true;
+        return;
       }
-      if (t && this.towers[i]) this.towers[i]!.getObjectByName('head')!.rotation.y = yaw(t.facing);
+      // Cycle 119: the batch draws every bush but the one the hero hides in, which shows as its own see-through mesh.
+      mat.opacity = 0.4; mat.depthWrite = false; mesh.children[0].visible = false; mesh.visible = inside;
+      if (kit.bushBatch.body.getVisibleAt(i) === inside) { kit.bushBatch.body.setVisibleAt(i, !inside); kit.bushBatch.hull.setVisibleAt(i, !inside); }
     });
-    const reach = alive ? padInReach(s) : -1;
-    if (!this.sheetMode) this.padRings.forEach((ring, i) => {
-      (ring.material as MeshBasicMaterial).opacity = i === reach ? reduced ? 0.9 : 0.8 + Math.sin(this.time * 8) * 0.15 : 0.72;
-      ring.scale.setScalar(i === reach ? 1.15 : 1.05);
-      ring.visible = !towerMaxed(s, i) || i === reach;
-    });
+    this.syncCrates(s, kit, worldDt);
+    this.syncDefences(s, worldDt, alive, reduced);
     this.setBar(this.townBar, s.town.hp / s.town.maxHp);
     this.syncDamage(s, reduced);
     this.updateAim(s, aim);
@@ -1016,6 +1770,101 @@ export class RushView {
     this.townHeroTarget.set(h.x, this.groundHeight(h.x,h.z)+1, h.z);
     this.townView?.update(this.camera, alive && !this.sheetMode ? this.townHeroTarget : undefined,
       this.renderer.domElement.width, this.renderer.domElement.height);
+  }
+
+  /** Towers, barricades, build rings and upgrade chevrons (defence lane). */
+  private syncDefences(s: RushState, dt: number, alive: boolean, reduced: boolean) {
+    const fx = this.particles;
+    s.towers.forEach((t, i) => {
+      const look = t ? `${t.level}${t.branch ?? ''}` : '', key = `${look}:${this.region}`, f = this.towerFx[i], pad = PADS[i];
+      if (key !== this.towerLevels[i]) {
+        // A new level or branch pops up (squash and stretch); a region change alone just swaps the kit.
+        if (look && look !== this.towerLevels[i].split(':')[0]) f.pop = POP_TIME;
+        if (this.towers[i]) this.scene.remove(this.towers[i]!);
+        this.towers[i] = t ? this.makeTower(t.level, t.branch, pad.x < 0) : null;
+        if (this.towers[i]) { this.towers[i]!.position.set(pad.x, this.groundHeight(pad.x, pad.z), pad.z); this.scene.add(this.towers[i]!); }
+        this.towerLevels[i] = key;
+        f.cd = t?.cd ?? 0;
+      }
+      const g = this.towers[i];
+      if (!t || !g) return;
+      const head = g.getObjectByName('head')!, bow = g.getObjectByName('bow')!, body = g.getObjectByName('body')!;
+      head.rotation.y = yaw(t.facing);
+      // A shot: the cooldown jumps back up. The bow kicks back and a puff in the branch colour leaves the muzzle.
+      if (t.cd > f.cd + 0.05 && dt > 0 && !this.fxPaused) {
+        f.recoil = 0.14;
+        const tip = 1.0 + t.level * 0.25, y = (g.userData.height as number) + 0.4;
+        fx.emit({ kind: 'puff', n: 2, color: t.branch === 'fire' ? 0xffb02e : t.branch === 'frost' ? 0xd8f6ff : 0xfff1c2, at: [pad.x + Math.cos(t.facing) * tip, y, pad.z + Math.sin(t.facing) * tip], speed: 1.4, up: 0.4, size: 0.13, life: 0.22, dir: t.facing, cone: 0.5 });
+      }
+      f.cd = t.cd;
+      f.recoil = Math.max(0, f.recoil - dt);
+      bow.position.x = -0.22 * (f.recoil / 0.14);
+      f.pop = Math.max(0, f.pop - dt);
+      const k = popScale(f.pop);
+      body.scale.set(1 + (k - 1) * 0.6, k, 1 + (k - 1) * 0.6);
+      // Branch life: embers rise off the fire crown, ice glints off the frost one (instanced particles, no draw calls).
+      if (t.branch && !reduced && !this.sheetMode && !this.fxPaused && (f.idle -= dt) <= 0) {
+        f.idle = t.branch === 'fire' ? 0.28 : 0.55;
+        const a = Math.random() * Math.PI * 2, r = 0.55 + t.level * 0.1, y = (g.userData.height as number) + 0.55;
+        fx.emit(t.branch === 'fire'
+          ? { kind: 'spark', n: 1, color: Math.random() < 0.5 ? 0xffb02e : 0xff6a2a, at: [pad.x + Math.cos(a) * r, y, pad.z + Math.sin(a) * r], speed: 0.3, up: 2.2, size: 0.09, life: 0.6 }
+          : { kind: 'spark', n: 1, color: 0xe6fbff, at: [pad.x + Math.cos(a) * r, y, pad.z + Math.sin(a) * r], speed: 0.2, up: 0.6, size: 0.11, life: 0.45 });
+      }
+    });
+    // Barricades: level, damage state (intact, cracked, rubble) and region pick the kit; a hit wobbles it, a build pops it.
+    s.barricades.forEach((b, i) => {
+      const v = this.barricadeViews[i];
+      if (!v) return;
+      v.root.visible = !!b && !this.sheetMode;
+      if (!b) { v.key = ''; return; }
+      const key = `${b.level}:${barricadeState(b.hp, barricadeMaxHp(s, b.level))}:${this.region}`;
+      if (key !== v.key) {
+        const kit = this.barricadeKit(b.level, barricadeState(b.hp, barricadeMaxHp(s, b.level)));
+        v.body.geometry = kit.body; v.hull.geometry = kit.hull; v.key = key;
+      }
+      v.wobble = Math.max(0, v.wobble - dt);
+      v.pop = Math.max(0, v.pop - dt);
+      const w = Math.sin(v.wobble * 60) * v.wobble * 0.35, k = popScale(v.pop);
+      v.root.rotation.set(w * 0.5, siteAngle(BARRICADES[i]), w);
+      v.root.scale.set(1 + (k - 1) * 0.4, k, 1 + (k - 1) * 0.4);
+    });
+    // Build rings: gold = you can afford it here, pale = not yet, green = a barricade to repair; the one in reach pulses.
+    const here = alive ? siteInReach(s) : null, gold = s.gold;
+    const C = this.chevrons;
+    C.body.begin(); C.hull.begin();
+    const chevron = (x: number, y: number, z: number) => {
+      const t = this.tmp, bob = reduced ? 0 : Math.sin(this.time * 4 + x) * 0.12;
+      t.m.compose(t.p.set(x, y + bob + this.groundHeight(x, z), z), this.camera.quaternion, t.s.set(1, 1, 1));
+      C.body.push(t.m); C.hull.push(t.m);
+    };
+    const R = this.siteRingSets;
+    R.strong.begin(); R.faint.begin(); R.near.visible = false;
+    R.at.forEach((at, j) => {
+      const tower = j < PADS.length, i = tower ? j : j - PADS.length;
+      const inReach = !!here && (here.kind === 'tower') === tower && here.i === i;
+      let cost: number | null, repair = false;
+      if (tower) cost = padCost(s, i);
+      else { const o = barricadeOrder(s, i); cost = o ? o.cost : null; repair = o?.action === 'repair'; }
+      if (this.sheetMode || (cost === null && !inReach)) return;
+      const can = cost !== null && cost <= gold, colour = repair ? 0x6fe08a : can ? 0xffd34a : 0xfff0b8;
+      const pulse = inReach && !reduced ? Math.sin(this.time * 8) : 0;
+      const size = (tower ? 1.12 : 1.4) * (inReach ? 1.08 + pulse * 0.03 : 1);
+      if (inReach) {
+        const mat = R.near.material as MeshBasicMaterial;
+        mat.color.setHex(colour); mat.opacity = 0.85 + pulse * 0.12;
+        R.near.position.copy(at); R.near.scale.setScalar(size); R.near.visible = true;
+      } else {
+        const t = this.tmp;
+        t.m.compose(t.p.copy(at), this.ringTurn, t.s.set(size, size, size));
+        (can ? R.strong : R.faint).push(t.m, this.ringColor.setHex(colour));
+      }
+      // Chevron over a standing defence whose next level is affordable (not over empty sites: the ring says that).
+      if (!can || repair || this.sheetMode) return;
+      if (tower && s.towers[i]) chevron(PADS[i].x, (this.towers[i]?.userData.height as number ?? 2) + 1.05, PADS[i].z);
+      else if (!tower && s.barricades[i]) chevron(BARRICADES[i].x, 1.85, BARRICADES[i].z);
+    });
+    R.strong.end(); R.faint.end();
+    C.body.end(); C.hull.end();
   }
 
   private updateAim(s: RushState, aim: AimPreview) {
@@ -1105,9 +1954,15 @@ export class RushView {
   }
 
   private updateCamera(s: RushState, dt: number) {
+    if (this.overhead) {
+      const cx = (ARENA.minX + ARENA.maxX) / 2, cz = (ARENA.minZ + ARENA.maxZ) / 2 - 2;
+      this.focus.set(cx, 0, cz);
+      this.camera.position.set(cx, 88, cz + 0.01); this.camera.lookAt(cx, 0, cz);
+      return;
+    }
     const h = s.hero, target = battleFocus(h, h.downT > 0, this.portrait);
     if (this.sheetMode) target.y = 0;
-    this.focus.lerp(target, 1 - Math.exp(-6 * dt));
+    if (this.snapNext) { this.focus.copy(target); this.snapNext = false; } else this.focus.lerp(target, 1 - Math.exp(-6 * dt));
     const height = (this.portrait ? 30 : 23) * this.zoom, back = (this.portrait ? 14 : 12.5) * this.zoom;
     this.camera.position.set(this.focus.x, this.focus.y + height, this.focus.z + back);
     if (this.shake > 0) {
@@ -1122,10 +1977,11 @@ export class RushView {
   /** Model sheet: hide everything but character bodies, outlines and the hero on a flat background. */
   sheet() {
     this.sheetMode = true;
-    const keep = new Set<Object3D>([this.hero, ...Object.values(this.batches.body).map(b => b.mesh), ...Object.values(this.batches.hull).map(b => b.mesh), ...Object.values(this.batches.flash).map(b => b.mesh)]);
+    const keep = new Set<Object3D>([this.hero, ...(this.batches.multi ? [this.batches.multi.body.mesh, this.batches.multi.hull.mesh, this.batches.multi.flash.mesh] : []), ...Object.values(this.batches.body).map(b => b.mesh), ...Object.values(this.batches.hull).map(b => b.mesh), ...Object.values(this.batches.flash).map(b => b.mesh)]);
     for (const o of this.scene.children) if (!keep.has(o) && !(o instanceof HemisphereLight) && !(o instanceof DirectionalLight)) o.visible = false;
     this.hero.children.filter(c => c !== this.heroBody).forEach(c => (c.visible = false));
     this.scene.background = new Color(0x2b3a55);
+    this.fitFrame();
   }
 
   /** Screen point → ground point (for mouse aim). */
@@ -1141,7 +1997,77 @@ export class RushView {
     return { x: (v.x + 1) / 2 * rect.width, y: (1 - v.y) / 2 * rect.height, visible: v.z < 1 && Math.abs(v.x) < 1.2 && Math.abs(v.y) < 1.2 };
   }
 
-  render() { this.renderer.render(this.scene, this.camera); }
+  /** Debug (cycle 109, contrast measurement only): true stops enemies casting shadows and hides their foot blobs and floor
+   * rings, so an enemy frame minus the empty frame is the body (with any shell) alone. */
+  bodyOnly = false;
+  /** Debug (cycle 120, matched captures): the world pose holds (enemy bob, walk, coin spin, hero clip), as in a hit-stop. */
+  poseHold = false;
+  /** Debug (cycle 120): the next frame puts the camera focus on its target at once instead of easing toward it. */
+  private snapNext = false;
+  snapCamera() { this.snapNext = true; }
+  /** Debug (cycle 114, contrast measurement only): true draws enemy bodies, shells and flashes in flat magenta and hides
+   * their outlines, so a frame gives each enemy's shape however close its colours are to the floor. */
+  maskMode = false;
+  /** Cycle 126: one flat colour per kind (MASK_COLOR), so a big neighbour's body or shell never counts as another enemy. */
+  private maskMats = Object.fromEntries(ENEMY_KINDS.map(k => [k, new MeshBasicMaterial({ color: MASK_COLOR[k], toneMapped: false })])) as Record<EnemyKind, MeshBasicMaterial>;
+  /** Debug (cycle 107): set by tallyDraws(); the next render() counts every draw call by pass and name. */
+  private tallyNext = false;
+  lastTally: Record<string, number> | null = null;
+  tallyDraws() { this.tallyNext = true; }
+  render() {
+    if (this.tallyNext) {
+      // Count every renderBufferDirect of this frame: shadow map (depth materials), main camera, or other (post, glow).
+      this.tallyNext = false;
+      const r = this.renderer, plain = r.renderBufferDirect, tally: Record<string, number> = {};
+      r.renderBufferDirect = (camera, scene, geometry, material, object, group) => {
+        const pass = (material as { isMeshDepthMaterial?: boolean; isMeshDistanceMaterial?: boolean }).isMeshDepthMaterial || (material as { isMeshDistanceMaterial?: boolean }).isMeshDistanceMaterial ? 'shadow'
+          : camera === this.camera ? 'main' : 'other';
+        const inst = (object as unknown as { isInstancedMesh?: boolean }).isInstancedMesh ? ' [inst]' : '';
+        // Named ancestors (cycle 115: any depth): the outermost and the nearest, '/part' when the drawn object has no name.
+        const names: string[] = [];
+        for (let o: Object3D | null = object; o && o !== this.scene; o = o.parent) if (o.name) names.push(o.name);
+        const name = names.length ? (names.length > 1 ? `${names[names.length - 1]}>${names[0]}` : names[0]) + (object.name ? '' : '/part')
+          : pass === 'other' ? 'post-pass' // glow and finishing passes draw full-screen quads outside the scene
+          : `${(material as Material).type}:${geometry.type}${inst}${(material as Material).side === BackSide ? ' ink' : ''}`;
+        const key = `${pass} ${name}`;
+        tally[key] = (tally[key] ?? 0) + 1;
+        plain.call(r, camera, scene, geometry, material, object, group);
+      };
+      try { this.renderFrame(); } finally { r.renderBufferDirect = plain; }
+      this.lastTally = tally;
+      return;
+    }
+    if (this.maskMode) { this.renderMask(); return; }
+    this.renderFrame();
+  }
+  /** Debug (cycle 114): one frame with the enemy layers swapped to the flat mask material and their outlines hidden. */
+  private renderMask() {
+    const B = this.batches, multi = B.multi;
+    const fill = ENEMY_KINDS.flatMap(k => [B.body[k], B.flash[k], B.ice[k], B.ward[k]].map(b => ({ mesh: b.mesh as Mesh, mat: this.maskMats[k] })));
+    const ink = [...Object.values(B.hull).map(b => b.mesh as Mesh), ...(multi ? [multi.hull.mesh] : [])];
+    const mats = fill.map(f => f.mesh.material), seen = ink.map(m => m.visible);
+    fill.forEach(f => { f.mesh.material = f.mat; });
+    ink.forEach(m => { m.visible = false; });
+    try { this.renderFrame(); } finally {
+      fill.forEach((f, i) => { f.mesh.material = mats[i]; });
+      ink.forEach((m, i) => { m.visible = seen[i]; });
+    }
+  }
+  private renderFrame() {
+    const look = this.frameLook;
+    this.rig.setLook(look);
+    setWaterLook(this.waterMat, look);
+    // Cycle 101: the caster/receiver walk runs only on frames whose shadow map is redrawn.
+    if (this.rig.shadows && this.rig.follow(this.camera, this.focus)) {
+      markShadows(this.scene, this.hero);
+      if (this.bodyOnly) for (const b of [...Object.values(this.batches.body), ...Object.values(this.batches.flash)]) b.mesh.castShadow = false;
+      if (this.bodyOnly && this.batches.multi) { this.batches.multi.body.mesh.castShadow = false; this.batches.multi.flash.mesh.castShadow = false; }
+    }
+    // Glow passes only while something that glows is on screen: a shot, a status ring, a shockwave, the super ring.
+    let glowing = this.fx.length > 0 || !!this.superRing?.visible;
+    for (let i = 0; !glowing && i < this.glowBatches.length; i++) glowing = this.glowBatches[i].size > 0;
+    this.draw(this.scene, this.camera, look, glowing);
+  }
   /** Renderer statistics for the debug overlay and performance notes. */
   /** Hero model triangles split into body and ink hull (outline meshes draw back faces), for measurement. */
   private heroTris() {
@@ -1153,7 +2079,28 @@ export class RushView {
     });
     return out;
   }
-  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroTexture: !!this.heroRig?.material.map, heroNormalMap: !!this.heroRig?.material.normalMap, heroMotion: this.heroRig?.motion.info(), heroKind: this.heroKind, heroTris: this.heroTris(), enemyTris: Object.fromEntries([...this.enemyKits].map(([k, v]) => [k, (v.body.index ? v.body.index.count : v.body.attributes.position.count) / 3])), heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, townModel: this.townView?.status, townOccluders: this.townView?.occlusion.count ?? 0, damage: { ...this.damageStages }, heroTint: this.mats.hero.color.getHex(), heroPosture: this.heroBody.scale.y, terrain: {heroY:this.hero.position.y,townY:this.townView?.root.position.y,focusY:this.focus.y}, dropped: Batch.dropped, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
+  /** Debug (cycle 100): the visible meshes that cast into the shadow map, grouped by name (or the parent's name),
+   * with their triangles and instance count. Read-only. */
+  shadowCasters() {
+    const out: Record<string, { meshes: number; tris: number; instances: number }> = {};
+    this.scene.traverseVisible(o => {
+      const m = o as Mesh;
+      if (!m.isMesh || !m.castShadow) return;
+      const g = m.geometry as BufferGeometry, tris = (g.index ? g.index.count : g.attributes.position.count) / 3;
+      const inst = (m as unknown as { isInstancedMesh?: boolean; count: number }).isInstancedMesh ? (m as unknown as { count: number }).count : 1;
+      if (inst === 0) return;
+      const key = o.name || o.parent?.name || o.userData.kind || 'unnamed';
+      const e = out[key] ?? (out[key] = { meshes: 0, tris: 0, instances: 0 });
+      e.meshes++; e.tris += tris * inst; e.instances += inst;
+    });
+    return out;
+  }
+  /** GPU name as the browser reports it (bench panel, cycle 125); shown on the device only. */
+  gpuName(): string {
+    const gl = this.renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info');
+    return String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+  }
+  info() { const r = this.renderer.info.render; return { calls: r.calls, triangles: r.triangles, memory: { ...this.renderer.info.memory, programs: this.renderer.info.programs?.length ?? 0 }, kits: this.kits.size, enemies: this.counts.enemies, shots: this.counts.shots, particles: this.particles.active, heroAnim: !!this.heroShot?.isRunning(), heroReady: !!this.heroRig, heroTexture: !!this.heroRig?.material.map, heroNormalMap: !!this.heroRig?.material.normalMap, heroMotion: this.heroRig?.motion.info(), heroKind: this.heroKind, heroTris: this.heroTris(), enemyTris: Object.fromEntries([...this.enemyKits].map(([k, v]) => [k, (v.body.index ? v.body.index.count : v.body.attributes.position.count) / 3])), heldProp: this.heroRig?.held ? this.heroRig.held.visible : null, townModel: this.townView?.status, townOccluders: this.townView?.occlusion.count ?? 0, damage: { ...this.damageStages }, heroTint: this.mats.hero.color.getHex(), heroPosture: this.heroBody.scale.y, terrain: {heroY:this.hero.position.y,townY:this.townView?.root.position.y,focusY:this.focus.y}, dropped: Batch.dropped, quality: this.quality, pixelRatio: this.renderer.getPixelRatio(), buffer: [this.renderer.domElement.width, this.renderer.domElement.height] }; }
 }
 
 /** Cape placement per hero model (shoulder height y, back offset x, height h, width w), tuned on the model sheet. */
@@ -1165,5 +2112,32 @@ const CAPE: Record<HeroKind, { x: number; y: number; h: number; w: number }> = {
 };
 const BRANCH_COLOR: Record<TowerBranch, number> = { fire: 0xff7a2f, frost: 0x4fc3ff };
 const ICE = new MeshBasicMaterial({ color: 0xc4f2ff, transparent: true, opacity: 0.4, depthWrite: false });
-const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x2fa38f, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4, shaman: 0xd65fcf };
-const towerMaxed = (s: RushState, pad: number) => { const t = s.towers[pad]; return !!t && t.level >= TOWER_LEVELS.length - 1; };
+/** Ward shell (cycle 90): the shaman's magenta, see-through, a little larger than the frost shell so both can show. */
+const WARD = new MeshBasicMaterial({ color: 0xf08cf0, transparent: true, opacity: 0.42, depthWrite: false });
+const KILL_COLOR: Record<EnemyKind, number> = { grunt: 0xe2463f, skirmisher: 0x1fa6b0, brute: 0xe8842a, boss: 0x6d55c4, shield: 0x8fa0c4, shaman: 0xd65fcf, wolf: 0x6fa6ee };
+const ENEMY_KINDS: readonly EnemyKind[] = ['grunt', 'skirmisher', 'brute', 'boss', 'shield', 'shaman', 'wolf'];
+/** Enemies are drawn larger than their hitbox so a grunt is no longer ~30 px tall on a phone; the simulation radius,
+ * spacing and hit tests are unchanged. The wolf is long rather than tall, the boss was already big. */
+/** Debug mask colours per kind (cycle 126, contrast measurement; tools/rush-contrast.py MASK_RGB must match). */
+export const MASK_COLOR: Record<EnemyKind, number> = { grunt: 0xff0000, skirmisher: 0x00ff00, brute: 0x0000ff, shield: 0xffff00, shaman: 0xff00ff, wolf: 0x00ffff, boss: 0xff8000 };
+export const ENEMY_SCALE: Record<EnemyKind, number> = { grunt: 1.3, skirmisher: 1.25, brute: 1.2, shield: 1.25, shaman: 1.25, boss: 1.1, wolf: 1.3 };
+/** Build pop (squash and stretch) length and its height scale over time left. */
+const POP_TIME = 0.45;
+const popScale = (left: number) => { if (left <= 0) return 1; const p = 1 - left / POP_TIME; return 1 - 0.4 * (1 - p) ** 2 * Math.cos(p * Math.PI * 2.5); };
+/** Barricade yaw: its front (local -z) faces up its lane, toward the enemies. */
+function siteAngle(b: Vec & { lane: number }): number {
+  const lane = LANES[b.lane];
+  let best = 0, bestD = Infinity;
+  for (let i = 0; i < lane.length - 1; i++) {
+    const a = lane[i], c = lane[i + 1], ax = c.x - a.x, az = c.z - a.z;
+    const t = Math.min(1, Math.max(0, ((b.x - a.x) * ax + (b.z - a.z) * az) / (ax * ax + az * az)));
+    const d = Math.hypot(a.x + ax * t - b.x, a.z + az * t - b.z);
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  const a = lane[best], c = lane[best + 1];
+  return Math.atan2(c.x - a.x, c.z - a.z);
+}
+/** Snow region: building materials (wood, stone, earth, steel) lean toward the cool wall stone; fire, ice, gold and
+ * team colours stay as they are so the branch and the side still read. */
+const COOLED = new Set<number>([DEF.wood, DEF.woodDark, DEF.plank, DEF.tip, DEF.stone, DEF.stoneAlt, DEF.stoneFoot, DEF.stoneCap, DEF.mortar, DEF.earth, DEF.iron, DEF.steel, 0xb87436]);
+const coolPart = (p: Part): Part => (COOLED.has(p.color) ? { ...p, color: mixHex(p.color, REGION_LOOK.snow.wallCool, REGION_LOOK.snow.wallMix) } : p);

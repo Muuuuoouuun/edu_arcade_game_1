@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ECONOMY, ENEMIES, HERO, HERO_SPAWN, PADS, STEP, TOWER_LEVELS, type EnemyKind } from './data.ts';
-import { createRush, NO_MODS, padCost, rushHash, stepRush, superReady, type Command, type Enemy, type RushEvent, type RushState } from './sim.ts';
+import { createRush, NO_MODS, padCost, rushHash, stepRush, superReady, wardBreakBurst, type Command, type Enemy, type RushEvent, type RushState } from './sim.ts';
 import { guardBot, idleBot } from './bot.ts';
 
 const steps = (s: RushState, n: number, cmd: Command | ((s: RushState) => Command) = {}) => {
@@ -138,10 +138,10 @@ test('design pillars: hero alone or towers alone lose, both together win', () =>
 
 test('the rules core stays engine-free (portable to a server or another renderer)', async () => {
   const { readFile } = await import('node:fs/promises');
-  for (const file of ['sim.ts', 'data.ts', 'bot.ts', 'kingdom.ts', 'stages.ts']) {
+  for (const file of ['sim.ts', 'data.ts', 'maps.ts', 'bot.ts', 'kingdom.ts', 'stages.ts']) {
     const src = await readFile(new URL(`./${file}`, import.meta.url), 'utf8');
     const imports = [...src.matchAll(/from '([^']+)'/g)].map(m => m[1]);
-    assert.ok(imports.every(i => ['./data.ts', './sim.ts', './kingdom.ts', './stages.ts'].includes(i)), `${file} imports only rules modules: ${imports.join(', ')}`);
+    assert.ok(imports.every(i => ['./data.ts', './maps.ts', './sim.ts', './kingdom.ts', './stages.ts'].includes(i)), `${file} imports only rules modules: ${imports.join(', ')}`);
     const code = src.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
     for (const banned of ['Math.random', 'document.', 'window.', 'performance.', 'Date.now', 'requestAnimationFrame']) {
       assert.ok(!code.includes(banned), `${file} must not use ${banned}`);
@@ -150,7 +150,8 @@ test('the rules core stays engine-free (portable to a server or another renderer
 });
 
 test('tall grass hides the hero from enemies beyond 1.8 m; attacking reveals for a second', async () => {
-  const { BUSHES, BUSH } = await import('./data.ts');
+  const { BUSH } = await import('./data.ts');
+  const BUSHES = (await import('./maps.ts')).FOREST.bushes;
   const { heroHidden } = await import('./sim.ts');
   const s = createRush(1);
   const b = BUSHES[0];
@@ -173,7 +174,8 @@ test('tall grass hides the hero from enemies beyond 1.8 m; attacking reveals for
 });
 
 test('crates block movement and shots, break after enough damage and drop gold', async () => {
-  const { CRATES, CRATE } = await import('./data.ts');
+  const { CRATE } = await import('./data.ts');
+  const CRATES = (await import('./maps.ts')).FOREST.crates;
   const s = createRush(1);
   const c = CRATES[0];
   s.hero.x = c.x; s.hero.z = c.z + 3;
@@ -473,7 +475,8 @@ test('endless lap twists (cycle 52): swift, shields, twin in turn from lap 2; no
 });
 
 test('shaman (cycle 59): its pulse heals hurt allies in range, never itself or the unhurt or the far, and reports it', () => {
-  const s = createRush(1, NO_MODS, { enemyHp: 2, enemyCount: 1, enemyDamage: 1, stage: 8 });
+  // Heal is endless-only since cycle 90 (stage 11 = the endless challenge); stage 8 keeps only the ward (below).
+  const s = createRush(1, NO_MODS, { enemyHp: 2, enemyCount: 1, enemyDamage: 1, stage: 11 });
   s.prepT = 999; // stay in prep: no spawns, but enemies still update
   const mk = (id: number, kind: EnemyKind, x: number, hp: number, maxHp: number): Enemy =>
     ({ id, kind, x, z: -12, kx: 0, kz: 0, hp, maxHp, lane: 0, wp: 1, cd: 9, flash: 0, chasing: false, facing: 0, windup: null });
@@ -513,4 +516,542 @@ test('boss arrival (cycle 67): exactly one bossEnter per boss, at its spawn, and
     }
   }
   assert.equal(enters.length, 1, 'stage 1 has one boss');
+});
+
+test('ward (cycle 90): the shaman wards allies in range for a while, and from stage 8 heals no one', () => {
+  const s = createRush(1, NO_MODS, { enemyHp: 1, enemyCount: 1, enemyDamage: 1, stage: 8 });
+  s.prepT = 999;
+  const ward = ENEMIES.shaman.ward!;
+  const shaman = enemy(s, 'shaman', 0, -12), near = enemy(s, 'brute', 3, -12), far = enemy(s, 'grunt', 9, -12);
+  near.hp = 100;
+  const at = new Map(s.enemies.map(e => [e, e.x]));
+  const wards: RushEvent[] = [];
+  for (let t = 0; t < ward.every + 0.05; t += STEP) {
+    for (const e of s.enemies) { e.x = at.get(e)!; e.z = -12; }
+    stepRush(s, {});
+    wards.push(...s.events.filter(e => e.type === 'ward'));
+    assert.ok(!s.events.some(e => e.type === 'heal'), 'no heal below the endless challenge');
+  }
+  assert.equal(wards.length, 1, 'one pulse per period');
+  assert.ok((near.wardT ?? 0) > ward.duration - 0.1, 'ally in range warded for the duration');
+  assert.equal(far.wardT ?? 0, 0, 'ally out of range unwarded');
+  assert.equal(shaman.wardT ?? 0, 0, 'never wards itself');
+  assert.equal(near.hp, 100, 'no heal at stage 8');
+  shaman.hp = 0; // with the shaman gone the ward runs out
+  steps(s, Math.ceil(ward.duration / STEP) + 1);
+  assert.equal(near.wardT, 0, 'the ward wears off');
+});
+
+test('ward (cycle 90): towers only scratch a warded enemy', () => {
+  const taken = (warded: boolean) => {
+    const s = createRush(1);
+    s.towers[1] = { level: 2, cd: 0, facing: 0 };
+    const e = enemy(s, 'brute', PADS[1].x, PADS[1].z - 5);
+    for (let i = 0; i < 90; i++) { if (warded) e.wardT = 9; stepRush(s, {}); }
+    return e.maxHp - e.hp;
+  };
+  const open = taken(false), shut = taken(true);
+  assert.ok(open > 0, 'the tower hits');
+  assert.ok(Math.abs(shut - open * ENEMIES.shaman.ward!.towerShare) < 1e-6, `warded takes the tower share (${shut} vs ${open})`);
+});
+
+test('ward (cycle 90): a hero hit breaks it; the ranger breaks only its target, Bron the wards around his', () => {
+  const hitAll = (hero: 'ranger' | 'bron', dx: number, dz: number, others: [number, number][]) => {
+    const s = createRush(1, NO_MODS, undefined, hero);
+    s.prepT = 999;
+    const h = s.hero, target = enemy(s, 'brute', h.x + dx, h.z + dz);
+    const rest = others.map(([x, z]) => enemy(s, 'grunt', target.x + x, target.z + z));
+    for (const e of s.enemies) e.wardT = 9;
+    const breaks: RushEvent[] = [];
+    for (let i = 0; i < 90 && (target.wardT ?? 0) > 0; i++) { stepRush(s, { fire: { x: dx, z: dz } }); breaks.push(...s.events.filter(e => e.type === 'wardBreak')); }
+    return { target, rest, breaks };
+  };
+  const r = hitAll('ranger', 0, -4, [[1.2, 0]]);
+  assert.equal(r.target.wardT, 0, 'ranger bolt breaks the ward');
+  assert.ok(r.breaks.some(e => e.type === 'wardBreak' && e.id === r.target.id), 'and reports it');
+  assert.ok((r.rest[0].wardT ?? 0) > 0, 'a bolt breaks only what it hits');
+  // The second grunt stands 2.4 m behind the target: past Bron's 2.8 m reach from the hero, inside the 2.5 m break.
+  const b = hitAll('bron', 0, -1.1, [[0, -2.4], [5, -1]]);
+  assert.equal(b.target.wardT, 0, 'Bron breaks his target');
+  assert.equal(b.rest[0].hp, b.rest[0].maxHp, 'the second grunt is out of the swing itself');
+  assert.equal(b.rest[0].wardT, 0, 'yet its ward within 2.5 m of the target breaks');
+  assert.ok((b.rest[1].wardT ?? 0) > 0, 'but not one further away');
+});
+
+test('ward breaks (cycle 91): one step summarised as a count, a centre and a covering radius', () => {
+  const firstBreak = (hero: 'ranger' | 'bron', dx: number, dz: number, others: [number, number][]) => {
+    const s = createRush(1, NO_MODS, undefined, hero);
+    s.prepT = 999;
+    const target = enemy(s, 'brute', s.hero.x + dx, s.hero.z + dz);
+    for (const [x, z] of others) enemy(s, 'grunt', target.x + x, target.z + z);
+    for (const e of s.enemies) e.wardT = 9;
+    for (let i = 0; i < 90; i++) { stepRush(s, { fire: { x: dx, z: dz } }); const b = wardBreakBurst(s.events); if (b) return b; }
+    return null;
+  };
+  assert.equal(wardBreakBurst([]), null, 'no breaks, no burst');
+  const bolt = firstBreak('ranger', 0, -4, [[1.2, 0]]);
+  assert.equal(bolt?.count, 1, 'a ranger bolt breaks one ward');
+  assert.equal(bolt?.radius, 0);
+  const swing = firstBreak('bron', 0, -1.1, [[0, -2.4], [0.8, 0.6]]);
+  assert.ok(swing && swing.count >= 2, `Bron's swing clears several at once (${swing?.count})`);
+  assert.ok(swing!.radius >= 1.2 - 1e-9, 'the radius reaches the furthest break');
+});
+
+
+// ---------- battlefield layouts (maps.ts) ----------
+test('layout follows the region: stages 6-10 fight on the snow map, everything else in the forest', async () => {
+  const { mapFor, FOREST, SNOW } = await import('./maps.ts');
+  const { regionOf } = await import('./expedition.ts');
+  for (let stage = 1; stage <= 11; stage++) assert.equal(mapFor(stage).id, regionOf(stage), `stage ${stage}`);
+  // One battlefield per stage, named after its village; the endless challenge reuses stage 1's.
+  const { STAGE_MAPS } = await import('./maps.ts');
+  const { EXPEDITION } = await import('./expedition.ts');
+  assert.equal(STAGE_MAPS.length, 10);
+  STAGE_MAPS.forEach((m, i) => { assert.equal(m.stage, i + 1); assert.equal(m.name, EXPEDITION[i].name); assert.equal(mapFor(i + 1), m); });
+  assert.equal(mapFor(11), STAGE_MAPS[0]);
+  const shape = (m: (typeof STAGE_MAPS)[number]) => JSON.stringify([m.walls, m.crates, m.bushes, m.ice, m.stream, m.props]);
+  assert.equal(new Set(STAGE_MAPS.map(shape)).size, 10, 'no two stages share a battlefield');
+  // What the guard bot's battles depend on is the same on every stage of a region: the gate-road cover pair, the two
+  // walls beside the gate road, a stream that only slows the hero, and ice that leaves the march alone.
+  for (const m of STAGE_MAPS) {
+    assert.ok(m.bushes.some(b => b.x === 3.6 && b.z === 1.5) && m.walls.some(w => w.x === 3.2 && w.z === -3.5), m.name);
+    assert.equal(m.walls.filter(w => w.z + w.d / 2 > -5 && Math.abs(w.x) < 9).length, 2, `${m.name}: nothing else solid near the gate road`);
+    assert.equal(m.bushes.filter(b => b.z + b.d / 2 > -2).length, 2, `${m.name}: no other cover near the town`);
+  }
+  assert.equal(createRush(1).map, FOREST, 'a battle without a stage is the forest');
+  const snow = createRush(1, NO_MODS, { enemyHp: 1, enemyCount: 1, enemyDamage: 1, stage: 6 });
+  assert.equal(snow.map, SNOW);
+  assert.deepEqual(snow.crates.map(c => [c.x, c.z]), SNOW.crates.map(c => [c.x, c.z]));
+  assert.equal(snow.nextId, 1 + SNOW.crates.length);
+  // The two halves of the campaign do not share a wall, a crate spot or a zone; only the cover by the gate road.
+  const key = (b: { x: number; z: number }) => `${b.x},${b.z}`;
+  assert.equal(FOREST.walls.filter(w => SNOW.walls.some(o => key(o) === key(w) && o.kind === w.kind)).length, 0);
+  assert.equal(FOREST.crates.filter(c => SNOW.crates.some(o => key(o) === key(c))).length, 0);
+  assert.equal(FOREST.bushes.filter(c => SNOW.bushes.some(o => key(o) === key(c))).length, 2);
+  assert.ok(FOREST.stream && !SNOW.stream && SNOW.ice.length === 3 && FOREST.ice.length === 0);
+});
+
+test('layouts keep the lanes, the town, the pads and the barricade strip clear, and are mirror-symmetric', async () => {
+  const { STAGE_MAPS, laneDistance, onBridge, pathDistance, onIce } = await import('./maps.ts');
+  const { ARENA, LANES, PADS, TOWN, HERO_SPAWN, CRATE } = await import('./data.ts');
+  const gap = (b: { x: number; z: number; w: number; d: number }, p: { x: number; z: number }) => Math.hypot(Math.max(0, Math.abs(p.x - b.x) - b.w / 2), Math.max(0, Math.abs(p.z - b.z) - b.d / 2));
+  /** Smallest distance from a block to any lane centre line (sampled every 10 cm along the lanes). */
+  const laneGap = (b: { x: number; z: number; w: number; d: number }) => {
+    let best = Infinity;
+    for (const lane of LANES) for (let i = 1; i < lane.length; i++) for (let u = 0; u <= 1; u += 0.1 / Math.hypot(lane[i].x - lane[i - 1].x, lane[i].z - lane[i - 1].z))
+      best = Math.min(best, gap(b, { x: lane[i - 1].x + (lane[i].x - lane[i - 1].x) * u, z: lane[i - 1].z + (lane[i].z - lane[i - 1].z) * u }));
+    return best;
+  };
+  for (const m of STAGE_MAPS) {
+    const solids = [...m.walls, ...m.crates.map(c => ({ ...c, w: CRATE.size, d: CRATE.size }))];
+    for (const b of solids) {
+      assert.ok(b.x - b.w / 2 >= ARENA.minX && b.x + b.w / 2 <= ARENA.maxX && b.z - b.d / 2 >= ARENA.minZ && b.z + b.d / 2 <= ARENA.maxZ, `${m.id}: inside the arena`);
+      for (const o of solids) assert.ok(o === b || Math.abs(o.x - b.x) >= (o.w + b.w) / 2 || Math.abs(o.z - b.z) >= (o.d + b.d) / 2, `${m.name}: solids overlap at ${b.x},${b.z}`);
+      // The boss (radius 1.15) and a brute pushed aside by a crowd still pass: 1.3 m from every lane centre line.
+      assert.ok(laneGap(b) >= 1.3, `${m.id}: solid at ${b.x},${b.z} is ${laneGap(b).toFixed(2)} m from a lane`);
+      assert.ok(gap(b, TOWN) >= TOWN.radius + 1.5 && gap(b, HERO_SPAWN) >= 1.5, `${m.id}: clear of the town and the hero's start`);
+      for (const p of PADS) assert.ok(gap(b, p) >= 2, `${m.id}: clear of a tower pad`);
+      // Barricade strip: the lanes 4-9 m north of the town stay free of solid cover.
+      if (b.z + b.d / 2 > TOWN.z - 9 && b.z - b.d / 2 < TOWN.z - 4) assert.ok(laneGap(b) >= 3, `${m.id}: barricade strip`);
+    }
+    for (const list of [m.walls, m.bushes, m.crates, m.ice, m.props] as const) for (const b of list)
+      assert.ok(list.some(o => o.x === -b.x && o.z === b.z), `${m.id}: mirrored at ${b.x},${b.z}`);
+    // Every lane crosses the stream on a bridge, and every ice sheet lies on a lane.
+    if (m.stream) for (const lane of LANES) for (let z = -26; z < 8; z += 0.05) {
+      const i = lane.findIndex((p, k) => k > 0 && z >= lane[k - 1].z && z <= p.z);
+      if (i < 1) continue;
+      const u = (z - lane[i - 1].z) / (lane[i].z - lane[i - 1].z), x = lane[i - 1].x + (lane[i].x - lane[i - 1].x) * u;
+      for (const dx of [-1.2, 0, 1.2]) if (pathDistance(x + dx, z, m.stream.path) < m.stream.half) assert.ok(onBridge(m, x + dx, z), `bridge under the lane at ${x + dx},${z}`);
+    }
+    for (const b of m.ice) assert.ok(laneDistance(b.x, b.z) < 0.5 && onIce(m, b.x, b.z));
+  }
+});
+
+test('zones: the hero wades the stream slowly but crosses a bridge at full speed; ice is fast and slippery; treasure pays more', async () => {
+  const { FOREST, SNOW, ZONE, inWater, onIce } = await import('./maps.ts');
+  const { CRATE, ENEMIES } = await import('./data.ts');
+  const walk = (x: number) => { const s = createRush(1); s.hero.x = x; s.hero.z = -9.4; steps(s, 12, { move: { x: 0, z: -1 } }); return -9.4 - s.hero.z; };
+  assert.ok(inWater(FOREST, 6, -10) && !inWater(FOREST, 0, -10));
+  const bridge = walk(0), wading = walk(6);
+  assert.ok(Math.abs(bridge - HERO.speed * 0.2) < 1e-6, `bridge: full speed (${bridge.toFixed(2)} m in 0.2 s)`);
+  assert.ok(Math.abs(wading - bridge * ZONE.streamSpeed) < 1e-6, `wading is slower (${wading.toFixed(2)} m)`);
+  // Enemies keep their pace in the stream (the guard bot's forest battles are exactly the pre-region ones).
+  const f = createRush(1), wet = enemy(f, 'grunt', 6, -10), dry = enemy(f, 'grunt', 6, -6);
+  f.hero.x = 14; f.hero.z = 12; wet.wp = dry.wp = 3;
+  const wet0 = { ...wet }, dry0 = { ...dry };
+  steps(f, 10);
+  assert.ok(Math.abs(Math.hypot(wet.x - wet0.x, wet.z - wet0.z) - Math.hypot(dry.x - dry0.x, dry.z - dry0.z)) < 1e-6);
+  // Ice: ×ZONE.iceSpeed for an enemy on the sheet.
+  const s = createRush(1, NO_MODS, { enemyHp: 1, enemyCount: 1, enemyDamage: 1, stage: 6 });
+  const ice = SNOW.ice[0];
+  assert.ok(onIce(SNOW, ice.x, ice.z));
+  const onSheet = enemy(s, 'grunt', ice.x, ice.z - 1), off = enemy(s, 'grunt', ice.x, ice.z + ice.d / 2 + 3);
+  s.hero.x = 14; s.hero.z = 12; onSheet.wp = off.wp = 3;
+  const a0 = onSheet.z, b0 = off.z;
+  steps(s, 30);
+  assert.ok(Math.abs((onSheet.z - a0) / (off.z - b0) - ZONE.iceSpeed) < 1e-6, 'an enemy on ice marches at the ice factor');
+  assert.ok(Math.abs(off.z - b0 - ENEMIES.grunt.speed * 0.5) < 1e-6);
+  // The hero runs faster on the sheet, and a knocked-back enemy slides further on it than on snow.
+  const run = (z: number) => { const r = createRush(1, NO_MODS, { enemyHp: 1, enemyCount: 1, enemyDamage: 1, stage: 6 }); r.hero.x = ice.x; r.hero.z = z; steps(r, 12, { move: { x: 0, z: -1 } }); return z - r.hero.z; };
+  assert.ok(Math.abs(run(ice.z + 1) / run(ice.z + ice.d / 2 + 4) - ZONE.iceHero) < 1e-6, 'the hero is faster on ice');
+  const slide = (z: number) => { const r = createRush(1, NO_MODS, { enemyHp: 1, enemyCount: 1, enemyDamage: 1, stage: 6 }); const e = enemy(r, 'brute', ice.x, z); r.hero.x = 14; r.hero.z = 12; e.wp = 3; e.kx = 6; const x0 = e.x; steps(r, 20); return e.x - x0; };
+  assert.ok(slide(ice.z) > slide(ice.z + ice.d / 2 + 4) * 1.3, 'knockback carries further on ice');
+  // Treasure crates drop their own gold.
+  const chest = s.crates.find(c => c.gold)!;
+  assert.equal(chest.gold, ZONE.cacheGold);
+  assert.ok(ZONE.cacheGold > CRATE.gold * 3);
+  s.hero.x = chest.x; s.hero.z = chest.z + 4;
+  let volleys = 0;
+  while (s.crates.includes(chest) && volleys++ < 20) steps(s, Math.ceil(HERO.reload / STEP) + 1, { fire: { x: 0, z: -1 } });
+  assert.ok(!s.crates.includes(chest) && (s.coins.some(k => k.value === ZONE.cacheGold) || s.stats.goldEarned >= ZONE.cacheGold), 'the chest dropped the cache gold');
+});
+
+test('map size and density stay where they were measured (docs/rush/map-metrics.md)', async () => {
+  const { FOREST, SNOW, mapStats, laneTime, laneLength } = await import('./maps.ts');
+  const { ENEMIES } = await import('./data.ts');
+  for (const m of (await import('./maps.ts')).STAGE_MAPS) {
+    const near2 = mapStats(m, 2), near3 = mapStats(m, 3);
+    // Before the regions: 65.7% of the field within 2 m of a feature (north half 68.3%), 19 features.
+    assert.ok(near2.used >= 0.74 && near2.north >= 0.85, `${m.id}: used ${near2.used.toFixed(3)}, north ${near2.north.toFixed(3)}`);
+    assert.ok(near3.used >= 0.86 && near3.north >= 0.95, `${m.id}: within 3 m ${near3.used.toFixed(3)}, north ${near3.north.toFixed(3)}`);
+    assert.ok(near2.features >= 25, `${m.id}: ${near2.features} features`);
+    // Waves must not arrive much sooner: a grunt took 13.0 s down the centre lane and 13.7 s down a side lane.
+    const centre = laneTime(m, 0, ENEMIES.grunt.speed), side = laneTime(m, 1, ENEMIES.grunt.speed);
+    assert.ok(centre <= 13.0 + 1e-6 && centre >= 12.3 && side <= 13.7 + 1e-6 && side >= 13.0, `${m.id}: grunt arrival ${centre.toFixed(2)} / ${side.toFixed(2)} s`);
+    assert.ok(Math.abs(laneTime(m, 1, 2.5) - laneTime(m, 2, 2.5)) < 1e-9);
+  }
+  assert.ok(Math.abs(laneLength(0) - 32.4) < 0.01 && Math.abs(laneLength(1) - 34.2) < 0.05);
+  // The snow field is a different shape: its outcrops close about 9% of the arena, the forest's walls about 2%.
+  assert.ok(mapStats(SNOW).blocked > 100 && mapStats(FOREST).blocked < 30);
+});
+
+test('frost wolves: snow stages 7-9 only, swapped in for a few grunts, fast, and they crouch before they lunge', async () => {
+  const { ENEMIES, WAVES } = await import('./data.ts');
+  const { stageDifficulty } = await import('./stages.ts');
+  const { groupCount } = await import('./sim.ts');
+  const { regionOf } = await import('./expedition.ts');
+  const packs = WAVES.flat().filter(g => g.kind === 'wolf');
+  assert.ok(packs.length >= 2 && packs.every(g => g.count <= 4), 'a few small packs');
+  const grunts = WAVES.flat().filter(g => g.kind === 'grunt');
+  const total = (stage: number, groups: typeof packs, plain = false) => groups.reduce((sum, g) => sum + groupCount(createRush(1, undefined, { ...stageDifficulty(stage), ...(stage > 10 ? { stage } : {}) }), plain ? { ...g, less: undefined } : g), 0);
+  for (let stage = 1; stage <= 11; stage++) {
+    const n = total(stage, packs), swapped = total(stage, grunts, true) - total(stage, grunts);
+    if (stage < 7 || stage > 9) { assert.equal(n, 0, `no wolves on stage ${stage}`); assert.equal(swapped, 0, `every grunt on stage ${stage}`); }
+    else { assert.ok(n > 0 && swapped > 0, `wolves for grunts on stage ${stage}: ${n} for ${swapped}`); assert.equal(regionOf(stage), 'snow'); }
+  }
+  const wolf = ENEMIES.wolf, lunge = wolf.lunge!;
+  assert.ok(wolf.speed >= ENEMIES.grunt.speed * 1.5 && wolf.hp < ENEMIES.grunt.hp && wolf.gold > 0);
+  // A wolf north of the hero, inside its aggro and lunge range: it warns, stands still for the wind-up, then covers ground faster than it runs.
+  const s = createRush(1);
+  Object.assign(s.hero, { x: 0, z: 0 });
+  const e = enemy(s, 'wolf', 0, -2.4);
+  let warnedAt = -1, sprangAt = -1, from = { x: 0, z: 0 };
+  for (let i = 0; i < 240 && sprangAt < 0; i++) {
+    stepRush(s, {});
+    if (warnedAt < 0 && s.events.some(v => v.type === 'lunge')) { warnedAt = i; from = { x: e.x, z: e.z }; }
+    if (s.events.some(v => v.type === 'pounce')) sprangAt = i;
+  }
+  assert.ok(warnedAt >= 0 && sprangAt > warnedAt, 'warned, then sprang');
+  assert.ok(Math.abs((sprangAt - warnedAt) / 60 - lunge.windup) < 0.05, `wind-up ${(sprangAt - warnedAt) / 60}s`);
+  assert.ok(Math.hypot(e.x - from.x, e.z - from.z) < 1e-9, 'it does not move while crouched');
+  const z0 = e.z;
+  for (let i = 0; i < 6; i++) stepRush(s, {});
+  assert.ok((e.z - z0) / (6 / 60) > wolf.speed * 1.5, `dash pace ${(e.z - z0) / 0.1}`);
+  // It lands a bite and cannot lunge again straight away.
+  const hp = s.hero.hp;
+  e.cd = 0;
+  for (let i = 0; i < 60; i++) stepRush(s, {});
+  assert.ok(s.hero.hp < hp, 'the bite lands');
+  assert.ok((e.lungeCd ?? 0) > 0);
+});
+
+// ---------- barricades (defence lane, 2026-11-13) ----------
+test('barricade sites: each sits on its lane, clear of pads, cover, crates, the town and each other', async () => {
+  const { BARRICADE, BARRICADES, HOME_PADS, LANES, PAD_REACH, TOWN, ARENA } = await import('./data.ts');
+  // Every battlefield layout (maps.ts): the sites are the same on all of them, the cover and crates are not.
+  const { FOREST, SNOW } = await import('./maps.ts');
+  const onSegment = (p: { x: number; z: number }, a: { x: number; z: number }, b: { x: number; z: number }) => {
+    const ax = b.x - a.x, az = b.z - a.z, t = Math.max(0, Math.min(1, ((p.x - a.x) * ax + (p.z - a.z) * az) / (ax * ax + az * az)));
+    return Math.hypot(a.x + ax * t - p.x, a.z + az * t - p.z);
+  };
+  const near = (p: { x: number; z: number }, b: { x: number; z: number; w: number; d: number }, pad: number) => Math.abs(p.x - b.x) <= b.w / 2 + pad && Math.abs(p.z - b.z) <= b.d / 2 + pad;
+  assert.equal(new Set(BARRICADES.map(b => b.lane)).size, BARRICADES.length, 'one site per lane');
+  for (const [i, b] of BARRICADES.entries()) {
+    const lane = LANES[b.lane];
+    assert.ok(Math.min(...lane.slice(1).map((p, k) => onSegment(b, lane[k], p))) < 0.05, `site ${i} lies on lane ${b.lane}`);
+    for (const p of PADS) assert.ok(Math.hypot(p.x - b.x, p.z - b.z) >= 2 * PAD_REACH, `site ${i} reach does not overlap a pad`);
+    const half = BARRICADE.length / 2; // the box turned any way still fits in this circle
+    for (const map of [FOREST, SNOW]) {
+      for (const w of [...map.walls, ...map.bushes]) assert.ok(!near(b, w, half), `site ${i} clear of walls and tall grass (${map.id})`);
+      for (const c of map.crates) assert.ok(Math.hypot(c.x - b.x, c.z - b.z) > half + 1, `site ${i} clear of crates (${map.id})`);
+    }
+    assert.ok(Math.hypot(TOWN.x - b.x, TOWN.z - b.z) > Math.max(...PADS.slice(0, HOME_PADS).map(p => Math.hypot(TOWN.x - p.x, TOWN.z - p.z))), `site ${i} further out than every home pad`);
+    assert.ok(b.x - half > ARENA.minX && b.x + half < ARENA.maxX);
+    for (const o of BARRICADES) if (o !== b) assert.ok(Math.hypot(o.x - b.x, o.z - b.z) >= 2 * PAD_REACH);
+  }
+});
+
+test('barricades are built, spiked and repaired from the build button, priced by the health missing', async () => {
+  const { BARRICADE, BARRICADES, BARRICADE_LEVELS } = await import('./data.ts');
+  const { barricadeOrder } = await import('./sim.ts');
+  const s = createRush(1);
+  const site = BARRICADES[0];
+  s.hero.x = site.x; s.hero.z = site.z + 1.2;
+  steps(s, 1, { build: true });
+  assert.deepEqual(s.barricades[0], { level: 0, hp: BARRICADE_LEVELS[0].hp });
+  assert.equal(s.gold, ECONOMY.startGold - BARRICADE_LEVELS[0].cost);
+  assert.ok(s.events.some(e => e.type === 'barricade' && e.slot === 0 && e.level === 0 && !e.repair));
+  assert.equal(s.towers.filter(Boolean).length, 0, 'no tower bought');
+  s.gold = 1000;
+  steps(s, 1, { build: 'frost' }); // any build press; the branch means nothing here
+  assert.deepEqual(s.barricades[0], { level: 1, hp: BARRICADE_LEVELS[1].hp });
+  assert.equal(barricadeOrder(s, 0), null, 'spiked and unhurt: nothing to do');
+  s.barricades[0]!.hp = BARRICADE_LEVELS[1].hp / 2;
+  const half = Math.round(BARRICADE_LEVELS[1].cost * BARRICADE.repair * 0.5);
+  assert.deepEqual(barricadeOrder(s, 0), { action: 'repair', cost: half });
+  steps(s, 1, { build: true });
+  assert.equal(s.barricades[0]!.hp, BARRICADE_LEVELS[1].hp);
+  assert.equal(s.gold, 1000 - BARRICADE_LEVELS[1].cost - half);
+  s.barricades[0]!.hp = 0;
+  assert.deepEqual(barricadeOrder(s, 0), { action: 'repair', cost: Math.round(BARRICADE_LEVELS[1].cost * BARRICADE.repair) }, 'rubble is rebuilt at its level');
+  // A hurt Lv1: spikes when affordable (back to full health too), else the cheaper repair.
+  s.barricades[1] = { level: 0, hp: 60 };
+  assert.equal(barricadeOrder(s, 1)?.action, 'upgrade');
+  s.gold = BARRICADE_LEVELS[1].cost - 1;
+  assert.equal(barricadeOrder(s, 1)?.action, 'repair');
+});
+
+test('enemies on a lane stop at its barricade and break it before the town; other lanes walk on', async () => {
+  const { BARRICADES, BARRICADE_LEVELS, LANES } = await import('./data.ts');
+  const s = createRush(1);
+  s.prepT = 999;
+  s.hero.downT = 999; // out of the way
+  s.barricades[0] = { level: 0, hp: BARRICADE_LEVELS[0].hp };
+  const start = LANES[0][2];
+  const pack = [0, 1, 2].map(i => { const e = enemy(s, 'grunt', start.x + (i - 1) * 0.5, start.z); e.wp = 3; e.cd = 0; e.hp = e.maxHp = 9999; return e; });
+  const side = enemy(s, 'grunt', LANES[1][2].x, LANES[1][2].z); side.lane = 1; side.wp = 3; side.cd = 0; side.hp = side.maxHp = 9999;
+  let hits = 0, broke = false;
+  for (let i = 0; i < 60 * 60 && !broke; i++) {
+    stepRush(s, {});
+    for (const e of s.events) { if (e.type === 'barricadeHit') hits++; if (e.type === 'barricadeBreak') broke = true; }
+    if (!broke) assert.ok(pack.every(e => e.z < BARRICADES[0].z), 'the pack stays in front of it');
+  }
+  assert.ok(hits > 0 && broke, `the pack wore it down (${hits} hits)`);
+  assert.ok(s.town.hp < s.town.maxHp, 'the side-lane grunt reached the town meanwhile');
+  steps(s, 60 * 10);
+  assert.ok(pack.some(e => e.z > BARRICADES[0].z + 1), 'after the break they walk on');
+  assert.equal(s.barricades[0]!.hp, 0, 'rubble stays until rebuilt');
+});
+
+test('a held melee enemy cannot reach a hero behind the barricade; spikes bite back; a shooter shoots the barricade', async () => {
+  const { BARRICADES, BARRICADE_LEVELS, BARRICADE } = await import('./data.ts');
+  const s = createRush(1);
+  s.prepT = 999;
+  const b = BARRICADES[0];
+  s.barricades[0] = { level: 1, hp: BARRICADE_LEVELS[1].hp };
+  s.hero.x = b.x; s.hero.z = b.z + BARRICADE.depth / 2 + 0.6; // right behind it, within the grunt's aggro range
+  const grunt = enemy(s, 'grunt', b.x + 0.2, b.z - BARRICADE.depth / 2 - 0.5); grunt.wp = 3; grunt.cd = 0;
+  const heroHp = s.hero.hp;
+  steps(s, 120);
+  assert.equal(s.hero.hp, heroHp, 'the grunt never reached the hero');
+  assert.ok(grunt.z < b.z, 'it stays on its side');
+  assert.ok(s.barricades[0]!.hp < BARRICADE_LEVELS[1].hp, 'it hit the barricade instead');
+  assert.ok(grunt.hp < grunt.maxHp, `spikes hurt the grunt (${grunt.hp}/${grunt.maxHp})`);
+  // With the hero out of its reach, a shooter shoots the barricade; spikes do not reach it.
+  const t = createRush(1);
+  t.prepT = 999;
+  t.barricades[0] = { level: 1, hp: BARRICADE_LEVELS[1].hp };
+  t.hero.x = 6; t.hero.z = 8;
+  const archer = enemy(t, 'skirmisher', b.x, b.z - 6.5); archer.wp = 3; archer.cd = 0;
+  let aimed = false;
+  for (let i = 0; i < 240; i++) { stepRush(t, {}); if (t.shots.some(sh => sh.owner === 'enemy' && sh.wall === 0)) aimed = true; }
+  assert.ok(aimed && t.barricades[0]!.hp < BARRICADE_LEVELS[1].hp, 'the archer shot the barricade');
+  assert.equal(archer.hp, archer.maxHp, 'no spikes for a shooter');
+});
+
+test('a standing barricade blocks the hero; its rubble does not', async () => {
+  const { BARRICADES, BARRICADE } = await import('./data.ts');
+  const s = createRush(1);
+  const b = BARRICADES[0];
+  s.barricades[0] = { level: 0, hp: 100 };
+  s.hero.x = b.x; s.hero.z = b.z + 3;
+  steps(s, 90, { move: { x: 0, z: -1 } });
+  assert.ok(s.hero.z >= b.z + BARRICADE.depth / 2 + HERO.radius - 1e-6, `stopped at it (z ${s.hero.z.toFixed(2)})`);
+  s.barricades[0]!.hp = 0;
+  steps(s, 90, { move: { x: 0, z: -1 } });
+  assert.ok(s.hero.z < b.z - 1, 'walks over the rubble');
+});
+
+
+test("frost lord's howl: on the last stage the boss's roar freezes the hero in ice for a while; towers and barricades stand", async () => {
+  const { stageDifficulty } = await import('./stages.ts');
+  const { FROST_HOWL } = await import('./data.ts');
+  const call = ENEMIES.boss.summon!, roarTicks = Math.round(call.roar / STEP);
+  const setup = (stage: number) => {
+    const s = createRush(1, NO_MODS, stageDifficulty(stage));
+    Object.assign(s.hero, { x: 9, z: 9 });
+    const b = enemy(s, 'boss', 0, -8);
+    b.hp = Math.floor(b.maxHp * call.at);
+    s.barricades[0] = { level: 0, hp: 180 };
+    s.towers[0] = { level: 0, cd: 0, facing: 0 };
+    return s;
+  };
+  const run = (s: RushState, n: number, cmd = {}) => { const seen: string[] = []; for (let i = 0; i < n; i++) { stepRush(s, cmd); seen.push(...s.events.map(e => e.type)); } return seen; };
+  assert.ok(FROST_HOWL.heroFreeze > 0 && FROST_HOWL.barricade === 0 && FROST_HOWL.towerFreeze === 0);
+  const last = setup(FROST_HOWL.stage), seen = run(last, roarTicks + 2);
+  assert.ok(seen.includes('howl') && seen.includes('summon'), 'the howl comes with the summon');
+  assert.ok((last.hero.frozenT ?? 0) > FROST_HOWL.heroFreeze - 0.1, 'the hero is frozen');
+  assert.equal(last.barricades[0]!.hp, 180, 'the barricade stands');
+  assert.ok(!last.towers[0]!.frozen, 'the tower keeps firing');
+  // Frozen: commands do nothing (no moving, no shooting).
+  const at = { x: last.hero.x, z: last.hero.z }, shots = last.stats.shots;
+  run(last, 30, { move: { x: 1, z: 0 }, fire: 'auto' });
+  assert.deepEqual({ x: last.hero.x, z: last.hero.z }, at, 'cannot move while frozen');
+  assert.equal(last.stats.shots, shots, 'cannot shoot while frozen');
+  // It thaws on time and moves again.
+  run(last, Math.round(FROST_HOWL.heroFreeze / STEP));
+  assert.ok(!last.hero.frozenT, 'thawed');
+  run(last, 10, { move: { x: -1, z: 0 } });
+  assert.ok(last.hero.x < at.x, 'moves again');
+  // Stage 9's boss only calls its minions.
+  const ninth = setup(FROST_HOWL.stage - 1), seen9 = run(ninth, roarTicks + 2);
+  assert.ok(seen9.includes('summon') && !seen9.includes('howl') && !ninth.hero.frozenT);
+});
+
+test('outposts: six pads but only TOWER_CAP towers; an empty pad offers nothing once they all stand; the bot keeps home', async () => {
+  const { HOME_PADS, TOWER_CAP, LANES } = await import('./data.ts');
+  const { padCost, towersFull } = await import('./sim.ts');
+  const { guardBot } = await import('./bot.ts');
+  assert.ok(PADS.length > TOWER_CAP && HOME_PADS === TOWER_CAP);
+  // Each outpost stands beside one side lane, within a Lv1 tower's range of it and out of range of the other lanes.
+  const laneGap = (p: { x: number; z: number }, lane: readonly { x: number; z: number }[]) => Math.min(...lane.slice(1).map((b, k) => {
+    const a = lane[k], ax = b.x - a.x, az = b.z - a.z, t = Math.max(0, Math.min(1, ((p.x - a.x) * ax + (p.z - a.z) * az) / (ax * ax + az * az)));
+    return Math.hypot(a.x + ax * t - p.x, a.z + az * t - p.z);
+  }));
+  for (const p of PADS.slice(HOME_PADS)) {
+    const gaps = LANES.map(l => laneGap(p, l)).sort((a, b) => a - b);
+    assert.ok(gaps[0] > 1.5 && gaps[0] < TOWER_LEVELS[0].range, `outpost near its lane (${gaps[0].toFixed(1)} m)`);
+    assert.ok(gaps[1] > TOWER_LEVELS[TOWER_LEVELS.length - 1].range, `and out of range of the next lane (${gaps[1].toFixed(1)} m)`);
+  }
+  const s = createRush(1);
+  s.gold = 9999;
+  for (let i = 0; i < TOWER_CAP - 1; i++) s.towers[i] = { level: 0, cd: 0, facing: 0 };
+  assert.ok(!towersFull(s) && padCost(s, PADS.length - 1) !== null, 'room for one more: an outpost can be built');
+  Object.assign(s.hero, { x: PADS[PADS.length - 1].x, z: PADS[PADS.length - 1].z });
+  stepRush(s, { build: true });
+  assert.ok(s.towers[PADS.length - 1], 'built at the outpost');
+  assert.ok(towersFull(s) && padCost(s, TOWER_CAP - 1) === null, 'the last home pad now offers nothing');
+  assert.ok(padCost(s, 0) !== null, 'standing towers still upgrade');
+  // The guard bot never builds on an outpost.
+  const b = createRush(3);
+  for (let i = 0; i < 60 * 60 * 3 && b.phase !== 'won' && b.phase !== 'lost'; i++) stepRush(b, guardBot(b));
+  assert.ok(b.towers.slice(HOME_PADS).every(t => !t));
+});
+
+test('demolish: a tower comes down for 60% of what it cost and frees a place under the cap', async () => {
+  const { TOWER_CAP, TOWER_REFUND } = await import('./data.ts');
+  const { padCost, towerRefund, towersFull } = await import('./sim.ts');
+  const s = createRush(1);
+  s.gold = 0;
+  for (let i = 0; i < TOWER_CAP; i++) s.towers[i] = { level: 0, cd: 0, facing: 0 };
+  s.towers[0] = { level: 2, cd: 0, facing: 0, branch: 'fire' };
+  const spent = TOWER_LEVELS.reduce((a, l) => a + l.cost, 0);
+  assert.equal(towerRefund(s, 0), Math.round(spent * TOWER_REFUND));
+  assert.equal(towerRefund(s, PADS.length - 1), null, 'no tower, nothing to take down');
+  assert.ok(towersFull(s) && padCost(s, PADS.length - 1) === null);
+  Object.assign(s.hero, { x: PADS[0].x, z: PADS[0].z });
+  stepRush(s, { demolish: true });
+  assert.equal(s.towers[0], null);
+  assert.equal(s.gold, Math.round(spent * TOWER_REFUND));
+  assert.ok(s.events.some(e => e.type === 'demolish' && e.pad === 0));
+  assert.ok(!towersFull(s) && padCost(s, PADS.length - 1) !== null, 'the outpost can be built now');
+  // Away from any tower the command does nothing.
+  Object.assign(s.hero, { x: 0, z: -10 });
+  const gold = s.gold;
+  stepRush(s, { demolish: true });
+  assert.equal(s.gold, gold);
+});
+
+test('fire tap buffer (cycle 131): a tap between shots waits and fires; nothing fires after the buffer runs out', async () => {
+  const { FireBuffer, FIRE_BUFFER } = await import('./fireBuffer.ts');
+  // A thumb tapping the fire button every `every` s for `tapFor` s; no enemies, so 'auto' fires where the hero faces.
+  const run = (buffered: boolean, every: number, tapFor: number, total = 3) => {
+    const s = createRush(1, NO_MODS, undefined, 'ranger'), buf = new FireBuffer(), shots: number[] = [];
+    const n = Math.round(every / STEP);
+    for (let i = 0; i * STEP < total; i++) {
+      const tap = i * STEP < tapFor - 1e-9 && i % n === 0 ? 'auto' as const : undefined;
+      const before = s.stats.shots;
+      stepRush(s, buffered ? { fire: buf.take(tap, s.t) } : { fire: tap });
+      if (buffered) buf.settle(s.stats.shots > before);
+      if (s.stats.shots > before) shots.push(s.t);
+    }
+    return shots;
+  };
+  // Three taps 0.25 s apart with three arrows: the middle tap lands inside the 0.32 s gap and used to vanish.
+  assert.equal(run(false, 0.25, 0.75).length, 2);
+  assert.equal(run(true, 0.25, 0.75).length, 3);
+  // Mashing every 0.2 s: the quiver still caps the shots, but the burst comes out on the gap, not every other tap.
+  const plain = run(false, 0.2, 2), held = run(true, 0.2, 2);
+  assert.equal(held.length, plain.length);
+  assert.ok(held[2] < plain[2] - 0.1, `third arrow ${plain[2].toFixed(2)} → ${held[2].toFixed(2)} s`);
+  // Nothing fires once the last tap is older than the buffer.
+  assert.ok(Math.max(...held) <= 1.8 + FIRE_BUFFER + 2 * STEP, `last shot ${Math.max(...held).toFixed(2)} s`);
+  // No taps, no shots; one tap, one shot.
+  assert.equal(run(true, 0.2, 0).length, 0);
+  assert.equal(run(true, 10, 1).length, 1);
+});
+
+test('fire tap buffer (cycle 137): a tap that runs out without firing is reported once; a shot or a newer tap is not', async () => {
+  const { FireBuffer, FIRE_BUFFER } = await import('./fireBuffer.ts');
+  // Empty the quiver (3 arrows, 0.32 s apart), then tap once more: it can only wait 0.25 s, the next arrow needs ~1.25 s.
+  const s = createRush(1, NO_MODS, undefined, 'ranger'), buf = new FireBuffer();
+  const step = (tap?: 'auto') => { const before = s.stats.shots; stepRush(s, { fire: buf.take(tap, s.t) }); buf.settle(s.stats.shots > before); return s.stats.shots > before; };
+  let shots = 0;
+  // Taps at 0, 0.33 and 0.67 s; the first arrow comes back only ~1.27 s in, so a tap just after 0.75 s cannot fire.
+  for (let i = 0; i < 45; i++) if (step(i % 20 === 0 && i <= 40 ? 'auto' : undefined)) shots++;
+  assert.equal(shots, 3, 'three arrows, then the quiver is empty');
+  assert.equal(buf.expired(), false, 'every tap so far fired (or waited and fired)');
+  assert.ok(s.hero.ammo < 1);
+  step('auto');
+  let lapsedAt = -1;
+  for (let i = 1; i < 40 && lapsedAt < 0; i++) { step(); if (buf.expired()) lapsedAt = i * STEP; }
+  assert.ok(lapsedAt > FIRE_BUFFER - STEP && lapsedAt < FIRE_BUFFER + 3 * STEP, `reported after the buffer (${lapsedAt.toFixed(2)} s)`);
+  assert.equal(buf.expired(), false, 'reading clears it');
+  // A tap replaced by a newer one is not a lapse; reset clears a pending one.
+  buf.take('auto', s.t); buf.take('auto', s.t + 0.1);
+  assert.equal(buf.expired(), false);
+  buf.reset(); assert.equal(buf.expired(), false);
+});
+
+test('wave preview (cycle 142): the prep line lists what the coming wave really spawns, by kind', async () => {
+  const { stageDifficulty } = await import('./stages.ts');
+  const { wavePreview, WAVE_COUNT } = await import('./sim.ts');
+  const at = (stage: number, wave: number) => { const s = createRush(1, NO_MODS, stageDifficulty(stage)); s.wave = wave; return s; };
+  const kinds = (stage: number, wave: number) => wavePreview(at(stage, wave)).map(r => r.kind);
+  assert.deepEqual(kinds(1, 0), ['grunt']);
+  assert.ok(!kinds(5, 2).includes('shield') && kinds(6, 2).includes('shield'), 'shield-bearers from stage 6');
+  assert.ok(!kinds(6, 1).includes('wolf') && kinds(7, 1).includes('wolf'), 'frost wolves from stage 7');
+  assert.ok(kinds(3, WAVE_COUNT - 1).includes('boss') && !kinds(3, 0).includes('boss'));
+  // The counts match what the wave spawns: run stage 7's second wave until every group has spawned.
+  const s = at(7, 1);
+  const want = wavePreview(s).reduce((n, r) => n + r.count, 0);
+  stepRush(s, { startWave: true });
+  const spawned = () => s.groups.reduce((n, g) => n + (g?.spawned ?? 0), 0);
+  for (let i = 0; i < 60 * 60 && spawned() < want && s.phase === 'wave'; i++) stepRush(s, {});
+  for (let i = 0; i < 60 * 5 && s.phase === 'wave'; i++) stepRush(s, {}); // nothing more comes from the groups
+  assert.equal(spawned(), want, `spawned ${spawned()}, preview ${want}`);
+  assert.ok(want > 0);
+});
+
+test('reach gate (cycle 149): build pills wait REACH_SHOW s on one site, hide at once when it changes or is left', async () => {
+  const { ReachGate, REACH_SHOW } = await import('./reachGate.ts');
+  const g = new ReachGate();
+  assert.equal(g.update('', 0), false);
+  assert.equal(g.update('tower0', 1), false, 'just arrived');
+  assert.equal(g.update('tower0', 1 + REACH_SHOW / 2), false);
+  assert.equal(g.update('tower0', 1 + REACH_SHOW), true, 'held long enough');
+  assert.equal(g.update('tower1', 1.5), false, 'another site starts over');
+  assert.equal(g.update('', 1.6), false, 'left: hidden at once');
+  assert.equal(g.update('tower1', 1.7), false, 'coming back starts over');
+  assert.equal(g.update('tower1', 1.7 + REACH_SHOW), true);
 });

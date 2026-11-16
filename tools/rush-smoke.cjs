@@ -59,9 +59,20 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await page.goto(BASE + '?seed=5');
     await page.evaluate(() => localStorage.removeItem('arcana-rush:kingdom:v1'));
     await page.reload();
+    // 1.0 front door (completion C1-C4): no prototype label, an install manifest, settings that persist, music moods.
+    check(!(await page.textContent('#screen-title')).includes('PROTOTYPE') && (await page.title()) === '아르카나 러시', 'title has no prototype label');
+    check(await page.evaluate(() => !!document.querySelector('link[rel="manifest"][href="/rush/rush.webmanifest"]')), 'install manifest linked');
+    await page.click('#btn-settings');
+    await page.click('#set-music');
+    const off = await page.evaluate(() => ({ music: __rush.music.enabled, saved: JSON.parse(localStorage.getItem('arcana-rush:settings:v1') || '{}').music }));
+    await page.click('#set-music');
+    await page.click('#set-close');
+    check(off.music === false && off.saved === false && await page.evaluate(() => __rush.music.enabled) && await page.isVisible('#screen-title'), 'settings: music toggle saves and returns to the title');
+    check(await page.evaluate(() => __rush.music.mood === 'title'), 'title music mood');
     await page.click('#btn-play');
     await page.waitForTimeout(300);
     check(await page.isVisible('#screen-town'), 'title → town screen');
+    check(await page.evaluate(() => __rush.music.mood === 'town'), 'town music mood');
     await page.screenshot({ path: `${OUT}/desktop-town.png` });
     await page.click('[data-select="attack"]');
     check(await page.isVisible('[data-up="attack"]'), 'tapping a building tag shows its card');
@@ -77,7 +88,13 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     check(await page.evaluate(() => __rush.kingdom.perks.attack === 1), 'kingdom persists across reload');
     check(await page.isDisabled('[data-stage="2"]'), 'stage 2 locked on a fresh kingdom');
     check(await page.isHidden('[data-endless]'), 'endless record flag tag hidden until endless opens');
-    check((await page.textContent('#town-goal')).includes('스테이지 1 승리') && await page.isDisabled('#town-goal'), 'fresh kingdom shows the first goal, not yet claimable');
+    // Cycle 87: a still town island redraws about one frame in four (every frame only during a building pop).
+    const still = await page.evaluate(() => new Promise(r => { setTimeout(() => { const d0 = __rush.drawnFrames, t0 = performance.now(); let n = 0; const f = () => { if (++n < 40) requestAnimationFrame(f); else r({ n, drawn: __rush.drawnFrames - d0, ms: Math.round(performance.now() - t0), mode: __rush.mode, q: __rush.quality.tier }); }; requestAnimationFrame(f); }, 1500); }));
+    check(still.drawn >= 6 && still.drawn <= 16, `still town redraws ${still.drawn} of ${still.n} frames (${still.ms} ms, ${still.mode}, ${still.q})`);
+    check((await page.textContent('#town-goal')).includes('1-1 승리') && !(await page.getAttribute('#town-goal', 'class')).includes('done'), 'fresh kingdom shows the first goal, not yet claimable');
+    // 1.0: an unmet stage goal is tappable and points at its stage instead of paying out.
+    await page.click('#town-goal');
+    check(await page.evaluate(() => __rush.kingdom.goal === 0) && (await page.getAttribute('[data-stage="1"]', 'aria-checked')) !== 'false', 'unmet stage goal selects its stage, pays nothing');
     await page.click('#btn-hero');
     check(await page.isVisible('[data-train]'), 'hero button opens the hero card');
     await page.click('[data-train]');
@@ -86,11 +103,13 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await page.screenshot({ path: `${OUT}/desktop-hero-card.png` });
     await page.click('#btn-hero');
     check((await page.textContent('#hero-name')).includes('도마뱀') && await page.isVisible('#town-reward'), 'Bron stays locked on a fresh kingdom (hint shown)');
-    check((await page.textContent('#btn-battle')).includes('스테이지 1'), 'battle button names the selected stage');
+    check((await page.textContent('#btn-battle')).includes('1-1'), 'battle button names the selected village');
     check(await page.isVisible('#btn-battle .daily-badge'), 'battle button shows the daily first-win badge on a fresh kingdom');
 
     // 3. Desktop controls: keyboard movement per sim tick, build on a pad, mouse fire.
     await page.click('#btn-battle');
+    await page.waitForTimeout(200);
+    check(await page.evaluate(() => __rush.music.mood === 'battle' || __rush.music.mood === 'boss'), 'battle music mood');
     await page.waitForTimeout(300);
     check(await page.evaluate(() => __rush.state.mods.damage > 1 && __rush.state.mods.heroHp > 1 && __rush.state.hero.hp > 420), 'battle starts with kingdom and hero-level modifiers');
     const t0 = await page.evaluate(() => ({ tick: __rush.state.tick, x: __rush.state.hero.x }));
@@ -103,7 +122,7 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await page.waitForTimeout(200);
     check(await page.isVisible('#build'), 'build button appears on a pad');
     await page.keyboard.press('KeyE');
-    await page.waitForTimeout(300);
+    await page.waitForFunction(() => __rush.state.towers[0] !== null, null, { timeout: 3000 }).catch(() => {}); // few frames a second under software GL
     check(await page.evaluate(() => __rush.state.towers[0] !== null), 'tower built with E');
     // Lv2 choice (cycle 15): with enough gold the build button splits; R picks frost.
     await page.evaluate(() => { __rush.state.gold += 500; });
@@ -111,12 +130,14 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     check(await page.isVisible('#build-frost'), 'Lv1 tower offers fire and frost');
     await page.screenshot({ path: `${OUT}/desktop-branch-choice.png` });
     await page.keyboard.press('KeyR');
-    await page.waitForTimeout(300);
+    // Wait for the result, not a fixed delay: with real shadows the software-rendered desktop run draws few frames a second.
+    await page.waitForFunction(() => __rush.state.towers[0]?.level === 1 && document.getElementById('build-frost')?.hidden !== false, null, { timeout: 3000 }).catch(() => {});
+    await page.waitForTimeout(150);
     check(await page.evaluate(() => __rush.state.towers[0]?.level === 1 && __rush.state.towers[0]?.branch === 'frost') && !(await page.isVisible('#build-frost')), 'R upgrades to a frost tower');
     await page.click('#start-wave');
     await page.mouse.move(640, 200);
     await page.mouse.down(); await page.mouse.up();
-    await page.waitForTimeout(300);
+    await page.waitForFunction(() => __rush.state.stats.shots >= 1, null, { timeout: 3000 }).catch(() => {});
     check(await page.evaluate(() => __rush.state.stats.shots >= 1), 'mouse click fires');
     check(await page.evaluate(() => new Promise(done => { const until = performance.now() + 1500; const look = () => __rush.info().heroAnim ? done(true) : performance.now() > until ? done(false) : requestAnimationFrame(look); look(); })), 'hero shoot clip plays on the baked model');
     await page.screenshot({ path: `${OUT}/desktop-play.png` });
@@ -162,7 +183,9 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await mp.tap('#start-wave');
     await mp.waitForTimeout(4000);
     await mp.tap('#fire');
-    await mp.waitForTimeout(400);
+    // Cycle 137: wait for the shot rather than a fixed 0.4 s (it failed twice in about ten runs when one software-GL frame
+    // took longer), as the desktop click check does; a tap that never fires still fails.
+    await mp.waitForFunction(() => __rush.state.stats.shots >= 1, null, { timeout: 3000 }).catch(() => {});
     check((await mp.evaluate(() => __rush.state.stats.shots)) >= 1, 'tap fire (auto-aim)');
     const box = await mp.locator('#fire').boundingBox();
     const fx = box.x + box.width / 2, fy = box.y + box.height / 2;
@@ -177,7 +200,8 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     check((await mp.evaluate(() => __rush.state.stats.shots)) > shots, 'drag-aim fire');
     // Graphics quality (cycle 12): auto follows the frame rate; the pause button cycles auto -> high -> low and persists.
     const auto = await mp.evaluate(() => ({ ...__rush.quality, fps: __rush.fps }));
-    check(auto.fps < 30 ? auto.tier === 'low' : auto.fps > 50 ? auto.tier === 'high' : true, `auto quality at ${auto.fps}fps → ${auto.tier}`);
+    // The automatic drop is one-way (quality.ts), so once it has happened the tier stays low whatever the fps reads now.
+    check(auto.autoDropped ? auto.tier === 'low' : auto.fps < 30 ? auto.tier === 'low' : auto.fps > 50 ? auto.tier === 'high' : true, `auto quality at ${auto.fps}fps → ${auto.tier}${auto.autoDropped ? ' (dropped earlier)' : ''}`);
     await mp.tap('#pause');
     await mp.waitForTimeout(200);
     await mp.tap('#btn-quality');

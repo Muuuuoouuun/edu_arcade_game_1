@@ -50,16 +50,16 @@
       "surface": "smooth"
     }
   ],
-  "triangles": 7948,
-  "meshes": 93,
+  "triangles": 7252,
+  "meshes": 98,
   "clips": [
     "gecko-seed-shot",
     "ranger-idle",
     "ranger-walk"
   ],
   "rig": "Articulated rigid pivots, including independent leg assemblies; no deforming skin weights",
-  "glb_bytes": 891740,
-  "glb_sha256": "c4d32694f9e9e55ef19bc15f8e968dd5bdca0b52f805077bc917dd7385e4bee8",
+  "glb_bytes": 2684060,
+  "glb_sha256": "6c74deae8f59da5639b5bddd2ab31cf5a76834618c8614ee57f357804e134a32",
   "limits": [
     "Concept-guided procedural surface textures, not a photogrammetry reconstruction",
     "No physical-device FPS measurement",

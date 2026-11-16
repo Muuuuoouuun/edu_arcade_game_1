@@ -48,18 +48,26 @@
     {
       "name": "09 Muzzle and inner ear",
       "surface": "smooth"
+    },
+    {
+      "name": "Scarf / team blue wool cloth",
+      "surface": "cloth"
+    },
+    {
+      "name": "Skin / inner ear pink",
+      "surface": "smooth"
     }
   ],
-  "triangles": 9176,
-  "meshes": 87,
+  "triangles": 8540,
+  "meshes": 92,
   "clips": [
     "polar-bear-attack",
     "bear-idle",
     "bear-walk"
   ],
   "rig": "Articulated rigid pivots, including independent leg assemblies; no deforming skin weights",
-  "glb_bytes": 998920,
-  "glb_sha256": "78b8dcbb28845686fc85a97f7f4174220ac189394b84f7c119afe7873b8ec4e8",
+  "glb_bytes": 2824624,
+  "glb_sha256": "eb6fbcab2e4ad84b797c316062da070f2b9c0804a24e7aa353fdf27b144a81e6",
   "limits": [
     "Concept-guided procedural surface textures, not a photogrammetry reconstruction",
     "No physical-device FPS measurement",

@@ -36,6 +36,7 @@ export class Particles {
     const geo = new IcosahedronGeometry(1, 0);
     this.body = new InstancedMesh(geo, new MeshBasicMaterial({ color: 0xffffff }), capacity);
     this.ink = new InstancedMesh(geo, new MeshBasicMaterial({ color: PAL.ink, side: BackSide }), capacity);
+    this.body.name = 'fx-shards'; this.ink.name = 'fx-shards-ink'; // debug draw counts (cycle 115)
     const white = new Color(0xffffff);
     for (let i = 0; i < capacity; i++) this.body.setColorAt(i, white);
     for (const mesh of [this.body, this.ink]) {

@@ -1,7 +1,7 @@
-// Arcana Rush prototype bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
+// Arcana Rush bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
-import { ECONOMY, ENEMIES, HEROES, TOWER_LEVELS, type HeroKind } from './data.ts';
-import { createRush, padCost, padInReach, stepRush, superReady, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
+import { ECONOMY, ENEMIES, HERO_ROLE, HEROES, TALENTS, TOWER_CAP, TOWER_LEVELS, type EnemyKind, type HeroKind } from './data.ts';
+import { barricadeOrder, createRush, padCost, siteInReach, stepRush, towerRefund, superReady, wardBreakBurst, wavePreview, TWIST, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
 import { RushInput } from './input.ts';
@@ -9,28 +9,52 @@ import { playCombatSound, setSound, unlockAudio, type CombatSoundKind } from '..
 import { readSaved } from '../lib/storage.ts';
 import { playHaptic } from '../lib/haptic.ts';
 import { NATIVE_BACKGROUND } from '../lib/nativeEvents.ts';
-import { collect, ENDLESS_STAGE, kingdomMods, settleBattle, settleEndless } from './kingdom.ts';
-import { stageDifficulty } from './stages.ts';
+import { collect, ENDLESS_STAGE, kingdomMods, nextStep, settleBattle, settleEndless, waitText, type NextStep, type Upgrade } from './kingdom.ts';
+import { stageDifficulty, STAGE_COUNT } from './stages.ts';
+import { createMusic } from './music.ts';
+import { parseSettings, RUSH_KINGDOM_KEY, RUSH_SETTINGS_KEY, serializeSettings, type RushSettings } from './storage.ts';
 import { advanceClock, createClock, hitStopFor, tryStop } from './clock.ts';
-import { loadKingdom, saveKingdom, today, TownScreen } from './town.ts';
+import { COMPANION_FACE, keeperNote, loadKingdom, saveKingdom, today, TownScreen, upgradeName } from './town.ts';
+import { COMPANIONS, expeditionStage, firstClearNews, importLegacyCampaign, LEGACY_CAMPAIGN_KEY, LEGACY_IMPORT_KEY } from './expedition.ts';
 import { TownView } from './townScene.ts';
 import { addHit, POP_LIFE, popKey, type PopSlot } from './pops.ts';
 import { createFrameWatch, nextPref, parsePref, PREF_LABEL, resolveQuality, watchFrame, type QualityPref } from './quality.ts';
+import { mapFor } from './maps.ts';
+import { CRATE } from './data.ts';
+import { ReachGate } from './reachGate.ts';
+import { setShadowEvery } from './frame.ts';
+import { benchEnemies, benchStats, type BenchStats } from './bench.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const params = new URLSearchParams(location.search);
-// A separate entry page must honour the same settings selected on the mode screen.
-let feedbackEnabled = readSaved().sound;
-setSound(feedbackEnabled);
+// Rush's own settings (1.0, completion C3): effects, music, vibration. The first run follows the arcade mode screen's
+// sound choice; after that the rush settings screen owns them.
+const settingsFallback = (): RushSettings => ({ sfx: readSaved().sound, music: true, haptics: true });
+let settings: RushSettings = (() => { try { return parseSettings(localStorage.getItem(RUSH_SETTINGS_KEY), settingsFallback()); } catch { return settingsFallback(); } })();
+let feedbackEnabled = settings.haptics;
+setSound(settings.sfx);
+// Procedural music (completion C4, src/rush/music.ts): starts on the first gesture, follows the screen each frame.
+const music = createMusic();
+music.setEnabled(settings.music);
+for (const type of ['pointerdown', 'keydown'] as const) window.addEventListener(type, () => music.unlock(), { passive: true });
+function applySettings() {
+  feedbackEnabled = settings.haptics;
+  setSound(settings.sfx);
+  music.setEnabled(settings.music);
+}
 window.addEventListener('storage', event => {
-  if (event.key !== 'playground:v1' && event.key !== null) return;
-  feedbackEnabled = readSaved().sound;
-  setSound(feedbackEnabled);
+  if (event.key !== RUSH_SETTINGS_KEY) return;
+  settings = parseSettings(event.newValue, settings);
+  applySettings();
 });
-const speed = Math.min(8, Math.max(0.25, Number(params.get('speed')) || 1));
+// ?bench=1 (cycle 125): run the demo fast to a frozen tick, then time a fixed heavy scene (bench.ts).
+const benchMode = params.has('bench');
+const speed = Math.min(8, Math.max(0.25, Number(params.get('speed')) || (benchMode ? 8 : 1)));
 const debug = params.has('debug');
 /** ?freeze=N stops the simulation at tick N (rendering continues) for matched before/after screenshots. */
-const freezeAt = Number(params.get('freeze')) || Infinity;
+const freezeAt = Number(params.get('freeze')) || (benchMode ? 900 : Infinity);
+// Debug (cycle 101): ?shadowEvery=N redraws the high-tier shadow map every N frames (default 2; 1 = every frame).
+if (params.has('shadowEvery')) setShadowEvery(Number(params.get('shadowEvery')));
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 /** Graphics quality (cycle 12): saved preference, or ?quality=high|low to pin one run for matched captures. */
 const QUALITY_KEY = 'arcana-rush:quality:v1';
@@ -67,9 +91,23 @@ let battleId = '';
 let stage = 1;
 const townView = new TownView();
 const town = new TownScreen($('screen-town'), townView);
+// One front door (2026-11-13 merge): a returning 원정 player brings their villages, gold and training along, once.
+// The old save is only read, never changed; the marker is set once the import is saved (or there was nothing to bring).
+let legacyNote = '';
+try {
+  if (!localStorage.getItem(LEGACY_IMPORT_KEY)) {
+    const got = importLegacyCampaign(loadKingdom(), localStorage.getItem(LEGACY_CAMPAIGN_KEY));
+    const saved = got ? saveKingdom(got.kingdom) : true;
+    if (got && saved) {
+      const r = got.report;
+      legacyNote = `원정 기록을 가져왔어요: 마을 ${r.villages}곳 · 식량 +${r.food} · 목재 +${r.wood}${r.shards ? ` · 조각 +${r.shards}` : ''}`;
+    }
+    if (saved) localStorage.setItem(LEGACY_IMPORT_KEY, String(Date.now()));
+  }
+} catch { /* storage blocked: try again next visit */ }
 const input = new RushInput({
   surface: $('rush-surface'), stick: $('stick'), knob: $('stick-knob'),
-  fire: $('fire'), superBtn: $('super'), build: $('build'), buildFrost: $('build-frost'), startWave: $('start-wave'),
+  fire: $('fire'), superBtn: $('super'), build: $('build'), buildFrost: $('build-frost'), demolish: $('demolish'), startWave: $('start-wave'),
 }, (x, y) => view.groundPoint(x, y, canvas.getBoundingClientRect()), () => state.hero);
 let rendererLost=false;
 canvas.addEventListener('webglcontextlost',event=>{
@@ -187,7 +225,7 @@ function updateCallout() {
 // ---------- events → feedback ----------
 // A melee swing sounds like an impact rather than a bowstring.
 const SOUND: Partial<Record<RushEvent['type'], CombatSoundKind>> = {
-  bossEnter: 'cannon', fire: 'arrow', swing: 'slash', burst: 'skill', slam: 'cannon', roar: 'surge', lap: 'surge', summon: 'cast', townHit: 'breach', heroDown: 'breach', build: 'cast', waveStart: 'surge', superReady: 'freeze',
+  bossEnter: 'cannon', fire: 'arrow', swing: 'slash', burst: 'skill', slam: 'cannon', roar: 'surge', lap: 'surge', summon: 'cast', townHit: 'breach', heroDown: 'breach', build: 'cast', barricade: 'cast', waveStart: 'surge', superReady: 'freeze',
 };
 /** Endless lap twists (cycle 52), as the player reads them. */
 const TWIST_NAME: Record<LapTwist, string> = { swift: '빠른 걸음', shields: '방패 행렬', twin: '쌍둥이 보스' };
@@ -198,8 +236,18 @@ function toast(text: string, cls = '', seconds = 1.6) {
   el.className = `toast show ${cls}`;
   toastTimer = seconds;
 }
+/** Cycle 137: a short 'not now' shake (a red flash with reduced motion) on a battle button whose press could not act. */
+function dryPress(el: HTMLElement) {
+  el.classList.remove('dry');
+  void el.offsetWidth; // restart the animation when presses come quickly
+  el.classList.add('dry');
+}
+for (const el of [$('fire'), $('super')]) el.addEventListener('animationend', e => { if ((e as AnimationEvent).animationName.startsWith('dry')) el.classList.remove('dry'); });
 function feedback(events: RushEvent[]) {
   view.applyEvents(events, reducedMotion);
+  // Ward breaks (cycle 91): a glassy crack instead of the plain hit thud; a buzz only when one swing clears several.
+  const wards = wardBreakBurst(events);
+  if (wards) { playCombatSound('freeze'); if (wards.count >= 2) playHaptic('skill', feedbackEnabled); }
   for (const ev of events) {
     const sound = SOUND[ev.type];
     if (sound) playCombatSound(sound);
@@ -209,6 +257,7 @@ function feedback(events: RushEvent[]) {
     else if (ev.type === 'block') { playCombatSound('cannon'); pop('막힘', ev.x, ev.z, 'blocked', 2.1); } // a heavier clank than a flesh hit
     else if (ev.type === 'heroHit') pop(String(Math.round(ev.damage)), state.hero.x, state.hero.z, 'hurt', 2.2);
     else if (ev.type === 'coin') pop(`+${ev.value}`, state.hero.x, state.hero.z, 'gold', 2.4);
+    else if (ev.type === 'loot') pop(`+${ev.value}`, ev.x, ev.z, 'gold', 2.4);
     else if (ev.type === 'burst') playHaptic('skill', feedbackEnabled);
     else if (ev.type === 'heroDown') { playHaptic('breach', feedbackEnabled); toast(`쓰러졌다! ${HEROES[state.hero.kind].respawn}초 뒤 마을에서 복귀`, 'bad'); }
     else if (ev.type === 'superReady') toast('필살기 준비 완료!', 'super');
@@ -219,7 +268,12 @@ function feedback(events: RushEvent[]) {
       const boss = ev.wave % WAVE_COUNT === WAVE_COUNT - 1;
       toast(boss ? (state.diff.endless ? `웨이브 ${ev.wave + 1} · 보스 출현!` : `마지막 웨이브 · 보스 출현!`) : `웨이브 ${ev.wave + 1} 시작`, boss ? 'bad' : '');
     }
-    else if (ev.type === 'waveClear') toast(`웨이브 ${ev.wave + 1} 방어 성공 · +${ev.bonus}G`, 'good');
+    else if (ev.type === 'waveClear') {
+      // Cycle 79: the toast (and every floating number) is hidden since #107, so the held wave also sounds bright
+      // and buzzes lightly; the renderer adds a gold ring and sparks around the town.
+      toast(`웨이브 ${ev.wave + 1} 방어 성공 · +${ev.bonus}G`, 'good');
+      playCombatSound('skill'); playHaptic('cast', feedbackEnabled);
+    }
     else if (ev.type === 'lap') {
       // Endless lap (cycle 47): comes right after the fifth wave's clear, so this toast replaces that one.
       playHaptic('surge', feedbackEnabled);
@@ -228,6 +282,9 @@ function feedback(events: RushEvent[]) {
       box.classList.remove('lap-flash'); void box.offsetWidth; box.classList.add('lap-flash');
     }
     else if (ev.type === 'build') toast(ev.level === 0 ? '궁수탑 건설!' : `${ev.branch ? BRANCH_NAME[ev.branch] : '궁수'}탑 Lv${ev.level + 1}`, 'good');
+    else if (ev.type === 'barricade') toast(ev.repair ? '방벽 수리!' : ev.level ? '가시 방벽!' : '방벽 건설!', 'good');
+    else if (ev.type === 'barricadeBreak') { playCombatSound('breach'); playHaptic('cast', feedbackEnabled); }
+    else if (ev.type === 'barricadeHit' && ev.spiked) playCombatSound('impact');
     else if (ev.type === 'won' || ev.type === 'lost') showResult();
   }
 }
@@ -235,7 +292,7 @@ function feedback(events: RushEvent[]) {
 // ---------- HUD ----------
 const hud = {
   wave: $('wave-label'), waveSub: $('wave-sub'), townFill: $('town-fill'), townHp: $('town-hp'), gold: $('gold'),
-  startWave: $<HTMLButtonElement>('start-wave'), build: $<HTMLButtonElement>('build'), buildFrost: $<HTMLButtonElement>('build-frost'), fire: $('fire'), superBtn: $('super'),
+  startWave: $<HTMLButtonElement>('start-wave'), build: $<HTMLButtonElement>('build'), buildFrost: $<HTMLButtonElement>('build-frost'), demolish: $<HTMLButtonElement>('demolish'), fire: $('fire'), superBtn: $('super'),
   ammo: [...document.querySelectorAll<HTMLElement>('#fire .ammo i')], superRing: $('super-ring'), debug: $('debug'),
 };
 const last: Record<string, string> = {};
@@ -280,30 +337,71 @@ function seeThroughHud() {
   hudParts.forEach((el, i) => el.classList.toggle('see-through', under[i]));
 }
 
+/** Short enemy names for the prep line (cycle 142). */
+const KIND_SHORT: Record<EnemyKind, string> = { grunt: '돌격', skirmisher: '투척', brute: '거인', shield: '방패', shaman: '주술', wolf: '늑대', boss: '보스' };
+function nextWaveHtml(s: RushState) {
+  const seen = new Set<EnemyKind>();
+  for (let w = Math.max(0, s.wave - WAVE_COUNT); w < s.wave; w++) for (const r of wavePreview({ ...s, wave: w })) seen.add(r.kind);
+  return wavePreview(s).map(r => { const label = r.kind === 'boss' && r.count === 1 ? KIND_SHORT.boss : `${KIND_SHORT[r.kind]} ${r.count}`; return seen.has(r.kind) ? label : `<b>${label}</b>`; }).join(' · ');
+}
+/** Endless laps (cycle 148): the lap and its twist lead the prep line. The lap toast is visually hidden in battle
+ * (#107), and a swift lap shows nowhere else (twin bosses and doubled shields at least show in the counts). */
+const TWIST_HINT: Record<LapTwist, string> = { swift: `적 +${Math.round((TWIST.swiftSpeed - 1) * 100)}% 빠름`, shields: `방패병 ×${TWIST.shieldCount}`, twin: `보스 ${TWIST.twinBosses}` };
+function lapHtml(s: RushState) {
+  if (!s.diff.endless) return '';
+  const lap = Math.floor(s.wave / WAVE_COUNT) + 1;
+  if (lap < 2) return '';
+  return `${lap}바퀴${s.diff.twist ? ` · <b>${TWIST_NAME[s.diff.twist]}</b>(${TWIST_HINT[s.diff.twist]})` : ''} · `;
+}
 function updateHud() {
   const s = state;
   setText('wave', hud.wave, s.diff.endless ? `웨이브 ${s.wave + 1}` : `웨이브 ${Math.min(s.wave + 1, WAVE_COUNT)}/${WAVE_COUNT}`);
   const lap = Math.floor(s.wave / WAVE_COUNT) + 1;
-  const where = mode === 'demo' ? '시연' : s.diff.endless ? `끝없는 도전${lap > 1 ? ` ${lap}바퀴` : ''}${s.diff.twist ? ` · ${TWIST_NAME[s.diff.twist]}` : ''}` : `스테이지 ${stage}`;
-  setText('waveSub', hud.waveSub, s.phase === 'prep' ? `${where} · 준비 ${Math.ceil(s.prepT)}초` : s.phase === 'wave' ? `${where} · 남은 적 ${s.enemies.length}` : where);
+  const where = mode === 'demo' ? '시연' : s.diff.endless ? `끝없는 도전${lap > 1 ? ` ${lap}바퀴` : ''}${s.diff.twist ? ` · ${TWIST_NAME[s.diff.twist]}` : ''}` : expeditionStage(stage).label;
+  if (s.phase === 'prep') {
+    // Cycle 142: the prep line (read by screen readers; the status box is visually hidden in battle) names what the
+    // coming wave brings; kinds new to this battle are bold.
+    const html = `${lapHtml(s)}다음 ${nextWaveHtml(s)} · ${Math.ceil(s.prepT)}초`;
+    if (last.waveSub !== html) { hud.waveSub.innerHTML = html; last.waveSub = html; }
+  } else setText('waveSub', hud.waveSub, s.phase === 'wave' ? `${where} · 남은 적 ${s.enemies.length}` : where);
   setStyle('townFill', hud.townFill, 'transform', `scaleX(${s.town.hp / s.town.maxHp})`);
   setText('townHp', hud.townHp, String(Math.ceil(s.town.hp)));
   setText('gold', hud.gold, String(s.gold));
   const bonus = Math.floor(s.prepT) * ECONOMY.earlyBonusPerSecond;
   setFlag('startWaveHidden', hud.startWave, 'hidden', s.phase !== 'prep' || mode !== 'play');
-  setText('startWave', hud.startWave, `웨이브 시작 +${bonus}G`);
-  const pad = s.hero.downT > 0 ? -1 : padInReach(s);
+  // Cycle 142: the battle screen shows only actionable controls (#107), so the coming wave is named on the start pill.
+  if (s.phase === 'prep' && mode === 'play') {
+    const html = `웨이브 시작 +${bonus}G<small class="wave-next">${lapHtml(s)}다음 ${nextWaveHtml(s)}</small>`;
+    if (last.startWave !== html) { hud.startWave.innerHTML = html; last.startWave = html; }
+  }
+  // Cycle 149: a site's pills show once the hero has held it for REACH_SHOW s; brushing an edge no longer flashes them.
+  const reach = s.hero.downT > 0 ? null : siteInReach(s);
+  const site = reachGate.update(reach ? `${reach.kind}${reach.i}` : '', s.t) ? reach : null;
+  const pad = site?.kind === 'tower' ? site.i : -1, wall = site?.kind === 'barricade' ? site.i : -1;
   const cost = pad >= 0 ? padCost(s, pad) : null;
-  const buildHidden = pad < 0 || mode !== 'play';
+  const buildHidden = !site || mode !== 'play';
   setFlag('buildHidden', hud.build, 'hidden', buildHidden);
   // Lv1 → Lv2 is a choice (cycle 15): the build button splits into fire and frost.
   const tower = pad >= 0 ? s.towers[pad] : null, choose = !!tower && tower.level === 0 && cost !== null;
   setFlag('buildFrostHidden', hud.buildFrost, 'hidden', buildHidden || !choose);
   hud.build.classList.toggle('fire', choose);
   hud.build.classList.toggle('split-l', choose);
+  // Standing on a tower: a small second button takes it down for a part refund, so it can go up on another pad.
+  const refund = pad >= 0 ? towerRefund(s, pad) : null;
+  setFlag('demolishHidden', hud.demolish, 'hidden', buildHidden || refund === null);
+  hud.demolish.classList.toggle('below-split', choose);
+  if (refund !== null) setText('demolish', hud.demolish, `철거 +${refund}G`);
+  // Barricade site (defence lane): the same button builds, adds spikes or repairs (green when it repairs).
+  const order = wall >= 0 ? barricadeOrder(s, wall) : null;
+  hud.build.classList.toggle('repair', order?.action === 'repair');
+  if (wall >= 0) {
+    setText('build', hud.build, !order ? '최대 강화' : order.action === 'build' ? `방벽 ${order.cost}G` : order.action === 'upgrade' ? `가시 방벽 · ${order.cost}G` : `수리 · ${order.cost}G`);
+    setFlag('buildDisabled', hud.build, 'disabled', !order || s.gold < order.cost);
+  }
   if (pad >= 0) {
     const level = tower ? tower.level + 1 : 0, branch = tower?.branch ? BRANCH_NAME[tower.branch] : '';
-    setText('build', hud.build, cost === null ? '최대 강화' : level === 0 ? `궁수탑 건설 ${cost}G` : choose ? `화염 Lv2 · ${cost}G` : `${branch} Lv${level + 1} · ${cost}G`);
+    // An empty pad with every allowed tower already standing: the button says so (six pads, TOWER_CAP towers).
+    setText('build', hud.build, cost === null ? (tower ? '최대 강화' : `궁수탑 ${TOWER_CAP}/${TOWER_CAP}`) : level === 0 ? `궁수탑 건설 ${cost}G` : choose ? `화염 Lv2 · ${cost}G` : `${branch} Lv${level + 1} · ${cost}G`);
     setFlag('buildDisabled', hud.build, 'disabled', cost === null || s.gold < cost);
     if (choose) { setText('buildFrost', hud.buildFrost, `냉기 Lv2 · ${cost}G`); setFlag('buildFrostDisabled', hud.buildFrost, 'disabled', s.gold < cost!); }
   }
@@ -319,18 +417,18 @@ function updateHud() {
 }
 
 // ---------- screens ----------
-function showScreen(id: 'title' | 'town' | 'result' | 'pause' | null) {
+function showScreen(id: 'title' | 'town' | 'result' | 'pause' | 'settings' | null) {
   if(rendererLost)return;
-  for (const s of ['title', 'town', 'result', 'pause']) $(`screen-${s}`).hidden = s !== id;
+  for (const s of ['title', 'town', 'result', 'pause', 'settings']) $(`screen-${s}`).hidden = s !== id;
   surface.classList.toggle('in-menu', id !== null);
   surface.classList.toggle('in-town', id === 'town');
 }
-function openTown(rewardText = '') {
+function openTown(rewardText = '', suggest: Upgrade | 'hero' | null = null) {
   mode = 'town';
   paused = false;
   input.enabled = false;
   showScreen('town');
-  town.show(rewardText);
+  town.show(rewardText, suggest);
 }
 function start(nextMode: 'play' | 'demo') {
   if(rendererLost)return;
@@ -342,14 +440,22 @@ function start(nextMode: 'play' | 'demo') {
   // Endless challenge (cycle 46): stage-10 difficulty, the five waves on a loop.
   // Endless keeps stage 10's numbers but reports its own stage, so endless-only groups (cycle 59: shamans) appear.
   const diff = stage === ENDLESS_STAGE ? { ...stageDifficulty(10), stage: ENDLESS_STAGE, endless: true } : stageDifficulty(stage);
-  state = createRush(seed, nextMode === 'play' ? kingdomMods(kingdom) : undefined, diff, nextMode === 'play' ? kingdom.hero : 'ranger');
+  // Debug (cycle 113): ?hero=bron|bear picks the demo's hero, as on the model sheet; the default demo shows the ranger.
+  const demoHero = (['bron', 'bear'] as const).find(h => h === params.get('hero')) ?? 'ranger';
+  state = createRush(seed, nextMode === 'play' ? kingdomMods(kingdom) : undefined, diff, nextMode === 'play' ? kingdom.hero : demoHero);
   battleId = `${Date.now().toString(36)}-${seed}`;
   mode = nextMode;
   paused = false;
   input.reset();
+  reachGate.reset();
   input.enabled = nextMode === 'play';
   surface.classList.toggle('demo', nextMode === 'demo');
+  town.closeMap();
   showScreen(null);
+  // Cycle 128: compile every battle material on the first frame, not when the first wave or glow appears.
+  // Cycle 140: with 'auto' the low tier's programs too, so a mid-battle drop does not compile them all at once.
+  view.prewarmLow = qualityPref === 'auto' && params.get('warmlow') !== '0';
+  view.warmShaders();
   toast(nextMode === 'demo' ? '자동 시연 · 화면을 누르면 타이틀로' : '노란 원 위에서 탑을 세우고 마을을 지키세요');
   updateOrientation();
 }
@@ -359,13 +465,26 @@ function showResult() {
   mode = 'result';
   input.enabled = false;
   if (s.diff.endless) { showEndlessResult(); return; }
-  $('result-title').textContent = won ? `스테이지 ${stage} 방어 성공!` : `스테이지 ${stage} 마을 함락`;
+  // Campaign ending (1.0, completion C6): read before settling, so only the very first stage-10 win shows it.
+  const ending = won && stage === STAGE_COUNT && (loadKingdom().stars[STAGE_COUNT - 1] ?? 0) === 0;
+  // Expedition (2026-11-13 merge): a first clear brings that village's companion; stage 5 closes the forest chapter.
+  const firstClear = won && (loadKingdom().stars[stage - 1] ?? 0) === 0, news = firstClear ? firstClearNews(stage) : {};
+  showVisitor(news.visitor);
+  const chapter = ending ? undefined : news.chapter;
+  $('result-chapter').hidden = !chapter;
+  $('screen-result').classList.toggle('has-news', !!(news.visitor || chapter));
+  if (chapter) { $('result-chapter').querySelector('[data-chapter-title]')!.textContent = chapter.title; $('result-chapter').querySelector('[data-chapter-text]')!.textContent = chapter.text; }
+  $('result-title').textContent = ending ? '캠페인 완료!' : won ? `${expeditionStage(stage).name} 방어 성공!` : `${expeditionStage(stage).name} 함락`;
   $('screen-result').classList.toggle('won', won);
+  $('screen-result').classList.toggle('ending', ending);
+  $('result-ending').hidden = !ending;
   const { kingdom, granted, reward } = settleBattle(collect(loadKingdom(), Date.now()), battleId, s, stage, today());
   $('result-stars').innerHTML = won
-    ? `<span class="stars">${'<i class="on">★</i>'.repeat(reward.stars)}${'<i>★</i>'.repeat(3 - reward.stars)}</span>${reward.newStars ? `<small>새 별 +${reward.newStars}${reward.newStars === reward.stars && stage < 10 ? ` · 스테이지 ${stage + 1} 열림` : ''}</small>` : ''}`
+    ? `<span class="stars">${'<i class="on">★</i>'.repeat(reward.stars)}${'<i>★</i>'.repeat(3 - reward.stars)}</span>${reward.newStars ? `<small>새 별 +${reward.newStars}${reward.newStars === reward.stars && stage < 10 ? ` · ${expeditionStage(stage + 1).label} ${expeditionStage(stage + 1).name} 열림` : ''}</small>` : ''}`
     : '<small>남은 마을 체력에 따라 별 1~3개를 얻어요</small>';
   const saved = granted && saveKingdom(kingdom);
+  // Cycle 129: after a loss the same stage, after a win the next one; none after the last stage.
+  showNextStep(won ? (stage < STAGE_COUNT ? nextStep(kingdom, stage + 1) : null) : nextStep(kingdom, stage), won);
   const rewardEl = $('result-reward');
   rewardEl.hidden = !granted;
   const shardText = reward.shards ? ` <i class="res-ico shard"></i>조각 +${reward.shards}` : '';
@@ -378,14 +497,36 @@ function showResult() {
     ['도달 웨이브', `${s.wave + 1}/${WAVE_COUNT}`], ['전투 시간', `${Math.floor(s.t / 60)}:${String(Math.floor(s.t % 60)).padStart(2, '0')}`],
     ['처치', `${s.stats.kills}`], ['명중률', `${accuracy}%`], ['필살기', `${s.stats.supers}회`], ['마을 체력', `${Math.ceil(s.town.hp)}`],
     ['획득 골드', `${s.stats.goldEarned}G`], ['궁수탑', towers],
+    ...(s.barricades.some(Boolean) ? [['방벽', `${s.barricades.filter(b => b && b.hp > 0).length}/${s.barricades.filter(Boolean).length} 버팀`]] : []),
   ].map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   window.setTimeout(() => showScreen('result'), 700);
+}
+/** Result screen next step (cycle 129): the target stage's recommended power against the kingdom's, and one thing to do
+ * in town (kingdom.ts nextStep). */
+function showNextStep(step: NextStep | null, won = false) {
+  const el = $('result-next');
+  el.hidden = !step;
+  // Cycle 135: '마을로' opens town on the suggested building (or the hero card for training and talents).
+  lastSuggest = !step?.action ? null : step.action.kind === 'upgrade' ? step.action.id : 'hero';
+  if (!step) return;
+  const fmt = (v: number) => v.toLocaleString('en-US'), a = step.action, ready = step.have >= step.need;
+  const name = !a ? '' : a.kind === 'upgrade' ? `${upgradeName(a.id)} 올리기` : a.kind === 'train' ? `${HEROES[a.hero].name} 훈련` : `${HEROES[a.hero].name} ${TALENTS[a.hero].name} 배우기`;
+  const miss = ([['식량', step.short.food], ['목재', step.short.wood], ['조각', step.short.shards]] as const).filter(([, v]) => v > 0).map(([k, v]) => `${k} ${fmt(v)}`).join(' · ');
+  // Cycle 141: how long the farm and mill take to cover what is missing (not for shards, which come from battles).
+  const wait = miss && step.eta ? `, ${waitText(step.eta)}` : '';
+  const todo = !a ? '마을이 다 자랐어요' : `${!ready ? '할 일' : won ? '준비됐어요 · 더 든든하게' : '전투력은 충분해요 · 더 든든하게'}: <b>${name}</b> <span class="gain">${miss ? `(${miss} 더 모으기${wait})` : `→ 전투력 +${step.gain}`}</span>`;
+  el.innerHTML = `<span class="head">다음 판 · ${expeditionStage(step.target).name} 권장 ${fmt(step.need)} · <span class="${ready ? 'ok' : 'short'}">지금 ${fmt(step.have)}</span></span>${todo}`;
 }
 /** Endless challenge result (cycle 46): waves held, best record, rewards. */
 function showEndlessResult() {
   const s = state, { kingdom, granted, reward } = settleEndless(collect(loadKingdom(), Date.now()), battleId, s);
   $('result-title').textContent = `끝없는 도전 · 웨이브 ${reward.waves}`;
-  $('screen-result').classList.remove('won');
+  $('screen-result').classList.remove('won', 'ending');
+  $('result-ending').hidden = true;
+  showNextStep(null);
+  showVisitor(undefined);
+  $('result-chapter').hidden = true;
+  $('screen-result').classList.remove('has-news');
   const passed = reward.milestones.map(m => `${m.waves}웨이브 돌파 <i class="res-ico shard"></i>+${m.shards}`).join(' · ');
   $('result-stars').innerHTML = (reward.newBest ? `<small class="best">새 최고 기록! ${reward.waves}웨이브</small>` : `<small>최고 기록 ${reward.best}웨이브</small>`)
     + (passed ? `<small class="milestone">기록 보상: ${passed}</small>` : '');
@@ -399,39 +540,98 @@ function showEndlessResult() {
   ].map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   window.setTimeout(() => showScreen('result'), 700);
 }
+/** The companion card on the result screen (none: hidden). */
+function showVisitor(c: keyof typeof COMPANIONS | undefined) {
+  const el = $('result-visitor');
+  el.hidden = !c;
+  if (!c) return;
+  const q = (sel: string) => el.querySelector<HTMLElement>(sel)!;
+  (q('[data-visitor-face]') as HTMLImageElement).src = COMPANION_FACE[c];
+  q('[data-visitor-head]').textContent = `새 동료 합류 · ${COMPANIONS[c].role}`;
+  q('[data-visitor-name]').textContent = COMPANIONS[c].name;
+  q('[data-visitor-line]').textContent = `“${COMPANIONS[c].greeting}”`;
+  // Cycle 136: a joining hero also says how they fight (HERO_ROLE), so the town's hero choice is an informed one.
+  const role = c === 'bron' ? HERO_ROLE.bron : c === 'popo' ? HERO_ROLE.bear : '';
+  // Short on purpose: one line on a 320 px tall phone, or the next-step line slips under the buttons (cycle 133).
+  q('[data-visitor-keeper]').textContent = role ? `출전 영웅: ${role} · 마을의 ${keeperNote(c)}` : `마을의 ${keeperNote(c)}`;
+}
 let lastReward = '';
-$('btn-play').addEventListener('click', () => { unlockAudio(); openTown(); });
+let lastSuggest: Upgrade | 'hero' | null = null;
+const reachGate = new ReachGate();
+$('btn-play').addEventListener('click', () => { unlockAudio(); openTown(legacyNote); legacyNote = ''; });
+$('map-battle').addEventListener('click', () => start('play'));
+// The title buttons ship disabled so a tap before this script runs is not silently lost.
+for (const id of ['btn-play', 'btn-demo']) ($(id) as HTMLButtonElement).disabled = false;
 $('btn-demo').addEventListener('click', () => start('demo'));
 $('btn-battle').addEventListener('click', () => start('play'));
 $('btn-again').addEventListener('click', () => start('play'));
-$('btn-town').addEventListener('click', () => { openTown(lastReward); lastReward = ''; });
+$('btn-town').addEventListener('click', () => { openTown(lastReward, lastSuggest); lastReward = ''; lastSuggest = null; });
 $('btn-town-title').addEventListener('click', () => { mode = 'title'; showScreen('title'); });
 $('pause').addEventListener('click', () => { if (mode === 'play') { paused = true; input.enabled = false; input.reset(); showScreen('pause'); } });
 $('btn-resume').addEventListener('click', () => { if (portrait.matches || document.hidden) return; paused = false; input.enabled = mode === 'play'; input.reset(); showScreen(null); });
 function qualityLabel() {
   const auto = qualityPref === 'auto' ? `(${PREF_LABEL[view.quality]})` : '';
-  $('btn-quality').textContent = `그래픽: ${PREF_LABEL[qualityPref]}${auto}`;
+  for (const id of ['btn-quality', 'btn-quality-2']) $(id).textContent = `그래픽: ${PREF_LABEL[qualityPref]}${auto}`;
 }
 function applyQuality() { view.setQuality(resolveQuality(qualityPref, frameWatch.dropped)); qualityLabel(); forceDraw = true; }
-$('btn-quality').addEventListener('click', () => {
+function cycleQuality() {
   qualityPref = nextPref(qualityPref);
   if (!pinnedQuality) try { localStorage.setItem(QUALITY_KEY, qualityPref); } catch { /* private mode: keep it for this session */ }
   applyQuality();
-});
+}
+$('btn-quality').addEventListener('click', cycleQuality);
+$('btn-quality-2').addEventListener('click', cycleQuality);
 qualityLabel();
+// Settings screen (1.0, completion C3): opened from the title or the pause card, returns where it came from.
+let settingsBack: 'title' | 'pause' = 'title', resetArmedUntil = 0, resetTimer = 0;
+function settingsLabels() {
+  for (const [id, key, name] of [['set-sfx', 'sfx', '효과음'], ['set-music', 'music', '배경 음악'], ['set-haptics', 'haptics', '진동']] as const) {
+    $(id).textContent = `${name}: ${settings[key] ? '켬' : '끔'}`;
+    $(id).setAttribute('aria-pressed', String(settings[key]));
+  }
+}
+function disarmReset() { resetArmedUntil = 0; window.clearTimeout(resetTimer); $('set-reset').classList.remove('armed'); $('set-reset').textContent = '진행 초기화'; }
+function openSettings(from: 'title' | 'pause') { settingsBack = from; settingsLabels(); qualityLabel(); disarmReset(); showScreen('settings'); }
+$('btn-settings').addEventListener('click', () => openSettings('title'));
+// The standalone app (1.0, tools/rush-app) has no arcade to go back to: drop the mode-select link there.
+if ((window as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.()) document.querySelector('.rush-back')?.remove();
+$('btn-pause-settings').addEventListener('click', () => openSettings('pause'));
+$('set-close').addEventListener('click', () => { disarmReset(); showScreen(settingsBack); });
+for (const [id, key] of [['set-sfx', 'sfx'], ['set-music', 'music'], ['set-haptics', 'haptics']] as const) {
+  $(id).addEventListener('click', () => {
+    settings = { ...settings, [key]: !settings[key] };
+    try { localStorage.setItem(RUSH_SETTINGS_KEY, serializeSettings(settings)); } catch { /* private mode: this session only */ }
+    applySettings();
+    settingsLabels();
+  });
+}
+// Reset needs a second press within 4 s; it clears only the kingdom save (settings stay) and reloads.
+$('set-reset').addEventListener('click', () => {
+  if (Date.now() < resetArmedUntil) {
+    try { localStorage.removeItem(RUSH_KINGDOM_KEY); } catch { /* nothing saved to clear */ }
+    location.reload();
+    return;
+  }
+  resetArmedUntil = Date.now() + 4000;
+  $('set-reset').classList.add('armed');
+  $('set-reset').textContent = '한 번 더 누르면 마을이 지워져요';
+  resetTimer = window.setTimeout(disarmReset, 4000);
+});
 $('btn-quit').addEventListener('click', () => { paused = false; mode = 'title'; showScreen('title'); });
 $('rush-surface').addEventListener('pointerdown', () => { if (mode === 'demo') { mode = 'title'; showScreen('title'); } });
 function pauseForBackground() { if (mode === 'play') { paused = true; input.enabled = false; input.reset(); showScreen('pause'); } }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pauseForBackground(); });
 window.addEventListener(NATIVE_BACKGROUND, pauseForBackground);
 window.addEventListener('blur', pauseForBackground);
+window.addEventListener('keydown', e => { if (e.code === 'Escape' && mode === 'town' && town.mapOpen) town.closeMap(); });
 window.addEventListener('keydown', e => { if (!rendererLost && e.code === 'Escape' && mode === 'play' && !portrait.matches && !document.hidden) { paused = !paused; input.enabled = !paused; input.reset(); showScreen(paused ? 'pause' : null); } });
 
 // ---------- loop ----------
 // Menus (title, result, pause) sit over a still battlefield: redraw it every MENU_DRAW_EVERY frames (cycle 30).
 // The first menu frame, a resize and a quality change (both clear the canvas) draw at once.
+// The town island is just as still (cycle 87): the same rule, plus every frame while a building pop runs.
 const MENU_DRAW_EVERY = 4;
-let menuFrames = 0, forceDraw = true, drawnFrames = 0;
+let menuFrames = 0, townFrames = 0, forceDraw = true, drawnFrames = 0;
 function resize() {
   forceDraw = true;
   layoutStale = true;
@@ -463,8 +663,13 @@ function frame(now: number) {
     const r = advanceClock(clock, seconds, speed);
     clock = r.clock;
     for (let i = 0; i < Math.min(r.steps, 40) && state.tick < freezeAt; i++) {
-      const cmd = mode === 'demo' ? guardBot(state) : input.command();
+      const cmd = mode === 'demo' ? guardBot(state) : input.command(state.t);
+      const shotsBefore = state.stats.shots, superDenied = mode === 'play' && !!cmd.super && !superReady(state);
       stepRush(state, cmd);
+      if (mode !== 'demo') input.settleFire(state.stats.shots > shotsBefore);
+      // Cycle 137: a press that arrived but could not act (quiver empty, hero down, super not charged) shakes its button.
+      if (mode === 'play' && input.dryFire()) dryPress(hud.fire);
+      if (superDenied) dryPress(hud.superBtn);
       feedback(state.events);
       // A big moment freezes the world for a beat; the rest of this frame's steps are dropped, not replayed.
       const next = tryStop(clock, seconds, state.tick, hitStopFor(state.events), reducedMotion ? 0 : 1);
@@ -476,6 +681,8 @@ function frame(now: number) {
   // Rendering keeps real time (camera settles, effects fade); during a hit-stop the world pose holds still.
   view.fxPaused = state.tick >= freezeAt;
   view.sync(state, running ? dt : 0, mode === 'play' ? input.aim : null, stopped, reducedMotion);
+  // Music follows the screen; a living boss turns battle music to the boss mood (same tempo, so it stays in step).
+  music.setMood(mode === 'town' ? 'town' : mode === 'play' || mode === 'demo' ? (state.enemies.some(e => e.kind === 'boss' && e.hp > 0) ? 'boss' : 'battle') : 'title');
   if (mode === 'town') {
     // The chosen hero's model downloads while the player is still in town (cycle 42), not at the start of the battle.
     // Only once the choice has held for PRELOAD_AFTER s: cycling past Bron must not start his 1.3 MB download.
@@ -484,9 +691,11 @@ function frame(now: number) {
     else if (seconds - townPickAt >= PRELOAD_AFTER) view.preloadHero(pick);
     // The kingdom has its own island scene; the battle scene is not drawn behind it.
     townView.update(dt);
-    view.renderer.render(townView.scene, townView.camera);
+    townFrames++;
+    if (forceDraw || townView.animating || townFrames % MENU_DRAW_EVERY === 1) { view.draw(townView.scene, townView.camera); drawnFrames++; forceDraw = false; }
     town.layout(canvasRect);
   } else {
+    townFrames = 0;
     const menu = mode === 'title' || mode === 'result' || (mode === 'play' && paused);
     menuFrames = menu ? menuFrames + 1 : 0;
     if (!menu || forceDraw || menuFrames % MENU_DRAW_EVERY === 1) { view.render(); drawnFrames++; forceDraw = false; }
@@ -512,17 +721,62 @@ if (params.has('sheet')) {
   // ?back=1 turns the hero away from the camera, as in battle where it faces the enemies at the top.
   Object.assign(state.hero, { x: 9.4, z: 2, facing: params.has('back') ? -Math.PI / 2 : Math.PI / 2 });
   // The shaman (cycle 59) stands at the left end so the earlier sheet positions stay comparable.
-  (['grunt', 'skirmisher', 'brute', 'shield', 'boss', 'shaman'] as const).forEach((kind, i) => state.enemies.push({
-    id: 900 + i, kind, x: [-6.4, -4, -1.2, 1.4, 5, -8.8][i], z: 2, kx: 0, kz: 0, hp: 1, maxHp: 1, lane: 0, wp: 1, cd: 0, flash: 0, chasing: false, facing: Math.PI / 2, windup: null,
+  // ?stage=N dresses the sheet for that stage: 6-10 show the winter clothes, 5 and 10 the named bosses.
+  if (params.has('stage')) state.diff = { ...state.diff, stage: Number(params.get('stage')) || 1 };
+  (['grunt', 'skirmisher', 'brute', 'shield', 'boss', 'shaman', 'wolf'] as const).forEach((kind, i) => state.enemies.push({
+    id: 900 + i, kind, x: [-6.4, -4, -1.2, 1.4, 5, -8.8, -11.2][i], z: 2, kx: 0, kz: 0, hp: 1, maxHp: 1, lane: 0, wp: 1, cd: 0, flash: 0, chasing: false, facing: Math.PI / 2, windup: null,
     // ?frost=1 shows the frost shell (cycle 16) on every enemy.
     ...(params.has('frost') ? { slowT: 99 } : {}),
   }));
   view.sheet();
   showScreen(null);
   surface.classList.add('sheet');
-} else if (params.has('demo')) start('demo');
+} else if (params.has('demo') || benchMode) { start('demo'); if (benchMode) void runBench(); }
 else if (params.has('play')) start('play');
 
 // Read-only handle for automated browser checks.
-Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, get quality() { return { pref: qualityPref, tier: view.quality, autoDropped: frameWatch.dropped }; }, get drawnFrames() { return drawnFrames; }, info: () => view.info(), enemyScreen, towerLevels: TOWER_LEVELS.length } });
+/** ?bench=1 (cycle 125): once the demo is frozen, build the heavy scene, warm up 2 s, time 10 s of frames and show the
+ * numbers in a panel (also window.__rush.bench). Rendering and animation keep running; the simulation is frozen. */
+let benchResult: (BenchStats & Record<string, unknown>) | null = null;
+async function runBench() {
+  const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
+  const frame = () => new Promise<number>(r => requestAnimationFrame(r));
+  const panel = document.createElement('pre');
+  panel.id = 'bench-panel';
+  panel.style.cssText = 'position:fixed;left:8px;top:8px;z-index:9999;margin:0;padding:8px 10px;background:rgba(10,16,32,.88);color:#e8f0ff;font:12px/1.4 ui-monospace,monospace;border-radius:8px;max-width:62vw;white-space:pre-wrap;pointer-events:none';
+  panel.textContent = '측정 준비 중…';
+  document.body.appendChild(panel);
+  while (state.tick < freezeAt) await wait(200);
+  state.enemies.push(...(benchEnemies(7000) as unknown as RushState['enemies']));
+  state.hero.x = 0; state.hero.z = -4.5;
+  view.snapCamera();
+  panel.textContent = '데우는 중(2초)…';
+  await wait(2000);
+  panel.textContent = '측정 중(10초)…';
+  const deltas: number[] = [];
+  let last = await frame(), calls = 0, n = 0;
+  const end = last + 10000;
+  while (last < end) { const t = await frame(); deltas.push(t - last); last = t; calls += view.info().calls; n++; }
+  const info = view.info(), st = benchStats(deltas);
+  benchResult = { ...st, calls: Math.round(calls / Math.max(1, n)), triangles: info.triangles, quality: view.quality, pref: qualityPref, autoDropped: frameWatch.dropped,
+    pixelRatio: info.pixelRatio, buffer: info.buffer, gpu: view.gpuName(), enemies: state.enemies.length };
+  panel.textContent = [
+    '아르카나 러시 · 기기 측정 (무거운 장면, 10초)',
+    `프레임 ${st.frames} · 평균 ${st.meanMs} ms (${st.fps} fps)`,
+    `중앙값 ${st.p50} · 95% ${st.p95} · 99% ${st.p99} · 최악 ${st.worst} ms`,
+    `드로콜 ${benchResult.calls} · 삼각형 ${info.triangles} · 적 ${state.enemies.length}`,
+    `품질 ${view.quality}${qualityPref === 'auto' ? ` (자동${frameWatch.dropped ? ', 낮춤' : ''})` : ''} · 화소 비율 ${info.pixelRatio} · 버퍼 ${info.buffer.join('×')}`,
+    `GPU ${benchResult.gpu}`,
+  ].join('\n');
+}
+
+Object.assign(window, { __rush: { get state() { return state; }, get mode() { return mode; }, get fps() { return fps; }, get frozen() { return state.tick >= freezeAt; }, get hitStops() { return hitStops; }, get stopUntil() { return clock.stopUntil; }, get kingdom() { return town.current; }, get quality() { return { pref: qualityPref, tier: view.quality, autoDropped: frameWatch.dropped }; }, get drawnFrames() { return drawnFrames; }, get music() { return { mood: music.mood, enabled: music.enabled }; }, info: () => view.info(), shadowCasters: () => view.shadowCasters(), tallyDraws: () => view.tallyDraws(), bodyOnly: (on: boolean) => { view.bodyOnly = on; }, holdPose: (on: boolean) => { view.poseHold = on; }, snapCamera: () => view.snapCamera(), maskMode: (on: boolean) => { view.maskMode = on; }, get lastTally() { return view.lastTally; }, get bench() { return benchResult; }, enemyScreen, towerLevels: TOWER_LEVELS.length } });
+// Debug only (map checks): dress the running battle as another stage's layout, and an overhead camera on the whole arena.
+Object.assign((window as unknown as { __rush: object }).__rush, {
+  setStage(n: number) { const map = mapFor(n); state.diff.stage = n; state.map = map; state.crates = map.crates.map((c, i) => ({ id: 1 + i, x: c.x, z: c.z, hp: CRATE.hp, ...(c.gold ? { gold: c.gold } : {}) })); },
+  overhead(on: boolean) { view.overhead = on; },
+  kits: () => view.kitCount,
+  programKeys: () => view.programKeys(),
+});
+if (params.has('overhead')) view.overhead = true;
 }

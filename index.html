@@ -10,6 +10,9 @@
     <link rel="preload" href="/fonts/Jua-Regular.ttf" as="font" type="font/ttf" crossorigin />
   </head>
   <body>
+    <!-- One front door (2026-11-13 merge): the expedition now lives inside Arcana Rush. The old mode picker
+         (원정, 전술 훈련, 군단 방어) is kept for regression checks only, at /?modes=1. -->
+    <script>if (!/[?&]modes=1\b/.test(location.search)) location.replace('/rush.html' + location.hash);</script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

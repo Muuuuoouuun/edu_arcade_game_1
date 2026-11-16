@@ -30,7 +30,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .rush-render-card a { color:#fff4c5; }
 
 /* Chunky display type with a thick ink outline: readable over any part of the battlefield. */
-.hud-wave b, .hud-gold b, .hud-town b, .toast, .card h1, .actions > button, .hud-pill, .hud-build, .btn-super .label, .pop, .eyebrow {
+.hud-wave b, .hud-gold b, .hud-town b, .toast, .card h1, .title-logo h1, .actions > button, .hud-pill, .hud-build, .btn-super .label, .pop, .eyebrow {
   font-family: var(--display); font-weight: 400; letter-spacing: 0.01em;
   -webkit-text-stroke: 4px var(--outline); paint-order: stroke fill; text-shadow: 0 3px 0 var(--outline);
 }
@@ -341,6 +341,12 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .hero-pick b { font-family: var(--display); font-weight: 400; font-size: 15px; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; }
 .hero-pick.has-more b::after { content: ' ⇄'; color: var(--gold); -webkit-text-stroke: 0; }
 @media (max-height: 420px) { .hero-pick b { font-size: 13px; } }
+/* Hero portraits (1.0, completion C5) */
+.hero-pick { flex-direction: row; align-items: center; gap: 6px; padding-left: 4px; }
+.hero-pick-text { display: flex; flex-direction: column; align-items: flex-start; }
+.hero-face { width: 34px; height: 34px; border-radius: 10px; border: 2px solid var(--outline); background: radial-gradient(circle at 50% 35%, #7fd0ff, #2f9bff); object-fit: cover; flex: none; }
+.hero-face-icon { padding: 0; object-fit: cover; background: radial-gradient(circle at 50% 35%, #7fd0ff, #2f9bff); }
+@media (max-height: 420px) { .hero-face { width: 28px; height: 28px; } }
 
 /* Model sheet (?sheet=1): characters only. */
 #rush.sheet .hud-top, #rush.sheet .btn-fire, #rush.sheet .btn-super, #rush.sheet .hud-pill, #rush.sheet .hud-build, #rush.sheet .toast { display: none; }
@@ -356,6 +362,8 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 /* Tower Lv2 choice (cycle 15): the build button splits into fire (left) and frost (right). */
 .hud-build.fire { background: linear-gradient(#ffc08a 0 50%, #ff7a2f 50%); }
 .hud-build.frost { background: linear-gradient(#4cb8ee 0 50%, #0f74c0 50%); } /* cycle 16: white on the lower half 4.9:1 (was 2.0:1) */
+/* Barricade repair (defence lane): the build button turns green, like the repair ring's sparks. */
+.hud-build.repair { background: linear-gradient(#a6f0b0 0 50%, #4fcf6a 50%); }
 .hud-build.split-l { transform: translateX(calc(-100% - 6px)); }
 .hud-build.split-r { transform: translateX(6px); }
 .hud-build.split-l:active { transform: translateX(calc(-100% - 6px)) translateY(2px); }
@@ -376,6 +384,15 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   white-space: nowrap; box-shadow: 0 2px 0 var(--outline); pointer-events: none;
 }
 .daily-badge .res-ico { width: 10px; height: 10px; margin: 0 1px 0 3px; border-width: 1.5px; vertical-align: 0; }
+/* Recommended power (cycle 89): hangs from the bottom edge of the battle button, clear of the top-right daily badge. */
+.power-pill {
+  position: absolute; bottom: -11px; left: 50%; transform: translateX(-50%); padding: 0 7px 1px; border-radius: 9px;
+  border: 2px solid var(--outline); color: #fff; font-size: 11px; line-height: 1.3; white-space: nowrap; pointer-events: none;
+}
+.power-pill.ok { background: #2f9e5a; }
+.power-pill.short { background: #e5772a; }
+/* Short landscape phones: the button sits on the screen's bottom edge, so the pill tucks up onto its lower rim. */
+@media (max-height: 420px) { .power-pill { bottom: -5px; font-size: 10px; line-height: 1.15; padding: 0 6px; } }
 .result-reward .daily-note { display: block; margin-top: 3px; font-size: 13px; color: #ffe58a; }
 
 /* Boss rally callout (cycle 35): pinned under the roaring boss, amber like its warning circle */
@@ -435,14 +452,16 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 }
 @media (orientation: landscape) and (max-width: 760px) {
   .town-bar { justify-content: flex-end; }
-  .town-bar h1 { display: none; }
+  /* Cycle 77: only the title words go; the kingdom power line stays (it is the growth number). */
+  .town-bar h1 .town-title { display: none; }
+  .town-bar h1 { flex: 0 1 auto; margin-right: auto; }
 }
 
 /* Kingdom goal (cycle 64): a small card under the top bar on the left; it glows gold when it can be claimed.
  * While it shows, the reward note moves aside: right in landscape, below it in portrait. */
 .town-goal {
   position: absolute; top: calc(100% + 8px); left: 0; max-width: 230px; padding: 5px 12px 6px; border-radius: 12px;
-  border: 3px solid var(--outline); background: rgba(29, 20, 51, 0.88); color: #fff; text-align: left;
+  border: 3px solid var(--outline); background: var(--navy, rgba(26, 37, 68, 0.92)); color: #fff; text-align: left;
   display: flex; flex-direction: column; gap: 1px; line-height: 1.15; box-shadow: 0 4px 0 var(--outline); touch-action: manipulation;
 }
 .town-goal:disabled { cursor: default; opacity: 1; }
@@ -469,3 +488,345 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .boss-edge[hidden] { display: none; }
 @keyframes bossEdgePulse { to { opacity: 0.55; } }
 @media (prefers-reduced-motion: reduce) { .boss-edge { animation: none; } }
+
+/* Kingdom power (cycle 71): a small line under the town title; a rise floats a gold '+N'. */
+.town-bar h1 .town-power { position: relative; display: table; font-size: 13px; line-height: 1.1; -webkit-text-stroke-width: 3px; text-shadow: 0 2px 0 var(--outline); }
+.town-power small { font-size: 11px; color: #ffe58a; margin-right: 4px; }
+.town-power b { font-weight: 400; font-variant-numeric: tabular-nums; }
+.town-power .power-up { position: absolute; left: 100%; top: -2px; margin-left: 6px; font-style: normal; color: var(--gold); opacity: 0; pointer-events: none; }
+.town-power .power-up.show { animation: powerUp 1.4s ease-out forwards; }
+@keyframes powerUp { 0% { opacity: 0; transform: translateY(6px) scale(0.8); } 15% { opacity: 1; transform: translateY(0) scale(1.15); } 70% { opacity: 1; transform: translateY(-6px) scale(1); } 100% { opacity: 0; transform: translateY(-12px); } }
+@media (prefers-reduced-motion: reduce) { .town-power .power-up.show { animation: none; opacity: 1; } }
+
+/* 1.0 title (completion C1): key art fills the screen; logo over the sky, a compact card along the bottom. */
+.title-screen {
+  display: flex; flex-direction: column; justify-content: space-between; align-items: center; gap: 10px;
+  background: linear-gradient(rgba(20,12,40,0) 55%, rgba(20,12,40,0.55)), url('./art/key-art.webp') center 62% / cover no-repeat, #2b6fb8;
+  padding: calc(14px + var(--safe-t, 0px)) 16px calc(14px + var(--safe-b, 0px));
+}
+@media (max-width: 1000px) { .title-screen { background-image: linear-gradient(rgba(20,12,40,0) 55%, rgba(20,12,40,0.55)), url('./art/key-art-960.webp'); } }
+/* Portrait phones get their own composition (all three heroes in a tall frame). */
+@media (orientation: portrait) { .title-screen { background-image: linear-gradient(rgba(20,12,40,0) 60%, rgba(20,12,40,0.5)), url('./art/key-art-portrait.webp'); background-position: center 70%; } }
+.title-logo { text-align: center; }
+.title-logo h1 { margin: 0; font-size: clamp(40px, 8vw, 76px); line-height: 1.05; color: #fff; -webkit-text-stroke: 8px var(--outline); paint-order: stroke fill; text-shadow: 0 6px 0 var(--outline), 0 10px 24px rgba(0,0,0,0.35); }
+.title-logo .eyebrow { font-size: clamp(12px, 1.6vw, 16px); }
+.title-logo .tag { margin: 4px 0 0; color: #fff; font-weight: 600; text-shadow: 0 2px 0 var(--outline), 0 0 8px rgba(0,0,0,0.6); }
+.title-card { position: relative; overflow: visible; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px 14px; width: auto; max-width: 100%; padding: 10px 16px; background: linear-gradient(rgba(58,42,110,0.92), rgba(38,26,74,0.92)); }
+.title-card .actions { flex-wrap: nowrap; }
+.howto-box { text-align: left; }
+.howto-box summary { cursor: pointer; color: var(--gold); font-weight: 700; list-style: none; padding: 4px 2px; text-decoration: underline; text-underline-offset: 3px; }
+.howto-box summary::-webkit-details-marker { display: none; }
+/* The controls open as a panel above the card, so the card itself stays one row and the heroes stay in view. */
+.howto-box[open] > :not(summary) { position: absolute; left: 0; right: 0; bottom: calc(100% + 8px); }
+.howto-box[open] .howto { margin: 0; padding: 12px 14px 40px; background: linear-gradient(#3a2a6e, #261a4a); border: 3px solid var(--outline); border-radius: 16px; }
+.howto-box[open] .note { bottom: calc(100% + 18px); padding: 0 16px; margin: 0; }
+@media (max-height: 420px) {
+  .title-logo h1 { font-size: 38px; -webkit-text-stroke-width: 6px; }
+  .title-logo .tag { font-size: 13px; }
+  .title-card { padding: 6px 12px; }
+  .title-card .actions > button { padding: 7px 18px; font-size: 17px; }
+}
+
+/* 1.0 settings (completion C3) */
+.link-button { background: none; border: 0; padding: 4px 2px; color: var(--gold); font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.setting-list { display: grid; gap: 8px; margin: 10px 0 12px; }
+.setting-list .setting[aria-pressed="false"] { background: #2a2140; color: var(--muted); }
+.credits { text-align: left; margin: 0 0 10px; }
+.credits summary { cursor: pointer; text-align: center; color: var(--gold); font-weight: 700; padding: 4px; }
+.credits ul { list-style: none; padding: 0; margin: 6px 0 0; display: grid; gap: 4px; font-size: 13px; color: #e3ece6; }
+.credits b { display: inline-block; min-width: 84px; color: var(--gold); font-weight: 600; }
+.danger-link { display: block; margin: 0 auto 12px; background: none; border: 0; color: #ff8a98; font: inherit; font-size: 14px; text-decoration: underline; cursor: pointer; }
+.danger-link.armed { color: #fff; background: #c8324a; border-radius: 10px; padding: 6px 12px; text-decoration: none; }
+.settings-card { max-height: 100%; overflow: auto; }
+.settings .setting + .setting { margin-left: 8px; }
+@media (max-height: 420px) {
+  .settings-card { padding: 8px 14px; }
+  .settings-card h1 { font-size: 24px; -webkit-text-stroke-width: 4px; }
+  .setting-list { grid-template-columns: 1fr 1fr; gap: 6px; margin: 6px 0 8px; }
+  .setting-list .setting { padding: 6px 10px; font-size: 13.5px; white-space: nowrap; }
+  .credits { margin-bottom: 4px; }
+  .danger-link { margin-bottom: 6px; }
+  .settings-card .actions > button { padding: 6px 18px; font-size: 17px; }
+}
+
+/* 1.0 ending (completion C6): the first stage 10 win, once. */
+#screen-result.ending { background: linear-gradient(rgba(20,12,40,0.25), rgba(20,12,40,0.7)), url('./art/key-art-960.webp') center 62% / cover no-repeat; }
+.result-ending { margin: 4px 0 8px; padding: 10px 12px; border-radius: 14px; background: linear-gradient(#ffe58a, #ffc93c); color: #3a2400; border: 3px solid var(--outline); box-shadow: 0 4px 0 var(--outline); animation: tagUp 0.9s ease-in-out 2; }
+.result-ending .ending-line { margin: 0; font-family: var(--display); font-size: 20px; }
+.result-ending .ending-sub { margin: 4px 0 0; font-size: 13px; }
+@media (prefers-reduced-motion: reduce) { .result-ending { animation: none; } }
+
+
+/* ==========================================================================================================
+   UNIFIED UI (2026-11-13, owner: "merge everything into one game"; reference docs/rush/art/ui-style-sheet.webp,
+   generated from the key art in the Brawl Stars / Clash of Clans / Kingshot tone).
+   Dialogs are parchment in a wood-and-gold frame with a blue ribbon title; buttons are chunky, riveted, navy-outlined;
+   bars over the 3D scene are deep navy. This layer only restyles; behaviour lives in main.ts / town.ts.
+   ========================================================================================================== */
+:root {
+  --outline: #1a2544;
+  --wood: #8b5226; --wood-dark: #5c3214; --trim: #f0b93a;
+  --parchment: #f8eed8; --parchment-2: #ecdab6; --paper-ink: #3b2614; --paper-muted: #7a5a3a;
+  --ribbon: #2f6fd1; --ribbon-hi: #5aa8ff; --navy: rgba(26, 37, 68, 0.92);
+}
+.card {
+  --ink: var(--paper-ink); --muted: var(--paper-muted); --line: rgba(59, 38, 20, 0.18);
+  color: var(--paper-ink);
+  background: linear-gradient(var(--parchment), var(--parchment-2));
+  border: 5px solid var(--wood);
+  box-shadow: inset 0 0 0 2px var(--trim), inset 0 0 0 5px rgba(92, 50, 20, 0.35), 0 0 0 3px var(--outline), 0 7px 0 3px var(--outline), 0 20px 60px rgba(0,0,0,0.45);
+}
+/* Title ribbon */
+.card h1 {
+  display: inline-block; padding: 2px 24px 5px; margin: -4px 0 8px; border-radius: 12px; border: 3px solid var(--outline);
+  background: linear-gradient(var(--ribbon-hi) 0 50%, var(--ribbon) 50%); color: #fff;
+  -webkit-text-stroke: 5px var(--outline); paint-order: stroke fill; text-shadow: none; box-shadow: 0 4px 0 var(--outline);
+}
+#screen-result.won h1 { color: #fff; background: linear-gradient(#7ee07a 0 50%, #3daa4a 50%); }
+#screen-result:not(.won) h1 { color: #fff; background: linear-gradient(#ff8a8a 0 50%, #d8394a 50%); }
+#screen-result.ending h1 { background: linear-gradient(#ffe58a 0 50%, #f0a81e 50%); }
+.card .eyebrow { color: var(--wood); -webkit-text-stroke-width: 0; }
+/* Buttons: chunky, glossy, riveted (two corner dots) */
+.actions > button, .setting, .collect, .hero-pick, .stage-chip, .town-up {
+  box-shadow: inset 0 2px 0 rgba(255,255,255,0.55), inset 0 -4px 0 rgba(0,0,0,0.16), 0 5px 0 var(--outline);
+}
+.actions > button { position: relative; border-radius: 14px; -webkit-text-stroke: 4px var(--outline); paint-order: stroke fill; }
+.actions > button::before, .actions > button::after {
+  content: ''; position: absolute; top: 5px; width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.75); box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+}
+.actions > button::before { left: 6px; } .actions > button::after { right: 6px; }
+.actions > button:disabled { background: linear-gradient(#c9cfd8 0 50%, #9aa3b0 50%); }
+.setting { background: linear-gradient(#7fd0ff 0 50%, #2f9bff 50%); color: #fff; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; font-weight: 700; }
+.setting-list .setting[aria-pressed="false"] { background: linear-gradient(#d6dbe3 0 50%, #a9b2bf 50%); color: #fff; }
+/* Text that was light-on-purple becomes ink-on-parchment */
+.card .howto, .card .credits ul { color: var(--paper-ink); }
+.card .howto b, .card .credits b { color: #a0521e; }
+.howto-box summary, .credits summary, .link-button { color: #a0521e; }
+.title-card .link-button, .title-card .rush-back, .title-card .howto-box summary { color: #a0521e; }
+.danger-link { color: #c8324a; }
+.result-reward .daily-note, .result-stars .best { color: #a8670a; }
+.result-stars .milestone, .town-info .talent-line { color: #7a4cc4; }
+.result-stars .stars i { color: rgba(59,38,20,0.18); }
+.town-reward, .result-reward { background: rgba(61, 170, 74, 0.14); border-color: rgba(46, 140, 60, 0.55); color: var(--paper-ink); }
+.town-row { background: rgba(255,255,255,0.55); border-color: rgba(92,50,20,0.35); }
+.town-info em { color: #b0700a; }
+.town-up:disabled { background: rgba(59,38,20,0.08); color: var(--paper-muted); }
+.collect:disabled { background: rgba(59,38,20,0.08); color: var(--paper-muted); }
+.town-card .actions, #screen-result .actions { background: linear-gradient(rgba(236,218,182,0), var(--parchment-2) 35%); }
+.howto-box[open] .howto { background: linear-gradient(var(--parchment), var(--parchment-2)); border: 4px solid var(--wood); box-shadow: inset 0 0 0 2px var(--trim), 0 0 0 3px var(--outline); }
+.howto-box[open] .note { color: var(--paper-muted); }
+.title-card { background: linear-gradient(rgba(248,238,216,0.96), rgba(236,218,182,0.96)); }
+.result-ending { color: #3a2400; }
+/* Bars and chips over the 3D scene: deep navy instead of purple */
+.town-res span, .hero-pick, .town-goal:not(.done) { background: var(--navy); }
+.stage-chip { background: linear-gradient(#3d5aa8, #22356e); }
+.stage-chip:disabled { background: rgba(26,37,68,0.45); }
+/* Portrait title: the riveted buttons are wide, so let the mode link drop to its own line instead of stacking letters. */
+.title-card .rush-back { white-space: nowrap; }
+@media (orientation: portrait) {
+  .title-card .actions { flex-wrap: wrap; justify-content: center; align-items: center; }
+  .title-card .actions > button { flex: 1 1 40%; }
+  .title-card .actions > .rush-back { flex-basis: 100%; text-align: center; }
+}
+
+/* ===== EXPEDITION (2026-11-13 merge: the old 원정 villages are Rush's ten stages, in two regions) ===== */
+/* Town dock: one map button replaces the stage chip strip. */
+.town-dock .map-open {
+  flex-basis: 100%; display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; align-items: center; column-gap: 8px;
+  max-width: 340px; margin-left: auto; padding: 5px 12px 6px 10px; min-height: 44px; text-align: left; border-radius: 14px; border: 3px solid var(--outline);
+  background: var(--navy, rgba(26,37,68,0.92)); color: #fff; box-shadow: 0 4px 0 var(--outline); cursor: pointer; touch-action: manipulation;
+}
+.map-open .region-dot { grid-row: 1 / 3; width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--outline); background: radial-gradient(circle at 35% 35%, #c8f59a, #3fa34a); }
+.map-open.region-snow .region-dot { background: radial-gradient(circle at 35% 35%, #ffffff, #8ecbe8); }
+.map-open small { font-size: 10px; color: #b9c8ec; line-height: 1.1; }
+.map-open b { grid-column: 2; font-family: var(--display); font-weight: 400; font-size: 15px; line-height: 1.15; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.map-open span { grid-column: 3; grid-row: 1 / 3; color: var(--gold); font-size: 12px; letter-spacing: -1px; }
+@media (max-height: 420px) { .town-dock .map-open { padding: 3px 10px 4px 8px; } .map-open b { font-size: 13px; } }
+
+/* The map: painted world, village markers, a parchment letter panel. Covers the town while open. */
+.expedition-map { position: absolute; inset: 0; z-index: 30; display: flex; background: #2b8fd0; pointer-events: auto; }
+.expedition-map[hidden] { display: none; }
+.map-scroll { position: relative; flex: 1; min-width: 0; height: 100%; overflow: auto; display: flex; align-items: center; justify-content: center; -webkit-overflow-scrolling: touch; }
+.map-board {
+  position: relative; flex: none; aspect-ratio: 3 / 2; height: min(100%, calc((100vw - 300px) / 1.5)); max-width: none;
+  background: url('./art/expedition-map.webp') center / cover no-repeat; box-shadow: inset 0 0 40px rgba(10, 40, 80, 0.45);
+}
+@media (max-width: 1000px) { .map-board { background-image: url('./art/expedition-map-960.webp'); } }
+.map-nodes { position: absolute; inset: 0; }
+.map-node {
+  position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); width: 46px; height: 46px; padding: 0; border-radius: 50%;
+  border: 3px solid var(--outline); background: radial-gradient(circle at 50% 35%, #ffe58a, #f0a020); color: #fff; box-shadow: 0 4px 0 var(--outline), 0 6px 10px rgba(0,0,0,0.35);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; cursor: pointer; touch-action: manipulation;
+}
+.map-node b { font-family: var(--display); font-weight: 400; font-size: 14px; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; }
+.map-node span { position: absolute; top: calc(100% + 1px); left: 50%; transform: translateX(-50%); padding: 0 4px; border-radius: 6px; background: rgba(26,37,68,0.85); color: var(--gold); font-size: 9px; letter-spacing: -1px; white-space: nowrap; }
+.map-node span:empty { display: none; }
+.map-node.region-snow { background: radial-gradient(circle at 50% 35%, #ffffff, #7fc4ea); }
+.map-node.cleared { background: radial-gradient(circle at 50% 35%, #9df07a, #2f9a3f); }
+.map-node.region-snow.cleared { background: radial-gradient(circle at 50% 35%, #d8f4ff, #3a8fd8); }
+.map-node.boss { width: 56px; height: 56px; }
+.map-node.boss::before { content: ''; position: absolute; top: -13px; left: 50%; width: 26px; height: 14px; transform: translateX(-50%); background: var(--trim, #f0b93a); border: 3px solid var(--outline); border-bottom: 0;
+  clip-path: polygon(0 100%, 0 20%, 25% 60%, 50% 0, 75% 60%, 100% 20%, 100% 100%); }
+.map-node.endless { background: radial-gradient(circle at 50% 35%, #e2ccff, #8a5ae8); }
+.map-node.next:not(.locked)::after { content: ''; position: absolute; inset: -9px; border-radius: 50%; border: 3px solid #fff; pointer-events: none; animation: nodeCall 1.4s ease-out infinite; }
+.map-node[aria-checked="true"] { box-shadow: 0 0 0 4px #fff, 0 0 0 7px var(--outline), 0 6px 12px rgba(0,0,0,0.4); z-index: 2; }
+.map-node.locked { background: radial-gradient(circle at 50% 35%, #c9cfd8, #7d8796); filter: saturate(0.4); cursor: default; }
+.map-node.locked b { opacity: 0.75; }
+@keyframes nodeCall { from { transform: scale(0.8); opacity: 1; } to { transform: scale(1.35); opacity: 0; } }
+.map-note { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); margin: 0; padding: 6px 12px; border-radius: 10px; background: rgba(26,37,68,0.92); color: #fff; font-size: 13px; white-space: nowrap; opacity: 0; pointer-events: none; }
+.map-note.show { animation: mapNote 2.4s ease forwards; }
+@keyframes mapNote { 10%, 80% { opacity: 1; } 100% { opacity: 0; } }
+
+.map-panel.card {
+  position: relative; flex: none; width: 300px; max-width: none; margin: 0; border-radius: 0; border-width: 0 0 0 5px; overflow: auto;
+  display: flex; flex-direction: column; gap: 6px; padding: calc(34px + var(--safe-t)) calc(14px + var(--safe-r)) calc(10px + var(--safe-b)) 14px; text-align: left;
+}
+.map-panel h1 { align-self: center; margin: -22px 0 4px; font-size: 20px; }
+.expedition-map.region-snow .map-panel h1 { background: linear-gradient(#bfe6ff 0 50%, #7cbbe8 50%); color: #fff; }
+.map-stage { margin: 0; font-family: var(--display); font-size: 19px; color: var(--paper-ink, #3b2614); line-height: 1.15; }
+.map-stage b { color: #a0521e; }
+.map-meta { margin: 0; display: flex; gap: 10px; align-items: center; font-size: 13px; }
+.map-meta [data-stage-stars] { color: #e0a000; letter-spacing: -1px; font-size: 16px; text-shadow: 0 1px 0 var(--outline); }
+.map-meta .ok, .map-meta .short { padding: 1px 8px; border-radius: 8px; border: 2px solid var(--outline); color: #fff; font-weight: 800; font-size: 12px; }
+.map-meta .ok { background: #3fa34a; } .map-meta .short { background: #e07a2a; }
+.map-letter { padding: 8px 10px; border-radius: 10px; border: 2px dashed rgba(139, 82, 38, 0.55); background: rgba(255, 255, 255, 0.45); }
+.map-letter small { display: block; font-size: 11px; color: var(--paper-muted, #7a5a3a); font-weight: 700; }
+.map-letter p { margin: 2px 0 0; font-size: 13px; line-height: 1.4; color: var(--paper-ink, #3b2614); }
+.map-foe { margin: 0; font-size: 12px; color: #a0322e; font-weight: 800; }
+.map-foe:empty { display: none; }
+.map-visitor { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--paper-ink, #3b2614); }
+.map-visitor[hidden] { display: none; }
+.map-visitor img { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--outline); filter: brightness(0.15) saturate(0); background: #8ecbe8; }
+.map-visitor.met img { filter: none; }
+.map-panel .actions { margin-top: auto; flex-wrap: nowrap; }
+.map-panel .actions > button { flex: 1; min-height: 44px; }
+@media (max-height: 420px) {
+  .map-panel.card { width: 260px; gap: 4px; padding-top: calc(28px + var(--safe-t)); }
+  .map-panel h1 { font-size: 17px; margin-top: -18px; }
+  .map-stage { font-size: 16px; }
+  .map-letter p { font-size: 12px; line-height: 1.3; }
+  .map-node { width: 40px; height: 40px; } .map-node.boss { width: 48px; height: 48px; }
+  .map-board { height: min(100%, calc((100vw - 260px) / 1.5)); }
+}
+@media (orientation: portrait) {
+  .expedition-map { flex-direction: column; }
+  .map-scroll { flex: 1 1 auto; justify-content: flex-start; }
+  .map-board { height: 100%; }
+  .map-panel.card { width: auto; border-width: 5px 0 0 0; padding: 26px 14px calc(10px + var(--safe-b)); max-height: 46%; }
+}
+
+/* Result: a companion arrives after a first clear; the chapter end has its own line. */
+.result-visitor { display: flex; gap: 12px; align-items: center; margin: 4px auto 6px; padding: 8px 12px; max-width: 520px; text-align: left; border-radius: 14px; border: 3px solid var(--outline); background: linear-gradient(#fff6d8, #ffe39a); }
+.result-visitor[hidden] { display: none; }
+.result-visitor img { flex: none; width: 72px; height: 72px; border-radius: 16px; border: 3px solid var(--outline); box-shadow: 0 3px 0 var(--outline); }
+.result-visitor small { display: block; font-size: 11px; font-weight: 800; color: #a0521e; }
+.result-visitor b { font-family: var(--display); font-weight: 400; font-size: 20px; color: #fff; -webkit-text-stroke: 4px var(--outline); paint-order: stroke fill; }
+.result-visitor p { margin: 2px 0; font-size: 13px; line-height: 1.35; color: var(--paper-ink, #3b2614); }
+.result-visitor em { font-style: normal; font-size: 12px; font-weight: 800; color: #2f6fd1; }
+.result-chapter { margin: 2px auto 6px; padding: 6px 12px; max-width: 520px; border-radius: 12px; background: rgba(47, 111, 209, 0.12); color: var(--paper-ink, #3b2614); }
+.result-chapter[hidden] { display: none; }
+.result-chapter b { font-family: var(--display); font-weight: 400; font-size: 18px; color: #2f6fd1; }
+.result-chapter p { margin: 2px 0 0; font-size: 13px; }
+@media (max-height: 420px) { .result-visitor { padding: 4px 10px; margin: 0 auto 2px; } .result-visitor img { width: 52px; height: 52px; } .result-visitor b { font-size: 16px; } .result-visitor p { font-size: 12px; } }
+
+/* Town card: the companion who keeps this building. */
+.town-row .keeper { display: flex; align-items: center; gap: 5px; margin-top: 2px; font-size: 11px; color: #ffe39a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.town-row .keeper[hidden] { display: none; }
+.town-row .keeper img { flex: none; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--outline); }
+.town-row .keeper span { overflow: hidden; text-overflow: ellipsis; }
+.map-home { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); padding: 3px 10px; border-radius: 10px; border: 3px solid var(--outline); background: linear-gradient(#5aa8ff 0 50%, #2f6fd1 50%); color: #fff; font-family: var(--display); font-size: 13px; -webkit-text-stroke: 3px var(--outline); paint-order: stroke fill; box-shadow: 0 3px 0 var(--outline); cursor: pointer; }
+
+/* Fixes after the first expedition screenshots. */
+.town-screen .town-reward { color: #fff; }               /* the note sits on a navy pill, not on parchment */
+.result-stars small { color: #2f7a3a; }                  /* readable on parchment */
+.map-panel .actions > button { min-width: 0; padding-left: 8px; padding-right: 8px; }
+@media (max-height: 420px) {
+  #screen-result.has-news #result-stats, #screen-result.has-news .result-stars small { display: none; }
+  .result-visitor p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+}
+
+/* Take a tower down (2026-11-14): a small second pill beside the build button; never in the way of the main action. */
+.hud-build.demolish { bottom: calc(126px + var(--safe-b)); min-height: 36px; padding: 5px 12px; font-size: 14px; background: linear-gradient(#e8d5b0 0 50%, #c9a26a 50%); }
+@media (orientation:landscape) {
+  .hud-build.demolish { left: calc(12px + var(--safe-l)); top: calc(114px + var(--safe-t)); bottom: auto; transform: none; min-height: 36px; font-size: 13px; padding: 5px 10px; }
+  .hud-build.demolish.below-split { top: calc(166px + var(--safe-t)); }
+  .hud-build.demolish:active { transform: translateY(2px); }
+}
+
+/* Cycle 98: the effect line of a town card may wrap (two lines; three on a narrow portrait card) instead of ending in
+   an ellipsis: the walls and forge cards now also say what they do for the lane barricades. */
+.town-info small[data-effect] { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.25; overflow-wrap: anywhere; }
+@media (orientation: portrait) { .town-info small[data-effect] { -webkit-line-clamp: 4; } }
+
+/* Next battle (cycle 129): recommended power for the stage to aim at and one thing to raise in town. */
+.result-next { margin: 8px 0 0; padding: 6px 12px; border-radius: 12px; text-align: center; font-size: 14px; line-height: 1.4; color: var(--paper-ink); background: rgba(160, 82, 30, 0.08); border: 2px dashed rgba(160, 82, 30, 0.35); }
+.result-next .head { display: block; font-weight: 700; }
+.result-next b, .result-next .gain { white-space: nowrap; }
+.result-next .short { color: #b4471b; }
+.result-next .ok { color: #2c7a3a; }
+@media (max-height: 420px) { .result-next { margin-top: 4px; padding: 3px 10px; font-size: 13px; } .result-next .head { display: inline; } .result-next .head::after { content: ' · '; } }
+
+/* Cycle 133: on a short landscape phone a first win (companion card + bonus line) pushed the next-step line under the
+   sticky buttons on every phone tried (Pixel 7, iPhone 12, Galaxy S9+, iPhone SE). The companion's greeting and the
+   bonus breakdown give way first; the name, role and what they keep in town stay. */
+@media (max-height: 420px) {
+  #screen-result.has-news .result-visitor p, #screen-result.has-news .result-reward .daily-note { display: none; }
+  #screen-result.has-news .result-visitor img { width: 40px; height: 40px; border-radius: 12px; }
+  #screen-result.has-news .result-stars { margin-top: 0; }
+  #screen-result.has-news .result-stars .stars { font-size: 22px; }
+  #screen-result.has-news h1 { font-size: 24px; margin-bottom: 4px; padding: 0 18px 3px; }
+  #screen-result.has-news .result-reward { margin-top: 2px; padding: 2px 10px; }
+  #screen-result.has-news .result-visitor em { margin-left: 8px; } /* with the greeting gone it follows the name */
+}
+
+/* Cycle 135: the building (or hero card) the result screen suggested carries a small '추천' ribbon until it is raised. */
+.town-tag.suggested::before, .hero-pick.suggested::before {
+  content: '추천'; position: absolute; left: 50%; top: -17px; transform: translateX(-50%); z-index: 1; padding: 1px 6px; border-radius: 8px;
+  border: 2px solid var(--outline); background: #ff8a3d; color: #fff; font-size: 10px; font-weight: 800; line-height: 12px; white-space: nowrap; pointer-events: none;
+}
+.hero-pick.suggested { position: relative; }
+
+/* Cycle 137: a press that could not act (empty quiver, hero down, super not charged) shakes its button for a beat and
+   flashes the arrow pips red. `translate` is separate from the pressed `transform`, so the two never fight. */
+@keyframes dryShake { 0%, 100% { translate: 0 0; } 20% { translate: -5px 0; } 45% { translate: 4px 0; } 70% { translate: -3px 0; } }
+@keyframes dryFlash { 0%, 100% { box-shadow: none; } 30% { box-shadow: 0 0 0 4px rgba(255, 70, 70, 0.85); } }
+.btn-fire.dry, .btn-super.dry { animation: dryShake 0.26s ease-out; }
+.btn-fire.dry { filter: none; } /* the empty quiver's dimming would mute the red */
+.btn-fire.dry .ammo i { background: #ff4d4d; box-shadow: 0 0 6px rgba(255, 77, 77, 0.9); }
+@media (prefers-reduced-motion: reduce) { .btn-fire.dry, .btn-super.dry { animation: dryFlash 0.3s ease-out; } }
+
+/* Cycle 139: touch targets at the project's 44 px on the smallest phone tried (iPhone SE landscape, 568×320). */
+.hud-icon { width: 44px; height: 44px; }                                   /* pause: was 40 */
+.link-button { min-height: 44px; padding: 4px 8px; }                       /* title '설정': was 36×30 */
+.setting { min-height: 44px; }                                             /* settings rows: were 36 tall */
+.danger-link { display: flex; align-items: center; justify-content: center; width: fit-content; min-height: 44px; margin-left: auto; margin-right: auto; } /* reset: was 20 tall */
+.actions > button { min-height: 44px; }                                    /* result, settings close: were 43 */
+/* Expedition map: on narrow short phones (SE, Galaxy S9+) the width-bound board was ~305×205 px and stage nodes piled up
+   (1-3/1-4, 2-1…2-5, overlaps up to 24 px). The board now takes the full height and scrolls sideways (openMap centres
+   the chosen village); nodes keep 44 px. */
+@media (max-height: 420px) { .map-node { width: 44px; height: 44px; } .map-node.boss { width: 50px; height: 50px; } }
+.map-home { min-height: 44px; }                                            /* map '우리 마을': was 31 tall */
+@media (max-height: 420px) and (max-width: 760px) and (orientation: landscape) { .map-board { height: 100%; } }
+/* The taller settings rows and reset link (+40 px) pushed '닫기' off the SE settings card: tighter gaps there. */
+@media (max-height: 420px) {
+  .setting-list { gap: 4px; margin: 2px 0 4px; }
+  .credits { margin-bottom: 0; } .credits summary { padding: 2px; }
+  .danger-link { margin-top: 0; margin-bottom: 2px; }
+  .settings-card h1 { margin-bottom: 2px; }
+}
+
+/* Cycle 141: how long until a greyed upgrade can be bought ('· 약 4분'), or '· 수확 먼저' when the uncollected stock covers it. */
+.town-up .eta { font-size: 12px; font-weight: 700; color: #ffd36a; white-space: nowrap; }
+
+/* Cycle 142: what the coming wave brings, under '웨이브 시작'; kinds new to this battle in bold. Dark ink: white at this size
+   on the orange pill was too faint. */
+.hud-pill .wave-next { display: block; margin-top: 1px; font-family: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif; -webkit-text-stroke: 0; text-shadow: none;
+  font-size: 12px; font-weight: 600; letter-spacing: 0; color: #2a1238; max-width: 230px; margin: 1px auto 0; line-height: 1.3; word-break: keep-all; }
+/* On narrow landscape phones (iPhone SE 568 px) the centred pill reached the super button (the 139 audit saw 2 px;
+   the preview made it up to 60): it sits a little left of centre there. */
+@media (orientation: landscape) and (max-width: 760px) { .hud-pill { left: calc(50% - 60px); } }
+.hud-pill .wave-next b { font-weight: 900; color: #000; text-decoration: underline; text-underline-offset: 2px; }
+
+/* Cycle 143: the demolish pill (36 px tall) was the one battle control under the 44 px touch size; stacked under the
+   build pills it still ends well above the start pill on a 320 px tall phone (210 vs 235 px). */
+.hud-build.demolish { min-height: 44px; }

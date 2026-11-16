@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   battleReward, canUpgrade, collect, createKingdom, grantReward, heroMaxLevel, kingdomMods, parseKingdom, pending, RATE_PER_LEVEL, settleBattle,
   serializeKingdom, STORAGE_MINUTES, train, trainCost, upgrade, upgradeCost, type Kingdom,
+  nextStep, kingdomPower, recommendedPower, POWER, minutesUntil, waitText, townSuggestion,
 } from './kingdom.ts';
 import { createRush, heroMaxHp, padCost, stepRush, WAVE_COUNT } from './sim.ts';
 import { HERO, PADS, TOWER_LEVELS, TOWN } from './data.ts';
@@ -342,17 +343,153 @@ test('kingdom goals (cycle 64): one at a time, claimed only when met, paid once,
   const after = claimGoal(won);
   assert.deepEqual([after.goal, after.food - won.food, won.goal], [1, GOALS[0].reward.food, 0], 'pays, moves on, leaves the input alone');
   assert.equal(claimGoal(after), after, 'the next goal (castle Lv2) is not met yet');
-  // A grown kingdom meets every goal in order: the whole chain can be claimed and then nothing is left.
+  // A grown kingdom meets every goal in order: the whole chain can be claimed; what follows is the power ladder (cycle 83).
   let grown: Kingdom = { ...k, castle: 5, farm: 5, mill: 5, perks: { ...k.perks, attack: 1, forge: 1 }, stars: k.stars.map(() => 3), heroLv: { ...k.heroLv, ranger: 2 }, endlessBest: 5 };
   const shards0 = grown.shards;
   for (let i = 0; i < GOALS.length; i++) grown = claimGoal(grown);
   assert.equal(grown.goal, GOALS.length);
-  assert.equal(currentGoal(grown), null);
-  assert.equal(claimGoal(grown), grown);
+  assert.equal(currentGoal(grown)?.goal.ladder, true, 'the chain hands over to the ladder');
+  assert.equal(claimGoal(grown), grown, 'this kingdom is still short of the first rung');
   assert.equal(grown.shards - shards0, GOALS.reduce((a, g) => a + (g.reward.shards ?? 0), 0));
   // Saves: the index round-trips; older saves start at 0; nonsense clamps to a valid start.
   assert.equal(parseKingdom(serializeKingdom({ ...k, goal: 4 }), T0).goal, 4);
   const old = JSON.parse(serializeKingdom(k)); delete old.goal;
   assert.equal(parseKingdom(JSON.stringify(old), T0).goal, 0);
-  assert.equal(parseKingdom(JSON.stringify({ ...old, goal: 99 }), T0).goal, 0);
+  for (const bad of [-1, 2.5, 'x', 1e6]) assert.equal(parseKingdom(JSON.stringify({ ...old, goal: bad }), T0).goal, 0, `goal ${bad}`);
+});
+
+test('kingdom power ladder (cycle 83): after the chain, power targets every 500 from 2,500, claimed only when met', async () => {
+  const { GOALS, POWER_LADDER, currentGoal, claimGoal, goalAt, kingdomPower } = await import('./kingdom.ts');
+  const k = createKingdom(T0);
+  // The rungs follow from the goal index alone.
+  assert.deepEqual([0, 1, 4].map(r => goalAt(GOALS.length + r)!.progress(k)[1]), [2500, 3000, 4500]);
+  assert.equal(goalAt(GOALS.length)!.text, '전투력 2,500');
+  assert.equal(goalAt(GOALS.length + POWER_LADDER.rungs), null);
+  assert.equal(goalAt(-1), null);
+  // A chain finisher near 2,000 power waits; the first rung pays its shards once met, and the next rung is 3,000.
+  let done: Kingdom = { ...k, goal: GOALS.length, castle: 5, farm: 3, mill: 3, perks: { attack: 2, towerDiscount: 1, townHp: 1, forge: 1, vault: 1 }, heroLv: { ranger: 5, bron: 2, bear: 2 }, talent: { ranger: 1, bron: 0, bear: 0 }, stars: [3, 3, 3, 3, 3, 2, 2, 1, 1, 1], endlessBest: 5 };
+  assert.equal(kingdomPower(done), 2080);
+  const wait = currentGoal(done)!;
+  assert.deepEqual([wait.have, wait.need, wait.done], [2080, 2500, false]);
+  assert.equal(claimGoal(done), done);
+  done = { ...done, talent: { ranger: 3, bron: 2, bear: 2 } }; // +480 power: 2,560
+  const paid = claimGoal(done);
+  assert.deepEqual([paid.goal, paid.shards - done.shards, kingdomPower(paid)], [GOALS.length + 1, POWER_LADDER.shards, kingdomPower(done)], 'pays shards, power itself unchanged');
+  assert.deepEqual([currentGoal(paid)!.need, currentGoal(paid)!.done], [3000, false]);
+  // A kingdom far ahead catches up one tap at a time; everything but the endless challenge reaches five rungs.
+  let max: Kingdom = { ...k, goal: GOALS.length, castle: 5, farm: 5, mill: 5, perks: { attack: 5, towerDiscount: 5, townHp: 5, forge: 5, vault: 5 }, heroLv: { ranger: 10, bron: 10, bear: 10 }, talent: { ranger: 3, bron: 3, bear: 3 }, stars: k.stars.map(() => 3) };
+  assert.equal(kingdomPower(max), 4970);
+  let taps = 0;
+  for (let next = claimGoal(max); next !== max; next = claimGoal(max)) { max = next; taps++; }
+  assert.equal(taps, 5);
+  assert.equal(currentGoal(max)!.need, 5000);
+  // Ladder rungs survive a save.
+  assert.equal(parseKingdom(serializeKingdom(max), T0).goal, GOALS.length + 5);
+});
+
+test('kingdom power (cycle 71): a start value, and each kind of growth adds exactly its weight', async () => {
+  const { kingdomPower, POWER } = await import('./kingdom.ts');
+  const k = createKingdom(T0);
+  // castle 1, farm 1, mill 1, three heroes at Lv1: 100 + 60 + 120.
+  assert.equal(kingdomPower(k), POWER.castle + 2 * POWER.field + 3 * POWER.heroLv);
+  const rich = { ...k, castle: 3, food: 1e6, wood: 1e6, shards: 1e3 }; // castle 3 so the farm may grow
+  const p0 = kingdomPower(rich);
+  assert.equal(kingdomPower(upgrade(rich, 'castle', T0)) - p0, POWER.castle);
+  assert.equal(kingdomPower(upgrade(rich, 'farm', T0)) - p0, POWER.field);
+  assert.equal(kingdomPower(upgrade(rich, 'attack', T0)) - p0, POWER.perk);
+  assert.equal(kingdomPower(train(rich, 'ranger', T0)) - p0, POWER.heroLv);
+  assert.equal(kingdomPower({ ...rich, stars: [2, ...rich.stars.slice(1)] }) - p0, 2 * POWER.star);
+  assert.equal(kingdomPower({ ...rich, endlessBest: 7 }) - p0, 7 * POWER.endlessWave);
+  assert.equal(kingdomPower({ ...rich, talent: { ...rich.talent, bron: 2 } }) - p0, 2 * POWER.talent);
+  assert.ok(!('power' in JSON.parse(serializeKingdom(rich))), 'not saved: always computed');
+});
+
+test('recommended stage power (cycle 89): one per stage, rising, a new kingdom already meets stage 1', async () => {
+  const { STAGE_POWER, recommendedPower, kingdomPower } = await import('./kingdom.ts');
+  const { STAGE_COUNT } = await import('./stages.ts');
+  assert.equal(STAGE_POWER.length, STAGE_COUNT);
+  for (let i = 1; i < STAGE_POWER.length; i++) assert.ok(STAGE_POWER[i] > STAGE_POWER[i - 1], `stage ${i + 1} above stage ${i}`);
+  assert.ok(STAGE_POWER[0] <= kingdomPower(createKingdom(T0)), 'a fresh kingdom is ready for stage 1');
+  assert.equal(recommendedPower(1), STAGE_POWER[0]);
+  assert.equal(recommendedPower(STAGE_COUNT + 1), null, 'endless has no recommendation');
+});
+
+test('stage goals name their stage (1.0): the town can point an unmet goal at it', async () => {
+  const { GOALS } = await import('./kingdom.ts');
+  for (const g of GOALS) {
+    const m = g.text.match(/^스테이지 (\d+)/);
+    assert.equal(g.stage, m ? Number(m[1]) : undefined, g.text);
+  }
+});
+test('barricade growth shown in town equals what the battle gives (walls → health, forge → spikes)', async () => {
+  const { barricadeGrowth, kingdomMods, createKingdom } = await import('./kingdom.ts');
+  const { barricadeMaxHp, barricadeSpike, createRush } = await import('./sim.ts');
+  const { BARRICADE_LEVELS } = await import('./data.ts');
+  for (let lv = 0; lv <= 5; lv++) {
+    const k = { ...createKingdom(T0), castle: 5, perks: { attack: 0, towerDiscount: 0, townHp: lv, forge: lv, vault: 0 } };
+    const s = createRush(1, kingdomMods(k)), g = barricadeGrowth(k);
+    for (let level = 0; level < BARRICADE_LEVELS.length; level++) {
+      assert.equal(barricadeMaxHp(s, level), Math.round(BARRICADE_LEVELS[level].hp * (1 + g.hp)), `health at walls Lv${lv}, barricade level ${level}`);
+    }
+    assert.equal(barricadeSpike(s, 1), BARRICADE_LEVELS[1].spike + g.spike, `spikes at forge Lv${lv}`);
+    assert.equal(barricadeSpike(s, 0), 0, 'a plain barricade has no spikes');
+  }
+  assert.deepEqual(barricadeGrowth(createKingdom(T0)), { hp: 0, spike: 0 });
+});
+
+import './expedition.test.ts';
+
+test('result next step (cycle 129): the biggest affordable power gain, else the least missing, and none past the last stage', () => {
+  const start = createKingdom(T0);
+  // A new kingdom (120 food, 120 wood) can just pay for castle Lv2 (120/120), the biggest gain.
+  const s0 = nextStep(start, 1)!;
+  assert.equal(s0.need, recommendedPower(1));
+  assert.equal(s0.have, kingdomPower(start));
+  assert.deepEqual(s0.action, { kind: 'upgrade', id: 'castle' });
+  assert.deepEqual(s0.short, { food: 0, wood: 0, shards: 0 });
+  // Rich: the castle adds the most power and is affordable.
+  const r = nextStep(rich(start), 6)!;
+  assert.deepEqual(r.action, { kind: 'upgrade', id: 'castle' });
+  assert.equal(r.gain, POWER.castle);
+  assert.deepEqual(r.short, { food: 0, wood: 0, shards: 0 });
+  // Broke: nothing affordable, so the pick names what is missing.
+  const poor = nextStep({ ...start, food: 0, wood: 0 }, 2)!;
+  assert.ok(poor.action);
+  assert.ok(poor.short.food + poor.short.wood > 0);
+  // Castle maxed and nothing else affordable except hero training: training is suggested.
+  const capped: Kingdom = { ...start, castle: 5, farm: 5, mill: 5, perks: { attack: 5, towerDiscount: 5, townHp: 5, forge: 5, vault: 5 }, food: 1e6, wood: 1e6 };
+  assert.deepEqual(nextStep(capped, 10)!.action, { kind: 'train', hero: 'ranger' });
+  // Everything maxed: no action left.
+  const done: Kingdom = { ...capped, heroLv: { ranger: 10, bron: 10, bear: 10 }, talent: { ranger: 3, bron: 3, bear: 3 } };
+  assert.equal(nextStep(done, 10)!.action, null);
+  // No recommendation past stage 10.
+  assert.equal(nextStep(start, 11), null);
+});
+
+test('waiting time (cycle 141): minutes of farm and mill production until a cost is covered, counting the uncollected stock', () => {
+  const k = createKingdom(T0); // 120 food, 120 wood, farm and mill Lv1: 8 of each per minute
+  assert.equal(minutesUntil(k, { food: 100, wood: 100 }, T0), 0);
+  assert.equal(minutesUntil(k, { food: 200, wood: 120 }, T0), 10, '80 food short at 8 a minute');
+  assert.equal(minutesUntil(k, { food: 201, wood: 120 }, T0), 11, 'rounded up');
+  assert.equal(minutesUntil(k, { food: 200, wood: 200 }, T0 + 5 * MIN), 5, 'five minutes already waiting');
+  assert.equal(minutesUntil(k, { food: 150, wood: 150 }, T0 + 5 * MIN), 0, 'the uncollected stock covers it: collect first');
+  assert.equal(minutesUntil(k, { food: 0, wood: 0, shards: 1 }, T0), null, 'shards come only from battles');
+  assert.deepEqual([waitText(4), waitText(80), waitText(120)], ['약 4분', '약 1시간 20분', '약 2시간']);
+  // The result screen's next step carries it: a broke kingdom waits for the cheapest action.
+  const poor = nextStep({ ...k, food: 0, wood: 0 }, 2)!;
+  assert.ok(poor.eta !== null && poor.eta > 0);
+  assert.equal(poor.eta, Math.max(Math.ceil(poor.short.food / 8), Math.ceil(poor.short.wood / 8)));
+  assert.equal(nextStep(rich(k), 6)!.eta, 0);
+});
+
+test('town suggestion (cycle 147): the best affordable upgrade only while the stage\'s recommended power is out of reach', () => {
+  const k = createKingdom(T0); // power 280; stage 6 recommends 1,050
+  assert.ok(kingdomPower(k) < recommendedPower(6)!);
+  assert.equal(townSuggestion(k, 6), 'castle', '120/120 pays for castle Lv2, the biggest gain');
+  assert.equal(townSuggestion({ ...k, food: 0, wood: 0 }, 6), null, 'nothing affordable: no nagging');
+  assert.equal(townSuggestion(rich(k), 1), null, 'stage 1 is within reach already (280 vs 250)');
+  assert.equal(townSuggestion(k, 11), null, 'the endless challenge has no recommendation');
+  // Raising the suggested building moves the suggestion on.
+  const after = upgrade(k, 'castle', T0);
+  assert.notEqual(townSuggestion(rich(after), 6), null);
 });

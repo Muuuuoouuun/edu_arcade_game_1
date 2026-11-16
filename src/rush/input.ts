@@ -4,6 +4,7 @@
 import { HERO, HEROES, type HeroKind, type Vec } from './data.ts';
 import type { Command } from './sim.ts';
 import type { AimPreview } from './render.ts';
+import { FireBuffer } from './fireBuffer.ts';
 
 const DEADZONE = 14;
 const STICK_RADIUS = 56;
@@ -11,7 +12,7 @@ const AIM_RADIUS = 70;
 
 type Elements = {
   surface: HTMLElement; stick: HTMLElement; knob: HTMLElement;
-  fire: HTMLElement; superBtn: HTMLElement; build: HTMLElement; buildFrost: HTMLElement; startWave: HTMLElement;
+  fire: HTMLElement; superBtn: HTMLElement; build: HTMLElement; buildFrost: HTMLElement; demolish: HTMLElement; startWave: HTMLElement;
 };
 type ButtonDrag = { id: number; cx: number; cy: number; v: Vec; aimed: boolean };
 
@@ -27,6 +28,8 @@ export class RushInput {
   private mouse: Vec | null = null;
   private mouseActive = false;
   private pending: Command = {};
+  /** Cycle 131: a fire tap that lands between shots waits a moment instead of vanishing. */
+  private fireBuffer = new FireBuffer();
   private cleanups: (() => void)[] = [];
 
   constructor(private el: Elements, private groundPoint: (x: number, y: number) => Vec | null, private heroPos: () => Vec & { kind: HeroKind }) {
@@ -77,6 +80,7 @@ export class RushInput {
     this.bindAimButton(el.superBtn, 'super', on);
     on(el.build, 'click', () => { this.pending.build = true; });
     on(el.buildFrost, 'click', () => { this.pending.build = 'frost'; });
+    on(el.demolish, 'click', () => { this.pending.demolish = true; });
     on(el.startWave, 'click', () => { this.pending.startWave = true; });
 
     on(window, 'keydown', e => {
@@ -86,6 +90,7 @@ export class RushInput {
       if (e.code === 'Space') { this.queueSuperAtMouse(); e.preventDefault(); }
       else if (e.code === 'KeyE' || e.code === 'KeyB') this.pending.build = true;
       else if (e.code === 'KeyR') this.pending.build = 'frost'; // Lv1 → Lv2: E picks fire, R picks frost
+      else if (e.code === 'KeyX') this.pending.demolish = true; // take the tower here down for a part refund
       else if (e.code === 'Enter') this.pending.startWave = true;
       else if (e.code === 'KeyJ' || e.code === 'KeyF') this.pending.fire = 'auto';
     });
@@ -156,15 +161,21 @@ export class RushInput {
     return { x, z };
   }
 
-  /** Called once per sim step. One-shot actions are consumed by the first step that sees them. */
-  command(): Command {
-    if (!this.enabled) { this.pending = {}; return {}; }
+  /** Called once per sim step. One-shot actions are consumed by the first step that sees them, except fire: with the
+   * game time `t`, a fire tap is offered again on later steps (fireBuffer.ts) until settleFire(true) or it expires. */
+  command(t?: number): Command {
+    if (!this.enabled) { this.pending = {}; this.fireBuffer.reset(); return {}; }
     const km = this.keyMove();
     const move = km.x || km.z ? km : this.stickVec;
     const cmd: Command = { ...this.pending, move };
     this.pending = {};
+    if (t !== undefined) { const fire = this.fireBuffer.take(cmd.fire, t); if (fire) cmd.fire = fire; else delete cmd.fire; }
     return cmd;
   }
+  /** After the step: whether the hero fired (a held tap is then spent). */
+  settleFire(fired: boolean) { this.fireBuffer.settle(fired); }
+  /** Cycle 137: a fire tap ran out without firing since the last call. */
+  dryFire() { return this.fireBuffer.expired(); }
 
   /** Refresh the aim preview for rendering (once per frame). */
   refreshAim() {
@@ -182,7 +193,7 @@ export class RushInput {
   }
 
   reset() {
-    this.pending = {}; this.fireDrag = this.superDrag = null; this.aim = null;
+    this.pending = {}; this.fireBuffer.reset(); this.fireDrag = this.superDrag = null; this.aim = null;
     this.keys.clear(); this.stickId = null; this.stickVec = { x: 0, z: 0 };
     this.el.stick.classList.remove('active'); this.el.fire.classList.remove('pressed'); this.el.superBtn.classList.remove('pressed');
     this.mouse = null; this.mouseActive = false;

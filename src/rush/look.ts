@@ -1,10 +1,13 @@
 // Render tone ("look") for Arcana Rush: bright toon shading, rim light, ink outlines and baked multi-part meshes.
 // Art direction: docs/rush/art-direction.md. Our own palette and shapes; reference games are principles only.
 import {
-  BackSide, BoxGeometry, BufferAttribute, Color, DataTexture, Euler, Matrix4, MeshBasicMaterial, MeshToonMaterial, NearestFilter, Quaternion,
-  RedFormat, Vector3, type BufferGeometry, type Material, type Mesh,
+  BackSide, BoxGeometry, BufferAttribute, Color, Euler, Matrix4, MeshBasicMaterial, MeshToonMaterial, Quaternion,
+  Vector3, type BufferGeometry, type Material, type Mesh,
 } from 'three';
 import { mergeGeometries, toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
+import { FOREST_GROUND, type GroundPalette } from './terrainElevation.ts';
+import { patchOutline, patchToon, toonDetail, trackToon } from './toonShader.ts';
+export { glow } from './toonShader.ts';
 
 /** Palette tokens. Ground stays calmer than anything you can interact with. */
 export const PAL = {
@@ -14,48 +17,90 @@ export const PAL = {
   cream: 0xf5e6c6, wood: 0xa8642e, woodDark: 0x6e3c1c,
 } as const;
 
-let gradient: DataTexture | null = null;
-/** Three hard light bands: shadow, mid, lit. */
-function toonGradient(): DataTexture {
-  if (gradient) return gradient;
-  gradient = new DataTexture(new Uint8Array([105, 185, 255]), 3, 1, RedFormat);
-  gradient.minFilter = gradient.magFilter = NearestFilter;
-  gradient.generateMipmaps = false;
-  gradient.needsUpdate = true;
-  return gradient;
+/** The two expedition regions (expedition.ts `regionOf`): stages 1-5 and the endless challenge are the forest, 6-10 the snowy mountains. */
+export type RegionName = 'forest' | 'snow';
+/** Everything in the battle scene that changes with the region. Team colours, ink and the heroes never do. */
+export interface RegionLook {
+  water: number; ground: GroundPalette;
+  hedge: number; hedgeTop: number;
+  /** Tall-grass cover: the patch underneath and three blade colours. */
+  bushBase: number; bushBlades: readonly [number, number, number];
+  /** Snow lying on the upward faces of walls and town roofs; null = none. */
+  cap: number | null;
+  /** Wall stone leans this far (0-1) toward `wallCool`. */
+  wallMix: number; wallCool: number;
+  hemiSky: number; hemiGround: number;
+  /** Multiplied into every enemy body (one shared material, set per battle). */
+  enemyTint: number;
+  /** Frost cues (slow ring, ice shell, snowball landing): pale in the forest, deeper on snow where pale would vanish. */
+  frostRing: number; ice: number; iceOpacity: number; frostFx: number;
+  /** Aim previews: white fan and pale landing ring in the forest, ink-blue on snow. */
+  aimFan: number; aimLob: number;
+  /** Falling snowflakes at full quality (0 = none). */
+  snowfall: number;
 }
+export const REGION_LOOK: Record<RegionName, RegionLook> = {
+  forest: {
+    water: PAL.water, ground: FOREST_GROUND, hedge: PAL.hedge, hedgeTop: PAL.hedgeTop,
+    bushBase: 0x4cae48, bushBlades: [0x6bd05a, 0x58c04d, 0x7ddc63],
+    cap: null, wallMix: 0, wallCool: 0xffffff, hemiSky: 0xe6f6ff, hemiGround: 0x9c8a62, enemyTint: 0xffffff,
+    frostRing: 0x8fe6ff, ice: 0xc4f2ff, iceOpacity: 0.4, frostFx: 0xc4f2ff, aimFan: 0xffffff, aimLob: 0xc4f2ff, snowfall: 0,
+  },
+  // Snowy mountains: a calm blue-grey field (never pure white, so white actors, snowballs and frost cues still show),
+  // a paler packed-snow road with a slate edge, icy water. Reference: the old campaign's snow villages, toned down.
+  snow: {
+    water: 0x86c3d6,
+    ground: {
+      plaza: 0xc6d4da, road: 0xd0dde2, roadEdge: 0x86a3b3, grass: 0xb8cfde, grassAlt: 0xadc6d7,
+      rock: 0x8394a8, rockAlt: 0x6f8196, rockFoot: 0x4a5d78, rim: 0xadc6d7,
+    },
+    hedge: 0x3f7f78, hedgeTop: 0xe9f2f8,
+    bushBase: 0xa9bfd0, bushBlades: [0xdbe8f2, 0xc9dbe9, 0xeef5fa],
+    cap: 0xe9f2f8, wallMix: 0.35, wallCool: 0x8fa0c0, hemiSky: 0xe8f6ff, hemiGround: 0x8f9fb5, enemyTint: 0xc4d2e6,
+    frostRing: 0x1aa0d8, ice: 0x1a8496, iceOpacity: 0.42, frostFx: 0x49b6e6, aimFan: 0x24406e, aimLob: 0x1f8fd0, snowfall: 140,
+  },
+};
+/** Boss body colours. Only the last stage of a region has a named boss (stage 5 elder tree king, stage 10 frost lord);
+ * every other boss wave keeps the default purple. Eyes stay enemy red in all three. */
+export interface BossLook { cape: number; trunk: number; chest: number; head: number; crown: number; arm: number; fist: number; kill: number }
+export type BossName = 'default' | RegionName;
+export const BOSS_LOOK: Record<BossName, BossLook> = {
+  default: { cape: 0x8a1f3a, trunk: 0x4b3a8a, chest: 0x6d55c4, head: 0x2a1f4d, crown: PAL.gold, arm: 0x6d55c4, fist: 0x9d83ff, kill: 0x6d55c4 },
+  // Bark and moss: dark bark trunk, mossy shoulders and arms, leaf-green fists, an autumn-amber crown.
+  forest: { cape: 0x7a2a1e, trunk: 0x5a3a22, chest: 0x7d5a34, head: 0x3a2616, crown: 0xf2b23a, arm: 0x4f7d3a, fist: 0x9ccf4a, kill: 0x7d5a34 },
+  // Deep ice teal and mid ice blue over dark ink-navy; the crimson cape and red eyes keep it on the enemy team. Cycle 112:
+  // the ice-blue arms (0x62b4ee) and white fists and crown matched the snow. Over the same body area, pixels at dE >= 30
+  // from the floor rose 40% -> 56% (median dE 22.7 -> 33.5); the deeper ice also sits further from the ally blue (26 -> 38).
+  snow: { cape: 0x8a1f3a, trunk: 0x232c5c, chest: 0x1f7aa0, head: 0x1a2044, crown: 0x6cc6e8, arm: 0x1f7aa0, fist: 0x6cc6e8, kill: 0x62b4ee },
+};
 
-/** Toon material with an optional fresnel rim that lifts silhouettes off the ground. */
-export function toon(color: number | Color = 0xffffff, opts: { vertexColors?: boolean; rim?: number; emissive?: number } = {}): MeshToonMaterial {
-  const m = new MeshToonMaterial({ color, gradientMap: toonGradient(), vertexColors: !!opts.vertexColors, emissive: opts.emissive ?? 0x000000 });
-  const rim = opts.rim ?? 0.32;
-  if (rim > 0) {
-    m.onBeforeCompile = shader => {
-      shader.uniforms.rimStrength = { value: rim };
-      shader.fragmentShader = 'uniform float rimStrength;\n' + shader.fragmentShader.replace(
-        '#include <opaque_fragment>',
-        'float rimF = 1.0 - clamp( dot( normal, normalize( vViewPosition ) ), 0.0, 1.0 );\n' +
-        'outgoingLight += vec3( 1.0, 0.97, 0.9 ) * rimStrength * pow( rimF, 2.6 );\n#include <opaque_fragment>',
-      );
-    };
-    m.customProgramCacheKey = () => `toon-rim-${rim}`;
-  }
+/** How a toon material takes part in the shadow pass (frame.ts `markShadows`): `solid` casts and receives,
+ * `ground` and `flat` only receive. Stored in `material.userData.toon`, so it survives `Material.clone()`. */
+export type ToonRole = 'solid' | 'ground' | 'flat';
+/** Toon material: three flat light bands (shade, mid, lit) with the shade in a cool tint, cast shadows as one clean
+ * step, and a fresnel rim that lifts silhouettes off the ground (shader in toonShader.ts). `rim: 0` marks flat scenery
+ * (ground, water): it receives shadows but casts none, and with vertex colours (or `ground: true`) it also gets the
+ * painted ground detail on the high tier. A clone must copy `onBeforeCompile` and `customProgramCacheKey` (three does not). */
+export function toon(color: number | Color = 0xffffff, opts: { vertexColors?: boolean; rim?: number; emissive?: number; ground?: boolean } = {}): MeshToonMaterial {
+  const m = new MeshToonMaterial({ color, vertexColors: !!opts.vertexColors, emissive: opts.emissive ?? 0x000000 });
+  const rim = opts.rim ?? 0.32, ground = opts.ground ?? (rim === 0 && !!opts.vertexColors);
+  m.userData.toon = (ground ? 'ground' : rim === 0 ? 'flat' : 'solid') satisfies ToonRole;
+  m.onBeforeCompile = shader => patchToon(shader, rim, ground);
+  m.customProgramCacheKey = () => `rush-toon-${rim}${toonDetail() ? (ground ? '-detail-ground' : '-detail') : ''}`;
+  trackToon(m);
   return m;
 }
 
 const outlineCache = new Map<string, MeshBasicMaterial>();
-/** Inverted-hull ink outline: back faces pushed out along smoothed normals (object units). */
+/** Inverted-hull ink outline: back faces pushed out along smoothed normals (object units), with a minimum thickness
+ * in screen pixels (toonShader.ts `OUTLINE_VIEW`) so thin hulls stay whole at low pixel ratios. */
 export function outlineMaterial(width: number, color: number = PAL.ink): MeshBasicMaterial {
   const key = `${width}:${color}`;
   let m = outlineCache.get(key);
   if (m) return m;
   m = new MeshBasicMaterial({ color, side: BackSide });
-  m.onBeforeCompile = shader => {
-    shader.uniforms.outlineWidth = { value: width };
-    shader.vertexShader = 'uniform float outlineWidth;\n' + shader.vertexShader.replace(
-      '#include <begin_vertex>', 'vec3 transformed = vec3( position ) + normal * outlineWidth;');
-  };
-  m.customProgramCacheKey = () => `outline-${width}`;
+  m.onBeforeCompile = shader => patchOutline(shader, width);
+  m.customProgramCacheKey = () => `rush-outline-${width}`;
   outlineCache.set(key, m);
   return m;
 }
@@ -98,6 +143,26 @@ export function wallParts(b:{x:number;z:number;w:number;d:number}):Part[] {
   }
   return parts;
 }
+/** Vertex colours bake(parts) would produce, without keeping the geometry: a second colour set for the same mesh. */
+export function bakeColors(parts: Part[]): Float32Array {
+  const g = bake(parts), out = g.getAttribute('color').array as Float32Array;
+  g.dispose();
+  return out;
+}
+/** Lean a colour toward another (in the renderer's working space). */
+export function mixHex(a: number, b: number, t: number): number { return new Color(a).lerp(new Color(b), t).getHex(); }
+/** Paint the upward faces (normal.y above `minNy`, at or above height `minY`) of a colour set: snow that settled on top.
+ * `mix` below 1 leaves some of the colour underneath showing (the town keeps its team-blue roofs under a dusting). */
+export function capColors(geo: BufferGeometry, colors: BufferAttribute, cap: number, minNy = 0.7, minY = -Infinity, mix = 1): void {
+  const n = geo.getAttribute('normal'), p = geo.getAttribute('position'), c = new Color(cap);
+  if (!n) return;
+  const old = colors as unknown as BufferAttribute;
+  for (let i = 0; i < p.count; i++) if (n.getY(i) > minNy && p.getY(i) >= minY) {
+    if (mix >= 1) colors.setXYZ(i, c.r, c.g, c.b);
+    else colors.setXYZ(i, old.getX(i) + (c.r - old.getX(i)) * mix, old.getY(i) + (c.g - old.getY(i)) * mix, old.getZ(i) + (c.b - old.getZ(i)) * mix);
+  }
+}
+
 /** Bake several coloured primitives into one vertex-coloured geometry: one draw call per object. */
 export function bake(parts: Part[]): BufferGeometry {
   const q = new Quaternion(), e = new Euler(), p = new Vector3(), s = new Vector3();

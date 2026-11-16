@@ -26,3 +26,16 @@ test('forward exploration keeps the old look-ahead and follows the sloped ground
   const respawn = battleFocus({x:100,z:-100},true,false);
   assert.deepEqual(respawn.toArray(),[0,1.2,6.9]);
 });
+
+test('map size against the screen: a landscape phone shows about a third of the arena, and the enemy gates when the hero is north', async () => {
+  const { viewFootprint } = await import('./battleCamera.ts');
+  const { ARENA } = await import('./data.ts');
+  const start = viewFootprint(HERO_SPAWN, 915, 412);
+  assert.ok(start.share > 0.3 && start.share < 0.36, `share at the start ${start.share}`);
+  assert.ok(start.south > TOWN.z + 2.5 && start.north < 0, 'the town and the ground ahead of it');
+  const north = viewFootprint({ x: 0, z: -18 }, 915, 412);
+  // The gates stand on the north edge (z -26 to -27.4): the camera now goes far enough to show them whole.
+  assert.ok(north.north < ARENA.minZ - 2.5, `north view reaches z ${north.north}`);
+  const desktop = viewFootprint(HERO_SPAWN, 1280, 720);
+  assert.ok(desktop.share > start.share);
+});

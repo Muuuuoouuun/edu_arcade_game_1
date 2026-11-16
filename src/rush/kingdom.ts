@@ -2,7 +2,7 @@
 // Principles taken from kingdom-builder games: the castle is the hub and caps everything else, resource
 // buildings produce over (offline) time, and permanent upgrades change the next battle.
 import { WAVE_COUNT, type RushMods, type RushState } from './sim.ts';
-import { TALENT_MAX, type HeroKind } from './data.ts';
+import { BARRICADE, TALENT_MAX, type HeroKind } from './data.ts';
 import { STAGE_COUNT, starBonus, starsFor, stageRewardMul } from './stages.ts';
 
 export type Resource = 'food' | 'wood';
@@ -31,7 +31,7 @@ export interface Kingdom {
   shards: number;
   /** Endless challenge (cycle 46): most waves held in one run. */
   endlessBest: number;
-  /** Kingdom goal chain (cycle 64): index of the next goal to claim (GOALS.length = all done). */
+  /** Kingdom goal chain (cycle 64): index of the next goal to claim; past GOALS.length it is a power ladder rung (cycle 83). */
   goal: number;
   /** Local day number (see `dayIndex`) of the last daily first-win bonus (cycle 32); 0 = never. */
   dailyWin: number;
@@ -174,6 +174,14 @@ export function learnTalent(k: Kingdom, hero: HeroKind): Kingdom {
   return next;
 }
 
+/** What the kingdom adds to a barricade (cycle 98, shown on the town cards): its health grows with the town-health
+ * perk (BARRICADE.masonry times that perk's share), a spiked one's spike damage with the forge. The same numbers as
+ * sim.ts `barricadeMaxHp` and `barricadeSpike` (kingdom.test.ts ties them together). */
+export const barricadeGrowth = (k: Pick<Kingdom, 'perks'>): { hp: number; spike: number } => ({
+  hp: BARRICADE.masonry * PERK_EFFECT.townHp * k.perks.townHp,
+  spike: BARRICADE.spikeForge * k.perks.forge,
+});
+
 /** Battle modifiers from permanent upgrades and the chosen hero's level. */
 export const kingdomMods = (k: Kingdom): RushMods => {
   const g = heroGrowth(k.heroLv[k.hero]);
@@ -305,7 +313,7 @@ export function parseKingdom(raw: string | null, now: number): Kingdom {
       // Saves from before the endless challenge (cycle 46) have no record yet.
       endlessBest: count(v.endlessBest, 0, 1e6) ?? 0, rewarded,
       // Saves from before goals (cycle 64) start the chain at the first goal; ones already met can be claimed at once.
-      goal: count(v.goal, 0, GOALS.length) ?? 0,
+      goal: count(v.goal, 0, GOALS.length + POWER_LADDER.rungs) ?? 0,
     };
   } catch {
     return createKingdom(now);
@@ -313,28 +321,66 @@ export function parseKingdom(raw: string | null, now: number): Kingdom {
 }
 export const serializeKingdom = (k: Kingdom): string => JSON.stringify(k);
 
+/** Kingdom power (cycle 71): one number that every kind of growth raises, shown in town. Always computed, never saved. */
+export const POWER = { castle: 100, field: 30, perk: 60, heroLv: 40, talent: 80, star: 25, endlessWave: 10 } as const;
+/** Recommended kingdom power per stage (cycle 89), measured: on a balanced growth path (castle 1 + L/2, the five perks
+ * at L/2, hero Lv 1 + L, talent L/3) the least step L at which the guard bot wins at least 4 of seeds 1-8, counted with
+ * two stars per earlier stage, rounded down to 50. Stages 1-5 need no growth; stage 6 is the first wall. Stages 8-9
+ * re-measured with the ward shaman (cycle 90; tools/rush-stage-power.ts). */
+/** Re-measured 2026-11-14 on the merged six-area build (per-region maps, frost wolves on 7-9, barricades, the frost
+ * lord's howl on 10): 7 fell 1200 -> 1100, 8 fell 1800 -> 1750 and 10 fell 3050 -> 2500, because barricades hold the
+ * waves in front of the towers. Stage 10 sits one rounding step above stage 9: at the same growth step the bot wins
+ * 5 of 8 there against 8 of 8 on stage 9, but both pass the 4-of-8 rule at L6. */
+/** Cycle 99: the frost lord's howl now freezes the hero for 3 s instead of hitting towers and barricades; stage 10
+ * re-measured 2500 -> 2550 (growth step L6 wins 3/8 there, L7 5/8; stage 9 stays L6 at 8/8). */
+/** Cycle 105: the same rule over seeds 1-40 (win at least half), since single seeds of 1-8 flip with small rule changes.
+ * Two stages move: 7 is 1100 -> 1200 (step L2 wins 18/40, L3 40/40) and 10 is 2550 -> 3050 (L7 wins 18/40, L8 34/40);
+ * the other eight are unchanged. Campaign tool, 8 seeds: 12 -> 15 battles, 45 -> 55 min, stage 10 losses 1 -> 0. */
+export const STAGE_POWER: readonly number[] = [250, 300, 350, 400, 450, 1050, 1200, 1750, 2450, 3050];
+export const recommendedPower = (stage: number): number | null => STAGE_POWER[stage - 1] ?? null;
+export function kingdomPower(k: Kingdom): number {
+  const perks = Object.values(k.perks).reduce((a, b) => a + b, 0);
+  const heroLv = k.heroLv.ranger + k.heroLv.bron + k.heroLv.bear, talents = k.talent.ranger + k.talent.bron + k.talent.bear;
+  const stars = k.stars.reduce((a, b) => a + b, 0);
+  return k.castle * POWER.castle + (k.farm + k.mill) * POWER.field + perks * POWER.perk + heroLv * POWER.heroLv
+    + talents * POWER.talent + stars * POWER.star + k.endlessBest * POWER.endlessWave;
+}
+
 /** Kingdom goal chain (cycle 64): one goal at a time, in the order a growing kingdom meets them (castle, stages, hero,
  * forge, endless), each paying a little food, wood or shards when claimed in town. */
-export type Goal = { text: string; progress: (k: Kingdom) => [number, number]; reward: Partial<Cost> & { shards?: number } };
+/** `stage`: the stage a goal is about (1.0): tapping the unmet goal in town selects it, so '3 stars on stage 5' points at stage 5. */
+export type Goal = { text: string; progress: (k: Kingdom) => [number, number]; reward: Partial<Cost> & { shards?: number }; ladder?: boolean; stage?: number };
 const starsOn = (k: Kingdom, n: number) => k.stars[n - 1] ?? 0;
 const bestHeroLv = (k: Kingdom) => Math.max(k.heroLv.ranger, k.heroLv.bron, k.heroLv.bear);
 export const GOALS: readonly Goal[] = [
-  { text: '스테이지 1 승리', progress: k => [Math.min(1, starsOn(k, 1)), 1], reward: { food: 60 } },
+  { text: '스테이지 1 승리', stage: 1, progress: k => [Math.min(1, starsOn(k, 1)), 1], reward: { food: 60 } },
   { text: '성 Lv 2', progress: k => [Math.min(2, k.castle), 2], reward: { wood: 60 } },
   { text: '농장 Lv 2', progress: k => [Math.min(2, k.farm), 2], reward: { food: 80 } },
-  { text: '스테이지 3에서 별', progress: k => [Math.min(1, starsOn(k, 3)), 1], reward: { shards: 2 } },
+  { text: '스테이지 3에서 별', stage: 3, progress: k => [Math.min(1, starsOn(k, 3)), 1], reward: { shards: 2 } },
   { text: '공격 강화 Lv 1', progress: k => [Math.min(1, k.perks.attack), 1], reward: { wood: 80 } },
   { text: '영웅 Lv 2', progress: k => [Math.min(2, bestHeroLv(k)), 2], reward: { shards: 2 } },
   { text: '성 Lv 3', progress: k => [Math.min(3, k.castle), 3], reward: { food: 150, wood: 150 } },
-  { text: '스테이지 5에서 별 3개', progress: k => [starsOn(k, 5), 3], reward: { shards: 3 } },
+  { text: '스테이지 5에서 별 3개', stage: 5, progress: k => [starsOn(k, 5), 3], reward: { shards: 3 } },
   { text: '대장간 Lv 1', progress: k => [Math.min(1, k.perks.forge), 1], reward: { shards: 3 } },
-  { text: '스테이지 10에서 별', progress: k => [Math.min(1, starsOn(k, 10)), 1], reward: { shards: 5 } },
+  { text: '스테이지 10에서 별', stage: 10, progress: k => [Math.min(1, starsOn(k, 10)), 1], reward: { shards: 5 } },
   { text: '끝없는 도전 5웨이브', progress: k => [Math.min(5, k.endlessBest), 5], reward: { shards: 5 } },
   { text: '성 Lv 5', progress: k => [Math.min(5, k.castle), 5], reward: { shards: 8 } },
 ];
-/** The goal to work on (null once the chain is done), its progress and whether it can be claimed. */
+/** Power ladder (cycle 83): after the fixed chain the goals go on as kingdom power targets, 2,500 then every 500 more,
+ * each paying a few shards. The rung follows from the saved goal index, so nothing new is stored. A chain finisher sits
+ * near 2,000 power; everything but the endless challenge tops out at 4,970, so that is five rungs (15 shards). */
+export const POWER_LADDER = { from: 2500, step: 500, shards: 3, rungs: 1000 } as const;
+export function goalAt(index: number): Goal | null {
+  if (!Number.isInteger(index) || index < 0) return null;
+  if (index < GOALS.length) return GOALS[index];
+  const rung = index - GOALS.length;
+  if (rung >= POWER_LADDER.rungs) return null;
+  const need = POWER_LADDER.from + rung * POWER_LADDER.step;
+  return { text: `전투력 ${need.toLocaleString('en-US')}`, progress: k => [Math.min(need, kingdomPower(k)), need], reward: { shards: POWER_LADDER.shards }, ladder: true };
+}
+/** The goal to work on (null only past the end of the ladder), its progress and whether it can be claimed. */
 export function currentGoal(k: Kingdom): { index: number; goal: Goal; have: number; need: number; done: boolean } | null {
-  const goal = GOALS[k.goal];
+  const goal = goalAt(k.goal);
   if (!goal) return null;
   const [have, need] = goal.progress(k);
   return { index: k.goal, goal, have, need, done: have >= need };
@@ -347,4 +393,72 @@ export function claimGoal(k: Kingdom): Kingdom {
   next.food += r.food ?? 0; next.wood += r.wood ?? 0; next.shards += r.shards ?? 0;
   next.goal = k.goal + 1;
   return next;
+}
+
+// ---------- next step (cycle 129) ----------
+/** One thing to do in town before the next battle. */
+export type StepAction = { kind: 'upgrade'; id: Upgrade } | { kind: 'train'; hero: HeroKind } | { kind: 'talent'; hero: HeroKind };
+export interface NextStep {
+  /** The stage aimed at, its recommended power and the kingdom's power now. */
+  target: number; need: number; have: number;
+  /** The suggested action and the power it adds; null when nothing is left to raise. */
+  action: StepAction | null; gain: number;
+  /** What is still missing to pay for it (all zero: it can be done now). */
+  short: Cost & { shards: number };
+  /** Cycle 141: minutes of production until the food and wood are there (0: they are); null when shards are short. */
+  eta: number | null;
+}
+const UPGRADES: readonly Upgrade[] = ['castle', 'farm', 'mill', 'attack', 'towerDiscount', 'townHp', 'forge', 'vault'];
+/** Result screen (cycle 129): power against the target stage's recommendation and one action in town. Among the actions
+ * the kingdom can pay for now, the one adding the most power (the cheaper on a tie); when none is affordable, the one
+ * with the least missing (a shard counts as 30 food or wood). Null when the target has no recommendation. */
+export function nextStep(k: Kingdom, target: number): NextStep | null {
+  const need = recommendedPower(target);
+  if (need === null) return null;
+  const options: { action: StepAction; gain: number; cost: Cost & { shards: number } }[] = [];
+  for (const id of UPGRADES) {
+    const c = upgradeCost(k, id);
+    if (c) options.push({ action: { kind: 'upgrade', id }, gain: id === 'castle' ? POWER.castle : id === 'farm' || id === 'mill' ? POWER.field : POWER.perk, cost: { ...c, shards: 0 } });
+  }
+  const t = trainCost(k, k.hero);
+  if (t) options.push({ action: { kind: 'train', hero: k.hero }, gain: POWER.heroLv, cost: t });
+  const tc = talentCost(k, k.hero);
+  if (tc?.ready) options.push({ action: { kind: 'talent', hero: k.hero }, gain: POWER.talent, cost: { food: 0, wood: 0, shards: tc.shards } });
+  const shortOf = (c: Cost & { shards: number }) => ({ food: Math.max(0, c.food - k.food), wood: Math.max(0, c.wood - k.wood), shards: Math.max(0, c.shards - k.shards) });
+  const weight = (c: Cost & { shards: number }) => c.food + c.wood + 30 * c.shards;
+  const have = kingdomPower(k);
+  const ready = options.filter(o => weight(shortOf(o.cost)) === 0).sort((a, b) => b.gain - a.gain || weight(a.cost) - weight(b.cost));
+  const pick = ready[0] ?? [...options].sort((a, b) => weight(shortOf(a.cost)) - weight(shortOf(b.cost)) || b.gain - a.gain)[0];
+  return pick ? { target, need, have, action: pick.action, gain: pick.gain, short: shortOf(pick.cost), eta: minutesUntil(k, pick.cost, k.lastCollect) }
+    : { target, need, have, action: null, gain: 0, short: { food: 0, wood: 0, shards: 0 }, eta: 0 };
+}
+
+// ---------- waiting time (cycle 141) ----------
+/** Whole minutes until the kingdom can pay `cost`, counting what is already waiting to be collected at `now` and the
+ * farm and mill's production per minute: 0 when it can pay now (perhaps after collecting), null when production cannot
+ * cover it (shards come only from battles). Storage holds STORAGE_MINUTES of production, so a longer wait needs a
+ * collect in between; the number stays right if the player collects. */
+export function minutesUntil(k: Kingdom, cost: Partial<Cost> & { shards?: number }, now: number): number | null {
+  if ((cost.shards ?? 0) > k.shards) return null;
+  const r = rate(k), w = pending(k, now);
+  let minutes = 0;
+  for (const res of ['food', 'wood'] as const) {
+    const need = (cost[res] ?? 0) - k[res] - w[res];
+    if (need <= 0) continue;
+    if (r[res] <= 0) return null;
+    minutes = Math.max(minutes, Math.ceil(need / r[res]));
+  }
+  return minutes;
+}
+/** '약 4분', '약 1시간 20분' (cycle 141). */
+export const waitText = (minutes: number) => minutes < 60 ? `약 ${minutes}분` : `약 ${Math.floor(minutes / 60)}시간${minutes % 60 ? ` ${minutes % 60}분` : ''}`;
+
+// ---------- town suggestion (cycle 147) ----------
+/** While the kingdom is below `stage`'s recommended power, the action nextStep picks if it can be paid for right now
+ * (the biggest power gain among affordable ones); null when the kingdom has the power or cannot pay for anything. */
+export function townSuggestion(k: Kingdom, stage: number): Upgrade | 'hero' | null {
+  const step = nextStep(k, stage);
+  if (!step || !step.action || step.have >= step.need) return null;
+  if (step.short.food + step.short.wood + step.short.shards > 0) return null;
+  return step.action.kind === 'upgrade' ? step.action.id : 'hero';
 }
