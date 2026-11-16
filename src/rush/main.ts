@@ -1,7 +1,7 @@
 // Arcana Rush bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
 import { ECONOMY, ENEMIES, HERO_ROLE, HEROES, TALENTS, TOWER_CAP, TOWER_LEVELS, type EnemyKind, type HeroKind } from './data.ts';
-import { barricadeOrder, createRush, padCost, siteInReach, stepRush, towerRefund, superReady, wardBreakBurst, wavePreview, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
+import { barricadeOrder, createRush, padCost, siteInReach, stepRush, towerRefund, superReady, wardBreakBurst, wavePreview, TWIST, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
 import { RushInput } from './input.ts';
@@ -343,6 +343,15 @@ function nextWaveHtml(s: RushState) {
   for (let w = Math.max(0, s.wave - WAVE_COUNT); w < s.wave; w++) for (const r of wavePreview({ ...s, wave: w })) seen.add(r.kind);
   return wavePreview(s).map(r => { const label = r.kind === 'boss' && r.count === 1 ? KIND_SHORT.boss : `${KIND_SHORT[r.kind]} ${r.count}`; return seen.has(r.kind) ? label : `<b>${label}</b>`; }).join(' · ');
 }
+/** Endless laps (cycle 148): the lap and its twist lead the prep line. The lap toast is visually hidden in battle
+ * (#107), and a swift lap shows nowhere else (twin bosses and doubled shields at least show in the counts). */
+const TWIST_HINT: Record<LapTwist, string> = { swift: `적 +${Math.round((TWIST.swiftSpeed - 1) * 100)}% 빠름`, shields: `방패병 ×${TWIST.shieldCount}`, twin: `보스 ${TWIST.twinBosses}` };
+function lapHtml(s: RushState) {
+  if (!s.diff.endless) return '';
+  const lap = Math.floor(s.wave / WAVE_COUNT) + 1;
+  if (lap < 2) return '';
+  return `${lap}바퀴${s.diff.twist ? ` · <b>${TWIST_NAME[s.diff.twist]}</b>(${TWIST_HINT[s.diff.twist]})` : ''} · `;
+}
 function updateHud() {
   const s = state;
   setText('wave', hud.wave, s.diff.endless ? `웨이브 ${s.wave + 1}` : `웨이브 ${Math.min(s.wave + 1, WAVE_COUNT)}/${WAVE_COUNT}`);
@@ -351,7 +360,7 @@ function updateHud() {
   if (s.phase === 'prep') {
     // Cycle 142: the prep line (read by screen readers; the status box is visually hidden in battle) names what the
     // coming wave brings; kinds new to this battle are bold.
-    const html = `다음 ${nextWaveHtml(s)} · ${Math.ceil(s.prepT)}초`;
+    const html = `${lapHtml(s)}다음 ${nextWaveHtml(s)} · ${Math.ceil(s.prepT)}초`;
     if (last.waveSub !== html) { hud.waveSub.innerHTML = html; last.waveSub = html; }
   } else setText('waveSub', hud.waveSub, s.phase === 'wave' ? `${where} · 남은 적 ${s.enemies.length}` : where);
   setStyle('townFill', hud.townFill, 'transform', `scaleX(${s.town.hp / s.town.maxHp})`);
@@ -361,7 +370,7 @@ function updateHud() {
   setFlag('startWaveHidden', hud.startWave, 'hidden', s.phase !== 'prep' || mode !== 'play');
   // Cycle 142: the battle screen shows only actionable controls (#107), so the coming wave is named on the start pill.
   if (s.phase === 'prep' && mode === 'play') {
-    const html = `웨이브 시작 +${bonus}G<small class="wave-next">다음 ${nextWaveHtml(s)}</small>`;
+    const html = `웨이브 시작 +${bonus}G<small class="wave-next">${lapHtml(s)}다음 ${nextWaveHtml(s)}</small>`;
     if (last.startWave !== html) { hud.startWave.innerHTML = html; last.startWave = html; }
   }
   const site = s.hero.downT > 0 ? null : siteInReach(s);

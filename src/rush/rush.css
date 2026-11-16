@@ -821,7 +821,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 /* Cycle 142: what the coming wave brings, under '웨이브 시작'; kinds new to this battle in bold. Dark ink: white at this size
    on the orange pill was too faint. */
 .hud-pill .wave-next { display: block; margin-top: 1px; font-family: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif; -webkit-text-stroke: 0; text-shadow: none;
-  font-size: 12px; font-weight: 600; letter-spacing: 0; color: #2a1238; max-width: 230px; margin: 1px auto 0; line-height: 1.3; }
+  font-size: 12px; font-weight: 600; letter-spacing: 0; color: #2a1238; max-width: 230px; margin: 1px auto 0; line-height: 1.3; word-break: keep-all; }
 /* On narrow landscape phones (iPhone SE 568 px) the centred pill reached the super button (the 139 audit saw 2 px;
    the preview made it up to 60): it sits a little left of centre there. */
 @media (orientation: landscape) and (max-width: 760px) { .hud-pill { left: calc(50% - 60px); } }
