@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   battleReward, canUpgrade, collect, createKingdom, grantReward, heroMaxLevel, kingdomMods, parseKingdom, pending, RATE_PER_LEVEL, settleBattle,
   serializeKingdom, STORAGE_MINUTES, train, trainCost, upgrade, upgradeCost, type Kingdom,
-  nextStep, kingdomPower, recommendedPower, POWER, minutesUntil, waitText,
+  nextStep, kingdomPower, recommendedPower, POWER, minutesUntil, waitText, townSuggestion,
 } from './kingdom.ts';
 import { createRush, heroMaxHp, padCost, stepRush, WAVE_COUNT } from './sim.ts';
 import { HERO, PADS, TOWER_LEVELS, TOWN } from './data.ts';
@@ -480,4 +480,16 @@ test('waiting time (cycle 141): minutes of farm and mill production until a cost
   assert.ok(poor.eta !== null && poor.eta > 0);
   assert.equal(poor.eta, Math.max(Math.ceil(poor.short.food / 8), Math.ceil(poor.short.wood / 8)));
   assert.equal(nextStep(rich(k), 6)!.eta, 0);
+});
+
+test('town suggestion (cycle 147): the best affordable upgrade only while the stage\'s recommended power is out of reach', () => {
+  const k = createKingdom(T0); // power 280; stage 6 recommends 1,050
+  assert.ok(kingdomPower(k) < recommendedPower(6)!);
+  assert.equal(townSuggestion(k, 6), 'castle', '120/120 pays for castle Lv2, the biggest gain');
+  assert.equal(townSuggestion({ ...k, food: 0, wood: 0 }, 6), null, 'nothing affordable: no nagging');
+  assert.equal(townSuggestion(rich(k), 1), null, 'stage 1 is within reach already (280 vs 250)');
+  assert.equal(townSuggestion(k, 11), null, 'the endless challenge has no recommendation');
+  // Raising the suggested building moves the suggestion on.
+  const after = upgrade(k, 'castle', T0);
+  assert.notEqual(townSuggestion(rich(after), 6), null);
 });

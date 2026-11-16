@@ -452,3 +452,13 @@ export function minutesUntil(k: Kingdom, cost: Partial<Cost> & { shards?: number
 }
 /** '약 4분', '약 1시간 20분' (cycle 141). */
 export const waitText = (minutes: number) => minutes < 60 ? `약 ${minutes}분` : `약 ${Math.floor(minutes / 60)}시간${minutes % 60 ? ` ${minutes % 60}분` : ''}`;
+
+// ---------- town suggestion (cycle 147) ----------
+/** While the kingdom is below `stage`'s recommended power, the action nextStep picks if it can be paid for right now
+ * (the biggest power gain among affordable ones); null when the kingdom has the power or cannot pay for anything. */
+export function townSuggestion(k: Kingdom, stage: number): Upgrade | 'hero' | null {
+  const step = nextStep(k, stage);
+  if (!step || !step.action || step.have >= step.need) return null;
+  if (step.short.food + step.short.wood + step.short.shards > 0) return null;
+  return step.action.kind === 'upgrade' ? step.action.id : 'hero';
+}

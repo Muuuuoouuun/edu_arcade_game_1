@@ -4,7 +4,7 @@ import { SPOTS, type TownView } from './townScene.ts';
 import { FORGE, HERO_ROLE, HEROES, TALENT_MAX, TALENTS, type HeroKind } from './data.ts';
 import { barricadeGrowth, kingdomPower, recommendedPower, claimGoal, currentGoal, GOALS,
   CASTLE_MAX, DAILY_WIN, ENDLESS_STAGE, nextMilestone, HERO_JOINS, VAULT_GOLD, HERO_LV_PER_CASTLE, canLearnTalent, canTrain, learnTalent, talentCost, dailyReady, dayIndex, canUpgrade, chooseHero, collect, heroGrowth, heroMaxLevel, heroUnlocked, latestStage, level, stageUnlocked, maxLevel, pending, PERK_EFFECT, rate,
-  storageFull, train, trainCost, upgrade, upgradeCost, minutesUntil, waitText, type Cost, type Kingdom, type Upgrade,
+  storageFull, train, trainCost, upgrade, upgradeCost, minutesUntil, waitText, townSuggestion, type Cost, type Kingdom, type Upgrade,
 } from './kingdom.ts';
 import { createKingdomStore } from './storage.ts';
 import { COMPANIONS, REGIONS, expeditionStage, josa, keeperOf, regionOf, villageText, type Companion } from './expedition.ts';
@@ -365,13 +365,15 @@ export class TownScreen {
     this.view.sync(k);
     // The suggestion's mark stays until that thing is raised, even if another building is picked meanwhile.
     if (this.suggested && this.suggestLevel(this.suggested.id) > this.suggested.from) this.suggested = null;
-    const sug = this.suggested?.id ?? null;
+    // Cycle 147: without a result-screen suggestion, the town suggests on its own while the chosen stage's recommended
+    // power is out of reach (the best upgrade it can pay for now); it moves on as things are raised.
+    const sug = this.suggested?.id ?? townSuggestion(k, this.stage);
     this.$('btn-hero').classList.toggle('suggested', sug === 'hero');
     for (const r of ROWS) {
       const tag = this.root.querySelector<HTMLElement>(`[data-select="${r.id}"]`)!;
       tag.classList.toggle('suggested', r.id === sug);
       tag.querySelector('[data-tag-level]')!.textContent = String(level(k, r.id));
-      tag.setAttribute('aria-label', `${r.name} Lv ${level(k, r.id)}${canUpgrade(k, r.id) ? ', 강화 가능' : ''}`);
+      tag.setAttribute('aria-label', `${r.name} Lv ${level(k, r.id)}${canUpgrade(k, r.id) ? ', 강화 가능' : ''}${r.id === sug ? ', 추천' : ''}`);
       tag.classList.toggle('can', canUpgrade(k, r.id));
       tag.classList.toggle('on', r.id === this.selected);
       this.root.querySelector<HTMLElement>(`[data-id="${r.id}"]`)!.classList.toggle('selected', r.id === this.selected);
