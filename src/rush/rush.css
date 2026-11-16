@@ -794,3 +794,23 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
 .btn-fire.dry { filter: none; } /* the empty quiver's dimming would mute the red */
 .btn-fire.dry .ammo i { background: #ff4d4d; box-shadow: 0 0 6px rgba(255, 77, 77, 0.9); }
 @media (prefers-reduced-motion: reduce) { .btn-fire.dry, .btn-super.dry { animation: dryFlash 0.3s ease-out; } }
+
+/* Cycle 139: touch targets at the project's 44 px on the smallest phone tried (iPhone SE landscape, 568×320). */
+.hud-icon { width: 44px; height: 44px; }                                   /* pause: was 40 */
+.link-button { min-height: 44px; padding: 4px 8px; }                       /* title '설정': was 36×30 */
+.setting { min-height: 44px; }                                             /* settings rows: were 36 tall */
+.danger-link { display: flex; align-items: center; justify-content: center; width: fit-content; min-height: 44px; margin-left: auto; margin-right: auto; } /* reset: was 20 tall */
+.actions > button { min-height: 44px; }                                    /* result, settings close: were 43 */
+/* Expedition map: on narrow short phones (SE, Galaxy S9+) the width-bound board was ~305×205 px and stage nodes piled up
+   (1-3/1-4, 2-1…2-5, overlaps up to 24 px). The board now takes the full height and scrolls sideways (openMap centres
+   the chosen village); nodes keep 44 px. */
+@media (max-height: 420px) { .map-node { width: 44px; height: 44px; } .map-node.boss { width: 50px; height: 50px; } }
+.map-home { min-height: 44px; }                                            /* map '우리 마을': was 31 tall */
+@media (max-height: 420px) and (max-width: 760px) and (orientation: landscape) { .map-board { height: 100%; } }
+/* The taller settings rows and reset link (+40 px) pushed '닫기' off the SE settings card: tighter gaps there. */
+@media (max-height: 420px) {
+  .setting-list { gap: 4px; margin: 2px 0 4px; }
+  .credits { margin-bottom: 0; } .credits summary { padding: 2px; }
+  .danger-link { margin-top: 0; margin-bottom: 2px; }
+  .settings-card h1 { margin-bottom: 2px; }
+}
