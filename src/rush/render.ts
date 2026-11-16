@@ -1098,7 +1098,9 @@ export class RushView {
         ...pair(() => S(0.4, 6, 4), steel, 0, 1.75, 0.78),
         ...face(0.56, 2.18, 0.25, 0.2, 0xffffff, PAL.ink, helm),
       ];
-      if (snow) parts.push(P(Y(0.6, 0.74, 0.28), FUR, 0, 1.72, 0), P(X(0.36, 0.16, 2.1), FUR, 0.97, 2.24, 0), P(Y(0.75, 0.75, 0.2, 8, true), FUR, 0, 2.36, 0));
+      // Cycle 150: no fur band along the shield's top edge on snow: a shield-wide cream strip on the pale snow was 86% of
+      // the shield-bearer's low-contrast pixels (snow mid rows 62%). The collar and helmet fur keep the winter look.
+      if (snow) parts.push(P(Y(0.6, 0.74, 0.28), FUR, 0, 1.72, 0), P(Y(0.75, 0.75, 0.2, 8, true), FUR, 0, 2.36, 0));
     } else if (kind === 'shaman') {
       // Shaman (cycle 59): bell robe, horned bone mask with hollow green-lit eyes, and a staff taller than the body with a
       // glowing green orb (the heal colour), held to one side: an 'i' beside a bell, unlike the skirmisher's T. Cycle 68:
