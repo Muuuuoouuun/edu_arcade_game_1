@@ -1022,3 +1022,23 @@ test('fire tap buffer (cycle 137): a tap that runs out without firing is reporte
   assert.equal(buf.expired(), false);
   buf.reset(); assert.equal(buf.expired(), false);
 });
+
+test('wave preview (cycle 142): the prep line lists what the coming wave really spawns, by kind', async () => {
+  const { stageDifficulty } = await import('./stages.ts');
+  const { wavePreview, WAVE_COUNT } = await import('./sim.ts');
+  const at = (stage: number, wave: number) => { const s = createRush(1, NO_MODS, stageDifficulty(stage)); s.wave = wave; return s; };
+  const kinds = (stage: number, wave: number) => wavePreview(at(stage, wave)).map(r => r.kind);
+  assert.deepEqual(kinds(1, 0), ['grunt']);
+  assert.ok(!kinds(5, 2).includes('shield') && kinds(6, 2).includes('shield'), 'shield-bearers from stage 6');
+  assert.ok(!kinds(6, 1).includes('wolf') && kinds(7, 1).includes('wolf'), 'frost wolves from stage 7');
+  assert.ok(kinds(3, WAVE_COUNT - 1).includes('boss') && !kinds(3, 0).includes('boss'));
+  // The counts match what the wave spawns: run stage 7's second wave until every group has spawned.
+  const s = at(7, 1);
+  const want = wavePreview(s).reduce((n, r) => n + r.count, 0);
+  stepRush(s, { startWave: true });
+  const spawned = () => s.groups.reduce((n, g) => n + (g?.spawned ?? 0), 0);
+  for (let i = 0; i < 60 * 60 && spawned() < want && s.phase === 'wave'; i++) stepRush(s, {});
+  for (let i = 0; i < 60 * 5 && s.phase === 'wave'; i++) stepRush(s, {}); // nothing more comes from the groups
+  assert.equal(spawned(), want, `spawned ${spawned()}, preview ${want}`);
+  assert.ok(want > 0);
+});

@@ -1,7 +1,7 @@
 // Arcana Rush bootstrap: fixed-step loop, HUD, screens, sound and the debug handle used by browser checks.
 import './rush.css';
-import { ECONOMY, ENEMIES, HERO_ROLE, HEROES, TALENTS, TOWER_CAP, TOWER_LEVELS, type HeroKind } from './data.ts';
-import { barricadeOrder, createRush, padCost, siteInReach, stepRush, towerRefund, superReady, wardBreakBurst, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
+import { ECONOMY, ENEMIES, HERO_ROLE, HEROES, TALENTS, TOWER_CAP, TOWER_LEVELS, type EnemyKind, type HeroKind } from './data.ts';
+import { barricadeOrder, createRush, padCost, siteInReach, stepRush, towerRefund, superReady, wardBreakBurst, wavePreview, WAVE_COUNT, type LapTwist, type RushEvent, type RushState } from './sim.ts';
 import { guardBot } from './bot.ts';
 import { RushView } from './render.ts';
 import { RushInput } from './input.ts';
@@ -336,18 +336,34 @@ function seeThroughHud() {
   hudParts.forEach((el, i) => el.classList.toggle('see-through', under[i]));
 }
 
+/** Short enemy names for the prep line (cycle 142). */
+const KIND_SHORT: Record<EnemyKind, string> = { grunt: '돌격', skirmisher: '투척', brute: '거인', shield: '방패', shaman: '주술', wolf: '늑대', boss: '보스' };
+function nextWaveHtml(s: RushState) {
+  const seen = new Set<EnemyKind>();
+  for (let w = Math.max(0, s.wave - WAVE_COUNT); w < s.wave; w++) for (const r of wavePreview({ ...s, wave: w })) seen.add(r.kind);
+  return wavePreview(s).map(r => { const label = r.kind === 'boss' && r.count === 1 ? KIND_SHORT.boss : `${KIND_SHORT[r.kind]} ${r.count}`; return seen.has(r.kind) ? label : `<b>${label}</b>`; }).join(' · ');
+}
 function updateHud() {
   const s = state;
   setText('wave', hud.wave, s.diff.endless ? `웨이브 ${s.wave + 1}` : `웨이브 ${Math.min(s.wave + 1, WAVE_COUNT)}/${WAVE_COUNT}`);
   const lap = Math.floor(s.wave / WAVE_COUNT) + 1;
   const where = mode === 'demo' ? '시연' : s.diff.endless ? `끝없는 도전${lap > 1 ? ` ${lap}바퀴` : ''}${s.diff.twist ? ` · ${TWIST_NAME[s.diff.twist]}` : ''}` : expeditionStage(stage).label;
-  setText('waveSub', hud.waveSub, s.phase === 'prep' ? `${where} · 준비 ${Math.ceil(s.prepT)}초` : s.phase === 'wave' ? `${where} · 남은 적 ${s.enemies.length}` : where);
+  if (s.phase === 'prep') {
+    // Cycle 142: the prep line (read by screen readers; the status box is visually hidden in battle) names what the
+    // coming wave brings; kinds new to this battle are bold.
+    const html = `다음 ${nextWaveHtml(s)} · ${Math.ceil(s.prepT)}초`;
+    if (last.waveSub !== html) { hud.waveSub.innerHTML = html; last.waveSub = html; }
+  } else setText('waveSub', hud.waveSub, s.phase === 'wave' ? `${where} · 남은 적 ${s.enemies.length}` : where);
   setStyle('townFill', hud.townFill, 'transform', `scaleX(${s.town.hp / s.town.maxHp})`);
   setText('townHp', hud.townHp, String(Math.ceil(s.town.hp)));
   setText('gold', hud.gold, String(s.gold));
   const bonus = Math.floor(s.prepT) * ECONOMY.earlyBonusPerSecond;
   setFlag('startWaveHidden', hud.startWave, 'hidden', s.phase !== 'prep' || mode !== 'play');
-  setText('startWave', hud.startWave, `웨이브 시작 +${bonus}G`);
+  // Cycle 142: the battle screen shows only actionable controls (#107), so the coming wave is named on the start pill.
+  if (s.phase === 'prep' && mode === 'play') {
+    const html = `웨이브 시작 +${bonus}G<small class="wave-next">다음 ${nextWaveHtml(s)}</small>`;
+    if (last.startWave !== html) { hud.startWave.innerHTML = html; last.startWave = html; }
+  }
   const site = s.hero.downT > 0 ? null : siteInReach(s);
   const pad = site?.kind === 'tower' ? site.i : -1, wall = site?.kind === 'barricade' ? site.i : -1;
   const cost = pad >= 0 ? padCost(s, pad) : null;

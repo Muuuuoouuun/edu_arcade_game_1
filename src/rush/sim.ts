@@ -442,6 +442,18 @@ export const groupCount = (s: RushState, g: Pick<SpawnGroup, 'kind' | 'count' | 
   const count = g.count - (g.less && stage >= g.less.minStage && stage <= g.less.maxStage ? g.less.count : 0);
   return Math.max(1, Math.round(count * s.diff.enemyCount * (t === 'shields' && g.kind === 'shield' ? TWIST.shieldCount : 1)));
 };
+/** Cycle 142: what the current wave brings, by kind in order of first appearance, with this stage's scaling, wolf
+ * swaps and twists (the same counts spawn() uses). Shown during the prep time before the wave. */
+export function wavePreview(s: RushState): { kind: EnemyKind; count: number }[] {
+  const out: { kind: EnemyKind; count: number }[] = [];
+  for (const g of waveDef(s)) {
+    const n = groupCount(s, g);
+    if (n <= 0) continue;
+    const row = out.find(r => r.kind === g.kind);
+    if (row) row.count += n; else out.push({ kind: g.kind, count: n });
+  }
+  return out;
+}
 function spawn(s: RushState) {
   waveDef(s).forEach((g, i) => {
     const p = s.groups[i];
