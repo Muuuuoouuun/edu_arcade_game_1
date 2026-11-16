@@ -1042,3 +1042,16 @@ test('wave preview (cycle 142): the prep line lists what the coming wave really 
   assert.equal(spawned(), want, `spawned ${spawned()}, preview ${want}`);
   assert.ok(want > 0);
 });
+
+test('reach gate (cycle 149): build pills wait REACH_SHOW s on one site, hide at once when it changes or is left', async () => {
+  const { ReachGate, REACH_SHOW } = await import('./reachGate.ts');
+  const g = new ReachGate();
+  assert.equal(g.update('', 0), false);
+  assert.equal(g.update('tower0', 1), false, 'just arrived');
+  assert.equal(g.update('tower0', 1 + REACH_SHOW / 2), false);
+  assert.equal(g.update('tower0', 1 + REACH_SHOW), true, 'held long enough');
+  assert.equal(g.update('tower1', 1.5), false, 'another site starts over');
+  assert.equal(g.update('', 1.6), false, 'left: hidden at once');
+  assert.equal(g.update('tower1', 1.7), false, 'coming back starts over');
+  assert.equal(g.update('tower1', 1.7 + REACH_SHOW), true);
+});

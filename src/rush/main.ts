@@ -21,6 +21,7 @@ import { addHit, POP_LIFE, popKey, type PopSlot } from './pops.ts';
 import { createFrameWatch, nextPref, parsePref, PREF_LABEL, resolveQuality, watchFrame, type QualityPref } from './quality.ts';
 import { mapFor } from './maps.ts';
 import { CRATE } from './data.ts';
+import { ReachGate } from './reachGate.ts';
 import { setShadowEvery } from './frame.ts';
 import { benchEnemies, benchStats, type BenchStats } from './bench.ts';
 
@@ -373,7 +374,9 @@ function updateHud() {
     const html = `웨이브 시작 +${bonus}G<small class="wave-next">${lapHtml(s)}다음 ${nextWaveHtml(s)}</small>`;
     if (last.startWave !== html) { hud.startWave.innerHTML = html; last.startWave = html; }
   }
-  const site = s.hero.downT > 0 ? null : siteInReach(s);
+  // Cycle 149: a site's pills show once the hero has held it for REACH_SHOW s; brushing an edge no longer flashes them.
+  const reach = s.hero.downT > 0 ? null : siteInReach(s);
+  const site = reachGate.update(reach ? `${reach.kind}${reach.i}` : '', s.t) ? reach : null;
   const pad = site?.kind === 'tower' ? site.i : -1, wall = site?.kind === 'barricade' ? site.i : -1;
   const cost = pad >= 0 ? padCost(s, pad) : null;
   const buildHidden = !site || mode !== 'play';
@@ -444,6 +447,7 @@ function start(nextMode: 'play' | 'demo') {
   mode = nextMode;
   paused = false;
   input.reset();
+  reachGate.reset();
   input.enabled = nextMode === 'play';
   surface.classList.toggle('demo', nextMode === 'demo');
   town.closeMap();
@@ -553,6 +557,7 @@ function showVisitor(c: keyof typeof COMPANIONS | undefined) {
 }
 let lastReward = '';
 let lastSuggest: Upgrade | 'hero' | null = null;
+const reachGate = new ReachGate();
 $('btn-play').addEventListener('click', () => { unlockAudio(); openTown(legacyNote); legacyNote = ''; });
 $('map-battle').addEventListener('click', () => start('play'));
 // The title buttons ship disabled so a tap before this script runs is not silently lost.
