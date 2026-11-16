@@ -826,3 +826,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
    the preview made it up to 60): it sits a little left of centre there. */
 @media (orientation: landscape) and (max-width: 760px) { .hud-pill { left: calc(50% - 60px); } }
 .hud-pill .wave-next b { font-weight: 900; color: #000; text-decoration: underline; text-underline-offset: 2px; }
+
+/* Cycle 143: the demolish pill (36 px tall) was the one battle control under the 44 px touch size; stacked under the
+   build pills it still ends well above the start pill on a 320 px tall phone (210 vs 235 px). */
+.hud-build.demolish { min-height: 44px; }
