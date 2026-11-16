@@ -785,3 +785,12 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: none; }
   border: 2px solid var(--outline); background: #ff8a3d; color: #fff; font-size: 10px; font-weight: 800; line-height: 12px; white-space: nowrap; pointer-events: none;
 }
 .hero-pick.suggested { position: relative; }
+
+/* Cycle 137: a press that could not act (empty quiver, hero down, super not charged) shakes its button for a beat and
+   flashes the arrow pips red. `translate` is separate from the pressed `transform`, so the two never fight. */
+@keyframes dryShake { 0%, 100% { translate: 0 0; } 20% { translate: -5px 0; } 45% { translate: 4px 0; } 70% { translate: -3px 0; } }
+@keyframes dryFlash { 0%, 100% { box-shadow: none; } 30% { box-shadow: 0 0 0 4px rgba(255, 70, 70, 0.85); } }
+.btn-fire.dry, .btn-super.dry { animation: dryShake 0.26s ease-out; }
+.btn-fire.dry { filter: none; } /* the empty quiver's dimming would mute the red */
+.btn-fire.dry .ammo i { background: #ff4d4d; box-shadow: 0 0 6px rgba(255, 77, 77, 0.9); }
+@media (prefers-reduced-motion: reduce) { .btn-fire.dry, .btn-super.dry { animation: dryFlash 0.3s ease-out; } }

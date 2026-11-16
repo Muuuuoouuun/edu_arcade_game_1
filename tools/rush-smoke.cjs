@@ -183,7 +183,9 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     await mp.tap('#start-wave');
     await mp.waitForTimeout(4000);
     await mp.tap('#fire');
-    await mp.waitForTimeout(400);
+    // Cycle 137: wait for the shot rather than a fixed 0.4 s (it failed twice in about ten runs when one software-GL frame
+    // took longer), as the desktop click check does; a tap that never fires still fails.
+    await mp.waitForFunction(() => __rush.state.stats.shots >= 1, null, { timeout: 3000 }).catch(() => {});
     check((await mp.evaluate(() => __rush.state.stats.shots)) >= 1, 'tap fire (auto-aim)');
     const box = await mp.locator('#fire').boundingBox();
     const fx = box.x + box.width / 2, fy = box.y + box.height / 2;

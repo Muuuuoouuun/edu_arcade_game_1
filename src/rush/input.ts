@@ -174,6 +174,8 @@ export class RushInput {
   }
   /** After the step: whether the hero fired (a held tap is then spent). */
   settleFire(fired: boolean) { this.fireBuffer.settle(fired); }
+  /** Cycle 137: a fire tap ran out without firing since the last call. */
+  dryFire() { return this.fireBuffer.expired(); }
 
   /** Refresh the aim preview for rendering (once per frame). */
   refreshAim() {

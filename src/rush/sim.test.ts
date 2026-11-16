@@ -1000,3 +1000,25 @@ test('fire tap buffer (cycle 131): a tap between shots waits and fires; nothing 
   assert.equal(run(true, 0.2, 0).length, 0);
   assert.equal(run(true, 10, 1).length, 1);
 });
+
+test('fire tap buffer (cycle 137): a tap that runs out without firing is reported once; a shot or a newer tap is not', async () => {
+  const { FireBuffer, FIRE_BUFFER } = await import('./fireBuffer.ts');
+  // Empty the quiver (3 arrows, 0.32 s apart), then tap once more: it can only wait 0.25 s, the next arrow needs ~1.25 s.
+  const s = createRush(1, NO_MODS, undefined, 'ranger'), buf = new FireBuffer();
+  const step = (tap?: 'auto') => { const before = s.stats.shots; stepRush(s, { fire: buf.take(tap, s.t) }); buf.settle(s.stats.shots > before); return s.stats.shots > before; };
+  let shots = 0;
+  // Taps at 0, 0.33 and 0.67 s; the first arrow comes back only ~1.27 s in, so a tap just after 0.75 s cannot fire.
+  for (let i = 0; i < 45; i++) if (step(i % 20 === 0 && i <= 40 ? 'auto' : undefined)) shots++;
+  assert.equal(shots, 3, 'three arrows, then the quiver is empty');
+  assert.equal(buf.expired(), false, 'every tap so far fired (or waited and fired)');
+  assert.ok(s.hero.ammo < 1);
+  step('auto');
+  let lapsedAt = -1;
+  for (let i = 1; i < 40 && lapsedAt < 0; i++) { step(); if (buf.expired()) lapsedAt = i * STEP; }
+  assert.ok(lapsedAt > FIRE_BUFFER - STEP && lapsedAt < FIRE_BUFFER + 3 * STEP, `reported after the buffer (${lapsedAt.toFixed(2)} s)`);
+  assert.equal(buf.expired(), false, 'reading clears it');
+  // A tap replaced by a newer one is not a lapse; reset clears a pending one.
+  buf.take('auto', s.t); buf.take('auto', s.t + 0.1);
+  assert.equal(buf.expired(), false);
+  buf.reset(); assert.equal(buf.expired(), false);
+});

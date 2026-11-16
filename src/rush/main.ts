@@ -235,6 +235,13 @@ function toast(text: string, cls = '', seconds = 1.6) {
   el.className = `toast show ${cls}`;
   toastTimer = seconds;
 }
+/** Cycle 137: a short 'not now' shake (a red flash with reduced motion) on a battle button whose press could not act. */
+function dryPress(el: HTMLElement) {
+  el.classList.remove('dry');
+  void el.offsetWidth; // restart the animation when presses come quickly
+  el.classList.add('dry');
+}
+for (const el of [$('fire'), $('super')]) el.addEventListener('animationend', e => { if ((e as AnimationEvent).animationName.startsWith('dry')) el.classList.remove('dry'); });
 function feedback(events: RushEvent[]) {
   view.applyEvents(events, reducedMotion);
   // Ward breaks (cycle 91): a glassy crack instead of the plain hit thud; a buzz only when one swing clears several.
@@ -623,9 +630,12 @@ function frame(now: number) {
     clock = r.clock;
     for (let i = 0; i < Math.min(r.steps, 40) && state.tick < freezeAt; i++) {
       const cmd = mode === 'demo' ? guardBot(state) : input.command(state.t);
-      const shotsBefore = state.stats.shots;
+      const shotsBefore = state.stats.shots, superDenied = mode === 'play' && !!cmd.super && !superReady(state);
       stepRush(state, cmd);
       if (mode !== 'demo') input.settleFire(state.stats.shots > shotsBefore);
+      // Cycle 137: a press that arrived but could not act (quiver empty, hero down, super not charged) shakes its button.
+      if (mode === 'play' && input.dryFire()) dryPress(hud.fire);
+      if (superDenied) dryPress(hud.superBtn);
       feedback(state.events);
       // A big moment freezes the world for a beat; the rest of this frame's steps are dropped, not replayed.
       const next = tryStop(clock, seconds, state.tick, hitStopFor(state.events), reducedMotion ? 0 : 1);
