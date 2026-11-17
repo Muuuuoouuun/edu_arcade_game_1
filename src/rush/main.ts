@@ -20,6 +20,7 @@ import { TownView } from './townScene.ts';
 import { addHit, POP_LIFE, popKey, type PopSlot } from './pops.ts';
 import { createFrameWatch, nextPref, parsePref, PREF_LABEL, resolveQuality, watchFrame, type QualityPref } from './quality.ts';
 import { mapFor } from './maps.ts';
+import { MODEL_SCALE } from './look.ts';
 import { CRATE } from './data.ts';
 import { ReachGate } from './reachGate.ts';
 import { setShadowEvery } from './frame.ts';
@@ -323,7 +324,7 @@ function readLayout(fight: boolean) {
 /** Screen points (page CSS px) of each live enemy's body and head. */
 function enemyScreen(rect: DOMRect = canvas.getBoundingClientRect()): { id: number; pts: { x: number; y: number }[] }[] {
   return state.enemies.filter(e => e.hp > 0).map(e => {
-    const r = ENEMIES[e.kind].radius;
+    const r = ENEMIES[e.kind].radius * MODEL_SCALE; // bodies are drawn at the map-growth scale (look.ts)
     return { id: e.id, pts: [r * 1.2, e.kind === 'boss' ? r * 3.6 : r * 2.6].map(h => { const p = view.screenPoint(e.x, h, e.z, rect); return { x: p.x + rect.left, y: p.y + rect.top }; }) };
   });
 }

@@ -5,6 +5,7 @@ import { HERO, HEROES, type HeroKind, type Vec } from './data.ts';
 import type { Command } from './sim.ts';
 import type { AimPreview } from './render.ts';
 import { FireBuffer } from './fireBuffer.ts';
+import { screenToGround } from './battleCamera.ts';
 
 const DEADZONE = 14;
 const STICK_RADIUS = 56;
@@ -63,7 +64,8 @@ export class RushInput {
       const dx = e.clientX - this.stickOrigin.x, dy = e.clientY - this.stickOrigin.y, d = Math.hypot(dx, dy);
       const k = d > STICK_RADIUS ? STICK_RADIUS / d : 1;
       this.setKnob(dx * k, dy * k);
-      this.stickVec = d < 6 ? { x: 0, z: 0 } : { x: (dx * k) / STICK_RADIUS, z: (dy * k) / STICK_RADIUS };
+      // Screen directions become ground directions through the battle view's yaw (battleCamera.ts): up is up the screen.
+      this.stickVec = d < 6 ? { x: 0, z: 0 } : screenToGround({ x: (dx * k) / STICK_RADIUS, z: (dy * k) / STICK_RADIUS });
     });
     const endStick = (e: PointerEvent) => {
       if (e.pointerId !== this.stickId) return;
@@ -114,7 +116,7 @@ export class RushInput {
       const d = get();
       if (!d || d.id !== e.pointerId) return;
       const dx = e.clientX - d.cx, dy = e.clientY - d.cy;
-      d.v = { x: dx, z: dy };
+      d.v = screenToGround({ x: dx, z: dy });
       if (Math.hypot(dx, dy) > DEADZONE) d.aimed = true;
     });
     const release = (e: PointerEvent, cancelled: boolean) => {
@@ -158,7 +160,7 @@ export class RushInput {
     const k = this.keys;
     const x = (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) - (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0);
     const z = (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0) - (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0);
-    return { x, z };
+    return screenToGround({ x, z });
   }
 
   /** Called once per sim step. One-shot actions are consumed by the first step that sees them, except fire: with the

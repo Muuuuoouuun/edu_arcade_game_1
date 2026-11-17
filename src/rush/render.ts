@@ -18,7 +18,7 @@ import bearGlb from './models/polar-bear.glb?url';
 import { ARENA, BARRICADES, ENEMIES, FROST_HOWL, HEROES, HERO_SPAWN, LANES, PADS, TOWER_LEVELS, TOWN, type EnemyKind, type HeroDef, type HeroKind, type TowerBranch, type Vec } from './data.ts';
 import { barricadeMaxHp, barricadeOrder, heroDef, heroHidden, heroMaxHp, lobReach, padCost, siteInReach, superReady, wardBreakBurst, type Enemy, type RushEvent, type RushState, type Shot } from './sim.ts';
 import { BRANCH_TRIM, DEF, barricadeParts, barricadeState, chevronParts, padParts, siteParts, towerParts, type BarricadeState } from './defenceModels.ts';
-import { bake, bakeColors, bakeMatrices, BOSS_LOOK, capColors, hullGeometry, mixHex, outlineMaterial, PAL, REGION_LOOK, toon, toonify, wallParts, type BossLook, type BossName, type Part, type RegionLook, type RegionName } from './look.ts';
+import { bake, bakeColors, bakeMatrices, BOSS_LOOK, capColors, hullGeometry, mixHex, MODEL_SCALE, outlineMaterial, PAL, REGION_LOOK, toon, toonify, wallParts, type BossLook, type BossName, type Part, type RegionLook, type RegionName } from './look.ts';
 import { REGIONS, regionOf } from './expedition.ts';
 import { FOREST, GATES, type MapLayout } from './maps.ts';
 import { bushParts, coverParts, crateParts, groundTexture, sceneryParts, SCENERY_LOOK } from './mapScenery.ts';
@@ -28,7 +28,7 @@ import { Particles } from './fx.ts';
 import { QUALITY, type Quality } from './quality.ts';
 import { TownView } from './townView.ts';
 import { TownDamage } from './townDamage.ts';
-import { battleFocus } from './battleCamera.ts';
+import { battleCameraPose, battleEye, battleFocus } from './battleCamera.ts';
 import { HeroMotion } from './heroMotion.ts';
 import { cliffColors, createGroundGeometry, createCliffGeometry, heightAt, raycastTerrain } from './terrainElevation.ts';
 // Frame-level look (lights, shadows, water, finishing pass): everything below marked "frame" belongs to it.
@@ -71,7 +71,7 @@ function heroHull(geo: BufferGeometry, simplifier: Simplifier | null): BufferGeo
 /** Hero model height in metres. Raised from 2.0 with the rebuilt heroes (2026-11-14): the enemies had grown 1.1-1.3x
  * and a brute stood taller than the hero; at 2.4 the new faces read at phone size and the hero is the largest ally on
  * the field. Visual only: the simulation radius, reach and hit tests are unchanged. */
-const HERO_HEIGHT = 2.4;
+const HERO_HEIGHT = 2.4 * MODEL_SCALE;
 /** Yaw that turns the GLB authored front (-z) toward simulation angle 0 (+x). Verified by east/north close-up renders. */
 const HERO_MODEL_YAW = -Math.PI / 2;
 /** Per-hero tweaks to a shared campaign GLB (cycle 41), applied when baking; the files stay untouched. Names are
@@ -1451,7 +1451,8 @@ export class RushView {
     head.add(bow);
     body.add(head);
     g.add(body);
-    g.userData.height = kit.height;
+    g.scale.setScalar(MODEL_SCALE);
+    g.userData.height = kit.height * MODEL_SCALE;
     return g;
   }
   private barricadeKit(level: number, state: BarricadeState) {
@@ -1965,8 +1966,7 @@ export class RushView {
     const h = s.hero, target = battleFocus(h, h.downT > 0, this.portrait);
     if (this.sheetMode) target.y = 0;
     if (this.snapNext) { this.focus.copy(target); this.snapNext = false; } else this.focus.lerp(target, 1 - Math.exp(-6 * dt));
-    const height = (this.portrait ? 30 : 23) * this.zoom, back = (this.portrait ? 14 : 12.5) * this.zoom;
-    this.camera.position.set(this.focus.x, this.focus.y + height, this.focus.z + back);
+    battleEye(this.focus, battleCameraPose(this.size.w, this.size.h), this.camera.position);
     if (this.shake > 0) {
       this.shake = Math.max(0, this.shake - dt * 1.8);
       const k = this.shake * this.shake;
@@ -2122,7 +2122,8 @@ const ENEMY_KINDS: readonly EnemyKind[] = ['grunt', 'skirmisher', 'brute', 'boss
  * spacing and hit tests are unchanged. The wolf is long rather than tall, the boss was already big. */
 /** Debug mask colours per kind (cycle 126, contrast measurement; tools/rush-contrast.py MASK_RGB must match). */
 export const MASK_COLOR: Record<EnemyKind, number> = { grunt: 0xff0000, skirmisher: 0x00ff00, brute: 0x0000ff, shield: 0xffff00, shaman: 0xff00ff, wolf: 0x00ffff, boss: 0xff8000 };
-export const ENEMY_SCALE: Record<EnemyKind, number> = { grunt: 1.3, skirmisher: 1.25, brute: 1.2, shield: 1.25, shaman: 1.25, boss: 1.1, wolf: 1.3 };
+/** Drawn size against the hitbox radius. The second factor is the map growth (look.ts): the first is the readable size chosen in the six-area pass. */
+export const ENEMY_SCALE: Record<EnemyKind, number> = { grunt: 1.3 * MODEL_SCALE, skirmisher: 1.25 * MODEL_SCALE, brute: 1.2 * MODEL_SCALE, shield: 1.25 * MODEL_SCALE, shaman: 1.25 * MODEL_SCALE, boss: 1.1 * MODEL_SCALE, wolf: 1.3 * MODEL_SCALE };
 /** Build pop (squash and stretch) length and its height scale over time left. */
 const POP_TIME = 0.45;
 const popScale = (left: number) => { if (left <= 0) return 1; const p = 1 - left / POP_TIME; return 1 - 0.4 * (1 - p) ** 2 * Math.cos(p * Math.PI * 2.5); };

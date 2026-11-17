@@ -269,6 +269,64 @@ function rock(parts: Part[], look: SceneryLook, x: number, y: number, z: number,
   if (look.snowCap !== null) parts.push({ geo: G.blob, color: look.snowCap, at: [x, y + s * 0.82, z], scale: [s * 0.62, s * 0.16, s * 0.54] });
 }
 
+/** Turn a group of parts about the vertical axis and move it into place. Parts of a group tilt only about Z (roof
+ * slabs), so with three's XYZ Euler order the group yaw is simply added to each part's Y rotation. */
+function placed(parts: Part[], x: number, y: number, z: number, yaw: number): Part[] {
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  return parts.map(p => {
+    const [px, py, pz] = p.at ?? [0, 0, 0], [, ry, rz] = p.rot ?? [0, 0, 0];
+    return { ...p, at: [x + px * c + pz * s, y + py, z - px * s + pz * c], rot: [0, ry + yaw, rz] };
+  });
+}
+/** A village house on the home shore (2026-11-16, from the battlefield model set in docs/arcana-3d-modeling): stone
+ * footing, plastered walls in a timber frame, a gabled roof (teal tiles in the forest, snow-laden timber in the
+ * mountains), a chimney, a dark door and a lit window on the gable end that faces the field. Local axes: ridge along Z,
+ * the door on +Z. `kind` 1 is the forge: wider, with an open hearth mouth and an anvil outside. */
+function houseParts(snow: boolean, kind: 0 | 1 | 2, r: () => number): Part[] {
+  const w = kind === 1 ? 3.8 : 3.0 + r() * 0.5, d = kind === 2 ? 3.0 : 3.6 + r() * 0.6, h = kind === 2 ? 1.6 : 1.9 + r() * 0.3, base = 0.32;
+  const stone = snow ? 0x9fb0c2 : 0xcfc8b4, stoneDark = snow ? 0x74869c : 0x9a947f, wall = snow ? 0x9a6a45 : 0xead9b4, timber = snow ? 0x5f4030 : 0x7a4a26;
+  const roof = snow ? 0x6c4a33 : 0x2f7f96, ridge = snow ? 0x5a3c2a : 0x3fa0b2, top = base + h, pitch = 0.72;
+  const parts: Part[] = [box(0, base / 2, 0, w + 0.34, base, d + 0.34, stone), box(0, base + h / 2, 0, w, h, d, wall), box(0, top - 0.02, 0, w + 0.12, 0.16, d + 0.12, timber)];
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) parts.push(box(sx * (w / 2 - 0.04), base + h / 2, sz * (d / 2 - 0.04), 0.2, h, 0.2, timber));
+  // Roof: two slabs meeting at the ridge, and the gable ends filled in steps.
+  const half = w / 2 + 0.34, len = half / Math.cos(pitch), rise = half * Math.tan(pitch);
+  for (const sx of [-1, 1]) {
+    parts.push(box(sx * half / 2, top + rise / 2 + 0.02, 0, len, 0.2, d + 0.7, roof, [0, 0, -sx * pitch]));
+    if (snow) parts.push(box(sx * half / 2, top + rise / 2 + 0.2, 0, len * 0.86, 0.2, d + 0.5, 0xf1f7fb, [0, 0, -sx * pitch]));
+  }
+  parts.push(box(0, top + rise + 0.06, 0, 0.3, 0.2, d + 0.82, snow ? 0xf1f7fb : ridge));
+  for (const sz of [-1, 1]) for (let k = 0; k < 2; k++)
+    parts.push(box(0, top + rise * (k + 0.5) / 2.2, sz * (d / 2 - 0.06), w * (1 - (k + 0.6) / 2.2), rise / 2.2, 0.14, k % 2 ? timber : wall));
+  parts.push(box(w * 0.27, top + rise * 0.55 + 0.7, -d * 0.2, 0.5, 1.5, 0.5, stone), box(w * 0.27, top + rise * 0.55 + 1.48, -d * 0.2, 0.64, 0.14, 0.64, stoneDark));
+  // The gable end toward the field: door or hearth mouth, a lit window.
+  const face = d / 2 + 0.02;
+  if (kind === 1) {
+    parts.push(box(-w * 0.2, base + 0.6, face, 1.2, 1.2, 0.1, 0x241a1c), box(-w * 0.2, base + 0.32, face + 0.04, 0.86, 0.5, 0.08, 0xff9b35), box(-w * 0.2, base + 0.52, face + 0.07, 0.44, 0.3, 0.06, 0xffe08a));
+    parts.push(box(-w * 0.2, 0.18, face + 1.1, 0.26, 0.36, 0.26, 0x4a4f56), box(-w * 0.2, 0.44, face + 1.1, 0.62, 0.18, 0.3, 0x5c626a));
+  } else parts.push(box(-w * 0.18, base + 0.62, face, 0.72, 1.24, 0.1, 0x4a2f1c), box(-w * 0.18, base + 1.3, face + 0.02, 0.86, 0.12, 0.1, timber));
+  parts.push(box(w * 0.22, base + h * 0.58, face, 0.62, 0.62, 0.08, timber), box(w * 0.22, base + h * 0.58, face + 0.03, 0.44, 0.44, 0.08, 0xffd27a));
+  // Something by the door: a barrel and a crate, or a woodpile in the snow.
+  parts.push({ geo: G.log, color: snow ? 0x6b4a34 : 0x8a5a30, at: [w / 2 + 0.5, 0.36, d * 0.28], scale: [0.3, 0.72, 0.3] }, box(w / 2 + 0.55, 0.26, d * 0.28 - 0.75, 0.52, 0.52, 0.52, snow ? 0x7a5536 : 0xa8764a, [0, 0.5, 0]));
+  return parts;
+}
+/** Raider camp dressing beside an enemy gate (same source): a palisade of sharpened logs, a war banner, a torch. */
+function campParts(g: Vec, snow: boolean, size: number, r: () => number): Part[] {
+  const z = ARENA.minZ - 0.9, parts: Part[] = [], log = snow ? 0x5f4634 : 0x6b4424, tip = snow ? 0xf1f7fb : 0xd9b27a;
+  for (const side of [-1, 1]) {
+    for (let k = 0; k < 3; k++) {
+      const x = g.x + side * (3.4 * size + 0.72 * k), h = 1.9 + r() * 0.5;
+      parts.push({ geo: G.post, color: log, at: [x, h / 2, z - 0.25 * k], scale: [0.26, h, 0.26], rot: [0, r() * 3, side * 0.06] });
+      parts.push({ geo: G.cone, color: tip, at: [x + side * 0.03, h + 0.2, z - 0.25 * k], scale: [0.25, 0.44, 0.25] });
+    }
+    parts.push(box(g.x + side * (3.4 * size + 0.95), 1.1, z + 0.18, 2.3, 0.16, 0.14, log, [0, -side * 0.38, 0]));
+    // Torch in front of the palisade.
+    const tx = g.x + side * (2.95 * size), tz = ARENA.minZ + 0.75;
+    parts.push({ geo: G.post, color: log, at: [tx, 0.75, tz], scale: [0.09, 1.5, 0.09] }, { geo: G.crystal, color: 0x3b4245, at: [tx, 1.56, tz], scale: [0.22, 0.2, 0.22], rot: [Math.PI, 0, 0] });
+    parts.push({ geo: G.gem, color: 0xff8a2a, at: [tx, 1.86, tz], scale: [0.17, 0.3, 0.17] }, { geo: G.gem, color: 0xffe08a, at: [tx, 1.82, tz], scale: [0.09, 0.2, 0.09], rot: [0, 0.8, 0] });
+  }
+  return parts;
+}
+
 /** Enemy gate behind a lane start, on the field's north edge. Forest: a ruined stone arch grown over by a dark
  * thicket. Snow: an arch of ice. Both: a black mouth and an enemy-red banner, so the lane's origin reads at a glance. */
 export function gateParts(g: Vec, id: MapId, size = 1): Part[] {
@@ -408,8 +466,37 @@ export function sceneryParts(map: MapLayout): Scenery {
     land.push({ geo: G.cone, color: look.far, at: [x, h / 2 - 0.2, north - 15 - r() * 2], scale: [6 + r() * 2, h, 5], rot: [0, r(), 0] });
     if (snow) land.push({ geo: G.cone, color: look.farCap, at: [x, h * 0.78 - 0.2, north - 15], scale: [2.2, h * 0.45, 1.9] });
   }
-  // Islets in the water on both sides: the field is still an island, but no longer alone.
-  const islets: [number, number, number][] = [[west - 4.6, -19, 2.6], [west - 5.2, -8, 3.1], [west - 4.4, 3.5, 2.4], [east + 4.6, -15, 2.9], [east + 5.4, -3, 2.5], [east + 4.4, 7, 2.2]];
+  // Islets in the water on the west side. The east side and the south-east corner are the home shore (2026-11-16):
+  // the three-quarter view looks north-east across the field, so what stands behind the east hedge is on screen in
+  // every battle. A channel of water stays between the hedge and the shore, so the field is still an island.
+  const islets: [number, number, number][] = [[west - 4.6, -19, 2.6], [west - 5.2, -8, 3.1], [west - 4.4, 3.5, 2.4]];
+  const shore = east + 2.6, south = ARENA.maxZ + 1.1 + 2.6, cz = (ARENA.minZ + ARENA.maxZ) / 2;
+  land.push(box(shore + 10, -0.66, cz + 3, 20, 1.3, ARENA.maxZ - ARENA.minZ + 26, look.land), box(shore + 10, -0.7, cz + 3, 20.5, 1.3, ARENA.maxZ - ARENA.minZ + 26.5, look.landEdge));
+  land.push(box(shore - 8, -0.66, south + 6, 36, 1.3, 12, look.land), box(shore - 8, -0.7, south + 6, 36.5, 1.3, 12.5, look.landEdge));
+  // The village: houses in two loose rows facing the field, the forge nearest the town.
+  const facing = -Math.PI / 2, homes: [number, number, 0 | 1 | 2, number][] = [
+    [shore + 3.2, 9.5, 1, 0.1], [shore + 3.6, 3.2, 0, -0.14], [shore + 3.0, -3.6, 0, 0.12], [shore + 3.4, -10.4, 2, -0.2], [shore - 3.5, south + 3.4, 0, Math.PI / 2 + 0.15],
+    [shore + 9.2, 6.4, 2, 0.22], [shore + 9.6, -0.6, 0, -0.1], [shore + 9.0, -7.8, 0, 0.16], [shore + 8.6, 13.4, 0, -0.18], [shore - 10.5, south + 3.8, 2, Math.PI / 2 - 0.12],
+  ];
+  // The row by the water is inked like everything near the field; the houses behind it are full-quality extras.
+  homes.forEach(([x, z, kind, turn], i) => (i < 5 ? outlined : extra).push(...placed(houseParts(snow, kind, r), x, 0, z, facing + turn)));
+  // A fence along the shore in front of the houses, with gaps, and lantern posts.
+  for (let z = -12; z <= 14; z += 3) {
+    if ((z + 12) % 9 === 6) continue;
+    outlined.push({ geo: G.post, color: look.trunk, at: [shore + 0.7, 0.4, z], scale: [0.09, 0.8, 0.09] }, box(shore + 0.7, 0.52, z + 1.5, 0.07, 0.1, 3, look.trunk));
+  }
+  for (const z of [-7.2, 0, 6.4, 12.4]) {
+    outlined.push({ geo: G.post, color: look.trunk, at: [shore + 1.1, 0.9, z], scale: [0.08, 1.8, 0.08] }, box(shore + 1.1, 1.86, z, 0.3, 0.34, 0.3, 0xffd27a), box(shore + 1.1, 2.08, z, 0.42, 0.1, 0.42, snow ? 0xf1f7fb : 0x2f7f96));
+  }
+  // Trees between and behind the houses, thicker toward the north where the shore meets the enemy's forest.
+  for (let i = 0; i < 20; i++) {
+    const x = shore + 1.6 + r() * 16, z = -32 + r() * 52;
+    if (homes.some(([hx, hz]) => Math.hypot(x - hx, z - hz) < 3.4)) continue;
+    tree(z < -13 && x < shore + 8 ? outlined : extra, look, x, 0, z, 1.0 + r() * 0.6, snow || r() < 0.35, r);
+  }
+  for (let i = 0; i < 8; i++) tree(extra, look, shore + 13 + r() * 5, 0, -30 + i * 6.6 + r() * 2, 1.2 + r() * 0.6, snow || r() < 0.5, r);
+  for (let i = 0; i < 5; i++) rock(outlined, look, shore + 0.9 + r() * 1.2, 0, -30 + i * 7 + r() * 4, 0.4 + r() * 0.35, r);
+  GATES.forEach((g, i) => outlined.push(...campParts(g, snow, i === 0 ? map.gateScale ?? 1 : 1, r)));
   for (const [x, z, rad] of islets) {
     land.push({ geo: G.log, color: look.rockDark, at: [x, -0.75, z], scale: [rad, 1.3, rad * 0.85] });
     land.push({ geo: G.log, color: look.land, at: [x, -0.05, z], scale: [rad * 0.93, 0.14, rad * 0.78] });

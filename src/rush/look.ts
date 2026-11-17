@@ -207,3 +207,11 @@ export function toonify(mesh: Mesh): void {
   };
   mesh.material = Array.isArray(mesh.material) ? mesh.material.map(convert) : convert(mesh.material);
 }
+
+/** Map size (2026-11-16, user request: the map 60% larger). The battlefield is 1.6 times larger in area against everything that
+ * stands on it: heroes, enemies and towers are drawn at MODEL_SCALE while the arena, lanes, walls, pads and the town
+ * keep their rule sizes, and the camera frames the wider ground. Speeds and ranges are rule lengths too, so a battle
+ * runs exactly as before (same arrival times, same balance): the field is larger, not slower. */
+export const MAP_GROWTH = 1.6;
+export const MODEL_SCALE = 1 / Math.sqrt(MAP_GROWTH);
+
