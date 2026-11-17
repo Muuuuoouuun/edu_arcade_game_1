@@ -1966,7 +1966,9 @@ export class RushView {
     const h = s.hero, target = battleFocus(h, h.downT > 0, this.portrait);
     if (this.sheetMode) target.y = 0;
     if (this.snapNext) { this.focus.copy(target); this.snapNext = false; } else this.focus.lerp(target, 1 - Math.exp(-6 * dt));
-    battleEye(this.focus, battleCameraPose(this.size.w, this.size.h), this.camera.position);
+    // The model sheet keeps the straight view from the south (its line-up runs east-west); battles use the three-quarter view.
+    if (this.sheetMode) this.camera.position.set(this.focus.x, this.focus.y + 23 * this.zoom, this.focus.z + 12.5 * this.zoom);
+    else battleEye(this.focus, battleCameraPose(this.size.w, this.size.h), this.camera.position);
     if (this.shake > 0) {
       this.shake = Math.max(0, this.shake - dt * 1.8);
       const k = this.shake * this.shake;

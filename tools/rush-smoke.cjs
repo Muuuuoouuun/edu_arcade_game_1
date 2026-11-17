@@ -112,14 +112,18 @@ const check = (ok, label) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${label}`); 
     check(await page.evaluate(() => __rush.music.mood === 'battle' || __rush.music.mood === 'boss'), 'battle music mood');
     await page.waitForTimeout(300);
     check(await page.evaluate(() => __rush.state.mods.damage > 1 && __rush.state.mods.heroHp > 1 && __rush.state.hero.hp > 420), 'battle starts with kingdom and hero-level modifiers');
-    const t0 = await page.evaluate(() => ({ tick: __rush.state.tick, x: __rush.state.hero.x }));
+    // Keys follow the screen (three-quarter view, battleCamera.ts): A is screen-left, which on the ground is west and a
+    // little north. The speed is measured along the path walked; the hero is then stood on the first pad for the build checks.
+    const t0 = await page.evaluate(() => ({ tick: __rush.state.tick, x: __rush.state.hero.x, z: __rush.state.hero.z }));
     await page.keyboard.down('KeyA');
-    await page.waitForFunction(() => __rush.state.hero.x <= -4.4, null, { timeout: 20000 });
+    await page.waitForFunction(() => __rush.state.hero.x <= -3.2, null, { timeout: 20000 });
     await page.keyboard.up('KeyA');
-    const t1 = await page.evaluate(() => ({ tick: __rush.state.tick, x: __rush.state.hero.x }));
-    const perTick = (t0.x - t1.x) / (t1.tick - t0.tick);
+    const t1 = await page.evaluate(() => ({ tick: __rush.state.tick, x: __rush.state.hero.x, z: __rush.state.hero.z }));
+    const perTick = Math.hypot(t0.x - t1.x, t0.z - t1.z) / (t1.tick - t0.tick);
     check(Math.abs(perTick - 5.2 / 60) < 0.01, `keyboard move ${perTick.toFixed(4)} m/tick`);
-    await page.waitForTimeout(200);
+    check(t1.x < t0.x && t1.z < t0.z, `A walks screen-left: west and north on the ground (${(t1.x - t0.x).toFixed(1)}, ${(t1.z - t0.z).toFixed(1)})`);
+    await page.evaluate(() => { __rush.state.hero.x = -4.6; __rush.state.hero.z = 5.2; });
+    await page.waitForTimeout(500);
     check(await page.isVisible('#build'), 'build button appears on a pad');
     await page.keyboard.press('KeyE');
     await page.waitForFunction(() => __rush.state.towers[0] !== null, null, { timeout: 3000 }).catch(() => {}); // few frames a second under software GL
